@@ -1,0 +1,224 @@
+#include "Weaver.h"
+#include <sstream>
+
+using namespace PaintsNow;
+using namespace PaintsNow::NsGalaxyWeaver;
+using namespace PaintsNow::NsBridgeSunset;
+using namespace PaintsNow::NsSnowyStream;
+using namespace PaintsNow::NsMythForest;
+
+static const String WEAVER_VERSION = "2018.1.25";
+
+Weaver::Weaver(BridgeSunset& sunset, SnowyStream& ns, MythForest& mf, ITunnel& tunnel, const String& entry) : bridgeSunset(sunset), snowyStream(ns), mythForest(mf), BaseClass(sunset.GetThreadApi(), tunnel, entry) {}
+
+void Weaver::ScriptUninitialize(IScript::Request& request) {
+	IScript* script = request.GetScript();
+	if (script == &bridgeSunset.GetScript()) {
+		request.DoLock();
+		request.Dereference(rpcCallback);
+		request.Dereference(connectionCallback);
+		request.UnLock();
+	}
+	
+	ProxyStub::ScriptUninitialize(request);
+}
+
+static void ReplaceCallback(IScript::Request& request, IScript::Request::Ref& target, const IScript::Request::Ref& ref) {
+	if (target) {
+		request.DoLock();
+		request.Dereference(target);
+		request.UnLock();
+	}
+
+	target = ref;
+}
+
+void Weaver::SetRpcCallback(IScript::Request& request, const IScript::Request::Ref& ref) {
+	ReplaceCallback(request, rpcCallback, ref);
+}
+
+void Weaver::SetConnectionCallback(IScript::Request& request, const IScript::Request::Ref& ref) {
+	ReplaceCallback(request, connectionCallback, ref);
+}
+
+void Weaver::OnConnectionStatus(IScript::Request& request, bool isAuto, ZRemoteProxy::STATUS status, const String & message) {
+	if (status == ZRemoteProxy::CONNECTED || status == ZRemoteProxy::CLOSED || status == ZRemoteProxy::ABORTED) {
+		String code = status == ZRemoteProxy::CONNECTED ? "Connected" : status == ZRemoteProxy::CLOSED ? "Closed" : "Aborted";
+		if (connectionCallback) {
+			request.DoLock();
+			request.Push();
+			request.Call(sync, connectionCallback, code, message);
+			request.Pop();
+			request.UnLock();
+		}
+	}
+	/*
+	if (status == ZRemoteProxy::CLOSED || status == ZRemoteProxy::ABORTED) {
+		// restart if not manually stopped
+		if (started) {
+			started = false;
+			Start();
+		}
+	}*/
+}
+
+void Weaver::Start() {
+	if (Flag() & TINY_ACTIVATED) {
+		Stop();
+	}
+
+	remoteProxy.Run();
+	Flag() |= TINY_ACTIVATED;
+}
+
+void Weaver::Stop() {
+	Flag() &= ~TINY_ACTIVATED;
+	remoteProxy.Reset();
+}
+
+TObject<IReflect>& Weaver::operator () (IReflect& reflect) {
+	BaseClass::operator () (reflect);
+
+	if (reflect.IsReflectMethod()) {
+		ReflectMethod(RpcCheckVersion)[ScriptMethod = "CheckVersion"];
+		ReflectMethod(RpcComplete)[ScriptMethod = "Complete"];
+		ReflectMethod(RpcPostResource)[ScriptMethod = "PostResource"];
+		ReflectMethod(RpcDebugPrint)[ScriptMethod = "DebugPrint"];
+		ReflectMethod(RpcPostEntity)[ScriptMethod = "PostEntity"];
+		ReflectMethod(RpcPostEntityGroup)[ScriptMethod = "PostEntityGroup"];
+		ReflectMethod(RpcPostEntityComponent)[ScriptMethod = "PostEntityComponent"];
+		ReflectMethod(RpcPostModelComponent)[ScriptMethod = "PostModelComponent"];
+		ReflectMethod(RpcPostModelComponentMaterial)[ScriptMethod = "PostModelComponentMaterial"];
+		ReflectMethod(RpcPostEnvCubeComponent)[ScriptMethod = "PostEnvCubeComponent"];
+		ReflectMethod(RpcPostTransformComponent)[ScriptMethod = "PostTransformComponent"];
+		ReflectMethod(RpcPostSpaceComponent)[ScriptMethod = "PostSpaceComponent"];
+		ReflectMethod(RpcUpdateView)[ScriptMethod = "UpdateView"];
+	}
+
+	return *this;
+}
+
+void Weaver::RpcCheckVersion(IScript::Request& request) {
+	// Write current version string to output buffer.
+	request.DoLock();
+	request << WEAVER_VERSION;
+	request.UnLock();
+
+	if (rpcCallback) {
+		bridgeSunset.Dispatch(CreateTaskScript(rpcCallback, String("RpcCheckVersion"), WEAVER_VERSION));
+	}
+}
+
+void Weaver::RpcPostResource(IScript::Request& request, const String& path, const String& extension, const String& resourceData) {
+	bool success = true;
+	// Make memory stream for deserialization
+	size_t length = resourceData.length();
+	ZMemoryStream memoryStream(length);
+	memoryStream.Write(resourceData.c_str(), length);
+	// resource use internal persist and needn't set environment here
+	// memoryStream.SetEnvironment(snowyStream);
+	assert(length == resourceData.length());
+
+	memoryStream.Seek(IStreamBase::BEGIN, 0);
+	// Create resource from memory
+	TShared<ResourceBase> resource = snowyStream.CreateResource(path, extension, false, 0, &memoryStream);
+	SpinLock(resource->mapCritical);
+	resource->Map();
+	SpinUnLock(resource->mapCritical);
+
+	if (resource) {
+		// Serialize it to disk
+		success = snowyStream.PersistResource(resource);
+	}
+
+	if (rpcCallback) {
+		bridgeSunset.Dispatch(CreateTaskScript(rpcCallback, String("RpcPostResource"), path, extension));
+	}
+}
+
+void Weaver::RpcComplete(IScript::Request& request) {
+	
+	if (rpcCallback) {
+		bridgeSunset.Dispatch(CreateTaskScript(rpcCallback, String("RpcComplete")));
+	}
+}
+
+void Weaver::RpcPostEntity(IScript::Request& request, uint32_t entityID, uint32_t groupID, const String& entityName) {
+	/*
+	TShared<Entity> entity = mythForest.CreateEntity(0); // default warp 0
+	TShared<FormComponent> formComponent = TShared<FormComponent>::From(allocator->New(entityID));
+	entity->AddComponent(mythForest.GetEngine(), formComponent());*/
+
+	if (rpcCallback) {
+		bridgeSunset.Dispatch(CreateTaskScript(rpcCallback, String("RpcPostEntity"), entityID, groupID, entityName));
+	}
+}
+
+void Weaver::RpcPostEntityGroup(IScript::Request& request, uint32_t groupID, const String& groupName) {
+	if (rpcCallback) {
+		bridgeSunset.Dispatch(CreateTaskScript(rpcCallback, String("RpcPostEntityGroup"), groupID, groupName));
+	}
+}
+
+void Weaver::RpcPostEntityComponent(IScript::Request& request, uint32_t entityID, uint32_t componentID) {
+	if (rpcCallback) {
+		bridgeSunset.Dispatch(CreateTaskScript(rpcCallback, String("RpcPostEntityComponent"), entityID, componentID));
+	}
+}
+
+void Weaver::RpcPostModelComponent(IScript::Request& request, uint32_t componentID, const String& resource, float viewDistance) {
+	
+	if (rpcCallback) {
+		bridgeSunset.Dispatch(CreateTaskScript(rpcCallback, String("RpcPostModelComponent"), componentID, resource, viewDistance));
+	}
+}
+
+void Weaver::RpcPostModelComponentMaterial(IScript::Request& request, uint32_t componentID, uint32_t meshGroupID, const String& materialResource) {
+	
+	if (rpcCallback) {
+		bridgeSunset.Dispatch(CreateTaskScript(rpcCallback, String("RpcPostModelComponentMaterial"), componentID, meshGroupID, materialResource));
+	}
+}
+
+void Weaver::RpcPostTransformComponent(IScript::Request& request, uint32_t componentID, const Float3& position, const Float3& scale, const Float3& rotation) {
+	
+	if (rpcCallback) {
+		bridgeSunset.Dispatch(CreateTaskScript(rpcCallback, String("RpcPostTransformComponent"), componentID, position, scale, rotation));
+	}
+}
+
+void Weaver::RpcPostEnvCubeComponent(IScript::Request& request, uint32_t componentID, const String& texturePath) {
+	
+	if (rpcCallback) {
+		bridgeSunset.Dispatch(CreateTaskScript(rpcCallback, String("RpcPostEnvCubeComponent"), componentID, texturePath));
+	}
+}
+
+void Weaver::RpcPostSpaceComponent(IScript::Request& request, uint32_t componentID, uint32_t groupID) {
+	
+	if (rpcCallback) {
+		bridgeSunset.Dispatch(CreateTaskScript(rpcCallback, String("RpcPostSpaceComponent"), componentID, groupID));
+	}
+}
+
+void Weaver::RpcUpdateView(IScript::Request& request,  const MatrixFloat4x4& viewMatrix, const Float4& fovNearFarAspect) {
+	
+	if (rpcCallback) {
+		bridgeSunset.Dispatch(CreateTaskScript(rpcCallback, String("RpcUpdateView"), viewMatrix, fovNearFarAspect));
+	}
+}
+
+void Weaver::RpcInitialize(IScript::Request& request, const String& clientVersion) {
+	
+}
+
+void Weaver::RpcUninitialize(IScript::Request& request) {
+	
+}
+
+void Weaver::RpcDebugPrint(IScript::Request& request, const String& text) {
+	
+	if (rpcCallback) {
+		bridgeSunset.Dispatch(CreateTaskScript(rpcCallback, String("RpcDebugPrint"), text));
+	}
+}

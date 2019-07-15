@@ -1,0 +1,202 @@
+#include "BridgeSunset.h"
+
+using namespace PaintsNow;
+using namespace PaintsNow::NsBridgeSunset;
+
+BridgeSunset::BridgeSunset(IThread& t, IScript& s, uint32_t threadCount, uint32_t warpCount) : ISyncObject(t), script(s), threadPool(t, threadCount), kernel(threadPool, warpCount) {
+	requestCritical.store(0, std::memory_order_relaxed);
+}
+
+BridgeSunset::~BridgeSunset() {
+	assert(requests.empty());
+}
+
+IScript::Request& BridgeSunset::AllocateRequest() {
+	IScript::Request* request = nullptr;
+
+	SpinLock(requestCritical);
+	if (!requests.empty()) {
+		request = requests.top();
+		requests.pop();
+	}
+	SpinUnLock(requestCritical);
+
+	if (request == nullptr) {
+		script.DoLock();
+		request = script.NewRequest();
+		script.UnLock();
+	}
+
+	return *request;
+}
+
+void BridgeSunset::FreeRequest(IScript::Request& request) {
+	IScript::Request* req = &request;
+	SpinLock(requestCritical);
+	if (requests.size() < kernel.GetWarpCount() * 2) {
+		requests.push(req);
+		req = nullptr;
+	}
+	SpinUnLock(requestCritical);
+
+	if (req != nullptr) {
+		script.DoLock();
+		req->ReleaseObject();
+		script.UnLock();
+	}
+}
+
+void BridgeSunset::ScriptInitialize(IScript::Request& request) {
+	Library::ScriptInitialize(request);
+	if (!threadPool.IsInitialized()) {
+		threadPool.Initialize();
+	}
+
+	request.DoLock();
+	for (uint32_t k = 0; k < threadPool.GetThreadCount(); k++) {
+		threadPool.SetThreadContext(k, this);
+	}
+
+	// register script dispatcher hook
+	origDispatcher = script.GetDispatcher();
+	script.SetDispatcher(Wrap(this, &BridgeSunset::ContinueScriptDispatcher));
+	request.UnLock();
+}
+
+void BridgeSunset::ScriptUninitialize(IScript::Request& request) {
+	assert(threadPool.IsInitialized());
+	threadPool.Uninitialize();
+
+	IScript::Request& mainRequest = script.GetDefaultRequest();
+	assert(script.GetDispatcher() == Wrap(this, &BridgeSunset::ContinueScriptDispatcher));
+	script.SetDispatcher(origDispatcher);
+
+	request.DoLock();
+	for (uint32_t k = 0; k < threadPool.GetThreadCount(); k++) {
+		threadPool.SetThreadContext(k, nullptr);
+	}
+
+	request.UnLock();
+
+	SpinLock(requestCritical);
+	std::stack<IScript::Request*> s;
+	s = std::move(requests);
+	SpinUnLock(requestCritical);
+
+	script.DoLock();
+	while (!s.empty()) {
+		IScript::Request* request = s.top();
+		request->ReleaseObject();
+		s.pop();
+	}
+	script.UnLock();
+
+	Library::ScriptUninitialize(request);
+}
+
+TObject<IReflect>& BridgeSunset::operator () (IReflect& reflect) {
+	BaseClass::operator () (reflect);
+	if (reflect.IsReflectMethod()) {
+		ReflectMethod(RequestQueueRoutine)[ScriptMethod = "QueueRoutine"];
+		ReflectMethod(RequestGetWarpCount)[ScriptMethod = "GetWarpCount"];
+	}
+
+	return *this;
+}
+
+IScript& BridgeSunset::GetScript() {
+	return script;
+}
+
+Kernel& BridgeSunset::GetKernel() {
+	return kernel;
+}
+
+void BridgeSunset::Dispatch(ITask* task) {
+	threadPool.Push(task);
+}
+
+class ScriptContinuer : public TaskOnce {
+public:
+	ScriptContinuer(const TWrapper<void, IScript::Request&>& c, IScript::Request& r) : continuer(c), request(r) {
+		token.store(1, std::memory_order_relaxed);
+	}
+
+	inline void Complete() {
+		token.store(0, std::memory_order_release);
+	}
+
+	virtual void Execute(void* context) override {
+		BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
+		request.DoLock();
+		bridgeSunset.ContinueScriptDispatcher(request, nullptr, 0, continuer);
+		request.UnLock();
+		Complete();
+	}
+
+	virtual void Abort(void* context) override {
+		Complete();
+	}
+
+	TWrapper<void, IScript::Request&> continuer;
+	TAtomic<int32_t> token;
+	IScript::Request& request;
+};
+
+void BridgeSunset::ContinueScriptDispatcher(IScript::Request& request, IHost* host, size_t paramCount, const TWrapper<void, IScript::Request&>& continuer) {
+	// check if current warp is yielded
+	static thread_local uint32_t stackWarpIndex = 0;
+	uint32_t warpIndex = kernel.GetCurrentWarpIndex();
+	if (warpIndex == ~(uint32_t)0) warpIndex = stackWarpIndex;
+	else stackWarpIndex = warpIndex;
+	Kernel::SubTaskQueue& queue = kernel.taskQueueGrid[warpIndex];
+
+	if (queue.PreemptExecution()) {
+		continuer(request);
+		queue.YieldExecution();
+	} else {
+		request.UnLock();
+		size_t threadIndex = threadPool.GetCurrentThreadIndex();
+		// Only fails on destructing
+		ScriptContinuer scriptContinuer(continuer, request);
+		queue.Push(safe_cast<uint32_t>(threadIndex), &scriptContinuer, nullptr);
+		queue.Flush(threadPool);
+
+		// wait for it finishes
+		while (scriptContinuer.token.load(std::memory_order_acquire) != 0) {
+			threadPool.PollRoutine(safe_cast<uint32_t>(threadIndex), false);
+		}
+
+		request.DoLock();
+	}
+
+	stackWarpIndex = warpIndex;
+}
+
+void BridgeSunset::RequestQueueRoutine(IScript::Request& request, IScript::Delegate<WarpTiny> unit, IScript::Request::Ref callback) {
+	CHECK_REFERENCES_WITH_TYPE(callback, IScript::Request::FUNCTION);
+	CHECK_DELEGATE(unit);
+	GetKernel().YieldCurrentWarp();
+
+	if (GetKernel().GetCurrentWarpIndex() != unit->GetWarpIndex()) {
+		GetKernel().QueueRoutine(unit.Get(), CreateTaskScript(callback));
+
+		request.DoLock();
+		request.Dereference(callback);
+		request.UnLock();
+	} else {
+		request.DoLock();
+		request.Call(deferred, callback); // use async call to prevent stack depth increase
+		request.Dereference(callback);
+		request.UnLock();
+	}
+}
+
+void BridgeSunset::RequestGetWarpCount(IScript::Request& request) {
+	CHECK_REFERENCES_NONE();
+
+	GetKernel().YieldCurrentWarp();
+	request.DoLock();
+	request << GetKernel().GetWarpCount();
+	request.UnLock();
+}

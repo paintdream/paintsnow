@@ -1,0 +1,240 @@
+local RepositoryDaemon = {}
+RepositoryDaemon.__index = RepositoryDaemon
+local Database = require("Engine/Data/Database")
+
+local function MakeDatabase(databasePath : string, sqlTemplatePath : string)
+	-- Always create a new database
+	if databasePath ~= ":memory:" then
+		SnowyStream.DeleteFile(databasePath)
+	end
+
+	local database = Database.New(databasePath)
+	-- initialize table structure
+	local schema = SnowyStream.FetchFileData(sqlTemplatePath)
+	for sql in schema:gmatch("[^;]+;") do
+		if sql then
+			database:Execute(sql, nil)
+		end
+	end
+
+	return database
+end
+
+local function FilterPath(path : string)
+	return (path:gsub(":", "/"))
+end
+
+function RepositoryDaemon:New(localAddress : string, sqlTemplatePath, databasePath)
+	-- Debug.TestDatabase = MakeDatabase(":memory:")
+	-- database:Execute("Create table test(a int not null);", nil)
+	-- mount debug objects
+	local weaver = GalaxyWeaver.NewWeaver(localAddress)
+
+	if weaver then
+		local resources : { any } = {}
+		local names : { any } = {}
+		local nameMap : { string : integer } = {}
+		local resourceMap : { string : integer } = {}
+		local entities : { any } = {}
+		local entityGroups : { any } = {}
+		local components : { any } = {}
+		local entityComponents : { any } = {}
+		local modelComponents : { any } = {}
+		local modelComponentMaterials : { any } = {}
+		local envCubeComponents : { any } = {}
+		local transformComponents : { any } = {}
+		local spaceComponents : { any } = {}
+		local cameraViewMatrix : { number } = {}
+		local cameraFovNearFarAspect : float4 = { 90, 0.5, 2000, 1 }
+
+		local function AllocateName(name : string, category : string)
+			local idx = nameMap[name]
+			if idx then
+				return idx
+			else
+				local id = #names + 1
+				table.insert(names, { id, category, name })
+				nameMap[name] = id
+				return id
+			end
+		end
+
+		local handlers : { string : any } = {
+			RpcCheckVersion = function (version : string)
+				print("RepositoryDaemon: Client connected. Version = " .. version)
+			end,
+			RpcPostResource = function (path : string, ext : string)
+				local typeID = AllocateName(ext, "Resource")
+				path = FilterPath(path)
+				print("RepositoryDaemon: Received resource " .. path .. "." .. ext)
+				table.insert(resources, { #resources + 1, typeID, path })
+				resourceMap[path .. "." .. ext] = #resources
+			end,
+			RpcPostEntity = function (entityID : integer, groupID : integer, name : string)
+				table.insert(entities, { entityID, groupID, name })
+			end,
+			RpcPostEntityGroup = function (groupID : integer, name : string)
+				table.insert(entityGroups, { groupID, name })
+			end,
+			RpcPostEntityComponent = function (entityID : integer, component : integer)
+				table.insert(entityComponents, { entityID, component })
+			end,
+			RpcPostModelComponent = function (componentID : integer, resource : string, viewDistance : number)
+				table.insert(components, { componentID, AllocateName("ModelComponent", "Component") })
+				table.insert(modelComponents, { componentID, resource, viewDistance })
+			end,
+			RpcPostModelComponentMaterial = function (componentID : integer, meshGroupID : integer, resource : string)
+				table.insert(modelComponentMaterials, { componentID, meshGroupID, resource })
+			end,
+			RpcPostTransformComponent = function (componentID : integer, position : float3, scale : float3, rotation : float3)
+				table.insert(components, { componentID, AllocateName("TransformComponent", "Component") })
+				table.insert(transformComponents, { componentID, position[1], position[2], position[3], scale[1], rotation[1], rotation[2], rotation[3] })	
+			end,
+			RpcPostSpaceComponent = function (componentID : integer, groupID : integer)
+				table.insert(components, { componentID, AllocateName("SpaceComponent", "Component") })
+				table.insert(spaceComponents, { componentID, groupID })
+			end,
+			RpcPostEnvCubeComponent = function (componentID : integer, texturePath : string)
+				table.insert(components, { componentID, AllocateName("EnvCubeComponent", "Component")})
+				table.insert(envCubeComponents, { componentID, texturePath })
+			end,
+			RpcUpdateView = function (viewMatrix : { number }, fovNearFarAspect : float4)
+				cameraViewMatrix = viewMatrix
+				cameraFovNearFarAspect = fovNearFarAspect
+			end,
+			RpcComplete = function ()
+				print("RepositoryDaemon: Completing ...")
+				local database = MakeDatabase(databasePath, sqlTemplatePath)
+				-- write database
+				if #names ~= 0 then
+					for k, item in ipairs(names) do
+						print("AddName: " .. item[3])
+					end
+					database:Execute("insert into `Names` values (?, ?, ?)", names)
+				end
+
+				if #resources ~= 0 then
+					database:Execute("insert into `Resources` values (?, ?, ?)", resources)
+				end
+
+				if #entityGroups ~= 0 then
+					database:Execute("insert into `EntityGroups` values (?, ?)", entityGroups)
+				end
+				
+				print("RepositoryDaemon: Collecting resource dependencies ...")
+				local resourceDependencies : { { integer } } = {}
+				for path, index in pairs(resourceMap) do
+					local res : ResourceBase = SnowyStream.NewResource(path, "", false)	
+					if res then
+						local info = SnowyStream.InspectResource(res)
+						for key, value in ipairs(info.Depends) do
+							local target = resourceMap[value]
+							if target then
+								table.insert(resourceDependencies, { index, target })
+							else
+								print("RepositoryDaemon: Cannot load resource Dependency: " .. value)
+							end
+						end
+					else
+						print("RepositoryDaemon: Cannot load resource: " .. path)
+					end
+				end
+
+				if #resourceDependencies ~= 0 then
+					database:Execute("insert into `ResourceDependencies` values (?, ?)", resourceDependencies)
+				end
+
+				print("RepositoryDaemon: Writing components ...")
+
+				if #entityGroups ~= 0 then
+					database:Execute("insert into `EntityGroups` values (?, ?)", entityGroups)
+				end
+
+				if #components ~= 0 then
+					database:Execute("insert into `Components` values (?, ?)", components)
+				end
+
+				if #modelComponents ~= 0 then
+					for _, v in ipairs(modelComponents) do
+						local id = resourceMap[v[2] .. ".MeshResource"]
+						if id then
+							v[2] = id
+						else
+							print("Unable to find Mesh ID for " .. v[2])
+						end
+					end
+
+					database:Execute("insert into `ModelComponents` values (?, ?, ?)", modelComponents)
+				end
+
+				if #modelComponentMaterials ~= 0 then
+					for _, v in ipairs(modelComponentMaterials) do
+						local id = resourceMap[v[3] .. ".MaterialResource"]
+						if id then
+							v[3] = id
+						else
+							print("Unable to find Material ID for " .. v[3])
+						end
+					end
+
+					database:Execute("insert into `ModelComponentMaterials` values (?, ?, ?)", modelComponentMaterials)
+				end
+
+				if #transformComponents ~= 0 then
+					database:Execute("insert into `TransformComponents` values (?, ?, ?, ?, ?, ?, ?, ?)", transformComponents)
+				end
+				
+				if #spaceComponents ~= 0 then
+					database:Execute("insert into `SpaceComponents` values (?, ?)", spaceComponents)
+				end
+
+				if #envCubeComponents ~= 0 then
+					for _, v in ipairs(envCubeComponents) do
+						local id = resourceMap[v[2] .. ".TextureResource"]
+						if id then
+							v[2] = id
+						else
+							print("Unable to find Texture ID for " .. v[2])
+						end
+					end
+
+					database:Execute("insert into `EnvCubeComponents` values(?, ?)", envCubeComponents)
+				end
+
+				print("RepositoryDaemon: Writing entities ...")
+
+				if #entities ~= 0 then
+					database:Execute("insert into `Entities` values (?, ?, ?)", entities)
+				end
+
+				if #entityComponents ~= 0 then
+					database:Execute("insert into `EntityComponents` values (?, ?)", entityComponents)
+				end
+
+				print("RepositoryDaemon: Completed!")
+			end
+		}
+
+		GalaxyWeaver.SetWeaverRpcCallback(weaver, function (operation : string, ...)
+			local handler = handlers[operation]
+			if handler then
+				handler(...)
+			end
+		end)
+
+		GalaxyWeaver.SetWeaverConnectionCallback(weaver, function (...)
+		end)
+
+		GalaxyWeaver.StartWeaver(weaver)
+	else
+		print("RepositoryDaemon: Unable to create remote sync.")
+	end
+
+	return weaver
+end
+
+function RepositoryDaemon:Start()
+
+end
+
+return RepositoryDaemon

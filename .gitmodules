@@ -1,0 +1,3 @@
+[submodule "Source/Core"]
+	path = Source/Core
+	url = https://github.com/paintdream/PaintsNowCore.git

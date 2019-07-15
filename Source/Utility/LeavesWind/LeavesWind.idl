@@ -1,0 +1,44 @@
+// LeavesWind.idl : IDL source for LeavesWind.dll
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (LeavesWind.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+	[
+		object,
+		uuid(4E9CF52A-68FF-4B94-BD11-EF9C22F17BF4),
+		dual,
+		helpstring("ILeavesWind ReflectInterface"),
+		pointer_default(unique)
+	]
+	interface ILeavesWind : IDispatch
+	{
+		[id(1), helpstring("method QueryBuiltinFactory")] HRESULT QueryBuiltinFactory([in] BSTR key, [in] BSTR name, [out, retval] LONG* ret);
+		[id(2), helpstring("method RegisterFactory")] HRESULT RegisterFactory([in] BSTR key, [in] BSTR name, [in] LONG value, [out, retval] VARIANT_BOOL* ret);
+		[id(3), helpstring("method Initialize")] HRESULT Initialize([in] SAFEARRAY(BSTR) argv, [out, retval] VARIANT_BOOL* ret);
+		[id(4), helpstring("method Uninitialize")] HRESULT Uninitialize([out, retval] VARIANT_BOOL* ret);
+	};
+	
+[
+	uuid(ce84002c-a45f-425b-8e62-4924690c88a5),
+	version(1.0),
+	helpstring("LeavesWindLib 1.0 Type Library")
+]
+library LeavesWindLib
+{
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+	
+	[
+		uuid(872e86af-90e3-4124-b67d-740c7f59c01e),
+		helpstring("CLeavesWind Class")
+	]
+	coclass CLeavesWind
+	{
+		[default] interface ILeavesWind;
+	};
+	
+};

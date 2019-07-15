@@ -1,0 +1,957 @@
+CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
+OPTION (CMAKE_WARN_VS6 "Allow compilation under Visual C++ 6.0" OFF)
+OPTION (STATIC_VC_RUNTIME "Use dynamic VC runtime" ON)
+
+
+# ================================================================ #
+PROJECT (PaintsNow)
+
+
+macro(configure_msvc_runtime)
+	if(MSVC)
+		# Default to statically-linked runtime.
+		if(STATIC_VC_RUNTIME)
+			set(MSVC_RUNTIME "static")
+		else()
+			set(MSVC_RUNTIME "dynamic")
+		endif()
+		# Set compiler options.
+		set(variables
+			CMAKE_C_FLAGS_DEBUG
+			CMAKE_C_FLAGS_MINSIZEREL
+			CMAKE_C_FLAGS_RELEASE
+			CMAKE_C_FLAGS_RELWITHDEBINFO
+			CMAKE_CXX_FLAGS_DEBUG
+			CMAKE_CXX_FLAGS_MINSIZEREL
+			CMAKE_CXX_FLAGS_RELEASE
+			CMAKE_CXX_FLAGS_RELWITHDEBINFO
+		)
+		add_definitions(-D_HAS_EXCEPTIONS=0)
+		if(${MSVC_RUNTIME} STREQUAL "static")
+			# disable RTTI & Exceptions
+			set(CMAKE_CXX_FLAGS, "/DWIN32 /D_WINDOWS /W3")
+			message(STATUS
+				"MSVC -> forcing use of statically-linked runtime."
+			)
+			foreach(variable ${variables})
+				if(${variable} MATCHES "/MD")
+					string(REGEX REPLACE "/MD" "/MT" ${variable} "${${variable}}")
+				endif()
+			endforeach()
+		else()
+			message(STATUS
+				"MSVC -> forcing use of dynamically-linked runtime."
+			)
+			foreach(variable ${variables})
+				if(${variable} MATCHES "/MT")
+					string(REGEX REPLACE "/MT" "/MD" ${variable} "${${variable}}")
+				endif()
+			endforeach()
+		endif()
+	endif()
+endmacro()
+
+configure_msvc_runtime()
+set(variables
+	CMAKE_C_FLAGS_DEBUG
+	CMAKE_C_FLAGS_MINSIZEREL
+	CMAKE_C_FLAGS_RELEASE
+	CMAKE_C_FLAGS_RELWITHDEBINFO
+	CMAKE_CXX_FLAGS_DEBUG
+	CMAKE_CXX_FLAGS_MINSIZEREL
+	CMAKE_CXX_FLAGS_RELEASE
+	CMAKE_CXX_FLAGS_RELWITHDEBINFO
+)
+message(STATUS "Initial build flags:")
+foreach(variable ${variables})
+	message(STATUS " '${variable}': ${${variable}}")
+endforeach()
+message(STATUS "")
+
+
+
+# SET (PAINTSNOW_VERSION_MAJOR "0") #
+# SET (PAINTSNOW_VERSION_MINOR "2.0413") #
+
+
+INCLUDE(CheckIncludeFiles)
+
+IF (MSVC)
+		IF (MSVC60)
+				ADD_COMPILE_OPTIONS ("-GX")
+				ADD_COMPILE_OPTOINS ("-Zm700")
+		ELSE (MSVC60)
+				ADD_COMPILE_OPTIONS ("/EHsc")
+				# ADD_COMPILE_OPTIONS ("/MTd")
+		ENDIF (MSVC60)
+
+		OPTION (USE_STATIC_THIRDPARTY_LIBRARIES "Use statically-linked third-party libraries" ON)
+		IF (USE_STATIC_THIRDPARTY_LIBRARIES)
+			SET (FLAG_USE_STATIC_THIRDPARTY_LIBRARIES 1)
+		ELSE (USE_STATIC_THIRDPARTY_LIBRARIES)
+			SET (FLAG_USE_STATIC_THIRDPARTY_LIBRARIES 0)
+		ENDIF (USE_STATIC_THIRDPARTY_LIBRARIES)
+ELSE (MSVC)
+	SET (FLAG_USE_STATIC_THIRDPARTY_LIBRARIES 0)
+ENDIF (MSVC)
+
+add_definitions(-D_7ZIP_ST)
+add_definitions(-DCMAKE_PAINTSNOW)
+
+IF (CMAKE_COMPILER_IS_GNUCXX)
+		add_definitions(-std=c++11)
+		add_definitions(-lstdc++)
+		add_definitions(-msse4.1)
+		add_definitions(-msse3)
+		add_definitions(-std=c++11)
+		add_definitions(-fno-exceptions)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+ENDIF (CMAKE_COMPILER_IS_GNUCXX)
+
+INCLUDE_DIRECTORIES ("${PROJECT_BINARY_DIR}")
+STRING (REPLACE "/" "\\" LOCAL_SOURCE_DIR "${PROJECT_SOURCE_DIR}")
+
+FILE (GLOB_RECURSE PAINTSNOW_SRC
+		"${PROJECT_SOURCE_DIR}/Source/Core/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/Core/*.cpp"
+		"${PROJECT_SOURCE_DIR}/Source/Core/*.c"
+		"${PROJECT_SOURCE_DIR}/Source/General/Misc/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/General/Misc/*.cpp"
+		"${PROJECT_SOURCE_DIR}/Source/General/Interface/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/General/Interface/*.cpp"
+		"${PROJECT_SOURCE_DIR}/Source/General/Template/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/General/Template/*.cpp"
+)
+
+# ADD DRIVER OPTIONS
+
+OPTION (ADD_ARCHIVE_DIRENT_BUILTIN "Add Dirent Archive Driver" ON)
+
+IF (ADD_ARCHIVE_DIRENT_BUILTIN)
+	SET (FLAG_ADD_ARCHIVE_DIRENT_BUILTIN 1)
+	IF (NOT WIN32)
+		CHECK_INCLUDE_FILES(dirent.h HAVE_DIRENT_H)
+		IF (NOT HAVE_DIRENT_H)
+			MESSAGE (FINAL_ERROR "Could not find direct.h for Direct Archive Driver")
+		ENDIF (NOT HAVE_DIRENT_H)
+	ENDIF (NOT WIN32)
+ELSE (ADD_ARCHIVE_DIRENT_BUILTIN)
+	SET (FLAG_ADD_ARCHIVE_DIRENT_BUILTIN 0)
+ENDIF (ADD_ARCHIVE_DIRENT_BUILTIN)
+	
+SET (FLAG_ADD_ARCHIVE_DIRENT_BUILTIN 1)
+
+IF (ADD_ARCHIVE_DIRENT_BUILTIN)
+	FILE (GLOB_RECURSE DIRENT_SRC
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Archive/Dirent/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Archive/Dirent/*.cpp"
+	)
+
+	SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${DIRENT_SRC})
+ENDIF (ADD_ARCHIVE_DIRENT_BUILTIN)
+
+OPTION (ADD_RANDOM_LIBNOISE_BUILTIN "Add Libnoise Noise Driver" ON)
+
+IF (ADD_RANDOM_LIBNOISE_BUILTIN)
+	SET (FLAG_ADD_RANDOM_LIBNOISE_BUILTIN 1)
+	FILE (GLOB_RECURSE BUILTIN_LIBNOISE_SRC
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Random/Libnoise/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Random/Libnoise/*.cpp"
+	)
+
+	SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${BUILTIN_LIBNOISE_SRC})
+ELSE (ADD_RANDOM_LIBNOISE_BUILTIN)
+
+	SET (FLAG_ADD_RANDOM_LIBNOISE_BUILTIN 0)
+ENDIF (ADD_RANDOM_LIBNOISE_BUILTIN)
+
+OPTION (ADD_AUDIO_LAME "Add LAME Decoder Audio Driver" ON)
+IF (ADD_AUDIO_LAME)
+	SET (FLAG_ADD_AUDIO_LAME 1)
+	CHECK_INCLUDE_FILES(lame.h HAVE_LAME_H)
+	CHECK_INCLUDE_FILES(lame/lame.h HAVE_LAME_OTHER_H)
+	IF (NOT HAVE_LAME_H AND NOT HAVE_LAME_OTHER_H)
+		MESSAGE (FINAL_ERROR "Could not find lame.h for LAME Decoder Audio Driver")
+	ENDIF (NOT HAVE_LAME_H AND NOT HAVE_LAME_OTHER_H)
+
+	FILE (GLOB_RECURSE LAME_SRC
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Audio/Decoder/LAME/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Audio/Decoder/LAME/*.cpp"
+	)
+
+	SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${LAME_SRC})
+ELSE (ADD_AUDIO_LAME)
+	SET (FLAG_ADD_AUDIO_LAME 0)
+ENDIF (ADD_AUDIO_LAME)
+
+OPTION (ADD_AUDIO_OPENAL "Add OpenAL Audio Driver" ON)
+IF (ADD_AUDIO_OPENAL)
+	SET (FLAG_ADD_AUDIO_OPENAL 1)
+	CHECK_INCLUDE_FILES(AL/al.h HAVE_AL_H)
+	IF (NOT HAVE_AL_H)
+		MESSAGE (FATAL_ERROR "Could not find AL/al.h for OpenAL Audio Driver")
+	ENDIF (NOT HAVE_AL_H)
+
+	FILE (GLOB_RECURSE OPENAL_SRC
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Audio/OpenAL/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Audio/OpenAL/*.cpp"
+	)
+
+	SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${OPENAL_SRC})
+ELSE (ADD_AUDIO_OPENAL)
+	SET (FLAG_ADD_AUDIO_OPENAL 0)
+ENDIF (ADD_AUDIO_OPENAL)
+
+OPTION (ADD_DATABASE_SQLITE3_BUILTIN "Add Sqlite3 Database Driver" ON)
+IF (ADD_DATABASE_SQLITE3_BUILTIN)
+	SET (FLAG_ADD_DATABASE_SQLITE3_BUILTIN 1)
+	FILE (GLOB_RECURSE SQLITE3_SRC
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Database/Sqlite/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Database/Sqlite/*.cpp"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Database/Sqlite/*.c"
+	)
+
+	SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${SQLITE3_SRC})
+ELSE (ADD_DATABASE_SQLITE3_BUILTIN)
+	
+	SET (FLAG_ADD_DATABASE_SQLITE3_BUILTIN 0)
+ENDIF (ADD_DATABASE_SQLITE3_BUILTIN)
+
+IF (WIN32)
+	FILE (GLOB_RECURSE WIN32_DUMPER_SRC
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Debugger/MiniDump/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Debugger/MiniDump/*.cpp"
+	)
+
+	SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${WIN32_DUMPER_SRC})
+ENDIF (WIN32)
+
+# IF (WIN32)
+# 	OPTION (ADD_RENDER_DIRECTX12 "Add DirectX12 Render Driver" OFF)
+# 	IF (ADD_RENDER_DIRECTX12)
+# 		SET (FLAG_ADD_RENDER_DIRECTX12 1)
+# 		FILE (GLOB_RECURSE DIRECTX12_SRC
+# 			"${PROJECT_SOURCE_DIR}/Source/General/Driver/Render/12/*.h"
+# 			"${PROJECT_SOURCE_DIR}/Source/General/Driver/Render/12/*.cpp"
+# 		)
+# 	
+# 		SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${DIRECTX12_SRC})
+# 	ELSE (ADD_RENDER_DIRECTX12)
+# 	
+# 		SET (FLAG_ADD_RENDER_DIRECTX12 0)
+# 	ENDIF (ADD_RENDER_DIRECTX12)
+# ELSE (WIN32)
+# 	SET (FLAG_ADD_RENDER_DIRECTX12 0)
+# ENDIF (WIN32)
+
+
+OPTION (ADD_FILTER_JSON_BUILTIN "Add Json Archive Driver" ON)
+IF (ADD_FILTER_JSON_BUILTIN)
+	SET (FLAG_ADD_FILTER_JSON_BUILTIN 1)
+	FILE (GLOB_RECURSE JSON_SRC
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Filter/Json/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Filter/Json/*.cpp"
+	)
+
+	SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${JSON_SRC})
+ELSE (ADD_FILTER_JSON_BUILTIN)
+
+	SET (FLAG_ADD_FILTER_JSON_BUILTIN 0)
+ENDIF (ADD_FILTER_JSON_BUILTIN)
+
+OPTION (ADD_FILTER_LZW_BUILTIN "Add LZW Archive Driver (Developing)" ON)
+IF (ADD_FILTER_LZW_BUILTIN)
+	SET (FLAG_ADD_FILTER_LZW_BUILTIN 1)
+	FILE (GLOB_RECURSE LZW_SRC
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Filter/LZW/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Filter/LZW/*.cpp"
+	)
+
+	SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${LZW_SRC})
+ELSE (ADD_FILTER_LZW_BUILTIN)
+	SET (FLAG_ADD_FILTER_LZW_BUILTIN 0)
+ENDIF (ADD_FILTER_LZW_BUILTIN)
+
+OPTION (ADD_FILTER_BPTC_BUILTIN "Add Intel BPTC Texture Compression Driver (Developing)" ON)
+IF (ADD_FILTER_BPTC_BUILTIN)
+	SET (FLAG_ADD_FILTER_BPTC_BUILTIN 1)
+	FILE (GLOB_RECURSE BPTC_SRC
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Filter/BPTC/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Filter/BPTC/*.cpp"
+	)
+
+	SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${BPTC_SRC})
+ELSE (ADD_FILTER_BPTC_BUILTIN)
+	SET (FLAG_ADD_FILTER_BPTC_BUILTIN 0)
+ENDIF (ADD_FILTER_BPTC_BUILTIN)
+
+OPTION (ADD_FILTER_POD_BUILTIN "Add POD Archive Driver" ON)
+IF (ADD_FILTER_POD_BUILTIN)
+	SET (FLAG_ADD_FILTER_POD_BUILTIN 1)
+	FILE (GLOB_RECURSE POD_SRC
+		"${PROJECT_SOURCE_DIR}/Source/Core/Driver/Filter/Pod/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/Core/Driver/Filter/Pod/*.cpp"
+		"${PROJECT_SOURCE_DIR}/Source/Core/Driver/Filter/Pod/*.c"
+	)
+
+	SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${POD_SRC})
+ELSE (ADD_FILTER_POD_BUILTIN)
+	SET (FLAG_ADD_FILTER_POD_BUILTIN 0)
+ENDIF (ADD_FILTER_POD_BUILTIN)
+
+OPTION (ADD_FILTER_STRBUF_BUILTIN "Add StringBuffer Archive Driver" ON)
+IF (ADD_FILTER_STRBUF_BUILTIN)
+	SET (FLAG_ADD_FILTER_STRBUF_BUILTIN 1)
+	FILE (GLOB_RECURSE STRBUF_SRC
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Filter/StringBuffer/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Filter/StringBuffer/*.cpp"
+	)
+
+	SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${STRBUF_SRC})
+ELSE (ADD_FILTER_STRBUF_BUILTIN)
+	SET (FLAG_ADD_FILTER_STRBUF_BUILTIN 0)
+ENDIF (ADD_FILTER_STRBUF_BUILTIN)
+
+OPTION (ADD_FILTER_LZMA_BUILTIN "Add LZMA/7Z Archive/Filter Driver" ON)
+IF (ADD_FILTER_LZMA_BUILTIN)
+	SET (FLAG_ADD_FILTER_LZMA_BUILTIN 1)
+	FILE (GLOB_RECURSE LZMA_SRC
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Filter/LZMA/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Filter/LZMA/*.c"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Filter/LZMA/*.cpp"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Archive/7Z/*.cpp"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Archive/7Z/*.cpp"
+	)
+
+	SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${LZMA_SRC})
+ELSE (ADD_FILTER_LZMA_BUILTIN)
+	
+	SET (FLAG_ADD_FILTER_LZMA_BUILTIN 0)
+ENDIF (ADD_FILTER_LZMA_BUILTIN)
+
+OPTION (ADD_FONT_FREETYPE "Add Freetype Font Driver" ON)
+IF (ADD_FONT_FREETYPE)
+	SET (FLAG_ADD_FONT_FREETYPE 1)
+	IF (NOT WIN32)
+		INCLUDE_DIRECTORIES("/usr/include/freetype2")
+	ENDIF (NOT WIN32)
+	CHECK_INCLUDE_FILES(ftglyph.h HAVE_FREETYPE_H)
+	CHECK_INCLUDE_FILES(freetype/ftglyph.h HAVE_FREETYPE_OTHER_H)
+	IF (NOT HAVE_FREETYPE_H AND NOT HAVE_FREETYPE_OTHER_H)
+		# MESSAGE (FATAL_ERROR "Could not find ftglyph.h for Freetype Font Driver")
+	ENDIF (NOT HAVE_FREETYPE_H AND NOT HAVE_FREETYPE_OTHER_H)
+
+	CHECK_INCLUDE_FILES(iconv.h HAVE_ICONV_H)
+	IF (NOT HAVE_ICONV_H)
+		MESSAGE (FATAL_ERROR "Could not find iconv.h for Freetype Font Driver")
+	ENDIF (NOT HAVE_ICONV_H)
+
+	FILE (GLOB_RECURSE FREETYPE_SRC
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Font/Freetype/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Font/Freetype/*.cpp"
+	)
+
+	SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${FREETYPE_SRC})
+ELSE (ADD_FONT_FREETYPE)
+	SET (FLAG_ADD_FONT_FREETYPE 0)
+ENDIF (ADD_FONT_FREETYPE)
+
+OPTION (ADD_FRAME_FREEGLUT "Add Freeglut Frame/Timer Driver" ON)
+IF (ADD_FRAME_FREEGLUT)
+	SET (FLAG_ADD_FRAME_FREEGLUT 1)
+	CHECK_INCLUDE_FILES(GL/freeglut.h HAVE_FREEGLUT_H)
+	IF (NOT HAVE_FREEGLUT_H)
+		MESSAGE (FATAL_ERROR "Could not find GL/freeglut.h for Freeglut Frame/Timer Driver")
+	ENDIF (NOT HAVE_FREEGLUT_H)
+
+	FILE (GLOB_RECURSE FREEGLUT_SRC
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Frame/Freeglut/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Frame/Freeglut/*.cpp"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Timer/Freeglut/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Timer/Freeglut/*.cpp"
+	)
+
+	SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${FREEGLUT_SRC})
+ELSE (ADD_FRAME_FREEGLUT)
+	SET (FLAG_ADD_FRAME_FREEGLUT 0)
+ENDIF (ADD_FRAME_FREEGLUT)
+
+
+OPTION (ADD_FRAME_DXUT_BUILTIN "Add DXUT Frame/Timer Driver" OFF)
+IF (ADD_FRAME_DXUT_BUILTIN)
+	SET (FLAG_ADD_FRAME_DXUT_BUILTIN 1)
+	FILE (GLOB_RECURSE DXUT_SRC
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Frame/DXUT/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Frame/DXUT/*.c"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Frame/DXUT/*.cpp"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Timer/DXUT/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Timer/DXUT/*.cpp"
+	)
+
+	SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${DXUT_SRC})
+ELSE (ADD_FRAME_DXUT_BUILTIN)
+	
+	SET (FLAG_ADD_FRAME_DXUT_BUILTIN 0)
+ENDIF (ADD_FRAME_DXUT_BUILTIN)
+
+OPTION (ADD_IMAGE_FREEIMAGE "Add Freeimage Image Driver" ON)
+IF (ADD_IMAGE_FREEIMAGE)
+	SET (FLAG_ADD_IMAGE_FREEIMAGE 1)
+	CHECK_INCLUDE_FILES(FreeImage.h HAVE_FREEIMAGE_H)
+	IF (NOT HAVE_FREEIMAGE_H)
+		MESSAGE (FATAL_ERROR "Could not find FreeImage.h for Freeimage Image Driver")
+	ENDIF (NOT HAVE_FREEIMAGE_H)
+
+	FILE (GLOB_RECURSE FREEIMAGE_SRC
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Image/FreeImage/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Image/FreeImage/*.cpp"
+	)
+
+	SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${FREEIMAGE_SRC})
+ELSE (ADD_IMAGE_FREEIMAGE)
+	SET (FLAG_ADD_IMAGE_FREEIMAGE 0)
+ENDIF (ADD_IMAGE_FREEIMAGE)
+
+OPTION (ADD_NETWORK_LIBEVENT "Add Libevent Network Driver" ON)
+IF (ADD_NETWORK_LIBEVENT)
+	SET (FLAG_ADD_NETWORK_LIBEVENT 1)
+	CHECK_INCLUDE_FILES(event2/event.h HAVE_EVENT_H)
+	IF (NOT HAVE_EVENT_H)
+		MESSAGE (FATAL_ERROR "Could not find event2/event.h for Libevent Network Driver")
+	ENDIF (NOT HAVE_EVENT_H)
+
+	FILE (GLOB_RECURSE LIBEVENT_SRC
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Network/LibEvent/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Network/LibEvent/*.cpp"
+	)
+
+	SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${LIBEVENT_SRC})
+ELSE (ADD_NETWORK_LIBEVENT)
+	SET (FLAG_ADD_NETWORK_LIBEVENT 0)
+ENDIF (ADD_NETWORK_LIBEVENT)
+
+OPTION (ADD_RENDER_OPENGL "Add OpenGL Render Driver" ON)
+IF (ADD_RENDER_OPENGL)
+	SET (FLAG_ADD_RENDER_OPENGL 1)
+	CHECK_INCLUDE_FILES(GL/glew.h HAVE_GLEW_H)
+	IF (NOT HAVE_GLEW_H)
+		MESSAGE (FATAL_ERROR "Could not find GL/glew.h for OpenGL Render Driver")
+	ENDIF (NOT HAVE_GLEW_H)
+
+	FILE (GLOB_RECURSE OPENGL_SRC
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Render/OpenGL/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Render/OpenGL/*.cpp"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Shader/OpenGL/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Shader/OpenGL/*.cpp"
+	)
+
+	SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${OPENGL_SRC})
+ELSE (ADD_RENDER_OPENGL)
+	
+	SET (FLAG_ADD_RENDER_OPENGL 0)
+ENDIF (ADD_RENDER_OPENGL)
+
+# OPTION (ADD_RENDER_DIRECTX9 "Add DirectX9 Render Driver" OFF)
+# IF (ADD_RENDER_DIRECTX9)
+# 	SET (FLAG_ADD_RENDER_DIRECTX9 1)
+# 	ADD_DEFINITIONS(-D_UNICODE)
+# 	ADD_DEFINITIONS(-DUNICODE)
+# 	MESSAGE(STATUS "DXSDK dir: $ENV{DXSDK_DIR}")
+# 	IF ($ENV{DXSDK_DIR} EQUAL "")
+# 		MESSAGE(FATAL_ERROR "DirectX SDK Not Detected.")
+# 	ENDIF ($ENV{DXSDK_DIR} EQUAL "")
+# 	INCLUDE_DIRECTORIES($ENV{DXSDK_DIR}/Include)
+# 	IF (CMAKE_SIZEOF_VOID_P EQUAL 4)
+# 		LINK_DIRECTORIES($ENV{DXSDK_DIR}/Lib/x86)
+# 	ELSE (CMAKE_SIZEOF_VOID_P EQUAL 4)
+# 		LINK_DIRECTORIES($ENV{DXSDK_DIR}/Lib/x64)
+# 	ENDIF (CMAKE_SIZEOF_VOID_P EQUAL 4)
+# 
+# 	#CHECK_INCLUDE_FILES(dxsdkver.h HAVE_DX9_SDK_H)
+# 	#IF (NOT HAVE_DX9_SDK_H)
+# 	#	MESSAGE (FATAL_ERROR "Could not find dxsdkver.h for DIRECTX9 Render Driver")
+# 	#ENDIF (NOT HAVE_DX9_SDK_H)
+# 
+# 	FILE (GLOB_RECURSE DIRECTX9_SRC
+# 		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Render/DirectX/9/*.h"
+# 		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Render/DirectX/9/*.cpp"
+# 		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Shader/DirectX/9/*.h"
+# 		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Shader/DirectX/9/*.cpp"
+# 	)
+# 
+# 	SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${DIRECTX9_SRC})
+# ELSE (ADD_RENDER_DIRECTX9)
+# 	
+# 	SET (FLAG_ADD_RENDER_DIRECTX9 0)
+# ENDIF (ADD_RENDER_DIRECTX9)
+
+OPTION (ADD_SCRIPT_LUA53_BUILTIN "Add Lua 5.3 Script Driver" ON)
+IF (ADD_SCRIPT_LUA53_BUILTIN)
+	SET (FLAG_ADD_SCRIPT_LUA53_BUILTIN 1)
+	FILE (GLOB_RECURSE LUA53_SRC
+		"${PROJECT_SOURCE_DIR}/Source/Core/Driver/Script/Lua/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/Core/Driver/Script/Lua/*.cpp"
+		"${PROJECT_SOURCE_DIR}/Source/Core/Driver/Script/Lua/*.c"
+	)
+
+	SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${LUA53_SRC})
+ELSE (ADD_SCRIPT_LUA53_BUILTIN)
+
+	SET (FLAG_ADD_SCRIPT_LUA53_BUILTIN 0)
+ENDIF (ADD_SCRIPT_LUA53_BUILTIN)
+
+OPTION (ADD_SCRIPT_TCC_BUILTIN "Add TCC 0.9.6 Script Driver" ON)
+IF (ADD_SCRIPT_TCC_BUILTIN)
+	SET (FLAG_ADD_SCRIPT_TCC_BUILTIN 1)
+	FILE (GLOB_RECURSE TCC_SRC
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Script/TCC/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Script/TCC/*.cpp"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Script/TCC/*.c"
+	)
+
+	SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${TCC_SRC})
+ELSE (ADD_SCRIPT_TCC_BUILTIN)
+
+	SET (ADD_SCRIPT_TCC_BUILTIN 0)
+ENDIF (ADD_SCRIPT_TCC_BUILTIN)
+
+OPTION (ADD_THREAD_PTHREAD "Add Pthread Thread Driver" ON)
+IF (ADD_THREAD_PTHREAD)
+	SET (FLAG_ADD_THREAD_PTHREAD 1)
+	FILE (GLOB_RECURSE PTHREAD_SRC
+		"${PROJECT_SOURCE_DIR}/Source/Core/Driver/Thread/Pthread/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/Core/Driver/Thread/Pthread/*.cpp"
+	)
+
+	SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${PTHREAD_SRC})
+ELSE (ADD_THREAD_PTHREAD)
+	SET (FLAG_ADD_THREAD_PTHREAD 0)
+ENDIF (ADD_THREAD_PTHREAD)
+
+
+SET (FLAG_ADD_TIMER_TIMERQUEUE_BUILTIN 0)
+SET (FLAG_ADD_TIMER_POSIX_BUILTIN 0)
+IF (WIN32)
+
+OPTION (ADD_TIMER_TIMERQUEUE_BUILTIN "Add TimerQueue (Win32) Timer Driver" ON)
+IF (ADD_TIMER_TIMERQUEUE_BUILTIN)
+	SET (FLAG_ADD_TIMER_TIMERQUEUE_BUILTIN 1)
+	FILE (GLOB_RECURSE TIMERQUEUE_SRC
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Timer/WinTimerQueue/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Timer/WinTimerQueue/*.cpp"
+	)
+
+	SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${TIMERQUEUE_SRC})
+ELSE (ADD_TIMER_TIMERQUEUE_BUILTIN)
+	SET (FLAG_ADD_TIMER_TIMERQUEUE_BUILTIN 0)
+ENDIF (ADD_TIMER_TIMERQUEUE_BUILTIN)
+
+ELSE (WIN32)
+
+OPTION (ADD_TIMER_POSIX_BUILTIN "Add Posix Timer Driver" ON)
+IF (ADD_TIMER_POSIX_BUILTIN)
+	SET (FLAG_ADD_TIMER_POSIX_BUILTIN 1)
+	CHECK_INCLUDE_FILES(sys/time.h HAVE_SYSTIME_H)
+	IF (NOT HAVE_SYSTIME_H)
+		MESSAGE (FATAL_ERROR "Could not find sys/time.h for Posix Timer Driver")
+	ENDIF (NOT HAVE_SYSTIME_H)
+
+	FILE (GLOB_RECURSE POSIX_TIMER_SRC
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Timer/PosixTimer/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Timer/PosixTimer/*.cpp"
+	)
+
+	SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${POSIX_TIMER_SRC})
+ELSE (ADD_TIMER_POSIX_BUILTIN)
+	SET (FLAG_ADD_TIMER_POSIX_BUILTIN 0)
+ENDIF (ADD_TIMER_POSIX_BUILTIN)
+
+ENDIF (WIN32)
+
+FOREACH (FILE ${PAINTSNOW_SRC}) 
+	GET_FILENAME_COMPONENT(PARENT_DIR "${FILE}" PATH)
+
+	# skip src or include and changes /'s to \\'s
+	STRING(REGEX REPLACE "(\\./)?(src|include)/?" "" GROUP "${PARENT_DIR}")
+	STRING(REPLACE "/" "\\" GROUP "${GROUP}")
+	STRING(REPLACE "${LOCAL_SOURCE_DIR}" "" GROUP "${GROUP}")
+	SOURCE_GROUP("${GROUP}" FILES "${FILE}")
+ENDFOREACH (FILE ${PAINTSNOW_SRC})
+
+ADD_LIBRARY (PaintsNow ${PAINTSNOW_SRC})
+
+# ================================================================ #
+# ADD UTILITIES
+
+# ---------------------------------------------------------------- #
+
+FILE (GLOB_RECURSE BRIDGESUNSET_SRC
+		"${PROJECT_SOURCE_DIR}/Source/Utility/BridgeSunset/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/Utility/BridgeSunset/*.cpp"
+)
+
+FOREACH (FILE ${BRIDGESUNSET_SRC}) 
+	GET_FILENAME_COMPONENT(PARENT_DIR "${FILE}" PATH)
+
+	# skip src or include and changes /'s to \\'s
+	STRING(REGEX REPLACE "(\\./)?(src|include)/?" "" GROUP "${PARENT_DIR}")
+	STRING(REPLACE "/" "\\" GROUP "${GROUP}")
+	STRING(REPLACE "${LOCAL_SOURCE_DIR}" "" GROUP "${GROUP}")
+	SOURCE_GROUP("${GROUP}" FILES "${FILE}")
+ENDFOREACH (FILE ${BRIDGESUNSET_SRC})
+
+ADD_LIBRARY (BridgeSunset ${BRIDGESUNSET_SRC})
+
+# ---------------------------------------------------------------- #
+
+FILE (GLOB_RECURSE ECHOLEGEND_SRC
+		"${PROJECT_SOURCE_DIR}/Source/Utility/EchoLegend/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/Utility/EchoLegend/*.cpp"
+)
+
+FOREACH (FILE ${ECHOLEGEND_SRC}) 
+	GET_FILENAME_COMPONENT(PARENT_DIR "${FILE}" PATH)
+
+	# skip src or include and changes /'s to \\'s
+	STRING(REGEX REPLACE "(\\./)?(src|include)/?" "" GROUP "${PARENT_DIR}")
+	STRING(REPLACE "/" "\\" GROUP "${GROUP}")
+	STRING(REPLACE "${LOCAL_SOURCE_DIR}" "" GROUP "${GROUP}")
+	SOURCE_GROUP("${GROUP}" FILES "${FILE}")
+ENDFOREACH (FILE ${ECHOLEGEND_SRC})
+
+ADD_LIBRARY (EchoLegend ${ECHOLEGEND_SRC})
+
+# ---------------------------------------------------------------- #
+
+FILE (GLOB_RECURSE FLAMEWORK_SRC
+		"${PROJECT_SOURCE_DIR}/Source/Utility/FlameWork/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/Utility/FlameWork/*.cpp"
+)
+
+FOREACH (FILE ${FLAMEWORK_SRC}) 
+	GET_FILENAME_COMPONENT(PARENT_DIR "${FILE}" PATH)
+
+	# skip src or include and changes /'s to \\'s
+	STRING(REGEX REPLACE "(\\./)?(src|include)/?" "" GROUP "${PARENT_DIR}")
+	STRING(REPLACE "/" "\\" GROUP "${GROUP}")
+	STRING(REPLACE "${LOCAL_SOURCE_DIR}" "" GROUP "${GROUP}")
+	SOURCE_GROUP("${GROUP}" FILES "${FILE}")
+ENDFOREACH (FILE ${FLAMEWORK_SRC})
+
+ADD_LIBRARY (FlameWork ${FLAMEWORK_SRC})
+
+# ---------------------------------------------------------------- #
+
+FILE (GLOB_RECURSE GALAXYWEAVER_SRC
+		"${PROJECT_SOURCE_DIR}/Source/Utility/GalaxyWeaver/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/Utility/GalaxyWeaver/*.cpp"
+)
+
+FOREACH (FILE ${GALAXYWEAVER_SRC}) 
+	GET_FILENAME_COMPONENT(PARENT_DIR "${FILE}" PATH)
+
+	# skip src or include and changes /'s to \\'s
+	STRING(REGEX REPLACE "(\\./)?(src|include)/?" "" GROUP "${PARENT_DIR}")
+	STRING(REPLACE "/" "\\" GROUP "${GROUP}")
+	STRING(REPLACE "${LOCAL_SOURCE_DIR}" "" GROUP "${GROUP}")
+	SOURCE_GROUP("${GROUP}" FILES "${FILE}")
+ENDFOREACH (FILE ${GALAXYWEAVER_SRC})
+
+
+ADD_LIBRARY (GalaxyWeaver ${GALAXYWEAVER_SRC})
+
+# ---------------------------------------------------------------- #
+
+FILE (GLOB_RECURSE HEARTVIOLINER_SRC
+		"${PROJECT_SOURCE_DIR}/Source/Utility/HeartVioliner/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/Utility/HeartVioliner/*.cpp"
+)
+
+FOREACH (FILE ${HEARTVIOLINER_SRC}) 
+	GET_FILENAME_COMPONENT(PARENT_DIR "${FILE}" PATH)
+
+	# skip src or include and changes /'s to \\'s
+	STRING(REGEX REPLACE "(\\./)?(src|include)/?" "" GROUP "${PARENT_DIR}")
+	STRING(REPLACE "/" "\\" GROUP "${GROUP}")
+	STRING(REPLACE "${LOCAL_SOURCE_DIR}" "" GROUP "${GROUP}")
+	SOURCE_GROUP("${GROUP}" FILES "${FILE}")
+ENDFOREACH (FILE ${HEARTVIOLINER_SRC})
+
+ADD_LIBRARY (HeartVioliner ${HEARTVIOLINER_SRC})
+
+# ---------------------------------------------------------------- #
+
+FILE (GLOB_RECURSE LEAVESFLUTE_SRC
+		"${PROJECT_SOURCE_DIR}/Source/Utility/LeavesFlute/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/Utility/LeavesFlute/*.cpp"
+)
+
+FOREACH (FILE ${LEAVESFLUTE_SRC}) 
+	GET_FILENAME_COMPONENT(PARENT_DIR "${FILE}" PATH)
+
+	# skip src or include and changes /'s to \\'s
+	STRING(REGEX REPLACE "(\\./)?(src|include)/?" "" GROUP "${PARENT_DIR}")
+	STRING(REPLACE "/" "\\" GROUP "${GROUP}")
+	STRING(REPLACE "${LOCAL_SOURCE_DIR}" "" GROUP "${GROUP}")
+	SOURCE_GROUP("${GROUP}" FILES "${FILE}")
+ENDFOREACH (FILE ${LEAVESFLUTE_SRC})
+
+ADD_LIBRARY (LeavesFlute ${LEAVESFLUTE_SRC})
+
+
+# ---------------------------------------------------------------- #
+
+FILE (GLOB_RECURSE MYTHFOREST_SRC
+		"${PROJECT_SOURCE_DIR}/Source/Utility/MythForest/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/Utility/MythForest/*.cpp"
+)
+
+FOREACH (FILE ${MYTHFOREST_SRC}) 
+	GET_FILENAME_COMPONENT(PARENT_DIR "${FILE}" PATH)
+
+	# skip src or include and changes /'s to \\'s
+	STRING(REGEX REPLACE "(\\./)?(src|include)/?" "" GROUP "${PARENT_DIR}")
+	STRING(REPLACE "/" "\\" GROUP "${GROUP}")
+	STRING(REPLACE "${LOCAL_SOURCE_DIR}" "" GROUP "${GROUP}")
+	SOURCE_GROUP("${GROUP}" FILES "${FILE}")
+ENDFOREACH (FILE ${MYTHFOREST_SRC})
+
+
+ADD_LIBRARY (MythForest ${MYTHFOREST_SRC})
+
+# ---------------------------------------------------------------- #
+
+FILE (GLOB_RECURSE RAYFORCE_SRC
+		"${PROJECT_SOURCE_DIR}/Source/Utility/RayForce/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/Utility/RayForce/*.cpp"
+)
+
+FOREACH (FILE ${RAYFORCE_SRC}) 
+	GET_FILENAME_COMPONENT(PARENT_DIR "${FILE}" PATH)
+
+	# skip src or include and changes /'s to \\'s
+	STRING(REGEX REPLACE "(\\./)?(src|include)/?" "" GROUP "${PARENT_DIR}")
+	STRING(REPLACE "/" "\\" GROUP "${GROUP}")
+	STRING(REPLACE "${LOCAL_SOURCE_DIR}" "" GROUP "${GROUP}")
+	SOURCE_GROUP("${GROUP}" FILES "${FILE}")
+ENDFOREACH (FILE ${RAYFORCE_SRC})
+
+ADD_LIBRARY (RayForce ${RAYFORCE_SRC})
+
+# ---------------------------------------------------------------- #
+
+FILE (GLOB_RECURSE REMEMBERY_SRC
+		"${PROJECT_SOURCE_DIR}/Source/Utility/Remembery/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/Utility/Remembery/*.cpp"
+)
+
+FOREACH (FILE ${REMEMBERY_SRC}) 
+	GET_FILENAME_COMPONENT(PARENT_DIR "${FILE}" PATH)
+
+	# skip src or include and changes /'s to \\'s
+	STRING(REGEX REPLACE "(\\./)?(src|include)/?" "" GROUP "${PARENT_DIR}")
+	STRING(REPLACE "/" "\\" GROUP "${GROUP}")
+	STRING(REPLACE "${LOCAL_SOURCE_DIR}" "" GROUP "${GROUP}")
+	SOURCE_GROUP("${GROUP}" FILES "${FILE}")
+ENDFOREACH (FILE ${REMEMBERY_SRC})
+
+ADD_LIBRARY (Remembery ${REMEMBERY_SRC})
+
+# ---------------------------------------------------------------- #
+
+FILE (GLOB_RECURSE SNOWYSTREAM_SRC
+		"${PROJECT_SOURCE_DIR}/Source/Utility/SnowyStream/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/Utility/SnowyStream/*.cpp"
+)
+
+FOREACH (FILE ${SNOWYSTREAM_SRC}) 
+	GET_FILENAME_COMPONENT(PARENT_DIR "${FILE}" PATH)
+
+	# skip src or include and changes /'s to \\'s
+	STRING(REGEX REPLACE "(\\./)?(src|include)/?" "" GROUP "${PARENT_DIR}")
+	STRING(REPLACE "/" "\\" GROUP "${GROUP}")
+	STRING(REPLACE "${LOCAL_SOURCE_DIR}" "" GROUP "${GROUP}")
+	SOURCE_GROUP("${GROUP}" FILES "${FILE}")
+ENDFOREACH (FILE ${SNOWYSTREAM_SRC})
+
+ADD_LIBRARY (SnowyStream ${SNOWYSTREAM_SRC})
+
+
+# ================================================================ #
+# ADD APPLICATIONS ONLY IF STATIC_VC_RUNTIME WERE ENABLED
+
+IF (STATIC_VC_RUNTIME OR CMAKE_COMPILER_IS_GNUCXX)
+FILE (GLOB_RECURSE LEAVESWING_SRC
+		"${PROJECT_SOURCE_DIR}/Source/Utility/LeavesWing/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/Utility/LeavesWing/*.cpp"
+)
+
+FOREACH (FILE ${LEAVESWING_SRC}) 
+	GET_FILENAME_COMPONENT(PARENT_DIR "${FILE}" PATH)
+
+	# skip src or include and changes /'s to \\'s
+	STRING(REGEX REPLACE "(\\./)?(src|include)/?" "" GROUP "${PARENT_DIR}")
+	STRING(REPLACE "/" "\\" GROUP "${GROUP}")
+	STRING(REPLACE "${LOCAL_SOURCE_DIR}" "" GROUP "${GROUP}")
+	SOURCE_GROUP("${GROUP}" FILES "${FILE}")
+ENDFOREACH (FILE ${LEAVESWING_SRC})
+
+ADD_EXECUTABLE (LeavesWing ${LEAVESWING_SRC})
+
+SET (PAINTSNOW_LIBRARIES
+	LeavesFlute Remembery MythForest SnowyStream RayForce BridgeSunset HeartVioliner EchoLegend FlameWork GalaxyWeaver PaintsNow
+)
+
+IF (CMAKE_COMPILER_IS_GNUCXX)
+	IF (ADD_RENDER_OPENGL)
+		SET (PAINTSNOW_LIBRARIES ${PAINTSNOW_LIBRARIES} GL GLU GLEW)
+	ENDIF (ADD_RENDER_OPENGL)
+
+	IF (ADD_FRAME_FREEGLUT)
+		SET (PAINTSNOW_LIBRARIES ${PAINTSNOW_LIBRARIES} glut)
+	ENDIF (ADD_FRAME_FREEGLUT)
+
+	IF (ADD_AUDIO_OPENAL)
+		SET (PAINTSNOW_LIBRARIES ${PAINTSNOW_LIBRARIES} openal)
+	ENDIF (ADD_AUDIO_OPENAL)
+
+	IF (ADD_FONT_FREETYPE)
+		SET (PAINTSNOW_LIBRARIES ${PAINTSNOW_LIBRARIES} freetype)
+	ENDIF (ADD_FONT_FREETYPE)
+
+	IF (ADD_IMAGE_FREEIMAGE)
+		SET (PAINTSNOW_LIBRARIES ${PAINTSNOW_LIBRARIES} freeimage)
+	ENDIF (ADD_IMAGE_FREEIMAGE)
+
+	IF (ADD_THREAD_PTHREAD)
+		SET (PAINTSNOW_LIBRARIES ${PAINTSNOW_LIBRARIES} pthread)
+	ENDIF (ADD_THREAD_PTHREAD)
+
+	IF (ADD_AUDIO_LAME)
+		SET (PAINTSNOW_LIBRARIES ${PAINTSNOW_LIBRARIES} mp3lame)
+	ENDIF (ADD_AUDIO_LAME)
+
+	IF (ADD_NETWORK_LIBEVENT)
+		SET (PAINTSNOW_LIBRARIES ${PAINTSNOW_LIBRARIES} event)
+		SET (PAINTSNOW_LIBRARIES ${PAINTSNOW_LIBRARIES} event_pthreads)
+	ENDIF (ADD_NETWORK_LIBEVENT)
+
+	SET (PAINTSNOW_LIBRARIES ${PAINTSNOW_LIBRARIES} dl rt)
+
+ENDIF (CMAKE_COMPILER_IS_GNUCXX)
+
+
+
+TARGET_LINK_LIBRARIES (LeavesWing ${PAINTSNOW_LIBRARIES})
+
+
+IF (NOT CMAKE_COMPILER_IS_GNUCXX)
+
+SET_TARGET_PROPERTIES (LeavesWing PROPERTIES LINK_FLAGS_DEBUG "uafxcwd.lib /nodefaultlib:uafxcwd.lib")
+SET_TARGET_PROPERTIES (LeavesWing PROPERTIES LINK_FLAGS_RELWITHDEBINFO "uafxcw.lib /nodefaultlib:uafxcw.lib")
+SET_TARGET_PROPERTIES (LeavesWing PROPERTIES LINK_FLAGS_RELEASE "uafxcw.lib /nodefaultlib:uafxcw.lib")
+SET_TARGET_PROPERTIES (LeavesWing PROPERTIES LINK_FLAGS_MINSIZEREL "uafxcw.lib /nodefaultlib:uafxcw.lib")
+
+ENDIF (NOT CMAKE_COMPILER_IS_GNUCXX)
+
+
+FILE (GLOB_RECURSE LOSTDREAM_SRC
+		"${PROJECT_SOURCE_DIR}/Source/Utility/LostDream/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/Utility/LostDream/*.cpp"
+)
+
+ADD_EXECUTABLE (LostDream ${LOSTDREAM_SRC})
+
+TARGET_LINK_LIBRARIES (LostDream ${PAINTSNOW_LIBRARIES})
+
+IF (NOT CMAKE_COMPILER_IS_GNUCXX)
+
+# SET_TARGET_PROPERTIES (LostDream PROPERTIES LINK_FLAGS_DEBUG "uafxcwd.lib /nodefaultlib:uafxcwd.lib")
+# SET_TARGET_PROPERTIES (LostDream PROPERTIES LINK_FLAGS_RELWITHDEBINFO "uafxcw.lib /nodefaultlib:uafxcw.lib")
+# SET_TARGET_PROPERTIES (LostDream PROPERTIES LINK_FLAGS_RELEASE "uafxcw.lib /nodefaultlib:uafxcw.lib")
+# SET_TARGET_PROPERTIES (LostDream PROPERTIES LINK_FLAGS_MINSIZEREL "uafxcw.lib /nodefaultlib:uafxcw.lib")
+
+ENDIF (NOT CMAKE_COMPILER_IS_GNUCXX)
+
+# ---------------------------------------------------------------- #
+
+FILE (GLOB_RECURSE LEAVESWINE_SRC
+		"${PROJECT_SOURCE_DIR}/Source/Utility/LeavesWine/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/Utility/LeavesWine/*.cpp"
+		"${PROJECT_SOURCE_DIR}/Source/Utility/LeavesWine/*.def"
+		"${PROJECT_SOURCE_DIR}/Source/Utility/LeavesWine/*.idl"
+		# "${PROJECT_SOURCE_DIR}/Source/Utility/LeavesWine/*.rc"
+)
+
+FOREACH (FILE ${LEAVESWINE_SRC}) 
+	GET_FILENAME_COMPONENT(PARENT_DIR "${FILE}" PATH)
+
+	# skip src or include and changes /'s to \\'s
+	STRING(REGEX REPLACE "(\\./)?(src|include)/?" "" GROUP "${PARENT_DIR}")
+	STRING(REPLACE "/" "\\" GROUP "${GROUP}")
+	STRING(REPLACE "${LOCAL_SOURCE_DIR}" "" GROUP "${GROUP}")
+	SOURCE_GROUP("${GROUP}" FILES "${FILE}")
+ENDFOREACH (FILE ${LEAVESWINE_SRC})
+
+ADD_EXECUTABLE (LeavesWine ${LEAVESWINE_SRC} )
+
+TARGET_LINK_LIBRARIES (LeavesWine ${PAINTSNOW_LIBRARIES})
+
+
+IF (NOT CMAKE_COMPILER_IS_GNUCXX)
+
+SET_TARGET_PROPERTIES (LeavesWine PROPERTIES LINK_FLAGS_DEBUG "uafxcwd.lib /nodefaultlib:uafxcwd.lib")
+SET_TARGET_PROPERTIES (LeavesWine PROPERTIES LINK_FLAGS_RELWITHDEBINFO "uafxcw.lib /nodefaultlib:uafxcw.lib")
+SET_TARGET_PROPERTIES (LeavesWine PROPERTIES LINK_FLAGS_RELEASE "uafxcw.lib /nodefaultlib:uafxcw.lib")
+SET_TARGET_PROPERTIES (LeavesWine PROPERTIES LINK_FLAGS_MINSIZEREL "uafxcw.lib /nodefaultlib:uafxcw.lib")
+
+ELSE (NOT CMAKE_COMPILER_IS_GNUCXX)
+
+ADD_DEFINITIONS(-fPIC)
+
+ENDIF (NOT CMAKE_COMPILER_IS_GNUCXX)
+
+# ---------------------------------------------------------------- #
+
+FILE (GLOB_RECURSE LEAVESWIND_SRC
+		"${PROJECT_SOURCE_DIR}/Source/Utility/LeavesWind/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/Utility/LeavesWind/*.cpp"
+		"${PROJECT_SOURCE_DIR}/Source/Utility/LeavesWind/*.def"
+		"${PROJECT_SOURCE_DIR}/Source/Utility/LeavesWind/*.idl"
+		# "${PROJECT_SOURCE_DIR}/Source/Utility/LeavesWind/*.rc"
+)
+
+FOREACH (FILE ${LEAVESWIND_SRC}) 
+	GET_FILENAME_COMPONENT(PARENT_DIR "${FILE}" PATH)
+
+	# skip src or include and changes /'s to \\'s
+	STRING(REGEX REPLACE "(\\./)?(src|include)/?" "" GROUP "${PARENT_DIR}")
+	STRING(REPLACE "/" "\\" GROUP "${GROUP}")
+	STRING(REPLACE "${LOCAL_SOURCE_DIR}" "" GROUP "${GROUP}")
+	SOURCE_GROUP("${GROUP}" FILES "${FILE}")
+ENDFOREACH (FILE ${LEAVESWIND_SRC})
+
+ADD_LIBRARY (LeavesWind SHARED ${LEAVESWIND_SRC} )
+
+TARGET_LINK_LIBRARIES (LeavesWind ${PAINTSNOW_LIBRARIES})
+
+
+IF (NOT CMAKE_COMPILER_IS_GNUCXX)
+
+SET_TARGET_PROPERTIES (LeavesWind PROPERTIES LINK_FLAGS_DEBUG "uafxcwd.lib /nodefaultlib:uafxcwd.lib")
+SET_TARGET_PROPERTIES (LeavesWind PROPERTIES LINK_FLAGS_RELWITHDEBINFO "uafxcw.lib /nodefaultlib:uafxcw.lib")
+SET_TARGET_PROPERTIES (LeavesWind PROPERTIES LINK_FLAGS_RELEASE "uafxcw.lib /nodefaultlib:uafxcw.lib")
+SET_TARGET_PROPERTIES (LeavesWind PROPERTIES LINK_FLAGS_MINSIZEREL "uafxcw.lib /nodefaultlib:uafxcw.lib")
+
+ELSE (NOT CMAKE_COMPILER_IS_GNUCXX)
+
+ADD_DEFINITIONS(-fPIC)
+
+ENDIF (NOT CMAKE_COMPILER_IS_GNUCXX)
+
+ENDIF (STATIC_VC_RUNTIME OR CMAKE_COMPILER_IS_GNUCXX)
+
+CONFIGURE_FILE (
+		"${PROJECT_SOURCE_DIR}/Config.h.in"
+		"${PROJECT_BINARY_DIR}/Config.h"
+)

@@ -1,0 +1,152 @@
+// ResourceManager.h
+// By PaintDream (paintdream@paintdream.com)
+// 2018-3-19
+//
+
+#ifndef __RESOURCEMANAGER_H__
+#define __RESOURCEMANAGER_H__
+
+#include "../../General/Interface/Interfaces.h"
+#include "../../Core/Interface/IFilterBase.h"
+#include "../../Core/Template/TMap.h"
+#include "../../Core/System/Tiny.h"
+
+namespace PaintsNow {
+	namespace NsSnowyStream {
+		class ResourceBase;
+		class IUniformResourceManager;
+		template <class T>
+		class DeviceResourceBase;
+		class ResourceManager : public TReflected<ResourceManager, SharedTiny>, public ISyncObject {
+		public:
+			ResourceManager(IThread& threadApi, IUniformResourceManager& hostManager, Interfaces* interfaces, const TWrapper<void, const String&>& errorHandler, void* context);
+			virtual ~ResourceManager();
+			typedef String UniqueLocation;
+			virtual ResourceBase* Insert(const UniqueLocation& uniqueLocation, ResourceBase* resource);
+			void Remove(ResourceBase* resource);
+			void RemoveAll();
+			virtual Unique GetDeviceUnique() const = 0;
+			Interfaces* GetInterfaces() const;
+			void Report(const String& err);
+			void* GetContext() const;
+
+			ResourceBase* LoadExist(const UniqueLocation& uniqueLocation);
+			IUniformResourceManager& GetUniformResourceManager();
+
+		public:
+			virtual void InvokeAttach(ResourceBase* resource, void* deviceContext = nullptr) = 0;
+			virtual void InvokeDetach(ResourceBase* resource, void* deviceContext = nullptr) = 0;
+			virtual void InvokeUpload(ResourceBase* resource, void* deviceContext = nullptr) = 0;
+			virtual void InvokeDownload(ResourceBase* resource, void* deviceContext = nullptr) = 0;
+
+		private:
+			unordered_map<UniqueLocation, ResourceBase*> resourceMap;
+			IUniformResourceManager& uniformResourceManager;
+			Interfaces* interfaces;
+			TWrapper<void, const String&> errorHandler;
+			void* context;
+		};
+
+		template <class T>
+		class DeviceResourceManager : public ResourceManager {
+		public:
+			DeviceResourceManager(IThread& threadApi, IUniformResourceManager& hostManager, Interfaces* inters, T& dev, const TWrapper<void, const String&>& errorHandler, void* context) : ResourceManager(threadApi, hostManager, inters, errorHandler, context), device(dev) {}
+			virtual Unique GetDeviceUnique() const {
+				return UniqueType<T>::Get();
+			}
+
+			virtual void InvokeAttach(ResourceBase* resource, void* deviceContext) override {
+				assert(resource != nullptr);
+				DeviceResourceBase<T>* typedResource = static_cast<DeviceResourceBase<T>*>(resource);
+				typedResource->Attach(device, deviceContext != nullptr ? deviceContext : GetContext());
+			}
+
+			virtual void InvokeDetach(ResourceBase* resource, void* deviceContext) override {
+				assert(resource != nullptr);
+				DeviceResourceBase<T>* typedResource = static_cast<DeviceResourceBase<T>*>(resource);
+				typedResource->Detach(device, deviceContext != nullptr ? deviceContext : GetContext());
+			}
+
+			virtual void InvokeUpload(ResourceBase* resource, void* deviceContext) override {
+				assert(resource != nullptr);
+				DeviceResourceBase<T>* typedResource = static_cast<DeviceResourceBase<T>*>(resource);
+				typedResource->Upload(device, deviceContext != nullptr ? deviceContext : GetContext());
+			}
+
+			virtual void InvokeDownload(ResourceBase* resource, void* deviceContext) override {
+				assert(resource != nullptr);
+				DeviceResourceBase<T>* typedResource = static_cast<DeviceResourceBase<T>*>(resource);
+				typedResource->Download(device, deviceContext != nullptr ? deviceContext : GetContext());
+			}
+
+		protected:
+			T& device;
+		};
+
+		class ResourceSerializerBase : public TReflected<ResourceSerializerBase, SharedTiny> {
+		public:
+			virtual ~ResourceSerializerBase();
+			ResourceBase* DeserializeFromArchive(ResourceManager& manager, IArchive& archive, const String& path,  IFilterBase& protocol, bool openExisting, Tiny::FLAG flag);
+			bool MapFromArchive(ResourceBase* resource, IArchive& archive, IFilterBase& protocol, const String& path);
+			bool SerializeToArchive(ResourceBase* resource, IArchive& archive, IFilterBase& protocol, const String& path);
+
+			virtual ResourceBase* Deserialize(ResourceManager& manager, const ResourceManager::UniqueLocation& id, IFilterBase& protocol, Tiny::FLAG flag, IStreamBase* stream) = 0;
+			virtual bool Serialize(ResourceBase* res, IFilterBase& protocol, IStreamBase& stream) = 0;
+			virtual bool LoadData(ResourceBase* res, IFilterBase& protocol, IStreamBase& stream) = 0;
+			virtual Unique GetDeviceUnique() const = 0;
+			virtual const String& GetExtension() const = 0;
+		};
+
+		template <class T>
+		class ResourceReflectedSerializer : public ResourceSerializerBase {
+		public:
+			ResourceReflectedSerializer(const String& ext) : extension(ext) {}
+		protected:
+			virtual const String& GetExtension() const { return extension; }
+			virtual Unique GetDeviceUnique() const {
+				return UniqueType<typename T::DriverType>::Get();
+			}
+
+			virtual bool LoadData(ResourceBase* res, IFilterBase& protocol, IStreamBase& stream) {
+				IStreamBase* filter = protocol.CreateFilter(stream);
+				assert(filter != nullptr);
+				bool success = *filter >> *res;
+				filter->ReleaseObject();
+				return success;
+			}
+
+			virtual ResourceBase* Deserialize(ResourceManager& manager, const ResourceManager::UniqueLocation& id, IFilterBase& protocol, Tiny::FLAG flag, IStreamBase* stream) {
+				T* object = new T(manager, id);
+
+				if (stream != nullptr) {
+					if (LoadData(object, protocol, *stream)) {
+						if (flag != 0) object->Flag() |= flag;
+						object = static_cast<T*>(manager.Insert(id, object));
+					} else {
+						object->ReleaseObject();
+						object = nullptr;
+					}
+				} else {
+					if (flag != 0) object->Flag() |= flag;
+					manager.Insert(id, object);
+				}
+
+				return object;
+			}
+
+			virtual bool Serialize(ResourceBase* object, IFilterBase& protocol, IStreamBase& stream) {
+				IStreamBase* filter = protocol.CreateFilter(stream);
+				assert(filter != nullptr);
+				bool state = *filter << *object;
+				filter->ReleaseObject();
+
+				return state;
+			}
+
+			String extension;
+		};
+	}
+}
+
+
+#endif // __RESOURCEMANAGER_H__

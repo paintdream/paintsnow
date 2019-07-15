@@ -1,0 +1,3 @@
+local DialogTrigger = {}
+
+return DialogTrigger

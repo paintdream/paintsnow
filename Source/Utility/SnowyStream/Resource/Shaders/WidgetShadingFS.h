@@ -1,0 +1,37 @@
+// WidgetShadingFS.h
+// By PaintDream (paintdream@paintdream.com)
+// 2018-4-13
+//
+
+#ifndef __WIDGETSHADING_FS_H
+#define __WIDGETSHADING_FS_H
+
+#include "../../../../General/Interface/IShader.h"
+
+namespace PaintsNow {
+	namespace NsSnowyStream {
+		class WidgetShadingFS : public TReflected<WidgetShadingFS, IShader> {
+		public:
+			WidgetShadingFS();
+			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+			virtual String GetShaderText() override;
+
+		public:
+			IShader::BindTexture mainTexture;
+
+		protected:
+			// varyings
+			Float4 texCoord;
+			Float4 texCoordRect;
+			Float4 texCoordMark;
+			Float4 texCoordScale;
+			Float4 tintColor;
+
+			// targets
+			Float4 target;
+		};
+	}
+}
+
+
+#endif // __WIDGETSHADING_FS_H
