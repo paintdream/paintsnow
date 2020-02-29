@@ -24,6 +24,7 @@
 #include "Component/Model/ModelComponentModule.h"
 #include "Component/Navigate/NavigateComponentModule.h"
 #include "Component/Particle/ParticleComponentModule.h"
+#include "Component/Phase/PhaseComponentModule.h"
 #include "Component/Profile/ProfileComponentModule.h"
 #include "Component/Remote/RemoteComponentModule.h"
 #include "Component/RenderFlow/RenderFlowComponentModule.h"
@@ -91,6 +92,7 @@ namespace PaintsNow {
 			ModelComponentModule modelComponentModule;
 			NavigateComponentModule navigateComponentModule;
 			ParticleComponentModule particleComponentModule;
+			PhaseComponentModule phaseComponentModule;
 			ProfileComponentModule profileComponentModule;
 			RemoteComponentModule remoteComponentModule;
 			RenderFlowComponentModule renderFlowComponentModule;

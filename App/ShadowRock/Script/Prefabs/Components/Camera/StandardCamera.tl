@@ -1,5 +1,4 @@
 local StandardCamera = {}
-StandardCamera.__index = StandardCamera
 
 function StandardCamera.New(renderFlowComponent : RenderFlowComponent)
 	local camera = CameraComponentModule.New(renderFlowComponent, "CameraView")

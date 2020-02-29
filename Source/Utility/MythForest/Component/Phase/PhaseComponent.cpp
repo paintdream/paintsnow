@@ -14,7 +14,31 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
+TObject<IReflect>& PhaseComponentConfig::WorldGlobalData::operator () (IReflect& reflect) {
+	BaseClass::operator () (reflect);
+
+	if (reflect.IsReflectProperty()) {
+		ReflectProperty(viewProjectionMatrix)[IShader::BindInput(IShader::BindInput::TRANSFORM_VIEWPROJECTION)];
+	}
+
+	return *this;
+}
+
+TObject<IReflect>& PhaseComponentConfig::WorldInstanceData::operator () (IReflect& reflect) {
+	BaseClass::operator () (reflect);
+
+	if (reflect.IsReflectProperty()) {
+		ReflectProperty(worldMatrix)[IShader::BindInput(IShader::BindInput::TRANSFORM_WORLD)];
+		// ReflectProperty(boundingBox);
+	}
+
+	return *this;
+}
+
 PhaseComponentConfig::TaskData::TaskData() : status(STATUS_IDLE), pendingCount(0), renderQueue(nullptr), renderTarget(nullptr), pipeline(nullptr) {}
+PhaseComponentConfig::TaskData::~TaskData() {
+	assert(renderQueue == nullptr && renderTarget == nullptr);
+}
 
 void PhaseComponentConfig::InstanceGroup::Reset() {
 	for (size_t k = 0; k < instancedData.size(); k++) {

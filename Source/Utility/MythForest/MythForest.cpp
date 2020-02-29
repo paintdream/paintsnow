@@ -36,6 +36,7 @@ MythForest::MythForest(Interfaces& interfaces, NsSnowyStream::SnowyStream& snowy
 	layoutComponentModule(engine),
 	lightComponentModule(engine),
 	particleComponentModule(engine),
+	phaseComponentModule(engine),
 	profileComponentModule(engine),
 	remoteComponentModule(engine),
 	renderFlowComponentModule(engine),
@@ -92,6 +93,7 @@ TObject<IReflect>& MythForest::operator () (IReflect& reflect) {
 		ReflectProperty(modelComponentModule)[ScriptLibrary = "ModelComponentModule"];
 		ReflectProperty(navigateComponentModule)[ScriptLibrary = "NavigateComponentModule"];
 		ReflectProperty(particleComponentModule)[ScriptLibrary = "ParticleComponentModule"];
+		ReflectProperty(phaseComponentModule)[ScriptLibrary = "PhaseComponentModule"];
 		ReflectProperty(profileComponentModule)[ScriptLibrary = "ProfileComponentModule"];
 		ReflectProperty(remoteComponentModule)[ScriptLibrary = "RemoteComponentModule"];
 		ReflectProperty(renderFlowComponentModule)[ScriptLibrary = "RenderFlowComponentModule"];
