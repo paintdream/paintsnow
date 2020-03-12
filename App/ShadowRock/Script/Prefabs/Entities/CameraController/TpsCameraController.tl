@@ -6,9 +6,11 @@ local anyone : any = {}
 local entityPrototype : Entity = anyone
 local transformPrototype : TransformComponent = anyone
 local cameraPrototype : CameraComponent = anyone
+local renderFlowPrototype: RenderFlowComponent = anyone
 
 TpsCameraController.cameraComponent = cameraPrototype
 TpsCameraController.transformComponent = transformPrototype
+TpsCameraController.renderFlowComponent = renderFlowPrototype
 TpsCameraController.__index = TpsCameraController
 TpsCameraController.speed = 0.02
 TpsCameraController.fov = math.pi / 2 -- 90
@@ -31,6 +33,7 @@ function TpsCameraController.New(eventListenerComponent : EventListenerComponent
 	local meta = {}
 	meta.cameraComponent = cameraComponent
 	meta.transformComponent = transformComponent
+	meta.renderFlowComponent = renderFlowComponent
 	meta.cameraController = cameraController
 
 	return setmetatable(meta, { __index = TpsCameraController, __chain = true })

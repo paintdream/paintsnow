@@ -17,6 +17,7 @@ TObject<IReflect>& FieldComponentModule::operator () (IReflect& reflect) {
 
 	return *this;
 }
+
 void FieldComponentModule::RequestNew(IScript::Request& request) {
 	CHECK_REFERENCES_NONE();
 

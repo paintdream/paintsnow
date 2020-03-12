@@ -84,10 +84,25 @@ local function InitializeWorld(databasePath : string)
 	local moveSpeed = 1.0
 	local inOperation = false
 	scene.rootEntity:UpdateEntity()
+
+	-- setup phase
+	local Phase = require("Script/Prefabs/Components/Phase/StandardPhase")
+	local phaseComponent = Phase.New(cameraController.renderFlowComponent)
+	phaseComponent:Setup(16, 8, { 10, 10, 10 }, { 256, 256 })
+	local stepPhase = false
+	local stepBounceCount : number = 16
+
+	local function ReportStepConfig()
+		print("PhaseStep: " .. (stepPhase and "[ON] " or "[OFF] BOUNCE: ") .. tostring(stepBounceCount))
+	end
+
 	eventListenerComponent:SetEventHandler(function (eventType : integer, eventData)
 		if eventType == "EVENT_TICK" then
 			local deltaTime : number = eventData
 			SetFrameMonitorOnTitle(deltaTime, cameraComponent, spaceComponent)
+			if stepPhase then
+				phaseComponent:Step(stepBounceCount)
+			end
 		elseif eventType == "EVENT_INPUT" then
 			if inOperation then return end
 
@@ -111,6 +126,16 @@ local function InitializeWorld(databasePath : string)
 						cameraController:Translate({ -moveSpeed, 0 })
 					elseif name == "D" then
 						cameraController:Translate({ moveSpeed, 0})
+					elseif name == "G" then
+						-- step phase
+						stepPhase = not stepPhase
+						ReportStepConfig()
+					elseif name == "," then
+						stepBounceCount = math.min(stepBounceCount - 1, 1)
+						ReportStepConfig()
+					elseif name == "." then
+						stepBounceCount = stepBounceCount + 1
+						ReportStepConfig()
 					end
 
 					moveSpeed = math.min(moveSpeed + 0.1, 10.0)
