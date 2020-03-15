@@ -1,16 +1,20 @@
 local TpsCameraController = {}
 local StandardCamera = require("Script/Prefabs/Components/Camera/StandardCamera")
 local StandardRenderFlow = require("Script/Prefabs/Components/RenderFlow/StandardRenderFlow")
+local Phase = require("Script/Prefabs/Components/Phase/StandardPhase")
+
 local Vector = require("Engine/Math/Vector")
 local anyone : any = {}
 local entityPrototype : Entity = anyone
 local transformPrototype : TransformComponent = anyone
 local cameraPrototype : CameraComponent = anyone
-local renderFlowPrototype: RenderFlowComponent = anyone
+local renderFlowPrototype : RenderFlowComponent = anyone
+local phasePrototype : PhaseComponent = anyone
 
 TpsCameraController.cameraComponent = cameraPrototype
 TpsCameraController.transformComponent = transformPrototype
 TpsCameraController.renderFlowComponent = renderFlowPrototype
+TpsCameraController.phaseComponent = phasePrototype
 TpsCameraController.__index = TpsCameraController
 TpsCameraController.speed = 0.02
 TpsCameraController.fov = math.pi / 2 -- 90
@@ -24,16 +28,23 @@ function TpsCameraController.New(eventListenerComponent : EventListenerComponent
 	local cameraComponent = StandardCamera.New(renderFlowComponent)
 	local cameraController = MythForest.NewEntity(-1)
 	local transformComponent = TransformComponentModule.New()
+	local phaseComponent = Phase.New(renderFlowComponent)
 
 	cameraController:AddEntityComponent(transformComponent)
 	cameraController:AddEntityComponent(renderFlowComponent)
 	cameraController:AddEntityComponent(cameraComponent)
+	cameraController:AddEntityComponent(phaseComponent)
 	cameraController:AddEntityComponent(eventListenerComponent)
+
+	-- setup phase
+	phaseComponent:Setup(16, 8, { 10, 10, 10 }, { 256, 256 })
+	phaseComponent:Update({ 5, 5, 5})
 
 	local meta = {}
 	meta.cameraComponent = cameraComponent
 	meta.transformComponent = transformComponent
 	meta.renderFlowComponent = renderFlowComponent
+	meta.phaseComponent = phaseComponent
 	meta.cameraController = cameraController
 
 	return setmetatable(meta, { __index = TpsCameraController, __chain = true })

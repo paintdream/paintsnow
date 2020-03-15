@@ -16,6 +16,8 @@
 #include "Resource/Passes/DepthBoundingSetupPass.h"
 #include "Resource/Passes/ForwardLightingPass.h"
 #include "Resource/Passes/LightBufferPass.h"
+#include "Resource/Passes/MultiHashSetupPass.h"
+#include "Resource/Passes/MultiHashTracePass.h"
 #include "Resource/Passes/ScreenPass.h"
 #include "Resource/Passes/BloomPass.h"
 #include "Resource/Passes/WidgetPass.h"
@@ -650,6 +652,8 @@ void SnowyStream::RegisterBuiltinPasses() {
 	RegisterPass(*resourceManager(), UniqueType<DepthBoundingPass>());
 	RegisterPass(*resourceManager(), UniqueType<DepthBoundingSetupPass>());
 	RegisterPass(*resourceManager(), UniqueType<LightBufferPass>());
+	RegisterPass(*resourceManager(), UniqueType<MultiHashSetupPass>());
+	RegisterPass(*resourceManager(), UniqueType<MultiHashTracePass>());
 	RegisterPass(*resourceManager(), UniqueType<ScreenPass>());
 	RegisterPass(*resourceManager(), UniqueType<StandardPass>());
 	RegisterPass(*resourceManager(), UniqueType<WidgetPass>());

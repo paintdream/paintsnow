@@ -296,7 +296,7 @@ void RenderFlowComponent::SetMainResolution(Engine& engine, bool sizeOnly) {
 		for (size_t i = 0; i < cachedRenderStages.size(); i++) {
 			RenderStage* renderStage = cachedRenderStages[i];
 			if (renderStage != nullptr) {
-				renderStage->SetMainResolution(engine, width, height, sizeOnly);
+				renderStage->SetMainResolution(engine, resourceQueue, width, height, sizeOnly);
 			}
 		}
 

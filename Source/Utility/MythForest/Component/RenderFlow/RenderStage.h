@@ -30,8 +30,8 @@ namespace PaintsNow {
 			virtual void Initialize(Engine& engine);
 			virtual void Uninitialize(Engine& engine);
 
-			virtual void SetMainResolution(Engine& engine, uint32_t width, uint32_t height, bool sizeOnly);
-			virtual void UpdateRenderTarget(Engine& engine, bool sizeOnly);
+			virtual void SetMainResolution(Engine& engine, IRender::Queue* resourceQueue, uint32_t width, uint32_t height, bool sizeOnly);
+			virtual void UpdateRenderTarget(Engine& engine, IRender::Queue* resourceQueue, bool sizeOnly);
 			virtual void UpdatePass(Engine& engine);
 			virtual void UpdateComplete(Engine& engine);
 			virtual void Tick(Engine& engine);

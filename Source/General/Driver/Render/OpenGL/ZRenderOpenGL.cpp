@@ -1621,6 +1621,8 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> : public R
 				assert(t->textureID != 0);
 				// do not support other types :D
 				assert(t->GetDescription().state.layout == IRender::Resource::TextureDescription::DEPTH_STENCIL || t->GetDescription().state.layout == IRender::Resource::TextureDescription::DEPTH);
+				assert(t->GetDescription().dimension.x() == d.width && t->GetDescription().dimension.y() == d.height);
+
 				if (t->GetDescription().state.sample == IRender::Resource::TextureDescription::RENDERBUFFER) {
 					glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, t->renderbufferID);
 				} else {
@@ -1636,6 +1638,7 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> : public R
 				ResourceImplOpenGL<IRender::Resource::TextureDescription>* t = static_cast<ResourceImplOpenGL<IRender::Resource::TextureDescription>*>(storage.resource);
 				assert(t != nullptr);
 				assert(t->textureID != 0);
+				assert(t->GetDescription().dimension.x() == d.width && t->GetDescription().dimension.y() == d.height);
 				if (t->GetDescription().state.sample == IRender::Resource::TextureDescription::RENDERBUFFER) {
 					glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + (GLsizei)i, GL_RENDERBUFFER, t->renderbufferID);
 				} else {

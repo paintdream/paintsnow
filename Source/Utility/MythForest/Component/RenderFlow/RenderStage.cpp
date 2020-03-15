@@ -1,5 +1,6 @@
 #include "RenderStage.h"
 #include "RenderPort/RenderPortRenderTarget.h"
+#include "RenderPort/RenderPortLoadTarget.h"
 
 using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
@@ -94,13 +95,12 @@ public:
 	bool updateSizeOnly;
 };
 
-void RenderStage::UpdateRenderTarget(Engine& engine, bool updateSizeOnly) {
+void RenderStage::UpdateRenderTarget(Engine& engine, IRender::Queue* resourceQueue, bool updateSizeOnly) {
 	if (!(Flag() & RENDERSTAGE_ADAPT_MAIN_RESOLUTION)) return;
 
 	// by now we have no color-free render buffers
 	assert(!renderTargetDescription.colorBufferStorages.empty());
 	IRender& render = engine.interfaces.render;
-	IRender::Queue* queue = renderQueue.GetQueue();
 	
 	uint16_t width = mainResolution.x();
 	uint16_t height = mainResolution.y();
@@ -108,14 +108,14 @@ void RenderStage::UpdateRenderTarget(Engine& engine, bool updateSizeOnly) {
 	renderTargetDescription.width = resolutionShift.x() > 0 ? Max(width >> resolutionShift.x(), 2) : width << resolutionShift.x();
 	renderTargetDescription.height = resolutionShift.y() > 0 ? Max(height >> resolutionShift.y(), 2) : height << resolutionShift.y();
 
-	AutoAdaptRenderTarget adapt(render, queue, renderTargetDescription.width, renderTargetDescription.height, updateSizeOnly);
+	AutoAdaptRenderTarget adapt(render, resourceQueue, renderTargetDescription.width, renderTargetDescription.height, updateSizeOnly);
 	(*this)(adapt);
 
 	if (!updateSizeOnly) {
 		// Commit
 		assert(renderTarget != nullptr);
 		IRender::Resource::RenderTargetDescription copy = renderTargetDescription;
-		render.UploadResource(queue, renderTarget, &copy);
+		render.UploadResource(resourceQueue, renderTarget, &copy);
 	}
 }
 
@@ -147,7 +147,7 @@ void RenderStage::Initialize(Engine& engine) {
 		port->Initialize(render, queue);
 	}
 
-	UpdateRenderTarget(engine, false);
+	UpdateRenderTarget(engine, queue, false);
 	UpdatePass(engine);
 	UpdateComplete(engine);
 
@@ -221,12 +221,12 @@ void RenderStage::PrepareRenderQueues(Engine& engine, std::vector<ZRenderQueue*>
 	}
 }
 
-void RenderStage::SetMainResolution(Engine& engine, uint32_t width, uint32_t height, bool updateSizeOnly) {
+void RenderStage::SetMainResolution(Engine& engine, IRender::Queue* resourceQueue, uint32_t width, uint32_t height, bool updateSizeOnly) {
 	// By default, create render buffer with resolution provided
 	// For some stages(e.g. cascaded bloom generator), we must override this function to adapt the new value
 
 	mainResolution = UShort2(width, height);
 
-	UpdateRenderTarget(engine, updateSizeOnly);
+	UpdateRenderTarget(engine, resourceQueue, updateSizeOnly);
 	Flag() |= TINY_MODIFIED;
 }

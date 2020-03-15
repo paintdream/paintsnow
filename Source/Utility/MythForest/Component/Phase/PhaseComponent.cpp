@@ -36,9 +36,7 @@ TObject<IReflect>& PhaseComponentConfig::WorldInstanceData::operator () (IReflec
 }
 
 PhaseComponentConfig::TaskData::TaskData() : status(STATUS_IDLE), pendingCount(0), renderQueue(nullptr), renderTarget(nullptr), pipeline(nullptr) {}
-PhaseComponentConfig::TaskData::~TaskData() {
-	assert(renderQueue == nullptr && renderTarget == nullptr);
-}
+PhaseComponentConfig::TaskData::~TaskData() {}
 
 void PhaseComponentConfig::InstanceGroup::Reset() {
 	for (size_t k = 0; k < instancedData.size(); k++) {
@@ -60,9 +58,9 @@ void PhaseComponent::Initialize(Engine& engine, Entity* entity) {
 	const String path = "[Runtime]/MeshResource/StandardSquare";
 	quadMeshResource = snowyStream.CreateReflectedResource(UniqueType<NsSnowyStream::MeshResource>(), path, true, 0, nullptr);
 
-	tracePipeline = snowyStream.CreateReflectedResource(UniqueType<ShaderResourceImpl<MultiHashTracePass> >(), ShaderResource::GetShaderPathPrefix() + UniqueType<MultiHashTracePass>::Get()->GetSubName());
-	setupPipeline = snowyStream.CreateReflectedResource(UniqueType<ShaderResourceImpl<MultiHashSetupPass> >(), ShaderResource::GetShaderPathPrefix() + UniqueType<MultiHashSetupPass>::Get()->GetSubName());
-	shadowPipeline = snowyStream.CreateReflectedResource(UniqueType<ShaderResourceImpl<ConstMapPass> >(), ShaderResource::GetShaderPathPrefix() + UniqueType<ConstMapPass>::Get()->GetSubName());
+	tracePipeline = snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), ShaderResource::GetShaderPathPrefix() + UniqueType<MultiHashTracePass>::Get()->GetSubName())->QueryInterface(UniqueType<ShaderResourceImpl<MultiHashTracePass> >());
+	setupPipeline = snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), ShaderResource::GetShaderPathPrefix() + UniqueType<MultiHashSetupPass>::Get()->GetSubName())->QueryInterface(UniqueType<ShaderResourceImpl<MultiHashSetupPass> >());
+	shadowPipeline = snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), ShaderResource::GetShaderPathPrefix() + UniqueType<ConstMapPass>::Get()->GetSubName())->QueryInterface(UniqueType<ShaderResourceImpl<ConstMapPass> >());
 
 	IRender& render = engine.interfaces.render;
 	IRender::Device* device = engine.snowyStream.GetRenderDevice();
@@ -159,17 +157,13 @@ void PhaseComponent::Setup(Engine& engine, uint32_t phaseCount, uint32_t taskCou
 	}
 
 	// prepare uniform buffers for tracing
-	ZPassBase::Updater& updater = tracePipeline->GetPassUpdater();
-	IRender::Resource::DrawCallDescription drawCallDescripton;
-	std::vector<Bytes> bufferData;
-	updater.Capture(drawCallDescripton, bufferData, 1 << IRender::Resource::BufferDescription::UNIFORM);
-
 	phases.resize(phaseCount);
 	for (size_t i = 0; i < phases.size(); i++) {
 		Phase& phase = phases[i];
 
-		phase.tracePipeline.From(static_cast<ShaderResourceImpl<MultiHashTracePass>*>(tracePipeline->Clone()));
-		// bufferData will be moved in Update(), but any way it's OK for next phases.
+		std::vector<Bytes> bufferData;
+		phase.tracePipeline.Reset(static_cast<ShaderResourceImpl<MultiHashTracePass>*>(tracePipeline->Clone()));
+		phase.tracePipeline->GetPassUpdater().Capture(phase.drawCallDescription, bufferData, 1 << IRender::Resource::BufferDescription::UNIFORM);
 		phase.tracePipeline->GetPassUpdater().Update(render, renderQueue, phase.drawCallDescription, phase.uniformBuffers, bufferData, 1 << IRender::Resource::BufferDescription::UNIFORM);
 		phase.drawCallResource = render.CreateResource(renderQueue, IRender::Resource::RESOURCE_DRAWCALL);
 
@@ -443,11 +437,11 @@ void PhaseComponent::DispatchTasks(Engine& engine) {
 				const UpdatePointShadow& shadow = bakePointShadows.top();
 				threadPool.Push(CreateCoTaskContextFree(kernel, Wrap(this, &PhaseComponent::CoTaskAssembleTaskShadow), std::ref(engine), std::ref(task), shadow));
 				bakePointShadows.pop();
-			} else if (bakePointSetups.empty()) {
+			} else if (!bakePointSetups.empty()) {
 				const UpdatePointSetup& setup = bakePointSetups.top();
 				threadPool.Push(CreateCoTaskContextFree(kernel, Wrap(this, &PhaseComponent::CoTaskAssembleTaskSetup), std::ref(engine), std::ref(task), setup));
 				bakePointSetups.pop();
-			} else if (bakePointBounces.empty()) {
+			} else if (!bakePointBounces.empty()) {
 				const UpdatePointBounce& bounce = bakePointBounces.top();
 				TaskAssembleTaskBounce(engine, task, bounce);
 				bakePointBounces.pop();
@@ -624,7 +618,7 @@ void PhaseComponent::Update(Engine& engine, const Float3& center) {
 		Float3 up(RandFloat(), RandFloat(), RandFloat());
 
 		phases[i].projectionMatrix = projectionMatrix;
-		phases[i].viewProjectionMatrix = LookAt(view, dir, up) * projectionMatrix;
+		phases[i].viewProjectionMatrix = LookAt(view + center, dir + center, up) * projectionMatrix;
 	}
 
 	lightCollector.InvokeCollect(engine, hostEntity);

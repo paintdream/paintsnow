@@ -7,7 +7,7 @@ using namespace PaintsNow::NsSnowyStream;
 using namespace PaintsNow::ShaderMacro;
 
 MultiHashSetupFS::MultiHashSetupFS() {
-	
+	noiseParamBuffer.description.usage = IRender::Resource::BufferDescription::UNIFORM;
 }
 
 TObject<IReflect>& MultiHashSetupFS::operator () (IReflect& reflect) {
@@ -17,7 +17,7 @@ TObject<IReflect>& MultiHashSetupFS::operator () (IReflect& reflect) {
 		ReflectProperty(noiseTexture);
 		ReflectProperty(noiseParamBuffer);
 
-		ReflectProperty(texCoord)[IShader::BindInput(IShader::BindInput::TEXCOORD)];
+		ReflectProperty(rasterPosition)[IShader::BindInput(IShader::BindInput::TEXCOORD)];
 		ReflectProperty(noiseOffset)[noiseParamBuffer][IShader::BindInput(IShader::BindInput::GENERAL)];
 		ReflectProperty(noiseClip)[noiseParamBuffer][IShader::BindInput(IShader::BindInput::GENERAL)];
 	}
@@ -27,7 +27,7 @@ TObject<IReflect>& MultiHashSetupFS::operator () (IReflect& reflect) {
 
 String MultiHashSetupFS::GetShaderText() {
 	return UnifyShaderCode(
-		float noise = texture(noiseTexture, texCoord + noiseOffset).x;
+		float noise = texture(noiseTexture, rasterPosition.xy + noiseOffset).x;
 		clip(noise - noiseClip);
 	);
 }

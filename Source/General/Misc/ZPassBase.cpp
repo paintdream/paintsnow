@@ -273,6 +273,7 @@ void ZPassBase::Updater::Update(IRender& render, IRender::Queue* queue, IRender:
 	for (size_t i = 0; i < buffers.size(); i++) {
 		const IShader::BindBuffer* bindBuffer = buffers[i];
 		if ((bufferMask & (1 << bindBuffer->description.usage))) {
+			assert(i < drawCallDescription.bufferResources.size());
 			IRender::Resource*& buffer = drawCallDescription.bufferResources[i].buffer;
 			if (bindBuffer->resource != nullptr) {
 				buffer = bindBuffer->resource;

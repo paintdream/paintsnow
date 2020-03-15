@@ -68,7 +68,7 @@ local function InitializeWorld(databasePath : string)
 	cameraComponent:BindRootEntity(scene.rootEntity)
 
 	-- set camera transform
-	local cameraTranslation : float3 = { -5, 5, 3 }
+	local cameraTranslation : float3 = { 5, 5, 8 }
 	local cameraRotation : float3 = { 0.25 * math.pi, 0, math.pi }
 	local cameraController = playerEntity.cameraController
 	local cameraTransform = cameraController.transformComponent
@@ -85,12 +85,9 @@ local function InitializeWorld(databasePath : string)
 	local inOperation = false
 	scene.rootEntity:UpdateEntity()
 
-	-- setup phase
-	local Phase = require("Script/Prefabs/Components/Phase/StandardPhase")
-	local phaseComponent = Phase.New(cameraController.renderFlowComponent)
-	phaseComponent:Setup(16, 8, { 10, 10, 10 }, { 256, 256 })
 	local stepPhase = false
 	local stepBounceCount : number = 16
+	local phaseComponent = cameraController.phaseComponent
 
 	local function ReportStepConfig()
 		print("PhaseStep: " .. (stepPhase and "[ON] " or "[OFF] BOUNCE: ") .. tostring(stepBounceCount))
@@ -108,6 +105,7 @@ local function InitializeWorld(databasePath : string)
 
 			local evSize = eventData.Size
 			if evSize then
+				print("Resizing to (" .. tostring(evSize[1]) .. ", " .. tostring(evSize[2]) .. ")")
 				cameraController.aspect = evSize[1] / evSize[2]
 				cameraController:UpdatePerspective()
 			end
@@ -225,9 +223,12 @@ function Main.Main()
 		end
 	end
 
+	--[[
 	local RepositoryDaemon = require("Script/Util/RepositoryDaemon")
 	local weaver = RepositoryDaemon:New("127.0.0.1:16384", "Database/Repository.sql", databasePath)
 	Debug.Weaver = weaver
+	]]
+	
 	local s, msg = pcall(function ()
 		InitializeWorld(databasePath)
 	end)

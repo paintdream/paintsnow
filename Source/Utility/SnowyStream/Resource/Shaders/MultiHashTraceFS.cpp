@@ -23,6 +23,7 @@ TObject<IReflect>& MultiHashTraceFS::operator () (IReflect& reflect) {
 		ReflectProperty(srcDepthTexture);
 		ReflectProperty(srcLitTexture);
 		ReflectProperty(dstDepthTexture);
+		ReflectProperty(dstBaseColorOcclusionTexture);
 		ReflectProperty(dstNormalRoughnessMetallicTexture);
 
 		ReflectProperty(uniformBuffer);
@@ -31,6 +32,7 @@ TObject<IReflect>& MultiHashTraceFS::operator () (IReflect& reflect) {
 		ReflectProperty(srcProjection)[uniformBuffer][IShader::BindInput(IShader::BindInput::GENERAL)];
 		ReflectProperty(srcInverseProjection)[uniformBuffer][IShader::BindInput(IShader::BindInput::GENERAL)];
 		ReflectProperty(offsets)[uniformBuffer][IShader::BindInput(IShader::BindInput::GENERAL)];
+		ReflectProperty(srcOrigin)[uniformBuffer][IShader::BindInput(IShader::BindInput::GENERAL)];
 		ReflectProperty(sigma)[uniformBuffer][IShader::BindInput(IShader::BindInput::GENERAL)];
 		ReflectProperty(dstLit)[IShader::BindOutput(IShader::BindOutput::COLOR)];
 	}
@@ -87,7 +89,7 @@ String MultiHashTraceFS::GetShaderText() {
 		vl = vl.yx * sqrt(saturate(-vl * p + vl) * vl + p);
 		float DG = p / max(q * q, 0.0001) * (0.5 / PI) / max(vl.x + vl.y, 0.0001);
 		float f = saturate(50.0 * spec.y);
-		float3 F = spec + (float3(f, f, f) - spec) * (float)exp2(VoH * (-5.55473 * VoH - 6.98316));
+		float3 F = spec + (float3(f, f, f) - spec) * float(exp2(VoH * (-5.55473 * VoH - 6.98316)));
 		dstLit.xyz += (diff + F * DG) * srcLit.xyz / srcLit.w * NoL * s;
 	});
 }
