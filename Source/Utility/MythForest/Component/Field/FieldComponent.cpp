@@ -8,3 +8,7 @@ FieldComponent::FieldComponent() {
 }
 
 FieldComponent::~FieldComponent() {}
+
+Bytes FieldComponent::operator [] (const Float3& position) const {
+	return (*fieldImpl)[position];
+}

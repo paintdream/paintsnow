@@ -7,20 +7,25 @@
 #define __FIELDCOMPONENTMODULE_H__
 
 #include "FieldComponent.h"
+#include "../../../SnowyStream/Resource/TextureResource.h"
+#include "../../../SnowyStream/Resource/MeshResource.h"
 #include "../../Module.h"
 
 namespace PaintsNow {
 	namespace NsMythForest {
 		class Entity;
 		class FieldComponent;
-		class FieldComponentModule  : public TReflected<FieldComponentModule , ModuleImpl<FieldComponent> > {
+		class FieldComponentModule  : public TReflected<FieldComponentModule, ModuleImpl<FieldComponent> > {
 		public:
 			FieldComponentModule(Engine& engine);
 			virtual ~FieldComponentModule();
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
 			void RequestNew(IScript::Request& request);
-			void RequestRebuild(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent);
+			void RequestFromSimplygon(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, const String& shapeType);
+			void RequestFromTexture(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, IScript::Delegate<NsSnowyStream::TextureResource> textureResource);
+			void RequestFromMesh(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, IScript::Delegate<NsSnowyStream::MeshResource> meshResource);
+			void RequestQuery(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, const Float3& position);
 		};
 	}
 }

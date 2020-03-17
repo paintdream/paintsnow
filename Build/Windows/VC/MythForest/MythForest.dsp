@@ -193,6 +193,18 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Field\FieldComponentModul
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Field\Types\FieldMesh.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Field\Types\FieldSimplygon.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Field\Types\FieldTexture.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Form\FormComponent.cpp
 # End Source File
 # Begin Source File
@@ -554,6 +566,18 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Field\FieldComponent.h
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Field\FieldComponentModule.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Field\Types\FieldMesh.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Field\Types\FieldSimplygon.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Field\Types\FieldTexture.h
 # End Source File
 # Begin Source File
 
