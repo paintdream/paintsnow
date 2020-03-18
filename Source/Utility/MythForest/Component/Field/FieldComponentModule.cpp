@@ -1,5 +1,6 @@
 #include "FieldComponentModule.h"
 #include "../../Engine.h"
+#include "Types/FieldSimplygon.h"
 
 using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
@@ -49,6 +50,22 @@ void FieldComponentModule::RequestFromSimplygon(IScript::Request& request, IScri
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(fieldComponent);
 
+	FieldSimplygon::SIMPOLYGON_TYPE type = FieldSimplygon::BOUNDING_BOX;
+
+	if (shapeType == "Box") {
+		type = FieldSimplygon::BOUNDING_BOX;
+	} else if (shapeType == "Sphere") {
+		type = FieldSimplygon::BOUNDING_SPHERE;
+	} else if (shapeType == "Cylinder") {
+		type = FieldSimplygon::BOUNDING_CYLINDER;
+	}
+
+	TShared<FieldSimplygon> instance = TShared<FieldSimplygon>(new FieldSimplygon(type));
+
+	engine.GetKernel().YieldCurrentWarp();
+	request.DoLock();
+	request << instance();
+	request.UnLock();
 }
 
 void FieldComponentModule::RequestFromTexture(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, IScript::Delegate<NsSnowyStream::TextureResource> textureResource) {
