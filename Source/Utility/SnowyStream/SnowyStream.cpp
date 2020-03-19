@@ -532,7 +532,8 @@ void SnowyStream::RequestMapResource(IScript::Request& request, IScript::Delegat
 	CHECK_DELEGATE(resource);
 	bridgeSunset.GetKernel().YieldCurrentWarp();
 
-	bool result = MapResource(resource.Get(), typeExtension);
+	bool result = resource->Map();
+
 	request.DoLock();
 	request << result;
 	request.UnLock();
@@ -542,7 +543,7 @@ void SnowyStream::RequestUnmapResource(IScript::Request& request, IScript::Deleg
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(resource);
 
-	UnmapResource(resource.Get());
+	resource->Unmap();
 }
 
 void SnowyStream::RequestPersistResource(IScript::Request& request, IScript::Delegate<ResourceBase> resource, const String& extension) {
@@ -755,14 +756,6 @@ void SnowyStream::UnmapResource(TShared<ResourceBase> resource) {
 bool SnowyStream::MapResource(TShared<ResourceBase> resource, const String& extension) {
 	// Find resource serializer
 	assert(resource);
-	SpinLock(resource->mapCritical);
-	if (resource->IsMapped()) {
-		resource->Map(); // already mapped
-		SpinUnLock(resource->mapCritical);
-		return true;
-	}
-	SpinUnLock(resource->mapCritical);
-
 	String typeExtension = extension.empty() ? GetReflectedExtension(resource->GetUnique()) : extension;
 	IArchive& archive = interfaces.archive;
 	IFilterBase& protocol = interfaces.filterBase;

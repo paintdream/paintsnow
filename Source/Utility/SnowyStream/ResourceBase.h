@@ -59,14 +59,13 @@ namespace PaintsNow {
 			// virtual bool operator << (IStreamBase& stream) override;
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 			virtual bool Map();
-			virtual bool Unmap();
-			bool IsMapped() const;
-			TAtomic<uint32_t> mapCritical;
+			virtual void Unmap();
+			TAtomic<uint32_t> critical;
 
 		protected:
 			ResourceManager::UniqueLocation uniqueLocation;
 			ResourceManager& resourceManager;
-			uint32_t mapCount;
+			TAtomic<uint32_t> mapCount;
 		};
 
 		template <class T>

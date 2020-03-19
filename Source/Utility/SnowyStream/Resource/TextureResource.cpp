@@ -32,13 +32,14 @@ void TextureResource::Detach(IRender& render, void* deviceContext) {
 	GraphicResourceBase::Detach(render, deviceContext);
 }
 
-bool TextureResource::Unmap() {
-	if (GraphicResourceBase::Unmap()) {
+void TextureResource::Unmap() {
+	GraphicResourceBase::Unmap();
+	
+	SpinLock(critical);
+	if (mapCount.load(std::memory_order_relaxed) == 0) {
 		description.data.Clear();
-		return true;
-	} else {
-		return false;
 	}
+	SpinUnLock(critical);
 }
 
 void TextureResource::Upload(IRender& render, void* deviceContext) {
@@ -46,14 +47,14 @@ void TextureResource::Upload(IRender& render, void* deviceContext) {
 	//	assert(description.data.size() == (size_t)description.dimension.x() * description.dimension.y() * IImage::GetPixelSize((IRender::Resource::TextureDescription::Format)description.state.format, (IRender::Resource::TextureDescription::Layout)description.state.layout));
 	IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(deviceContext);
 
-	SpinLock(mapCritical);
-	if (IsMapped()) {
+	SpinLock(critical);
+	if (mapCount.load(std::memory_order_relaxed) > 1) {
 		IRender::Resource::TextureDescription desc = description;
 		render.UploadResource(queue, instance, &desc);
 	} else {
 		render.UploadResource(queue, instance, &description);
 	}
-	SpinUnLock(mapCritical);
+	SpinUnLock(critical);
 }
 
 void TextureResource::Download(IRender& render, void* deviceContext) {
@@ -160,11 +161,13 @@ bool TextureResource::Compress(const String& compressionType) {
 		}
 
 
-		SpinLock(mapCritical);
+		// TODO: conflicts with mapped resource
+		assert(mapCount.load(std::memory_order_relaxed) == 0);
+		SpinLock(critical);
 		description.data.Assign((uint8_t*)target.GetBuffer(), safe_cast<uint32_t>(target.GetTotalLength()));
 		description.state.compress = 1;
 		description.state.layout = IRender::Resource::TextureDescription::RGBA;
-		SpinUnLock(mapCritical);
+		SpinUnLock(critical);
 
 		filter->ReleaseObject();
 		return true;
@@ -180,7 +183,8 @@ bool TextureResource::LoadExternalResource(IStreamBase& streamBase, size_t lengt
 	bool success = imageBase.Load(image, streamBase, length);
 	IRender::Resource::TextureDescription::Layout layout = imageBase.GetLayoutType(image);
 	IRender::Resource::TextureDescription::Format dataType = imageBase.GetDataType(image);
-	SpinLock(mapCritical);
+
+	SpinLock(critical);
 	description.state.layout = layout;
 	description.state.format = dataType;
 	description.dimension.x() = safe_cast<uint16_t>(imageBase.GetWidth(image));
@@ -188,7 +192,8 @@ bool TextureResource::LoadExternalResource(IStreamBase& streamBase, size_t lengt
 
 	void* buffer = imageBase.GetBuffer(image);
 	description.data.Assign(reinterpret_cast<uint8_t*>(buffer), (size_t)description.dimension.x() * description.dimension.y() * IImage::GetPixelSize(dataType, layout));
-	SpinUnLock(mapCritical);
+	SpinUnLock(critical);
+
 	// copy info
 	imageBase.Delete(image);
 	return success;

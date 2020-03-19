@@ -122,9 +122,7 @@ void Weaver::RpcPostResource(IScript::Request& request, const String& path, cons
 	memoryStream.Seek(IStreamBase::BEGIN, 0);
 	// Create resource from memory
 	TShared<ResourceBase> resource = snowyStream.CreateResource(path, extension, false, 0, &memoryStream);
-	SpinLock(resource->mapCritical);
 	resource->Map();
-	SpinUnLock(resource->mapCritical);
 
 	if (resource) {
 		// Serialize it to disk

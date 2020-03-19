@@ -20,7 +20,7 @@ namespace PaintsNow {
 			virtual void Detach(IRender& render, void* deviceContext) override;
 			virtual bool Compress(const String& compressType) override;
 			virtual bool LoadExternalResource(IStreamBase& streamBase, size_t length);
-			virtual bool Unmap() override;
+			virtual void Unmap() override;
 
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 			IRender::Resource* GetTexture() const;

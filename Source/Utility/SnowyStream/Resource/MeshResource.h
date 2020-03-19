@@ -21,7 +21,7 @@ namespace PaintsNow {
 			virtual void Download(IRender& render, void* deviceContext) override;
 			virtual void Attach(IRender& render, void* deviceContext) override;
 			virtual void Detach(IRender& render, void* deviceContext) override;
-			virtual bool Unmap() override;
+			virtual void Unmap() override;
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 			const Float3Pair& GetBoundingBox() const;
 

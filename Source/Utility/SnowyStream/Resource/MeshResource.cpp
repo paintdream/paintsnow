@@ -45,8 +45,9 @@ void MeshResource::Upload(IRender& render, void* deviceContext) {
 	Flag() &= ~RESOURCE_UPLOADED;
 	IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(deviceContext);
 	assert(queue != nullptr);
-	SpinLock(mapCritical);
-	bool preserve = IsMapped();
+
+	SpinLock(critical);
+	bool preserve = mapCount.load(std::memory_order_relaxed) != 0;
 
 	UpdateBuffer(render, queue, bufferCollection.indexBuffer, meshCollection.indices, Description::INDEX, preserve);
 	UpdateBuffer(render, queue, bufferCollection.positionBuffer, meshCollection.vertices, Description::VERTEX, preserve);
@@ -62,17 +63,16 @@ void MeshResource::Upload(IRender& render, void* deviceContext) {
 		UpdateBuffer(render, queue, bufferCollection.texCoordBuffers[i], texCoord.coords, Description::VERTEX, preserve);
 	}
 
-	SpinUnLock(mapCritical);
+	SpinUnLock(critical);
 	Flag() |= RESOURCE_UPLOADED;
 }
 
-bool MeshResource::Unmap() {
-	if (GraphicResourceBase::Unmap()) {
-		meshCollection = IAsset::MeshCollection();
-		return true;
-	} else {
-		return false;
-	}
+void MeshResource::Unmap() {
+	GraphicResourceBase::Unmap();
+
+	SpinLock(critical);
+	meshCollection = IAsset::MeshCollection();
+	SpinUnLock(critical);
 }
 
 void MeshResource::Detach(IRender& render, void* deviceContext) {

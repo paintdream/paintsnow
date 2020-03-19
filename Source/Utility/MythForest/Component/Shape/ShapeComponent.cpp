@@ -90,10 +90,7 @@ ShapeComponent::Patch* ShapeComponent::MakeBound(Patch& patch, const std::vector
 
 void ShapeComponent::Cleanup() {
 	if (meshResource) {
-		SpinLock(meshResource->mapCritical);
 		meshResource->Unmap();
-		SpinUnLock(meshResource->mapCritical);
-
 		meshResource = nullptr;
 	}
 }

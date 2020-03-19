@@ -44,11 +44,12 @@ private:
 static LeakGuard leakGuard;
 #endif
 
-ResourceBase::ResourceBase(ResourceManager& manager, const ResourceManager::UniqueLocation& id) : BaseClass(Tiny::TINY_UNIQUE | Tiny::TINY_READONLY | Tiny::TINY_ACTIVATED | Tiny::TINY_UPDATING), resourceManager(manager), uniqueLocation(id), mapCount(0) {
+ResourceBase::ResourceBase(ResourceManager& manager, const ResourceManager::UniqueLocation& id) : BaseClass(Tiny::TINY_UNIQUE | Tiny::TINY_READONLY | Tiny::TINY_ACTIVATED | Tiny::TINY_UPDATING), resourceManager(manager), uniqueLocation(id) {
 #ifdef _DEBUG
 	leakGuard.Insert(this);
 #endif
-	mapCritical.store(0, std::memory_order_relaxed);
+	mapCount.store(0, std::memory_order_relaxed);
+	critical.store(0, std::memory_order_relaxed);
 }
 
 ResourceBase::~ResourceBase() {
@@ -105,18 +106,17 @@ bool ResourceBase::Compress(const String& compressType) {
 }
 
 bool ResourceBase::Map() {
-	assert(mapCritical.load(std::memory_order_relaxed) != 0);
-	return mapCount++ == 0;
+	if (mapCount.fetch_add(1, std::memory_order_relaxed) == 0) {
+		return resourceManager.GetUniformResourceManager().MapResource(this);
+	} else {
+		return true;
+	}
 }
 
-bool ResourceBase::IsMapped() const {
-	assert(mapCritical.load(std::memory_order_relaxed) != 0);
-	return mapCount != 0;
-}
-
-bool ResourceBase::Unmap() {
-	assert(mapCritical.load(std::memory_order_relaxed) != 0);
-	return --mapCount == 0;
+void ResourceBase::Unmap() {
+	if (mapCount.fetch_sub(1, std::memory_order_release) == 1) {
+		resourceManager.GetUniformResourceManager().UnmapResource(this);
+	}
 }
 
 class SearchDependencies : public IReflect {

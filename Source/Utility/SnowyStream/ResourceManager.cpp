@@ -153,16 +153,9 @@ bool ResourceSerializerBase::MapFromArchive(ResourceBase* resource, IArchive& ar
 	IStreamBase* stream = archive.Open(path + "." + GetExtension() + uniExtension, false, length);
 	if (stream != nullptr) {
 		bool result = true;
-		SpinLock(resource->mapCritical);
-		if (!resource->IsMapped()) {
-			result = LoadData(resource, protocol, *stream);
-			if (result) {
-				resource->Map();
-			}
-		} else {
-			resource->Map();
-		}
-		SpinUnLock(resource->mapCritical);
+		SpinLock(resource->critical);
+		result = LoadData(resource, protocol, *stream);
+		SpinUnLock(resource->critical);
 
 		stream->ReleaseObject();
 		return result;
@@ -177,9 +170,9 @@ bool ResourceSerializerBase::SerializeToArchive(ResourceBase* resource, IArchive
 	size_t length;
 	IStreamBase* stream = archive.Open(path + "." + GetExtension() + uniExtension, true, length);
 	if (stream != nullptr) {
-		SpinLock(resource->mapCritical);
+		SpinLock(resource->critical);
 		bool result = Serialize(resource, protocol, *stream);
-		SpinUnLock(resource->mapCritical);
+		SpinUnLock(resource->critical);
 		stream->ReleaseObject();
 
 		if (!result) {
