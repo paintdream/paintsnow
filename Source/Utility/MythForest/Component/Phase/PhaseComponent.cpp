@@ -334,6 +334,8 @@ void PhaseComponent::TaskAssembleTaskBounce(Engine& engine, TaskData& task, cons
 	Phase& toPhase = phases[bakePoint.toPhaseIndex];
 	storage.resource = toPhase.irradiance->GetTexture();
 	desc.colorBufferStorages.emplace_back(std::move(storage));
+	desc.width = resolution.x();
+	desc.height = resolution.y();
 
 	// TODO: fill params
 	MultiHashTraceFS& fs = static_cast<MultiHashTracePass&>(toPhase.tracePipeline->GetPass()).shaderMultiHashTrace;
@@ -413,6 +415,9 @@ void PhaseComponent::CoTaskAssembleTaskSetup(Engine& engine, TaskData& task, con
 		storage.resource = rt[k]->GetTexture();
 		desc.colorBufferStorages.emplace_back(std::move(storage));
 	}
+
+	desc.width = resolution.x();
+	desc.height = resolution.y();
 
 	render.UploadResource(task.renderQueue, task.renderTarget, &desc);
 	render.ExecuteResource(task.renderQueue, task.renderTarget);

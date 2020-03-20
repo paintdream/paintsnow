@@ -48,7 +48,7 @@ void TextureResource::Upload(IRender& render, void* deviceContext) {
 	IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(deviceContext);
 
 	SpinLock(critical);
-	if (mapCount.load(std::memory_order_relaxed) > 1) {
+	if (mapCount.load(std::memory_order_relaxed) != 0) {
 		IRender::Resource::TextureDescription desc = description;
 		render.UploadResource(queue, instance, &desc);
 	} else {
