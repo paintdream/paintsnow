@@ -16,6 +16,7 @@ TObject<IReflect>& PhaseComponentModule::operator () (IReflect& reflect) {
 		ReflectMethod(RequestUpdate)[ScriptMethod = "Update"];
 		ReflectMethod(RequestStep)[ScriptMethod = "Step"];
 		ReflectMethod(RequestResample)[ScriptMethod = "Resample"];
+		ReflectMethod(RequestBindRootEntity)[ScriptMethod = "BindRootEntity"];
 	}
 
 	return *this;
@@ -61,3 +62,10 @@ void PhaseComponentModule::RequestResample(IScript::Request& request, IScript::D
 	phaseComponent->Resample(engine, phaseCount);
 }
 
+void PhaseComponentModule::RequestBindRootEntity(IScript::Request& request, IScript::Delegate<PhaseComponent> phaseComponent, IScript::Delegate<Entity> rootEntity) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(phaseComponent);
+	CHECK_DELEGATE(rootEntity);
+
+	phaseComponent->BindRootEntity(engine, rootEntity.Get());
+}

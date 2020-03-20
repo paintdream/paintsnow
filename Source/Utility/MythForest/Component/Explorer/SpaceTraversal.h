@@ -77,6 +77,8 @@ namespace PaintsNow {
 			void CollectComponentsFromEntity(Engine& engine, TaskData& taskData, const WorldInstanceData& instanceData, const CaptureData& captureData, Entity* entity) {
 				const std::vector<Component*>& components = entity->GetComponents();
 				TAtomic<uint32_t>& pendingCount = reinterpret_cast<TAtomic<uint32_t>&>(taskData.pendingCount);
+
+				++pendingCount;
 				for (size_t i = 0; i < components.size(); i++) {
 					Component* component = components[i];
 					if (component != nullptr && (component->GetEntityFlagMask() & Entity::ENTITY_HAS_SPACE)) {
@@ -86,7 +88,7 @@ namespace PaintsNow {
 					}
 				}
 
-				if (pendingCount.load(std::memory_order_acquire) == 0) {
+				if (pendingCount.fetch_sub(1, std::memory_order_relaxed) == 1) {
 					(static_cast<T*>(this))->CompleteCollect(engine, taskData);
 				}
 			}

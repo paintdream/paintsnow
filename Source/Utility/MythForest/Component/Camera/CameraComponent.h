@@ -112,6 +112,8 @@ namespace PaintsNow {
 						std::vector<std::pair<uint32_t, IRender::Resource*> > buffers;
 					};
 
+					WarpData();
+
 					std::map<NsSnowyStream::ShaderResource*, GlobalBufferItem> worldGlobalBufferMap;
 					std::map<IRender::Resource::RenderStateDescription, IRender::Resource*> renderStateMap;
 					std::map<RenderPolicy*, PolicyData> renderPolicyMap;

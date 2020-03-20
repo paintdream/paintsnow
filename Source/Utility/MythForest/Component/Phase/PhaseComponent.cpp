@@ -14,6 +14,10 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
+PhaseComponent::LightConfig::TaskData::TaskData(uint32_t warpCount) : pendingCount(0) {
+	warpData.resize(warpCount);
+}
+
 TObject<IReflect>& PhaseComponentConfig::WorldGlobalData::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
@@ -29,13 +33,15 @@ TObject<IReflect>& PhaseComponentConfig::WorldInstanceData::operator () (IReflec
 
 	if (reflect.IsReflectProperty()) {
 		ReflectProperty(worldMatrix)[IShader::BindInput(IShader::BindInput::TRANSFORM_WORLD)];
-		// ReflectProperty(boundingBox);
+		ReflectProperty(instancedColor)[IShader::BindInput(IShader::BindInput::COLOR_INSTANCED)];
 	}
 
 	return *this;
 }
 
-PhaseComponentConfig::TaskData::TaskData() : status(STATUS_IDLE), pendingCount(0), renderQueue(nullptr), renderTarget(nullptr), pipeline(nullptr) {}
+PhaseComponentConfig::TaskData::TaskData() : status(STATUS_IDLE), pendingCount(0), renderQueue(nullptr), renderTarget(nullptr), pipeline(nullptr) {
+}
+
 PhaseComponentConfig::TaskData::~TaskData() {}
 
 void PhaseComponentConfig::InstanceGroup::Reset() {
@@ -44,79 +50,85 @@ void PhaseComponentConfig::InstanceGroup::Reset() {
 	}
 }
 
-PhaseComponent::PhaseComponent(TShared<RenderFlowComponent> renderFlow, const String& portName) : hostEntity(nullptr), maxTracePerTick(8), renderQueue(nullptr), clearResource(nullptr), stateResource(nullptr), range(32, 32, 32), resolution(512, 512), lightCollector(this), renderFlowComponent(renderFlow), lightPhaseViewPortName(portName) {}
+PhaseComponent::PhaseComponent(TShared<RenderFlowComponent> renderFlow, const String& portName) : hostEntity(nullptr), maxTracePerTick(8), renderQueue(nullptr), clearResource(nullptr), stateResource(nullptr), range(32, 32, 32), resolution(512, 512), lightCollector(this), renderFlowComponent(renderFlow), lightPhaseViewPortName(portName), rootEntity(nullptr) {}
 
 PhaseComponent::~PhaseComponent() {}
 
 void PhaseComponent::Initialize(Engine& engine, Entity* entity) {
-	Component::Initialize(engine, entity);
-	assert(hostEntity == nullptr);
-	assert(renderQueue == nullptr);
-	hostEntity = entity;
+	if (rootEntity != entity) { // Set Host?
+		Component::Initialize(engine, entity);
+		assert(hostEntity == nullptr);
+		assert(renderQueue == nullptr);
+		hostEntity = entity;
 
-	SnowyStream& snowyStream = engine.snowyStream;
-	const String path = "[Runtime]/MeshResource/StandardSquare";
-	quadMeshResource = snowyStream.CreateReflectedResource(UniqueType<NsSnowyStream::MeshResource>(), path, true, 0, nullptr);
+		SnowyStream& snowyStream = engine.snowyStream;
+		const String path = "[Runtime]/MeshResource/StandardSquare";
+		quadMeshResource = snowyStream.CreateReflectedResource(UniqueType<NsSnowyStream::MeshResource>(), path, true, 0, nullptr);
 
-	tracePipeline = snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), ShaderResource::GetShaderPathPrefix() + UniqueType<MultiHashTracePass>::Get()->GetSubName())->QueryInterface(UniqueType<ShaderResourceImpl<MultiHashTracePass> >());
-	setupPipeline = snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), ShaderResource::GetShaderPathPrefix() + UniqueType<MultiHashSetupPass>::Get()->GetSubName())->QueryInterface(UniqueType<ShaderResourceImpl<MultiHashSetupPass> >());
-	shadowPipeline = snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), ShaderResource::GetShaderPathPrefix() + UniqueType<ConstMapPass>::Get()->GetSubName())->QueryInterface(UniqueType<ShaderResourceImpl<ConstMapPass> >());
+		tracePipeline = snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), ShaderResource::GetShaderPathPrefix() + UniqueType<MultiHashTracePass>::Get()->GetSubName())->QueryInterface(UniqueType<ShaderResourceImpl<MultiHashTracePass> >());
+		setupPipeline = snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), ShaderResource::GetShaderPathPrefix() + UniqueType<MultiHashSetupPass>::Get()->GetSubName())->QueryInterface(UniqueType<ShaderResourceImpl<MultiHashSetupPass> >());
+		shadowPipeline = snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), ShaderResource::GetShaderPathPrefix() + UniqueType<ConstMapPass>::Get()->GetSubName())->QueryInterface(UniqueType<ShaderResourceImpl<ConstMapPass> >());
 
-	IRender& render = engine.interfaces.render;
-	IRender::Device* device = engine.snowyStream.GetRenderDevice();
-	renderQueue = render.CreateQueue(device);
+		IRender& render = engine.interfaces.render;
+		IRender::Device* device = engine.snowyStream.GetRenderDevice();
+		renderQueue = render.CreateQueue(device);
 
-	clearResource = render.CreateResource(renderQueue, IRender::Resource::RESOURCE_CLEAR);
-	IRender::Resource::ClearDescription clear;
-	clear.clearColorBit = IRender::Resource::ClearDescription::DISCARD_LOAD;
-	clear.clearDepthBit = IRender::Resource::ClearDescription::DISCARD_LOAD | IRender::Resource::ClearDescription::DISCARD_STORE;
-	clear.clearStencilBit = IRender::Resource::ClearDescription::DISCARD_LOAD | IRender::Resource::ClearDescription::DISCARD_STORE;
-	render.UploadResource(renderQueue, clearResource, &clear);
-	
-	stateResource = render.CreateResource(renderQueue, IRender::Resource::RESOURCE_RENDERSTATE);
-	IRender::Resource::RenderStateDescription state;
-	state.cull = 1;
-	state.fill = 1;
-	state.alphaBlend = 0;
-	state.colorWrite = 1;
-	state.depthTest = IRender::Resource::RenderStateDescription::DISABLED;
-	state.depthWrite = 0;
-	state.stencilTest = IRender::Resource::RenderStateDescription::DISABLED;
-	state.stencilWrite = 0;
-	render.UploadResource(renderQueue, stateResource, &state);
+		clearResource = render.CreateResource(renderQueue, IRender::Resource::RESOURCE_CLEAR);
+		IRender::Resource::ClearDescription clear;
+		clear.clearColorBit = IRender::Resource::ClearDescription::DISCARD_LOAD;
+		clear.clearDepthBit = IRender::Resource::ClearDescription::DISCARD_LOAD | IRender::Resource::ClearDescription::DISCARD_STORE;
+		clear.clearStencilBit = IRender::Resource::ClearDescription::DISCARD_LOAD | IRender::Resource::ClearDescription::DISCARD_STORE;
+		render.UploadResource(renderQueue, clearResource, &clear);
+
+		stateResource = render.CreateResource(renderQueue, IRender::Resource::RESOURCE_RENDERSTATE);
+		IRender::Resource::RenderStateDescription state;
+		state.cull = 1;
+		state.fill = 1;
+		state.alphaBlend = 0;
+		state.colorWrite = 1;
+		state.depthTest = IRender::Resource::RenderStateDescription::DISABLED;
+		state.depthWrite = 0;
+		state.stencilTest = IRender::Resource::RenderStateDescription::DISABLED;
+		state.stencilWrite = 0;
+		render.UploadResource(renderQueue, stateResource, &state);
+	}
 }
 
 void PhaseComponent::Uninitialize(Engine& engine, Entity* entity) {
-	IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(tracePipeline->GetResourceManager().GetContext());
-	IRender& render = engine.interfaces.render;
-	for (size_t j = 0; j < tasks.size(); j++) {
-		TaskData& task = tasks[j];
-		render.DeleteResource(task.renderQueue, task.renderTarget);
-		render.DeleteQueue(task.renderQueue);
-	}
-
-	tasks.clear();
-
-	for (size_t k = 0; k < phases.size(); k++) {
-		Phase& phase = phases[k];
-		for (size_t j = 0; j < phase.uniformBuffers.size(); j++) {
-			render.DeleteResource(queue, phase.uniformBuffers[j]);
+	if (rootEntity == entity) {
+		rootEntity = nullptr;
+	} else {
+		IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(tracePipeline->GetResourceManager().GetContext());
+		IRender& render = engine.interfaces.render;
+		for (size_t j = 0; j < tasks.size(); j++) {
+			TaskData& task = tasks[j];
+			render.DeleteResource(task.renderQueue, task.renderTarget);
+			render.DeleteQueue(task.renderQueue);
 		}
 
-		render.DeleteResource(queue, phase.drawCallResource);
+		tasks.clear();
+
+		for (size_t k = 0; k < phases.size(); k++) {
+			Phase& phase = phases[k];
+			for (size_t j = 0; j < phase.uniformBuffers.size(); j++) {
+				render.DeleteResource(queue, phase.uniformBuffers[j]);
+			}
+
+			render.DeleteResource(queue, phase.drawCallResource);
+		}
+
+		phases.clear();
+
+		render.DeleteResource(queue, clearResource);
+		render.DeleteResource(queue, stateResource);
+		render.DeleteQueue(renderQueue);
+
+		clearResource = stateResource = nullptr;
+		renderQueue = nullptr;
+		hostEntity = nullptr;
+
+		Component::Uninitialize(engine, entity);
 	}
-
-	phases.clear();
-
-	render.DeleteResource(queue, clearResource);
-	render.DeleteResource(queue, stateResource);
-	render.DeleteQueue(renderQueue);
-
-	clearResource = stateResource = nullptr;
-	renderQueue = nullptr;
-	hostEntity = nullptr;
-
-	Component::Uninitialize(engine, entity);
 }
 
 void PhaseComponent::Resample(Engine& engine, uint32_t phaseCount) {
@@ -149,9 +161,11 @@ void PhaseComponent::Setup(Engine& engine, uint32_t phaseCount, uint32_t taskCou
 	resolution = res;
 	range = r;
 
+	uint32_t warpCount = engine.GetKernel().GetWarpCount();
 	tasks.resize(taskCount);
 	for (size_t j = 0; j < tasks.size(); j++) {
 		TaskData& task = tasks[j];
+		task.instanceGroups.resize(warpCount);
 		task.renderQueue = render.CreateQueue(device);
 		task.renderTarget = render.CreateResource(task.renderQueue, IRender::Resource::RESOURCE_RENDERTARGET);
 	}
@@ -219,14 +233,16 @@ void PhaseComponent::Setup(Engine& engine, uint32_t phaseCount, uint32_t taskCou
 }
 
 void PhaseComponent::DispatchEvent(Event& event, Entity* entity) {
-	if (event.eventID == Event::EVENT_FRAME) {
-		// DoUpdate
-		TickRender(event.engine);
-	} else if (event.eventID == Event::EVENT_TICK) {
-		Engine& engine = event.engine;
-		ResolveTasks(engine);
-		DispatchTasks(engine);
-		UpdateRenderFlow(engine);
+	if (entity != rootEntity) {
+		if (event.eventID == Event::EVENT_FRAME) {
+			// DoUpdate
+			TickRender(event.engine);
+		} else if (event.eventID == Event::EVENT_TICK) {
+			Engine& engine = event.engine;
+			ResolveTasks(engine);
+			DispatchTasks(engine);
+			UpdateRenderFlow(engine);
+		}
 	}
 }
 
@@ -363,6 +379,8 @@ void PhaseComponent::CoTaskAssembleTaskShadow(Engine& engine, TaskData& task, co
 	IRender& render = engine.interfaces.render;
 	assert(task.status == TaskData::STATUS_DISPATCHED);
 	IRender::Resource::RenderTargetDescription desc;
+	desc.width = resolution.x();
+	desc.height = resolution.y();
 
 	const Shadow& shadow = shadows[bakePoint.shadowIndex];
 	desc.depthStencilStorage.resource = shadow.shadow->GetTexture();
@@ -372,6 +390,7 @@ void PhaseComponent::CoTaskAssembleTaskShadow(Engine& engine, TaskData& task, co
 	render.ExecuteResource(task.renderQueue, stateResource);
 	render.ExecuteResource(task.renderQueue, clearResource);
 
+	task.pipeline = shadowPipeline();
 	Collect(engine, task, shadow.viewProjectionMatrix);
 }
 
@@ -381,21 +400,13 @@ void PhaseComponent::Collect(Engine& engine, TaskData& taskData, const MatrixFlo
 	PerspectiveCamera camera;
 	CaptureData captureData;
 	camera.UpdateCaptureData(captureData, viewProjectionMatrix);
-
-	const std::vector<Component*>& components = hostEntity->GetComponents();
-	for (size_t m = 0; m < components.size(); m++) {
-		Component* component = components[m];
-		if (component != nullptr && (component->GetEntityFlagMask() & Entity::ENTITY_HAS_SPACE)) {
-			TAtomic<uint32_t>& counter = reinterpret_cast<TAtomic<uint32_t>&>(taskData.pendingCount);
-			++counter;
-			WorldInstanceData instanceData;
-			instanceData.worldMatrix = viewProjectionMatrix;
-			CollectComponentsFromSpace(engine, taskData, instanceData, captureData, static_cast<SpaceComponent*>(component));
-		}
-	}
-
+	assert(rootEntity->GetWarpIndex() == GetWarpIndex());
+	WorldInstanceData instanceData;
+	instanceData.worldMatrix = viewProjectionMatrix;
 	TAtomic<uint32_t>& finalStatus = reinterpret_cast<TAtomic<uint32_t>&>(taskData.status);
 	finalStatus.store(TaskData::STATUS_ASSEMBLING, std::memory_order_release);
+
+	CollectComponentsFromEntity(engine, taskData, instanceData, captureData, rootEntity);
 }
 
 void PhaseComponent::CoTaskAssembleTaskSetup(Engine& engine, TaskData& task, const UpdatePointSetup& bakePoint) {
@@ -424,6 +435,7 @@ void PhaseComponent::CoTaskAssembleTaskSetup(Engine& engine, TaskData& task, con
 	render.ExecuteResource(task.renderQueue, stateResource);
 	render.ExecuteResource(task.renderQueue, clearResource);
 
+	task.pipeline = setupPipeline();
 	Collect(engine, task, phase.viewProjectionMatrix);
 }
 
@@ -472,12 +484,14 @@ void PhaseComponent::CollectRenderableComponent(Engine& engine, TaskData& task, 
 			InstanceKey key;
 			key.renderKey = (size_t)renderableComponent + i++;
 			InstanceGroup& group = instanceGroups[key];
-			if (group.drawCallDescription.shaderResource == nullptr) break;
+			if (group.drawCallDescription.shaderResource == nullptr)
+				break;
 
 			std::vector<Bytes> s;
 			group.partialUpdater.Snapshot(s, instanceData);
 			assert(s.size() == group.instancedData.size());
 			for (size_t k = 0; k < s.size(); k++) {
+				assert(!s[k].Empty());
 				group.instancedData[k].Append(s[k]);
 			}
 
@@ -503,6 +517,7 @@ void PhaseComponent::CollectRenderableComponent(Engine& engine, TaskData& task, 
 			group.partialUpdater.Snapshot(s, instanceData);
 			assert(s.size() == group.instancedData.size());
 			for (size_t k = 0; k < s.size(); k++) {
+				assert(!s[k].Empty());
 				group.instancedData[k].Append(s[k]);
 			}
 
@@ -599,7 +614,7 @@ void PhaseComponent::LightCollector::CompleteCollect(Engine& engine, TaskData& t
 }
 
 void PhaseComponent::LightCollector::InvokeCollect(Engine& engine, Entity* entity) {
-	LightConfig::TaskData* taskData = new LightConfig::TaskData();
+	LightConfig::TaskData* taskData = new LightConfig::TaskData(engine.GetKernel().GetWarpCount());
 	phaseComponent->ReferenceObject();
 	LightConfig::WorldInstanceData worldInstance;
 	LightConfig::CaptureData captureData;
@@ -626,7 +641,7 @@ void PhaseComponent::Update(Engine& engine, const Float3& center) {
 		phases[i].viewProjectionMatrix = LookAt(view + center, dir + center, up) * projectionMatrix;
 	}
 
-	lightCollector.InvokeCollect(engine, hostEntity);
+	lightCollector.InvokeCollect(engine, rootEntity);
 }
 
 void PhaseComponent::CollectComponents(Engine& engine, TaskData& task, const WorldInstanceData& inst, const CaptureData& captureData, Entity* entity) {
@@ -673,5 +688,18 @@ void PhaseComponent::UpdateRenderFlow(Engine& engine) {
 		}
 
 		renderFlowComponent->EndPort(renderPort);
+	}
+}
+
+void PhaseComponent::BindRootEntity(Engine& engine, Entity* entity) {
+	if (rootEntity != nullptr) {
+		// free last listener
+		rootEntity->RemoveComponent(engine, this);
+	}
+
+	rootEntity = entity;
+
+	if (entity != nullptr) {
+		entity->AddComponent(engine, this); // weak component
 	}
 }

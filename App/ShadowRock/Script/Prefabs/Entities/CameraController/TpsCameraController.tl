@@ -38,7 +38,6 @@ function TpsCameraController.New(eventListenerComponent : EventListenerComponent
 
 	-- setup phase
 	phaseComponent:Setup(16, 8, { 10, 10, 10 }, { 256, 256 })
-	phaseComponent:Update({ 5, 5, 5})
 
 	local meta = {}
 	meta.cameraComponent = cameraComponent

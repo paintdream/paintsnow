@@ -42,6 +42,7 @@ namespace PaintsNow {
 
 				MatrixFloat4x4 worldMatrix;
 				Float3Pair boundingBox;
+				Float4 instancedColor;
 			};
 
 			struct InstanceKey {
@@ -59,7 +60,7 @@ namespace PaintsNow {
 			};
 
 			struct InstanceGroup {
-				InstanceGroup() : drawCallResource(nullptr), instanceCount(0) {}
+				InstanceGroup() : renderStateResource(nullptr), drawCallResource(nullptr), instanceCount(0) {}
 				void Reset();
 
 				ZPassBase::PartialUpdater partialUpdater;
@@ -106,6 +107,7 @@ namespace PaintsNow {
 			virtual void Uninitialize(Engine& engine, Entity* entity) override;
 			virtual void DispatchEvent(Event& event, Entity* entity) override;
 
+			void BindRootEntity(Engine& engine, Entity* entity);
 			void Update(Engine& engine, const Float3& position);
 			void Step(Engine& engine, uint32_t bounceCount);
 			void Resample(Engine& engine, uint32_t phaseCount);
@@ -148,6 +150,7 @@ namespace PaintsNow {
 				};
 
 				struct TaskData {
+					TaskData(uint32_t warpCount);
 					uint32_t pendingCount;
 					std::vector<WarpData> warpData;
 				};
@@ -228,6 +231,7 @@ namespace PaintsNow {
 			
 			friend class LightCollector;
 			LightCollector lightCollector;
+			Entity* rootEntity;
 		};
 	}
 }

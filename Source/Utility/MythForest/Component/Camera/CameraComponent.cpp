@@ -32,6 +32,8 @@ enum {
 	STENCIL_LIGHTING = 0x80
 };
 
+CameraComponent::TaskData::WarpData::WarpData() : entityCount(0), visibleEntityCount(0) {}
+
 CameraComponent::CameraComponent(TShared<RenderFlowComponent> prenderFlowComponent, const String& name)
 : collectedEntityCount(0), collectedVisibleEntityCount(0), viewDistance(256), rootEntity(nullptr), jitterIndex(0), renderFlowComponent(prenderFlowComponent), cameraViewPortName(name) {
 	Flag() |= CAMERACOMPONENT_PERSPECTIVE;
@@ -692,12 +694,6 @@ void CameraComponent::BindRootEntity(Engine& engine, Entity* entity) {
 CameraComponentConfig::TaskData::TaskData(uint32_t warpCount) {
 	warpData.resize(warpCount);
 	pendingCount.store(0, std::memory_order_relaxed);
-
-	for (size_t i = 0; i < warpData.size(); i++) {
-		WarpData& data = warpData[i];
-		data.entityCount = 0;
-		data.visibleEntityCount = 0;
-	}
 }
 
 TObject<IReflect>& CameraComponent::TaskData::operator () (IReflect& reflect) {

@@ -79,6 +79,10 @@ local function InitializeWorld(databasePath : string)
 	local screenSize : float2 = System.GetScreenSize()
 	cameraController.aspect = screenSize[1] / screenSize[2]
 	cameraController:UpdatePerspective()
+	
+	local phaseComponent = cameraController.phaseComponent
+	phaseComponent:BindRootEntity(scene.rootEntity)
+	phaseComponent:Update({ 5, 5, 5})
 
 	local lastMousePos = { 0, 0 }
 	local moveSpeed = 1.0
@@ -87,7 +91,6 @@ local function InitializeWorld(databasePath : string)
 
 	local stepPhase = false
 	local stepBounceCount : number = 16
-	local phaseComponent = cameraController.phaseComponent
 
 	local function ReportStepConfig()
 		print("PhaseStep: " .. (stepPhase and "[ON] " or "[OFF] BOUNCE: ") .. tostring(stepBounceCount))
@@ -223,11 +226,9 @@ function Main.Main()
 		end
 	end
 
-	--[[
 	local RepositoryDaemon = require("Script/Util/RepositoryDaemon")
 	local weaver = RepositoryDaemon:New("127.0.0.1:16384", "Database/Repository.sql", databasePath)
 	Debug.Weaver = weaver
-	]]
 	
 	local s, msg = pcall(function ()
 		InitializeWorld(databasePath)
