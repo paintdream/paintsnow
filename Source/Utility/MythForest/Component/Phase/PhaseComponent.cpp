@@ -48,6 +48,8 @@ void PhaseComponentConfig::InstanceGroup::Reset() {
 	for (size_t k = 0; k < instancedData.size(); k++) {
 		instancedData[k].Clear();
 	}
+
+	instanceCount = 0;
 }
 
 PhaseComponent::PhaseComponent(TShared<RenderFlowComponent> renderFlow, const String& portName) : hostEntity(nullptr), maxTracePerTick(8), renderQueue(nullptr), clearResource(nullptr), stateResource(nullptr), range(32, 32, 32), resolution(512, 512), lightCollector(this), renderFlowComponent(renderFlow), lightPhaseViewPortName(portName), rootEntity(nullptr) {}
@@ -355,7 +357,6 @@ void PhaseComponent::TaskAssembleTaskBounce(Engine& engine, TaskData& task, cons
 
 	// TODO: fill params
 	MultiHashTraceFS& fs = static_cast<MultiHashTracePass&>(toPhase.tracePipeline->GetPass()).shaderMultiHashTrace;
-
 
 	// changing state
 	render.UploadResource(task.renderQueue, task.renderTarget, &desc);

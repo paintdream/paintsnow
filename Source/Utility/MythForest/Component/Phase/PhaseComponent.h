@@ -144,7 +144,6 @@ namespace PaintsNow {
 					Float3Pair boundingBox;
 				};
 
-
 				struct WarpData {
 					std::vector<LightElement> lightElements;
 				};

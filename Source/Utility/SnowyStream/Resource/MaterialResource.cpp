@@ -23,8 +23,6 @@ void MaterialResource::Attach(IRender& render, void* deviceContext) {
 		ZPassBase& pass = mutationShaderResource->GetPass();
 		ZPassBase::Updater& updater = mutationShaderResource->GetPassUpdater();
 		// Apply material
-		std::vector<ZPassBase::Name> inputs;
-		inputs.resize(materialParams.variables.size());
 		for (size_t i = 0; i < materialParams.variables.size(); i++) {
 			const IAsset::Material::Variable& var = materialParams.variables[i];
 			if (var.type == IAsset::TYPE_TEXTURE) {

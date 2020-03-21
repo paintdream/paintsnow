@@ -64,7 +64,7 @@ namespace PaintsNow {
 
 		class Updater : public IReflect {
 		public:
-			Updater(ZPassBase& Pass);
+			Updater(ZPassBase& pass);
 			Parameter& operator [] (const Bytes& key);
 			Parameter& operator [] (IShader::BindInput::SCHEMA schema);
 
