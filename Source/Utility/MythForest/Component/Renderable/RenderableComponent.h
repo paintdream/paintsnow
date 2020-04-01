@@ -21,7 +21,6 @@ namespace PaintsNow {
 			enum { RENDERABLECOMPONENT_CUSTOM_BEGIN = COMPONENT_CUSTOM_BEGIN };
 			RenderableComponent();
 
-			virtual String GetDescription() const;
 			virtual Tiny::FLAG GetEntityFlagMask() const override;
 
 			TShared<RenderPolicy> renderPolicy;

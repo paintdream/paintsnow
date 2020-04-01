@@ -381,9 +381,17 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 
 	UpdateJitterMatrices(worldGlobalData);
 
+	// update data updaters
+	IRender& render = engine.interfaces.render;
+	for (size_t i = 0; i < warpData.size(); i++) {
+		TaskData::WarpData& w = warpData[i];
+		for (size_t k = 0; k < w.dataUpdaters.size(); k++) {
+			w.dataUpdaters[k]->Update(render, renderFlowComponent->GetResourceQueue());
+		}
+	}
+
 	// update buffers
 	if (Flag() & (CAMERACOMPONENT_SMOOTH_TRACK | CAMERACOMPONENT_SUBPIXEL_JITTER)) {
-		IRender& render = engine.interfaces.render;
 		for (size_t i = 0; i < warpData.size(); i++) {
 			TaskData::WarpData& w = warpData[i];
 			typedef std::map<ShaderResource*, TaskData::WarpData::GlobalBufferItem> GlobalMap;
@@ -449,6 +457,9 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 		NsSnowyStream::IDrawCallProvider::OutputRenderData& outputRenderData = drawCalls[k];
 		const IRender::Resource::DrawCallDescription& drawCallTemplate = outputRenderData.drawCallDescription;
 		AnimationComponent* animationComponent = instanceData.animationComponent();
+		if (std::binary_find(warpData.dataUpdaters.begin(), warpData.dataUpdaters.end(), outputRenderData.dataUpdater) == warpData.dataUpdaters.end()) {
+			std::binary_insert(warpData.dataUpdaters, outputRenderData.dataUpdater);
+		}
 
 		// Add Lighting stencil
 		assert(!(outputRenderData.renderStateDescription.stencilValue & STENCIL_LIGHTING));
@@ -490,11 +501,11 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 			group.description = renderableComponent->GetDescription();
 #endif // _DEBUG
 
-			std::map<ShaderResource*, TaskData::WarpData::GlobalBufferItem>::iterator ip = warpData.worldGlobalBufferMap.find(outputRenderData.shaderResource);
+			std::map<ShaderResource*, TaskData::WarpData::GlobalBufferItem>::iterator ip = warpData.worldGlobalBufferMap.find(outputRenderData.shaderResource());
 			ZPassBase::Updater& updater = outputRenderData.shaderResource->GetPassUpdater();
 
 			if (ip == warpData.worldGlobalBufferMap.end()) {
-				ip = warpData.worldGlobalBufferMap.insert(std::make_pair(outputRenderData.shaderResource, TaskData::WarpData::GlobalBufferItem())).first;
+				ip = warpData.worldGlobalBufferMap.insert(std::make_pair(outputRenderData.shaderResource(), TaskData::WarpData::GlobalBufferItem())).first;
 
 				ip->second.renderQueue = queue;
 				taskData.worldGlobalData.Export(ip->second.globalUpdater, updater);
@@ -722,6 +733,7 @@ void CameraComponent::TaskData::Cleanup(IRender& render) {
 
 		data.renderStateMap.clear();
 		data.worldGlobalBufferMap.clear();
+		data.dataUpdaters.clear();
 		data.envCubeElements.clear();
 		data.instanceGroups.clear();
 		data.lightElements.clear();

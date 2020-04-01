@@ -1,4 +1,5 @@
 #include "Unit.h"
+#include <sstream>
 
 using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
@@ -20,6 +21,12 @@ bool Unit::EmplaceRaycastResult(std::vector<RaycastResult>& results, uint32_t ma
 }
 
 void Unit::Raycast(std::vector<RaycastResult>& results, Float3Pair& ray, uint32_t maxCount, IReflectObject* filter) const {}
+
+String Unit::GetDescription() const {
+	std::stringstream ss;
+	ss << GetUnique()->GetSubName() << "(" << std::hex << (size_t)this << ")";
+	return ss.str();
+}
 
 TObject<IReflect>& Unit::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);

@@ -10,10 +10,6 @@ uint64_t MaterialResource::GetMemoryUsage() const {
 	return 0;
 }
 
-const std::vector<Bytes>& MaterialResource::GetBufferData() const {
-	return bufferData;
-}
-
 void MaterialResource::Attach(IRender& render, void* deviceContext) {
 	// Collect empty draw calls
 	if (originalShaderResource) {
@@ -80,6 +76,27 @@ void MaterialResource::Upload(IRender& render, void* deviceContext) {
 
 void MaterialResource::Download(IRender& render, void* deviceContext) {
 
+}
+
+TShared<MaterialResource> MaterialResource::CloneWithOverrideShader(TShared<ShaderResource> overrideShaderResource) {
+	if (overrideShaderResource == originalShaderResource) {
+		return this;
+	} else {
+		// create overrider
+		ResourceManager::UniqueLocation overrideLocation = uniqueLocation + "@(" + overrideShaderResource->GetLocation() + ")";
+		TShared<MaterialResource> clone = static_cast<MaterialResource*>(resourceManager.LoadExist(overrideLocation));
+
+		if (clone == nullptr) {
+			clone = TShared<MaterialResource>::From(new MaterialResource(resourceManager, overrideLocation));
+			clone->materialParams = materialParams;
+			clone->originalShaderResource = overrideShaderResource;
+			resourceManager.Insert(overrideLocation, clone());
+			// Invoke attach
+			resourceManager.InvokeAttach(clone(), resourceManager.GetContext());
+		}
+
+		return clone;
+	}
 }
 
 uint32_t MaterialResource::CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) {

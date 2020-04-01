@@ -17,15 +17,21 @@ namespace PaintsNow {
 		class IDrawCallProvider {
 		public:
 			struct InputRenderData {
-				InputRenderData(float ref = 0.0f, ShaderResource* res = nullptr) :  overrideMaterialTemplate(res), viewReference(ref) {}
-				ShaderResource* overrideMaterialTemplate;
+				InputRenderData(float ref = 0.0f, ShaderResource* res = nullptr) :  overrideShaderTemplate(res), viewReference(ref) {}
+				ShaderResource* overrideShaderTemplate;
 				float viewReference;
+			};
+
+			class DataUpdater {
+			public:
+				virtual void Update(IRender& render, IRender::Queue* queue) = 0;
 			};
 
 			struct OutputRenderData {
 				IRender::Resource::DrawCallDescription drawCallDescription;
 				IRender::Resource::RenderStateDescription renderStateDescription;
-				ShaderResource* shaderResource;
+				DataUpdater* dataUpdater;
+				TShared<ShaderResource> shaderResource;
 				TShared<SharedTiny> host;
 			};
 
@@ -44,14 +50,12 @@ namespace PaintsNow {
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 			virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) override;
 
-			const std::vector<Bytes>& GetBufferData() const;
+			TShared<MaterialResource> CloneWithOverrideShader(TShared<ShaderResource> override);
 
 			IAsset::Material materialParams;
 			TShared<ShaderResource> originalShaderResource;
 			TShared<ShaderResource> mutationShaderResource;
 			std::vector<TShared<TextureResource> > textureResources;
-
-		protected:
 			IRender::Resource::DrawCallDescription drawCallTemplate;
 			std::vector<Bytes> bufferData;
 		};

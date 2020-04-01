@@ -14,24 +14,19 @@ namespace PaintsNow {
 	namespace NsMythForest {
 		// Manages Vertex/Uniform/Instance buffers statically
 		class RenderableComponent;
-		class BatchComponent : public TAllocatedTiny<BatchComponent, Component> {
+		class BatchComponent : public TAllocatedTiny<BatchComponent, Component>, public NsSnowyStream::IDrawCallProvider::DataUpdater {
 		public:
 			BatchComponent();
 			virtual ~BatchComponent();
-			virtual void Initialize(Engine& engine, Entity* entity) override;
-			virtual void Uninitialize(Engine& engine, Entity* entity) override;
-			virtual void DispatchEvent(Event& event, Entity* entity) override;
 
-			IRender::Resource::DrawCallDescription::BufferRange Allocate(IRender& render, const Bytes& data);
-			void Flush(IRender& render);
-
+			IRender::Resource::DrawCallDescription::BufferRange Allocate(const Bytes& data);
+			void Update(IRender& render, IRender::Queue* queue);
 			void InstanceInitialize(Engine& engine);
 			void InstanceUninitialize(Engine& engine);
 
 		private:
 			Bytes currentData;
 			IRender::Resource* buffer;
-			IRender::Queue* queue;
 			uint32_t referenceCount;
 		};
 	}

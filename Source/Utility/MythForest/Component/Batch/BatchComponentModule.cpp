@@ -11,7 +11,6 @@ TObject<IReflect>& BatchComponentModule::operator () (IReflect& reflect) {
 
 	if (reflect.IsReflectMethod()) {
 		ReflectMethod(RequestNew)[ScriptMethod = "New"];
-		ReflectMethod(RequestFlush)[ScriptMethod = "Flush"];
 		ReflectMethod(RequestGetCaptureStatistics)[ScriptMethod = "GetCaptureStatistics"];
 	}
 
@@ -33,13 +32,6 @@ void BatchComponentModule::RequestNew(IScript::Request& request) {
 	request.DoLock();
 	request << batchComponent;
 	request.UnLock();
-}
-
-void BatchComponentModule::RequestFlush(IScript::Request& request, IScript::Delegate<BatchComponent> component) {
-	CHECK_REFERENCES_NONE();
-	CHECK_DELEGATE(component);
-
-	component->Flush(engine.interfaces.render);
 }
 
 void BatchComponentModule::RequestGetCaptureStatistics(IScript::Request& request, IScript::Delegate<BatchComponent> component) {

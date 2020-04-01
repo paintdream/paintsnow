@@ -170,7 +170,6 @@ function Scene.New(database : Database?, clock : Clock)
 		]]
 	end
 
-	batchComponent:Flush()
 	local RuntimeVisibilityProbe = require("Script/Prefabs/Components/Visibility/RuntimeVisibilityProbe")
 	local visibilityComponent = RuntimeVisibilityProbe.New()
 	rootEntity:AddEntityComponent(visibilityComponent)

@@ -119,6 +119,7 @@ namespace PaintsNow {
 					std::map<RenderPolicy*, PolicyData> renderPolicyMap;
 					std::vector<std::pair<TShared<RenderPolicy>, LightElement> > lightElements;
 					std::vector<std::pair<TShared<RenderPolicy>, EnvCubeElement> > envCubeElements;
+					std::vector<NsSnowyStream::IDrawCallProvider::DataUpdater*> dataUpdaters;
 					uint32_t entityCount;
 					uint32_t visibleEntityCount;
 				};

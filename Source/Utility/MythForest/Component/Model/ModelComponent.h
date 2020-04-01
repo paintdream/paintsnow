@@ -16,7 +16,11 @@ namespace PaintsNow {
 	namespace NsMythForest {
 		class ModelComponent : public TAllocatedTiny<ModelComponent, RenderableComponent> {
 		public:
-			enum { MODELCOMPONENT_HAS_ANIMATION = RENDERABLECOMPONENT_CUSTOM_BEGIN };
+			enum {
+				MODELCOMPONENT_HAS_ANIMATION = RENDERABLECOMPONENT_CUSTOM_BEGIN,
+				MODELCOMPONENT_HAS_TECHNIQUE = RENDERABLECOMPONENT_CUSTOM_BEGIN << 1,
+				MODELCOMPONENT_CUSTOM_BEGIN = RENDERABLECOMPONENT_CUSTOM_BEGIN << 2
+			};
 
 			// delayed loader
 			ModelComponent(TShared<NsSnowyStream::MeshResource>& modelResource, TShared<BatchComponent>& batch);
@@ -27,14 +31,17 @@ namespace PaintsNow {
 			virtual void Initialize(Engine& engine, Entity* entity) override;
 			virtual void Uninitialize(Engine& engine, Entity* entity) override;
 			void AddMaterial(uint32_t meshGroupIndex, TShared<NsSnowyStream::MaterialResource>& materialResource);
+			uint32_t CreateOverrider(TShared<NsSnowyStream::ShaderResource> shaderResourceTemplate);
 
 		protected:
 			virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) override;
+			void GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTemplates, std::vector<std::pair<uint32_t, TShared<NsSnowyStream::MaterialResource> > >& materialResources);
 
 		protected:
 			TShared<NsSnowyStream::MeshResource> meshResource;
 			TShared<BatchComponent> batchComponent;
 
+			std::vector<TShared<NsSnowyStream::ShaderResource> > shaderOverriders;
 			std::vector<std::pair<uint32_t, TShared<NsSnowyStream::MaterialResource> > > materialResources;
 			std::vector<OutputRenderData> drawCallTemplates;
 		};

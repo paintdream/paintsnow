@@ -28,6 +28,7 @@ namespace PaintsNow {
 
 			static bool EmplaceRaycastResult(std::vector<RaycastResult>& results, uint32_t maxCount, const RaycastResult& item);
 			virtual void Raycast(std::vector<RaycastResult>& results, Float3Pair& ray, uint32_t maxCount, IReflectObject* metaInfo) const;
+			virtual String GetDescription() const;
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
 			enum {

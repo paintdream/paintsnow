@@ -876,6 +876,10 @@ IRender::Device* SnowyStream::GetRenderDevice() const {
 	return renderDevice;
 }
 
+IRender::Queue* SnowyStream::GetResourceQueue() const {
+	return resourceQueue;
+}
+
 IReflectObject* MetaResourceExternalPersist::Clone() const {
 	return new MetaResourceExternalPersist(*this);
 }
