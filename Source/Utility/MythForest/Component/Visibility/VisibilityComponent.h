@@ -150,6 +150,7 @@ namespace PaintsNow {
 			IRender::Resource* depthStencilResource;
 			IRender::Resource* stateResource;
 			TShared<NsSnowyStream::ShaderResourceImpl<NsSnowyStream::ConstMapPass> > pipeline;
+			TAtomic<uint32_t> collectCritical;
 
 			std::vector<TaskData> tasks;
 			std::stack<BakePoint> bakePoints;

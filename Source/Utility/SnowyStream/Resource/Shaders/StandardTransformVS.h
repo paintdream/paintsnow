@@ -39,6 +39,7 @@ namespace PaintsNow {
 			
 			// Output
 			Float4 rasterPosition;
+			Float2 rasterCoord;
 			Float4 texCoord;
 			Float3 viewNormal;
 			Float3 viewTangent;
@@ -51,6 +52,7 @@ namespace PaintsNow {
 			bool enableVertexColor;
 			bool enableInstancedColor;
 			bool enableVertexTangent;
+			bool enableRasterCoord;
 		};
 	}
 }

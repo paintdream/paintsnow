@@ -19,7 +19,7 @@ namespace PaintsNow {
 			BindTexture noiseTexture;
 			BindBuffer noiseParamBuffer;
 
-			Float4 rasterPosition;
+			Float2 rasterCoord;
 			Float2 noiseOffset;
 			float noiseClip;
 		};

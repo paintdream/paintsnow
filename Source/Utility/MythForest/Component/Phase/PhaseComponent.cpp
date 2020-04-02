@@ -284,7 +284,7 @@ void PhaseComponent::ResolveTasks(Engine& engine) {
 			finalStatus.store(TaskData::STATUS_IDLE);
 		} else if (task.status == TaskData::STATUS_ASSEMBLING) {
 			if (task.pendingCount == 0) {
-				// Commit draw calls.std::map<size_t, InstanceGroup>
+				// Commit draw calls.
 				IRender::Queue* queue = task.renderQueue;
 				IRender& render = engine.interfaces.render;
 

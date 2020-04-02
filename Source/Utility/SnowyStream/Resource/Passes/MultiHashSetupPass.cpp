@@ -3,7 +3,9 @@
 using namespace PaintsNow;
 using namespace PaintsNow::NsSnowyStream;
 
-MultiHashSetupPass::MultiHashSetupPass() {}
+MultiHashSetupPass::MultiHashSetupPass() {
+	standardTransform.enableRasterCoord = true;
+}
 
 TObject<IReflect>& MultiHashSetupPass::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);

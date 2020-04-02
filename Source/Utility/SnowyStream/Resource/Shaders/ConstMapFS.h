@@ -16,9 +16,6 @@ namespace PaintsNow {
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 			virtual String GetShaderText() override;
 
-		public:
-			IShader::BindBuffer valueBuffer;
-
 		protected:
 			// varyings
 			Float4 tintColor;

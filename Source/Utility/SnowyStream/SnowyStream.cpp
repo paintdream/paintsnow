@@ -514,8 +514,8 @@ void SnowyStream::RequestCloneResource(IScript::Request& request, IScript::Deleg
 	CHECK_DELEGATE(resource);
 	
 	ResourceManager& resourceManager = resource->GetResourceManager();
-	ResourceBase* exist = resourceManager.LoadExist(path);
-	if (exist == nullptr) {
+	TShared<ResourceBase> exist = resourceManager.LoadExist(path);
+	if (!exist) {
 		ResourceBase* p = static_cast<ResourceBase*>(resource->Clone());
 		if (p != nullptr) {
 			resourceManager.Insert(path, p);
@@ -723,23 +723,21 @@ TShared<ResourceBase> SnowyStream::CreateResource(const String& path, const Stri
 	IArchive& archive = interfaces.archive;
 	IFilterBase& protocol = interfaces.filterBase;
 
-	ResourceBase* res = nullptr;
+	TShared<ResourceBase> resource;
 	if (p != resourceSerializers.end()) {
 		// query manager
 		std::map<Unique, TShared<ResourceManager> >::iterator t = resourceManagers.find((*p).second.first);
 		assert(t != resourceManagers.end());
 		if (sourceStream == nullptr) {
-			res = (*p).second.second->DeserializeFromArchive(*(*t).second(), archive, location, protocol, openExisting, flag);
+			resource = (*p).second.second->DeserializeFromArchive(*(*t).second(), archive, location, protocol, openExisting, flag);
 		} else {
 			assert(!openExisting);
-			res = (*p).second.second->Deserialize(*(*t).second(), location, protocol, flag, sourceStream);
+			resource = (*p).second.second->Deserialize(*(*t).second(), location, protocol, flag, sourceStream);
 		}
 	} else {
 		return nullptr; // unknown resource type
 	}
 
-	TShared<ResourceBase> resource;
-	resource.Reset(res);
 	return resource;
 }
 

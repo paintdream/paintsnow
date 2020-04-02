@@ -17,7 +17,7 @@ TObject<IReflect>& MultiHashSetupFS::operator () (IReflect& reflect) {
 		ReflectProperty(noiseTexture);
 		ReflectProperty(noiseParamBuffer);
 
-		ReflectProperty(rasterPosition)[IShader::BindInput(IShader::BindInput::TEXCOORD)];
+		ReflectProperty(rasterCoord)[IShader::BindInput(IShader::BindInput::TEXCOORD)];
 		ReflectProperty(noiseOffset)[noiseParamBuffer][IShader::BindInput(IShader::BindInput::GENERAL)];
 		ReflectProperty(noiseClip)[noiseParamBuffer][IShader::BindInput(IShader::BindInput::GENERAL)];
 	}
@@ -27,7 +27,7 @@ TObject<IReflect>& MultiHashSetupFS::operator () (IReflect& reflect) {
 
 String MultiHashSetupFS::GetShaderText() {
 	return UnifyShaderCode(
-		float noise = texture(noiseTexture, rasterPosition.xy + noiseOffset).x;
+		float noise = texture(noiseTexture, rasterCoord.xy + noiseOffset).x;
 		clip(noise - noiseClip);
 	);
 }

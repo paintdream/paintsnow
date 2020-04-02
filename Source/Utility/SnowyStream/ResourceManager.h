@@ -30,7 +30,7 @@ namespace PaintsNow {
 			void Report(const String& err);
 			void* GetContext() const;
 
-			ResourceBase* LoadExist(const UniqueLocation& uniqueLocation);
+			TShared<ResourceBase> LoadExist(const UniqueLocation& uniqueLocation);
 			IUniformResourceManager& GetUniformResourceManager();
 
 		public:
@@ -86,11 +86,11 @@ namespace PaintsNow {
 		class ResourceSerializerBase : public TReflected<ResourceSerializerBase, SharedTiny> {
 		public:
 			virtual ~ResourceSerializerBase();
-			ResourceBase* DeserializeFromArchive(ResourceManager& manager, IArchive& archive, const String& path,  IFilterBase& protocol, bool openExisting, Tiny::FLAG flag);
+			TShared<ResourceBase> DeserializeFromArchive(ResourceManager& manager, IArchive& archive, const String& path,  IFilterBase& protocol, bool openExisting, Tiny::FLAG flag);
 			bool MapFromArchive(ResourceBase* resource, IArchive& archive, IFilterBase& protocol, const String& path);
 			bool SerializeToArchive(ResourceBase* resource, IArchive& archive, IFilterBase& protocol, const String& path);
 
-			virtual ResourceBase* Deserialize(ResourceManager& manager, const ResourceManager::UniqueLocation& id, IFilterBase& protocol, Tiny::FLAG flag, IStreamBase* stream) = 0;
+			virtual TShared<ResourceBase> Deserialize(ResourceManager& manager, const ResourceManager::UniqueLocation& id, IFilterBase& protocol, Tiny::FLAG flag, IStreamBase* stream) = 0;
 			virtual bool Serialize(ResourceBase* res, IFilterBase& protocol, IStreamBase& stream) = 0;
 			virtual bool LoadData(ResourceBase* res, IFilterBase& protocol, IStreamBase& stream) = 0;
 			virtual Unique GetDeviceUnique() const = 0;
@@ -115,7 +115,7 @@ namespace PaintsNow {
 				return success;
 			}
 
-			virtual ResourceBase* Deserialize(ResourceManager& manager, const ResourceManager::UniqueLocation& id, IFilterBase& protocol, Tiny::FLAG flag, IStreamBase* stream) {
+			virtual TShared<ResourceBase> Deserialize(ResourceManager& manager, const ResourceManager::UniqueLocation& id, IFilterBase& protocol, Tiny::FLAG flag, IStreamBase* stream) {
 				T* object = new T(manager, id);
 
 				if (stream != nullptr) {
@@ -131,7 +131,7 @@ namespace PaintsNow {
 					manager.Insert(id, object);
 				}
 
-				return object;
+				return TShared<ResourceBase>::From(object);
 			}
 
 			virtual bool Serialize(ResourceBase* object, IFilterBase& protocol, IStreamBase& stream) {

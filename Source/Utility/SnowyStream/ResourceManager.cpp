@@ -71,14 +71,13 @@ IUniformResourceManager& ResourceManager::GetUniformResourceManager() {
 	return uniformResourceManager;
 }
 
-ResourceBase* ResourceManager::LoadExist(const UniqueLocation& id) {
+TShared<ResourceBase> ResourceManager::LoadExist(const UniqueLocation& id) {
 	DoLock();
 	unordered_map<UniqueLocation, ResourceBase*>::iterator p = resourceMap.find(id);
 	ResourceBase* pointer = nullptr;
 	if (p != resourceMap.end()) {
 		pointer = (*p).second;
 		assert(pointer != nullptr);
-		pointer->ReferenceObject();
 	}
 
 	UnLock();
@@ -114,12 +113,12 @@ inline ResourceManager::UniqueLocation PathToUniqueID(const String& path) {
 	return path;
 }
 
-ResourceBase* ResourceSerializerBase::DeserializeFromArchive(ResourceManager& manager, IArchive& archive, const String& path, IFilterBase& protocol, bool openExisting, Tiny::FLAG flag) {
+TShared<ResourceBase> ResourceSerializerBase::DeserializeFromArchive(ResourceManager& manager, IArchive& archive, const String& path, IFilterBase& protocol, bool openExisting, Tiny::FLAG flag) {
 	assert(manager.GetDeviceUnique() == GetDeviceUnique());
 	if (manager.GetDeviceUnique() != GetDeviceUnique())
 		return nullptr;
 		
-	ResourceBase* resource = manager.LoadExist(PathToUniqueID(path));
+	TShared<ResourceBase> resource = manager.LoadExist(PathToUniqueID(path));
 	if (resource != nullptr) {
 		return resource;
 	}

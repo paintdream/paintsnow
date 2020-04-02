@@ -81,7 +81,7 @@ void ModelComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTe
 				for (size_t n = 0; n < uniformBufferData.size(); n++) {
 					const Bytes& data = uniformBufferData[n];
 					if (!data.Empty()) {
-						bufferRanges[n] = batchComponent->Allocate(uniformBufferData[n]);
+						bufferRanges[n] = batchComponent->Allocate(data);
 					}
 				}
 
@@ -118,7 +118,7 @@ uint32_t ModelComponent::CollectDrawCalls(std::vector<OutputRenderData>& drawCal
 			overrideMaterialResources.resize(materialResources.size());
 			for (size_t i = 0; i < materialResources.size(); i++) {
 				overrideMaterialResources[i].first = materialResources[i].first;
-				overrideMaterialResources[i].second = overrideMaterialResources[i].second->CloneWithOverrideShader(overrideShaderTemplate);
+				overrideMaterialResources[i].second = materialResources[i].second->CloneWithOverrideShader(overrideShaderTemplate);
 			}
 
 			std::vector<OutputRenderData> overrideDrawCallTemplates;

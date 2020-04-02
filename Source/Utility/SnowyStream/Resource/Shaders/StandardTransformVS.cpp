@@ -6,7 +6,7 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsSnowyStream;
 using namespace PaintsNow::ShaderMacro;
 
-StandardTransformVS::StandardTransformVS() : enableViewProjectionMatrix(true), enableVertexColor(false), enableVertexNormal(true), enableInstancedColor(false), enableVertexTangent(true) {
+StandardTransformVS::StandardTransformVS() : enableViewProjectionMatrix(true), enableVertexColor(false), enableVertexNormal(true), enableInstancedColor(false), enableVertexTangent(true), enableRasterCoord(false) {
 	instanceBuffer.description.usage = IRender::Resource::BufferDescription::INSTANCED;
 	vertexPositionBuffer.description.usage = IRender::Resource::BufferDescription::VERTEX;
 	vertexNormalBuffer.description.usage = IRender::Resource::BufferDescription::VERTEX;
@@ -53,6 +53,10 @@ String StandardTransformVS::GetShaderText() {
 		if (enableInstancedColor) {
 			tintColor *= instancedColor;
 		}
+
+		if (enableRasterCoord) {
+			rasterCoord = rasterPosition.xy * float(2.0) - float2(1.0, 1.0);
+		}
 	);
 }
 
@@ -66,6 +70,7 @@ TObject<IReflect>& StandardTransformVS::operator () (IReflect& reflect) {
 		ReflectProperty(enableVertexTangent)[IShader::BindConst<bool>()];
 		ReflectProperty(enableViewProjectionMatrix)[IShader::BindConst<bool>()];
 		ReflectProperty(enableInstancedColor)[IShader::BindConst<bool>()];
+		ReflectProperty(enableRasterCoord)[IShader::BindConst<bool>()];
 
 		ReflectProperty(instanceBuffer);
 		ReflectProperty(vertexPositionBuffer);
@@ -91,6 +96,7 @@ TObject<IReflect>& StandardTransformVS::operator () (IReflect& reflect) {
 		ReflectProperty(viewNormal)[IShader::BindOutput(IShader::BindOutput::TEXCOORD + 2)];
 		ReflectProperty(viewTangent)[IShader::BindOutput(IShader::BindOutput::TEXCOORD + 3)];
 		ReflectProperty(viewBinormal)[IShader::BindOutput(IShader::BindOutput::TEXCOORD + 4)];
+		ReflectProperty(rasterCoord)[IShader::BindOption(enableRasterCoord)][IShader::BindOutput(IShader::BindOutput::TEXCOORD + 5)];
 		ReflectProperty(tintColor)[IShader::BindOutput(IShader::BindOutput::COLOR)];
 	}
 

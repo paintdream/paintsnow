@@ -208,6 +208,17 @@ void ZPassBase::Updater::Property(IReflectObject& s, Unique typeID, Unique refTy
 }
 
 void ZPassBase::Updater::Flush() {
+	std::vector<uint32_t> fixBufferSlots(buffers.size());
+
+	std::vector<const IShader::BindBuffer*> fixedBuffers;
+	for (size_t i = 0; i < buffers.size(); i++) {
+		// Empty buffer?
+		fixBufferSlots[i] = safe_cast<uint32_t>(fixedBuffers.size());
+		if (bufferSize[buffers[i]] != 0) {
+			fixedBuffers.push_back(buffers[i]);
+		}
+	}
+
 	// generate quick updaters
 	quickUpdaters.reserve(parameters.size());
 
@@ -237,10 +248,16 @@ void ZPassBase::Updater::Flush() {
 
 				param.linearLayout = 1;
 			}
+		
+			param.slot = fixBufferSlots[param.slot]; // fix slot
 		}
 
 		quickUpdaters.emplace_back(j);
 	}
+
+	std::swap(buffers, fixedBuffers);
+	bufferSize.clear();
+	bufferID.clear();
 }
 
 void ZPassBase::Updater::Capture(IRender::Resource::DrawCallDescription& drawCallDescription, std::vector<Bytes>& bufferData, uint32_t bufferMask) {

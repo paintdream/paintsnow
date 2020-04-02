@@ -53,11 +53,11 @@ void MaterialResource::Attach(IRender& render, void* deviceContext) {
 			location.append((const char*)shaderHash.GetData(), shaderHash.GetSize());
 
 			// cached?
-			ShaderResource* cached = static_cast<ShaderResource*>(resourceManager.LoadExist(location));
+			TShared<ShaderResource> cached = static_cast<ShaderResource*>(resourceManager.LoadExist(location)());
 
 			if (cached != nullptr) {
 				// use cache
-				mutationShaderResource.Reset(cached);
+				mutationShaderResource = cached;
 			} else {
 				resourceManager.Insert(location, mutationShaderResource());
 			}
@@ -84,15 +84,14 @@ TShared<MaterialResource> MaterialResource::CloneWithOverrideShader(TShared<Shad
 	} else {
 		// create overrider
 		ResourceManager::UniqueLocation overrideLocation = uniqueLocation + "@(" + overrideShaderResource->GetLocation() + ")";
-		TShared<MaterialResource> clone = static_cast<MaterialResource*>(resourceManager.LoadExist(overrideLocation));
+		TShared<MaterialResource> clone = static_cast<MaterialResource*>(resourceManager.LoadExist(overrideLocation)());
 
-		if (clone == nullptr) {
+		if (!clone) {
 			clone = TShared<MaterialResource>::From(new MaterialResource(resourceManager, overrideLocation));
 			clone->materialParams = materialParams;
+			clone->textureResources = textureResources;
 			clone->originalShaderResource = overrideShaderResource;
 			resourceManager.Insert(overrideLocation, clone());
-			// Invoke attach
-			resourceManager.InvokeAttach(clone(), resourceManager.GetContext());
 		}
 
 		return clone;

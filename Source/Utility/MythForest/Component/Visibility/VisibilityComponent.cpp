@@ -11,6 +11,7 @@ using namespace PaintsNow::NsSnowyStream;
 
 VisibilityComponent::VisibilityComponent() : subDivision(1, 1, 1), taskCount(32), resolution(256, 256), maxFrameExecutionTime(5), viewDistance(512.0f), activeCellCacheIndex(0), hostEntity(nullptr), renderQueue(nullptr), clearResource(nullptr), depthStencilResource(nullptr), stateResource(nullptr) {
 	maxVisIdentity.store(0, std::memory_order_relaxed);
+	collectCritical.store(0, std::memory_order_relaxed);
 }
 
 Tiny::FLAG VisibilityComponent::GetEntityFlagMask() const {
@@ -388,7 +389,9 @@ void VisibilityComponent::CollectRenderableComponent(Engine& engine, TaskData& t
 	} else {
 		NsSnowyStream::IDrawCallProvider::InputRenderData inputRenderData(0.0f, pipeline());
 		std::vector<NsSnowyStream::IDrawCallProvider::OutputRenderData> drawCalls;
+		SpinLock(collectCritical);
 		renderableComponent->CollectDrawCalls(drawCalls, inputRenderData);
+		SpinUnLock(collectCritical);
 		assert(drawCalls.size() < sizeof(RenderableComponent) - 1);
 
 		for (size_t i = 0; i < drawCalls.size(); i++) {
@@ -523,6 +526,11 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 								group.drawCallDescription.bufferResources[output.slot].buffer = buffer;
 								buffers.emplace_back(buffer);
 							}
+						}
+
+
+						for (size_t n = 0; n < group.drawCallDescription.bufferResources.size(); n++) {
+							assert(group.drawCallDescription.bufferResources[n].buffer != nullptr);
 						}
 
 						group.drawCallDescription.instanceCounts.x() = group.instanceCount;
