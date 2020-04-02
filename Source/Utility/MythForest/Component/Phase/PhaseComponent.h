@@ -71,6 +71,12 @@ namespace PaintsNow {
 				uint32_t instanceCount;
 			};
 
+			struct WarpData {
+				typedef unordered_map<InstanceKey, InstanceGroup, HashInstanceKey> InstanceGroupMap;
+				InstanceGroupMap instanceGroups;
+				std::vector<NsSnowyStream::IDrawCallProvider::DataUpdater*> dataUpdaters;
+			};
+
 			struct TaskData {
 				TaskData();
 				virtual ~TaskData();
@@ -83,8 +89,7 @@ namespace PaintsNow {
 					STATUS_BAKED
 				};
 
-				typedef unordered_map<InstanceKey, InstanceGroup, HashInstanceKey> InstanceGroupMap;
-				std::vector<InstanceGroupMap> instanceGroups;
+				std::vector<WarpData> warpData;
 				WorldGlobalData worldGlobalData;
 				uint32_t status;
 				uint32_t pendingCount;
@@ -99,6 +104,7 @@ namespace PaintsNow {
 			friend class SpaceTraversal<PhaseComponent, PhaseComponentConfig>;
 			typedef PhaseComponentConfig::InstanceGroup InstanceGroup;
 			typedef PhaseComponentConfig::InstanceKey InstanceKey;
+			typedef PhaseComponentConfig::WarpData WarpData;
 			
 			PhaseComponent(TShared<RenderFlowComponent> renderFlowComponent, const String& lightPhaseViewName);
 			virtual ~PhaseComponent();

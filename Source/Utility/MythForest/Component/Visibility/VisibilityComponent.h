@@ -71,6 +71,7 @@ namespace PaintsNow {
 				IRender::Queue* renderQueue;
 				IRender::Resource* renderTarget;
 				TShared<NsSnowyStream::TextureResource> texture;
+				std::vector<NsSnowyStream::IDrawCallProvider::DataUpdater*> dataUpdaters;
 				Bytes data;
 				std::vector<std::map<size_t, InstanceGroup> > instanceGroups;
 			};
@@ -117,14 +118,14 @@ namespace PaintsNow {
 			void RoutineTickTasks(Engine& engine);
 			void ResolveTasks(Engine& engine);
 			void DispatchTasks(Engine& engine);
+
 			struct BakePoint {
 				UShort3 coord;
 				uint16_t face;
 			};
-			void CoTaskAssembleTask(Engine& engine, TaskData& task, const BakePoint& bakePoint);
-			void SetupIdentitiesForSpaceComponent(Engine& engine, SpaceComponent* spaceComponent);
-			void SetupIdentities(Engine& engine, Entity* hostEntity);
 
+			void CoTaskAssembleTask(Engine& engine, TaskData& task, const BakePoint& bakePoint);
+			void SetupIdentities(Engine& engine, Entity* hostEntity);
 			void CollectRenderableComponent(Engine& engine, TaskData& task, RenderableComponent* renderableComponent, WorldInstanceData& instanceData, uint32_t identity);
 			void CollectComponents(Engine& engine, TaskData& task, const WorldInstanceData& instanceData, const CaptureData& captureData, Entity* entity);
 			void CompleteCollect(Engine& engine, TaskData& task);

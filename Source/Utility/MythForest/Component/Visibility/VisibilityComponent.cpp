@@ -46,7 +46,7 @@ void VisibilityComponent::Initialize(Engine& engine, Entity* entity) {
 		Component* component = components[n];
 		if (component != nullptr && (component->GetEntityFlagMask() & Entity::ENTITY_HAS_SPACE)) {
 			SpaceComponent* spaceComponent = static_cast<SpaceComponent*>(component);
-			SetupIdentitiesForSpaceComponent(engine, spaceComponent);
+			SetupIdentities(engine, spaceComponent->GetRootEntity());
 		}
 	}
 
@@ -160,14 +160,6 @@ void VisibilityComponent::Setup(Engine& engine, float distance, const Float3Pair
 	viewDistance = distance;
 }
 
-void VisibilityComponent::SetupIdentitiesForSpaceComponent(Engine& engine, SpaceComponent* spaceComponent) {
-	if (spaceComponent->GetWarpIndex() != engine.GetKernel().GetCurrentWarpIndex()) {
-		spaceComponent->QueueRoutine(engine, CreateTaskContextFree(Wrap(this, &VisibilityComponent::SetupIdentitiesForSpaceComponent), std::ref(engine), spaceComponent));
-	} else {
-		SetupIdentities(engine, spaceComponent->GetRootEntity());
-	}
-}
-
 void VisibilityComponent::SetupIdentities(Engine& engine, Entity* entity) {
 	for (Entity* p = entity; p != nullptr; p = p->Right()) {
 		TransformComponent* transformComponent = p->GetUniqueComponent(UniqueType<TransformComponent>());
@@ -180,7 +172,8 @@ void VisibilityComponent::SetupIdentities(Engine& engine, Entity* entity) {
 		for (size_t i = 0; i < components.size(); i++) {
 			Component* component = components[i];
 			if (component != nullptr && (component->GetEntityFlagMask() & Entity::ENTITY_HAS_SPACE)) {
-				SetupIdentitiesForSpaceComponent(engine, static_cast<SpaceComponent*>(component));
+				assert(component->GetWarpIndex() == GetWarpIndex());
+				SetupIdentities(engine, static_cast<SpaceComponent*>(component)->GetRootEntity());
 			}
 		}
 
@@ -399,8 +392,11 @@ void VisibilityComponent::CollectRenderableComponent(Engine& engine, TaskData& t
 		assert(drawCalls.size() < sizeof(RenderableComponent) - 1);
 
 		for (size_t i = 0; i < drawCalls.size(); i++) {
+			IDrawCallProvider::DataUpdater* dataUpdater = drawCalls[i].dataUpdater;
 			InstanceGroup& group = instanceGroups[(size_t)renderableComponent + i];
 			if (group.instanceCount == 0) {
+				std::binary_insert(task.dataUpdaters, dataUpdater);
+
 				instanceData.Export(group.partialUpdater, pipeline->GetPassUpdater());
 				group.instancedData.resize(group.partialUpdater.groupInfos.size());
 				group.drawCallDescription = std::move(drawCalls[i].drawCallDescription);
@@ -492,6 +488,12 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 				// Commit draw calls.
 				IRender::Queue* queue = task.renderQueue;
 				IRender& render = engine.interfaces.render;
+
+				for (size_t k = 0; k < task.dataUpdaters.size(); k++) {
+					task.dataUpdaters[k]->Update(render, queue);
+				}
+
+				task.dataUpdaters.clear();
 
 				for (size_t i = 0; i < task.instanceGroups.size(); i++) {
 					std::map<size_t, InstanceGroup>& groups = task.instanceGroups[i];

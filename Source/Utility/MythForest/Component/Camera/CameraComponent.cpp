@@ -457,9 +457,7 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 		NsSnowyStream::IDrawCallProvider::OutputRenderData& outputRenderData = drawCalls[k];
 		const IRender::Resource::DrawCallDescription& drawCallTemplate = outputRenderData.drawCallDescription;
 		AnimationComponent* animationComponent = instanceData.animationComponent();
-		if (std::binary_find(warpData.dataUpdaters.begin(), warpData.dataUpdaters.end(), outputRenderData.dataUpdater) == warpData.dataUpdaters.end()) {
-			std::binary_insert(warpData.dataUpdaters, outputRenderData.dataUpdater);
-		}
+		std::binary_insert(warpData.dataUpdaters, outputRenderData.dataUpdater);
 
 		// Add Lighting stencil
 		assert(!(outputRenderData.renderStateDescription.stencilValue & STENCIL_LIGHTING));

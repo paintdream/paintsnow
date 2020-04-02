@@ -167,7 +167,7 @@ void PhaseComponent::Setup(Engine& engine, uint32_t phaseCount, uint32_t taskCou
 	tasks.resize(taskCount);
 	for (size_t j = 0; j < tasks.size(); j++) {
 		TaskData& task = tasks[j];
-		task.instanceGroups.resize(warpCount);
+		task.warpData.resize(warpCount);
 		task.renderQueue = render.CreateQueue(device);
 		task.renderTarget = render.CreateResource(task.renderQueue, IRender::Resource::RESOURCE_RENDERTARGET);
 	}
@@ -288,9 +288,16 @@ void PhaseComponent::ResolveTasks(Engine& engine) {
 				IRender::Queue* queue = task.renderQueue;
 				IRender& render = engine.interfaces.render;
 
-				for (size_t i = 0; i < task.instanceGroups.size(); i++) {
-					TaskData::InstanceGroupMap& groups = task.instanceGroups[i];
-					for (TaskData::InstanceGroupMap::iterator it = groups.begin(); it != groups.end(); ++it) {
+				for (size_t i = 0; i < task.warpData.size(); i++) {
+					std::vector<IDrawCallProvider::DataUpdater*>& dataUpdaters = task.warpData[i].dataUpdaters;
+
+					for (size_t k = 0; k < dataUpdaters.size(); k++) {
+						dataUpdaters[k]->Update(render, queue);
+					}
+
+					dataUpdaters.clear();
+					WarpData::InstanceGroupMap& groups = task.warpData[i].instanceGroups;
+					for (WarpData::InstanceGroupMap::iterator it = groups.begin(); it != groups.end(); ++it) {
 						InstanceGroup& group = (*it).second;
 						if (group.drawCallDescription.shaderResource == nullptr || group.instanceCount == 0) continue;
 
@@ -474,17 +481,17 @@ void PhaseComponent::CollectRenderableComponent(Engine& engine, TaskData& task, 
 	IRender& render = engine.interfaces.render;
 	IRender::Queue* queue = task.renderQueue;
 	uint32_t currentWarpIndex = engine.GetKernel().GetCurrentWarpIndex();
-	TaskData::InstanceGroupMap& instanceGroups = task.instanceGroups[currentWarpIndex == ~(uint32_t)0 ? GetWarpIndex() : currentWarpIndex];
+	WarpData& warpData = task.warpData[currentWarpIndex == ~(uint32_t)0 ? GetWarpIndex() : currentWarpIndex];
 
 	InstanceKey key;
 	key.renderKey = (size_t)renderableComponent;
-	InstanceGroup& first = instanceGroups[key];
+	InstanceGroup& first = warpData.instanceGroups[key];
 	if (first.drawCallDescription.shaderResource != nullptr) {
 		size_t i = 0;
 		while (true) {
 			InstanceKey key;
 			key.renderKey = (size_t)renderableComponent + i++;
-			InstanceGroup& group = instanceGroups[key];
+			InstanceGroup& group = warpData.instanceGroups[key];
 			if (group.drawCallDescription.shaderResource == nullptr)
 				break;
 
@@ -507,8 +514,9 @@ void PhaseComponent::CollectRenderableComponent(Engine& engine, TaskData& task, 
 		for (size_t i = 0; i < drawCalls.size(); i++) {
 			InstanceKey key;
 			key.renderKey = (size_t)renderableComponent + i;
-			InstanceGroup& group = instanceGroups[key];
+			InstanceGroup& group = warpData.instanceGroups[key];
 			if (group.instanceCount == 0) {
+				std::binary_insert(warpData.dataUpdaters, drawCalls[i].dataUpdater);
 				instanceData.Export(group.partialUpdater, task.pipeline->GetPassUpdater());
 				group.instancedData.resize(group.partialUpdater.groupInfos.size());
 				group.drawCallDescription = std::move(drawCalls[i].drawCallDescription);
