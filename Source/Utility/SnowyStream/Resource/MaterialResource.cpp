@@ -55,7 +55,7 @@ void MaterialResource::Attach(IRender& render, void* deviceContext) {
 			// cached?
 			TShared<ShaderResource> cached = static_cast<ShaderResource*>(resourceManager.LoadExist(location)());
 
-			if (cached != nullptr) {
+			if (cached) {
 				// use cache
 				mutationShaderResource = cached;
 			} else {

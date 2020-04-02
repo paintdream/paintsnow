@@ -119,7 +119,7 @@ TShared<ResourceBase> ResourceSerializerBase::DeserializeFromArchive(ResourceMan
 		return nullptr;
 		
 	TShared<ResourceBase> resource = manager.LoadExist(PathToUniqueID(path));
-	if (resource != nullptr) {
+	if (resource) {
 		return resource;
 	}
 
@@ -129,7 +129,7 @@ TShared<ResourceBase> ResourceSerializerBase::DeserializeFromArchive(ResourceMan
 		if (stream != nullptr) {
 			resource = Deserialize(manager, path, protocol, flag, stream);
 
-			if (resource != nullptr) {
+			if (resource) {
 				if (!(resource->Flag() & ResourceBase::RESOURCE_STREAM)) {
 					stream->ReleaseObject();
 				}
