@@ -528,11 +528,6 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 							}
 						}
 
-
-						for (size_t n = 0; n < group.drawCallDescription.bufferResources.size(); n++) {
-							assert(group.drawCallDescription.bufferResources[n].buffer != nullptr);
-						}
-
 						group.drawCallDescription.instanceCounts.x() = group.instanceCount;
 						ZPassBase::ValidateDrawCall(group.drawCallDescription);
 
