@@ -17,11 +17,9 @@ namespace PaintsNow {
 			virtual String GetShaderText() override;
 			
 			BindTexture noiseTexture;
-			BindBuffer noiseParamBuffer;
 
 			Float2 rasterCoord;
-			Float2 noiseOffset;
-			float noiseClip;
+			Float4 tintColor;
 		};
 	}
 }

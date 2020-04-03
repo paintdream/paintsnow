@@ -6,14 +6,12 @@
 #ifndef __IASSET_H__
 #define __IASSET_H__
 
-
 #include "../../Core/PaintsNow.h"
 #include "../../Core/Interface/IFilterBase.h"
 #include "../../Core/Interface/IType.h"
 #include "../../General/Interface/IRender.h"
 #include <list>
 #include <vector>
-
 
 namespace PaintsNow {
 	namespace IAsset {

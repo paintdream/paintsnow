@@ -36,7 +36,7 @@ namespace PaintsNow {
 			public:
 				InstanceGroup() : instanceCount(0) {}
 				void Reset();
-				ZPassBase::PartialUpdater partialUpdater;
+				ZPassBase::PartialUpdater instanceUpdater;
 				std::vector<Bytes> instancedData;
 				IRender::Resource::DrawCallDescription drawCallDescription;
 				uint32_t instanceCount;

@@ -461,18 +461,17 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 
 	for (size_t k = 0; k < drawCalls.size(); k++) {
 		// ZPassBase& Pass = provider->GetPass(k);
-		NsSnowyStream::IDrawCallProvider::OutputRenderData& outputRenderData = drawCalls[k];
-		const IRender::Resource::DrawCallDescription& drawCallTemplate = outputRenderData.drawCallDescription;
+		NsSnowyStream::IDrawCallProvider::OutputRenderData& drawCall = drawCalls[k];
+		const IRender::Resource::DrawCallDescription& drawCallTemplate = drawCall.drawCallDescription;
 		AnimationComponent* animationComponent = instanceData.animationComponent();
-		std::binary_insert(warpData.dataUpdaters, outputRenderData.dataUpdater);
 
 		// Add Lighting stencil
-		assert(!(outputRenderData.renderStateDescription.stencilValue & STENCIL_LIGHTING));
-		outputRenderData.renderStateDescription.stencilValue |= STENCIL_LIGHTING;
+		assert(!(drawCall.renderStateDescription.stencilValue & STENCIL_LIGHTING));
+		drawCall.renderStateDescription.stencilValue |= STENCIL_LIGHTING;
 
 		// Generate key
 		InstanceKey key;
-		key.renderStateDescription = outputRenderData.renderStateDescription;
+		key.renderStateDescription = drawCall.renderStateDescription;
 		key.renderKey = ((size_t)renderableComponent << 1) | k;
 		key.animationKey = (size_t)animationComponent;
 
@@ -484,6 +483,8 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 		std::vector<IRender::Resource::DrawCallDescription::BufferRange> bufferResources;
 		InstanceGroup& group = instanceGroups[key];
 		if (group.instanceCount == 0) {
+			std::binary_insert(warpData.dataUpdaters, drawCall.dataUpdater);
+
 			RenderPolicy* renderPolicy = renderableComponent->renderPolicy();
 			group.renderPolicy = renderPolicy;
 
@@ -494,10 +495,10 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 			}
 
 			// add renderstate if exists
-			IRender::Resource*& state = warpData.renderStateMap[outputRenderData.renderStateDescription];
+			IRender::Resource*& state = warpData.renderStateMap[drawCall.renderStateDescription];
 			if (state == nullptr) {
 				state = render.CreateResource(queue, IRender::Resource::RESOURCE_RENDERSTATE);
-				render.UploadResource(queue, state, &outputRenderData.renderStateDescription);
+				render.UploadResource(queue, state, &drawCall.renderStateDescription);
 				policyData.runtimeResources.emplace_back(state);
 			}
 
@@ -508,11 +509,11 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 			group.description = renderableComponent->GetDescription();
 #endif // _DEBUG
 
-			std::map<ShaderResource*, TaskData::WarpData::GlobalBufferItem>::iterator ip = warpData.worldGlobalBufferMap.find(outputRenderData.shaderResource());
-			ZPassBase::Updater& updater = outputRenderData.shaderResource->GetPassUpdater();
+			std::map<ShaderResource*, TaskData::WarpData::GlobalBufferItem>::iterator ip = warpData.worldGlobalBufferMap.find(drawCall.shaderResource());
+			ZPassBase::Updater& updater = drawCall.shaderResource->GetPassUpdater();
 
 			if (ip == warpData.worldGlobalBufferMap.end()) {
-				ip = warpData.worldGlobalBufferMap.insert(std::make_pair(outputRenderData.shaderResource(), TaskData::WarpData::GlobalBufferItem())).first;
+				ip = warpData.worldGlobalBufferMap.insert(std::make_pair(drawCall.shaderResource(), TaskData::WarpData::GlobalBufferItem())).first;
 
 				ip->second.renderQueue = queue;
 				taskData.worldGlobalData.Export(ip->second.globalUpdater, updater);

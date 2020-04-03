@@ -6,20 +6,16 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsSnowyStream;
 using namespace PaintsNow::ShaderMacro;
 
-MultiHashSetupFS::MultiHashSetupFS() {
-	noiseParamBuffer.description.usage = IRender::Resource::BufferDescription::UNIFORM;
-}
+MultiHashSetupFS::MultiHashSetupFS() {}
 
 TObject<IReflect>& MultiHashSetupFS::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectProperty()) {
 		ReflectProperty(noiseTexture);
-		ReflectProperty(noiseParamBuffer);
 
 		ReflectProperty(rasterCoord)[IShader::BindInput(IShader::BindInput::TEXCOORD)];
-		ReflectProperty(noiseOffset)[noiseParamBuffer][IShader::BindInput(IShader::BindInput::GENERAL)];
-		ReflectProperty(noiseClip)[noiseParamBuffer][IShader::BindInput(IShader::BindInput::GENERAL)];
+		ReflectProperty(tintColor)[IShader::BindInput(IShader::BindInput::LOCAL)];
 	}
 
 	return *this;
@@ -27,7 +23,7 @@ TObject<IReflect>& MultiHashSetupFS::operator () (IReflect& reflect) {
 
 String MultiHashSetupFS::GetShaderText() {
 	return UnifyShaderCode(
-		float noise = texture(noiseTexture, rasterCoord.xy + noiseOffset).x;
-		clip(noise - noiseClip);
+		float noise = texture(noiseTexture, rasterCoord.xy * tintColor.z + tintColor.xy).x;
+		clip(noise - tintColor.w);
 	);
 }

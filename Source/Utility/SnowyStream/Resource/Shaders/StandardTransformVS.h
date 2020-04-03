@@ -47,6 +47,7 @@ namespace PaintsNow {
 			Float4 tintColor;
 
 		public:
+			bool enableInstancing;
 			bool enableViewProjectionMatrix;
 			bool enableVertexNormal;
 			bool enableVertexColor;

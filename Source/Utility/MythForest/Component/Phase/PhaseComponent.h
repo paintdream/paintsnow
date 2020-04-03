@@ -35,6 +35,8 @@ namespace PaintsNow {
 			struct WorldGlobalData : public TReflected<WorldGlobalData, ZPassBase::PartialData> {
 				virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 				MatrixFloat4x4 viewProjectionMatrix;
+				MatrixFloat4x4 viewMatrix;
+				IShader::BindTexture noiseTexture;
 			};
 
 			struct WorldInstanceData : public TReflected<WorldInstanceData, ZPassBase::PartialData> {
@@ -63,17 +65,25 @@ namespace PaintsNow {
 				InstanceGroup() : renderStateResource(nullptr), drawCallResource(nullptr), instanceCount(0) {}
 				void Reset();
 
-				ZPassBase::PartialUpdater partialUpdater;
 				std::vector<Bytes> instancedData;
 				IRender::Resource::DrawCallDescription drawCallDescription;
 				IRender::Resource* renderStateResource;
 				IRender::Resource* drawCallResource;
+				ZPassBase::PartialUpdater* instanceUpdater;
 				uint32_t instanceCount;
 			};
 
 			struct WarpData {
 				typedef unordered_map<InstanceKey, InstanceGroup, HashInstanceKey> InstanceGroupMap;
+				struct GlobalBufferItem {
+					ZPassBase::PartialUpdater globalUpdater;
+					ZPassBase::PartialUpdater instanceUpdater;
+					std::vector<IRender::Resource*> buffers;
+				};
+
+				std::map<NsSnowyStream::ShaderResource*, GlobalBufferItem> worldGlobalBufferMap;
 				InstanceGroupMap instanceGroups;
+				std::vector<IRender::Resource*> runtimeResources;
 				std::vector<NsSnowyStream::IDrawCallProvider::DataUpdater*> dataUpdaters;
 			};
 

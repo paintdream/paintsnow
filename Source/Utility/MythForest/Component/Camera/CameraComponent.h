@@ -104,6 +104,7 @@ namespace PaintsNow {
 				struct WarpData {
 					typedef unordered_map<InstanceKey, InstanceGroup, HashInstanceKey> InstanceGroupMap;
 					InstanceGroupMap instanceGroups;
+					WarpData();
 
 					struct GlobalBufferItem {
 						IRender::Queue* renderQueue;
@@ -111,8 +112,6 @@ namespace PaintsNow {
 						ZPassBase::PartialUpdater instanceUpdater;
 						std::vector<IRender::Resource*> buffers;
 					};
-
-					WarpData();
 
 					std::map<NsSnowyStream::ShaderResource*, GlobalBufferItem> worldGlobalBufferMap;
 					std::map<IRender::Resource::RenderStateDescription, IRender::Resource*> renderStateMap;

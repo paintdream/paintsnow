@@ -23,6 +23,8 @@ TObject<IReflect>& PhaseComponentConfig::WorldGlobalData::operator () (IReflect&
 
 	if (reflect.IsReflectProperty()) {
 		ReflectProperty(viewProjectionMatrix)[IShader::BindInput(IShader::BindInput::TRANSFORM_VIEWPROJECTION)];
+		ReflectProperty(viewMatrix)[IShader::BindInput(IShader::BindInput::TRANSFORM_VIEW)];
+		ReflectProperty(noiseTexture);
 	}
 
 	return *this;
@@ -289,14 +291,16 @@ void PhaseComponent::ResolveTasks(Engine& engine) {
 				IRender& render = engine.interfaces.render;
 
 				for (size_t i = 0; i < task.warpData.size(); i++) {
-					std::vector<IDrawCallProvider::DataUpdater*>& dataUpdaters = task.warpData[i].dataUpdaters;
+					WarpData& warpData = task.warpData[i];
+					std::vector<IDrawCallProvider::DataUpdater*>& dataUpdaters = warpData.dataUpdaters;
 
 					for (size_t k = 0; k < dataUpdaters.size(); k++) {
 						dataUpdaters[k]->Update(render, queue);
 					}
 
 					dataUpdaters.clear();
-					WarpData::InstanceGroupMap& groups = task.warpData[i].instanceGroups;
+					WarpData::InstanceGroupMap& groups = warpData.instanceGroups;
+
 					for (WarpData::InstanceGroupMap::iterator it = groups.begin(); it != groups.end(); ++it) {
 						InstanceGroup& group = (*it).second;
 						if (group.drawCallDescription.shaderResource == nullptr || group.instanceCount == 0) continue;
@@ -308,7 +312,7 @@ void PhaseComponent::ResolveTasks(Engine& engine) {
 							Bytes& data = group.instancedData[k];
 							assert(!data.Empty());
 							if (!data.Empty()) {
-								ZPassBase::Parameter& output = group.partialUpdater.parameters[k];
+								const ZPassBase::Parameter& output = group.instanceUpdater->parameters[k];
 								// instanceable.
 								assert(output.slot < group.drawCallDescription.bufferResources.size());
 								IRender::Resource* buffer = render.CreateResource(queue, IRender::Resource::RESOURCE_BUFFER);
@@ -326,21 +330,29 @@ void PhaseComponent::ResolveTasks(Engine& engine) {
 						}
 
 						group.drawCallDescription.instanceCounts.x() = group.instanceCount;
-						ZPassBase::ValidateDrawCall(group.drawCallDescription);
 
-						IRender::Resource* drawCall = render.CreateResource(queue, IRender::Resource::RESOURCE_DRAWCALL);
-						IRender::Resource::DrawCallDescription dc = group.drawCallDescription; // make copy
-						render.UploadResource(queue, drawCall, &dc);
-						render.ExecuteResource(queue, drawCall);
+						if (ZPassBase::ValidateDrawCall(group.drawCallDescription)) {
+							IRender::Resource* drawCall = render.CreateResource(queue, IRender::Resource::RESOURCE_DRAWCALL);
+							IRender::Resource::DrawCallDescription dc = group.drawCallDescription; // make copy
+							render.UploadResource(queue, drawCall, &dc);
+							render.ExecuteResource(queue, drawCall);
 
-						// cleanup at current frame
-						render.DeleteResource(queue, drawCall);
+							// cleanup at current frame
+							render.DeleteResource(queue, drawCall);
+						}
+
 						for (size_t n = 0; n < buffers.size(); n++) {
 							render.DeleteResource(queue, buffers[n]);
 						}
 
 						group.Reset(); // for next reuse
 					}
+
+					for (size_t n = 0; n < warpData.runtimeResources.size(); n++) {
+						render.DeleteResource(queue, warpData.runtimeResources[n]);
+					}
+
+					warpData.runtimeResources.clear();
 				}
 
 				finalStatus.store(TaskData::STATUS_ASSEMBLED, std::memory_order_release);
@@ -477,11 +489,11 @@ void PhaseComponent::DispatchTasks(Engine& engine) {
 	}
 }
 
-void PhaseComponent::CollectRenderableComponent(Engine& engine, TaskData& task, RenderableComponent* renderableComponent, WorldInstanceData& instanceData) {
+void PhaseComponent::CollectRenderableComponent(Engine& engine, TaskData& taskData, RenderableComponent* renderableComponent, WorldInstanceData& instanceData) {
 	IRender& render = engine.interfaces.render;
-	IRender::Queue* queue = task.renderQueue;
+	IRender::Queue* queue = taskData.renderQueue;
 	uint32_t currentWarpIndex = engine.GetKernel().GetCurrentWarpIndex();
-	WarpData& warpData = task.warpData[currentWarpIndex == ~(uint32_t)0 ? GetWarpIndex() : currentWarpIndex];
+	WarpData& warpData = taskData.warpData[currentWarpIndex == ~(uint32_t)0 ? GetWarpIndex() : currentWarpIndex];
 
 	InstanceKey key;
 	key.renderKey = (size_t)renderableComponent;
@@ -499,7 +511,7 @@ void PhaseComponent::CollectRenderableComponent(Engine& engine, TaskData& task, 
 				break;
 
 			std::vector<Bytes> s;
-			group.partialUpdater.Snapshot(s, bufferResources, textureResources, instanceData);
+			group.instanceUpdater->Snapshot(s, bufferResources, textureResources, instanceData);
 
 			assert(s.size() == group.instancedData.size());
 			for (size_t k = 0; k < s.size(); k++) {
@@ -510,7 +522,7 @@ void PhaseComponent::CollectRenderableComponent(Engine& engine, TaskData& task, 
 			group.instanceCount++;
 		}
 	} else {
-		NsSnowyStream::IDrawCallProvider::InputRenderData inputRenderData(0.0f, task.pipeline);
+		NsSnowyStream::IDrawCallProvider::InputRenderData inputRenderData(0.0f, taskData.pipeline);
 		std::vector<NsSnowyStream::IDrawCallProvider::OutputRenderData> drawCalls;
 		renderableComponent->CollectDrawCalls(drawCalls, inputRenderData);
 		assert(drawCalls.size() < sizeof(RenderableComponent) - 1);
@@ -519,15 +531,57 @@ void PhaseComponent::CollectRenderableComponent(Engine& engine, TaskData& task, 
 			InstanceKey key;
 			key.renderKey = (size_t)renderableComponent + i;
 			InstanceGroup& group = warpData.instanceGroups[key];
+			
 			if (group.instanceCount == 0) {
 				IDrawCallProvider::OutputRenderData& drawCall = drawCalls[i];
 				std::binary_insert(warpData.dataUpdaters, drawCall.dataUpdater);
-				instanceData.Export(group.partialUpdater, task.pipeline->GetPassUpdater());
 				group.drawCallDescription = std::move(drawCall.drawCallDescription);
-				group.partialUpdater.Snapshot(group.instancedData, bufferResources, textureResources, instanceData);
+
+				std::map<ShaderResource*, WarpData::GlobalBufferItem>::iterator ip = warpData.worldGlobalBufferMap.find(drawCall.shaderResource());
+				ZPassBase::Updater& updater = drawCall.shaderResource->GetPassUpdater();
+
+				if (ip == warpData.worldGlobalBufferMap.end()) {
+					ip = warpData.worldGlobalBufferMap.insert(std::make_pair(drawCall.shaderResource(), WarpData::GlobalBufferItem())).first;
+
+					taskData.worldGlobalData.Export(ip->second.globalUpdater, updater);
+					instanceData.Export(ip->second.instanceUpdater, updater);
+
+					std::vector<Bytes> s;
+					std::vector<IRender::Resource::DrawCallDescription::BufferRange> bufferResources;
+					std::vector<IRender::Resource*> textureResources;
+					ip->second.globalUpdater.Snapshot(s, bufferResources, textureResources, taskData.worldGlobalData);
+					ip->second.buffers.resize(updater.GetBufferCount());
+
+					for (size_t i = 0; i < s.size(); i++) {
+						Bytes& data = s[i];
+						if (!data.Empty()) {
+							IRender::Resource::BufferDescription desc;
+							desc.usage = IRender::Resource::BufferDescription::UNIFORM;
+							desc.component = 4;
+							desc.dynamic = 1;
+							desc.format = IRender::Resource::BufferDescription::FLOAT;
+							desc.data = std::move(data);
+							IRender::Resource* res = render.CreateResource(queue, IRender::Resource::RESOURCE_BUFFER);
+							render.UploadResource(queue, res, &desc);
+							ip->second.buffers[i] = res;
+							warpData.runtimeResources.emplace_back(res);
+						}
+					}
+				}
+
+				for (size_t n = 0; n < group.drawCallDescription.bufferResources.size(); n++) {
+					IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[n];
+					if (ip->second.buffers[n] != nullptr) {
+						bufferRange.buffer = ip->second.buffers[n];
+						bufferRange.offset = bufferRange.length = 0;
+					}
+				}
+
+				group.instanceUpdater = &ip->second.instanceUpdater;
+				group.instanceUpdater->Snapshot(group.instancedData, bufferResources, textureResources, instanceData);
 			} else {
 				std::vector<Bytes> s;
-				group.partialUpdater.Snapshot(s, bufferResources, textureResources, instanceData);
+				group.instanceUpdater->Snapshot(s, bufferResources, textureResources, instanceData);
 				for (size_t k = 0; k < s.size(); k++) {
 					assert(!s[k].Empty());
 					group.instancedData[k].Append(s[k]);

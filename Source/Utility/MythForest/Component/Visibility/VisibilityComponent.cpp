@@ -382,7 +382,7 @@ void VisibilityComponent::CollectRenderableComponent(Engine& engine, TaskData& t
 			if (group.drawCallDescription.shaderResource == nullptr) break;
 	
 			std::vector<Bytes> s;
-			group.partialUpdater.Snapshot(s, bufferResources, textureResources, instanceData);
+			group.instanceUpdater.Snapshot(s, bufferResources, textureResources, instanceData);
 			assert(s.size() == group.instancedData.size());
 			for (size_t k = 0; k < s.size(); k++) {
 				group.instancedData[k].Append(s[k]);
@@ -404,12 +404,12 @@ void VisibilityComponent::CollectRenderableComponent(Engine& engine, TaskData& t
 			if (group.instanceCount == 0) {
 				std::binary_insert(task.dataUpdaters, dataUpdater);
 
-				instanceData.Export(group.partialUpdater, pipeline->GetPassUpdater());
+				instanceData.Export(group.instanceUpdater, pipeline->GetPassUpdater());
 				group.drawCallDescription = std::move(drawCalls[i].drawCallDescription);
-				group.partialUpdater.Snapshot(group.instancedData, bufferResources, textureResources, instanceData);
+				group.instanceUpdater.Snapshot(group.instancedData, bufferResources, textureResources, instanceData);
 			} else {
 				std::vector<Bytes> s;
-				group.partialUpdater.Snapshot(s, bufferResources, textureResources, instanceData);
+				group.instanceUpdater.Snapshot(s, bufferResources, textureResources, instanceData);
 				assert(s.size() == group.instancedData.size());
 				for (size_t k = 0; k < s.size(); k++) {
 					group.instancedData[k].Append(s[k]);
@@ -515,7 +515,7 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 							Bytes& data = group.instancedData[k];
 							assert(!data.Empty());
 							if (!data.Empty()) {
-								ZPassBase::Parameter& output = group.partialUpdater.parameters[k];
+								ZPassBase::Parameter& output = group.instanceUpdater.parameters[k];
 								// instanceable.
 								assert(output.slot < group.drawCallDescription.bufferResources.size());
 								IRender::Resource* buffer = render.CreateResource(queue, IRender::Resource::RESOURCE_BUFFER);

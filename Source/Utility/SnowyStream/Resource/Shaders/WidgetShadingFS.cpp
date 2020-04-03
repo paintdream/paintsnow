@@ -30,9 +30,9 @@ TObject<IReflect>& WidgetShadingFS::operator () (IReflect& reflect) {
 		ReflectProperty(mainTexture);
 
 		ReflectProperty(texCoord)[BindInput(BindInput::TEXCOORD)];
-		ReflectProperty(texCoordRect)[BindInput(BindInput::TEXCOORD + 1)];
-		ReflectProperty(texCoordScale)[BindInput(BindInput::TEXCOORD + 2)];
-		ReflectProperty(texCoordMark)[BindInput(BindInput::TEXCOORD + 3)];
+		ReflectProperty(texCoordRect)[BindInput(BindInput::TEXCOORD)];
+		ReflectProperty(texCoordScale)[BindInput(BindInput::TEXCOORD)];
+		ReflectProperty(texCoordMark)[BindInput(BindInput::TEXCOORD)];
 		ReflectProperty(tintColor)[BindInput(BindInput::COLOR)];
 		ReflectProperty(target)[BindOutput(BindOutput::COLOR)];
 	}

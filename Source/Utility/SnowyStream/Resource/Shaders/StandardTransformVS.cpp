@@ -6,7 +6,7 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsSnowyStream;
 using namespace PaintsNow::ShaderMacro;
 
-StandardTransformVS::StandardTransformVS() : enableViewProjectionMatrix(true), enableVertexColor(false), enableVertexNormal(true), enableInstancedColor(false), enableVertexTangent(true), enableRasterCoord(false) {
+StandardTransformVS::StandardTransformVS() : enableInstancing(true), enableViewProjectionMatrix(true), enableVertexColor(false), enableVertexNormal(true), enableInstancedColor(false), enableVertexTangent(true), enableRasterCoord(false) {
 	instanceBuffer.description.usage = IRender::Resource::BufferDescription::INSTANCED;
 	vertexPositionBuffer.description.usage = IRender::Resource::BufferDescription::VERTEX;
 	vertexNormalBuffer.description.usage = IRender::Resource::BufferDescription::VERTEX;
@@ -65,6 +65,7 @@ TObject<IReflect>& StandardTransformVS::operator () (IReflect& reflect) {
 
 	if (reflect.IsReflectProperty()) {
 		// options first
+		ReflectProperty(enableInstancing)[IShader::BindConst<bool>()];
 		ReflectProperty(enableVertexNormal)[IShader::BindConst<bool>()];
 		ReflectProperty(enableVertexColor)[IShader::BindConst<bool>()];
 		ReflectProperty(enableVertexTangent)[IShader::BindConst<bool>()];
@@ -72,7 +73,7 @@ TObject<IReflect>& StandardTransformVS::operator () (IReflect& reflect) {
 		ReflectProperty(enableInstancedColor)[IShader::BindConst<bool>()];
 		ReflectProperty(enableRasterCoord)[IShader::BindConst<bool>()];
 
-		ReflectProperty(instanceBuffer);
+		ReflectProperty(instanceBuffer)[IShader::BindOption(enableInstancing)];
 		ReflectProperty(globalBuffer);
 		ReflectProperty(vertexPositionBuffer);
 		ReflectProperty(vertexNormalBuffer)[IShader::BindOption(enableVertexNormal)];
@@ -80,8 +81,8 @@ TObject<IReflect>& StandardTransformVS::operator () (IReflect& reflect) {
 		ReflectProperty(vertexColorBuffer)[IShader::BindOption(enableVertexColor)];
 		ReflectProperty(vertexTexCoordBuffer);
 
-		ReflectProperty(worldMatrix)[instanceBuffer][IShader::BindInput(IShader::BindInput::TRANSFORM_WORLD)];
-		ReflectProperty(instancedColor)[instanceBuffer][IShader::BindOption(enableInstancedColor)][IShader::BindInput(IShader::BindInput::COLOR_INSTANCED)];
+		ReflectProperty(worldMatrix)[enableInstancing ? instanceBuffer : globalBuffer][IShader::BindInput(IShader::BindInput::TRANSFORM_WORLD)];
+		ReflectProperty(instancedColor)[enableInstancing ? instanceBuffer : globalBuffer][IShader::BindOption(enableInstancedColor)][IShader::BindInput(IShader::BindInput::COLOR_INSTANCED)];
 		ReflectProperty(viewMatrix)[globalBuffer][IShader::BindOption(enableViewProjectionMatrix)][IShader::BindInput(IShader::BindInput::TRANSFORM_VIEW)];
 		ReflectProperty(viewProjectionMatrix)[globalBuffer][IShader::BindOption(enableViewProjectionMatrix)][IShader::BindInput(IShader::BindInput::TRANSFORM_VIEWPROJECTION)];
 
@@ -93,10 +94,10 @@ TObject<IReflect>& StandardTransformVS::operator () (IReflect& reflect) {
 
 		ReflectProperty(rasterPosition)[IShader::BindOutput(IShader::BindOutput::HPOSITION)];
 		ReflectProperty(texCoord)[IShader::BindOutput(IShader::BindOutput::TEXCOORD)];
-		ReflectProperty(viewNormal)[IShader::BindOutput(IShader::BindOutput::TEXCOORD + 2)];
-		ReflectProperty(viewTangent)[IShader::BindOutput(IShader::BindOutput::TEXCOORD + 3)];
-		ReflectProperty(viewBinormal)[IShader::BindOutput(IShader::BindOutput::TEXCOORD + 4)];
-		ReflectProperty(rasterCoord)[IShader::BindOption(enableRasterCoord)][IShader::BindOutput(IShader::BindOutput::TEXCOORD + 5)];
+		ReflectProperty(viewNormal)[IShader::BindOutput(IShader::BindOutput::TEXCOORD + 1)];
+		ReflectProperty(viewTangent)[IShader::BindOutput(IShader::BindOutput::TEXCOORD + 2)];
+		ReflectProperty(viewBinormal)[IShader::BindOutput(IShader::BindOutput::TEXCOORD + 3)];
+		ReflectProperty(rasterCoord)[IShader::BindOption(enableRasterCoord)][IShader::BindOutput(IShader::BindOutput::TEXCOORD + 4)];
 		ReflectProperty(tintColor)[IShader::BindOutput(IShader::BindOutput::COLOR)];
 	}
 
