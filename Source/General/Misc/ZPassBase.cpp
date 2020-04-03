@@ -65,6 +65,20 @@ ZPassBase::Updater::Updater(ZPassBase& Pass) : textureCount(0), IReflect(true, f
 	Flush();
 }
 
+uint32_t ZPassBase::Updater::GetBufferCount() const {
+	return safe_cast<uint32_t>(buffers.size());
+}
+
+uint32_t ZPassBase::Updater::GetTextureCount() const {
+	return textureCount;
+}
+
+Bytes ZPassBase::Updater::MakeKeyFromString(const String& s) {
+	Bytes ret;
+	ret.Append((const uint8_t*)s.c_str(), s.size());
+	return ret;
+}
+
 ZPassBase::Parameter::Parameter() : internalAddress(nullptr), linearLayout(0) {}
 
 ZPassBase::Parameter& ZPassBase::Updater::operator [] (const Bytes& key) {
@@ -208,7 +222,7 @@ void ZPassBase::Updater::Property(IReflectObject& s, Unique typeID, Unique refTy
 }
 
 void ZPassBase::Updater::Flush() {
-	std::vector<uint32_t> fixBufferSlots(buffers.size());
+	std::vector<uint8_t> fixBufferSlots(buffers.size());
 
 	std::vector<const IShader::BindBuffer*> fixedBuffers;
 	for (size_t i = 0; i < buffers.size(); i++) {
@@ -365,18 +379,42 @@ bool ZPassBase::Name::operator < (const Name& rhs) const {
 
 ZPassBase::~ZPassBase() {}
 
-void ZPassBase::PartialUpdater::Snapshot(std::vector<Bytes>& buffers, const ZPassBase::PartialData& partialData) const {
-	buffers.resize(groupInfos.size());
+void ZPassBase::PartialUpdater::Snapshot(std::vector<Bytes>& bufferData, std::vector<IRender::Resource::DrawCallDescription::BufferRange>& bufferResources, std::vector<IRender::Resource*>& textureResources, const ZPassBase::PartialData& partialData) const {
+	static Unique uniqueBindBuffer = UniqueType<IShader::BindBuffer>::Get();
+	static Unique uniqueBindTexture = UniqueType<IShader::BindTexture>::Get();
 
-	for (size_t k = 0; k < groupInfos.size(); k++) {
-		const std::pair<uint8_t, std::vector<uint16_t> >& info = groupInfos[k];
-		Bytes& buffer = buffers[k];
-		assert(!info.second.empty());
-		buffer.Resize(parameters[info.second[0]].stride);
-		uint8_t* base = buffer.GetData();
-		for (size_t k = 0; k < info.second.size(); k++) {
-			const ZPassBase::Parameter& p = parameters[info.second[k]];
-			memcpy(base + p.offset, (const char*)&partialData + (size_t)p.internalAddress, p.type->GetSize());
+	for (size_t i = 0; i < parameters.size(); i++) {
+		const Parameter& parameter = parameters[i];
+		if (parameter.type == uniqueBindBuffer) {
+			const IShader::BindBuffer* buffer = reinterpret_cast<const IShader::BindBuffer*>((const char*)&partialData + (size_t)parameter.internalAddress);
+			if (bufferResources.size() <= parameter.slot) {
+				bufferResources.resize(parameter.slot + 1);
+			}
+
+			IRender::Resource::DrawCallDescription::BufferRange& range = bufferResources[parameter.slot];
+			range.buffer = buffer->resource;
+			range.offset = 0;
+			range.length = 0;
+		} else if (parameter.type == uniqueBindTexture) {
+			const IShader::BindTexture* texture = reinterpret_cast<const IShader::BindTexture*>((const char*)&partialData + (size_t)parameter.internalAddress);
+			if (textureResources.size() <= parameter.slot) {
+				textureResources.resize(parameter.slot + 1);
+			}
+
+			textureResources[parameter.slot] = texture->resource;
+		} else {
+			if (bufferData.size() <= parameter.slot) {
+				bufferData.resize(parameter.slot + 1);
+			}
+
+			assert(parameter.slot < bufferData.size());
+			Bytes& buffer = bufferData[parameter.slot];
+			const ZPassBase::Parameter& p = parameters[i];
+			if (buffer.Empty()) {
+				buffer.Resize(p.stride);
+			}
+
+			memcpy(buffer.GetData() + p.offset, (const char*)&partialData + (size_t)p.internalAddress, p.type->GetSize());
 		}
 	}
 }
@@ -417,34 +455,29 @@ public:
 
 			if (parameter) {
 				parameter.internalAddress = (void*)((size_t)ptr - (size_t)base);
-				maps[parameter.slot].emplace_back(safe_cast<uint16_t>(outputs.size()));
 				outputs.emplace_back(std::move(parameter));
 			}
 		}
 	}
 
 	std::vector<ZPassBase::Parameter> outputs;
-	std::map<uint8_t, std::vector<uint16_t> > maps;
 	ZPassBase::Updater& updater;
 };
 
 void ZPassBase::PartialData::Export(PartialUpdater& particalUpdater, ZPassBase::Updater& updater) const {
 	ReflectPartial reflector(updater);
 	(*const_cast<ZPassBase::PartialData*>(this))(reflector);
-	// check completeness
+
 	if (!reflector.outputs.empty()) {
 		uint32_t sum = 0;
 		for (size_t i = 0; i < reflector.outputs.size(); i++) {
-			sum += (uint32_t)safe_cast<uint32_t>(reflector.outputs[i].type->GetSize());
+			Parameter& parameter = reflector.outputs[i];
+			sum += (uint32_t)safe_cast<uint32_t>(parameter.type->GetSize());
 		}
-		assert(sum == reflector.outputs[0].stride);
+	
+		// check completeness
+		assert(sum == reflector.outputs[0].stride); // must provide all segments by now
 	}
 
 	particalUpdater.parameters = std::move(reflector.outputs);
-	particalUpdater.groupInfos.resize(reflector.maps.size());
-	uint32_t i = 0;
-	for (std::map<uint8_t, std::vector<uint16_t> >::iterator it = reflector.maps.begin(); it != reflector.maps.end(); ++it, ++i) {
-		particalUpdater.groupInfos[i].first = it->first;
-		particalUpdater.groupInfos[i].second = std::move(it->second);
-	}
 }

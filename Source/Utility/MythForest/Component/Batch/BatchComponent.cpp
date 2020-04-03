@@ -28,12 +28,13 @@ void BatchComponent::InstanceUninitialize(Engine& engine) {
 		IRender& render = engine.interfaces.render;
 		IRender::Queue* queue = engine.snowyStream.GetResourceQueue();
 		render.DeleteResource(queue, buffer);
+		currentData.Clear();
 		Flag() &= ~Tiny::TINY_MODIFIED;
 	}
 }
 
 void BatchComponent::Update(IRender& render, IRender::Queue* queue) {
-	if (!(Flag() & Tiny::TINY_UPDATING) && (Flag() & Tiny::TINY_MODIFIED)) {
+	if (Flag() & Tiny::TINY_MODIFIED) {
 		IRender::Resource::BufferDescription desc;
 		desc.component = 4; // packed by float4
 		desc.format = IRender::Resource::BufferDescription::FLOAT;
@@ -42,12 +43,11 @@ void BatchComponent::Update(IRender& render, IRender::Queue* queue) {
 		desc.data = currentData;
 		render.UploadResource(queue, buffer, &desc);
 
-		Flag() |= Tiny::TINY_UPDATING;
+		Flag() &= ~Tiny::TINY_MODIFIED;
 	}
 }
 
 IRender::Resource::DrawCallDescription::BufferRange BatchComponent::Allocate(const Bytes& data) {
-	assert(!(Flag() & Tiny::TINY_UPDATING));
 	uint32_t appendSize = data.GetSize();
 	uint32_t curSize = currentData.GetSize();
 	currentData.Append(data);

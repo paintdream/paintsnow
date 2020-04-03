@@ -486,6 +486,9 @@ void PhaseComponent::CollectRenderableComponent(Engine& engine, TaskData& task, 
 	InstanceKey key;
 	key.renderKey = (size_t)renderableComponent;
 	InstanceGroup& first = warpData.instanceGroups[key];
+	std::vector<IRender::Resource*> textureResources;
+	std::vector<IRender::Resource::DrawCallDescription::BufferRange> bufferResources;
+
 	if (first.drawCallDescription.shaderResource != nullptr) {
 		size_t i = 0;
 		while (true) {
@@ -496,7 +499,8 @@ void PhaseComponent::CollectRenderableComponent(Engine& engine, TaskData& task, 
 				break;
 
 			std::vector<Bytes> s;
-			group.partialUpdater.Snapshot(s, instanceData);
+			group.partialUpdater.Snapshot(s, bufferResources, textureResources, instanceData);
+
 			assert(s.size() == group.instancedData.size());
 			for (size_t k = 0; k < s.size(); k++) {
 				assert(!s[k].Empty());
@@ -516,18 +520,18 @@ void PhaseComponent::CollectRenderableComponent(Engine& engine, TaskData& task, 
 			key.renderKey = (size_t)renderableComponent + i;
 			InstanceGroup& group = warpData.instanceGroups[key];
 			if (group.instanceCount == 0) {
-				std::binary_insert(warpData.dataUpdaters, drawCalls[i].dataUpdater);
+				IDrawCallProvider::OutputRenderData& drawCall = drawCalls[i];
+				std::binary_insert(warpData.dataUpdaters, drawCall.dataUpdater);
 				instanceData.Export(group.partialUpdater, task.pipeline->GetPassUpdater());
-				group.instancedData.resize(group.partialUpdater.groupInfos.size());
-				group.drawCallDescription = std::move(drawCalls[i].drawCallDescription);
-			}
-
-			std::vector<Bytes> s;
-			group.partialUpdater.Snapshot(s, instanceData);
-			assert(s.size() == group.instancedData.size());
-			for (size_t k = 0; k < s.size(); k++) {
-				assert(!s[k].Empty());
-				group.instancedData[k].Append(s[k]);
+				group.drawCallDescription = std::move(drawCall.drawCallDescription);
+				group.partialUpdater.Snapshot(group.instancedData, bufferResources, textureResources, instanceData);
+			} else {
+				std::vector<Bytes> s;
+				group.partialUpdater.Snapshot(s, bufferResources, textureResources, instanceData);
+				for (size_t k = 0; k < s.size(); k++) {
+					assert(!s[k].Empty());
+					group.instancedData[k].Append(s[k]);
+				}
 			}
 
 			group.instanceCount++;

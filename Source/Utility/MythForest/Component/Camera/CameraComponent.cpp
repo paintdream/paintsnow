@@ -398,16 +398,23 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 			GlobalMap& globalMap = w.worldGlobalBufferMap;
 			for (GlobalMap::iterator it = globalMap.begin(); it != globalMap.end(); ++it) {
 				std::vector<Bytes> buffers;
-				it->second.globalUpdater.Snapshot(buffers, worldGlobalData);
-				assert(buffers.size() == it->second.buffers.size());
+				std::vector<IRender::Resource*> textureResources;
+				std::vector<IRender::Resource::DrawCallDescription::BufferRange> bufferResources;
+				it->second.globalUpdater.Snapshot(buffers, bufferResources, textureResources, worldGlobalData);
+
+				assert(bufferResources.empty());
+				assert(textureResources.empty());
 				for (size_t i = 0; i < buffers.size(); i++) {
-					IRender::Resource::BufferDescription desc;
-					desc.usage = IRender::Resource::BufferDescription::UNIFORM;
-					desc.component = 4;
-					desc.dynamic = 1;
-					desc.format = IRender::Resource::BufferDescription::FLOAT;
-					desc.data = std::move(buffers[i]);
-					render.UploadResource(it->second.renderQueue, it->second.buffers[i].second, &desc);
+					Bytes& data = buffers[i];
+					if (!data.Empty()) {
+						IRender::Resource::BufferDescription desc;
+						desc.usage = IRender::Resource::BufferDescription::UNIFORM;
+						desc.component = 4;
+						desc.dynamic = 1;
+						desc.format = IRender::Resource::BufferDescription::FLOAT;
+						desc.data = std::move(data);
+						render.UploadResource(it->second.renderQueue, it->second.buffers[i], &desc);
+					}
 				}
 			}
 		}
@@ -472,10 +479,11 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 		assert((~((size_t)renderableComponent << 1) & k) == k); // assume k can be stored in renderComponent's lowest bits
 
 		TaskData::WarpData::InstanceGroupMap::iterator it = instanceGroups.find(key);
-		InstanceGroup* groupPtr = nullptr;
-		if (it == instanceGroups.end()) {
-			groupPtr = &(instanceGroups[key] = InstanceGroup());
-			InstanceGroup& group = *groupPtr;
+		std::vector<Bytes> s;
+		std::vector<IRender::Resource*> textureResources;
+		std::vector<IRender::Resource::DrawCallDescription::BufferRange> bufferResources;
+		InstanceGroup& group = instanceGroups[key];
+		if (group.instanceCount == 0) {
 			RenderPolicy* renderPolicy = renderableComponent->renderPolicy();
 			group.renderPolicy = renderPolicy;
 
@@ -494,6 +502,7 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 			}
 
 			group.renderStateResource = state;
+			group.drawCallDescription = drawCallTemplate;
 
 #ifdef _DEBUG
 			group.description = renderableComponent->GetDescription();
@@ -510,27 +519,38 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 				instanceData.Export(ip->second.instanceUpdater, updater);
 
 				std::vector<Bytes> s;
-				ip->second.globalUpdater.Snapshot(s, taskData.worldGlobalData);
+				std::vector<IRender::Resource::DrawCallDescription::BufferRange> bufferResources;
+				std::vector<IRender::Resource*> textureResources;
+				ip->second.globalUpdater.Snapshot(s, bufferResources, textureResources, taskData.worldGlobalData);
+				ip->second.buffers.resize(updater.GetBufferCount());
 
-				assert(s.size() == ip->second.globalUpdater.groupInfos.size());
-				assert(ip->second.buffers.empty());
 				for (size_t i = 0; i < s.size(); i++) {
-					IRender::Resource::BufferDescription desc;
-					desc.usage = IRender::Resource::BufferDescription::UNIFORM;
-					desc.component = 4;
-					desc.dynamic = 1;
-					desc.format = IRender::Resource::BufferDescription::FLOAT;
-					desc.data = std::move(s[i]);
-					IRender::Resource* res = render.CreateResource(queue, IRender::Resource::RESOURCE_BUFFER);
-					render.UploadResource(queue, res, &desc);
-					ip->second.buffers.push_back(std::make_pair(ip->second.globalUpdater.groupInfos[i].first, res));
-					policyData.runtimeResources.emplace_back(res);
+					Bytes& data = s[i];
+					if (!data.Empty()) {
+						IRender::Resource::BufferDescription desc;
+						desc.usage = IRender::Resource::BufferDescription::UNIFORM;
+						desc.component = 4;
+						desc.dynamic = 1;
+						desc.format = IRender::Resource::BufferDescription::FLOAT;
+						desc.data = std::move(data);
+						IRender::Resource* res = render.CreateResource(queue, IRender::Resource::RESOURCE_BUFFER);
+						render.UploadResource(queue, res, &desc);
+						ip->second.buffers[i] = res;
+						policyData.runtimeResources.emplace_back(res);
+					}
+				}
+			}
+
+			for (size_t n = 0; n < group.drawCallDescription.bufferResources.size(); n++) {
+				IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[n];
+				if (ip->second.buffers[n] != nullptr) {
+					bufferRange.buffer = ip->second.buffers[n];
+					bufferRange.offset = bufferRange.length = 0;
 				}
 			}
 
 			group.instanceUpdater = &ip->second.instanceUpdater;
-			group.instancedData = std::vector<Bytes>(group.instanceUpdater->groupInfos.size()); // assure buffer length
-			group.drawCallDescription = drawCallTemplate;
+			group.instanceUpdater->Snapshot(group.instancedData, bufferResources, textureResources, instanceData);
 
 			// skinning
 			if (animationComponent) {
@@ -541,29 +561,20 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 					group.drawCallDescription.bufferResources[parameter.slot].buffer = animationComponent->AcquireBoneMatrixBuffer(queue);
 				}
 			}
-
-			std::vector<std::pair<uint32_t, IRender::Resource*> >& buffers = ip->second.buffers;
-			for (size_t i = 0; i < buffers.size(); i++) {
-				IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[buffers[i].first];
-				bufferRange.buffer = buffers[i].second;
-				bufferRange.offset = bufferRange.length = 0;
-			}
 		} else {
-			groupPtr = &((*it).second);
+			InstanceGroup& group = (*it).second;
+			group.instanceUpdater->Snapshot(s, bufferResources, textureResources, instanceData);
+			assert(!group.instanceUpdater->parameters.empty());
+			assert(s.size() == group.instancedData.size());
+
+			// merge slice
+			for (size_t m = 0; m < group.instancedData.size(); m++) {
+				group.instancedData[m].Append(s[m]);
+			}
 		}
 
-		InstanceGroup& group = *groupPtr;
-		std::vector<Bytes> s;
-		group.instanceUpdater->Snapshot(s, instanceData);
-		assert(!group.instanceUpdater->parameters.empty());
-		assert(s.size() == group.instancedData.size());
 
-		// merge slice
-		for (size_t m = 0; m < group.instancedData.size(); m++) {
-			group.instancedData[m].Append(s[m]);
-		}
-
-		++group.instanceCount;
+		group.instanceCount++;
 	}
 }
 

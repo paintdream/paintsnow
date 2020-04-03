@@ -38,10 +38,10 @@ namespace PaintsNow {
 				return *this;
 			}
 
-			inline Parameter& operator = (const String& data) {
+			inline Parameter& operator = (const Bytes& data) {
 				if (internalAddress != nullptr) {
-					assert(type->GetSize() == data.size());
-					memcpy(internalAddress, data.c_str(), data.size());
+					assert(type->GetSize() == data.GetSize());
+					memcpy(internalAddress, data.GetData(), data.GetSize());
 				}
 
 				return *this;
@@ -65,6 +65,8 @@ namespace PaintsNow {
 		class Updater : public IReflect {
 		public:
 			Updater(ZPassBase& pass);
+			static Bytes MakeKeyFromString(const String& s);
+
 			Parameter& operator [] (const Bytes& key);
 			Parameter& operator [] (IShader::BindInput::SCHEMA schema);
 
@@ -73,6 +75,9 @@ namespace PaintsNow {
 			void Flush();
 			virtual void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta);
 			virtual void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) {}
+			
+			uint32_t GetBufferCount() const;
+			uint32_t GetTextureCount() const;
 
 		private:
 			std::vector<const IShader::BindBuffer*> buffers;
@@ -92,10 +97,9 @@ namespace PaintsNow {
 		class PartialUpdater {
 		public:
 			Bytes ComputeHash() const;
-			void Snapshot(std::vector<Bytes>& buffers, const PartialData& data) const;
+			void Snapshot(std::vector<Bytes>& buffers, std::vector<IRender::Resource::DrawCallDescription::BufferRange>& bufferResources, std::vector<IRender::Resource*>& textureResources, const PartialData& data) const;
 			
 			std::vector<Parameter> parameters;
-			std::vector<std::pair<uint8_t, std::vector<uint16_t> > > groupInfos;
 		};
 
 		class PartialData : public TReflected<PartialData, IReflectObjectComplex> {

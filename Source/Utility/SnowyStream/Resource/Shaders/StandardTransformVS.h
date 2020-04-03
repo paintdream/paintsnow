@@ -18,12 +18,12 @@ namespace PaintsNow {
 
 		protected:
 			IShader::BindBuffer instanceBuffer;
+			IShader::BindBuffer globalBuffer;
 			IShader::BindBuffer vertexPositionBuffer;
 			IShader::BindBuffer vertexNormalBuffer;
 			IShader::BindBuffer vertexTangentBuffer;
 			IShader::BindBuffer vertexColorBuffer;
 			IShader::BindBuffer vertexTexCoordBuffer;
-			IShader::BindBuffer globalBuffer;
 
 			MatrixFloat4x4 worldMatrix;
 			MatrixFloat4x4 viewMatrix;

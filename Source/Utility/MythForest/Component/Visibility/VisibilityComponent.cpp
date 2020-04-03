@@ -371,14 +371,18 @@ void VisibilityComponent::CollectRenderableComponent(Engine& engine, TaskData& t
 	uint32_t currentWarpIndex = engine.GetKernel().GetCurrentWarpIndex();
 	std::map<size_t, InstanceGroup>& instanceGroups = task.instanceGroups[currentWarpIndex == ~(uint32_t)0 ? GetWarpIndex() : currentWarpIndex];
 	InstanceGroup& first = instanceGroups[(size_t)renderableComponent];
+
+	std::vector<IRender::Resource*> textureResources;
+	std::vector<IRender::Resource::DrawCallDescription::BufferRange> bufferResources;
+
 	if (first.drawCallDescription.shaderResource != nullptr) {
 		size_t i = 0;
 		while (true) {
 			InstanceGroup& group = instanceGroups[(size_t)renderableComponent + i++];
 			if (group.drawCallDescription.shaderResource == nullptr) break;
-
+	
 			std::vector<Bytes> s;
-			group.partialUpdater.Snapshot(s, instanceData);
+			group.partialUpdater.Snapshot(s, bufferResources, textureResources, instanceData);
 			assert(s.size() == group.instancedData.size());
 			for (size_t k = 0; k < s.size(); k++) {
 				group.instancedData[k].Append(s[k]);
@@ -401,15 +405,15 @@ void VisibilityComponent::CollectRenderableComponent(Engine& engine, TaskData& t
 				std::binary_insert(task.dataUpdaters, dataUpdater);
 
 				instanceData.Export(group.partialUpdater, pipeline->GetPassUpdater());
-				group.instancedData.resize(group.partialUpdater.groupInfos.size());
 				group.drawCallDescription = std::move(drawCalls[i].drawCallDescription);
-			}
-
-			std::vector<Bytes> s;
-			group.partialUpdater.Snapshot(s, instanceData);
-			assert(s.size() == group.instancedData.size());
-			for (size_t k = 0; k < s.size(); k++) {
-				group.instancedData[k].Append(s[k]);
+				group.partialUpdater.Snapshot(group.instancedData, bufferResources, textureResources, instanceData);
+			} else {
+				std::vector<Bytes> s;
+				group.partialUpdater.Snapshot(s, bufferResources, textureResources, instanceData);
+				assert(s.size() == group.instancedData.size());
+				for (size_t k = 0; k < s.size(); k++) {
+					group.instancedData[k].Append(s[k]);
+				}
 			}
 
 			group.instanceCount++;

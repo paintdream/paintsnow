@@ -109,7 +109,7 @@ namespace PaintsNow {
 						IRender::Queue* renderQueue;
 						ZPassBase::PartialUpdater globalUpdater;
 						ZPassBase::PartialUpdater instanceUpdater;
-						std::vector<std::pair<uint32_t, IRender::Resource*> > buffers;
+						std::vector<IRender::Resource*> buffers;
 					};
 
 					WarpData();

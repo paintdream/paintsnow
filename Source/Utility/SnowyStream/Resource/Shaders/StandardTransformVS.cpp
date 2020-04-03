@@ -73,12 +73,12 @@ TObject<IReflect>& StandardTransformVS::operator () (IReflect& reflect) {
 		ReflectProperty(enableRasterCoord)[IShader::BindConst<bool>()];
 
 		ReflectProperty(instanceBuffer);
+		ReflectProperty(globalBuffer);
 		ReflectProperty(vertexPositionBuffer);
 		ReflectProperty(vertexNormalBuffer)[IShader::BindOption(enableVertexNormal)];
 		ReflectProperty(vertexTangentBuffer)[IShader::BindOption(enableVertexTangent)];
 		ReflectProperty(vertexColorBuffer)[IShader::BindOption(enableVertexColor)];
 		ReflectProperty(vertexTexCoordBuffer);
-		ReflectProperty(globalBuffer);
 
 		ReflectProperty(worldMatrix)[instanceBuffer][IShader::BindInput(IShader::BindInput::TRANSFORM_WORLD)];
 		ReflectProperty(instancedColor)[instanceBuffer][IShader::BindOption(enableInstancedColor)][IShader::BindInput(IShader::BindInput::COLOR_INSTANCED)];
