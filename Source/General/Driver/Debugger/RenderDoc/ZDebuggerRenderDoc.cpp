@@ -1,4 +1,8 @@
 #include "ZDebuggerRenderDoc.h"
+#if defined(_MSC_VER) && _MSC_VER <= 1200
+#define RENDERDOC_NO_STDINT
+#include "../../../../Core/Interface/IType.h"
+#endif
 #include "renderdoc_app.h"
 
 #ifdef _WIN32

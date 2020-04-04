@@ -1976,6 +1976,22 @@ SOURCE=..\..\..\..\Source\General\Driver\Debugger\MiniDump\ZDebuggerWin.cpp
 SOURCE=..\..\..\..\Source\General\Driver\Debugger\MiniDump\ZDebuggerWin.h
 # End Source File
 # End Group
+# Begin Group "RenderDoc"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\General\Driver\Debugger\RenderDoc\renderdoc_app.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\General\Driver\Debugger\RenderDoc\ZDebuggerRenderDoc.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\General\Driver\Debugger\RenderDoc\ZDebuggerRenderDoc.h
+# End Source File
+# End Group
 # End Group
 # End Group
 # End Target
