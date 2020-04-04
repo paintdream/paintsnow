@@ -12,7 +12,10 @@ namespace PaintsNow {
 	public:
 		ZDebuggerWin();
 		virtual ~ZDebuggerWin();
-		virtual void SetDumpHandler(const String& path, const TWrapper<bool>& handler);
+		virtual void SetDumpHandler(const String& path, const TWrapper<bool>& handler) override;
+		virtual void StartDump(const String& options) override;
+		virtual void EndDump() override;
+		virtual void InvokeDump(const String& options) override;
 
 		TWrapper<bool> handler;
 		String path;

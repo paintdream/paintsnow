@@ -16,6 +16,9 @@ namespace PaintsNow {
 	public:
 		virtual ~IDebugger();
 		virtual void SetDumpHandler(const String& path, const TWrapper<bool>& handler) = 0;
+		virtual void StartDump(const String& options) = 0;
+		virtual void EndDump() = 0;
+		virtual void InvokeDump(const String& options) = 0;
 	};
 }
 

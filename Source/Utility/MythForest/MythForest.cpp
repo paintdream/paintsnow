@@ -1,9 +1,16 @@
 #include "MythForest.h"
+#define USE_FRAME_CAPTURE !defined(CMAKE_PAINTSNOW) || ADD_DEBUGGER_RENDERDOC_BUILTIN
 
 using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 using namespace PaintsNow::NsBridgeSunset;
+
+#if USE_FRAME_CAPTURE
+#include "../../General/Driver/Debugger/RenderDoc/ZDebuggerRenderDoc.h"
+static ZDebuggerRenderDoc debugger;
+#endif
+
 
 class ModuleRegistar : public IReflect {
 public:
@@ -121,6 +128,7 @@ TObject<IReflect>& MythForest::operator () (IReflect& reflect) {
 		ReflectMethod(RequestClearEntityComponents)[ScriptMethod = "ClearEntityComponents"];
 		ReflectMethod(RequestGetFrameTickTime)[ScriptMethod = "GetFrameTickTime"];
 		ReflectMethod(RequestRaycast)[ScriptMethod = "Raycast"];
+		ReflectMethod(RequestCaptureFrame)[ScriptMethod = "CaptureFrame"];
 	}
 
 	return *this;
@@ -306,6 +314,11 @@ void MythForest::RequestRaycast(IScript::Request& request, IScript::Delegate<Ent
 	}
 }
 
+void MythForest::RequestCaptureFrame(IScript::Request& request, const String& path, const String& options) {
+	InvokeCaptureFrame(path, options);
+}
+
+//
 void MythForest::OnSize(const Int2& size) {
 	eventListenerComponentModule.OnSize(size);
 }
@@ -316,4 +329,24 @@ void MythForest::OnMouse(const IFrame::EventMouse& mouse) {
 
 void MythForest::OnKeyboard(const IFrame::EventKeyboard& keyboard) {
 	eventListenerComponentModule.OnKeyboard(keyboard);
+}
+
+void MythForest::StartCaptureFrame(const String& path, const String& options) {
+#if USE_FRAME_CAPTURE
+	debugger.SetDumpHandler(path, TWrapper<bool>());
+	debugger.StartDump(options);
+#endif
+}
+
+void MythForest::EndCaptureFrame() {
+#if USE_FRAME_CAPTURE
+	debugger.EndDump();
+#endif
+}
+
+void MythForest::InvokeCaptureFrame(const String& path, const String& options) {
+#if USE_FRAME_CAPTURE
+	debugger.SetDumpHandler(path, TWrapper<bool>());
+	debugger.InvokeDump(options);
+#endif
 }

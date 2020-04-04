@@ -256,3 +256,17 @@ void ZDebuggerWin::SetDumpHandler(const String& p, const TWrapper<bool>& w) {
 	handler = w;
 	path = p;
 }
+
+void ZDebuggerWin::StartDump(const String& options) {
+#if defined(_WIN32) || defined(WIN32)
+	DebugBreak();
+#endif
+}
+
+void ZDebuggerWin::EndDump() {
+
+}
+
+void ZDebuggerWin::InvokeDump(const String& options) {
+	StartDump(options);
+}

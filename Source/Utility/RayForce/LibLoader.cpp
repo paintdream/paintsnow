@@ -1,6 +1,4 @@
 #include "LibLoader.h"
-
-
 using namespace PaintsNow;
 
 #ifdef __GNUC__

@@ -54,6 +54,10 @@ namespace PaintsNow {
 			void OnSize(const Int2& size);
 			void OnMouse(const IFrame::EventMouse& mouse);
 			void OnKeyboard(const IFrame::EventKeyboard& keyboard);
+			void StartCaptureFrame(const String& path, const String& options);
+			void EndCaptureFrame();
+			void InvokeCaptureFrame(const String& path, const String& options);
+
 			TShared<Entity> CreateEntity(int32_t warp = 0);
 			Engine& GetEngine();
 
@@ -72,6 +76,7 @@ namespace PaintsNow {
 			void RequestClearEntityComponents(IScript::Request& request, IScript::Delegate<Entity> entity);
 			void RequestGetFrameTickTime(IScript::Request& request);
 			void RequestRaycast(IScript::Request& request, IScript::Delegate<Entity> entity, const Float3& from, const Float3& dir, uint32_t count);
+			void RequestCaptureFrame(IScript::Request& request, const String& path, const String& options);
 
 			// Build-in sub modules
 		private:
