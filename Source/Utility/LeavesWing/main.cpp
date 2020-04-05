@@ -7,10 +7,6 @@
 #include "../LeavesFlute/Loader.h"
 #include <ctime>
 
-#if defined(_MSC_VER)
-#pragma comment(linker, "/STACK:4194304") // typedlua requires more stack memory ...
-#endif
-
 using namespace PaintsNow;
 using namespace PaintsNow::NsLeavesFlute;
 

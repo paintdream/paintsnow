@@ -10,7 +10,7 @@ local fpsBuffer : { integer } = {}
 local tickBuffer : { integer } = {}
 local bufferIndex = 1
 
-local function SetFrameMonitorOnTitle(deltaTime : number, cameraComponent : CameraComponent, spaceComponent : SpaceComponent)
+local function SetFrameMonitorOnTitle(deltaTime : number, cameraComponent : CameraComponent, transformComponent : TransformComponent, spaceComponent : SpaceComponent)
 	-- show fps
 	fpsBuffer[bufferIndex] = MythForest.GetFrameTickTime()
 	tickBuffer[bufferIndex] = deltaTime
@@ -28,10 +28,17 @@ local function SetFrameMonitorOnTitle(deltaTime : number, cameraComponent : Came
 	end
 
 	if bufferIndex % 4 == 0 then
+		local position = transformComponent:GetTranslation()
+		local fps = string.format("%3.2f", math.min(1000 * #fpsBuffer / sumFrame, 999.99))
+		local tps = string.format("%3.2f", math.min(1000 * #tickBuffer / sumTick, 999.99))
+		local eye = string.format("%3.2f, %3.2f, %3.2f", position[1], position[2], position[3])
+		local render = tostring(cameraComponent:GetCollectedVisibleEntityCount()) .. "/" .. tostring(cameraComponent:GetCollectedEntityCount()) .. "/" .. tostring(spaceComponent:GetEntityCount()) .. ")"
+
 		System.SetAppTitle("ShadowRock DEMO"
-			.. " | FPS: " .. string.format("%3.2f", math.min(1000 * #fpsBuffer / sumFrame, 999.99))
-			.. " | TPS: " .. string.format("%3.2f", math.min(1000 * #tickBuffer / sumTick, 999.99))
-			.. " | Render (" .. tostring(cameraComponent:GetCollectedVisibleEntityCount()) .. "/" .. tostring(cameraComponent:GetCollectedEntityCount()) .. "/" .. tostring(spaceComponent:GetEntityCount()) .. ")")
+			.. " | FPS: " .. fps
+			.. " | TPS: " .. tps
+			.. " | Eye: " .. eye
+			.. " | Render " .. render)
 	end
 end
 
@@ -82,7 +89,7 @@ local function InitializeWorld(databasePath : string)
 	
 	local phaseComponent = cameraController.phaseComponent
 	phaseComponent:BindRootEntity(scene.rootEntity)
-	phaseComponent:Update({ 5, 5, 5})
+	phaseComponent:Update({ 5, 1.5, 5})
 
 	local lastMousePos = { 0, 0 }
 	local moveSpeed = 1.0
@@ -99,7 +106,7 @@ local function InitializeWorld(databasePath : string)
 	eventListenerComponent:SetEventHandler(function (eventType : integer, eventData)
 		if eventType == "EVENT_TICK" then
 			local deltaTime : number = eventData
-			SetFrameMonitorOnTitle(deltaTime, cameraComponent, spaceComponent)
+			SetFrameMonitorOnTitle(deltaTime, cameraComponent, cameraTransform, spaceComponent)
 			if stepPhase then
 				phaseComponent:Step(stepBounceCount)
 			end
