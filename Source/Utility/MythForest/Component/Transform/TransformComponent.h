@@ -4,7 +4,7 @@
 //
 
 #ifndef __TRANSFORMCOMPONENT_H__
-#define __TRANSFORMCOMPOENNT_H__
+#define __TRANSFORMCOMPONENT_H__
 
 #include "../../Entity.h"
 #include "../../Component.h"
