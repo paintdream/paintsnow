@@ -18,9 +18,8 @@ TObject<IReflect>& DeviceRenderStage::operator () (IReflect& reflect) {
 
 void DeviceRenderStage::PrepareResources(Engine& engine) {
 	renderTargetDescription.isBackBuffer = true;
-	const RenderPort::PortMap& portMap = InputColor.GetTargetPortMap();
-	assert(portMap.size() == 1);
-	RenderPort* renderPort = static_cast<RenderPort*>(portMap.begin()->first);
+	assert(InputColor.GetLinks().size() == 1);
+	RenderPort* renderPort = static_cast<RenderPort*>(InputColor.GetLinks()[0].port);
 	assert(renderPort != nullptr);
 	assert(renderPort->QueryInterface(UniqueType<RenderPortRenderTarget>()) != nullptr);
 	RenderPortRenderTarget* input = renderPort->QueryInterface(UniqueType<RenderPortRenderTarget>());

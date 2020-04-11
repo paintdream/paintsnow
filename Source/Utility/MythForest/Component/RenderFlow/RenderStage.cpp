@@ -135,12 +135,11 @@ void RenderStage::UpdateComplete(Engine& engine) {
 void RenderStage::Initialize(Engine& engine) {
 	IRender& render = engine.interfaces.render;
 	IRender::Queue* queue = renderQueue.GetQueue();
-	for (std::map<String, Port*>::iterator it = nodePorts.begin(); it != nodePorts.end(); ++it) {
-		Port* port = it->second;
-		const std::map<GraphPort<SharedTiny>*, FLAG>& portMap = port->GetTargetPortMap();
-		for (std::map<GraphPort<SharedTiny>*, FLAG>::const_iterator it = portMap.begin(); it != portMap.end(); ++it) {
-			if (!(it->second & Tiny::TINY_PINNED)) {
-				port->UpdateDataStream(*static_cast<Port*>(it->first));
+	for (size_t i = 0; i < nodePorts.size(); i++) {
+		Port* port = nodePorts[i].port;
+		for (size_t j = 0; j < port->GetLinks().size(); j++) {
+			if (!(port->GetLinks()[j].flag & Tiny::TINY_PINNED)) {
+				port->UpdateDataStream(*static_cast<Port*>(port->GetLinks()[j].port));
 			}
 		}
 
@@ -159,8 +158,8 @@ void RenderStage::Uninitialize(Engine& engine) {
 
 	IRender& render = engine.interfaces.render;
 	IRender::Queue* queue = renderQueue.GetQueue();
-	for (std::map<String, Port*>::iterator it = nodePorts.begin(); it != nodePorts.end(); ++it) {
-		it->second->Uninitialize(render, queue);
+	for (size_t k = 0; k < nodePorts.size(); k++) {
+		nodePorts[k].port->Uninitialize(render, queue);
 	}
 
 	for (size_t i = 0; i < newResources.size(); i++) {
@@ -191,9 +190,9 @@ void RenderStage::Uninitialize(Engine& engine) {
 
 void RenderStage::Tick(Engine& engine) {
 	Tiny::FLAG flag = Flag().load(std::memory_order_relaxed);
-	for (std::map<String, Port*>::iterator it = nodePorts.begin(); it != nodePorts.end(); ++it) {
-		it->second->Tick(engine);
-		flag |= it->second->Flag().load(std::memory_order_relaxed);
+	for (size_t i = 0; i < nodePorts.size(); i++) {
+		nodePorts[i].port->Tick(engine);
+		flag |= nodePorts[i].port->Flag().load(std::memory_order_relaxed);
 	}
 
 	if (flag & TINY_MODIFIED) {
@@ -216,8 +215,8 @@ void RenderStage::PrepareRenderQueues(Engine& engine, std::vector<ZRenderQueue*>
 
 	queues.emplace_back(&renderQueue);
 	IRender::Queue* queue = renderQueue.GetQueue();
-	for (std::map<String, Port*>::iterator ip = nodePorts.begin(); ip != nodePorts.end(); ++ip) {
-		ip->second->PrepareRenderQueues(queues);
+	for (size_t i = 0; i < nodePorts.size(); i++) {
+		nodePorts[i].port->PrepareRenderQueues(queues);
 	}
 }
 

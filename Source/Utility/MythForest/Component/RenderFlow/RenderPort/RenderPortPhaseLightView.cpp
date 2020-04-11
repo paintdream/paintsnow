@@ -28,8 +28,8 @@ bool RenderPortPhaseLightView::BeginFrame(IRender& render) {
 
 void RenderPortPhaseLightView::EndFrame(IRender& render) {
 	node->Flag() |= TINY_MODIFIED;
-	for (PortMap::const_iterator it = targetPorts.begin(); it != targetPorts.end(); ++it) {
-		RenderPort* renderPort = static_cast<RenderPort*>(it->first);
+	for (size_t i = 0; i < links.size(); i++) {
+		RenderPort* renderPort = static_cast<RenderPort*>(links[i].port);
 		renderPort->GetNode()->Flag() |= TINY_MODIFIED;
 	}
 }

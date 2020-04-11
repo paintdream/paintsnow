@@ -114,21 +114,21 @@ void RenderFlowComponentModule::RequestEnumerateRenderStagePorts(IScript::Reques
 	request.DoLock();
 	RenderStage* s = renderStage.Get();
 	request << beginarray;
-	for (std::map<String, RenderStage::Port*>::const_iterator it = s->GetPortMap().begin(); it != s->GetPortMap().end(); ++it) {
-		RenderStage::Port* port = it->second;
+	for (size_t i = 0; i < s->GetPorts().size(); i++) {
+		RenderStage::Port* port = s->GetPorts()[i].port;
 		request << begintable <<
-			key("Name") << it->first <<
+			key("Name") << s->GetPorts()[i].name <<
 			key("Type") << port->GetUnique().info->typeName <<
 			key("Targets") << beginarray;
 
-		for (std::map<GraphPort<SharedTiny>*, Tiny::FLAG>::const_iterator ip = port->GetTargetPortMap().begin(); ip != port->GetTargetPortMap().end(); ++ip)	 {
-			RenderStage::Port* targetPort = static_cast<RenderStage::Port*>(ip->first);
+		for (size_t j = 0; j < port->GetLinks().size(); j++) {
+			RenderStage::Port* targetPort = static_cast<RenderStage::Port*>(port->GetLinks()[j].port);
 			RenderStage* target = static_cast<RenderStage*>(targetPort->GetNode());
 			String targetPortName;
 			// locate port
-			for (std::map<String, RenderStage::Port*>::const_iterator iw = target->GetPortMap().begin(); iw != target->GetPortMap().end(); ++iw) {
-				if (iw->second == targetPort) {
-					targetPortName = iw->first;
+			for (size_t k = 0; k < target->GetPorts().size(); k++) {
+				if (target->GetPorts()[k].port == targetPort) {
+					targetPortName = target->GetPorts()[k].name;
 					break;
 				}
 			}
@@ -136,7 +136,7 @@ void RenderFlowComponentModule::RequestEnumerateRenderStagePorts(IScript::Reques
 			request << begintable
 				<< key("RenderStage") << target
 				<< key("Port") << targetPortName
-				<< key("Direction") << !!(ip->second)
+				<< key("Direction") << !!(port->GetLinks()[j].flag & Tiny::TINY_PINNED)
 				<< endtable;
 		}
 
@@ -166,7 +166,7 @@ void RenderFlowComponentModule::RequestLinkRenderStagePort(IScript::Request& req
 		return;
 	}
 
-	if (!fromPort->GetTargetPortMap().empty() && ((fromPort->Flag() & Tiny::TINY_UNIQUE) || (toPort->Flag() & Tiny::TINY_UNIQUE))) {
+	if (!fromPort->GetLinks().empty() && ((fromPort->Flag() & Tiny::TINY_UNIQUE) || (toPort->Flag() & Tiny::TINY_UNIQUE))) {
 		request.Error(String("Sharing policy conflicts when connecting from: ") + fromPortName + " to " + toPortName);
 		return;
 	}

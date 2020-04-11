@@ -38,8 +38,8 @@ void RenderFlowComponent::SetMainResolution(const Int2& res) {
 void RenderFlowComponent::RemoveNode(RenderStage* stage) {
 	assert(!(Flag() & TINY_ACTIVATED));
 	// removes all symbols related with stage ...
-	for (std::map<String, RenderStage::Port*>::const_iterator it = stage->GetPortMap().begin(); it != stage->GetPortMap().end(); ++it) {
-		RenderStage::Port* port = it->second;
+	for (size_t i = 0; i < stage->GetPorts().size(); i++) {
+		RenderStage::Port* port = stage->GetPorts()[i].port;
 		for (std::vector<String>::const_iterator it = port->publicSymbols.begin(); it != port->publicSymbols.end(); ++it) {
 			symbolMap.erase(*it);
 		}
@@ -169,17 +169,16 @@ public:
 				std::vector<RenderPortRenderTarget*>& s = reusableTextures[texture];
 				for (size_t k = 0; k < s.size(); k++) {
 					RenderPortRenderTarget*& target = s[k];
-					const RenderPortRenderTarget::PortMap& portMap = target->GetTargetPortMap();
-					RenderPortRenderTarget::PortMap::const_iterator it;
-					for (it = portMap.begin(); it != portMap.end(); ++it) {
-						RenderStage* renderStage = static_cast<RenderStage*>(it->first->GetNode());
+					size_t i;
+					for (i = 0; i < target->GetLinks().size(); i++) {
+						RenderStage* renderStage = static_cast<RenderStage*>(target->GetLinks()[i].port->GetNode());
 						if (unlockedRenderStages.count(renderStage) == 0) {
 							// give up
 							break;
 						}
 					}
 
-					if (it == portMap.end()) {
+					if (i == target->GetLinks().size()) {
 						texture = target->renderTargetTextureResource;
 						target = &rt; // update reusable info
 						return;
@@ -313,8 +312,8 @@ void RenderFlowComponent::RenderSyncTick(Engine& engine) {
 		for (size_t k = 0; k < cachedRenderStages.size(); k++) {
 			RenderStage* stage = cachedRenderStages[k];
 			if (stage != nullptr) {
-				for (std::map<String, RenderPort*>::const_iterator it = stage->GetPortMap().begin(); it != stage->GetPortMap().end(); ++it) {
-					it->second->Flag() &= ~TINY_MODIFIED;
+				for (size_t j = 0; j < stage->GetPorts().size(); j++) {
+					stage->GetPorts()[j].port->Flag() &= ~TINY_MODIFIED;
 				}
 			}
 		}
