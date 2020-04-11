@@ -264,8 +264,8 @@ void RenderFlowComponent::Initialize(Engine& engine, Entity* entity) {
 }
 
 void RenderFlowComponent::Uninitialize(Engine& engine, Entity* entity) {
-	for (std::set<Node*>::iterator it = allNodes.begin(); it != allNodes.end(); ++it) {
-		(*it)->Uninitialize(engine);
+	for (size_t i = 0; i < allNodes.size(); i++) {
+		allNodes[i]->Uninitialize(engine);
 	}
 
 	IRender& render = engine.interfaces.render;

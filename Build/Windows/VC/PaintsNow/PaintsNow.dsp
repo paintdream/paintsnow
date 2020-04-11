@@ -383,6 +383,13 @@ SOURCE=..\..\..\..\Source\General\Template\TShaderMacro.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Core\Template\TTagged.h
+# PROP Exclude_From_Scan -1
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Core\Template\TVector.h
 # PROP Exclude_From_Scan -1
 # PROP BASE Exclude_From_Build 1

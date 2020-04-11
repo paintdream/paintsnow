@@ -48,22 +48,22 @@ void Entity::ReleaseObject() {
 void Entity::SetEngineInternal(Engine& engine) {
 	// reuse parent node as engine pointer
 	assert(!(Flag() & ENTITY_STORE_ENGINE));
-
 	Flag() |= ENTITY_STORE_ENGINE;
 
-	reinterpret_cast<Engine*&>(_parentNode) = &engine;
+	reinterpret_cast<Engine*&>(*(void**)&_parentNode) = &engine;
 }
 
 void Entity::CleanupEngineInternal() {
 	Flag() &= ~ENTITY_STORE_ENGINE;
-	SetParent(nullptr);
+
+	reinterpret_cast<Engine*&>(*(void**)&_parentNode) = nullptr;
 }
 
 Engine& Entity::GetEngineInternal() const {
 	assert(GetParent() != nullptr);
 	assert(Flag() & ENTITY_STORE_ENGINE);
 
-	return *reinterpret_cast<Engine*>(_parentNode);
+	return *reinterpret_cast<Engine*>(*(void**)&_parentNode);
 }
 
 void Entity::InitializeComponent(Engine& engine, Component* component) {
