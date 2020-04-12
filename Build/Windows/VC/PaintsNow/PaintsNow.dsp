@@ -417,6 +417,14 @@ SOURCE=..\..\..\..\Source\Core\System\Kernel.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Core\System\TaskGraph.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Core\System\TaskGraph.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Core\System\TaskQueue.cpp
 # End Source File
 # Begin Source File
