@@ -98,6 +98,8 @@ namespace PaintsNow {
 				struct PolicyData {
 					PolicyData();
 					IRender::Queue* portQueue;
+					IRender::Resource* instanceBuffer;
+					Bytes instanceData;
 					std::vector<IRender::Resource*> runtimeResources;
 				};
 

@@ -502,14 +502,15 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 
 				task.dataUpdaters.clear();
 
+				IRender::Resource* buffer = render.CreateResource(queue, IRender::Resource::RESOURCE_BUFFER);
+				Bytes bufferData;
+				std::vector<IRender::Resource*> drawCallResources;
+
 				for (size_t i = 0; i < task.instanceGroups.size(); i++) {
 					std::map<size_t, InstanceGroup>& groups = task.instanceGroups[i];
 					for (std::map<size_t, InstanceGroup>::iterator it = groups.begin(); it != groups.end(); ++it) {
 						InstanceGroup& group = it->second;
 						if (group.drawCallDescription.shaderResource == nullptr || group.instanceCount == 0) continue;
-
-						std::vector<IRender::Resource*> buffers;
-						buffers.reserve(group.instancedData.size());
 
 						for (size_t k = 0; k < group.instancedData.size(); k++) {
 							Bytes& data = group.instancedData[k];
@@ -518,17 +519,13 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 								ZPassBase::Parameter& output = group.instanceUpdater.parameters[k];
 								// instanceable.
 								assert(output.slot < group.drawCallDescription.bufferResources.size());
-								IRender::Resource* buffer = render.CreateResource(queue, IRender::Resource::RESOURCE_BUFFER);
-								IRender::Resource::BufferDescription desc;
-								desc.data = std::move(data);
-								desc.usage = IRender::Resource::BufferDescription::INSTANCED;
-								desc.component = desc.data.GetSize() / (group.instanceCount * sizeof(float));
-								render.UploadResource(queue, buffer, &desc);
 
 								// assign instanced buffer	
-								// assert(group.drawCallDescription.bufferResources[output.slot].buffer == nullptr);
-								group.drawCallDescription.bufferResources[output.slot].buffer = buffer;
-								buffers.emplace_back(buffer);
+								IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[output.slot];
+								bufferRange.buffer = buffer;
+								bufferRange.offset = bufferData.GetSize();
+								bufferRange.component = data.GetSize() / (group.instanceCount * sizeof(float));
+								bufferData.Append(data);
 							}
 						}
 
@@ -538,18 +535,25 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 						IRender::Resource* drawCall = render.CreateResource(queue, IRender::Resource::RESOURCE_DRAWCALL);
 						IRender::Resource::DrawCallDescription dc = group.drawCallDescription; // make copy
 						render.UploadResource(queue, drawCall, &dc);
-						render.ExecuteResource(queue, drawCall);
-
-						// cleanup at current frame
-						render.DeleteResource(queue, drawCall);
-						for (size_t n = 0; n < buffers.size(); n++) {
-							render.DeleteResource(queue, buffers[n]);
-						}
-
+						drawCallResources.emplace_back(drawCall);
 						group.Reset(); // for next reuse
 					}
 				}
 
+				IRender::Resource::BufferDescription desc;
+				desc.data = std::move(bufferData);
+				desc.usage = IRender::Resource::BufferDescription::INSTANCED;
+				desc.component = 0;
+				render.UploadResource(queue, buffer, &desc);
+
+				for (size_t i = 0; i < drawCallResources.size(); i++) {
+					IRender::Resource* drawCall = drawCallResources[i];
+					render.ExecuteResource(queue, drawCall);
+					// cleanup at current frame
+					render.DeleteResource(queue, drawCall);
+				}
+
+				render.DeleteResource(queue, buffer);
 				finalStatus.store(TaskData::STATUS_ASSEMBLED, std::memory_order_release);
 			}
 		}
