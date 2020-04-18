@@ -1765,7 +1765,7 @@ struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> : public Resou
 					GL_GUARD();
 					glEnableVertexAttribArray(vertexBufferBindingCount);
 					glBindBuffer(GL_ARRAY_BUFFER, buffer->bufferID);
-					glVertexAttribPointer(vertexBufferBindingCount, buffer->component, bufferElementType, GL_FALSE, 0,	reinterpret_cast<void*>((size_t)bufferRange.offset));
+					glVertexAttribPointer(vertexBufferBindingCount, buffer->component, bufferElementType, GL_FALSE, 0, reinterpret_cast<void*>((size_t)bufferRange.offset));
 					vertexBufferBindingCount++;
 					break;
 				}
@@ -1773,10 +1773,10 @@ struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> : public Resou
 				{
 					GL_GUARD();
 					assert(buffer->component % 4 == 0);
+					glBindBuffer(GL_ARRAY_BUFFER, buffer->bufferID);
 					for (k = 0; k < buffer->component; k += 4) {
 						glEnableVertexAttribArray(vertexBufferBindingCount);
-						glBindBuffer(GL_ARRAY_BUFFER, buffer->bufferID);
-						glVertexAttribPointer(vertexBufferBindingCount, Min(4u, buffer->component - k), bufferElementType,	GL_FALSE, buffer->component * sizeof(float), reinterpret_cast<void*>((size_t)bufferRange.offset +	 sizeof(float) * k));
+						glVertexAttribPointer(vertexBufferBindingCount, Min(4u, buffer->component - k), bufferElementType, GL_FALSE, buffer->component * sizeof(float), reinterpret_cast<void*>((size_t)bufferRange.offset + sizeof(float) * k));
 						glVertexAttribDivisor(vertexBufferBindingCount, 1);
 						vertexBufferBindingCount++;
 					}
