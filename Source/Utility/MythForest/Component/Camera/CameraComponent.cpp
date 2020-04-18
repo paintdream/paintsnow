@@ -41,8 +41,10 @@ CameraComponent::CameraComponent(TShared<RenderFlowComponent> prenderFlowCompone
 
 void CameraComponent::UpdateJitterMatrices(CameraComponentConfig::WorldGlobalData& worldGlobalData) {
 	if (Flag() & CAMERACOMPONENT_SUBPIXEL_JITTER) {
-		Int2 resolution = renderFlowComponent->GetMainResolution();
+		jitterIndex = (jitterIndex + 1) % 9;
+
 		MatrixFloat4x4 jitterMatrix;
+		Int2 resolution = renderFlowComponent->GetMainResolution();
 		static float jitterX[9] = { 1.0f / 2.0f, 1.0f / 4.0f, 3.0f / 4.0f, 1.0f / 8.0f, 5.0f / 8.0f, 3.0f / 8.0f, 7.0f / 8.0f, 1.0f / 16.0f, 9.0f / 16.0f };
 		static float jitterY[9] = { 1.0f / 3.0f, 2.0f / 3.0f, 1.0f / 9.0f, 4.0f / 9.0f, 7.0f / 9.0f, 2.0f / 9.0f, 5.0f / 9.0f, 8.0f / 9.0f, 1.0f / 27.0f };
 		Float2 jitterOffset((jitterX[jitterIndex] - 0.5f) / Max(resolution.x(), 1), (jitterY[jitterIndex] - 0.5f) / Max(resolution.y(), 1));
@@ -51,8 +53,8 @@ void CameraComponent::UpdateJitterMatrices(CameraComponentConfig::WorldGlobalDat
 		jitterMatrix(3, 1) += jitterOffset.y();
 		jitterIndex = (jitterIndex + 1) % 9;
 
+		worldGlobalData.jitterMatrix = jitterMatrix;
 		worldGlobalData.jitterOffset = jitterOffset;
-		worldGlobalData.viewProjectionMatrix = worldGlobalData.viewMatrix * worldGlobalData.projectionMatrix * jitterMatrix;
 	}
 }
 
@@ -385,10 +387,9 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 
 		// recompute global matrices
 		worldGlobalData.viewMatrix = QuickInverse(ComputeSmoothTrackTransform());
-		worldGlobalData.viewProjectionMatrix = worldGlobalData.viewMatrix * worldGlobalData.projectionMatrix;
 	}
-
-	UpdateJitterMatrices(worldGlobalData);
+	
+	worldGlobalData.viewProjectionMatrix = worldGlobalData.viewMatrix * worldGlobalData.projectionMatrix;
 
 	// update data updaters
 	IRender& render = engine.interfaces.render;
@@ -434,12 +435,13 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 		// CameraView settings
 		RenderStage::Port* port = renderFlowComponent->BeginPort(cameraViewPortName);
 		if (port != nullptr) {
-			jitterIndex = (jitterIndex + 1) % 9;
 			RenderPortCameraView* portCameraView = port->QueryInterface(UniqueType<RenderPortCameraView>());
 			if (portCameraView != nullptr) {
+				UpdateJitterMatrices(worldGlobalData);
+
 				portCameraView->viewMatrix = worldGlobalData.viewMatrix;
 				portCameraView->inverseViewMatrix = QuickInverse(portCameraView->viewMatrix);
-				portCameraView->projectionMatrix = worldGlobalData.projectionMatrix;
+				portCameraView->projectionMatrix = worldGlobalData.projectionMatrix * worldGlobalData.jitterMatrix;
 				portCameraView->inverseProjectionMatrix = InverseProjectionMatrix(portCameraView->projectionMatrix);
 				portCameraView->reprojectionMatrix = portCameraView->inverseProjectionMatrix * portCameraView->inverseViewMatrix * worldGlobalData.lastViewProjectionMatrix;
 				portCameraView->jitterOffset = worldGlobalData.jitterOffset;
@@ -450,6 +452,8 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 	}
 
 	worldGlobalData.lastViewProjectionMatrix = worldGlobalData.viewProjectionMatrix;
+	worldGlobalData.viewProjectionMatrix = worldGlobalData.viewMatrix * worldGlobalData.projectionMatrix;
+
 	renderPort.Flag() |= TINY_MODIFIED;
 }
 

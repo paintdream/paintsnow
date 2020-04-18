@@ -6,7 +6,7 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsSnowyStream;
 using namespace PaintsNow::ShaderMacro;
 
-AntiAliasingFS::AntiAliasingFS() : lastRatio(0.9f) {
+AntiAliasingFS::AntiAliasingFS() : lastRatio(0.75f) {
 	inputTexture.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
 	depthTexture.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
 	lastInputTexture.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
