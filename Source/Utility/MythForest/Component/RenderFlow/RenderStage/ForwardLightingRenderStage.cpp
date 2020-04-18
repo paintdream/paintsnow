@@ -27,6 +27,7 @@ void ForwardLightingRenderStage::PrepareResources(Engine& engine) {
 	OutputColor.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateRandomLocation("RT", &OutputColor), false, 0, nullptr);
 	OutputColor.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::HALF_FLOAT;
 	OutputColor.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::RGBA;
+	OutputColor.renderTargetTextureResource->description.state.immutable = false;
 
 	BaseClass::PrepareResources(engine);
 }

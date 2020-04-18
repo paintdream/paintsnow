@@ -29,6 +29,7 @@ void DepthBoundingSetupRenderStage::PrepareResources(Engine& engine) {
 	OutputDepth.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::HALF_FLOAT;
 	OutputDepth.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::RG;
 	OutputDepth.renderTargetTextureResource->description.state.sample = IRender::Resource::TextureDescription::POINT;
+	OutputDepth.renderTargetTextureResource->description.state.immutable = false;
 
 	BaseClass::PrepareResources(engine);
 }

@@ -25,6 +25,7 @@ void DepthResolveRenderStage::PrepareResources(Engine& engine) {
 	OutputDepth.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateRandomLocation("RT", &OutputDepth), false, 0, nullptr);
 	OutputDepth.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::FLOAT;
 	OutputDepth.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::R;
+	OutputDepth.renderTargetTextureResource->description.state.immutable = false;
 
 	BaseClass::PrepareResources(engine);
 }

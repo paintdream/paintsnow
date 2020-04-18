@@ -31,6 +31,7 @@ void LightBufferRenderStage::PrepareResources(Engine& engine) {
 	LightTexture.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_SHORT;
 	LightTexture.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::RGBA;
 	LightTexture.renderTargetTextureResource->description.state.sample = IRender::Resource::TextureDescription::POINT;
+	LightTexture.renderTargetTextureResource->description.state.immutable = false;
 
 	BaseClass::PrepareResources(engine);
 }

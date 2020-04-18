@@ -27,6 +27,7 @@ void FrameBarrierRenderStage::PrepareResources(Engine& engine) {
 
 	// Inititalize 
 	Next.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateRandomLocation("RT", &Next), false, 0, nullptr);
+	Next.renderTargetTextureResource->description.state.immutable = false;
 	/*
 	Next.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 	Next.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::RGBA;
