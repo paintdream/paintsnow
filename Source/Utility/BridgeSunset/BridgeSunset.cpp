@@ -97,6 +97,10 @@ void BridgeSunset::ScriptUninitialize(IScript::Request& request) {
 TObject<IReflect>& BridgeSunset::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 	if (reflect.IsReflectMethod()) {
+		ReflectMethod(RequestNewGraph)[ScriptMethod = "NewGraph"];
+		ReflectMethod(RequestQueueGraphRoutine)[ScriptMethod = "QueueGraphRoutine"];
+		ReflectMethod(RequestConnectGraphRoutine)[ScriptMethod = "ConnectGraphRoutine"];
+		ReflectMethod(RequestExecuteGraph)[ScriptMethod = "ExecuteGraph"];
 		ReflectMethod(RequestQueueRoutine)[ScriptMethod = "QueueRoutine"];
 		ReflectMethod(RequestGetWarpCount)[ScriptMethod = "GetWarpCount"];
 	}
@@ -179,11 +183,7 @@ void BridgeSunset::RequestQueueRoutine(IScript::Request& request, IScript::Deleg
 	GetKernel().YieldCurrentWarp();
 
 	if (GetKernel().GetCurrentWarpIndex() != unit->GetWarpIndex()) {
-		GetKernel().QueueRoutine(unit.Get(), CreateTaskScript(callback));
-
-		request.DoLock();
-		request.Dereference(callback);
-		request.UnLock();
+		GetKernel().QueueRoutine(unit.Get(), CreateTaskScriptOnce(callback));
 	} else {
 		request.DoLock();
 		request.Call(deferred, callback); // use async call to prevent stack depth increase
@@ -199,4 +199,41 @@ void BridgeSunset::RequestGetWarpCount(IScript::Request& request) {
 	request.DoLock();
 	request << GetKernel().GetWarpCount();
 	request.UnLock();
+}
+
+void BridgeSunset::RequestNewGraph(IScript::Request& request, int32_t startupWarp) {
+	CHECK_REFERENCES_NONE();
+
+	TShared<RoutineGraph> graph = TShared<RoutineGraph>::From(new RoutineGraph());
+	graph->SetWarpIndex(GetKernel().GetCurrentWarpIndex());
+	GetKernel().YieldCurrentWarp();
+
+	request.DoLock();
+	request << graph;
+	request.UnLock();
+}
+
+void BridgeSunset::RequestQueueGraphRoutine(IScript::Request& request, IScript::Delegate<RoutineGraph> graph, IScript::Delegate<WarpTiny> unit, IScript::Request::Ref callback) {
+	CHECK_REFERENCES_WITH_TYPE(callback, IScript::Request::FUNCTION);
+	CHECK_DELEGATE(graph);
+	CHECK_DELEGATE(unit);
+
+	uint32_t id = graph->Insert(GetKernel(), unit.Get(), CreateTaskScript(callback));
+	request.DoLock();
+	request << id;
+	request.UnLock();
+}
+
+void BridgeSunset::RequestConnectGraphRoutine(IScript::Request& request, IScript::Delegate<RoutineGraph> graph, int32_t prev, int32_t next) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(graph);
+
+	graph->Next(prev, next);
+}
+
+void BridgeSunset::RequestExecuteGraph(IScript::Request& request, IScript::Delegate<RoutineGraph> graph) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(graph);
+
+	graph->Commit();
 }

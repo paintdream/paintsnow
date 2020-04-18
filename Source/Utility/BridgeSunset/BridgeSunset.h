@@ -10,6 +10,7 @@
 #include "../../Core/Template/TFactory.h"
 #include "../../Core/Interface/IScript.h"
 #include "../../Core/System/Kernel.h"
+#include "RoutineGraph.h"
 #include <stack>
 
 namespace PaintsNow {
@@ -29,7 +30,12 @@ namespace PaintsNow {
 			IScript& GetScript();
 
 			void ContinueScriptDispatcher(IScript::Request& request, IHost* host, size_t paramCount, const TWrapper<void, IScript::Request&>& continuer);
+
 		protected:
+			void RequestNewGraph(IScript::Request& request, int32_t startupWarp);
+			void RequestQueueGraphRoutine(IScript::Request& request, IScript::Delegate<RoutineGraph> graph, IScript::Delegate<WarpTiny> unit, IScript::Request::Ref callback);
+			void RequestConnectGraphRoutine(IScript::Request& request, IScript::Delegate<RoutineGraph> graph, int32_t prev, int32_t next);
+			void RequestExecuteGraph(IScript::Request& request, IScript::Delegate<RoutineGraph> graph);
 			void RequestQueueRoutine(IScript::Request& request, IScript::Delegate<WarpTiny> unit, IScript::Request::Ref callback);
 			void RequestGetWarpCount(IScript::Request& request);
 
@@ -71,17 +77,16 @@ namespace PaintsNow {
 			}
 
 			virtual void Abort(void* context) override {
-				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
-
-				IScript::Request& req = bridgeSunset.AllocateRequest();
-				req.DoLock();
 				if (deref) {
+					BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
+
+					IScript::Request& req = bridgeSunset.GetScript().GetDefaultRequest();
+					req.DoLock();
 					req.Dereference(callback);
+					req.UnLock();
 				}
-				req.UnLock();
-				
-				bridgeSunset.FreeRequest(req);
-				delete this;
+
+				TaskOnce::Abort(context);
 			}
 
 			IScript::Request::Ref callback;
@@ -116,20 +121,17 @@ namespace PaintsNow {
 				bridgeSunset.FreeRequest(req);
 				delete this;
 			}
-
 			virtual void Abort(void* context) override {
-				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
-
-				IScript::Request& req = bridgeSunset.AllocateRequest();
-				req.DoLock();
 				if (deref) {
-					req.Dereference(callback);
-				}
-				req.UnLock();
-				
+					BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				bridgeSunset.FreeRequest(req);
-				delete this;
+					IScript::Request& req = bridgeSunset.GetScript().GetDefaultRequest();
+					req.DoLock();
+					req.Dereference(callback);
+					req.UnLock();
+				}
+
+				TaskOnce::Abort(context);
 			}
 
 			IScript::Request::Ref callback;
@@ -167,19 +169,17 @@ namespace PaintsNow {
 				bridgeSunset.FreeRequest(req);
 				delete this;
 			}
-
 			virtual void Abort(void* context) override {
-				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
-
-				IScript::Request& req = bridgeSunset.AllocateRequest();
-				req.DoLock();
 				if (deref) {
+					BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
+
+					IScript::Request& req = bridgeSunset.GetScript().GetDefaultRequest();
+					req.DoLock();
 					req.Dereference(callback);
+					req.UnLock();
 				}
-				req.UnLock();
-				
-				bridgeSunset.FreeRequest(req);
-				delete this;
+
+				TaskOnce::Abort(context);
 			}
 
 			IScript::Request::Ref callback;
@@ -217,19 +217,17 @@ namespace PaintsNow {
 				bridgeSunset.FreeRequest(req);
 				delete this;
 			}
-
 			virtual void Abort(void* context) override {
-				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
-
-				IScript::Request& req = bridgeSunset.AllocateRequest();
-				req.DoLock();
 				if (deref) {
+					BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
+
+					IScript::Request& req = bridgeSunset.GetScript().GetDefaultRequest();
+					req.DoLock();
 					req.Dereference(callback);
+					req.UnLock();
 				}
-				req.UnLock();
-				
-				bridgeSunset.FreeRequest(req);
-				delete this;
+
+				TaskOnce::Abort(context);
 			}
 
 			IScript::Request::Ref callback;
@@ -268,19 +266,17 @@ namespace PaintsNow {
 				bridgeSunset.FreeRequest(req);
 				delete this;
 			}
-
 			virtual void Abort(void* context) override {
-				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
-
-				IScript::Request& req = bridgeSunset.AllocateRequest();
-				req.DoLock();
 				if (deref) {
+					BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
+
+					IScript::Request& req = bridgeSunset.GetScript().GetDefaultRequest();
+					req.DoLock();
 					req.Dereference(callback);
+					req.UnLock();
 				}
-				req.UnLock();
-				
-				bridgeSunset.FreeRequest(req);
-				delete this;
+
+				TaskOnce::Abort(context);
 			}
 
 			IScript::Request::Ref callback;
@@ -320,19 +316,17 @@ namespace PaintsNow {
 				bridgeSunset.FreeRequest(req);
 				delete this;
 			}
-
 			virtual void Abort(void* context) override {
-				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
-
-				IScript::Request& req = bridgeSunset.AllocateRequest();
-				req.DoLock();
 				if (deref) {
+					BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
+
+					IScript::Request& req = bridgeSunset.GetScript().GetDefaultRequest();
+					req.DoLock();
 					req.Dereference(callback);
+					req.UnLock();
 				}
-				req.UnLock();
-				
-				bridgeSunset.FreeRequest(req);
-				delete this;
+
+				TaskOnce::Abort(context);
 			}
 
 			IScript::Request::Ref callback;
@@ -373,19 +367,17 @@ namespace PaintsNow {
 				bridgeSunset.FreeRequest(req);
 				delete this;
 			}
-
 			virtual void Abort(void* context) override {
-				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
-
-				IScript::Request& req = bridgeSunset.AllocateRequest();
-				req.DoLock();
 				if (deref) {
+					BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
+
+					IScript::Request& req = bridgeSunset.GetScript().GetDefaultRequest();
+					req.DoLock();
 					req.Dereference(callback);
+					req.UnLock();
 				}
-				req.UnLock();
-				
-				bridgeSunset.FreeRequest(req);
-				delete this;
+
+				TaskOnce::Abort(context);
 			}
 
 			IScript::Request::Ref callback;
@@ -429,19 +421,17 @@ namespace PaintsNow {
 				bridgeSunset.FreeRequest(req);
 				delete this;
 			}
-
 			virtual void Abort(void* context) override {
-				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
-
-				IScript::Request& req = bridgeSunset.AllocateRequest();
-				req.DoLock();
 				if (deref) {
+					BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
+
+					IScript::Request& req = bridgeSunset.GetScript().GetDefaultRequest();
+					req.DoLock();
 					req.Dereference(callback);
+					req.UnLock();
 				}
-				req.UnLock();
-				
-				bridgeSunset.FreeRequest(req);
-				delete this;
+
+				TaskOnce::Abort(context);
 			}
 
 			IScript::Request::Ref callback;
@@ -706,6 +696,18 @@ namespace PaintsNow {
 				bridgeSunset.FreeRequest(req);
 
 				delete this;
+			}
+
+			virtual void Abort(void* context) {
+				if (deref) {
+					BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
+					IScript::Request& request = bridgeSunset.GetScript().GetDefaultRequest();
+					request.DoLock();
+					request.Dereference(callback);
+					request.UnLock();
+				}
+
+				TaskOnce::Abort(context);
 			}
 
 			IScript::Request::Ref callback;
