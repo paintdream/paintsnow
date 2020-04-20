@@ -546,8 +546,8 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 				desc.component = 0;
 				render.UploadResource(queue, buffer, &desc);
 
-				for (size_t i = 0; i < drawCallResources.size(); i++) {
-					IRender::Resource* drawCall = drawCallResources[i];
+				for (size_t m = 0; m < drawCallResources.size(); m++) {
+					IRender::Resource* drawCall = drawCallResources[m];
 					render.ExecuteResource(queue, drawCall);
 					// cleanup at current frame
 					render.DeleteResource(queue, drawCall);

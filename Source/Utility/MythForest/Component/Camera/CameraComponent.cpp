@@ -178,8 +178,8 @@ void CameraComponent::Instancing(Engine& engine) {
 			}
 		}
 
-		for (std::map<RenderPolicy*, TaskData::PolicyData>::iterator it = warpData.renderPolicyMap.begin(); it != warpData.renderPolicyMap.end(); ++it) {
-			TaskData::PolicyData& policyData = it->second;
+		for (std::map<RenderPolicy*, TaskData::PolicyData>::iterator ip = warpData.renderPolicyMap.begin(); ip != warpData.renderPolicyMap.end(); ++ip) {
+			TaskData::PolicyData& policyData = ip->second;
 			IRender::Resource::BufferDescription desc;
 			desc.data = std::move(policyData.instanceData);
 			desc.usage = IRender::Resource::BufferDescription::INSTANCED;

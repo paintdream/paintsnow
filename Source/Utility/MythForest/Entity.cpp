@@ -248,7 +248,6 @@ void Entity::PostEvent(Event& event) {
 
 TObject<IReflect>& Entity::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
-	// Warning: Force casting, safe on memory layout.
 
 	if (reflect.IsReflectProperty()) {
 		ReflectProperty(components);

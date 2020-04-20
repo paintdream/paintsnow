@@ -240,10 +240,10 @@ public:
 				::InvalidateRect(hWnd, NULL, TRUE); // Prepare for next rendering
 				break;
 			case WM_KEYDOWN:
-				callback->OnKeyboard(ConvertKeyMessage(wParam, HIWORD(lParam), 0));
+				callback->OnKeyboard(ConvertKeyMessage(safe_cast<UINT>(wParam), HIWORD(lParam), 0));
 				break;
 			case WM_KEYUP:
-				callback->OnKeyboard(ConvertKeyMessage(wParam, HIWORD(lParam), IFrame::EventKeyboard::KEY_POP));
+				callback->OnKeyboard(ConvertKeyMessage(safe_cast<UINT>(wParam), HIWORD(lParam), IFrame::EventKeyboard::KEY_POP));
 				break;
 			case WM_MOUSEWHEEL:
 				callback->OnMouse(IFrame::EventMouse((short)HIWORD(wParam) > 0, false, false, true, MakePoint(lParam)));
