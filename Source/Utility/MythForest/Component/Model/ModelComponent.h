@@ -30,12 +30,21 @@ namespace PaintsNow {
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 			virtual void Initialize(Engine& engine, Entity* entity) override;
 			virtual void Uninitialize(Engine& engine, Entity* entity) override;
+
 			void AddMaterial(uint32_t meshGroupIndex, TShared<NsSnowyStream::MaterialResource>& materialResource);
 			uint32_t CreateOverrider(TShared<NsSnowyStream::ShaderResource> shaderResourceTemplate);
 
 		protected:
 			virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) override;
 			void GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTemplates, std::vector<std::pair<uint32_t, TShared<NsSnowyStream::MaterialResource> > >& materialResources);
+
+			void Collapse(Engine& engine);
+			void Expand(Engine& engine);
+
+			struct CollapseData {
+				String meshResourceLocation;
+				std::vector<String> materialResourceLocations;
+			};
 
 		protected:
 			TShared<NsSnowyStream::MeshResource> meshResource;
@@ -44,6 +53,9 @@ namespace PaintsNow {
 			std::vector<TShared<NsSnowyStream::ShaderResource> > shaderOverriders;
 			std::vector<std::pair<uint32_t, TShared<NsSnowyStream::MaterialResource> > > materialResources;
 			std::vector<OutputRenderData> drawCallTemplates;
+
+			CollapseData collapseData;
+			uint32_t hostCount;
 		};
 	}
 }

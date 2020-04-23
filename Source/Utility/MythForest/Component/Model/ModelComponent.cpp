@@ -6,7 +6,7 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
-ModelComponent::ModelComponent(TShared<MeshResource>& res, TShared<BatchComponent>& batch) : batchComponent(batch), meshResource(res) {
+ModelComponent::ModelComponent(TShared<MeshResource>& res, TShared<BatchComponent>& batch) : batchComponent(batch), meshResource(res), hostCount(0) {
 	assert(batch->GetWarpIndex() == GetWarpIndex());
 	Flag() |= COMPONENT_SHARED; // can be shared among different entities
 }
@@ -148,10 +148,10 @@ TObject<IReflect>& ModelComponent::operator () (IReflect& reflect) {
 
 void ModelComponent::Initialize(Engine& engine, Entity* entity) {
 	// Allocate buffers ... 
-	batchComponent->InstanceInitialize(engine);
 
-	if (!(Flag() & Tiny::TINY_PINNED)) {
-		Flag() |= Tiny::TINY_PINNED;
+	batchComponent->InstanceInitialize(engine);
+	if (hostCount++ == 0) {
+		Expand(engine);
 
 		// inspect vertex format
 		std::vector<ZPassBase::Name> inputs;
@@ -166,8 +166,12 @@ void ModelComponent::Initialize(Engine& engine, Entity* entity) {
 void ModelComponent::Uninitialize(Engine& engine, Entity* entity) {
 	RenderableComponent::Uninitialize(engine, entity);
 	batchComponent->InstanceUninitialize(engine);
-}
 
+	// fully detached?
+	if (--hostCount == 0) {
+		Collapse(engine);
+	}
+}
 
 String ModelComponent::GetDescription() const {
 	return meshResource->GetLocation();
@@ -177,4 +181,32 @@ void ModelComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box) {
 	const Float3Pair& sub = meshResource->GetBoundingBox();
 	Union(box, sub.first);
 	Union(box, sub.second);
+}
+
+void ModelComponent::Collapse(Engine& engine) {
+	assert(collapseData.meshResourceLocation.empty());
+	collapseData.meshResourceLocation = meshResource->GetLocation();
+	collapseData.materialResourceLocations.reserve(materialResources.size());
+	for (size_t i = 0; i < materialResources.size(); i++) {
+		collapseData.materialResourceLocations.emplace_back(materialResources[i].second->GetLocation());
+		materialResources[i].second = nullptr;
+	}
+
+	shaderOverriders.clear();
+	drawCallTemplates.clear();
+}
+
+void ModelComponent::Expand(Engine& engine) {
+	if (!collapseData.meshResourceLocation.empty()) {
+		SnowyStream& snowyStream = engine.snowyStream;
+		meshResource = snowyStream.CreateReflectedResource(UniqueType<MeshResource>(), collapseData.meshResourceLocation);
+		assert(collapseData.materialResourceLocations.size() == materialResources.size());
+		for (size_t i = 0; i < materialResources.size(); i++) {
+			assert(materialResources[i].second);
+			materialResources[i].second = snowyStream.CreateReflectedResource(UniqueType<MaterialResource>(), collapseData.materialResourceLocations[i]);
+		}
+
+		collapseData.meshResourceLocation = "";
+		collapseData.materialResourceLocations.clear();
+	}
 }
