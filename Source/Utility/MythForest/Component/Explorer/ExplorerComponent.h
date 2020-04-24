@@ -22,17 +22,25 @@ namespace PaintsNow {
 			virtual void Uninitialize(Engine& engine, Entity* entity);
 
 			// Forever Internet Explorer!
-			class IExplorer {};
+			class IExplorer {
+			public:
+				virtual void Explore(size_t index, Component* component, bool activated) = 0;
+				virtual Bytes Finalize() = 0;
+			};
+
+			void CollectActiveComponents(Engine& engine, Entity* entity, IExplorer& explorer);
 
 		protected:
 			struct CollapsedComponent {
 				TShared<Component> component;
-				size_t mainMemoryCost;
-				size_t deviceMemoryCost;
-				size_t lastVisitTimeStamp;
+				// TODO: other attributes...
 			};
 
 			std::vector<CollapsedComponent> collapsedComponents;
+
+#ifdef _DEBUG
+			Entity* hostEntity;
+#endif
 		};
 	}
 }
