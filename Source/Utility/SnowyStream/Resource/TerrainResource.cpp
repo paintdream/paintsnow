@@ -5,11 +5,6 @@ using namespace PaintsNow::NsSnowyStream;
 
 TerrainResource::TerrainResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID) : BaseClass(manager, uniqueID), width(0), height(0), deltaHeight(0.05f) {}
 
-uint64_t TerrainResource::GetMemoryUsage() const {
-	return 0;
-}
-
-
 void TerrainResource::Attach(IRender& render, void* deviceContext) {
 }
 

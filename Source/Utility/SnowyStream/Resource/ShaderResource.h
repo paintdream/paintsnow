@@ -20,7 +20,6 @@ namespace PaintsNow {
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 			static const String& GetShaderPathPrefix();
 
-			virtual uint64_t GetMemoryUsage() const;
 			virtual const String& GetShaderName() const;
 			virtual bool operator << (IStreamBase& stream) override;
 			virtual bool operator >> (IStreamBase& stream) const override;

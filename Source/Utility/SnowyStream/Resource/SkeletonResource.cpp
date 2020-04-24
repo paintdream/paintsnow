@@ -22,10 +22,6 @@ TObject<IReflect>& SkeletonResource::operator () (IReflect& reflect) {
 	return *this;
 }
 
-uint64_t SkeletonResource::GetMemoryUsage() const {
-	return 0;
-}
-
 void SkeletonResource::Attach(IRender& render, void* deviceContext) {
 	offsetMatrices.resize(boneAnimation.joints.size());
 	offsetMatricesInv.resize(boneAnimation.joints.size());

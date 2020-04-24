@@ -15,7 +15,6 @@ namespace PaintsNow {
 		public:
 			TextResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID);
 			virtual ~TextResource();
-			virtual uint64_t GetMemoryUsage() const;
 			virtual bool LoadExternalResource(IStreamBase& streamBase, size_t length);
 
 			// re-pure-virtualize these interfaces

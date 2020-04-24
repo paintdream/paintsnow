@@ -13,7 +13,8 @@ namespace PaintsNow {
 		class TextureResource : public TReflected<TextureResource, GraphicResourceBase> {
 		public:
 			TextureResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID);
-			virtual uint64_t GetMemoryUsage() const;
+
+			virtual size_t ReportDeviceMemoryUsage() const;
 			virtual void Upload(IRender& render, void* deviceContext) override;
 			virtual void Download(IRender& render, void* deviceContext) override;
 			virtual void Attach(IRender& render, void* deviceContext) override;
@@ -27,7 +28,8 @@ namespace PaintsNow {
 			IRender::Resource::TextureDescription description;
 
 		public:
-			IRender::Resource* instance;	
+			IRender::Resource* instance;
+			size_t deviceMemoryUsage;
 		};
 	}
 }

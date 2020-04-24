@@ -14,7 +14,6 @@ namespace PaintsNow {
 		class AudioResource : public TReflected<AudioResource, DeviceResourceBase<IAudio> > {
 		public:
 			AudioResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID);
-			virtual uint64_t GetMemoryUsage() const;
 			virtual void Download(IAudio& device, void* deviceContext);
 			virtual void Upload(IAudio& device, void* deviceContext);
 			virtual void Attach(IAudio& device, void* deviceContext);

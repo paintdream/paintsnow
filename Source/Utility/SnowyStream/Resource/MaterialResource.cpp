@@ -6,10 +6,6 @@ using namespace PaintsNow::NsSnowyStream;
 
 MaterialResource::MaterialResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID) : BaseClass(manager, uniqueID) {}
 
-uint64_t MaterialResource::GetMemoryUsage() const {
-	return 0;
-}
-
 void MaterialResource::Attach(IRender& render, void* deviceContext) {
 	// Collect empty draw calls
 	if (originalShaderResource) {
@@ -76,6 +72,21 @@ void MaterialResource::Upload(IRender& render, void* deviceContext) {
 
 void MaterialResource::Download(IRender& render, void* deviceContext) {
 
+}
+
+size_t MaterialResource::ReportDeviceMemoryUsage() const {
+	size_t size = 0;
+	for (size_t i = 0; i < textureResources.size(); i++) {
+		const TShared<TextureResource>& texture = textureResources[i];
+		size += texture->ReportDeviceMemoryUsage();
+	}
+
+	// bufferData will be uploaded further in constructing drawcalls.
+	for (size_t j = 0; j < bufferData.size(); j++) {
+		size += bufferData[j].GetSize();
+	}
+
+	return size;
 }
 
 TShared<MaterialResource> MaterialResource::CloneWithOverrideShader(TShared<ShaderResource> overrideShaderResource) {

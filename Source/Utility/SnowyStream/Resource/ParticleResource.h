@@ -14,7 +14,6 @@ namespace PaintsNow {
 		class ParticleResource : public TReflected<ParticleResource, GraphicResourceBase> {
 		public:
 			ParticleResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID);
-			virtual uint64_t GetMemoryUsage() const;
 			virtual bool operator << (IStreamBase& stream) override;
 			virtual bool operator >> (IStreamBase& stream) const override;
 			virtual void Upload(IRender& render, void* deviceContext) override;

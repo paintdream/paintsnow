@@ -8,10 +8,6 @@ using namespace PaintsNow::NsSnowyStream;
 FontResource::FontResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID) : BaseClass(manager, uniqueID), font(nullptr), reinforce(0) {}
 FontResource::~FontResource() {}
 
-uint64_t FontResource::GetMemoryUsage() const {
-	return 0;
-}
-
 bool FontResource::LoadExternalResource(IStreamBase& streamBase, size_t length) {
 	rawFontData.resize(length);
 	return streamBase.ReadBlock(const_cast<char*>(rawFontData.data()), length);

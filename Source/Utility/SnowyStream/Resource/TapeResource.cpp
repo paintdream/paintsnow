@@ -21,10 +21,6 @@ void TapeResource::Close() {
 	}
 }
 
-uint64_t TapeResource::GetMemoryUsage() const {
-	return 0;
-}
-
 void TapeResource::Download(IArchive& archive, void* deviceContext) {
 	Close();
 

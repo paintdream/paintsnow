@@ -5,10 +5,6 @@ using namespace PaintsNow::NsSnowyStream;
 
 ParticleResource::ParticleResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID) : BaseClass(manager, uniqueID) {}
 
-uint64_t ParticleResource::GetMemoryUsage() const {
-	return 0;
-}
-
 bool ParticleResource::operator << (IStreamBase& stream) {
 	return false;
 }

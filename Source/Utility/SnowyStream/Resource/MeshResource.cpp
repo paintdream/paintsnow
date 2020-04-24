@@ -4,13 +4,9 @@
 using namespace PaintsNow;
 using namespace PaintsNow::NsSnowyStream;
 
-MeshResource::MeshResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID) : BaseClass(manager, uniqueID) {}
+MeshResource::MeshResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID) : BaseClass(manager, uniqueID), deviceMemoryUsage(0) {}
 
 MeshResource::~MeshResource() {}
-
-uint64_t MeshResource::GetMemoryUsage() const {
-	return 0;
-}
 
 const Float3Pair& MeshResource::GetBoundingBox() const {
 	return boundingBox;
@@ -46,21 +42,23 @@ void MeshResource::Upload(IRender& render, void* deviceContext) {
 	IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(deviceContext);
 	assert(queue != nullptr);
 
+	deviceMemoryUsage = 0;
+
 	SpinLock(critical);
 	bool preserve = mapCount.load(std::memory_order_relaxed) != 0;
 
-	UpdateBuffer(render, queue, bufferCollection.indexBuffer, meshCollection.indices, Description::INDEX, preserve);
-	UpdateBuffer(render, queue, bufferCollection.positionBuffer, meshCollection.vertices, Description::VERTEX, preserve);
-	UpdateBuffer(render, queue, bufferCollection.normalBuffer, meshCollection.normals, Description::VERTEX, preserve);
-	UpdateBuffer(render, queue, bufferCollection.tangentBuffer, meshCollection.tangents, Description::VERTEX, preserve);
-	UpdateBuffer(render, queue, bufferCollection.colorBuffer, meshCollection.colors, Description::VERTEX, preserve);
-	UpdateBuffer(render, queue, bufferCollection.boneIndexBuffer, meshCollection.boneIndices, Description::VERTEX, preserve);
-	UpdateBuffer(render, queue, bufferCollection.boneWeightBuffer, meshCollection.boneWeights, Description::VERTEX, preserve);
+	deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.indexBuffer, meshCollection.indices, Description::INDEX, preserve);
+	deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.positionBuffer, meshCollection.vertices, Description::VERTEX, preserve);
+	deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.normalBuffer, meshCollection.normals, Description::VERTEX, preserve);
+	deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.tangentBuffer, meshCollection.tangents, Description::VERTEX, preserve);
+	deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.colorBuffer, meshCollection.colors, Description::VERTEX, preserve);
+	deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.boneIndexBuffer, meshCollection.boneIndices, Description::VERTEX, preserve);
+	deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.boneWeightBuffer, meshCollection.boneWeights, Description::VERTEX, preserve);
 
 	bufferCollection.texCoordBuffers.resize(meshCollection.texCoords.size(), nullptr);
 	for (size_t i = 0; i < meshCollection.texCoords.size(); i++) {
 		IAsset::TexCoord& texCoord = meshCollection.texCoords[i];
-		UpdateBuffer(render, queue, bufferCollection.texCoordBuffers[i], texCoord.coords, Description::VERTEX, preserve);
+		deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.texCoordBuffers[i], texCoord.coords, Description::VERTEX, preserve);
 	}
 
 	SpinUnLock(critical);
@@ -193,4 +191,8 @@ void MeshResource::BufferCollection::UpdateData(std::vector<IRender::Resource*>&
 		assert(texCoordBuffers[i] != nullptr);
 		data.emplace_back(texCoordBuffers[i]);
 	}
+}
+
+size_t MeshResource::ReportDeviceMemoryUsage() const {
+	return deviceMemoryUsage;
 }

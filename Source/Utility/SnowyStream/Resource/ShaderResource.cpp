@@ -14,10 +14,6 @@ const String& ShaderResource::GetShaderName() const {
 	return GetUnique()->typeName;
 }
 
-uint64_t ShaderResource::GetMemoryUsage() const {
-	return 0;
-}
-
 bool ShaderResource::operator << (IStreamBase& stream) {
 	return false;
 }

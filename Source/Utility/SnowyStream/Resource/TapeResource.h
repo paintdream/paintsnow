@@ -17,7 +17,6 @@ namespace PaintsNow {
 			TapeResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID);
 			virtual ~TapeResource();
 
-			virtual uint64_t GetMemoryUsage() const;
 			virtual void Download(IArchive& device, void* deviceContext);
 			virtual void Upload(IArchive& device, void* deviceContext);
 			virtual void Attach(IArchive& device, void* deviceContext);

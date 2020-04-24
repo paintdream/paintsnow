@@ -6,12 +6,8 @@
 using namespace PaintsNow;
 using namespace PaintsNow::NsSnowyStream;
 
-TextureResource::TextureResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID) : BaseClass(manager, uniqueID), instance(nullptr) {
+TextureResource::TextureResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID) : BaseClass(manager, uniqueID), instance(nullptr), deviceMemoryUsage(0) {
 	description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
-}
-
-uint64_t TextureResource::GetMemoryUsage() const {
-	return 0;
 }
 
 void TextureResource::Attach(IRender& render, void* deviceContext) {
@@ -46,6 +42,7 @@ void TextureResource::Upload(IRender& render, void* deviceContext) {
 	// if (description.data.size() == 0) return;
 	//	assert(description.data.size() == (size_t)description.dimension.x() * description.dimension.y() * IImage::GetPixelSize((IRender::Resource::TextureDescription::Format)description.state.format, (IRender::Resource::TextureDescription::Layout)description.state.layout));
 	IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(deviceContext);
+	deviceMemoryUsage = description.data.GetSize();
 
 	SpinLock(critical);
 	if (mapCount.load(std::memory_order_relaxed) != 0) {
@@ -85,6 +82,10 @@ TObject<IReflect>& TextureResource::operator () (IReflect& reflect) {
 	}
 
 	return *this;
+}
+
+size_t TextureResource::ReportDeviceMemoryUsage() const {
+	return deviceMemoryUsage;
 }
 
 bool TextureResource::Compress(const String& compressionType) {

@@ -6,10 +6,6 @@ using namespace PaintsNow::NsSnowyStream;
 TextResource::TextResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID) : BaseClass(manager, uniqueID) {}
 TextResource::~TextResource() {}
 
-uint64_t TextResource::GetMemoryUsage() const {
-	return 0;
-}
-
 void TextResource::Attach(IArchive& archive, void* deviceContext) {
 }
 

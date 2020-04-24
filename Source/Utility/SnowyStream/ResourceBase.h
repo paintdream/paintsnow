@@ -39,7 +39,6 @@ namespace PaintsNow {
 			const ResourceManager::UniqueLocation& GetLocation() const;
 			void SetLocation(const ResourceManager::UniqueLocation& location);
 
-			virtual uint64_t GetMemoryUsage() const;
 			virtual Unique GetDeviceUnique() const;
 			virtual bool LoadExternalResource(IStreamBase& streamBase, size_t length);
 			virtual bool Compress(const String& compressType);
@@ -79,6 +78,7 @@ namespace PaintsNow {
 			virtual void Upload(T& device, void* deviceContext) = 0;
 			virtual void Attach(T& device, void* deviceContext) = 0;
 			virtual void Detach(T& device, void* deviceContext) = 0;
+			virtual size_t ReportDeviceMemoryUsage() const { return 0; }
 
 			virtual Unique GetDeviceUnique() const {
 				return UniqueType<T>::Get();

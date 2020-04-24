@@ -15,7 +15,6 @@ namespace PaintsNow {
 		public:
 			FontResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID);
 			virtual ~FontResource();
-			virtual uint64_t GetMemoryUsage() const;
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 			virtual bool LoadExternalResource(IStreamBase& streamBase, size_t length);
 

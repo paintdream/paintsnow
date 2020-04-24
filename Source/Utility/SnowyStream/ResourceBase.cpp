@@ -88,10 +88,6 @@ ResourceManager::UniqueLocation ResourceBase::GenerateRandomLocation(const Strin
 	return ss.str();
 }
 
-uint64_t ResourceBase::GetMemoryUsage() const {
-	return sizeof(*this);
-}
-
 Unique ResourceBase::GetDeviceUnique() const {
 	assert(false);
 	return Unique();

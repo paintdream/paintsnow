@@ -15,7 +15,6 @@ namespace PaintsNow {
 		public:
 			TerrainResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID);
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-			virtual uint64_t GetMemoryUsage() const;
 			virtual void Upload(IRender& render, void* deviceContext) override;
 			virtual void Download(IRender& render, void* deviceContext) override;
 			virtual void Attach(IRender& render, void* deviceContext) override;

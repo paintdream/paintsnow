@@ -14,7 +14,6 @@ namespace PaintsNow {
 		class SkeletonResource : public TReflected<SkeletonResource, GraphicResourceBase> {
 		public:
 			SkeletonResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID);
-			virtual uint64_t GetMemoryUsage() const;
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 			virtual void Download(IRender& device, void* deviceContext) override;
 			virtual void Upload(IRender& device, void* deviceContext) override;

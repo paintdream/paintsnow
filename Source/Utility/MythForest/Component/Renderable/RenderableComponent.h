@@ -22,6 +22,7 @@ namespace PaintsNow {
 			RenderableComponent();
 
 			virtual Tiny::FLAG GetEntityFlagMask() const override;
+			virtual size_t ReportGraphicMemoryUsage() const;
 
 			TShared<RenderPolicy> renderPolicy;
 		};

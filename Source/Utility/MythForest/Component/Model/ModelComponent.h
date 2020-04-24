@@ -18,8 +18,7 @@ namespace PaintsNow {
 		public:
 			enum {
 				MODELCOMPONENT_HAS_ANIMATION = RENDERABLECOMPONENT_CUSTOM_BEGIN,
-				MODELCOMPONENT_HAS_TECHNIQUE = RENDERABLECOMPONENT_CUSTOM_BEGIN << 1,
-				MODELCOMPONENT_CUSTOM_BEGIN = RENDERABLECOMPONENT_CUSTOM_BEGIN << 2
+				MODELCOMPONENT_CUSTOM_BEGIN = RENDERABLECOMPONENT_CUSTOM_BEGIN << 1
 			};
 
 			// delayed loader
@@ -33,6 +32,7 @@ namespace PaintsNow {
 
 			void AddMaterial(uint32_t meshGroupIndex, TShared<NsSnowyStream::MaterialResource>& materialResource);
 			uint32_t CreateOverrider(TShared<NsSnowyStream::ShaderResource> shaderResourceTemplate);
+			virtual size_t ReportGraphicMemoryUsage() const;
 
 		protected:
 			virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) override;

@@ -7,10 +7,6 @@ AudioResource::AudioResource(ResourceManager& manager, const ResourceManager::Un
 	Flag() |= RESOURCE_STREAM;
 }
 
-uint64_t AudioResource::GetMemoryUsage() const {
-	return 0;
-}
-
 void AudioResource::Download(IAudio& audio, void* deviceContext) {
 }
 

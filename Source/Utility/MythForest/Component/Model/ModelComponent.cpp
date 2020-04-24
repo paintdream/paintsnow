@@ -12,7 +12,7 @@ ModelComponent::ModelComponent(TShared<MeshResource>& res, TShared<BatchComponen
 }
 
 void ModelComponent::AddMaterial(uint32_t meshGroupIndex, TShared<MaterialResource>& materialResource) {
-	assert(!(Flag() & MODELCOMPONENT_HAS_TECHNIQUE));
+	assert(shaderOverriders.empty());
 	materialResources.emplace_back(std::make_pair(meshGroupIndex, materialResource));
 }
 
@@ -209,4 +209,13 @@ void ModelComponent::Expand(Engine& engine) {
 		collapseData.meshResourceLocation = "";
 		collapseData.materialResourceLocations.clear();
 	}
+}
+
+size_t ModelComponent::ReportGraphicMemoryUsage() const {
+	size_t size = meshResource->ReportDeviceMemoryUsage();
+	for (size_t i = 0; i < materialResources.size(); i++) {
+		size += materialResources[i].second->ReportDeviceMemoryUsage();
+	}
+
+	return size;
 }
