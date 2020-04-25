@@ -34,7 +34,7 @@ namespace PaintsNow {
 
 		protected:
 			struct Proxy {
-				Proxy();
+				Proxy(Component* c = nullptr);
 				operator Component* () const {
 					return component();
 				}

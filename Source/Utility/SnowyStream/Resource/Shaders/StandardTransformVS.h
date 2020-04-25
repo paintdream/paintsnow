@@ -25,6 +25,13 @@ namespace PaintsNow {
 			IShader::BindBuffer vertexColorBuffer;
 			IShader::BindBuffer vertexTexCoordBuffer;
 
+			IShader::BindBuffer boneIndexBuffer;
+			IShader::BindBuffer boneWeightBuffer;
+			IShader::BindBuffer boneMatricesBuffer;
+
+			Float4 boneIndex;
+			Float4 boneWeight;
+
 			MatrixFloat4x4 worldMatrix;
 			MatrixFloat4x4 viewMatrix;
 			MatrixFloat4x4 viewProjectionMatrix;
@@ -48,6 +55,7 @@ namespace PaintsNow {
 
 		public:
 			bool enableInstancing;
+			bool enableSkinning;
 			bool enableViewProjectionMatrix;
 			bool enableVertexNormal;
 			bool enableVertexColor;

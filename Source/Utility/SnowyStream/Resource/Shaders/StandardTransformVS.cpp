@@ -6,7 +6,9 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsSnowyStream;
 using namespace PaintsNow::ShaderMacro;
 
-StandardTransformVS::StandardTransformVS() : enableInstancing(true), enableViewProjectionMatrix(true), enableVertexColor(false), enableVertexNormal(true), enableInstancedColor(false), enableVertexTangent(true), enableRasterCoord(false) {
+static MatrixFloat4x4 _boneMatrix;
+
+StandardTransformVS::StandardTransformVS() : enableInstancing(true), enableSkinning(false), enableViewProjectionMatrix(true), enableVertexColor(false), enableVertexNormal(true), enableInstancedColor(false), enableVertexTangent(true), enableRasterCoord(false) {
 	instanceBuffer.description.usage = IRender::Resource::BufferDescription::INSTANCED;
 	vertexPositionBuffer.description.usage = IRender::Resource::BufferDescription::VERTEX;
 	vertexNormalBuffer.description.usage = IRender::Resource::BufferDescription::VERTEX;
@@ -14,12 +16,27 @@ StandardTransformVS::StandardTransformVS() : enableInstancing(true), enableViewP
 	vertexColorBuffer.description.usage = IRender::Resource::BufferDescription::VERTEX;
 	vertexTexCoordBuffer.description.usage = IRender::Resource::BufferDescription::VERTEX;
 	globalBuffer.description.usage = IRender::Resource::BufferDescription::UNIFORM;
+
+	boneIndexBuffer.description.usage = IRender::Resource::BufferDescription::VERTEX;
+	boneWeightBuffer.description.usage = IRender::Resource::BufferDescription::VERTEX;
+	boneMatricesBuffer.description.usage = IRender::Resource::BufferDescription::UNIFORM;
 }
 
 String StandardTransformVS::GetShaderText() {
+	std::vector<MatrixFloat4x4> boneMatricesBuffer; // temp fix 
 	return UnifyShaderCode(
 		float4 position = float4(0, 0, 0, 1);
 		position.xyz = vertexPosition;
+		if (enableSkinning) {
+			// skinning
+			float4 sumPosition = float4(0, 0, 0, 0);
+			for (int i = 0; i < 4; i++) {
+				sumPosition += mult_vec(boneMatricesBuffer[int(boneIndex[i])], position) * boneWeight[i];
+			}
+
+			position.xyz = sumPosition.xyz / sumPosition.w;
+		}
+
 		position = mult_vec(worldMatrix, position);
 		if (enableViewProjectionMatrix) {
 			rasterPosition = mult_vec(viewProjectionMatrix, position);
@@ -66,6 +83,7 @@ TObject<IReflect>& StandardTransformVS::operator () (IReflect& reflect) {
 	if (reflect.IsReflectProperty()) {
 		// options first
 		ReflectProperty(enableInstancing)[IShader::BindConst<bool>()];
+		ReflectProperty(enableSkinning)[IShader::BindConst<bool>()];
 		ReflectProperty(enableVertexNormal)[IShader::BindConst<bool>()];
 		ReflectProperty(enableVertexColor)[IShader::BindConst<bool>()];
 		ReflectProperty(enableVertexTangent)[IShader::BindConst<bool>()];
@@ -80,6 +98,15 @@ TObject<IReflect>& StandardTransformVS::operator () (IReflect& reflect) {
 		ReflectProperty(vertexTangentBuffer)[IShader::BindOption(enableVertexTangent)];
 		ReflectProperty(vertexColorBuffer)[IShader::BindOption(enableVertexColor)];
 		ReflectProperty(vertexTexCoordBuffer);
+
+		ReflectProperty(boneIndexBuffer)[IShader::BindOption(enableSkinning)];
+		ReflectProperty(boneWeightBuffer)[IShader::BindOption(enableSkinning)];
+		ReflectProperty(boneMatricesBuffer)[IShader::BindOption(enableSkinning)];
+
+		static MatrixFloat4x4 _boneMatrix; // Just make reflection happy
+		ReflectProperty(_boneMatrix)[IShader::BindOption(enableSkinning)][boneMatricesBuffer][IShader::BindInput(IShader::BindInput::BONE_TRANSFORMS)];
+		ReflectProperty(boneIndex)[IShader::BindOption(enableSkinning)][boneIndexBuffer][IShader::BindInput(IShader::BindInput::BONE_INDEX)];
+		ReflectProperty(boneWeight)[IShader::BindOption(enableSkinning)][boneWeightBuffer][IShader::BindInput(IShader::BindInput::BONE_WEIGHT)];
 
 		ReflectProperty(worldMatrix)[enableInstancing ? instanceBuffer : globalBuffer][IShader::BindInput(IShader::BindInput::TRANSFORM_WORLD)];
 		ReflectProperty(instancedColor)[enableInstancing ? instanceBuffer : globalBuffer][IShader::BindOption(enableInstancedColor)][IShader::BindInput(IShader::BindInput::COLOR_INSTANCED)];

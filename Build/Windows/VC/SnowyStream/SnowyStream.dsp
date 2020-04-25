@@ -269,10 +269,6 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\SkeletonResource.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SkinningVS.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\SnowyStream.cpp
 # End Source File
 # Begin Source File
@@ -534,10 +530,6 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\ShadowMapVS.h
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\SkeletonResource.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SkinningVS.h
 # End Source File
 # Begin Source File
 

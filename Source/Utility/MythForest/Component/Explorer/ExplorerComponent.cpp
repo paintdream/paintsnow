@@ -6,7 +6,7 @@ using namespace PaintsNow::NsSnowyStream;
 
 ExplorerComponent::ProxyConfig::ProxyConfig() : layer(0), activateThreshold(0), deactivateThreshold(0) {}
 
-ExplorerComponent::Proxy::Proxy() : flag(0) {}
+ExplorerComponent::Proxy::Proxy(Component* c) : flag(0), component(c) {}
 
 bool ExplorerComponent::Proxy::operator < (const ExplorerComponent::Proxy& rhs) const {
 	return component < rhs.component;
@@ -40,7 +40,7 @@ void ExplorerComponent::Initialize(Engine& engine, Entity* entity) {
 }
 
 void ExplorerComponent::SetProxyConfig(Component* component, const ProxyConfig& config) {
-	std::vector<Proxy>::iterator it = std::binary_find(proxies.begin(), proxies.end(), component);
+	std::vector<Proxy>::iterator it = std::binary_find(proxies.begin(), proxies.end(), Proxy(component));
 	assert(it != proxies.end());
 	it->config = config;
 }
@@ -62,7 +62,7 @@ void ExplorerComponent::SelectComponents(Engine& engine, Entity* entity, float r
 		Proxy& proxy = proxies[i];
 		assert(proxy.config.activateThreshold <= proxy.config.deactivateThreshold);
 		if (refValue < proxy.config.activateThreshold) {
-			maxLayer = std::max(maxLayer, proxy.config.layer);
+			maxLayer = Max(maxLayer, proxy.config.layer);
 		}
 		
 		if (refValue < proxy.config.deactivateThreshold) {
