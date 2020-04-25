@@ -17,15 +17,23 @@ TObject<IReflect>& ExplorerComponentModule::operator () (IReflect& reflect) {
 
 	return *this;
 }
-void ExplorerComponentModule::RequestNew(IScript::Request& request) {
+void ExplorerComponentModule::RequestNew(IScript::Request& request, const String& componentType) {
 	CHECK_REFERENCES_NONE();
 
-	TShared<ExplorerComponent> fieldComponent = TShared<ExplorerComponent>::From(allocator->New());
-	fieldComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
-	engine.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << fieldComponent;
-	request.UnLock();
+	// Convert componentType from string
+	unordered_map<String, Module*>::const_iterator it = engine.GetModuleMap().find(componentType);
+	if (it != engine.GetModuleMap().end()) {
+		request.DoLock();
+		request.Error(String("Unable to load component type: ") + componentType);
+		request.UnLock();
+	} else {
+		TShared<ExplorerComponent> fieldComponent = TShared<ExplorerComponent>::From(allocator->New((*it).second->GetTinyUnique()));
+		fieldComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
+		engine.GetKernel().YieldCurrentWarp();
+		request.DoLock();
+		request << fieldComponent;
+		request.UnLock();
+	}
 }
 
 void ExplorerComponentModule::RequestRebuild(IScript::Request& request, IScript::Delegate<ExplorerComponent> fieldComponent) {

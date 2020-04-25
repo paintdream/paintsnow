@@ -19,7 +19,7 @@ namespace PaintsNow {
 			virtual ~ExplorerComponentModule();
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
-			void RequestNew(IScript::Request& request);
+			void RequestNew(IScript::Request& request, const String& componentType);
 			void RequestRebuild(IScript::Request& request, IScript::Delegate<ExplorerComponent> fieldComponent);
 		};
 	}

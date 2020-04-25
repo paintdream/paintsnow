@@ -40,6 +40,7 @@ namespace PaintsNow {
 			Module* GetComponentModuleFromName(const String& name) const;
 			const unordered_map<String, Module*>& GetModuleMap() const;
 			void TickFrame();
+			uint32_t GetFrameIndex() const;
 			Kernel& GetKernel();
 
 			Interfaces& interfaces;
@@ -63,9 +64,10 @@ namespace PaintsNow {
 			Engine(const Engine& engine);
 			Engine& operator = (const Engine& engine);
 
-			unordered_map<String, Module*> modules;
+			TAtomic<uint32_t> frameIndex;
 			TAtomic<uint32_t> entityCount;
 			IThread::Event* finalizeEvent;
+			unordered_map<String, Module*> modules;
 		};
 
 #define CHECK_THREAD_IN_MODULE(warpTiny) \

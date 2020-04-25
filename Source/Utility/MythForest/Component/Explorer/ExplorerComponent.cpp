@@ -4,104 +4,96 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
-ExplorerComponent::ExplorerComponent() {
-#ifdef _DEBUG
-	hostEntity = nullptr;
-#endif
+ExplorerComponent::ProxyConfig::ProxyConfig() : layer(0), activateThreshold(0), deactivateThreshold(0) {}
+
+ExplorerComponent::Proxy::Proxy() : flag(0) {}
+
+bool ExplorerComponent::Proxy::operator < (const ExplorerComponent::Proxy& rhs) const {
+	return component < rhs.component;
+}
+
+ExplorerComponent::ExplorerComponent(Unique type) : componentType(type), lastFrameIndex(0) {
+	assert(!componentType->IsClass(UniqueType<ExplorerComponent>::Get()));
 }
 
 ExplorerComponent::~ExplorerComponent() {}
 
 void ExplorerComponent::Initialize(Engine& engine, Entity* entity) {
 	assert(!(Flag() & TINY_ACTIVATED));
-	assert(hostEntity == nullptr);
-#ifdef _DEBUG
-	hostEntity = entity;
-#endif
 	Component::Initialize(engine, entity);
+
+	// recollect all target components
+	const std::vector<Component*>& components = entity->GetComponents();
+	assert(proxies.empty());
+
+	for (size_t i = 0; i < components.size(); i++) {
+		Component* component = components[i];
+		if (component != nullptr && component->GetUnique()->IsClass(componentType)) {
+			Proxy proxy;
+			proxy.component = component;
+			proxy.flag = Tiny::TINY_PINNED;
+			proxies.emplace_back(proxy);
+		}
+	}
+
+	std::sort(proxies.begin(), proxies.end());
+}
+
+void ExplorerComponent::SetProxyConfig(Component* component, const ProxyConfig& config) {
+	std::vector<Proxy>::iterator it = std::binary_find(proxies.begin(), proxies.end(), component);
+	assert(it != proxies.end());
+	it->config = config;
 }
 
 void ExplorerComponent::Uninitialize(Engine& engine, Entity* entity) {
 	assert((Flag() & TINY_ACTIVATED));
 	Component::Uninitialize(engine, entity);
-#ifdef _DEBUG
-	hostEntity = nullptr;
-#endif
+	proxies.clear();
 }
 
-static inline bool CheckBit(const uint8_t* p, size_t index) {
-	return p[index >> 3] & (1 << (index & 7));
+Unique ExplorerComponent::GetExploredComponentType() const {
+	return componentType;
 }
 
-void ExplorerComponent::CollectActiveComponents(Engine& engine, Entity* entity, IExplorer& explorer) {
-#ifdef _DEBUG
-	assert(hostEntity == entity);
-#endif
-	const std::vector<Component*>& components = entity->GetComponents();
-	size_t originalComponentCount = components.size();
-
-	for (size_t i = 0; i < originalComponentCount; i++) {
-		Component* component = components[i];
-		if (component != nullptr) {
-			explorer.Explore(i, component, false);
+void ExplorerComponent::RefreshComponents(Engine& engine, Entity* entity, float refValue, std::vector<Component*>& activatedComponents) {
+	uint32_t currentFrameIndex = engine.GetFrameIndex();
+	uint32_t maxLayer = 0;
+	for (size_t i = 0; i < proxies.size(); i++) {
+		Proxy& proxy = proxies[i];
+		assert(proxy.config.activateThreshold <= proxy.config.deactivateThreshold);
+		if (refValue < proxy.config.activateThreshold) {
+			maxLayer = std::max(maxLayer, proxy.config.layer);
+		}
+		
+		if (refValue < proxy.config.deactivateThreshold) {
+			if (!(proxy.flag & Tiny::TINY_PINNED)) {
+				entity->AddComponent(engine, proxy.component());
+				proxy.flag |= Tiny::TINY_PINNED;
+			}
 		}
 	}
-	
-	for (size_t j = 0; j < collapsedComponents.size(); j++) {
-		Component* component = collapsedComponents[j].component();
-		assert(component != nullptr);
-		explorer.Explore(originalComponentCount + j, component, true);
+
+	// activate the max layer
+	for (size_t j = 0; j < proxies.size(); j++) {
+		Proxy& proxy = proxies[j];
+		if (proxy.config.layer == maxLayer) {
+			// activate
+			proxy.flag |= Tiny::TINY_PINNED;
+			activatedComponents.emplace_back(proxy.component());
+		}
 	}
 
-	Bytes newState = explorer.Finalize();
-
-	if (!newState.Empty()) {
-		uint8_t* p = newState.GetData();
-		size_t stateCount = newState.GetSize();
-		for (size_t j = originalComponentCount; j < stateCount; j++) {
-			if (CheckBit(p, j)) { // activate
-				TShared<Component>& component = collapsedComponents[j - components.size()].component;
-				entity->AddComponent(engine, component());
-				component = nullptr;
-			}
-		}
-
-		size_t k = 0;
-		for (size_t i = originalComponentCount; i > 0; i--) {
-			if (!CheckBit(p, i - 1)) { // deactivate
-				Component* component = components[i - 1];
-				while (k < collapsedComponents.size()) {
-					CollapsedComponent& collapsedComponent = collapsedComponents[k];
-					if (collapsedComponent.component == nullptr) {
-						collapsedComponent.component = component;
-						// TODO: remaining items
-						break;
-					}
-
-					k++;
-				}
-
-				if (k >= collapsedComponents.size()) {
-					CollapsedComponent collapsedComponent;
-					collapsedComponent.component = component;
-					collapsedComponents.emplace_back(collapsedComponent);
-					k++;
-				}
-
-				entity->RemoveComponent(engine, component);
-			}
-		}
-
-		size_t n = k;
-		while (k < collapsedComponents.size()) {
-			CollapsedComponent& collapsedComponent = collapsedComponents[k];
-			if (collapsedComponent.component) {
-				collapsedComponents[n++] = collapsedComponents[k];
+	if (lastFrameIndex != currentFrameIndex) {
+		for (size_t i = 0; i < proxies.size(); i++) {
+			Proxy& proxy = proxies[i];
+			if (!(proxy.flag & Tiny::TINY_PINNED)) {
+				entity->RemoveComponent(engine, proxy.component());
 			}
 
-			k++;
+			proxy.flag &= ~Tiny::TINY_PINNED;
 		}
-
-		collapsedComponents.resize(n);
+		
+		lastFrameIndex = currentFrameIndex;
 	}
 }
+

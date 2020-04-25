@@ -15,32 +15,39 @@ namespace PaintsNow {
 		// Level of details controller
 		class ExplorerComponent : public TAllocatedTiny<ExplorerComponent, Component> {
 		public:
-			ExplorerComponent();
+			ExplorerComponent(Unique componentType);
 			virtual ~ExplorerComponent();
 
 			virtual void Initialize(Engine& engine, Entity* entity);
 			virtual void Uninitialize(Engine& engine, Entity* entity);
 
-			// Forever Internet Explorer!
-			class IExplorer {
-			public:
-				virtual void Explore(size_t index, Component* component, bool activated) = 0;
-				virtual Bytes Finalize() = 0;
+			struct ProxyConfig {
+				ProxyConfig();
+				uint32_t layer;
+				float activateThreshold;
+				float deactivateThreshold;
 			};
 
-			void CollectActiveComponents(Engine& engine, Entity* entity, IExplorer& explorer);
+			void SetProxyConfig(Component* component, const ProxyConfig& config);
+			Unique GetExploredComponentType() const;
+			void RefreshComponents(Engine& engine, Entity* entity, float refValue, std::vector<Component*>& collectedComponents);
 
 		protected:
-			struct CollapsedComponent {
+			struct Proxy {
+				Proxy();
+				operator Component* () const {
+					return component();
+				}
+
+				bool operator < (const Proxy& rhs) const;
 				TShared<Component> component;
-				// TODO: other attributes...
+				Tiny::FLAG flag;
+				ProxyConfig config;
 			};
 
-			std::vector<CollapsedComponent> collapsedComponents;
-
-#ifdef _DEBUG
-			Entity* hostEntity;
-#endif
+			std::vector<Proxy> proxies;
+			Unique componentType;
+			uint32_t lastFrameIndex;
 		};
 	}
 }

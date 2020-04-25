@@ -60,6 +60,12 @@ void Engine::TickFrame() {
 	for (unordered_map<String, Module*>::iterator it = modules.begin(); it != modules.end(); ++it) {
 		(*it).second->TickFrame();
 	}
+
+	frameIndex.fetch_add(1, std::memory_order_relaxed);
+}
+
+uint32_t Engine::GetFrameIndex() const {
+	return frameIndex.load(std::memory_order_relaxed);
 }
 
 Kernel& Engine::GetKernel() {
