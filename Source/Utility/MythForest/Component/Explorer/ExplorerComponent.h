@@ -30,7 +30,7 @@ namespace PaintsNow {
 
 			void SetProxyConfig(Component* component, const ProxyConfig& config);
 			Unique GetExploredComponentType() const;
-			void RefreshComponents(Engine& engine, Entity* entity, float refValue, std::vector<Component*>& collectedComponents);
+			void SelectComponents(Engine& engine, Entity* entity, float refValue, std::vector<Component*>& collectedComponents);
 
 		protected:
 			struct Proxy {

@@ -164,7 +164,7 @@ void TransformComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box) {
 			Union(newBox, Float3(pt.x(), pt.y(), pt.z()));
 		}
 
-		box = std::move(newBox);
+		cacheBoundingBox = box = newBox;
 	}
 }
 
@@ -182,4 +182,8 @@ void TransformComponent::Raycast(std::vector<RaycastResult>& results, Float3Pair
 	ray.second += ray.first;
 	ray.first = Transform3D(invTransform, ray.first);
 	ray.second = Transform3D(invTransform, ray.second) - ray.first;
+}
+
+const Float3Pair& TransformComponent::GetLocalBoundingBox() const {
+	return cacheBoundingBox;
 }

@@ -4,6 +4,7 @@
 #include "../Batch/BatchComponent.h"
 #include "../Space/SpaceComponent.h"
 #include "../Transform/TransformComponent.h"
+#include "../Explorer/ExplorerComponent.h"
 #include "../EnvCube/EnvCubeComponent.h"
 #include "../Light/LightComponent.h"
 #include "../Visibility/VisibilityComponent.h"
@@ -638,24 +639,36 @@ void CameraComponent::CollectComponents(Engine& engine, TaskData& taskData, cons
 	if (transformComponent != nullptr) {
 		localTransform = transformComponent->GetTransform();
 
-		// IsVisible through visiblity checking?
+		// IsVisible through visibility checking?
 		if (!(transformComponent->Flag() & TransformComponent::TRANSFORMCOMPONENT_DYNAMIC) && !VisibilityComponent::IsVisible(captureData.visData, transformComponent)) {
 			visible = false;
 		}
 
-		MatrixFloat4x4& trans = subWorldInstancedData.worldMatrix = localTransform * instanceData.worldMatrix;
-		Float3 worldPosition(trans(3, 0), trans(3, 1), trans(3, 2));
-
-		// Since it only affects Lod selection, we supress it here.
+		// Fetch screen ratio
 		float tanHalfFov = taskData.worldGlobalData.tanHalfFov;
-		subWorldInstancedData.viewReference = fabs(tanHalfFov * DotProduct(worldPosition - captureData.GetPosition(), captureData.GetDirection()));
+		const Float3Pair& localBoundingBox = transformComponent->GetLocalBoundingBox();
+		Float3 start = Transform3D(instanceData.worldMatrix, localBoundingBox.first);
+		Float3 end = Transform3D(instanceData.worldMatrix, localBoundingBox.second);
+		Float3 center = (start + end) * 0.5f;
+		float length = (end - start).SquareLength();
+
+		// Project
+		subWorldInstancedData.viewReference = Max(0.0f, 1.0f - length / (0.001f + tanHalfFov * (center - captureData.GetPosition()).SquareLength()));
 	}
 
 	if (rootFlag & (Entity::ENTITY_HAS_RENDERABLE | Entity::ENTITY_HAS_RENDERCONTROL)) {
 		// optional animation
 		subWorldInstancedData.animationComponent = entity->GetUniqueComponent(UniqueType<AnimationComponent>());
 
-		const std::vector<Component*>& components = entity->GetComponents();
+		std::vector<Component*> exploredComponents;
+		ExplorerComponent* explorerComponent = entity->GetUniqueComponent(UniqueType<ExplorerComponent>());
+		if (explorerComponent != nullptr) {
+			// Use nearest refValue for selecting most detailed components
+			explorerComponent->SelectComponents(engine, entity, subWorldInstancedData.viewReference, exploredComponents);
+		}
+
+		const std::vector<Component*>& components = explorerComponent != nullptr ? exploredComponents : entity->GetComponents();
+
 		for (size_t i = 0; i < components.size(); i++) {
 			Component* component = components[i];
 			if (component == nullptr) continue;
@@ -664,7 +677,8 @@ void CameraComponent::CollectComponents(Engine& engine, TaskData& taskData, cons
 			// Since EntityMask would be much more faster than Reflection
 			// We asserted that flaged components must be derived from specified implementations
 			Tiny::FLAG entityMask = component->GetEntityFlagMask();
-			if (!(component->Flag() & Tiny::TINY_ACTIVATED)) continue;
+			assert(component->Flag() & Tiny::TINY_ACTIVATED);
+			// if (!(component->Flag() & Tiny::TINY_ACTIVATED)) continue;
 
 			if (entityMask & Entity::ENTITY_HAS_RENDERABLE) {
 				bool isRenderControl = !!(entityMask & Entity::ENTITY_HAS_RENDERCONTROL);

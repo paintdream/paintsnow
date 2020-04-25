@@ -23,6 +23,8 @@ namespace PaintsNow {
 			virtual void UpdateBoundingBox(Engine& engine, Float3Pair& box) override;
 			virtual void Raycast(std::vector<RaycastResult>& results, Float3Pair& ray, uint32_t maxCount, IReflectObject* filter) const override;
 
+			const Float3Pair& GetLocalBoundingBox() const;
+
 		public:
 			Float3 GetQuickTranslation() const;
 			void SetRotation(const Float3& rotation);
@@ -53,6 +55,7 @@ namespace PaintsNow {
 
 		protected:
 			MatrixFloat4x4 transform;
+			Float3Pair cacheBoundingBox;
 			uint32_t uniqueObjectID;
 			TShared<TRS> trsData;
 		};

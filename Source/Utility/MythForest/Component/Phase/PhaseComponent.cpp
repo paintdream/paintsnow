@@ -3,6 +3,7 @@
 #include "../Space/SpaceComponent.h"
 #include "../Renderable/RenderableComponent.h"
 #include "../Transform/TransformComponent.h"
+#include "../Explorer/ExplorerComponent.h"
 #include <ctime>
 
 const float PI = 3.1415926f;
@@ -719,7 +720,15 @@ void PhaseComponent::CollectComponents(Engine& engine, TaskData& task, const Wor
 		WorldInstanceData instanceData;
 		instanceData.worldMatrix = transformComponent != nullptr ? transformComponent->GetTransform() * inst.worldMatrix : inst.worldMatrix;
 
-		const std::vector<Component*>& components = entity->GetComponents();
+		std::vector<Component*> exploredComponents;
+		ExplorerComponent* explorerComponent = entity->GetUniqueComponent(UniqueType<ExplorerComponent>());
+		if (explorerComponent != nullptr) {
+			// Use nearest refValue for selecting most detailed components
+			explorerComponent->SelectComponents(engine, entity, 0.0f, exploredComponents);
+		}
+
+		const std::vector<Component*>& components = explorerComponent != nullptr ? exploredComponents : entity->GetComponents();
+
 		for (size_t i = 0; i < components.size(); i++) {
 			Component* component = components[i];
 			if (component == nullptr) continue;

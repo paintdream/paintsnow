@@ -55,7 +55,7 @@ Unique ExplorerComponent::GetExploredComponentType() const {
 	return componentType;
 }
 
-void ExplorerComponent::RefreshComponents(Engine& engine, Entity* entity, float refValue, std::vector<Component*>& activatedComponents) {
+void ExplorerComponent::SelectComponents(Engine& engine, Entity* entity, float refValue, std::vector<Component*>& activatedComponents) {
 	uint32_t currentFrameIndex = engine.GetFrameIndex();
 	uint32_t maxLayer = 0;
 	for (size_t i = 0; i < proxies.size(); i++) {

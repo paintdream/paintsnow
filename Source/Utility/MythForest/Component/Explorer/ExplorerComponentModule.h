@@ -20,7 +20,7 @@ namespace PaintsNow {
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
 			void RequestNew(IScript::Request& request, const String& componentType);
-			void RequestRebuild(IScript::Request& request, IScript::Delegate<ExplorerComponent> fieldComponent);
+			void RequestSetProxyConfig(IScript::Request& request, IScript::Delegate<ExplorerComponent> explorerComponent, IScript::Delegate<Component> component, uint32_t layer, float activateThreshold, float deactivateThreshold);
 		};
 	}
 }

@@ -12,7 +12,7 @@ TObject<IReflect>& ExplorerComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 	if (reflect.IsReflectMethod()) {
 		ReflectMethod(RequestNew)[ScriptMethod = "New"];
-		ReflectMethod(RequestRebuild)[ScriptMethod = "Rebuild"];
+		ReflectMethod(RequestSetProxyConfig)[ScriptMethod = "SetProxyConfig"];
 	}
 
 	return *this;
@@ -36,8 +36,15 @@ void ExplorerComponentModule::RequestNew(IScript::Request& request, const String
 	}
 }
 
-void ExplorerComponentModule::RequestRebuild(IScript::Request& request, IScript::Delegate<ExplorerComponent> fieldComponent) {
+void ExplorerComponentModule::RequestSetProxyConfig(IScript::Request& request, IScript::Delegate<ExplorerComponent> explorerComponent, IScript::Delegate<Component> component, uint32_t layer, float activateThreshold, float deactivateThreshold) {
 	CHECK_REFERENCES_NONE();
-	CHECK_DELEGATE(fieldComponent);
+	CHECK_DELEGATE(explorerComponent);
+	CHECK_DELEGATE(component);
 
+	ExplorerComponent::ProxyConfig config;
+	config.layer = layer;
+	config.activateThreshold = activateThreshold;
+	config.deactivateThreshold = deactivateThreshold;
+
+	explorerComponent->SetProxyConfig(component.Get(), config);
 }
