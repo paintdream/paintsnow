@@ -8,6 +8,7 @@
 
 #include "GraphicResourceBase.h"
 #include "../../../General/Interface/IAsset.h"
+#include "TextureResource.h"
 
 namespace PaintsNow {
 	namespace NsSnowyStream {
@@ -19,6 +20,7 @@ namespace PaintsNow {
 			virtual void Download(IRender& render, void* deviceContext) override;
 			virtual void Attach(IRender& render, void* deviceContext) override;
 			virtual void Detach(IRender& render, void* deviceContext) override;
+			void FromTexture(TShared<TextureResource> textureResource, const Float3& scale);
 
 		protected:
 			std::vector<float> terrainData;
