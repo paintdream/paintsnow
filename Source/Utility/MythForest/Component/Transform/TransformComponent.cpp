@@ -164,8 +164,10 @@ void TransformComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box) {
 			Union(newBox, Float3(pt.x(), pt.y(), pt.z()));
 		}
 
-		cacheBoundingBox = box = newBox;
+		box = newBox;
 	}
+
+	cacheBoundingBox = box;
 }
 
 uint32_t TransformComponent::GetObjectID() const {

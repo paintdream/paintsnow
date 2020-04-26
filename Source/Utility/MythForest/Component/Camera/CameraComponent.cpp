@@ -68,7 +68,7 @@ void CameraComponent::UpdateRootMatrices(const MatrixFloat4x4& cameraWorldMatrix
 	nextTaskData->worldGlobalData.projectionMatrix = projectionMatrix;
 	nextTaskData->worldGlobalData.viewMatrix = viewMatrix;
 	nextTaskData->worldGlobalData.viewProjectionMatrix = viewMatrix * projectionMatrix;
-	nextTaskData->worldGlobalData.tanHalfFov = (float)tan(fov * PI / 360);
+	nextTaskData->worldGlobalData.tanHalfFov = (float)tan(fov / 2.0f);
 	nextTaskData->worldGlobalData.viewPosition = Float3(cameraWorldMatrix(3, 0), cameraWorldMatrix(3, 1), cameraWorldMatrix(3, 2));
 	nextTaskData->worldGlobalData.lastViewProjectionMatrix = currentTaskData->worldGlobalData.viewProjectionMatrix;
 }
@@ -644,6 +644,7 @@ void CameraComponent::CollectComponents(Engine& engine, TaskData& taskData, cons
 			visible = false;
 		}
 
+		subWorldInstancedData.worldMatrix = localTransform * instanceData.worldMatrix;
 		// Fetch screen ratio
 		float tanHalfFov = taskData.worldGlobalData.tanHalfFov;
 		const Float3Pair& localBoundingBox = transformComponent->GetLocalBoundingBox();
@@ -717,7 +718,7 @@ void CameraComponent::CollectComponents(Engine& engine, TaskData& taskData, cons
 				SpaceComponent* spaceComponent = static_cast<SpaceComponent*>(component);
 				bool captureFree = !!(spaceComponent->GetEntityFlagMask() & Entity::ENTITY_HAS_RENDERCONTROL);
 				if (transformComponent != nullptr) {
-					UpdateCaptureData(newCaptureData, QuickInverse(localTransform) * captureData.viewTransform);
+					UpdateCaptureData(newCaptureData, QuickInverse(localTransform) * mat);
 					CollectComponentsFromSpace(engine, taskData, subSpaceWorldInstancedData, newCaptureData, spaceComponent);
 				} else {
 					CollectComponentsFromSpace(engine, taskData, subSpaceWorldInstancedData, captureData, spaceComponent);
