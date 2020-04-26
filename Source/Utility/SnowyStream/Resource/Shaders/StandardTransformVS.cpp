@@ -6,8 +6,6 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsSnowyStream;
 using namespace PaintsNow::ShaderMacro;
 
-static MatrixFloat4x4 _boneMatrix;
-
 StandardTransformVS::StandardTransformVS() : enableInstancing(true), enableSkinning(false), enableViewProjectionMatrix(true), enableVertexColor(false), enableVertexNormal(true), enableInstancedColor(false), enableVertexTangent(true), enableRasterCoord(false) {
 	instanceBuffer.description.usage = IRender::Resource::BufferDescription::INSTANCED;
 	vertexPositionBuffer.description.usage = IRender::Resource::BufferDescription::VERTEX;
@@ -23,7 +21,7 @@ StandardTransformVS::StandardTransformVS() : enableInstancing(true), enableSkinn
 }
 
 String StandardTransformVS::GetShaderText() {
-	std::vector<MatrixFloat4x4> boneMatricesBuffer; // temp fix 
+	std::vector<MatrixFloat4x4> boneMatries; // temp fix 
 	return UnifyShaderCode(
 		float4 position = float4(0, 0, 0, 1);
 		position.xyz = vertexPosition;
@@ -31,7 +29,7 @@ String StandardTransformVS::GetShaderText() {
 			// skinning
 			float4 sumPosition = float4(0, 0, 0, 0);
 			for (int i = 0; i < 4; i++) {
-				sumPosition += mult_vec(boneMatricesBuffer[int(boneIndex[i])], position) * boneWeight[i];
+				sumPosition += mult_vec(boneMatries[int(boneIndex[i])], position) * boneWeight[i];
 			}
 
 			position.xyz = sumPosition.xyz / sumPosition.w;
@@ -103,8 +101,8 @@ TObject<IReflect>& StandardTransformVS::operator () (IReflect& reflect) {
 		ReflectProperty(boneWeightBuffer)[IShader::BindOption(enableSkinning)];
 		ReflectProperty(boneMatricesBuffer)[IShader::BindOption(enableSkinning)];
 
-		static MatrixFloat4x4 _boneMatrix; // Just make reflection happy
-		ReflectProperty(_boneMatrix)[IShader::BindOption(enableSkinning)][boneMatricesBuffer][IShader::BindInput(IShader::BindInput::BONE_TRANSFORMS)];
+		static std::vector<float4x4> boneMatries(128); // Just make reflection happy
+		ReflectProperty(boneMatries)[IShader::BindOption(enableSkinning)][boneMatricesBuffer][IShader::BindInput(IShader::BindInput::BONE_TRANSFORMS)];
 		ReflectProperty(boneIndex)[IShader::BindOption(enableSkinning)][boneIndexBuffer][IShader::BindInput(IShader::BindInput::BONE_INDEX)];
 		ReflectProperty(boneWeight)[IShader::BindOption(enableSkinning)][boneWeightBuffer][IShader::BindInput(IShader::BindInput::BONE_WEIGHT)];
 

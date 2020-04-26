@@ -1063,7 +1063,12 @@ public:
 					const IShader::BindOption* bindOption = static_cast<const IShader::BindOption*>(pre->GetNode());
 					if (!*bindOption->description) {
 						// defines as local
-						initialization += String("\t") + declareMap[typeID] + " " + name + ";\n";
+						if (s.IsIterator()) {
+							IIterator& iterator = static_cast<IIterator&>(s);
+							initialization += String("\t") + declareMap[iterator.GetPrototypeUnique()] + " " + name + "[1];\n";
+						} else {
+							initialization += String("\t") + declareMap[typeID] + " " + name + ";\n";
+						}
 						return;
 					}
 				}
