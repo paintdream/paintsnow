@@ -20,8 +20,9 @@ void TerrainResource::Download(IRender& render, void* deviceContext) {
 
 }
 
-void TerrainResource::FromTexture(TShared<TextureResource> textureResource, const Float3& scale) {
+void TerrainResource::FromTexture(TShared<TextureResource> textureResource) {
 	textureResource->Map();
+
 	IRender::Resource::TextureDescription& description = textureResource->description;
 	// Check texture type
 	width = description.dimension.x();
@@ -30,17 +31,19 @@ void TerrainResource::FromTexture(TShared<TextureResource> textureResource, cons
 	assert(description.state.layout == IRender::Resource::TextureDescription::R);
 
 	if (description.state.format == IRender::Resource::TextureDescription::FLOAT) {
-		const float* p = reinterpret_cast<const float*>(description.data.GetData());
-		for (size_t i = 0; i < width * height; i++) {
-			terrainData[i] = p[i] * scale.z();
-		}
+		memcpy(&terrainData[0], description.data.GetData(), width * height * sizeof(terrainData[0]));
 	} else if (description.state.format == IRender::Resource::TextureDescription::UNSIGNED_SHORT) {
 		const uint16_t* p = reinterpret_cast<const uint16_t*>(description.data.GetData());
 		for (size_t i = 0; i < width * height; i++) {
-			terrainData[i] = p[i] * scale.z() / 0xFFFF;
+			terrainData[i] = (float)p[i] / 0xFFFF;
+		}
+	} else if (description.state.format == IRender::Resource::TextureDescription::UNSIGNED_BYTE) {
+		const uint16_t* p = reinterpret_cast<const uint16_t*>(description.data.GetData());
+		for (size_t i = 0; i < width * height; i++) {
+			terrainData[i] = (float)p[i] / 0xFF;
 		}
 	} else {
-		assert(false); // not suported
+		assert(false); // not supported
 	}
 
 	textureResource->Unmap();

@@ -30,7 +30,7 @@ namespace PaintsNow {
 			};
 
 			struct PatchRaycaster;
-			static void MakeHeapInternal(std::vector<Patch>& target, const Patch* begin, const Patch* end);
+			static void MakeHeapInternal(std::vector<Patch>& target, Patch* begin, Patch* end);
 			static Patch* MakeBound(Patch& patch, const std::vector<Float3>& vertices, const std::vector<UInt3>& indices);
 
 			TShared<NsSnowyStream::MeshResource> meshResource;

@@ -266,8 +266,18 @@ void PhaseComponent::TickRender(Engine& engine) {
 			finalStatus.store(TaskData::STATUS_START, std::memory_order_release);
 		} else if (task.status == TaskData::STATUS_ASSEMBLED) {
 			render.YieldQueue(task.renderQueue);
+			if (!debugPath.empty()) {
+				render.RequestDownloadResource(task.renderQueue, task.texture->GetTexture(), &task.texture->description);
+			}
+
 			bakeQueues.emplace_back(task.renderQueue);
-			finalStatus.store(TaskData::STATUS_BAKED, std::memory_order_release);
+			finalStatus.store(debugPath.empty() ? TaskData::STATUS_BAKED : TaskData::STATUS_DOWNLOADED, std::memory_order_release);
+		} else if (task.status == TaskData::STATUS_DOWNLOADED) {
+			render.CompleteDownloadResource(task.renderQueue, task.texture->GetTexture());
+			bakeQueues.emplace_back(task.renderQueue);
+
+			// Save data
+			// engine.GetKernel().QueueRoutine();
 		}
 	}
 
@@ -437,7 +447,6 @@ void PhaseComponent::CoTaskAssembleTaskSetup(Engine& engine, TaskData& task, con
 	const Phase& phase = phases[bakePoint.phaseIndex];
 
 	TextureResource* rt[] = {
-		phase.irradiance(),
 		phase.baseColorOcclusion(),
 		phase.normalRoughnessMetallic()
 	};
@@ -456,6 +465,7 @@ void PhaseComponent::CoTaskAssembleTaskSetup(Engine& engine, TaskData& task, con
 	render.ExecuteResource(task.renderQueue, stateResource);
 	render.ExecuteResource(task.renderQueue, clearResource);
 
+	task.texture = phase.baseColorOcclusion;
 	task.pipeline = setupPipeline();
 	Collect(engine, task, phase.viewProjectionMatrix);
 }
@@ -779,3 +789,8 @@ void PhaseComponent::BindRootEntity(Engine& engine, Entity* entity) {
 		entity->AddComponent(engine, this); // weak component
 	}
 }
+
+void PhaseComponent::SetDebugMode(const String& path) {
+	debugPath = path;
+}
+

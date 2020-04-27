@@ -25,6 +25,7 @@ namespace PaintsNow {
 			void RequestStep(IScript::Request& request, IScript::Delegate<PhaseComponent> phaseComponent, uint32_t bounceCount);
 			void RequestResample(IScript::Request& request, IScript::Delegate<PhaseComponent> phaseComponent, uint32_t phaseCount);
 			void RequestBindRootEntity(IScript::Request& request, IScript::Delegate<PhaseComponent> phaseComponent, IScript::Delegate<Entity> rootEntity);
+			void RequestSetDebugMode(IScript::Request& request, IScript::Delegate<PhaseComponent> phaseComponent, const String& debugPath);
 		};
 	}
 }

@@ -96,6 +96,7 @@ namespace PaintsNow {
 					STATUS_DISPATCHED,
 					STATUS_ASSEMBLING,
 					STATUS_ASSEMBLED,
+					STATUS_DOWNLOADED,
 					STATUS_BAKED
 				};
 
@@ -106,6 +107,7 @@ namespace PaintsNow {
 				IRender::Queue* renderQueue;
 				IRender::Resource* renderTarget;
 				NsSnowyStream::ShaderResource* pipeline;
+				TShared<NsSnowyStream::TextureResource> texture;
 			};
 		};
 
@@ -128,6 +130,7 @@ namespace PaintsNow {
 			void Step(Engine& engine, uint32_t bounceCount);
 			void Resample(Engine& engine, uint32_t phaseCount);
 			void Setup(Engine& engine, uint32_t phaseCount, uint32_t taskCount, const Float3& range, const UShort2& resolution);
+			void SetDebugMode(const String& debugPath);
 
 			struct Phase : public RenderPortPhaseLightView::PhaseInfo {
 				TShared<NsSnowyStream::TextureResource> baseColorOcclusion;
@@ -247,6 +250,7 @@ namespace PaintsNow {
 			friend class LightCollector;
 			LightCollector lightCollector;
 			Entity* rootEntity;
+			String debugPath;
 		};
 	}
 }

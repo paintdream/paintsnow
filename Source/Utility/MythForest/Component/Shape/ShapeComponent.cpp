@@ -54,10 +54,10 @@ static inline CodeIndex Encode(const UShort3Pair& box, uint32_t level, uint32_t 
 	return CodeIndex(code << (3 * level), i, level);
 }
 
-void ShapeComponent::MakeHeapInternal(std::vector<Patch>& output, const Patch* begin, const Patch* end) {
+void ShapeComponent::MakeHeapInternal(std::vector<Patch>& output, Patch* begin, Patch* end) {
 	if (begin >= end) return;
 
-	const Patch* mid = begin + (end - begin) / 2;
+	Patch* mid = begin + (end - begin) / 2;
 	output.emplace_back(std::move(*mid));
 	MakeHeapInternal(output, begin, mid);
 	MakeHeapInternal(output, mid + 1, end);
