@@ -151,6 +151,7 @@ namespace PaintsNow {
 			void ResolveTasks(Engine& engine);
 			void DispatchTasks(Engine& engine);
 			void UpdateRenderFlow(Engine& engine);
+			void CoTaskWriteDebugTexture(Engine& engine, uint32_t index, Bytes& data, TShared<NsSnowyStream::TextureResource> texture);
 
 			struct LightElement {
 				Float4 position;

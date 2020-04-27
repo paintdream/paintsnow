@@ -256,6 +256,7 @@ void PhaseComponent::TickRender(Engine& engine) {
 	if (renderQueue == nullptr) return; // not inited.
 
 	IRender& render = engine.interfaces.render;
+	Kernel& kernel = engine.GetKernel();
 	render.PresentQueues(&renderQueue, 1, IRender::CONSUME);
 
 	std::vector<IRender::Queue*> bakeQueues;
@@ -276,14 +277,29 @@ void PhaseComponent::TickRender(Engine& engine) {
 			render.CompleteDownloadResource(task.renderQueue, task.texture->GetTexture());
 			bakeQueues.emplace_back(task.renderQueue);
 
-			// Save data
-			// engine.GetKernel().QueueRoutine();
+			// Save data asynchronized
+			uint32_t frameIndex = engine.GetFrameIndex();
+			engine.GetKernel().threadPool.Push(CreateCoTaskContextFree(kernel, Wrap(this, &PhaseComponent::CoTaskWriteDebugTexture), std::ref(engine), frameIndex * tasks.size() + i, std::move(task.texture->description.data), task.texture));
 		}
 	}
 
 	// Commit bakes
 	if (!bakeQueues.empty()) {
 		render.PresentQueues(&bakeQueues[0], safe_cast<uint32_t>(bakeQueues.size()), IRender::CONSUME);
+	}
+}
+
+void PhaseComponent::CoTaskWriteDebugTexture(Engine& engine, uint32_t index, Bytes& data, TShared<NsSnowyStream::TextureResource> texture) {
+	if (!debugPath.empty()) {
+		std::stringstream ss;
+		ss << debugPath << "phase_" << index << ".png";
+		size_t length;
+		IStreamBase* stream = engine.interfaces.archive.Open(debugPath + "phase_", true, length);
+		IRender::Resource::TextureDescription& description = texture->description;
+		IImage::Image* image = engine.interfaces.image.Create(description.dimension.x(), description.dimension.y(), (IRender::Resource::TextureDescription::Layout)description.state.layout, (IRender::Resource::TextureDescription::Format)description.state.format);
+		engine.interfaces.image.Save(image, *stream, "png");
+		// write png
+		stream->ReleaseObject();
 	}
 }
 
