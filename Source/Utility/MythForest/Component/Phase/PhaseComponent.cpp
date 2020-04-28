@@ -266,20 +266,23 @@ void PhaseComponent::TickRender(Engine& engine) {
 		if (task.status == TaskData::STATUS_IDLE) {
 			finalStatus.store(TaskData::STATUS_START, std::memory_order_release);
 		} else if (task.status == TaskData::STATUS_ASSEMBLED) {
-			render.YieldQueue(task.renderQueue);
-			if (!debugPath.empty()) {
+			uint32_t status = TaskData::STATUS_BAKED;
+			if (!debugPath.empty() && task.texture) {
 				render.RequestDownloadResource(task.renderQueue, task.texture->GetTexture(), &task.texture->description);
+				status = TaskData::STATUS_DOWNLOADED;
 			}
 
+			render.YieldQueue(task.renderQueue);
 			bakeQueues.emplace_back(task.renderQueue);
-			finalStatus.store(debugPath.empty() ? TaskData::STATUS_BAKED : TaskData::STATUS_DOWNLOADED, std::memory_order_release);
+			finalStatus.store(status, std::memory_order_release);
 		} else if (task.status == TaskData::STATUS_DOWNLOADED) {
 			render.CompleteDownloadResource(task.renderQueue, task.texture->GetTexture());
 			bakeQueues.emplace_back(task.renderQueue);
 
 			// Save data asynchronized
 			uint32_t frameIndex = engine.GetFrameIndex();
-			engine.GetKernel().threadPool.Push(CreateCoTaskContextFree(kernel, Wrap(this, &PhaseComponent::CoTaskWriteDebugTexture), std::ref(engine), frameIndex * tasks.size() + i, std::move(task.texture->description.data), task.texture));
+			engine.GetKernel().QueueRoutine(this, CreateTaskContextFree(Wrap(this, &PhaseComponent::CoTaskWriteDebugTexture), std::ref(engine), frameIndex * tasks.size() + i, std::move(task.texture->description.data), task.texture));
+			finalStatus.store(TaskData::STATUS_BAKED, std::memory_order_release);
 		}
 	}
 
@@ -294,9 +297,11 @@ void PhaseComponent::CoTaskWriteDebugTexture(Engine& engine, uint32_t index, Byt
 		std::stringstream ss;
 		ss << debugPath << "phase_" << index << ".png";
 		size_t length;
-		IStreamBase* stream = engine.interfaces.archive.Open(debugPath + "phase_", true, length);
+		IStreamBase* stream = engine.interfaces.archive.Open(ss.str(), true, length);
 		IRender::Resource::TextureDescription& description = texture->description;
 		IImage::Image* image = engine.interfaces.image.Create(description.dimension.x(), description.dimension.y(), (IRender::Resource::TextureDescription::Layout)description.state.layout, (IRender::Resource::TextureDescription::Format)description.state.format);
+		void* buffer = engine.interfaces.image.GetBuffer(image);
+		memcpy(buffer, data.GetData(), data.GetSize());
 		engine.interfaces.image.Save(image, *stream, "png");
 		// write png
 		stream->ReleaseObject();
@@ -400,6 +405,8 @@ void PhaseComponent::TaskAssembleTaskBounce(Engine& engine, TaskData& task, cons
 	desc.colorBufferStorages.emplace_back(std::move(storage));
 	desc.width = resolution.x();
 	desc.height = resolution.y();
+	// task.texture = toPhase.irradiance;
+	task.texture = nullptr;
 
 	// TODO: fill params
 	MultiHashTraceFS& fs = static_cast<MultiHashTracePass&>(toPhase.tracePipeline->GetPass()).shaderMultiHashTrace;
@@ -438,6 +445,8 @@ void PhaseComponent::CoTaskAssembleTaskShadow(Engine& engine, TaskData& task, co
 	render.ExecuteResource(task.renderQueue, clearResource);
 
 	task.pipeline = shadowPipeline();
+	// task.texture = shadow.shadow;
+	task.texture = nullptr;
 	Collect(engine, task, shadow.viewProjectionMatrix);
 }
 
