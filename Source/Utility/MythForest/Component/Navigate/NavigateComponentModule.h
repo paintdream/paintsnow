@@ -13,7 +13,7 @@ namespace PaintsNow {
 	namespace NsMythForest {
 		class Entity;
 		class NavigateComponent;
-		class NavigateComponentModule  : public TReflected<NavigateComponentModule , ModuleImpl<NavigateComponent> > {
+		class NavigateComponentModule  : public TReflected<NavigateComponentModule, ModuleImpl<NavigateComponent> > {
 		public:
 			NavigateComponentModule(Engine& engine);
 			virtual ~NavigateComponentModule();

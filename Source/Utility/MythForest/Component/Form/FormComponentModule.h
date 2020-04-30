@@ -12,7 +12,7 @@
 namespace PaintsNow {
 	namespace NsMythForest {
 		class FormComponent;
-		class FormComponentModule  : public TReflected<FormComponentModule , ModuleImpl<FormComponent> > {
+		class FormComponentModule  : public TReflected<FormComponentModule, ModuleImpl<FormComponent> > {
 		public:
 			FormComponentModule(Engine& engine);
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;

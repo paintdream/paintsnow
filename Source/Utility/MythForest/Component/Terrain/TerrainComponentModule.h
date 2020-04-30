@@ -12,7 +12,7 @@
 namespace PaintsNow {
 	namespace NsMythForest {
 		class TerrainComponent;
-		class TerrainComponentModule  : public TReflected<TerrainComponentModule , ModuleImpl<TerrainComponent> > {
+		class TerrainComponentModule  : public TReflected<TerrainComponentModule, ModuleImpl<TerrainComponent> > {
 		public:
 			TerrainComponentModule(Engine& engine);
 

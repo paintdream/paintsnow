@@ -12,7 +12,7 @@
 namespace PaintsNow {
 	namespace NsMythForest {
 		class TransformComponent;
-		class TransformComponentModule  : public TReflected<TransformComponentModule , ModuleImpl<TransformComponent> > {
+		class TransformComponentModule  : public TReflected<TransformComponentModule, ModuleImpl<TransformComponent> > {
 		public:
 			TransformComponentModule(Engine& engine);
 

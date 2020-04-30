@@ -11,7 +11,7 @@
 
 namespace PaintsNow {
 	namespace NsMythForest {
-		class BatchComponentModule  : public TReflected<BatchComponentModule , ModuleImpl<BatchComponent> > {
+		class BatchComponentModule  : public TReflected<BatchComponentModule, ModuleImpl<BatchComponent> > {
 		public:
 			BatchComponentModule(Engine& engine);
 

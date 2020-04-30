@@ -14,7 +14,7 @@ namespace PaintsNow {
 		class Entity;
 		class ComputeComponent;
 		class ComputeRoutine;
-		class ComputeComponentModule  : public TReflected<ComputeComponentModule , ModuleImpl<ComputeComponent> > {
+		class ComputeComponentModule  : public TReflected<ComputeComponentModule, ModuleImpl<ComputeComponent> > {
 		public:
 			ComputeComponentModule(Engine& engine);
 			virtual ~ComputeComponentModule();

@@ -11,7 +11,7 @@
 
 namespace PaintsNow {
 	namespace NsMythForest {
-		class AnimationComponentModule  : public TReflected<AnimationComponentModule , ModuleImpl<AnimationComponent> > {
+		class AnimationComponentModule  : public TReflected<AnimationComponentModule, ModuleImpl<AnimationComponent> > {
 		public:
 			AnimationComponentModule(Engine& engine);
 

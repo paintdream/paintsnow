@@ -13,7 +13,7 @@ namespace PaintsNow {
 	namespace NsMythForest {
 		class Entity;
 		class PhaseComponent;
-		class PhaseComponentModule  : public TReflected<PhaseComponentModule , ModuleImpl<PhaseComponent> > {
+		class PhaseComponentModule  : public TReflected<PhaseComponentModule, ModuleImpl<PhaseComponent> > {
 		public:
 			PhaseComponentModule(Engine& engine);
 			virtual ~PhaseComponentModule();

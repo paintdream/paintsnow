@@ -20,7 +20,7 @@ namespace PaintsNow {
 	}
 	namespace NsMythForest {
 		class EventListenerComponent;
-		class EventListenerComponentModule  : public TReflected<EventListenerComponentModule , ModuleImpl<EventListenerComponent> > {
+		class EventListenerComponentModule  : public TReflected<EventListenerComponentModule, ModuleImpl<EventListenerComponent> > {
 		public:
 			EventListenerComponentModule(Engine& engine);
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;

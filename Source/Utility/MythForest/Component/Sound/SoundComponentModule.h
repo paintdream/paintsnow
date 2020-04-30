@@ -13,7 +13,7 @@ namespace PaintsNow {
 	namespace NsMythForest {
 		class Entity;
 		class SoundComponent;
-		class SoundComponentModule  : public TReflected<SoundComponentModule , ModuleImpl<SoundComponent> > {
+		class SoundComponentModule  : public TReflected<SoundComponentModule, ModuleImpl<SoundComponent> > {
 		public:
 			SoundComponentModule(Engine& engine);
 			virtual ~SoundComponentModule();
@@ -22,7 +22,7 @@ namespace PaintsNow {
 			// static int main(int argc, char* argv[]);
 
 		public:
-			void RequestNewSource(IScript::Request& request, String path, IScript::Request::Ref callback);
+			void RequestNew(IScript::Request& request, String path, IScript::Request::Ref callback);
 			void RequestGetSourceDuration(IScript::Request& request, IScript::Delegate<SoundComponent> source);
 			void RequestMoveSource(IScript::Request& request, IScript::Delegate<SoundComponent> source, Float3& pos);
 			void RequestSeekSource(IScript::Request& request, IScript::Delegate<SoundComponent> source, double time);

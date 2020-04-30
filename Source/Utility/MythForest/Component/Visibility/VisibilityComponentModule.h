@@ -12,7 +12,7 @@
 namespace PaintsNow {
 	namespace NsMythForest {
 		class VisibilityComponent;
-		class VisibilityComponentModule  : public TReflected<VisibilityComponentModule , ModuleImpl<VisibilityComponent> > {
+		class VisibilityComponentModule  : public TReflected<VisibilityComponentModule, ModuleImpl<VisibilityComponent> > {
 		public:
 			VisibilityComponentModule(Engine& engine);
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;

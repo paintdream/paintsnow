@@ -13,7 +13,7 @@ namespace PaintsNow {
 	namespace NsMythForest {
 		class Entity;
 		class RemoteComponent;
-		class RemoteComponentModule  : public TReflected<RemoteComponentModule , ModuleImpl<RemoteComponent> > {
+		class RemoteComponentModule  : public TReflected<RemoteComponentModule, ModuleImpl<RemoteComponent> > {
 		public:
 			RemoteComponentModule(Engine& engine);
 			virtual ~RemoteComponentModule();

@@ -13,7 +13,7 @@ namespace PaintsNow {
 	namespace NsMythForest {
 		class Entity;
 		class SpaceComponent;
-		class SpaceComponentModule  : public TReflected<SpaceComponentModule , ModuleImpl<SpaceComponent> > {
+		class SpaceComponentModule  : public TReflected<SpaceComponentModule, ModuleImpl<SpaceComponent> > {
 		public:
 			SpaceComponentModule(Engine& engine);
 			void RequestNew(IScript::Request& request, int32_t warpIndex, bool sorted);

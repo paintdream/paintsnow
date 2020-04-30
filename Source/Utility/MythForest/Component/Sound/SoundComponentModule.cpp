@@ -11,7 +11,7 @@ SoundComponentModule::~SoundComponentModule() {}
 TObject<IReflect>& SoundComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 	if (reflect.IsReflectMethod()) {
-		ReflectMethod(RequestNewSource)[ScriptMethod = "NewSource"];
+		ReflectMethod(RequestNew)[ScriptMethod = "New"];
 		ReflectMethod(RequestGetSourceDuration)[ScriptMethod = "GetSourceDuration"];
 		ReflectMethod(RequestMoveSource)[ScriptMethod = "MoveSource"];
 		ReflectMethod(RequestSeekSource)[ScriptMethod = "SeekSource"];
@@ -25,7 +25,7 @@ TObject<IReflect>& SoundComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void SoundComponentModule::RequestNewSource(IScript::Request& request, String path, IScript::Request::Ref callback) {
+void SoundComponentModule::RequestNew(IScript::Request& request, String path, IScript::Request::Ref callback) {
 	CHECK_REFERENCES_WITH_TYPE(callback, IScript::Request::FUNCTION);
 
 	TShared<AudioResource> audioResource = engine.snowyStream.CreateReflectedResource(UniqueType<AudioResource>(), path);

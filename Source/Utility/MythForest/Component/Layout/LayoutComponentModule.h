@@ -13,7 +13,7 @@ namespace PaintsNow {
 	namespace NsMythForest {
 		class Entity;
 		class LayoutComponent;
-		class LayoutComponentModule  : public TReflected<LayoutComponentModule , ModuleImpl<LayoutComponent> > {
+		class LayoutComponentModule  : public TReflected<LayoutComponentModule, ModuleImpl<LayoutComponent> > {
 		public:
 			LayoutComponentModule(Engine& engine);
 			virtual ~LayoutComponentModule();

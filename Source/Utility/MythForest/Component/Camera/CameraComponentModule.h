@@ -13,7 +13,7 @@ namespace PaintsNow {
 	namespace NsMythForest {
 		class RenderFlowComponent;
 		class EventListenerComponentModule;
-		class CameraComponentModule  : public TReflected<CameraComponentModule , ModuleImpl<CameraComponent> > {
+		class CameraComponentModule  : public TReflected<CameraComponentModule, ModuleImpl<CameraComponent> > {
 		public:
 			CameraComponentModule(Engine& engine);
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;

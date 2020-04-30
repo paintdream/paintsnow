@@ -12,7 +12,7 @@
 namespace PaintsNow {
 	namespace NsMythForest {
 		class SurfaceComponent;
-		class SurfaceComponentModule  : public TReflected<SurfaceComponentModule , ModuleImpl<SurfaceComponent> > {
+		class SurfaceComponentModule  : public TReflected<SurfaceComponentModule, ModuleImpl<SurfaceComponent> > {
 		public:
 			SurfaceComponentModule(Engine& engine);
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;

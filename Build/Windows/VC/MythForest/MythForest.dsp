@@ -401,6 +401,14 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Space\SpaceComponentModul
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Stream\StreamComponent.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Stream\StreamComponentModule.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Surface\SurfaceComponent.cpp
 # End Source File
 # Begin Source File
@@ -782,6 +790,14 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Space\SpaceComponentModul
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Explorer\SpaceTraversal.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Stream\StreamComponent.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Stream\StreamComponentModule.h
 # End Source File
 # Begin Source File
 

@@ -13,7 +13,7 @@ namespace PaintsNow {
 	namespace NsMythForest {
 		class RenderStage;
 		class RenderFlowComponent;
-		class RenderFlowComponentModule  : public TReflected<RenderFlowComponentModule , ModuleImpl<RenderFlowComponent> > {
+		class RenderFlowComponentModule  : public TReflected<RenderFlowComponentModule, ModuleImpl<RenderFlowComponent> > {
 		public:
 			RenderFlowComponentModule(Engine& engine);
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;

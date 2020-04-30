@@ -12,7 +12,7 @@
 namespace PaintsNow {
 	namespace NsMythForest {
 		class ProfileComponent;
-		class ProfileComponentModule  : public TReflected<ProfileComponentModule , ModuleImpl<ProfileComponent> > {
+		class ProfileComponentModule  : public TReflected<ProfileComponentModule, ModuleImpl<ProfileComponent> > {
 		public:
 			ProfileComponentModule(Engine& engine);
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;

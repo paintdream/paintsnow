@@ -12,7 +12,7 @@
 namespace PaintsNow {
 	namespace NsMythForest {
 		class WidgetComponent;
-		class WidgetComponentModule  : public TReflected<WidgetComponentModule , ModuleImpl<WidgetComponent> > {
+		class WidgetComponentModule  : public TReflected<WidgetComponentModule, ModuleImpl<WidgetComponent> > {
 		public:
 			WidgetComponentModule(Engine& engine);
 			virtual void Initialize();
