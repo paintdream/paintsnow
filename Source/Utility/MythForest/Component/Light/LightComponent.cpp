@@ -32,3 +32,11 @@ void LightComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box) {
 	Union(box, Float3(-lightRange));
 	Union(box, lightRange);
 }
+
+void LightComponent::BindShadowStream(uint32_t layer, TShared<StreamComponent> streamComponent) {
+	if (shadowLayers.size() <= layer) {
+		shadowLayers.resize(layer + 1);
+	}
+
+	shadowLayers[layer] = streamComponent;
+}

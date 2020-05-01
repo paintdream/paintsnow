@@ -14,6 +14,7 @@ TObject<IReflect>& LightComponentModule::operator () (IReflect& reflect) {
 		ReflectMethod(RequestSetLightAttenuation)[ScriptMethod = "SetLightAttenuation"];
 		ReflectMethod(RequestSetLightDirectional)[ScriptMethod = "SetLightDirectional"];
 		ReflectMethod(RequestSetLightRange)[ScriptMethod = "SetLightRange"];
+		ReflectMethod(RequestBindLightShadowStream)[ScriptMethod = "BindLightShadowStream"];
 		// ReflectMethod(RequestSetLightSpotAngle)[ScriptMethod = "SetLightSpotAngle"];
 	}
 
@@ -76,4 +77,14 @@ void LightComponentModule::RequestSetLightRange(IScript::Request& request, IScri
 	CHECK_THREAD_IN_MODULE(lightComponent);
 
 	lightComponent->lightRange = range;
+}
+
+void LightComponentModule::RequestBindLightShadowStream(IScript::Request& request, IScript::Delegate<LightComponent> lightComponent, uint32_t layer, IScript::Delegate<StreamComponent> streamComponent) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(lightComponent);
+	CHECK_DELEGATE(streamComponent);
+	CHECK_THREAD_IN_MODULE(lightComponent);
+	CHECK_THREAD_IN_MODULE(streamComponent);
+
+	lightComponent->BindShadowStream(layer, streamComponent.Get());
 }

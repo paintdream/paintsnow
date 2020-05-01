@@ -8,6 +8,7 @@
 
 #include "../../Entity.h"
 #include "../Renderable/RenderableComponent.h"
+#include "../Stream/StreamComponent.h"
 
 namespace PaintsNow {
 	namespace NsMythForest {
@@ -23,12 +24,15 @@ namespace PaintsNow {
 			virtual FLAG GetEntityFlagMask() const override;
 			virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData);
 			virtual void UpdateBoundingBox(Engine& engine, Float3Pair& box) override;
+			void BindShadowStream(uint32_t layer, TShared<StreamComponent> streamComponent);
 
 			Float3 color;
 			float attenuation;
 			Float3 lightRange;
 			// float spotAngle;
 			// float temperature;
+		protected:
+			std::vector<TShared<StreamComponent> > shadowLayers;
 		};
 	}
 }
