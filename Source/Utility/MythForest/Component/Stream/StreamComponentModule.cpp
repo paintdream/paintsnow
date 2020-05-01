@@ -19,7 +19,7 @@ TObject<IReflect>& StreamComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void StreamComponentModule::RequestNew(IScript::Request& request, const UShort3& dimension, uint32_t cacheCount) {
+void StreamComponentModule::RequestNew(IScript::Request& request, const UShort3& dimension, uint16_t cacheCount) {
 	TShared<StreamComponent> soundComponent = TShared<StreamComponent>::From(allocator->New(dimension, cacheCount));
 	soundComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
 	engine.GetKernel().YieldCurrentWarp();
