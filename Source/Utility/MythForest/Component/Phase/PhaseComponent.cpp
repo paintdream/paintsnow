@@ -281,7 +281,7 @@ void PhaseComponent::TickRender(Engine& engine) {
 
 			// Save data asynchronized
 			uint32_t frameIndex = engine.GetFrameIndex();
-			engine.GetKernel().QueueRoutine(this, CreateTaskContextFree(Wrap(this, &PhaseComponent::CoTaskWriteDebugTexture), std::ref(engine), frameIndex * tasks.size() + i, task.texture->description.data, task.texture));
+			engine.GetKernel().QueueRoutine(this, CreateTaskContextFree(Wrap(this, &PhaseComponent::CoTaskWriteDebugTexture), std::ref(engine), frameIndex * tasks.size() + i, std::move(task.texture->description.data), task.texture));
 			finalStatus.store(TaskData::STATUS_BAKED, std::memory_order_release);
 		}
 	}

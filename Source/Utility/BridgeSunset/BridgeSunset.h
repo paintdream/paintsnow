@@ -103,7 +103,7 @@ namespace PaintsNow {
 		template <bool deref, class A>
 		class ScriptTaskTemplateA : public TaskOnce {
 		public:
-			ScriptTaskTemplateA(IScript::Request::Ref ref, A a) : callback(ref) { pa = std::move(a); }
+			ScriptTaskTemplateA(IScript::Request::Ref ref, const A& a) : callback(ref) { pa = const_cast<A&>(a); }
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
@@ -139,19 +139,19 @@ namespace PaintsNow {
 		};
 
 		template <class A>
-		ITask* CreateTaskScript(IScript::Request::Ref ref, A a) {
+		ITask* CreateTaskScript(IScript::Request::Ref ref, const A& a) {
 			return new ScriptTaskTemplateA<false, A>(ref, a);
 		}
 
 		template <class A>
-		ITask* CreateTaskScriptOnce(IScript::Request::Ref ref, A a) {
+		ITask* CreateTaskScriptOnce(IScript::Request::Ref ref, const A& a) {
 			return new ScriptTaskTemplateA<true, A>(ref, a);
 		}
 
 		template <bool deref, class A, class B>
 		class ScriptTaskTemplateB : public TaskOnce {
 		public:
-			ScriptTaskTemplateB(IScript::Request::Ref ref, A a, B b) : callback(ref) { pa = std::move(a); pb = std::move(b); }
+			ScriptTaskTemplateB(IScript::Request::Ref ref, const A& a, const B& b) : callback(ref) { pa = const_cast<A&>(a); pb = const_cast<B&>(b); }
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
@@ -188,19 +188,19 @@ namespace PaintsNow {
 		};
 
 		template <class A, class B>
-		ITask* CreateTaskScript(IScript::Request::Ref ref, A a, B b) {
+		ITask* CreateTaskScript(IScript::Request::Ref ref, const A& a, const B& b) {
 			return new ScriptTaskTemplateB<false, A, B>(ref, a, b);
 		}
 
 		template <class A, class B>
-		ITask* CreateTaskScriptOnce(IScript::Request::Ref ref, A a, B b) {
+		ITask* CreateTaskScriptOnce(IScript::Request::Ref ref, const A& a, const B& b) {
 			return new ScriptTaskTemplateB<true, A, B>(ref, a, b);
 		}
 
 		template <bool deref, class A, class B, class C>
 		class ScriptTaskTemplateC : public TaskOnce {
 		public:
-			ScriptTaskTemplateC(IScript::Request::Ref ref, A a, B b, C c) : callback(ref) { pa = std::move(a); pb = std::move(b); pc = std::move(c); }
+			ScriptTaskTemplateC(IScript::Request::Ref ref, const A& a, const B& b, const C& c) : callback(ref) { pa = const_cast<A&>(a); pb = const_cast<B&>(b); pc = const_cast<C&>(c); }
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
@@ -237,19 +237,19 @@ namespace PaintsNow {
 		};
 
 		template <class A, class B, class C>
-		ITask* CreateTaskScript(IScript::Request::Ref ref, A a, B b, C c) {
+		ITask* CreateTaskScript(IScript::Request::Ref ref, const A& a, const B& b, const C& c) {
 			return new ScriptTaskTemplateC<false, A, B, C>(ref, a, b, c);
 		}
 
 		template <class A, class B, class C>
-		ITask* CreateTaskScriptOnce(IScript::Request::Ref ref, A a, B b, C c) {
+		ITask* CreateTaskScriptOnce(IScript::Request::Ref ref, const A& a, const B& b, const C& c) {
 			return new ScriptTaskTemplateC<true, A, B, C>(ref, a, b, c);
 		}
 
 		template <bool deref, class A, class B, class C, class D>
 		class ScriptTaskTemplateD : public TaskOnce {
 		public:
-			ScriptTaskTemplateD(IScript::Request::Ref ref, A a, B b, C c, D d) : callback(ref) { pa = std::move(a); pb = std::move(b); pc = std::move(c); pd = std::move(d); }
+			ScriptTaskTemplateD(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d) : callback(ref) { pa = const_cast<A&>(a); pb = const_cast<B&>(b); pc = const_cast<C&>(c); pd = const_cast<D&>(d); }
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
@@ -287,19 +287,19 @@ namespace PaintsNow {
 		};
 
 		template <class A, class B, class C, class D>
-		ITask* CreateTaskScript(IScript::Request::Ref ref, A a, B b, C c, D d) {
+		ITask* CreateTaskScript(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d) {
 			return new ScriptTaskTemplateD<false, A, B, C, D>(ref, a, b, c, d);
 		}
 
 		template <class A, class B, class C, class D>
-		ITask* CreateTaskScriptOnce(IScript::Request::Ref ref, A a, B b, C c, D d) {
+		ITask* CreateTaskScriptOnce(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d) {
 			return new ScriptTaskTemplateD<true, A, B, C, D>(ref, a, b, c, d);
 		}
 
 		template <bool deref, class A, class B, class C, class D, class E>
 		class ScriptTaskTemplateE : public TaskOnce {
 		public:
-			ScriptTaskTemplateE(IScript::Request::Ref ref, A a, B b, C c, D d, E e) : callback(ref) { pa = std::move(a); pb = std::move(b); pc = std::move(c); pd = std::move(d); pe = std::move(e); }
+			ScriptTaskTemplateE(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d, const E& e) : callback(ref) { pa = const_cast<A&>(a); pb = const_cast<B&>(b); pc = const_cast<C&>(c); pd = const_cast<D&>(d); pe = const_cast<E&>(e); }
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
@@ -338,19 +338,19 @@ namespace PaintsNow {
 		};
 
 		template <class A, class B, class C, class D, class E>
-		ITask* CreateTaskScript(IScript::Request::Ref ref, A a, B b, C c, D d, E e) {
+		ITask* CreateTaskScript(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d, const E& e) {
 			return new ScriptTaskTemplateE<false, A, B, C, D, E>(ref, a, b, c, d, e);
 		}
 
 		template <class A, class B, class C, class D, class E>
-		ITask* CreateTaskScriptOnce(IScript::Request::Ref ref, A a, B b, C c, D d, E e) {
+		ITask* CreateTaskScriptOnce(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d, const E& e) {
 			return new ScriptTaskTemplateE<true, A, B, C, D, E>(ref, a, b, c, d, e);
 		}
 
 		template <bool deref, class A, class B, class C, class D, class E, class F>
 		class ScriptTaskTemplateF : public TaskOnce {
 		public:
-			ScriptTaskTemplateF(IScript::Request::Ref ref, A a, B b, C c, D d, E e, F f) : callback(ref) { pa = std::move(a); pb = std::move(b); pc = std::move(c); pd = std::move(d); pe = std::move(e); pf = std::move(f); }
+			ScriptTaskTemplateF(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d, const E& e, const F& f) : callback(ref) { pa = const_cast<A&>(a); pb = const_cast<B&>(b); pc = const_cast<C&>(c); pd = const_cast<D&>(d); pe = const_cast<E&>(e); pf = const_cast<F&>(f); }
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
@@ -390,20 +390,20 @@ namespace PaintsNow {
 		};
 
 		template <class A, class B, class C, class D, class E, class F>
-		ITask* CreateTaskScript(IScript::Request::Ref ref, A a, B b, C c, D d, E e, F f) {
+		ITask* CreateTaskScript(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d, const E& e, const F& f) {
 			return new ScriptTaskTemplateF<false, A, B, C, D, E, F>(ref, a, b, c, d, e, f);
 		}
 
 		template <class A, class B, class C, class D, class E, class F>
-		ITask* CreateTaskScriptOnce(IScript::Request::Ref ref, A a, B b, C c, D d, E e, F f) {
+		ITask* CreateTaskScriptOnce(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d, const E& e, const F& f) {
 			return new ScriptTaskTemplateF<true, A, B, C, D, E, F>(ref, a, b, c, d, e, f);
 		}
 
 		template <bool deref, class A, class B, class C, class D, class E, class F, class G>
 		class ScriptTaskTemplateG : public TaskOnce {
 		public:
-			ScriptTaskTemplateG(IScript::Request::Ref ref, A a, B b, C c, D d, E e, F f, G g) : callback(ref) {
-				pa = std::move(a); pb = std::move(b); pc = std::move(c); pd = std::move(d); pe = std::move(e); pf = std::move(f); pg = std::move(g);
+			ScriptTaskTemplateG(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d, const E& e, const F& f, const G& g) : callback(ref) {
+				pa = const_cast<A&>(a); pb = const_cast<B&>(b); pc = const_cast<C&>(c); pd = const_cast<D&>(d); pe = const_cast<E&>(e); pf = const_cast<F&>(f); pg = const_cast<G&>(g);
 			}
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
@@ -445,12 +445,12 @@ namespace PaintsNow {
 		};
 
 		template <class A, class B, class C, class D, class E, class F, class G>
-		ITask* CreateTaskScript(IScript::Request::Ref ref, A a, B b, C c, D d, E e, F f, G g) {
+		ITask* CreateTaskScript(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d, const E& e, const F& f, const G& g) {
 			return new ScriptTaskTemplateG<false, A, B, C, D, E, F, G>(ref, a, b, c, d, e, f, g);
 		}
 
 		template <class A, class B, class C, class D, class E, class F, class G>
-		ITask* CreateTaskScriptOnce(IScript::Request::Ref ref, A a, B b, C c, D d, E e, F f, G g) {
+		ITask* CreateTaskScriptOnce(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d, const E& e, const F& f, const G& g) {
 			return new ScriptTaskTemplateG<true, A, B, C, D, E, F, G>(ref, a, b, c, d, e, f, g);
 		}
 
@@ -481,7 +481,7 @@ namespace PaintsNow {
 		template <class T, class A>
 		class ScriptHandlerTemplateA : public TaskOnce {
 		public:
-			ScriptHandlerTemplateA(T ref, A a) : callback(ref) { pa = std::move(a); }
+			ScriptHandlerTemplateA(T ref, const A& a) : callback(ref) { pa = const_cast<A&>(a); }
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
@@ -497,14 +497,14 @@ namespace PaintsNow {
 		};
 
 		template <class T, class A>
-		ITask* CreateTaskScriptHandler(T ref, A a) {
+		ITask* CreateTaskScriptHandler(T ref, const A& a) {
 			return new ScriptHandlerTemplateA<T, A>(ref, a);
 		}
 
 		template <class T, class A, class B>
 		class ScriptHandlerTemplateB : public TaskOnce {
 		public:
-			ScriptHandlerTemplateB(T ref, A a, B b) : callback(ref) { pa = std::move(a); pb = std::move(b); }
+			ScriptHandlerTemplateB(T ref, const A& a, const B& b) : callback(ref) { pa = const_cast<A&>(a); pb = const_cast<B&>(b); }
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
@@ -521,14 +521,14 @@ namespace PaintsNow {
 		};
 
 		template <class T, class A, class B>
-		ITask* CreateTaskScriptHandler(T ref, A a, B b) {
+		ITask* CreateTaskScriptHandler(T ref, const A& a, const B& b) {
 			return new ScriptHandlerTemplateB<T, A, B>(ref, a, b);
 		}
 
 		template <class T, class A, class B, class C>
 		class ScriptHandlerTemplateC : public TaskOnce {
 		public:
-			ScriptHandlerTemplateC(T ref, A a, B b, C c) : callback(ref) { pa = std::move(a); pb = std::move(b); pc = std::move(c); }
+			ScriptHandlerTemplateC(T ref, const A& a, const B& b, const C& c) : callback(ref) { pa = const_cast<A&>(a); pb = const_cast<B&>(b); pc = const_cast<C&>(c); }
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
@@ -546,14 +546,14 @@ namespace PaintsNow {
 		};
 
 		template <class T, class A, class B, class C>
-		ITask* CreateTaskScriptHandler(T ref, A a, B b, C c) {
+		ITask* CreateTaskScriptHandler(T ref, const A& a, const B& b, const C& c) {
 			return new ScriptHandlerTemplateC<T, A, B, C>(ref, a, b, c);
 		}
 
 		template <class T, class A, class B, class C, class D>
 		class ScriptHandlerTemplateD : public TaskOnce {
 		public:
-			ScriptHandlerTemplateD(T ref, A a, B b, C c, D d) : callback(ref) { pa = std::move(a); pb = std::move(b); pc = std::move(c); pd = std::move(d); }
+			ScriptHandlerTemplateD(T ref, const A& a, const B& b, const C& c, const D& d) : callback(ref) { pa = const_cast<A&>(a); pb = const_cast<B&>(b); pc = const_cast<C&>(c); pd = const_cast<D&>(d); }
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
@@ -572,14 +572,14 @@ namespace PaintsNow {
 		};
 
 		template <class T, class A, class B, class C, class D>
-		ITask* CreateTaskScriptHandler(T ref, A a, B b, C c, D d) {
+		ITask* CreateTaskScriptHandler(T ref, const A& a, const B& b, const C& c, const D& d) {
 			return new ScriptHandlerTemplateD<T, A, B, C, D>(ref, a, b, c, d);
 		}
 
 		template <class T, class A, class B, class C, class D, class E>
 		class ScriptHandlerTemplateE : public TaskOnce {
 		public:
-			ScriptHandlerTemplateE(T ref, A a, B b, C c, D d, E e) : callback(ref) { pa = std::move(a); pb = std::move(b); pc = std::move(c); pd = std::move(d); pe = std::move(e); }
+			ScriptHandlerTemplateE(T ref, const A& a, const B& b, const C& c, const D& d, const E& e) : callback(ref) { pa = const_cast<A&>(a); pb = const_cast<B&>(b); pc = const_cast<C&>(c); pd = const_cast<D&>(d); pe = const_cast<E&>(e); }
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
@@ -599,14 +599,14 @@ namespace PaintsNow {
 		};
 
 		template <class T, class A, class B, class C, class D, class E>
-		ITask* CreateTaskScriptHandler(T ref, A a, B b, C c, D d, E e) {
+		ITask* CreateTaskScriptHandler(T ref, const A& a, const B& b, const C& c, const D& d, const E& e) {
 			return new ScriptHandlerTemplateE<T, A, B, C, D, E>(ref, a, b, c, d, e);
 		}
 
 		template <class T, class A, class B, class C, class D, class E, class F>
 		class ScriptHandlerTemplateF : public TaskOnce {
 		public:
-			ScriptHandlerTemplateF(T ref, A a, B b, C c, D d, E e, F f) : callback(ref) { pa = std::move(a); pb = std::move(b); pc = std::move(c); pd = std::move(d); pe = std::move(e); pf = f; }
+			ScriptHandlerTemplateF(T ref, const A& a, const B& b, const C& c, const D& d, const E& e, const F& f) : callback(ref) { pa = const_cast<A&>(a); pb = const_cast<B&>(b); pc = const_cast<C&>(c); pd = const_cast<D&>(d); pe = const_cast<E&>(e); pf = f; }
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
@@ -627,15 +627,15 @@ namespace PaintsNow {
 		};
 
 		template <class T, class A, class B, class C, class D, class E, class F>
-		ITask* CreateTaskScriptHandler(T ref, A a, B b, C c, D d, E e, F f) {
+		ITask* CreateTaskScriptHandler(T ref, const A& a, const B& b, const C& c, const D& d, const E& e, const F& f) {
 			return new ScriptHandlerTemplateF<T, A, B, C, D, E, F>(ref, a, b, c, d, e, f);
 		}
 
 		template <class T, class A, class B, class C, class D, class E, class F, class G>
 		class ScriptHandlerTemplateG : public TaskOnce {
 		public:
-			ScriptHandlerTemplateG(T ref, A a, B b, C c, D d, E e, F f, G g) : callback(ref) {
-				pa = std::move(a); pb = std::move(b); pc = std::move(c); pd = std::move(d); pe = std::move(e); pf = std::move(f); pg = std::move(g);
+			ScriptHandlerTemplateG(T ref, const A& a, const B& b, const C& c, const D& d, const E& e, const F& f, const G& g) : callback(ref) {
+				pa = const_cast<A&>(a); pb = const_cast<B&>(b); pc = const_cast<C&>(c); pd = const_cast<D&>(d); pe = const_cast<E&>(e); pf = const_cast<F&>(f); pg = const_cast<G&>(g);
 			}
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
@@ -658,7 +658,7 @@ namespace PaintsNow {
 		};
 
 		template <class T, class A, class B, class C, class D, class E, class F, class G>
-		ITask* CreateTaskScriptHandler(T ref, A a, B b, C c, D d, E e, F f, G g) {
+		ITask* CreateTaskScriptHandler(T ref, const A& a, const B& b, const C& c, const D& d, const E& e, const F& f, const G& g) {
 			return new ScriptHandlerTemplateG<T, A, B, C, D, E, F, G>(ref, a, b, c, d, e, f, g);
 		}
 
