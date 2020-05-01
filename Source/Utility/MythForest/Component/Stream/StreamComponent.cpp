@@ -21,55 +21,62 @@ void StreamComponent::Unload(Engine& engine, const UShort3& coord) {
 }
 
 void StreamComponent::UnloadInternal(Engine& engine, Grid& grid) {
-	assert(grid.component);
+	assert(grid.object);
 
-	TShared<Component> component = grid.component;
-	grid.component = nullptr;
+	TShared<SharedTiny> object = std::move(grid.object);
+	grid.object = nullptr;
 
-	if (unloadHandler) {
+	if (unloadHandler.script) {
 		IScript::Request& request = engine.bridgeSunset.AllocateRequest();
 
 		request.DoLock();
 		request.Push();
-		request.Call(sync, unloadHandler, grid.coord, component);
+		request.Call(sync, unloadHandler.script, grid.coord, object);
 		request.Pop();
 		request.UnLock();
 
 		engine.bridgeSunset.FreeRequest(request);
+	} else if (unloadHandler.native) {
+		unloadHandler.native(engine, grid.coord, object);
 	}
 }
 
-Component* StreamComponent::Load(Engine& engine, const UShort3& coord) {
+SharedTiny* StreamComponent::Load(Engine& engine, const UShort3& coord) {
 	uint16_t id = idGrids[(coord.z() * dimension.y() + coord.y()) * dimension.x() + coord.x()];
-	Component* component = nullptr;
+	SharedTiny* object = nullptr;
 	if (id == ~(uint16_t)0) {
 		// allocate id ...
 		id = recycleQueue[recycleStart];
 
 		Grid& grid = grids[id];
-		if (grid.component) {
+		if (grid.object) {
 			UnloadInternal(engine, grid);
-			assert(!grid.component);
+			assert(!grid.object);
 		}
 
 		grid.recycleIndex = recycleStart;
 		recycleStart = (recycleStart + 1) % safe_cast<uint16_t>(recycleQueue.size());
 
-		IScript::Request& request = engine.bridgeSunset.AllocateRequest();
-		IScript::Delegate<Component> w;
+		if (loadHandler.script) {
+			IScript::Request& request = engine.bridgeSunset.AllocateRequest();
+			IScript::Delegate<Component> w;
 
-		request.DoLock();
-		request.Push();
-		request.Call(sync, loadHandler, coord);
-		request >> w;
-		request.Pop();
-		request.UnLock();
+			request.DoLock();
+			request.Push();
+			request.Call(sync, loadHandler.script, coord);
+			request >> w;
+			request.Pop();
+			request.UnLock();
 
-		assert(w);
-		grid.component = w.Get();
+			assert(w);
+			grid.object = w.Get();
+			engine.bridgeSunset.FreeRequest(request);
+		} else {
+			assert(loadHandler.native);
+			grid.object = loadHandler.native(engine, coord);
+		}
+
 		grid.coord = coord;
-
-		engine.bridgeSunset.FreeRequest(request);
 	} else {
 		Grid& grid = grids[id];
 		uint16_t oldIndex = grid.recycleIndex;
@@ -80,7 +87,7 @@ Component* StreamComponent::Load(Engine& engine, const UShort3& coord) {
 		recycleStart = (recycleStart + 1) % safe_cast<uint16_t>(recycleQueue.size());
 	}
 
-	return component;
+	return object;
 }
 
 void StreamComponent::Uninitialize(Engine& engine, Entity* entity) {
@@ -91,20 +98,20 @@ void StreamComponent::Uninitialize(Engine& engine, Entity* entity) {
 	Component::Uninitialize(engine, entity);
 }
 
-static void ReplaceHandler(IScript::Request& request, IScript::Request::Ref& target, IScript::Request::Ref ref) {
-	if (target != ref) {
-		request.DoLock();
-		request.Dereference(target);
-		target = ref;
-		request.UnLock();
-	}
-}
 
 void StreamComponent::SetLoadHandler(IScript::Request& request, IScript::Request::Ref ref) {
-	ReplaceHandler(request, loadHandler, ref);
+	loadHandler.ReplaceScript(request, ref);
 }
 
 void StreamComponent::SetUnloadHandler(IScript::Request& request, IScript::Request::Ref ref) {
-	ReplaceHandler(request, unloadHandler, ref);
+	unloadHandler.ReplaceScript(request, ref);
+}
+
+void StreamComponent::SetLoadHandler(IScript::Request& request, const TWrapper<TShared<SharedTiny>, Engine&, const UShort3&>& handler) {
+	loadHandler.native = handler;
+}
+
+void StreamComponent::SetUnloadHandler(IScript::Request& request, const TWrapper<void, Engine&, const UShort3&, TShared<SharedTiny> >& handler) {
+	unloadHandler.native = handler;
 }
 

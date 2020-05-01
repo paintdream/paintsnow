@@ -13,15 +13,17 @@ namespace PaintsNow {
 		class StreamComponent : public TAllocatedTiny<StreamComponent, Component> {
 		public:
 			StreamComponent(const UShort3& dimension, uint16_t cacheCount);
-			Component* Load(Engine& engine, const UShort3& coord);
+			SharedTiny* Load(Engine& engine, const UShort3& coord);
 			void Unload(Engine& engine, const UShort3& coord);
 			void SetLoadHandler(IScript::Request& request, IScript::Request::Ref ref);
+			void SetLoadHandler(IScript::Request& request, const TWrapper<TShared<SharedTiny>, Engine&, const UShort3&>& handler);
 			void SetUnloadHandler(IScript::Request& request, IScript::Request::Ref ref);
+			void SetUnloadHandler(IScript::Request& request, const TWrapper<void, Engine&, const UShort3&, TShared<SharedTiny> >& handler);
 			virtual void Uninitialize(Engine& engine, Entity* entity) override;
 
 		protected:
 			struct Grid {
-				TShared<Component> component;
+				TShared<SharedTiny> object;
 				UShort3 coord;
 				uint16_t recycleIndex;
 			};
@@ -34,8 +36,23 @@ namespace PaintsNow {
 			std::vector<Grid> grids;
 			std::vector<uint16_t> recycleQueue;
 
-			IScript::Request::Ref loadHandler;
-			IScript::Request::Ref unloadHandler;
+			template <class T>
+			struct Handler {
+				void ReplaceScript(IScript::Request& request, IScript::Request::Ref ref) {
+					if (script != ref && script) {
+						request.DoLock();
+						request.Dereference(script);
+						script = ref;
+						request.UnLock();
+					}
+				}
+
+				T native;
+				IScript::Request::Ref script;
+			};
+
+			Handler<TWrapper<TShared<SharedTiny>, Engine&, const UShort3&> > loadHandler;
+			Handler<TWrapper<void, Engine&, const UShort3&, TShared<SharedTiny> > > unloadHandler;
 		};
 	}
 }
