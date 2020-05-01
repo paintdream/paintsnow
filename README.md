@@ -9,7 +9,7 @@ Author: PaintDream (paintdream@paintdream.com)
 
 Quick installation for dependencies + build essentials on Debian/Ubuntu: 
 
-sudo apt-get install libglew-dev libfreetype6-dev libfreeimage-dev libevent-dev g++ git vim cmake freelut3-dev
+sudo apt-get install libglew-dev libfreetype6-dev libfreeimage-dev libevent-dev g++ git vim cmake freeglut3-dev libopenal-dev libmp3lame-dev
       
 Compilers supported: gcc & msvc12/14 & msvc6
 
