@@ -39,7 +39,7 @@ void LightComponentModule::RequestSetLightAttenuation(IScript::Request& request,
 	CHECK_DELEGATE(lightComponent);
 	CHECK_THREAD_IN_MODULE(lightComponent);
 
-	lightComponent->attenuation = attenuation;
+	lightComponent->SetAttenuation(attenuation);
 }
 
 /*
@@ -56,7 +56,7 @@ void LightComponentModule::RequestSetLightColor(IScript::Request& request, IScri
 	CHECK_DELEGATE(lightComponent);
 	CHECK_THREAD_IN_MODULE(lightComponent);
 
-	lightComponent->color = color;
+	lightComponent->SetColor(color);
 }
 
 void LightComponentModule::RequestSetLightDirectional(IScript::Request& request, IScript::Delegate<LightComponent> lightComponent, bool directional) {
@@ -76,15 +76,15 @@ void LightComponentModule::RequestSetLightRange(IScript::Request& request, IScri
 	CHECK_DELEGATE(lightComponent);
 	CHECK_THREAD_IN_MODULE(lightComponent);
 
-	lightComponent->lightRange = range;
+	lightComponent->SetRange(range);
 }
 
-void LightComponentModule::RequestBindLightShadowStream(IScript::Request& request, IScript::Delegate<LightComponent> lightComponent, uint32_t layer, IScript::Delegate<StreamComponent> streamComponent) {
+void LightComponentModule::RequestBindLightShadowStream(IScript::Request& request, IScript::Delegate<LightComponent> lightComponent, uint32_t layer, IScript::Delegate<StreamComponent> streamComponent, const Float2& size) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(lightComponent);
 	CHECK_DELEGATE(streamComponent);
 	CHECK_THREAD_IN_MODULE(lightComponent);
 	CHECK_THREAD_IN_MODULE(streamComponent);
 
-	lightComponent->BindShadowStream(layer, streamComponent.Get());
+	lightComponent->BindShadowStream(layer, streamComponent.Get(), size);
 }

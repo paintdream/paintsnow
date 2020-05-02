@@ -21,23 +21,21 @@ void StreamComponent::Unload(Engine& engine, const UShort3& coord) {
 }
 
 void StreamComponent::UnloadInternal(Engine& engine, Grid& grid) {
-	assert(grid.object);
-
-	TShared<SharedTiny> object = std::move(grid.object);
-	grid.object = nullptr;
-
 	if (unloadHandler.script) {
 		IScript::Request& request = engine.bridgeSunset.AllocateRequest();
+		IScript::Delegate<SharedTiny> w;
 
 		request.DoLock();
 		request.Push();
-		request.Call(sync, unloadHandler.script, grid.coord, object);
+		request.Call(sync, unloadHandler.script, grid.coord, grid.object);
+		request >> w;
 		request.Pop();
 		request.UnLock();
 
+		grid.object = w.Get();
 		engine.bridgeSunset.FreeRequest(request);
 	} else if (unloadHandler.native) {
-		unloadHandler.native(engine, grid.coord, object);
+		grid.object = unloadHandler.native(engine, grid.coord, grid.object);
 	}
 }
 
@@ -51,7 +49,6 @@ SharedTiny* StreamComponent::Load(Engine& engine, const UShort3& coord) {
 		Grid& grid = grids[id];
 		if (grid.object) {
 			UnloadInternal(engine, grid);
-			assert(!grid.object);
 		}
 
 		grid.recycleIndex = recycleStart;
@@ -59,11 +56,11 @@ SharedTiny* StreamComponent::Load(Engine& engine, const UShort3& coord) {
 
 		if (loadHandler.script) {
 			IScript::Request& request = engine.bridgeSunset.AllocateRequest();
-			IScript::Delegate<Component> w;
+			IScript::Delegate<SharedTiny> w;
 
 			request.DoLock();
 			request.Push();
-			request.Call(sync, loadHandler.script, coord);
+			request.Call(sync, loadHandler.script, coord, grid.object);
 			request >> w;
 			request.Pop();
 			request.UnLock();
@@ -73,7 +70,7 @@ SharedTiny* StreamComponent::Load(Engine& engine, const UShort3& coord) {
 			engine.bridgeSunset.FreeRequest(request);
 		} else {
 			assert(loadHandler.native);
-			grid.object = loadHandler.native(engine, coord);
+			grid.object = loadHandler.native(engine, coord, grid.object);
 		}
 
 		grid.coord = coord;
@@ -107,11 +104,11 @@ void StreamComponent::SetUnloadHandler(IScript::Request& request, IScript::Reque
 	unloadHandler.ReplaceScript(request, ref);
 }
 
-void StreamComponent::SetLoadHandler(IScript::Request& request, const TWrapper<TShared<SharedTiny>, Engine&, const UShort3&>& handler) {
+void StreamComponent::SetLoadHandler(const TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny> >& handler) {
 	loadHandler.native = handler;
 }
 
-void StreamComponent::SetUnloadHandler(IScript::Request& request, const TWrapper<void, Engine&, const UShort3&, TShared<SharedTiny> >& handler) {
+void StreamComponent::SetUnloadHandler(const TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny> >& handler) {
 	unloadHandler.native = handler;
 }
 

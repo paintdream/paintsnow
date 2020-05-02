@@ -16,9 +16,9 @@ namespace PaintsNow {
 			SharedTiny* Load(Engine& engine, const UShort3& coord);
 			void Unload(Engine& engine, const UShort3& coord);
 			void SetLoadHandler(IScript::Request& request, IScript::Request::Ref ref);
-			void SetLoadHandler(IScript::Request& request, const TWrapper<TShared<SharedTiny>, Engine&, const UShort3&>& handler);
+			void SetLoadHandler(const TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny> >& handler);
 			void SetUnloadHandler(IScript::Request& request, IScript::Request::Ref ref);
-			void SetUnloadHandler(IScript::Request& request, const TWrapper<void, Engine&, const UShort3&, TShared<SharedTiny> >& handler);
+			void SetUnloadHandler(const TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny> >& handler);
 			virtual void Uninitialize(Engine& engine, Entity* entity) override;
 
 		protected:
@@ -51,8 +51,8 @@ namespace PaintsNow {
 				IScript::Request::Ref script;
 			};
 
-			Handler<TWrapper<TShared<SharedTiny>, Engine&, const UShort3&> > loadHandler;
-			Handler<TWrapper<void, Engine&, const UShort3&, TShared<SharedTiny> > > unloadHandler;
+			Handler<TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny> > > loadHandler;
+			Handler<TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny> > > unloadHandler;
 		};
 	}
 }

@@ -695,8 +695,8 @@ void PhaseComponent::LightCollector::CollectComponents(Engine& engine, TaskData&
 						// element.position = Float4(worldMatrix(3, 0), worldMatrix(3, 1), worldMatrix(3, 2), 1);
 					}
 
-					const Float3& color = lightComponent->color;
-					element.colorAttenuation = Float4(color.x(), color.y(), color.z(), lightComponent->attenuation);
+					const Float3& color = lightComponent->GetColor();
+					element.colorAttenuation = Float4(color.x(), color.y(), color.z(), lightComponent->GetAttenuation());
 					task.warpData[engine.GetKernel().GetCurrentWarpIndex()].lightElements.emplace_back(std::move(element));
 				}
 			}
