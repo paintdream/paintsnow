@@ -43,6 +43,7 @@ namespace PaintsNow {
 			};
 
 			struct CaptureData {
+				CaptureData() {}
 				CaptureData(const Float3& v, bool(*c)(const Float3Pair&)) : viewPosition(v), culler(c) {}
 				inline bool operator () (const Float3Pair& box) const {
 					return culler(Float3Pair(box.first - viewPosition, box.second - viewPosition));

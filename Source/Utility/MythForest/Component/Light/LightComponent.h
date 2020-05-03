@@ -47,6 +47,7 @@ namespace PaintsNow {
 
 			struct InstanceGroup {
 				InstanceGroup() : instanceCount(0), instanceUpdater(nullptr) {}
+				void Reset();
 				ZPassBase::PartialUpdater* instanceUpdater;
 				std::vector<Bytes> instancedData;
 				IRender::Resource::DrawCallDescription drawCallDescription;
@@ -64,7 +65,6 @@ namespace PaintsNow {
 				struct WarpData {
 					typedef unordered_map<InstanceKey, InstanceGroup, HashInstanceKey> InstanceGroupMap;
 					WarpData();
-
 					InstanceGroupMap instanceGroups;
 					IRender::Queue* renderQueue;
 
@@ -79,6 +79,7 @@ namespace PaintsNow {
 
 				std::vector<WarpData> warpData;
 				TAtomic<uint32_t> pendingCount;
+				IRender::Queue* renderQueue;
 				OrthoCamera camera;
 			};
 		};
@@ -104,13 +105,19 @@ namespace PaintsNow {
 			virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData);
 			virtual void UpdateBoundingBox(Engine& engine, Float3Pair& box) override;
 
-			void BindShadowStream(Engine& engine, uint32_t layer, TShared<StreamComponent> streamComponent, const Float2& gridSize);
+			void BindShadowStream(Engine& engine, uint32_t layer, TShared<StreamComponent> streamComponent);
 			const Float3& GetColor() const;
 			void SetColor(const Float3& color);
 			float GetAttenuation() const;
 			void SetAttenuation(float value);
 			const Float3& GetRange() const;
 			void SetRange(const Float3& range);
+
+			class ShadowContext : public TReflected<ShadowContext, SharedTiny> {
+			public:
+				MatrixFloat4x4 cameraWorldMatrix;
+				Entity* rootEntity;
+			};
 
 			class ShadowLayer : public TReflected<ShadowLayer, SharedTiny>, public SpaceTraversal<ShadowLayer, ShadowLayerConfig> {
 			public:
@@ -120,13 +127,12 @@ namespace PaintsNow {
 				void CollectRenderableComponent(Engine& engine, TaskData& taskData, RenderableComponent* renderableComponent, TaskData::WarpData& warpData, const WorldInstanceData& instanceData);
 				void CollectComponents(Engine& engine, TaskData& taskData, const WorldInstanceData& instanceData, const CaptureData& captureData, Entity* rootEntity);
 				void CompleteCollect(Engine& engine, TaskData& taskData);
-				void Initialize(Engine& engine, TShared<StreamComponent> streamComponent, const Float2& size);
+				void Initialize(Engine& engine, TShared<StreamComponent> streamComponent);
 				void Uninitialize(Engine& engine);
 
 			protected:
 				TShared<StreamComponent> streamComponent;
 				TShared<TaskData> taskData;
-				Float2 gridSize;
 				uint32_t layer;
 			};
 
