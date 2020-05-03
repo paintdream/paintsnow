@@ -13,7 +13,7 @@
 #include "../../../SnowyStream/Resource/Passes/MultiHashTracePass.h"
 #include "../../../SnowyStream/Resource/Passes/MultiHashSetupPass.h"
 #include "../../../SnowyStream/Resource/Passes/ConstMapPass.h"
-#include "../Explorer/PerspectiveCamera.h"
+#include "../Explorer/CameraCuller.h"
 #include "../Explorer/SpaceTraversal.h"
 #include "../RenderFlow/RenderFlowComponent.h"
 #include "../RenderFlow/RenderPort/RenderPortPhaseLightView.h"

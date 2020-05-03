@@ -117,6 +117,10 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Camera\CameraComponentMod
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Explorer\CameraCuller.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component.cpp
 # End Source File
 # Begin Source File
@@ -274,10 +278,6 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Particle\ParticleComponen
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Particle\ParticleComponentModule.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Explorer\PerspectiveCamera.cpp
 # End Source File
 # Begin Source File
 
@@ -501,6 +501,10 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Camera\CameraComponentMod
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Explorer\CameraCuller.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component.h
 # End Source File
 # Begin Source File
@@ -658,10 +662,6 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Particle\ParticleComponen
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Particle\ParticleComponentModule.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Explorer\PerspectiveCamera.h
 # End Source File
 # Begin Source File
 
