@@ -76,6 +76,8 @@ void PerspectiveCamera::UpdateCaptureData(FrustrumCuller& captureData, const Mat
 	captureData.planes[5] = BuildPlane(farLeftTop, farRightBottom, farLeftBottom);			// Back
 }
 
+OrthoCamera::OrthoCamera() : scale(1, 1, 1) {}
+
 void OrthoCamera::UpdateCaptureData(FrustrumCuller& captureData, const MatrixFloat4x4& cameraWorldMatrix) const {
 	Float3 position(cameraWorldMatrix(3, 0), cameraWorldMatrix(3, 1), cameraWorldMatrix(3, 2));
 	Float3 up(cameraWorldMatrix(1, 0), cameraWorldMatrix(1, 1), cameraWorldMatrix(1, 2));

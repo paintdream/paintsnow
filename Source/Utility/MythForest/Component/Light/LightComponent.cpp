@@ -8,24 +8,6 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
-TObject<IReflect>& LightComponent::TaskData::operator () (IReflect& reflect) {
-	BaseClass::operator () (reflect);
-
-	if (reflect.IsReflectProperty()) {
-	}
-
-	return *this;
-}
-
-TObject<IReflect>& LightComponent::WorldInstanceData::operator () (IReflect& reflect) {
-	BaseClass::operator () (reflect);
-
-	if (reflect.IsReflectProperty()) {
-		ReflectProperty(worldMatrix)[IShader::BindInput(IShader::BindInput::TRANSFORM_WORLD)];
-	}
-
-	return *this;
-}
 
 LightComponent::LightComponent() : attenuation(0) /*, spotAngle(1), temperature(6500) */ {
 }
@@ -57,39 +39,26 @@ void LightComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box) {
 	Union(box, range);
 }
 
-void LightComponent::ReplaceStreamComponent(ShadowLayer& shadowLayer, TShared<StreamComponent> streamComponent) {
-	if (shadowLayer.streamComponent) {
-		shadowLayer.streamComponent->SetLoadHandler(TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny> >());
-		shadowLayer.streamComponent->SetUnloadHandler(TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny> >());
-	}
 
-	shadowLayer.streamComponent = streamComponent;
-
-	if (streamComponent) {
-		shadowLayer.streamComponent->SetLoadHandler(Wrap(this, &LightComponent::StreamLoadHandler));
-		shadowLayer.streamComponent->SetUnloadHandler(Wrap(this, &LightComponent::StreamUnloadHandler));
-	}
-}
-
-void LightComponent::BindShadowStream(uint32_t layer, TShared<StreamComponent> streamComponent, const Float2& size) {
+void LightComponent::BindShadowStream(Engine& engine, uint32_t layer, TShared<StreamComponent> streamComponent, const Float2& size) {
 	if (shadowLayers.size() <= layer) {
 		shadowLayers.resize(layer + 1);
 	}
 
-	ShadowLayer& shadowLayer = shadowLayers[layer];
-	ReplaceStreamComponent(shadowLayer, streamComponent);
-	shadowLayer.gridSize = size;
-}
-
-void LightComponent::Uninitialize(Engine& engine, Entity* entity) {
-	for (size_t i = 0; i < shadowLayers.size(); i++) {
-		ReplaceStreamComponent(shadowLayers[i], nullptr);
+	TShared<ShadowLayer>& shadowLayer = shadowLayers[layer];
+	if (!shadowLayer) {
+		shadowLayer = TShared<ShadowLayer>::From(new ShadowLayer(engine));
 	}
-
-	BaseClass::Uninitialize(engine, entity);
+	
+	shadowLayer->Initialize(engine, streamComponent, size);
 }
 
-TShared<SharedTiny> LightComponent::StreamLoadHandler(Engine& engine, const UShort3& coord, TShared<SharedTiny> tiny) {
+LightComponent::ShadowLayer::ShadowLayer(Engine& engine) {
+	taskData = TShared<TaskData>::From(new TaskData(engine, engine.GetKernel().GetWarpCount()));
+}
+
+TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engine, const UShort3& coord, TShared<SharedTiny> tiny, TShared<SharedTiny> context) {
+	assert(coord.z() == 0);
 	// Do nothing by now
 	TShared<ShadowGrid> shadowGrid;
 	if (tiny) {
@@ -98,10 +67,20 @@ TShared<SharedTiny> LightComponent::StreamLoadHandler(Engine& engine, const USho
 	}
 
 	// refresh shadow grid info
-	return nullptr;
+	shadowGrid->Flag() |= TINY_MODIFIED;
+
+	// calculate position
+	/*
+	CaptureData captureData;
+	MatrixFloat4x4 viewProjectionMatrix = LookAt(viewPosition, directions[face], ups[face]) * projectionMatrix;
+	WorldInstanceData instanceData;
+	instanceData.worldMatrix = viewProjectionMatrix;
+
+	CollectComponentsFromEntity(engine, *taskData, instanceData, captureData, hostEntity);*/
+	return shadowGrid;
 }
 
-TShared<SharedTiny> LightComponent::StreamUnloadHandler(Engine& engine, const UShort3& coord, TShared<SharedTiny> tiny) {
+TShared<SharedTiny> LightComponent::ShadowLayer::StreamUnloadHandler(Engine& engine, const UShort3& coord, TShared<SharedTiny> tiny, TShared<SharedTiny> context) {
 	return tiny;
 }
 
@@ -129,9 +108,7 @@ void LightComponent::SetRange(const Float3& r) {
 	range = r;
 }
 
-LightComponent::TaskData::WarpData::WarpData() {}
-
-void LightComponent::CollectRenderableComponent(Engine& engine, TaskData& taskData, RenderableComponent* renderableComponent, TaskData::WarpData& warpData, const WorldInstanceData& instanceData) {
+void LightComponent::ShadowLayer::CollectRenderableComponent(Engine& engine, TaskData& taskData, RenderableComponent* renderableComponent, TaskData::WarpData& warpData, const WorldInstanceData& instanceData) {
 	IRender& render = engine.interfaces.render;
 	IRender::Device* device = engine.snowyStream.GetRenderDevice();
 	NsSnowyStream::IDrawCallProvider::InputRenderData inputRenderData(0.0f);
@@ -206,9 +183,10 @@ void LightComponent::CollectRenderableComponent(Engine& engine, TaskData& taskDa
 	}
 }
 
-void LightComponent::CompleteCollect(Engine& engine, TaskData& taskData) {}
+void LightComponent::ShadowLayer::CompleteCollect(Engine& engine, TaskData& taskData) {}
 
-void LightComponent::CollectComponents(Engine& engine, TaskData& taskData, const WorldInstanceData& instanceData, const CaptureData& captureData, Entity* entity) {
+
+void LightComponent::ShadowLayer::CollectComponents(Engine& engine, TaskData& taskData, const WorldInstanceData& instanceData, const CaptureData& captureData, Entity* entity) {
 	Tiny::FLAG rootFlag = entity->Flag().load(std::memory_order_acquire);
 	uint32_t warpIndex = entity->GetWarpIndex();
 	assert(warpIndex == engine.GetKernel().GetCurrentWarpIndex());
@@ -283,5 +261,63 @@ void LightComponent::CollectComponents(Engine& engine, TaskData& taskData, const
 				}
 			}
 		}
+	}
+}
+
+LightComponent::ShadowLayer::TaskData::WarpData::WarpData() : renderQueue(nullptr) {}
+
+LightComponent::ShadowLayer::TaskData::TaskData(Engine& engine, uint32_t warpCount) {
+	warpData.resize(warpCount);
+	IRender& render = engine.interfaces.render;
+
+	for (uint32_t i = 0; i < warpCount; i++) {
+		warpData[i].renderQueue = render.CreateQueue(engine.snowyStream.GetRenderDevice());
+	}
+}
+
+void LightComponent::TaskData::Destroy(IRender& render) {
+	for (size_t i = 0; i < warpData.size(); i++) {
+		render.DeleteQueue(warpData[i].renderQueue);
+	}
+}
+
+void LightComponent::TaskData::Cleanup(IRender& render) {
+}
+
+
+TObject<IReflect>& LightComponent::TaskData::operator () (IReflect& reflect) {
+	BaseClass::operator () (reflect);
+
+	if (reflect.IsReflectProperty()) {
+	}
+
+	return *this;
+}
+
+TObject<IReflect>& LightComponent::ShadowLayer::WorldInstanceData::operator () (IReflect& reflect) {
+	BaseClass::operator () (reflect);
+
+	if (reflect.IsReflectProperty()) {
+		ReflectProperty(worldMatrix)[IShader::BindInput(IShader::BindInput::TRANSFORM_WORLD)];
+	}
+
+	return *this;
+}
+void LightComponent::ShadowLayer::Initialize(Engine& engine, TShared<StreamComponent> component, const Float2& size) {
+	Uninitialize(engine);
+
+	streamComponent = component;
+	gridSize = size;
+
+	if (streamComponent) {
+		streamComponent->SetLoadHandler(Wrap(this, &ShadowLayer::StreamLoadHandler));
+		streamComponent->SetUnloadHandler(Wrap(this, &ShadowLayer::StreamUnloadHandler));
+	}
+}
+
+void LightComponent::ShadowLayer::Uninitialize(Engine& engine) {
+	if (streamComponent) {
+		streamComponent->SetLoadHandler(TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny>, TShared<SharedTiny> >());
+		streamComponent->SetUnloadHandler(TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny>, TShared<SharedTiny> >());
 	}
 }

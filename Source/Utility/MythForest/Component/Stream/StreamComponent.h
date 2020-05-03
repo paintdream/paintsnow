@@ -13,12 +13,12 @@ namespace PaintsNow {
 		class StreamComponent : public TAllocatedTiny<StreamComponent, Component> {
 		public:
 			StreamComponent(const UShort3& dimension, uint16_t cacheCount);
-			SharedTiny* Load(Engine& engine, const UShort3& coord);
-			void Unload(Engine& engine, const UShort3& coord);
+			SharedTiny* Load(Engine& engine, const UShort3& coord, TShared<SharedTiny> context);
+			void Unload(Engine& engine, const UShort3& coord, TShared<SharedTiny> context);
 			void SetLoadHandler(IScript::Request& request, IScript::Request::Ref ref);
-			void SetLoadHandler(const TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny> >& handler);
+			void SetLoadHandler(const TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny>, TShared<SharedTiny> >& handler);
 			void SetUnloadHandler(IScript::Request& request, IScript::Request::Ref ref);
-			void SetUnloadHandler(const TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny> >& handler);
+			void SetUnloadHandler(const TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny>, TShared<SharedTiny> >& handler);
 			virtual void Uninitialize(Engine& engine, Entity* entity) override;
 
 		protected:
@@ -28,7 +28,7 @@ namespace PaintsNow {
 				uint16_t recycleIndex;
 			};
 
-			void UnloadInternal(Engine& engine, Grid& grid);
+			void UnloadInternal(Engine& engine, Grid& grid, TShared<SharedTiny> context);
 
 			UShort3 dimension;
 			uint16_t recycleStart;
@@ -51,8 +51,8 @@ namespace PaintsNow {
 				IScript::Request::Ref script;
 			};
 
-			Handler<TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny> > > loadHandler;
-			Handler<TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny> > > unloadHandler;
+			Handler<TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny>, TShared<SharedTiny> > > loadHandler;
+			Handler<TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny>, TShared<SharedTiny> > > unloadHandler;
 		};
 	}
 }

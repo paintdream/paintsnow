@@ -16,7 +16,7 @@
 
 namespace PaintsNow {
 	namespace NsMythForest {
-		struct LightComponentConfig {
+		struct ShadowLayerConfig {
 			struct CaptureData : public FrustrumCuller {
 				Bytes visData;
 			};
@@ -55,8 +55,7 @@ namespace PaintsNow {
 			};
 
 			struct TaskData : public TReflected<TaskData, SharedTiny> {
-				TaskData(uint32_t warpCount);
-				virtual ~TaskData();
+				TaskData(Engine& engine, uint32_t warpCount);
 				void Cleanup(IRender& render);
 				void Destroy(IRender& render);
 
@@ -65,6 +64,7 @@ namespace PaintsNow {
 				struct WarpData {
 					typedef unordered_map<InstanceKey, InstanceGroup, HashInstanceKey> InstanceGroupMap;
 					WarpData();
+
 					InstanceGroupMap instanceGroups;
 					IRender::Queue* renderQueue;
 
@@ -83,14 +83,15 @@ namespace PaintsNow {
 			};
 		};
 
-		class LightComponent : public TAllocatedTiny<LightComponent, RenderableComponent>, SpaceTraversal<LightComponent, LightComponentConfig> {
+		class LightComponent : public TAllocatedTiny<LightComponent, RenderableComponent>{
 		public:
 			LightComponent();
-			friend class SpaceTraversal<LightComponent, LightComponentConfig>;
+			friend class SpaceTraversal<LightComponent, ShadowLayerConfig>;
 
-			typedef typename LightComponentConfig::InstanceKey InstanceKey;
-			typedef typename LightComponentConfig::HashInstanceKey HashInstanceKey;
-			typedef typename LightComponentConfig::InstanceGroup InstanceGroup;
+			typedef typename ShadowLayerConfig::InstanceKey InstanceKey;
+			typedef typename ShadowLayerConfig::HashInstanceKey HashInstanceKey;
+			typedef typename ShadowLayerConfig::InstanceGroup InstanceGroup;
+			typedef typename ShadowLayerConfig::TaskData TaskData;
 
 			enum {
 				LIGHTCOMPONENT_DIRECTIONAL = COMPONENT_CUSTOM_BEGIN,
@@ -102,8 +103,8 @@ namespace PaintsNow {
 			virtual FLAG GetEntityFlagMask() const override;
 			virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData);
 			virtual void UpdateBoundingBox(Engine& engine, Float3Pair& box) override;
-			virtual void Uninitialize(Engine& engine, Entity* entity) override;
-			void BindShadowStream(uint32_t layer, TShared<StreamComponent> streamComponent, const Float2& gridSize);
+
+			void BindShadowStream(Engine& engine, uint32_t layer, TShared<StreamComponent> streamComponent, const Float2& gridSize);
 			const Float3& GetColor() const;
 			void SetColor(const Float3& color);
 			float GetAttenuation() const;
@@ -111,33 +112,36 @@ namespace PaintsNow {
 			const Float3& GetRange() const;
 			void SetRange(const Float3& range);
 
-			// float spotAngle;
-			// float temperature;
-			struct ShadowLayer {
+			class ShadowLayer : public TReflected<ShadowLayer, SharedTiny>, public SpaceTraversal<ShadowLayer, ShadowLayerConfig> {
+			public:
+				ShadowLayer(Engine& engine);
+				TShared<SharedTiny> StreamLoadHandler(Engine& engine, const UShort3& coord, TShared<SharedTiny> tiny, TShared<SharedTiny> context);
+				TShared<SharedTiny> StreamUnloadHandler(Engine& engine, const UShort3& coord, TShared<SharedTiny> tiny, TShared<SharedTiny> context);
+				void CollectRenderableComponent(Engine& engine, TaskData& taskData, RenderableComponent* renderableComponent, TaskData::WarpData& warpData, const WorldInstanceData& instanceData);
+				void CollectComponents(Engine& engine, TaskData& taskData, const WorldInstanceData& instanceData, const CaptureData& captureData, Entity* rootEntity);
+				void CompleteCollect(Engine& engine, TaskData& taskData);
+				void Initialize(Engine& engine, TShared<StreamComponent> streamComponent, const Float2& size);
+				void Uninitialize(Engine& engine);
+
+			protected:
 				TShared<StreamComponent> streamComponent;
 				TShared<TaskData> taskData;
 				Float2 gridSize;
+				uint32_t layer;
 			};
 
 			class ShadowGrid : public TReflected<ShadowGrid, SharedTiny> {
 			public:
 				TShared<NsSnowyStream::TextureResource> texture;
-				uint32_t layer;
 			};
 
 		protected:
-			void ReplaceStreamComponent(ShadowLayer& shadowLayer, TShared<StreamComponent> streamComponent);
-			TShared<SharedTiny> StreamLoadHandler(Engine& engine, const UShort3& coord, TShared<SharedTiny> tiny);
-			TShared<SharedTiny> StreamUnloadHandler(Engine& engine, const UShort3& coord, TShared<SharedTiny> tiny);
-
-			void CollectRenderableComponent(Engine& engine, TaskData& taskData, RenderableComponent* renderableComponent, TaskData::WarpData& warpData, const WorldInstanceData& instanceData);
-			void CollectComponents(Engine& engine, TaskData& taskData, const WorldInstanceData& instanceData, const CaptureData& captureData, Entity* rootEntity);
-			void CompleteCollect(Engine& engine, TaskData& taskData);
-
 			Float3 color;
 			float attenuation;
 			Float3 range;
-			std::vector<ShadowLayer> shadowLayers;
+			// float spotAngle;
+			// float temperature;
+			std::vector<TShared<ShadowLayer> > shadowLayers;
 		};
 	}
 }

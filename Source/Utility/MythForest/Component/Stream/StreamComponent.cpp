@@ -13,21 +13,21 @@ StreamComponent::StreamComponent(const UShort3& dim, uint16_t cacheCount) : dime
 	}
 }
 
-void StreamComponent::Unload(Engine& engine, const UShort3& coord) {
+void StreamComponent::Unload(Engine& engine, const UShort3& coord, TShared<SharedTiny> context) {
 	uint16_t id = idGrids[(coord.z() * dimension.y() + coord.y()) * dimension.x() + coord.x()];
 	if (id == ~(uint16_t)0) return;
 
-	UnloadInternal(engine, grids[id]);
+	UnloadInternal(engine, grids[id], context);
 }
 
-void StreamComponent::UnloadInternal(Engine& engine, Grid& grid) {
+void StreamComponent::UnloadInternal(Engine& engine, Grid& grid, TShared<SharedTiny> context) {
 	if (unloadHandler.script) {
 		IScript::Request& request = engine.bridgeSunset.AllocateRequest();
 		IScript::Delegate<SharedTiny> w;
 
 		request.DoLock();
 		request.Push();
-		request.Call(sync, unloadHandler.script, grid.coord, grid.object);
+		request.Call(sync, unloadHandler.script, grid.coord, grid.object, context);
 		request >> w;
 		request.Pop();
 		request.UnLock();
@@ -35,11 +35,11 @@ void StreamComponent::UnloadInternal(Engine& engine, Grid& grid) {
 		grid.object = w.Get();
 		engine.bridgeSunset.FreeRequest(request);
 	} else if (unloadHandler.native) {
-		grid.object = unloadHandler.native(engine, grid.coord, grid.object);
+		grid.object = unloadHandler.native(engine, grid.coord, grid.object, context);
 	}
 }
 
-SharedTiny* StreamComponent::Load(Engine& engine, const UShort3& coord) {
+SharedTiny* StreamComponent::Load(Engine& engine, const UShort3& coord, TShared<SharedTiny> context) {
 	uint16_t id = idGrids[(coord.z() * dimension.y() + coord.y()) * dimension.x() + coord.x()];
 	SharedTiny* object = nullptr;
 	if (id == ~(uint16_t)0) {
@@ -48,7 +48,7 @@ SharedTiny* StreamComponent::Load(Engine& engine, const UShort3& coord) {
 
 		Grid& grid = grids[id];
 		if (grid.object) {
-			UnloadInternal(engine, grid);
+			UnloadInternal(engine, grid, context);
 		}
 
 		grid.recycleIndex = recycleStart;
@@ -60,7 +60,7 @@ SharedTiny* StreamComponent::Load(Engine& engine, const UShort3& coord) {
 
 			request.DoLock();
 			request.Push();
-			request.Call(sync, loadHandler.script, coord, grid.object);
+			request.Call(sync, loadHandler.script, coord, grid.object, context);
 			request >> w;
 			request.Pop();
 			request.UnLock();
@@ -70,7 +70,7 @@ SharedTiny* StreamComponent::Load(Engine& engine, const UShort3& coord) {
 			engine.bridgeSunset.FreeRequest(request);
 		} else {
 			assert(loadHandler.native);
-			grid.object = loadHandler.native(engine, coord, grid.object);
+			grid.object = loadHandler.native(engine, coord, grid.object, context);
 		}
 
 		grid.coord = coord;
@@ -104,11 +104,11 @@ void StreamComponent::SetUnloadHandler(IScript::Request& request, IScript::Reque
 	unloadHandler.ReplaceScript(request, ref);
 }
 
-void StreamComponent::SetLoadHandler(const TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny> >& handler) {
+void StreamComponent::SetLoadHandler(const TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny>, TShared<SharedTiny> >& handler) {
 	loadHandler.native = handler;
 }
 
-void StreamComponent::SetUnloadHandler(const TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny> >& handler) {
+void StreamComponent::SetUnloadHandler(const TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny>, TShared<SharedTiny> >& handler) {
 	unloadHandler.native = handler;
 }
 

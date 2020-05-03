@@ -86,5 +86,5 @@ void LightComponentModule::RequestBindLightShadowStream(IScript::Request& reques
 	CHECK_THREAD_IN_MODULE(lightComponent);
 	CHECK_THREAD_IN_MODULE(streamComponent);
 
-	lightComponent->BindShadowStream(layer, streamComponent.Get(), size);
+	lightComponent->BindShadowStream(engine, layer, streamComponent.Get(), size);
 }
