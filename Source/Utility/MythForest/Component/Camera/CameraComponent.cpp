@@ -64,7 +64,7 @@ void CameraComponent::UpdateRootMatrices(const MatrixFloat4x4& cameraWorldMatrix
 
 	Flag() &= ~TINY_MODIFIED;
 
-	MatrixFloat4x4 viewMatrix = QuickInverse(cameraWorldMatrix);
+	MatrixFloat4x4 viewMatrix = Inverse(cameraWorldMatrix);
 	nextTaskData->worldGlobalData.projectionMatrix = projectionMatrix;
 	nextTaskData->worldGlobalData.viewMatrix = viewMatrix;
 	nextTaskData->worldGlobalData.viewProjectionMatrix = viewMatrix * projectionMatrix;
@@ -387,7 +387,7 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 		currentState.scale = Interpolate(currentState.scale, targetState.scale, ratio);
 
 		// recompute global matrices
-		worldGlobalData.viewMatrix = QuickInverse(ComputeSmoothTrackTransform());
+		worldGlobalData.viewMatrix = Inverse(ComputeSmoothTrackTransform());
 	}
 	
 	worldGlobalData.viewProjectionMatrix = worldGlobalData.viewMatrix * worldGlobalData.projectionMatrix;
@@ -441,7 +441,7 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 				UpdateJitterMatrices(worldGlobalData);
 
 				portCameraView->viewMatrix = worldGlobalData.viewMatrix;
-				portCameraView->inverseViewMatrix = QuickInverse(portCameraView->viewMatrix);
+				portCameraView->inverseViewMatrix = Inverse(portCameraView->viewMatrix);
 				portCameraView->projectionMatrix = worldGlobalData.projectionMatrix * worldGlobalData.jitterMatrix;
 				portCameraView->inverseProjectionMatrix = InverseProjectionMatrix(portCameraView->projectionMatrix);
 				portCameraView->reprojectionMatrix = portCameraView->inverseProjectionMatrix * portCameraView->inverseViewMatrix * worldGlobalData.lastViewProjectionMatrix;
@@ -718,7 +718,7 @@ void CameraComponent::CollectComponents(Engine& engine, TaskData& taskData, cons
 				SpaceComponent* spaceComponent = static_cast<SpaceComponent*>(component);
 				bool captureFree = !!(spaceComponent->GetEntityFlagMask() & Entity::ENTITY_HAS_RENDERCONTROL);
 				if (transformComponent != nullptr) {
-					UpdateCaptureData(newCaptureData, QuickInverse(localTransform) * mat);
+					UpdateCaptureData(newCaptureData, Inverse(localTransform) * mat);
 					CollectComponentsFromSpace(engine, taskData, subSpaceWorldInstancedData, newCaptureData, spaceComponent);
 				} else {
 					CollectComponentsFromSpace(engine, taskData, subSpaceWorldInstancedData, captureData, spaceComponent);

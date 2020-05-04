@@ -299,10 +299,12 @@ void PhaseComponent::CoTaskWriteDebugTexture(Engine& engine, uint32_t index, Byt
 		size_t length;
 		IStreamBase* stream = engine.interfaces.archive.Open(ss.str(), true, length);
 		IRender::Resource::TextureDescription& description = texture->description;
-		IImage::Image* image = engine.interfaces.image.Create(description.dimension.x(), description.dimension.y(), (IRender::Resource::TextureDescription::Layout)description.state.layout, (IRender::Resource::TextureDescription::Format)description.state.format);
-		void* buffer = engine.interfaces.image.GetBuffer(image);
+		IImage& image = engine.interfaces.image;
+		IImage::Image* png = image.Create(description.dimension.x(), description.dimension.y(), (IRender::Resource::TextureDescription::Layout)description.state.layout, (IRender::Resource::TextureDescription::Format)description.state.format);
+		void* buffer = image.GetBuffer(png);
 		memcpy(buffer, data.GetData(), data.GetSize());
-		engine.interfaces.image.Save(image, *stream, "png");
+		image.Save(png, *stream, "png");
+		image.Delete(png);
 		// write png
 		stream->ReleaseObject();
 	}

@@ -30,10 +30,7 @@ namespace PaintsNow {
 		};
 
 		struct OrthoCamera {
-			OrthoCamera();
-			void UpdateCaptureData(FrustrumCuller& captureData, const MatrixFloat4x4& cameraWorldMatrix) const;
-
-			Float3 scale;
+			static void UpdateCaptureData(FrustrumCuller& captureData, const MatrixFloat4x4& cameraWorldMatrix);
 		};
 	}
 }

@@ -12,7 +12,7 @@ static inline Float4 BuildPlane(const Float3& a, const Float3& b, const Float3& 
 	return Float4(n.x(), n.y(), n.z(), -DotProduct(a, n));
 }
 
-bool FrustrumCuller::operator ()(const Float3Pair& box) const {
+bool FrustrumCuller::operator () (const Float3Pair& box) const {
 	// check visibility
 	// Float3Pair box(Float3(0, -6, 0), Float3(0, -5, 0));
 	Float3 size = (box.second - box.first) * 0.5f;
@@ -76,31 +76,26 @@ void PerspectiveCamera::UpdateCaptureData(FrustrumCuller& captureData, const Mat
 	captureData.planes[5] = BuildPlane(farLeftTop, farRightBottom, farLeftBottom);			// Back
 }
 
-OrthoCamera::OrthoCamera() : scale(1, 1, 1) {}
-
-void OrthoCamera::UpdateCaptureData(FrustrumCuller& captureData, const MatrixFloat4x4& cameraWorldMatrix) const {
+void OrthoCamera::UpdateCaptureData(FrustrumCuller& captureData, const MatrixFloat4x4& cameraWorldMatrix) {
 	Float3 position(cameraWorldMatrix(3, 0), cameraWorldMatrix(3, 1), cameraWorldMatrix(3, 2));
+	Float3 right(cameraWorldMatrix(0, 0), cameraWorldMatrix(0, 1), cameraWorldMatrix(0, 2));
 	Float3 up(cameraWorldMatrix(1, 0), cameraWorldMatrix(1, 1), cameraWorldMatrix(1, 2));
 	Float3 direction(-cameraWorldMatrix(2, 0), -cameraWorldMatrix(2, 1), -cameraWorldMatrix(2, 2));
-	direction.Normalize();
 
 	captureData.viewTransform = cameraWorldMatrix;
 
-	Float3 basisX = CrossProduct(direction, up).Normalize();
-	Float3 basisY = CrossProduct(basisX, direction);
+	Float3 nearCenter = position - direction;
+	Float3 farCenter = position + direction;
 
-	Float3 nearCenter = position - direction * scale.z();
-	Float3 farCenter = position + direction * scale.z();
+	Float3 nearLeftBottom = nearCenter - right - up;
+	Float3 nearRightBottom = nearCenter + right - up;
+	Float3 nearLeftTop = nearCenter - right + up;
+	Float3 nearRightTop = nearCenter + right + up;
 
-	Float3 nearLeftBottom = nearCenter - basisX * scale.x() - basisY * scale.y();
-	Float3 nearRightBottom = nearCenter + basisX * scale.x() - basisY * scale.y();
-	Float3 nearLeftTop = nearCenter - basisX * scale.x() + basisY * scale.y();
-	Float3 nearRightTop = nearCenter + basisX * scale.x() + basisY * scale.y();
-
-	Float3 farLeftBottom = farCenter - basisX * scale.x() - basisY * scale.y();
-	Float3 farRightBottom = farCenter + basisX * scale.x() - basisY * scale.y();
-	Float3 farLeftTop = farCenter - basisX * scale.x() + basisY * scale.y();
-	Float3 farRightTop = farCenter + basisX * scale.x() + basisY * scale.y();
+	Float3 farLeftBottom = farCenter - right - up;
+	Float3 farRightBottom = farCenter + right - up;
+	Float3 farLeftTop = farCenter - right + up;
+	Float3 farRightTop = farCenter + right + up;
 
 	captureData.planes[0] = BuildPlane(nearLeftTop, nearRightTop, farLeftTop);				// Top
 	captureData.planes[1] = BuildPlane(nearLeftBottom, farLeftBottom, nearRightBottom);		// Bottom

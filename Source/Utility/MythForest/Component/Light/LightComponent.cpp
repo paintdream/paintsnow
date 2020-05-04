@@ -78,10 +78,10 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 
 		// calculate position
 		CaptureData captureData;
-		taskData->camera.UpdateCaptureData(captureData, shadowContext->cameraWorldMatrix);
+		OrthoCamera::UpdateCaptureData(captureData, shadowContext->cameraWorldMatrix);
 
 		WorldInstanceData instanceData;
-		instanceData.worldMatrix = QuickInverse(shadowContext->cameraWorldMatrix);
+		instanceData.worldMatrix = Inverse(shadowContext->cameraWorldMatrix);
 		CollectComponentsFromEntity(engine, *taskData, instanceData, captureData, shadowContext->rootEntity);
 	}
 
@@ -328,7 +328,7 @@ void LightComponent::ShadowLayer::CollectComponents(Engine& engine, TaskData& ta
 				SpaceComponent* spaceComponent = static_cast<SpaceComponent*>(component);
 				bool captureFree = !!(spaceComponent->GetEntityFlagMask() & Entity::ENTITY_HAS_RENDERCONTROL);
 				if (transformComponent != nullptr) {
-					taskData.camera.UpdateCaptureData(newCaptureData, QuickInverse(localTransform) * mat);
+					OrthoCamera::UpdateCaptureData(newCaptureData, Inverse(localTransform) * mat);
 					CollectComponentsFromSpace(engine, taskData, subSpaceWorldInstancedData, newCaptureData, spaceComponent);
 				} else {
 					CollectComponentsFromSpace(engine, taskData, subSpaceWorldInstancedData, captureData, spaceComponent);

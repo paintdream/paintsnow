@@ -80,7 +80,6 @@ namespace PaintsNow {
 				std::vector<WarpData> warpData;
 				TAtomic<uint32_t> pendingCount;
 				IRender::Queue* renderQueue;
-				OrthoCamera camera;
 			};
 		};
 
