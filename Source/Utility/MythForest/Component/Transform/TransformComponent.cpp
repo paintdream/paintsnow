@@ -179,7 +179,8 @@ void TransformComponent::SetObjectID(uint32_t id) {
 }
 
 void TransformComponent::Raycast(std::vector<RaycastResult>& results, Float3Pair& ray, uint32_t maxCount, IReflectObject* filter) const {
-	MatrixFloat4x4 invTransform = Inverse(transform);
+	MatrixFloat4x4 invTransform = QuickInverse(transform);
+	
 	ray.second += ray.first;
 	ray.first = Transform3D(invTransform, ray.first);
 	ray.second = Transform3D(invTransform, ray.second) - ray.first;

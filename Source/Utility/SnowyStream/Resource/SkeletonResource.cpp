@@ -53,7 +53,7 @@ void SkeletonResource::PrepareOffsetTransform(size_t k) {
 		offsetMatrices[k] = offsetMatrices[k] * offsetMatrices[parent];
 	}
 
-	offsetMatricesInv[k] = Inverse(offsetMatrices[k]);
+	offsetMatricesInv[k] = QuickInverse(offsetMatrices[k]);
 }
 
 template <class T>
