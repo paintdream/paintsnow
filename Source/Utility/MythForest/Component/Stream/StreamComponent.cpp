@@ -5,7 +5,7 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 
 StreamComponent::StreamComponent(const UShort3& dim, uint16_t cacheCount) : dimension(dim), recycleStart(0) {
-	idGrids.resize(dim.x() * dim.y() * dim.z());
+	idGrids.resize(dim.x() * dim.y() * dim.z(), (uint16_t)~0);
 	grids.resize(cacheCount);
 	recycleQueue.resize(cacheCount);
 	for (uint16_t i = 0; i < cacheCount; i++) {
@@ -15,7 +15,7 @@ StreamComponent::StreamComponent(const UShort3& dim, uint16_t cacheCount) : dime
 
 void StreamComponent::Unload(Engine& engine, const UShort3& coord, TShared<SharedTiny> context) {
 	uint16_t id = idGrids[(coord.z() * dimension.y() + coord.y()) * dimension.x() + coord.x()];
-	if (id == ~(uint16_t)0) return;
+	if (id == (uint16_t)~0) return;
 
 	UnloadInternal(engine, grids[id], context);
 }
@@ -42,7 +42,7 @@ void StreamComponent::UnloadInternal(Engine& engine, Grid& grid, TShared<SharedT
 SharedTiny* StreamComponent::Load(Engine& engine, const UShort3& coord, TShared<SharedTiny> context) {
 	uint16_t id = idGrids[(coord.z() * dimension.y() + coord.y()) * dimension.x() + coord.x()];
 	SharedTiny* object = nullptr;
-	if (id == ~(uint16_t)0) {
+	if (id == (uint16_t)~0) {
 		// allocate id ...
 		id = recycleQueue[recycleStart];
 
@@ -74,6 +74,7 @@ SharedTiny* StreamComponent::Load(Engine& engine, const UShort3& coord, TShared<
 		}
 
 		grid.coord = coord;
+		object = grid.object();
 	} else {
 		Grid& grid = grids[id];
 		uint16_t oldIndex = grid.recycleIndex;
@@ -82,6 +83,7 @@ SharedTiny* StreamComponent::Load(Engine& engine, const UShort3& coord, TShared<
 		recycleQueue[recycleStart] = id;
 
 		recycleStart = (recycleStart + 1) % safe_cast<uint16_t>(recycleQueue.size());
+		object = grid.object();
 	}
 
 	return object;

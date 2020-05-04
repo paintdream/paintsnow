@@ -9,7 +9,9 @@
 #include "Resource/TextResource.h"
 #include "Resource/TextureResource.h"
 #include "Resource/Passes/AntiAliasingPass.h"
+#include "Resource/Passes/BloomPass.h"
 #include "Resource/Passes/ConstMapPass.h"
+#include "Resource/Passes/CustomMaterialPass.h"
 #include "Resource/Passes/DeferredLightingPass.h"
 #include "Resource/Passes/DepthResolvePass.h"
 #include "Resource/Passes/DepthBoundingPass.h"
@@ -18,15 +20,14 @@
 #include "Resource/Passes/LightBufferPass.h"
 #include "Resource/Passes/MultiHashSetupPass.h"
 #include "Resource/Passes/MultiHashTracePass.h"
-#include "Resource/Passes/ScreenPass.h"
-#include "Resource/Passes/BloomPass.h"
-#include "Resource/Passes/WidgetPass.h"
-#include "Resource/Passes/CustomMaterialPass.h"
 #include "Resource/Passes/ParticlePass.h"
+#include "Resource/Passes/ScreenPass.h"
+#include "Resource/Passes/ShadowMaskPass.h"
 #include "Resource/Passes/StandardPass.h"
 #include "Resource/Passes/TerrainPass.h"
 #include "Resource/Passes/VolumePass.h"
 #include "Resource/Passes/WaterPass.h"
+#include "Resource/Passes/WidgetPass.h"
 #include "../../General/Misc/ZMemoryStream.h"
 #include <iterator>
 
@@ -656,6 +657,7 @@ void SnowyStream::RegisterBuiltinPasses() {
 	RegisterPass(*resourceManager(), UniqueType<MultiHashSetupPass>());
 	RegisterPass(*resourceManager(), UniqueType<MultiHashTracePass>());
 	RegisterPass(*resourceManager(), UniqueType<ScreenPass>());
+	RegisterPass(*resourceManager(), UniqueType<ShadowMaskPass>());
 	RegisterPass(*resourceManager(), UniqueType<StandardPass>());
 	RegisterPass(*resourceManager(), UniqueType<WidgetPass>());
 	// RegisterPass(*resourceManager(), UniqueType<CustomMaterialPass>());

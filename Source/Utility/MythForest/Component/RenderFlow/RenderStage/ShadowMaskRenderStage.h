@@ -7,12 +7,23 @@
 #define __SHADOWMASKRENDERSTAGE_H__
 
 #include "../RenderStage.h"
+#include "../RenderPort/RenderPortRenderTarget.h"
+#include "../RenderPort/RenderPortTextureInput.h"
+#include "../../../../SnowyStream/Resource/Passes/ShadowMaskPass.h"
 
 namespace PaintsNow {
 	namespace NsMythForest {
-		class ShadowMaskRenderStage : public TReflected<ShadowMaskRenderStage, RenderStage> {
+		class ShadowMaskRenderStage : public TReflected<ShadowMaskRenderStage, GeneralRenderStageRect<NsSnowyStream::ShadowMaskPass> > {
 		public:
-			ShadowMaskRenderStage();
+			ShadowMaskRenderStage(const String& config = "1");
+			virtual void PrepareResources(Engine& engine) override;
+			virtual void UpdatePass(Engine& engine) override;
+
+			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+
+			RenderPortTextureInput InputDepth;
+			RenderPortTextureInput InputShadow;
+			RenderPortRenderTarget OutputMask;
 		};
 	}
 }

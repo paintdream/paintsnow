@@ -514,12 +514,12 @@ TShared<LightComponent::ShadowGrid> LightComponent::ShadowLayer::UpdateShadow(En
 	UShort3 coord(
 		safe_cast<uint16_t>((int(lightCoord.x() / gridSize) % dimension.x() + dimension.x()) % dimension.x()),
 		safe_cast<uint16_t>((int(lightCoord.y() / gridSize) % dimension.y() + dimension.y()) % dimension.y()),
-		1);
+		0);
 
 	TShared<ShadowContext> shadowContext = TShared<ShadowContext>::From(new ShadowContext());
 	shadowContext->rootEntity = rootEntity;
 	shadowContext->cameraWorldMatrix = cameraTransform;
-	TShared<ShadowGrid> grid = streamComponent->Load(engine, coord, shadowContext)->QueryInterface(UniqueType<ShadowGrid>());
+	TShared<ShadowGrid> grid = streamComponent->Load(engine, coord, shadowContext())->QueryInterface(UniqueType<ShadowGrid>());
 	assert(grid);
 
 	return grid;
