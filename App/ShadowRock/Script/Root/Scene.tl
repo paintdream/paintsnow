@@ -133,11 +133,13 @@ function Scene.New(database : Database?, clock : Clock)
 		lightComponent:SetLightAttenuation(0.1)
 		lightComponent:SetLightDirectional(true)
 		lightComponent:SetRenderPolicy(lightPolicy)
+		local streamComponent = StreamComponentModule.New({32, 32, 1}, 16)
+		lightComponent:BindShadowStream(0, streamComponent)
+
 		sun:AddEntityComponent(lightComponent)
 		spaceComponent:InsertEntity(sun)
 
 		--[[
-		
 		print("\tAdding point lights")
 		math.randomseed(20)
 		local colors : { integer : any } = {

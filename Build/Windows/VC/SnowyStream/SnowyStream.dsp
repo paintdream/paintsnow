@@ -261,7 +261,7 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\ShaderResource.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\ShadowMapVS.cpp
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\ShadowMaskFS.cpp
 # End Source File
 # Begin Source File
 
@@ -525,7 +525,7 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\ShaderResource.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\ShadowMapVS.h
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\ShadowMaskFS.h
 # End Source File
 # Begin Source File
 
