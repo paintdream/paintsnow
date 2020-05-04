@@ -39,8 +39,16 @@ void LightComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box) {
 	Union(box, range);
 }
 
+void LightComponent::RefreshShadow(Engine& engine, const MatrixFloat4x4& mat, Entity* rootEntity) {
+	for (size_t i = 0; i < shadowLayers.size(); i++) {
+		TShared<ShadowLayer>& shadowLayer = shadowLayers[i];
+		if (shadowLayer) {
+			shadowLayer->RefreshShadow(engine, mat, rootEntity);
+		}
+	}
+}
 
-void LightComponent::BindShadowStream(Engine& engine, uint32_t layer, TShared<StreamComponent> streamComponent) {
+void LightComponent::BindShadowStream(Engine& engine, uint32_t layer, TShared<StreamComponent> streamComponent, const UShort2& res, float size) {
 	if (shadowLayers.size() <= layer) {
 		shadowLayers.resize(layer + 1);
 	}
@@ -50,11 +58,10 @@ void LightComponent::BindShadowStream(Engine& engine, uint32_t layer, TShared<St
 		shadowLayer = TShared<ShadowLayer>::From(new ShadowLayer(engine));
 	}
 	
-	shadowLayer->Initialize(engine, streamComponent);
+	shadowLayer->Initialize(engine, streamComponent, res, size);
 }
 
-LightComponent::ShadowLayer::ShadowLayer(Engine& engine) {
-	taskData = TShared<TaskData>::From(new TaskData(engine, engine.GetKernel().GetWarpCount()));
+LightComponent::ShadowLayer::ShadowLayer(Engine& engine) : gridSize(1) {
 }
 
 TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engine, const UShort3& coord, TShared<SharedTiny> tiny, TShared<SharedTiny> context) {
@@ -63,14 +70,31 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 
 	// Do nothing by now
 	TShared<ShadowGrid> shadowGrid;
+	TShared<TaskData> taskData = currentTask;
+
 	if (tiny) {
 		shadowGrid = tiny->QueryInterface(UniqueType<ShadowGrid>());
 		assert(shadowGrid);
+	} else {
+		shadowGrid = TShared<ShadowGrid>::From(new ShadowGrid());
+
+		UShort3 dim(resolution.x(), resolution.y(), 0);
+		IRender::Resource::TextureDescription depthStencilDescription;
+		depthStencilDescription.dimension = dim;
+		depthStencilDescription.state.format = IRender::Resource::TextureDescription::FLOAT;
+		depthStencilDescription.state.layout = IRender::Resource::TextureDescription::DEPTH_STENCIL;
+
+		TShared<NsSnowyStream::TextureResource> texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateRandomLocation("LightShadowBake", shadowGrid()), false, 0, nullptr);
+		texture->description.dimension = dim;
+		texture->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
+		texture->description.state.layout = IRender::Resource::TextureDescription::RGBA;
+		texture->GetResourceManager().InvokeUpload(texture(), taskData->renderQueue);
+		shadowGrid->texture = texture;
 	}
 
-	if (!(Flag() & TINY_MODIFIED)) {
+	if (!(taskData->Flag() & TINY_MODIFIED)) {
 		// refresh shadow grid info
-		Flag() |= TINY_MODIFIED;
+		taskData->Flag() |= TINY_MODIFIED;
 
 		// get entity
 		ShadowContext* shadowContext = context->QueryInterface(UniqueType<ShadowContext>());
@@ -82,7 +106,27 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 
 		WorldInstanceData instanceData;
 		instanceData.worldMatrix = QuickInverse(shadowContext->cameraWorldMatrix);
-		CollectComponentsFromEntity(engine, *taskData, instanceData, captureData, shadowContext->rootEntity);
+		taskData->rootEntity = shadowContext->rootEntity; // in case of gc
+		taskData->shadowGrid = shadowGrid();
+		taskData->ReferenceObject();
+
+		// Prepare render target
+		IRender::Resource::RenderTargetDescription desc;
+		desc.colorBufferStorages.resize(1);
+		desc.isBackBuffer = 0;
+		desc.width = resolution.x();
+		desc.height = resolution.y();
+		IRender::Resource::RenderTargetDescription::Storage& s = desc.colorBufferStorages[0];
+		s.resource = dummyColorAttachment->GetTexture();
+		desc.depthStencilStorage.resource = shadowGrid->texture->GetTexture();
+
+		IRender& render = engine.interfaces.render;
+		render.UploadResource(taskData->renderQueue, taskData->renderTargetResource, &desc);
+		render.ExecuteResource(taskData->renderQueue, taskData->renderTargetResource);
+		render.ExecuteResource(taskData->renderQueue, taskData->stateResource);
+		render.ExecuteResource(taskData->renderQueue, taskData->clearResource);
+
+		CollectComponentsFromEntity(engine, *taskData, instanceData, captureData, shadowContext->rootEntity());
 	}
 
 	return shadowGrid();
@@ -119,7 +163,7 @@ void LightComponent::SetRange(const Float3& r) {
 void LightComponent::ShadowLayer::CollectRenderableComponent(Engine& engine, TaskData& taskData, RenderableComponent* renderableComponent, TaskData::WarpData& warpData, const WorldInstanceData& instanceData) {
 	IRender& render = engine.interfaces.render;
 	IRender::Device* device = engine.snowyStream.GetRenderDevice();
-	NsSnowyStream::IDrawCallProvider::InputRenderData inputRenderData(0.0f);
+	NsSnowyStream::IDrawCallProvider::InputRenderData inputRenderData(0.0f, pipeline());
 	std::vector<NsSnowyStream::IDrawCallProvider::OutputRenderData> drawCalls;
 	renderableComponent->CollectDrawCalls(drawCalls, inputRenderData);
 	TaskData::WarpData::InstanceGroupMap& instanceGroups = warpData.instanceGroups;
@@ -256,8 +300,9 @@ void LightComponent::ShadowLayer::CompleteCollect(Engine& engine, TaskData& task
 
 	render.DeleteResource(queue, buffer);
 
+	task.shadowGrid->Flag() &= ~TINY_MODIFIED;
 	task.Cleanup(engine.interfaces.render);
-	Flag() &= ~TINY_MODIFIED;
+	task.ReleaseObject();
 }
 
 void LightComponent::ShadowLayer::CollectComponents(Engine& engine, TaskData& taskData, const WorldInstanceData& instanceData, const CaptureData& captureData, Entity* entity) {
@@ -340,7 +385,7 @@ void LightComponent::ShadowLayer::CollectComponents(Engine& engine, TaskData& ta
 
 LightComponent::ShadowLayer::TaskData::WarpData::WarpData() : renderQueue(nullptr) {}
 
-LightComponent::ShadowLayer::TaskData::TaskData(Engine& engine, uint32_t warpCount) {
+LightComponent::ShadowLayer::TaskData::TaskData(Engine& engine, uint32_t warpCount, const UShort2& resolution) {
 	warpData.resize(warpCount);
 	IRender& render = engine.interfaces.render;
 	IRender::Device* device = engine.snowyStream.GetRenderDevice();
@@ -350,6 +395,33 @@ LightComponent::ShadowLayer::TaskData::TaskData(Engine& engine, uint32_t warpCou
 	}
 
 	renderQueue = render.CreateQueue(device);
+
+	IRender::Resource::ClearDescription cls;
+
+	// we don't care color
+	cls.clearColorBit = IRender::Resource::ClearDescription::DISCARD_LOAD | IRender::Resource::ClearDescription::DISCARD_STORE;
+	cls.clearStencilBit = IRender::Resource::ClearDescription::DISCARD_LOAD | IRender::Resource::ClearDescription::DISCARD_STORE;
+	cls.clearDepthBit = IRender::Resource::ClearDescription::CLEAR;
+
+	clearResource = render.CreateResource(renderQueue, IRender::Resource::RESOURCE_CLEAR);
+	render.UploadResource(renderQueue, clearResource, &cls);
+
+	IRender::Resource::RenderStateDescription rs;
+	rs.pass = 0;
+	rs.cull = 0;
+	rs.fill = 1;
+	rs.alphaBlend = 0;
+	rs.colorWrite = 0;
+	rs.depthTest = IRender::Resource::RenderStateDescription::GREATER_EQUAL;
+	rs.depthWrite = 1;
+	rs.stencilTest = 0;
+	rs.stencilWrite = 0;
+	rs.stencilValue = 0;
+	rs.stencilMask = 0;
+	stateResource = render.CreateResource(renderQueue, IRender::Resource::RESOURCE_RENDERSTATE);
+	render.UploadResource(renderQueue, stateResource, &rs);
+
+	renderTargetResource = render.CreateResource(renderQueue, IRender::Resource::RESOURCE_RENDERTARGET);
 }
 
 void LightComponent::TaskData::Destroy(IRender& render) {
@@ -357,12 +429,16 @@ void LightComponent::TaskData::Destroy(IRender& render) {
 		render.DeleteQueue(warpData[i].renderQueue);
 	}
 
+	render.DeleteResource(renderQueue, stateResource);
+	render.DeleteResource(renderQueue, clearResource);
+	render.DeleteResource(renderQueue, renderTargetResource);
 	render.DeleteQueue(renderQueue);
 }
 
 void LightComponent::TaskData::Cleanup(IRender& render) {
+	rootEntity = nullptr;
+	shadowGrid = nullptr;
 }
-
 
 TObject<IReflect>& LightComponent::TaskData::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
@@ -382,14 +458,33 @@ TObject<IReflect>& LightComponent::ShadowLayer::WorldInstanceData::operator () (
 
 	return *this;
 }
-void LightComponent::ShadowLayer::Initialize(Engine& engine, TShared<StreamComponent> component) {
+void LightComponent::ShadowLayer::Initialize(Engine& engine, TShared<StreamComponent> component, const UShort2& res, float size) {
 	Uninitialize(engine);
 
 	streamComponent = component;
+	resolution = res;
+	gridSize = size;
 
 	if (streamComponent) {
 		streamComponent->SetLoadHandler(Wrap(this, &ShadowLayer::StreamLoadHandler));
 		streamComponent->SetUnloadHandler(Wrap(this, &ShadowLayer::StreamUnloadHandler));
+	}
+
+	if (!pipeline) {
+		String path = NsSnowyStream::ShaderResource::GetShaderPathPrefix() + UniqueType<ConstMapPass>::Get()->GetSubName();
+		pipeline = engine.snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), path, true, 0, nullptr)->QueryInterface(UniqueType<ShaderResourceImpl<ConstMapPass> >());
+	}
+
+	TShared<NsSnowyStream::TextureResource> texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateRandomLocation("LightShadowBakeDummy", this), false, 0, nullptr);
+	texture->description.dimension = UShort3(res.x(), res.y(), 1);
+	texture->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
+	texture->description.state.layout = IRender::Resource::TextureDescription::RGBA;
+	texture->GetResourceManager().InvokeUpload(texture(), engine.snowyStream.GetResourceQueue());
+
+	dummyColorAttachment = texture;
+
+	if (!currentTask) {
+		currentTask = TShared<TaskData>::From(new TaskData(engine, engine.GetKernel().GetWarpCount(), res));
 	}
 }
 
@@ -399,5 +494,16 @@ void LightComponent::ShadowLayer::Uninitialize(Engine& engine) {
 		streamComponent->SetUnloadHandler(TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny>, TShared<SharedTiny> >());
 	}
 
-	taskData->Destroy(engine.interfaces.render);
+	if (currentTask) {
+		currentTask->Destroy(engine.interfaces.render);
+		currentTask = nullptr;
+	}
 }
+
+void LightComponent::ShadowLayer::RefreshShadow(Engine& engine, const MatrixFloat4x4& mat, Entity* rootEntity) {
+	// compute grid id
+	Float3 position(mat(3, 0), mat(3, 1), mat(3, 2));
+
+	// TODO: 
+}
+

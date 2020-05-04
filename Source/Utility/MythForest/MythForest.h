@@ -31,6 +31,7 @@
 #include "Component/Shape/ShapeComponentModule.h"
 #include "Component/Sound/SoundComponentModule.h"
 #include "Component/Space/SpaceComponentModule.h"
+#include "Component/Stream/StreamComponentModule.h"
 #include "Component/Surface/SurfaceComponentModule.h"
 #include "Component/Terrain/TerrainComponentModule.h"
 #include "Component/TextView/TextViewComponentModule.h"
@@ -104,6 +105,7 @@ namespace PaintsNow {
 			ShapeComponentModule shapeComponentModule;
 			SoundComponentModule soundComponentModule;
 			SpaceComponentModule spaceComponentModule;
+			StreamComponentModule streamComponentModule;
 			SurfaceComponentModule surfaceComponentModule;
 			TerrainComponentModule terrainComponentModule;
 			TextViewComponentModule textViewComponentModule;

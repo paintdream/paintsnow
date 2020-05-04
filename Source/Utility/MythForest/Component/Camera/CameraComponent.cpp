@@ -603,10 +603,12 @@ void CameraComponent::CollectEnvCubeComponent(EnvCubeComponent* envCubeComponent
 
 void CameraComponent::CompleteCollect(Engine& engine, TaskData& taskData) {}
 
-void CameraComponent::CollectLightComponent(LightComponent* lightComponent, std::vector<std::pair<TShared<RenderPolicy>, LightElement> >& lightElements, const MatrixFloat4x4& worldMatrix) const {
+void CameraComponent::CollectLightComponent(Engine& engine, LightComponent* lightComponent, std::vector<std::pair<TShared<RenderPolicy>, LightElement> >& lightElements, const MatrixFloat4x4& worldMatrix, const MatrixFloat4x4& cameraTransform) const {
 	LightElement element;
 	if (lightComponent->Flag() & LightComponent::LIGHTCOMPONENT_DIRECTIONAL) {
 		element.position = Float4(-worldMatrix(2, 0), -worldMatrix(2, 1), -worldMatrix(2, 2), 0);
+		// refresh shadow
+		lightComponent->RefreshShadow(engine, cameraTransform, rootEntity);
 	} else {
 		element.position = Float4(worldMatrix(3, 0), worldMatrix(3, 1), worldMatrix(3, 2), 1);
 	}
@@ -695,7 +697,7 @@ void CameraComponent::CollectComponents(Engine& engine, TaskData& taskData, cons
 					LightComponent* lightComponent;
 					EnvCubeComponent* envCubeComponent;
 					if ((lightComponent = component->QueryInterface(UniqueType<LightComponent>())) != nullptr) {
-						CollectLightComponent(lightComponent, warpData.lightElements, subWorldInstancedData.worldMatrix);
+						CollectLightComponent(engine, lightComponent, warpData.lightElements, subWorldInstancedData.worldMatrix, taskData.worldGlobalData.viewMatrix);
 					} else if ((envCubeComponent = component->QueryInterface(UniqueType<EnvCubeComponent>())) != nullptr) {
 						CollectEnvCubeComponent(envCubeComponent, warpData.envCubeElements, subWorldInstancedData.worldMatrix);
 					}

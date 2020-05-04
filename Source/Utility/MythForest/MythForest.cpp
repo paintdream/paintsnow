@@ -50,6 +50,7 @@ MythForest::MythForest(Interfaces& interfaces, NsSnowyStream::SnowyStream& snowy
 	shapeComponentModule(engine),
 	soundComponentModule(engine),
 	spaceComponentModule(engine),
+	streamComponentModule(engine),
 	surfaceComponentModule(engine),
 	terrainComponentModule(engine),
 	textViewComponentModule(engine),
@@ -107,6 +108,7 @@ TObject<IReflect>& MythForest::operator () (IReflect& reflect) {
 		ReflectProperty(shapeComponentModule)[ScriptLibrary = "ShapeComponentModule"];
 		ReflectProperty(soundComponentModule)[ScriptLibrary = "SoundComponentModule"];
 		ReflectProperty(spaceComponentModule)[ScriptLibrary = "SpaceComponentModule"];
+		ReflectProperty(streamComponentModule)[ScriptLibrary = "StreamComponentModule"];
 		ReflectProperty(surfaceComponentModule)[ScriptLibrary = "SurfaceComponentModule"];
 		ReflectProperty(terrainComponentModule)[ScriptLibrary = "TerrainComponentModule"];
 		ReflectProperty(textViewComponentModule)[ScriptLibrary = "TextViewComponentModule"];

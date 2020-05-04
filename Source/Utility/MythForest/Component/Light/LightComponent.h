@@ -13,6 +13,7 @@
 #include "../Explorer/SpaceTraversal.h"
 #include "../Explorer/CameraCuller.h"
 #include "../../../SnowyStream/Resource/TextureResource.h"
+#include "../../../SnowyStream/Resource/Passes/ConstMapPass.h"
 
 namespace PaintsNow {
 	namespace NsMythForest {
@@ -56,7 +57,7 @@ namespace PaintsNow {
 			};
 
 			struct TaskData : public TReflected<TaskData, SharedTiny> {
-				TaskData(Engine& engine, uint32_t warpCount);
+				TaskData(Engine& engine, uint32_t warpCount, const UShort2& res);
 				void Cleanup(IRender& render);
 				void Destroy(IRender& render);
 
@@ -79,7 +80,12 @@ namespace PaintsNow {
 
 				std::vector<WarpData> warpData;
 				TAtomic<uint32_t> pendingCount;
+				TShared<Entity> rootEntity;
+				TShared<SharedTiny> shadowGrid;
 				IRender::Queue* renderQueue;
+				IRender::Resource* clearResource;
+				IRender::Resource* stateResource;
+				IRender::Resource* renderTargetResource;
 			};
 		};
 
@@ -104,7 +110,8 @@ namespace PaintsNow {
 			virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData);
 			virtual void UpdateBoundingBox(Engine& engine, Float3Pair& box) override;
 
-			void BindShadowStream(Engine& engine, uint32_t layer, TShared<StreamComponent> streamComponent);
+			void RefreshShadow(Engine& engine, const MatrixFloat4x4& viewTransform, Entity* rootEntity);
+			void BindShadowStream(Engine& engine, uint32_t layer, TShared<StreamComponent> streamComponent, const UShort2& res, float gridSize);
 			const Float3& GetColor() const;
 			void SetColor(const Float3& color);
 			float GetAttenuation() const;
@@ -112,10 +119,11 @@ namespace PaintsNow {
 			const Float3& GetRange() const;
 			void SetRange(const Float3& range);
 
+		protected:
 			class ShadowContext : public TReflected<ShadowContext, SharedTiny> {
 			public:
 				MatrixFloat4x4 cameraWorldMatrix;
-				Entity* rootEntity;
+				TShared<Entity> rootEntity;
 			};
 
 			class ShadowLayer : public TReflected<ShadowLayer, SharedTiny>, public SpaceTraversal<ShadowLayer, ShadowLayerConfig> {
@@ -126,13 +134,19 @@ namespace PaintsNow {
 				void CollectRenderableComponent(Engine& engine, TaskData& taskData, RenderableComponent* renderableComponent, TaskData::WarpData& warpData, const WorldInstanceData& instanceData);
 				void CollectComponents(Engine& engine, TaskData& taskData, const WorldInstanceData& instanceData, const CaptureData& captureData, Entity* rootEntity);
 				void CompleteCollect(Engine& engine, TaskData& taskData);
-				void Initialize(Engine& engine, TShared<StreamComponent> streamComponent);
+				void Initialize(Engine& engine, TShared<StreamComponent> streamComponent, const UShort2& res, float size);
 				void Uninitialize(Engine& engine);
+
+				void RefreshShadow(Engine& engine, const MatrixFloat4x4& mat, Entity* rootEntity);
 
 			protected:
 				TShared<StreamComponent> streamComponent;
-				TShared<TaskData> taskData;
+				TShared<NsSnowyStream::TextureResource> dummyColorAttachment;
+				TShared<NsSnowyStream::ShaderResourceImpl<NsSnowyStream::ConstMapPass> > pipeline;
+				TShared<TaskData> currentTask;
 				uint32_t layer;
+				float gridSize;
+				UShort2 resolution;
 			};
 
 			class ShadowGrid : public TReflected<ShadowGrid, SharedTiny> {
@@ -140,7 +154,6 @@ namespace PaintsNow {
 				TShared<NsSnowyStream::TextureResource> texture;
 			};
 
-		protected:
 			Float3 color;
 			float attenuation;
 			Float3 range;
