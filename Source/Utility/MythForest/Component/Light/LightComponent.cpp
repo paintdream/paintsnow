@@ -386,9 +386,9 @@ void LightComponent::ShadowLayer::CollectComponents(Engine& engine, TaskData& ta
 	}
 }
 
-LightComponent::ShadowLayer::TaskData::WarpData::WarpData() : renderQueue(nullptr) {}
+LightComponent::TaskData::WarpData::WarpData() : renderQueue(nullptr) {}
 
-LightComponent::ShadowLayer::TaskData::TaskData(Engine& engine, uint32_t warpCount, const UShort2& resolution) {
+LightComponent::TaskData::TaskData(Engine& engine, uint32_t warpCount, const UShort2& resolution) {
 	warpData.resize(warpCount);
 	IRender& render = engine.interfaces.render;
 	IRender::Device* device = engine.snowyStream.GetRenderDevice();
@@ -452,7 +452,7 @@ TObject<IReflect>& LightComponent::TaskData::operator () (IReflect& reflect) {
 	return *this;
 }
 
-TObject<IReflect>& LightComponent::ShadowLayer::WorldInstanceData::operator () (IReflect& reflect) {
+TObject<IReflect>& ShadowLayerConfig::WorldInstanceData::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectProperty()) {
