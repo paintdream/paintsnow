@@ -39,13 +39,16 @@ void LightComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box) {
 	Union(box, range);
 }
 
-void LightComponent::RefreshShadow(Engine& engine, const MatrixFloat4x4& mat, Entity* rootEntity) {
+std::vector<TShared<LightComponent::ShadowGrid> > LightComponent::UpdateShadow(Engine& engine, const MatrixFloat4x4& cameraTransform, const MatrixFloat4x4& lightTransform, Entity* rootEntity) {
+	std::vector<TShared<ShadowGrid> > grids(shadowLayers.size());
 	for (size_t i = 0; i < shadowLayers.size(); i++) {
 		TShared<ShadowLayer>& shadowLayer = shadowLayers[i];
 		if (shadowLayer) {
-			shadowLayer->RefreshShadow(engine, mat, rootEntity);
-		}
+			grids[i] = shadowLayer->UpdateShadow(engine, cameraTransform, lightTransform, rootEntity);
+		} 
 	}
+
+	return grids;
 }
 
 void LightComponent::BindShadowStream(Engine& engine, uint32_t layer, TShared<StreamComponent> streamComponent, const UShort2& res, float size) {
@@ -500,10 +503,25 @@ void LightComponent::ShadowLayer::Uninitialize(Engine& engine) {
 	}
 }
 
-void LightComponent::ShadowLayer::RefreshShadow(Engine& engine, const MatrixFloat4x4& mat, Entity* rootEntity) {
+TShared<LightComponent::ShadowGrid> LightComponent::ShadowLayer::UpdateShadow(Engine& engine, const MatrixFloat4x4& cameraTransform, const MatrixFloat4x4& lightTransform, Entity* rootEntity) {
 	// compute grid id
-	Float3 position(mat(3, 0), mat(3, 1), mat(3, 2));
+	Float3 position(cameraTransform(3, 0), cameraTransform(3, 1), cameraTransform(3, 2));
 
-	// TODO: 
+	// project to ortho plane
+	Float3 lightCoord = Transform3D(QuickInverse(lightTransform), position);
+	const UShort3& dimension = streamComponent->GetDimension();
+
+	UShort3 coord(
+		safe_cast<uint16_t>((int(lightCoord.x() / gridSize) % dimension.x() + dimension.x()) % dimension.x()),
+		safe_cast<uint16_t>((int(lightCoord.y() / gridSize) % dimension.y() + dimension.y()) % dimension.y()),
+		1);
+
+	TShared<ShadowContext> shadowContext = TShared<ShadowContext>::From(new ShadowContext());
+	shadowContext->rootEntity = rootEntity;
+	shadowContext->cameraWorldMatrix = cameraTransform;
+	TShared<ShadowGrid> grid = streamComponent->Load(engine, coord, shadowContext)->QueryInterface(UniqueType<ShadowGrid>());
+	assert(grid);
+
+	return grid;
 }
 

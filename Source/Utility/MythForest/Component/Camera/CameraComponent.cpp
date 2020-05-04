@@ -608,7 +608,7 @@ void CameraComponent::CollectLightComponent(Engine& engine, LightComponent* ligh
 	if (lightComponent->Flag() & LightComponent::LIGHTCOMPONENT_DIRECTIONAL) {
 		element.position = Float4(-worldMatrix(2, 0), -worldMatrix(2, 1), -worldMatrix(2, 2), 0);
 		// refresh shadow
-		lightComponent->RefreshShadow(engine, cameraTransform, rootEntity);
+		lightComponent->UpdateShadow(engine, cameraTransform, worldMatrix, rootEntity);
 	} else {
 		element.position = Float4(worldMatrix(3, 0), worldMatrix(3, 1), worldMatrix(3, 2), 1);
 	}

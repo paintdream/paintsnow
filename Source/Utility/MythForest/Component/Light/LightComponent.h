@@ -110,14 +110,21 @@ namespace PaintsNow {
 			virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData);
 			virtual void UpdateBoundingBox(Engine& engine, Float3Pair& box) override;
 
-			void RefreshShadow(Engine& engine, const MatrixFloat4x4& viewTransform, Entity* rootEntity);
-			void BindShadowStream(Engine& engine, uint32_t layer, TShared<StreamComponent> streamComponent, const UShort2& res, float gridSize);
 			const Float3& GetColor() const;
 			void SetColor(const Float3& color);
 			float GetAttenuation() const;
 			void SetAttenuation(float value);
 			const Float3& GetRange() const;
 			void SetRange(const Float3& range);
+
+			class ShadowGrid : public TReflected<ShadowGrid, SharedTiny> {
+			public:
+				TShared<NsSnowyStream::TextureResource> texture;
+				MatrixFloat4x4 invProjectionMatrix;
+			};
+
+			std::vector<TShared<ShadowGrid> > UpdateShadow(Engine& engine, const MatrixFloat4x4& viewTransform, const MatrixFloat4x4& lightTransform, Entity* rootEntity);
+			void BindShadowStream(Engine& engine, uint32_t layer, TShared<StreamComponent> streamComponent, const UShort2& res, float gridSize);
 
 		protected:
 			class ShadowContext : public TReflected<ShadowContext, SharedTiny> {
@@ -137,7 +144,7 @@ namespace PaintsNow {
 				void Initialize(Engine& engine, TShared<StreamComponent> streamComponent, const UShort2& res, float size);
 				void Uninitialize(Engine& engine);
 
-				void RefreshShadow(Engine& engine, const MatrixFloat4x4& mat, Entity* rootEntity);
+				TShared<ShadowGrid> UpdateShadow(Engine& engine, const MatrixFloat4x4& cameraTransform, const MatrixFloat4x4& lightTransform, Entity* rootEntity);
 
 			protected:
 				TShared<StreamComponent> streamComponent;
@@ -149,10 +156,6 @@ namespace PaintsNow {
 				UShort2 resolution;
 			};
 
-			class ShadowGrid : public TReflected<ShadowGrid, SharedTiny> {
-			public:
-				TShared<NsSnowyStream::TextureResource> texture;
-			};
 
 			Float3 color;
 			float attenuation;

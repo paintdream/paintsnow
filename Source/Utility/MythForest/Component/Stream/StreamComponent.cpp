@@ -87,6 +87,10 @@ SharedTiny* StreamComponent::Load(Engine& engine, const UShort3& coord, TShared<
 	return object;
 }
 
+const UShort3& StreamComponent::GetDimension() const {
+	return dimension;
+}
+
 void StreamComponent::Uninitialize(Engine& engine, Entity* entity) {
 	IScript::Request& request = engine.interfaces.script.GetDefaultRequest();
 	SetLoadHandler(request, IScript::Request::Ref());

@@ -20,6 +20,7 @@ namespace PaintsNow {
 			void SetUnloadHandler(IScript::Request& request, IScript::Request::Ref ref);
 			void SetUnloadHandler(const TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny>, TShared<SharedTiny> >& handler);
 			virtual void Uninitialize(Engine& engine, Entity* entity) override;
+			const UShort3& GetDimension() const;
 
 		protected:
 			struct Grid {
