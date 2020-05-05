@@ -10,6 +10,7 @@
 #include "../RenderPort/RenderPortRenderTarget.h"
 #include "../RenderPort/RenderPortTextureInput.h"
 #include "../RenderPort/RenderPortLightSource.h"
+#include "../RenderPort/RenderPortCameraView.h"
 #include "../../../../SnowyStream/Resource/Passes/ShadowMaskPass.h"
 
 namespace PaintsNow {
@@ -23,8 +24,11 @@ namespace PaintsNow {
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
 			TRenderPortReference<RenderPortLightSource> LightSource;
+			TRenderPortReference<RenderPortCameraView> CameraView;
 			RenderPortTextureInput InputDepth;
 			RenderPortRenderTarget OutputMask;
+
+			TShared<NsSnowyStream::TextureResource> emptyShadowMask;
 		};
 	}
 }

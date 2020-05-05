@@ -11,6 +11,14 @@ using namespace PaintsNow::NsBridgeSunset;
 Engine::Engine(Interfaces& pinterfaces, NsBridgeSunset::BridgeSunset& pbridgeSunset, NsSnowyStream::SnowyStream& psnowyStream, NsMythForest::MythForest& pmythForest) : ISyncObject(pinterfaces.thread), interfaces(pinterfaces), bridgeSunset(pbridgeSunset), snowyStream(psnowyStream), mythForest(pmythForest) {
 	entityCount.store(0, std::memory_order_relaxed);
 	finalizeEvent = interfaces.thread.NewEvent();
+	frameTasks.resize(GetKernel().GetWarpCount());
+}
+
+void Engine::QueueFrameRoutine(ITask* task) {
+	uint32_t warp = GetKernel().GetCurrentWarpIndex();
+	assert(warp != ~(uint32_t)0);
+
+	frameTasks[warp].Push(task);
 }
 
 Engine::~Engine() {
@@ -21,6 +29,16 @@ Engine::~Engine() {
 void Engine::Clear() {
 	for (unordered_map<String, Module*>::iterator it = modules.begin(); it != modules.end(); ++it) {
 		(*it).second->Uninitialize();
+	}
+
+	for (size_t i = 0; i < frameTasks.size(); i++) {
+		TQueue<ITask*>& q = frameTasks[i];
+		while (!q.Empty()) {
+			ITask* task = q.Top();
+			q.Pop();
+
+			task->Abort(this);
+		}
 	}
 
 	while (entityCount.load(std::memory_order_acquire) != 0) {
@@ -57,6 +75,16 @@ const unordered_map<String, Module*>& Engine::GetModuleMap() const {
 }
 
 void Engine::TickFrame() {
+	for (size_t i = 0; i < frameTasks.size(); i++) {
+		TQueue<ITask*>& q = frameTasks[i];
+		while (!q.Empty()) {
+			ITask* task = q.Top();
+			q.Pop();
+
+			task->Execute(this);
+		}
+	}
+
 	for (unordered_map<String, Module*>::iterator it = modules.begin(); it != modules.end(); ++it) {
 		(*it).second->TickFrame();
 	}

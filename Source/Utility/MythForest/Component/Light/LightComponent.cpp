@@ -34,6 +34,17 @@ TObject<IReflect>& LightComponent::operator () (IReflect& reflect) {
 	return *this;
 }
 
+void LightComponent::Uninitialize(Engine& engine, Entity* entity) {
+	for (size_t i = 0; i < shadowLayers.size(); i++) {
+		TShared<ShadowLayer>& shadowLayer = shadowLayers[i];
+		if (shadowLayer) {
+			shadowLayer->Uninitialize(engine);
+		}
+	}
+
+	BaseClass::Uninitialize(engine, entity);
+}
+
 void LightComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box) {
 	Union(box, Float3(-range));
 	Union(box, range);
@@ -85,19 +96,21 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 		IRender::Resource::TextureDescription depthStencilDescription;
 		depthStencilDescription.dimension = dim;
 		depthStencilDescription.state.format = IRender::Resource::TextureDescription::FLOAT;
-		depthStencilDescription.state.layout = IRender::Resource::TextureDescription::DEPTH_STENCIL;
+		depthStencilDescription.state.layout = IRender::Resource::TextureDescription::DEPTH;
 
 		TShared<NsSnowyStream::TextureResource> texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateRandomLocation("LightShadowBake", shadowGrid()), false, 0, nullptr);
 		texture->description.dimension = dim;
-		texture->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
-		texture->description.state.layout = IRender::Resource::TextureDescription::RGBA;
+		texture->description.state.format = IRender::Resource::TextureDescription::FLOAT;
+		texture->description.state.layout = IRender::Resource::TextureDescription::DEPTH;
 		texture->GetResourceManager().InvokeUpload(texture(), taskData->renderQueue);
 		shadowGrid->texture = texture;
+		shadowGrid->Flag() |= TINY_MODIFIED;
 	}
 
 	if (!(taskData->Flag() & TINY_MODIFIED)) {
 		// refresh shadow grid info
 		taskData->Flag() |= TINY_MODIFIED;
+		shadowGrid->Flag() |= TINY_MODIFIED;
 
 		// get entity
 		ShadowContext* shadowContext = context->QueryInterface(UniqueType<ShadowContext>());
@@ -202,14 +215,6 @@ void LightComponent::ShadowLayer::CollectRenderableComponent(Engine& engine, Tas
 				instanceData.Export(ip->second.instanceUpdater, updater);
 			}
 
-			for (size_t n = 0; n < group.drawCallDescription.bufferResources.size(); n++) {
-				IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[n];
-				if (ip->second.buffers[n] != nullptr) {
-					bufferRange.buffer = ip->second.buffers[n];
-					bufferRange.offset = bufferRange.length = 0;
-				}
-			}
-
 			group.instanceUpdater = &ip->second.instanceUpdater;
 			group.instanceUpdater->Snapshot(group.instancedData, bufferResources, textureResources, instanceData);
 
@@ -245,6 +250,21 @@ void LightComponent::InstanceGroup::Reset() {
 	}
 }
 
+void LightComponent::TaskData::RenderFrame(Engine& engine) {
+	std::vector<IRender::Queue*> renderQueues;
+	renderQueues.emplace_back(renderQueue);
+	for (size_t k = 0; k < warpData.size(); k++) {
+		TaskData::WarpData& warp = warpData[k];
+		renderQueues.emplace_back(warp.renderQueue);
+	}
+
+	engine.interfaces.render.PresentQueues(&renderQueues[0], safe_cast<uint32_t>(renderQueues.size()), IRender::CONSUME);
+	shadowGrid->Flag() &= ~TINY_MODIFIED;
+	Flag() &= ~TINY_MODIFIED;
+	Cleanup(engine.interfaces.render);
+	ReleaseObject();
+}
+
 void LightComponent::ShadowLayer::CompleteCollect(Engine& engine, TaskData& task) {
 	// assemble 
 	IRender::Queue* queue = task.renderQueue;
@@ -278,7 +298,7 @@ void LightComponent::ShadowLayer::CompleteCollect(Engine& engine, TaskData& task
 			}
 
 			group.drawCallDescription.instanceCounts.x() = group.instanceCount;
-			ZPassBase::ValidateDrawCall(group.drawCallDescription);
+			assert(ZPassBase::ValidateDrawCall(group.drawCallDescription));
 
 			IRender::Resource* drawCall = render.CreateResource(queue, IRender::Resource::RESOURCE_DRAWCALL);
 			IRender::Resource::DrawCallDescription dc = group.drawCallDescription; // make copy
@@ -302,10 +322,7 @@ void LightComponent::ShadowLayer::CompleteCollect(Engine& engine, TaskData& task
 	}
 
 	render.DeleteResource(queue, buffer);
-
-	task.shadowGrid->Flag() &= ~TINY_MODIFIED;
-	task.Cleanup(engine.interfaces.render);
-	task.ReleaseObject();
+	engine.QueueFrameRoutine(CreateTaskContextFree(Wrap(&task, &TaskData::RenderFrame), std::ref(engine)));
 }
 
 void LightComponent::ShadowLayer::CollectComponents(Engine& engine, TaskData& taskData, const WorldInstanceData& instanceData, const CaptureData& captureData, Entity* entity) {
@@ -388,7 +405,7 @@ void LightComponent::ShadowLayer::CollectComponents(Engine& engine, TaskData& ta
 
 LightComponent::TaskData::WarpData::WarpData() : renderQueue(nullptr) {}
 
-LightComponent::TaskData::TaskData(Engine& engine, uint32_t warpCount, const UShort2& resolution) {
+LightComponent::TaskData::TaskData(Engine& engine, uint32_t warpCount, const UShort2& resolution) : pendingCount(0) {
 	warpData.resize(warpCount);
 	IRender& render = engine.interfaces.render;
 	IRender::Device* device = engine.snowyStream.GetRenderDevice();
@@ -457,6 +474,7 @@ TObject<IReflect>& ShadowLayerConfig::WorldInstanceData::operator () (IReflect& 
 
 	if (reflect.IsReflectProperty()) {
 		ReflectProperty(worldMatrix)[IShader::BindInput(IShader::BindInput::TRANSFORM_WORLD)];
+		ReflectProperty(instancedColor)[IShader::BindInput(IShader::BindInput::COLOR_INSTANCED)];
 	}
 
 	return *this;

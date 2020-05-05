@@ -14,6 +14,7 @@ TObject<IReflect>& ShadowMaskRenderStage::operator () (IReflect& reflect) {
 
 	if (reflect.IsReflectProperty()) {
 		ReflectProperty(LightSource);
+		ReflectProperty(CameraView);
 		ReflectProperty(InputDepth);
 		ReflectProperty(OutputMask);
 	}
@@ -28,6 +29,8 @@ void ShadowMaskRenderStage::PrepareResources(Engine& engine) {
 	OutputMask.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::R;
 	OutputMask.renderTargetTextureResource->description.state.immutable = false;
 
+	emptyShadowMask = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), "[Runtime]/TextureResource/Black", true, 0, nullptr);
+
 	BaseClass::PrepareResources(engine);
 }
 
@@ -37,6 +40,22 @@ void ShadowMaskRenderStage::UpdatePass(Engine& engine) {
 	screenTransform.vertexBuffer.resource = quadMeshResource->bufferCollection.positionBuffer;
 	ShadowMaskFS& mask = Pass.mask;
 	mask.depthTexture.resource = InputDepth.textureResource->GetTexture();
+	mask.shadowTexture.resource = emptyShadowMask->GetTexture();
+
+	MatrixFloat4x4 inverseMatrix = CameraView->inverseProjectionMatrix * CameraView->inverseViewMatrix;
+
+	for (size_t i = 0; i < LightSource->lightElements.size(); i++) {
+		RenderPortLightSource::LightElement& element = LightSource->lightElements[i];
+		// just get first shadow
+		for (size_t j = 0; j < element.shadows.size(); j++) {
+			RenderPortLightSource::LightElement::Shadow& shadow = element.shadows[j];
+			if (shadow.shadowTexture) {
+				mask.reprojectionMatrix = inverseMatrix * shadow.shadowMatrix;
+				mask.shadowTexture.resource = shadow.shadowTexture->GetTexture();
+				break;
+			}
+		}
+	}
 
 	BaseClass::UpdatePass(engine);
 }

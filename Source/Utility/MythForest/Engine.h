@@ -42,6 +42,7 @@ namespace PaintsNow {
 			void TickFrame();
 			uint32_t GetFrameIndex() const;
 			Kernel& GetKernel();
+			void QueueFrameRoutine(ITask* task);
 
 			Interfaces& interfaces;
 			NsBridgeSunset::BridgeSunset& bridgeSunset;
@@ -68,6 +69,7 @@ namespace PaintsNow {
 			TAtomic<uint32_t> entityCount;
 			IThread::Event* finalizeEvent;
 			unordered_map<String, Module*> modules;
+			std::vector<TQueue<ITask*> > frameTasks;
 		};
 
 #define CHECK_THREAD_IN_MODULE(warpTiny) \

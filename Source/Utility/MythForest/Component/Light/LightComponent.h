@@ -27,6 +27,7 @@ namespace PaintsNow {
 				virtual TObject<IReflect>& operator () (IReflect& reflect);
 
 				MatrixFloat4x4 worldMatrix;
+				Float4 instancedColor; // currently not used.
 				Float3Pair boundingBox;
 				TShared<AnimationComponent> animationComponent;
 			};
@@ -60,6 +61,7 @@ namespace PaintsNow {
 				TaskData(Engine& engine, uint32_t warpCount, const UShort2& res);
 				void Cleanup(IRender& render);
 				void Destroy(IRender& render);
+				void RenderFrame(Engine& engine);
 
 				virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
@@ -109,6 +111,7 @@ namespace PaintsNow {
 			virtual FLAG GetEntityFlagMask() const override;
 			virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData);
 			virtual void UpdateBoundingBox(Engine& engine, Float3Pair& box) override;
+			virtual void Uninitialize(Engine& engine, Entity* entity) override;
 
 			const Float3& GetColor() const;
 			void SetColor(const Float3& color);
@@ -120,7 +123,7 @@ namespace PaintsNow {
 			class ShadowGrid : public TReflected<ShadowGrid, SharedTiny> {
 			public:
 				TShared<NsSnowyStream::TextureResource> texture;
-				MatrixFloat4x4 invProjectionMatrix;
+				MatrixFloat4x4 shadowMatrix;
 			};
 
 			std::vector<TShared<ShadowGrid> > UpdateShadow(Engine& engine, const MatrixFloat4x4& viewTransform, const MatrixFloat4x4& lightTransform, Entity* rootEntity);

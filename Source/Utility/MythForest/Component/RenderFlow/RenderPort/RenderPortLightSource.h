@@ -21,7 +21,7 @@ namespace PaintsNow {
 				Float4 colorAttenuation;
 
 				struct Shadow {
-					MatrixFloat4x4 invProjectionMatrix;
+					MatrixFloat4x4 shadowMatrix;
 					TShared<NsSnowyStream::TextureResource> shadowTexture;
 				};
 

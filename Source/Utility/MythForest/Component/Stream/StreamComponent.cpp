@@ -40,7 +40,8 @@ void StreamComponent::UnloadInternal(Engine& engine, Grid& grid, TShared<SharedT
 }
 
 SharedTiny* StreamComponent::Load(Engine& engine, const UShort3& coord, TShared<SharedTiny> context) {
-	uint16_t id = idGrids[(coord.z() * dimension.y() + coord.y()) * dimension.x() + coord.x()];
+	size_t offset = (coord.z() * dimension.y() + coord.y()) * dimension.x() + coord.x();
+	uint16_t id = idGrids[offset];
 	SharedTiny* object = nullptr;
 	if (id == (uint16_t)~0) {
 		// allocate id ...
@@ -75,6 +76,7 @@ SharedTiny* StreamComponent::Load(Engine& engine, const UShort3& coord, TShared<
 
 		grid.coord = coord;
 		object = grid.object();
+		idGrids[offset] = id;
 	} else {
 		Grid& grid = grids[id];
 		uint16_t oldIndex = grid.recycleIndex;

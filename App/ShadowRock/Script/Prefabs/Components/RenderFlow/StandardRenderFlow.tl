@@ -35,6 +35,7 @@ function StandardRenderFlow.New(bloomLayerCount : integer)
 	renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "CameraView", stageDeferredLighting, "CameraView")
 
 	local stageShadowMask : RenderStage = renderFlowComponent:NewRenderStage("ShadowMaskRenderStage", "1")
+	renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "CameraView", stageShadowMask, "CameraView")
 	renderFlowComponent:LinkRenderStagePort(stageLightBuffer, "LightSource", stageShadowMask, "LightSource")
 	renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "Depth", stageShadowMask, "InputDepth")
 	renderFlowComponent:LinkRenderStagePort(stageShadowMask, "OutputMask", stageDeferredLighting, "ShadowTexture")

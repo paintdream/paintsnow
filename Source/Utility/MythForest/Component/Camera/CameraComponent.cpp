@@ -612,8 +612,11 @@ void CameraComponent::CollectLightComponent(Engine& engine, LightComponent* ligh
 		for (size_t i = 0; i < shadowGrids.size(); i++) {
 			TShared<LightComponent::ShadowGrid>& grid = shadowGrids[i];
 			RenderPortLightSource::LightElement::Shadow shadow;
-			shadow.shadowTexture = grid->texture;
-			shadow.invProjectionMatrix = grid->invProjectionMatrix;
+			if (!(grid->Flag() & TINY_MODIFIED)) {
+				shadow.shadowTexture = grid->texture;
+			}
+			shadow.shadowMatrix = grid->shadowMatrix;
+
 			element.shadows.emplace_back(std::move(shadow));
 		}
 	} else {
