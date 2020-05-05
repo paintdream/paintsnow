@@ -13,8 +13,8 @@ TObject<IReflect>& ShadowMaskRenderStage::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectProperty()) {
+		ReflectProperty(LightSource);
 		ReflectProperty(InputDepth);
-		ReflectProperty(InputShadow);
 		ReflectProperty(OutputMask);
 	}
 

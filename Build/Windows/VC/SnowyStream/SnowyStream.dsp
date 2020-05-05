@@ -265,6 +265,10 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\ShadowMaskFS.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\ShadowMaskPass.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\SkeletonResource.cpp
 # End Source File
 # Begin Source File
@@ -526,6 +530,10 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\ShaderResource.h
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\ShadowMaskFS.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\ShadowMaskPass.h
 # End Source File
 # Begin Source File
 

@@ -83,6 +83,7 @@ TObject<IReflect>& StandardLightingFS::operator () (IReflect& reflect) {
 		ReflectProperty(baseColor)[IShader::BindInput(IShader::BindInput::LOCAL)];
 		ReflectProperty(metallic)[IShader::BindInput(IShader::BindInput::LOCAL)];
 		ReflectProperty(roughness)[IShader::BindInput(IShader::BindInput::LOCAL)];
+		ReflectProperty(shadow)[IShader::BindInput(IShader::BindInput::LOCAL)];
 		ReflectProperty(occlusion)[IShader::BindInput(IShader::BindInput::LOCAL)];
 		ReflectProperty(invWorldNormalMatrix)[paramBuffer][IShader::BindInput(IShader::BindInput::GENERAL)];
 		ReflectProperty(cubeLevelInv)[paramBuffer][IShader::BindInput(IShader::BindInput::GENERAL)];

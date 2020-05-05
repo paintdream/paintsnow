@@ -27,6 +27,7 @@ namespace PaintsNow {
 			float metallic;
 			float roughness;
 			float occlusion;
+			float shadow;
 
 			enum { MAX_LIGHT_COUNT = 64 };
 			std::vector<Float4> lightInfos; // position & color

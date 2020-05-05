@@ -15,9 +15,17 @@ namespace PaintsNow {
 		class RenderPortLightSource : public TReflected<RenderPortLightSource, RenderPort> {
 		public:
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+
 			struct LightElement {
 				Float4 position;
 				Float4 colorAttenuation;
+
+				struct Shadow {
+					MatrixFloat4x4 invProjectionMatrix;
+					TShared<NsSnowyStream::TextureResource> shadowTexture;
+				};
+
+				std::vector<Shadow> shadows;
 			};
 
 			struct EnvCubeElement {

@@ -608,7 +608,14 @@ void CameraComponent::CollectLightComponent(Engine& engine, LightComponent* ligh
 	if (lightComponent->Flag() & LightComponent::LIGHTCOMPONENT_DIRECTIONAL) {
 		element.position = Float4(-worldMatrix(2, 0), -worldMatrix(2, 1), -worldMatrix(2, 2), 0);
 		// refresh shadow
-		lightComponent->UpdateShadow(engine, cameraTransform, worldMatrix, rootEntity);
+		std::vector<TShared<LightComponent::ShadowGrid> > shadowGrids = lightComponent->UpdateShadow(engine, cameraTransform, worldMatrix, rootEntity);
+		for (size_t i = 0; i < shadowGrids.size(); i++) {
+			TShared<LightComponent::ShadowGrid>& grid = shadowGrids[i];
+			RenderPortLightSource::LightElement::Shadow shadow;
+			shadow.shadowTexture = grid->texture;
+			shadow.invProjectionMatrix = grid->invProjectionMatrix;
+			element.shadows.emplace_back(std::move(shadow));
+		}
 	} else {
 		element.position = Float4(worldMatrix(3, 0), worldMatrix(3, 1), worldMatrix(3, 2), 1);
 	}

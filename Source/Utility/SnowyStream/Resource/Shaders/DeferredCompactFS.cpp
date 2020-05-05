@@ -46,9 +46,10 @@ DeferredCompactDecodeFS::DeferredCompactDecodeFS() {
 
 String DeferredCompactDecodeFS::GetShaderText() {
 	return UnifyShaderCode(
-		depth = texture(DepthTexture, rasterCoord.xy).x;
-		float4 NormalRoughnessMetallic = texture(NormalRoughnessMetallicTexture, rasterCoord.xy);
-		float4 BaseColorOcclusion = texture(BaseColorOcclusionTexture, rasterCoord.xy);
+		depth = textureLod(DepthTexture, rasterCoord.xy, float(0)).x;
+		float4 NormalRoughnessMetallic = textureLod(NormalRoughnessMetallicTexture, rasterCoord.xy, float(0));
+		float4 BaseColorOcclusion = textureLod(BaseColorOcclusionTexture, rasterCoord.xy, float(0));
+		shadow = textureLod(ShadowTexture, rasterCoord.xy, float(0)).x;
 
 		float2 nn = NormalRoughnessMetallic.xy * float(255.0 / 127.0) - float2(128.0 / 127.0, 128.0 / 127.0);
 		viewNormal = float3(nn.x, nn.y, sqrt(max(0.0, 1 - dot(nn.xy, nn.xy))));
@@ -72,6 +73,7 @@ TObject<IReflect>& DeferredCompactDecodeFS::operator () (IReflect& reflect) {
 		ReflectProperty(BaseColorOcclusionTexture);
 		ReflectProperty(NormalRoughnessMetallicTexture);
 		ReflectProperty(DepthTexture);
+		ReflectProperty(ShadowTexture);
 		ReflectProperty(uniformProjectionBuffer);
 
 		ReflectProperty(inverseProjectionMatrix)[uniformProjectionBuffer][IShader::BindInput(IShader::BindInput::TRANSFORM_VIEWPROJECTION_INV)];
@@ -84,6 +86,7 @@ TObject<IReflect>& DeferredCompactDecodeFS::operator () (IReflect& reflect) {
 		ReflectProperty(occlusion)[IShader::BindOutput(IShader::BindOutput::LOCAL)];
 		ReflectProperty(metallic)[IShader::BindOutput(IShader::BindOutput::LOCAL)];
 		ReflectProperty(roughness)[IShader::BindOutput(IShader::BindOutput::LOCAL)];
+		ReflectProperty(shadow)[IShader::BindOutput(IShader::BindOutput::LOCAL)];
 	}
 
 	return *this;

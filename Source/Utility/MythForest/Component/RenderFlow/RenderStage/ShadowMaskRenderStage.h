@@ -9,6 +9,7 @@
 #include "../RenderStage.h"
 #include "../RenderPort/RenderPortRenderTarget.h"
 #include "../RenderPort/RenderPortTextureInput.h"
+#include "../RenderPort/RenderPortLightSource.h"
 #include "../../../../SnowyStream/Resource/Passes/ShadowMaskPass.h"
 
 namespace PaintsNow {
@@ -21,8 +22,8 @@ namespace PaintsNow {
 
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
+			TRenderPortReference<RenderPortLightSource> LightSource;
 			RenderPortTextureInput InputDepth;
-			RenderPortTextureInput InputShadow;
 			RenderPortRenderTarget OutputMask;
 		};
 	}

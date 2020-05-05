@@ -30,6 +30,7 @@ namespace PaintsNow {
 			RenderPortTextureInput NormalRoughnessMetallic;		// N.x, N.y, Roughness, Occlusion
 			RenderPortTextureInput Depth;
 			RenderPortTextureInput LightTexture;
+			RenderPortTextureInput ShadowTexture;
 
 			RenderPortLoadTarget LoadDepth;
 			RenderPortRenderTarget OutputColor;

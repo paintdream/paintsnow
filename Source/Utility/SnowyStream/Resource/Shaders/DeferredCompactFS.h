@@ -39,6 +39,7 @@ namespace PaintsNow {
 			IShader::BindTexture BaseColorOcclusionTexture;
 			IShader::BindTexture NormalRoughnessMetallicTexture;
 			IShader::BindTexture DepthTexture;
+			IShader::BindTexture ShadowTexture;
 			IShader::BindBuffer uniformProjectionBuffer;
 
 			MatrixFloat4x4 inverseProjectionMatrix;
@@ -52,6 +53,7 @@ namespace PaintsNow {
 			float metallic;
 			float roughness;
 			float depth;
+			float shadow;
 		};
 	}
 }
