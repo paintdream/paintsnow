@@ -119,10 +119,16 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 
 		// calculate position
 		CaptureData captureData;
-		OrthoCamera::UpdateCaptureData(captureData, shadowContext->lightTransformMatrix);
+		MatrixFloat4x4 viewMatrix = shadowContext->lightTransformMatrix;
+		viewMatrix(3, 0) = shadowContext->cameraWorldMatrix(3, 0);
+		viewMatrix(3, 1) = shadowContext->cameraWorldMatrix(3, 1);
+		viewMatrix(3, 2) = shadowContext->cameraWorldMatrix(3, 2);
+
+		OrthoCamera::UpdateCaptureData(captureData, viewMatrix);
+		MatrixFloat4x4 reverseDepth;
 
 		WorldInstanceData instanceData;
-		instanceData.worldMatrix = QuickInverse(shadowContext->cameraWorldMatrix);
+		instanceData.worldMatrix = QuickInverse(Scale(viewMatrix, Float4(1, -1, -1, 1)));
 		taskData->rootEntity = shadowContext->rootEntity; // in case of gc
 		taskData->shadowGrid = shadowGrid();
 		taskData->ReferenceObject();
