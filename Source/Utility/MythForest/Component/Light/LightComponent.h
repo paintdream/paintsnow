@@ -133,6 +133,7 @@ namespace PaintsNow {
 			class ShadowContext : public TReflected<ShadowContext, SharedTiny> {
 			public:
 				MatrixFloat4x4 cameraWorldMatrix;
+				MatrixFloat4x4 lightTransformMatrix;
 				TShared<Entity> rootEntity;
 			};
 

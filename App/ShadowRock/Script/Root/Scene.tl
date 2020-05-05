@@ -123,6 +123,7 @@ function Scene.New(database : Database?, clock : Clock)
 		
 		local sun = MythForest.NewEntity(-(1))
 		local sunTransformComponent : TransformComponent = TransformComponentModule.New()
+		sunTransformComponent:SetScale({ 16, 16, 16 })
 		sunTransformComponent:SetRotation({0.25 * math.pi, 0.75 * math.pi, 0})
 		sunTransformComponent:SetTranslation({-3, 2, 4})
 		sunTransformComponent:UpdateTransform()

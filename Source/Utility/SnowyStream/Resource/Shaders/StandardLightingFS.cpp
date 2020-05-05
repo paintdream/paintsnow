@@ -47,6 +47,7 @@ String StandardLightingFS::GetShaderText() {
 
 		float4 pos = lightInfos[i * 2 - 2];
 		float4 color = lightInfos[i * 2 - 1];
+		if (pos.w < 0.5 && shadow < 0.5) break;
 		float3 L = pos.xyz - viewPosition.xyz * pos.www;
 		float s = saturate(1.0 / (0.001 + dot(L, L) * color.w));
 		color.xyz = color.xyz * s;

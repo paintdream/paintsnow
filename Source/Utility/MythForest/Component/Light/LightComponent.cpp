@@ -3,6 +3,7 @@
 #include "../Transform/TransformComponent.h"
 #include "../Visibility/VisibilityComponent.h"
 #include "../../../SnowyStream/SnowyStream.h"
+#include "../../../MythForest/MythForest.h"
 
 using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
@@ -118,7 +119,7 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 
 		// calculate position
 		CaptureData captureData;
-		OrthoCamera::UpdateCaptureData(captureData, shadowContext->cameraWorldMatrix);
+		OrthoCamera::UpdateCaptureData(captureData, shadowContext->lightTransformMatrix);
 
 		WorldInstanceData instanceData;
 		instanceData.worldMatrix = QuickInverse(shadowContext->cameraWorldMatrix);
@@ -251,6 +252,7 @@ void LightComponent::InstanceGroup::Reset() {
 }
 
 void LightComponent::TaskData::RenderFrame(Engine& engine) {
+	engine.mythForest.StartCaptureFrame("lightdebug", "");
 	std::vector<IRender::Queue*> renderQueues;
 	renderQueues.emplace_back(renderQueue);
 	for (size_t k = 0; k < warpData.size(); k++) {
@@ -263,6 +265,7 @@ void LightComponent::TaskData::RenderFrame(Engine& engine) {
 	Flag() &= ~TINY_MODIFIED;
 	Cleanup(engine.interfaces.render);
 	ReleaseObject();
+	engine.mythForest.EndCaptureFrame();
 }
 
 void LightComponent::ShadowLayer::CompleteCollect(Engine& engine, TaskData& task) {
@@ -537,6 +540,7 @@ TShared<LightComponent::ShadowGrid> LightComponent::ShadowLayer::UpdateShadow(En
 	TShared<ShadowContext> shadowContext = TShared<ShadowContext>::From(new ShadowContext());
 	shadowContext->rootEntity = rootEntity;
 	shadowContext->cameraWorldMatrix = cameraTransform;
+	shadowContext->lightTransformMatrix = lightTransform;
 	TShared<ShadowGrid> grid = streamComponent->Load(engine, coord, shadowContext())->QueryInterface(UniqueType<ShadowGrid>());
 	assert(grid);
 
