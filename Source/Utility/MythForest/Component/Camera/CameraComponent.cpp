@@ -615,8 +615,8 @@ void CameraComponent::CollectLightComponent(Engine& engine, LightComponent* ligh
 			if (!(grid->Flag() & TINY_MODIFIED)) {
 				shadow.shadowTexture = grid->texture;
 			}
-			shadow.shadowMatrix = grid->shadowMatrix;
 
+			shadow.shadowMatrix = grid->shadowMatrix;
 			element.shadows.emplace_back(std::move(shadow));
 		}
 	} else {

@@ -128,7 +128,7 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 		MatrixFloat4x4 reverseDepth;
 
 		WorldInstanceData instanceData;
-		instanceData.worldMatrix = QuickInverse(Scale(viewMatrix, Float4(1, -1, -1, 1)));
+		instanceData.worldMatrix = shadowGrid->shadowMatrix = QuickInverse(Scale(viewMatrix, Float4(1, -1, -1, 1)));
 		taskData->rootEntity = shadowContext->rootEntity; // in case of gc
 		taskData->shadowGrid = shadowGrid();
 		taskData->ReferenceObject();
