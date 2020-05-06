@@ -105,7 +105,6 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 		texture->description.state.layout = IRender::Resource::TextureDescription::DEPTH;
 		texture->GetResourceManager().InvokeUpload(texture(), taskData->renderQueue);
 		shadowGrid->texture = texture;
-		shadowGrid->Flag() |= TINY_MODIFIED;
 	}
 
 	if (!(taskData->Flag() & TINY_MODIFIED)) {
@@ -258,7 +257,7 @@ void LightComponent::InstanceGroup::Reset() {
 }
 
 void LightComponent::TaskData::RenderFrame(Engine& engine) {
-	engine.mythForest.StartCaptureFrame("lightdebug", "");
+	// engine.mythForest.StartCaptureFrame("lightdebug", "");
 	std::vector<IRender::Queue*> renderQueues;
 	renderQueues.emplace_back(renderQueue);
 	for (size_t k = 0; k < warpData.size(); k++) {
@@ -271,7 +270,7 @@ void LightComponent::TaskData::RenderFrame(Engine& engine) {
 	Flag() &= ~TINY_MODIFIED;
 	Cleanup(engine.interfaces.render);
 	ReleaseObject();
-	engine.mythForest.EndCaptureFrame();
+	// engine.mythForest.EndCaptureFrame();
 }
 
 void LightComponent::ShadowLayer::CompleteCollect(Engine& engine, TaskData& task) {
@@ -539,8 +538,8 @@ TShared<LightComponent::ShadowGrid> LightComponent::ShadowLayer::UpdateShadow(En
 	const UShort3& dimension = streamComponent->GetDimension();
 
 	UShort3 coord(
-		safe_cast<uint16_t>((int(lightCoord.x() / gridSize) % dimension.x() + dimension.x()) % dimension.x()),
-		safe_cast<uint16_t>((int(lightCoord.y() / gridSize) % dimension.y() + dimension.y()) % dimension.y()),
+		safe_cast<uint16_t>((int(lightCoord.x() / 0.1f) % dimension.x() + dimension.x()) % dimension.x()),
+		safe_cast<uint16_t>((int(lightCoord.y() / 0.1f) % dimension.y() + dimension.y()) % dimension.y()),
 		0);
 
 	TShared<ShadowContext> shadowContext = TShared<ShadowContext>::From(new ShadowContext());
@@ -549,7 +548,7 @@ TShared<LightComponent::ShadowGrid> LightComponent::ShadowLayer::UpdateShadow(En
 	shadowContext->lightTransformMatrix = lightTransform;
 	TShared<ShadowGrid> grid = streamComponent->Load(engine, coord, shadowContext())->QueryInterface(UniqueType<ShadowGrid>());
 	assert(grid);
-
+	// printf("COORD: %d, %d, %d\n", coord.x(), coord.y(), coord.z());
 	return grid;
 }
 

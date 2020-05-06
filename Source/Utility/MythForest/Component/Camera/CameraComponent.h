@@ -39,6 +39,7 @@ namespace PaintsNow {
 				MatrixFloat4x4 projectionMatrix;
 				MatrixFloat4x4 lastViewProjectionMatrix;
 				MatrixFloat4x4 viewMatrix;
+				MatrixFloat4x4 cameraMatrix; // inverse of viewMatrix
 				MatrixFloat4x4 jitterMatrix;
 				Float3 viewPosition;
 				float time;

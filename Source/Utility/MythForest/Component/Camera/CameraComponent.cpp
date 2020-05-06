@@ -65,6 +65,7 @@ void CameraComponent::UpdateRootMatrices(const MatrixFloat4x4& cameraWorldMatrix
 	Flag() &= ~TINY_MODIFIED;
 
 	MatrixFloat4x4 viewMatrix = QuickInverse(cameraWorldMatrix);
+	nextTaskData->worldGlobalData.cameraMatrix = cameraWorldMatrix;
 	nextTaskData->worldGlobalData.projectionMatrix = projectionMatrix;
 	nextTaskData->worldGlobalData.viewMatrix = viewMatrix;
 	nextTaskData->worldGlobalData.viewProjectionMatrix = viewMatrix * projectionMatrix;
@@ -612,10 +613,7 @@ void CameraComponent::CollectLightComponent(Engine& engine, LightComponent* ligh
 		for (size_t i = 0; i < shadowGrids.size(); i++) {
 			TShared<LightComponent::ShadowGrid>& grid = shadowGrids[i];
 			RenderPortLightSource::LightElement::Shadow shadow;
-			if (!(grid->Flag() & TINY_MODIFIED)) {
-				shadow.shadowTexture = grid->texture;
-			}
-
+			shadow.shadowTexture = grid->texture;
 			shadow.shadowMatrix = grid->shadowMatrix;
 			element.shadows.emplace_back(std::move(shadow));
 		}
@@ -707,7 +705,7 @@ void CameraComponent::CollectComponents(Engine& engine, TaskData& taskData, cons
 					LightComponent* lightComponent;
 					EnvCubeComponent* envCubeComponent;
 					if ((lightComponent = component->QueryInterface(UniqueType<LightComponent>())) != nullptr) {
-						CollectLightComponent(engine, lightComponent, warpData.lightElements, subWorldInstancedData.worldMatrix, taskData.worldGlobalData.viewMatrix);
+						CollectLightComponent(engine, lightComponent, warpData.lightElements, subWorldInstancedData.worldMatrix, taskData.worldGlobalData.cameraMatrix);
 					} else if ((envCubeComponent = component->QueryInterface(UniqueType<EnvCubeComponent>())) != nullptr) {
 						CollectEnvCubeComponent(envCubeComponent, warpData.envCubeElements, subWorldInstancedData.worldMatrix);
 					}

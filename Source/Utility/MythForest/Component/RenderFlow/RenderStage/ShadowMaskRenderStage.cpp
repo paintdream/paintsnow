@@ -57,5 +57,6 @@ void ShadowMaskRenderStage::UpdatePass(Engine& engine) {
 		}
 	}
 
+	// assert(LightSource->lightElements.empty() || mask.shadowTexture.resource != emptyShadowMask->GetTexture());
 	BaseClass::UpdatePass(engine);
 }
