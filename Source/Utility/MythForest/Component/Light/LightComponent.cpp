@@ -538,8 +538,8 @@ TShared<LightComponent::ShadowGrid> LightComponent::ShadowLayer::UpdateShadow(En
 	const UShort3& dimension = streamComponent->GetDimension();
 
 	UShort3 coord(
-		safe_cast<uint16_t>((int(lightCoord.x() / 0.1f) % dimension.x() + dimension.x()) % dimension.x()),
-		safe_cast<uint16_t>((int(lightCoord.y() / 0.1f) % dimension.y() + dimension.y()) % dimension.y()),
+		safe_cast<uint16_t>((int(lightCoord.x() / gridSize) % dimension.x() + dimension.x()) % dimension.x()),
+		safe_cast<uint16_t>((int(lightCoord.y() / gridSize) % dimension.y() + dimension.y()) % dimension.y()),
 		0);
 
 	TShared<ShadowContext> shadowContext = TShared<ShadowContext>::From(new ShadowContext());

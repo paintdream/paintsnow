@@ -139,9 +139,10 @@ void CameraComponent::Instancing(Engine& engine) {
 	IRender& render = engine.interfaces.render;
 	uint32_t entityCount = 0;
 	uint32_t visibleEntityCount = 0;
+	TShared<TaskData> taskData = nextTaskData;
 
-	for (size_t j = 0; j < currentTaskData->warpData.size(); j++) {
-		TaskData::WarpData& warpData = currentTaskData->warpData[j];
+	for (size_t j = 0; j < taskData->warpData.size(); j++) {
+		TaskData::WarpData& warpData = taskData->warpData[j];
 		TaskData::WarpData::InstanceGroupMap& instanceGroup = warpData.instanceGroups;
 		entityCount += warpData.entityCount;
 		visibleEntityCount += warpData.visibleEntityCount;
@@ -272,10 +273,9 @@ void CameraComponent::CommitRenderRequests(Engine& engine) {
 	// commit to RenderFlowComponent
 	if (renderFlowComponent) {
 		std::map<RenderPolicy*, RenderStage::Port*> policyPortMap;
-
 		IRender& render = engine.interfaces.render;
-
-		const Float3& viewPosition = currentTaskData->worldGlobalData.viewPosition;
+		TShared<TaskData> taskData = nextTaskData;
+		const Float3& viewPosition = taskData->worldGlobalData.viewPosition;
 
 		TShared<NsSnowyStream::TextureResource> cubeMapTexture;
 		TShared<NsSnowyStream::TextureResource> skyMapTexture;
@@ -284,8 +284,8 @@ void CameraComponent::CommitRenderRequests(Engine& engine) {
 		RenderPortCommandQueue* lastCommandQueue = nullptr;
 		IRender::Resource* lastRenderState = nullptr;
 
-		for (size_t j = 0; j < currentTaskData->warpData.size(); j++) {
-			TaskData::WarpData& warpData = currentTaskData->warpData[j];
+		for (size_t j = 0; j < taskData->warpData.size(); j++) {
+			TaskData::WarpData& warpData = taskData->warpData[j];
 
 			// warpData.resourceQueue
 			TaskData::WarpData::InstanceGroupMap& instanceGroups = warpData.instanceGroups;
@@ -378,8 +378,9 @@ void CameraComponent::CommitRenderRequests(Engine& engine) {
 
 void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPort) {
 	// Update jitter
-	CameraComponentConfig::WorldGlobalData& worldGlobalData = currentTaskData->worldGlobalData;
-	std::vector<TaskData::WarpData>& warpData = currentTaskData->warpData;
+	TShared<TaskData> taskData = nextTaskData;
+	CameraComponentConfig::WorldGlobalData& worldGlobalData = taskData->worldGlobalData;
+	std::vector<TaskData::WarpData>& warpData = nextTaskData->warpData;
 
 	if (Flag() & CAMERACOMPONENT_SMOOTH_TRACK) {
 		const float ratio = 0.75f;
