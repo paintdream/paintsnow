@@ -135,7 +135,7 @@ function Scene.New(database : Database?, clock : Clock)
 		lightComponent:SetLightDirectional(true)
 		lightComponent:SetRenderPolicy(lightPolicy)
 		local streamComponent : StreamComponent = StreamComponentModule.New({32, 32, 1}, 16)
-		lightComponent:BindLightShadowStream(0, streamComponent, { 1024, 1024 }, 4.0)
+		lightComponent:BindLightShadowStream(0, streamComponent, { 1024, 1024 }, 0.25)
 
 		sun:AddEntityComponent(lightComponent)
 		spaceComponent:InsertEntity(sun)

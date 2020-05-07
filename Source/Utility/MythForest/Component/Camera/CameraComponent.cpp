@@ -71,7 +71,7 @@ void CameraComponent::UpdateRootMatrices(const MatrixFloat4x4& cameraWorldMatrix
 	nextTaskData->worldGlobalData.viewProjectionMatrix = viewMatrix * projectionMatrix;
 	nextTaskData->worldGlobalData.tanHalfFov = (float)tan(fov / 2.0f);
 	nextTaskData->worldGlobalData.viewPosition = Float3(cameraWorldMatrix(3, 0), cameraWorldMatrix(3, 1), cameraWorldMatrix(3, 2));
-	nextTaskData->worldGlobalData.lastViewProjectionMatrix = currentTaskData->worldGlobalData.viewProjectionMatrix;
+	nextTaskData->worldGlobalData.lastViewProjectionMatrix = prevTaskData->worldGlobalData.viewProjectionMatrix;
 }
 
 RenderFlowComponent* CameraComponent::GetRenderFlowComponent() const {
@@ -97,7 +97,7 @@ void CameraComponent::Initialize(Engine& engine, Entity* entity) {
 
 		IRender::Device* device = engine.snowyStream.GetRenderDevice();
 		uint32_t warpCount = engine.bridgeSunset.GetKernel().GetWarpCount();
-		currentTaskData = TShared<TaskData>::From(new TaskData(warpCount));
+		prevTaskData = TShared<TaskData>::From(new TaskData(warpCount));
 		nextTaskData = TShared<TaskData>::From(new TaskData(warpCount));
 	}
 }
@@ -117,8 +117,8 @@ void CameraComponent::Uninitialize(Engine& engine, Entity* entity) {
 		}
 
 		IRender& render = engine.interfaces.render;
-		currentTaskData->Destroy(render);
-		currentTaskData = nullptr;
+		prevTaskData->Destroy(render);
+		prevTaskData = nullptr;
 		nextTaskData->Destroy(render);
 		nextTaskData = nullptr;
 
@@ -216,7 +216,7 @@ MatrixFloat4x4 CameraComponent::ComputeSmoothTrackTransform() const {
 void CameraComponent::UpdateTaskData(Engine& engine, Entity* hostEntity) {
 	// Next collection ready? 
 	if (nextTaskData->pendingCount.load(std::memory_order_acquire) == 0) {
-		std::swap(currentTaskData, nextTaskData);
+		std::swap(prevTaskData, nextTaskData);
 		// Tick new collection
 		nextTaskData->Cleanup(engine.interfaces.render);
 
@@ -378,9 +378,9 @@ void CameraComponent::CommitRenderRequests(Engine& engine) {
 
 void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPort) {
 	// Update jitter
-	TShared<TaskData> taskData = nextTaskData;
+	TShared<TaskData> taskData = prevTaskData;
 	CameraComponentConfig::WorldGlobalData& worldGlobalData = taskData->worldGlobalData;
-	std::vector<TaskData::WarpData>& warpData = nextTaskData->warpData;
+	std::vector<TaskData::WarpData>& warpData = taskData->warpData;
 
 	if (Flag() & CAMERACOMPONENT_SMOOTH_TRACK) {
 		const float ratio = 0.75f;
@@ -403,38 +403,39 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 		}
 	}
 
-	// update buffers
-	if (Flag() & (CAMERACOMPONENT_SMOOTH_TRACK | CAMERACOMPONENT_SUBPIXEL_JITTER)) {
-		for (size_t i = 0; i < warpData.size(); i++) {
-			TaskData::WarpData& w = warpData[i];
-			typedef std::map<ShaderResource*, TaskData::WarpData::GlobalBufferItem> GlobalMap;
-			GlobalMap& globalMap = w.worldGlobalBufferMap;
-			for (GlobalMap::iterator it = globalMap.begin(); it != globalMap.end(); ++it) {
-				std::vector<Bytes> buffers;
-				std::vector<IRender::Resource*> textureResources;
-				std::vector<IRender::Resource::DrawCallDescription::BufferRange> bufferResources;
-				it->second.globalUpdater.Snapshot(buffers, bufferResources, textureResources, worldGlobalData);
+	// update camera view settings
+	if (renderFlowComponent) {
+		IRender::Queue* renderQueue = renderFlowComponent->GetResourceQueue();
+		// update buffers
+		if (Flag() & (CAMERACOMPONENT_SMOOTH_TRACK | CAMERACOMPONENT_SUBPIXEL_JITTER)) {
+			for (size_t i = 0; i < warpData.size(); i++) {
+				TaskData::WarpData& w = warpData[i];
+				typedef std::map<ShaderResource*, TaskData::WarpData::GlobalBufferItem> GlobalMap;
+				GlobalMap& globalMap = w.worldGlobalBufferMap;
+				for (GlobalMap::iterator it = globalMap.begin(); it != globalMap.end(); ++it) {
+					std::vector<Bytes> buffers;
+					std::vector<IRender::Resource*> textureResources;
+					std::vector<IRender::Resource::DrawCallDescription::BufferRange> bufferResources;
+					it->second.globalUpdater.Snapshot(buffers, bufferResources, textureResources, worldGlobalData);
 
-				assert(bufferResources.empty());
-				assert(textureResources.empty());
-				for (size_t i = 0; i < buffers.size(); i++) {
-					Bytes& data = buffers[i];
-					if (!data.Empty()) {
-						IRender::Resource::BufferDescription desc;
-						desc.usage = IRender::Resource::BufferDescription::UNIFORM;
-						desc.component = 4;
-						desc.dynamic = 1;
-						desc.format = IRender::Resource::BufferDescription::FLOAT;
-						desc.data = std::move(data);
-						render.UploadResource(it->second.renderQueue, it->second.buffers[i], &desc);
+					assert(bufferResources.empty());
+					assert(textureResources.empty());
+					for (size_t i = 0; i < buffers.size(); i++) {
+						Bytes& data = buffers[i];
+						if (!data.Empty()) {
+							IRender::Resource::BufferDescription desc;
+							desc.usage = IRender::Resource::BufferDescription::UNIFORM;
+							desc.component = 4;
+							desc.dynamic = 1;
+							desc.format = IRender::Resource::BufferDescription::FLOAT;
+							desc.data = std::move(data);
+							render.UploadResource(it->second.renderQueue, it->second.buffers[i], &desc);
+						}
 					}
 				}
 			}
 		}
-	}
 
-	// update camera view settings
-	if (renderFlowComponent) {
 		// CameraView settings
 		RenderStage::Port* port = renderFlowComponent->BeginPort(cameraViewPortName);
 		if (port != nullptr) {
@@ -815,7 +816,7 @@ void CameraComponent::TaskData::Destroy(IRender& render) {
 TObject<IReflect>& CameraComponent::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 	if (reflect.IsReflectProperty()) {
-		ReflectProperty(currentTaskData)[Runtime];
+		ReflectProperty(prevTaskData)[Runtime];
 		ReflectProperty(nextTaskData)[Runtime];
 		ReflectProperty(renderFlowComponent)[Runtime];
 		ReflectProperty(rootEntity)[Runtime];

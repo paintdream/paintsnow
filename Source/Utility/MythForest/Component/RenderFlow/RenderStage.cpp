@@ -210,6 +210,10 @@ const IRender::Resource::RenderTargetDescription& RenderStage::GetRenderTargetDe
 	return renderTargetDescription;
 }
 
+IRender::Queue* RenderStage::GetStageRenderQueue() const {
+	return renderQueue.GetQueue();
+}
+
 void RenderStage::PrepareRenderQueues(Engine& engine, std::vector<ZRenderQueue*>& queues) {
 	assert(Flag() & TINY_ACTIVATED);
 

@@ -37,6 +37,7 @@ namespace PaintsNow {
 			virtual void Tick(Engine& engine);
 
 			virtual void PrepareRenderQueues(Engine& engine, std::vector<ZRenderQueue*>& queues);
+			IRender::Queue* GetStageRenderQueue() const;
 
 			IRender::Resource* GetRenderTargetResource() const;
 			const IRender::Resource::RenderTargetDescription& GetRenderTargetDescription() const;

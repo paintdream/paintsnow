@@ -182,7 +182,7 @@ namespace PaintsNow {
 
 		protected:
 			// TaskDatas
-			TShared<TaskData> currentTaskData;
+			TShared<TaskData> prevTaskData;
 			TShared<TaskData> nextTaskData;
 
 			// Runtime Resource
