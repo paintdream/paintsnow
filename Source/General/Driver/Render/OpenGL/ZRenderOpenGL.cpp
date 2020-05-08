@@ -74,6 +74,7 @@ struct ResourceBaseImplOpenGL : public ResourceAligned {
 	virtual void SetUploadDescription(IRender::Resource::Description* description) = 0;
 	virtual void SetDownloadDescription(IRender::Resource::Description* description) = 0;
 
+	virtual void Nop(QueueImplOpenGL& queue) {}
 	virtual void Execute(QueueImplOpenGL& queue) = 0;
 	virtual void Upload(QueueImplOpenGL& queue) = 0;
 	virtual void Download(QueueImplOpenGL& queue) = 0;
@@ -86,20 +87,16 @@ struct ResourceBaseImplOpenGL : public ResourceAligned {
 struct ResourceCommandImplOpenGL {
 	typedef void (ResourceBaseImplOpenGL::*Action)(QueueImplOpenGL& queue);
 	enum Operation {
-		OP_EXECUTE = 0,
-		OP_UPLOAD = 1,
-		OP_DOWNLOAD = 2,
-		OP_DELETE = 3,
-		OP_PRESWAP = 4,
-		OP_POSTSWAP = 5,
-		OP_MAX = 5,
+		OP_NOP = 0,
+		OP_EXECUTE = 1,
+		OP_UPLOAD = 2,
+		OP_DOWNLOAD = 3,
+		OP_DELETE = 4,
+		OP_PRESWAP = 5,
+		OP_POSTSWAP = 6,
+		OP_MAX = 6,
 		OP_MASK = 7
 	};
-
-	inline bool IsActionOnce() {
-		uint8_t op = (uint8_t)((size_t)resource & OP_MASK);
-		return op != OP_EXECUTE;
-	}
 
 	ResourceCommandImplOpenGL(Operation a = OP_EXECUTE, IRender::Resource* r = nullptr) {
 		assert(((size_t)r & OP_MASK) == 0);
@@ -110,10 +107,6 @@ struct ResourceCommandImplOpenGL {
 		return reinterpret_cast<IRender::Resource*>((size_t)resource & ~(size_t)OP_MASK);
 	}
 
-	operator bool() const {
-		return resource != nullptr;
-	}
-
 	Operation GetOperation() const {
 		return (Operation)((size_t)resource & OP_MASK);
 	}
@@ -121,6 +114,7 @@ struct ResourceCommandImplOpenGL {
 	bool Invoke(QueueImplOpenGL& queue) {
 		// decode mask	
 		static Action actionTable[] = {
+			&ResourceBaseImplOpenGL::Nop,
 			&ResourceBaseImplOpenGL::Execute,
 			&ResourceBaseImplOpenGL::Upload,
 			&ResourceBaseImplOpenGL::Download,
@@ -129,8 +123,8 @@ struct ResourceCommandImplOpenGL {
 			&ResourceBaseImplOpenGL::PostSwap
 		};
 
-		if (resource == nullptr) {
-			return false;
+		if (GetResource() == nullptr) {
+			return GetOperation() == OP_NOP;
 		}
 
 		ResourceBaseImplOpenGL* impl = static_cast<ResourceBaseImplOpenGL*>(GetResource());
@@ -139,11 +133,11 @@ struct ResourceCommandImplOpenGL {
 		Action action = actionTable[index];
 #ifdef _DEBUG
 		const char* opnames[] = {
-			"Execute", "Upload", "Download", "Delete", "PreSwap"
+			"Nop", "Execute", "Upload", "Download", "Delete", "PreSwap"
 		};
 
 		const char* types[] = {
-			"Unknown", "Texture", "Buffer", "Shader", "RenderState", "RenderTarget", "Clear", "DrawCall"
+			"Nop", "Unknown", "Texture", "Buffer", "Shader", "RenderState", "RenderTarget", "Clear", "DrawCall"
 		};
 
 #ifdef LOG_OPENGL
@@ -183,47 +177,6 @@ struct QueueImplOpenGL : public IRender::Queue {
 		}
 	}
 
-	struct Transfer {
-		Transfer(QueueImplOpenGL& q, std::vector<ResourceCommandImplOpenGL>& coll) : queue(q), collection(coll) {
-			count = safe_cast<uint32_t>(collection.size());
-		}
-
-		bool operator () (ResourceCommandImplOpenGL& command, ResourceCommandImplOpenGL& predict) {
-			if (count != 0) {
-				command = collection[collection.size() - (count--)];
-				return true;
-			} else {
-				return false;
-			}
-		}
-
-		QueueImplOpenGL& queue;
-		uint32_t count;
-		std::vector<ResourceCommandImplOpenGL> collection;
-	};
-
-	struct Collector {
-		Collector(QueueImplOpenGL& q, uint32_t rc, uint32_t c) : queue(q), totalCount(c) {
-			collection.reserve(c - rc);
-		}
-
-		bool operator () (ResourceCommandImplOpenGL& command, ResourceCommandImplOpenGL& predict) {
-			if (totalCount-- != 0) {
-				if (!command.IsActionOnce()) {
-					collection.emplace_back(command);
-				}
-
-				return true;
-			} else {
-				return false;
-			}
-		}
-
-		QueueImplOpenGL& queue;
-		std::vector<ResourceCommandImplOpenGL> collection;
-		uint32_t totalCount;
-	};
-
 	static inline void PrefetchCommand(const ResourceCommandImplOpenGL& predict) {
 		IMemory::PrefetchRead(&predict);
 		IRender::Resource* resource = predict.GetResource();
@@ -232,34 +185,22 @@ struct QueueImplOpenGL : public IRender::Queue {
 	}
 
 	struct Scanner {
-		Scanner(QueueImplOpenGL& q) : queue(q), removeCount(0), totalCount(0) {}
+		Scanner(QueueImplOpenGL& q) : queue(q) {}
 		bool operator () (ResourceCommandImplOpenGL& command, ResourceCommandImplOpenGL& predict) {
 			PrefetchCommand(predict);
 			if (command.Invoke(queue)) {
-				removeCount += command.IsActionOnce();
-				++totalCount;
+				if (command.GetOperation() != ResourceCommandImplOpenGL::OP_EXECUTE) {
+					// replace it with nop
+					command = ResourceCommandImplOpenGL(ResourceCommandImplOpenGL::OP_NOP, nullptr);
+				}
+
 				return true;
 			} else {
 				return false;
 			}
 		}
 
-		~Scanner() {
-			if (removeCount != 0) {
-				Collector collector(queue, removeCount, totalCount);
-				queue.queuedCommands.Iterate(collector);
-
-				while (!queue.queuedCommands.Empty() && removeCount-- != 0) {
-					queue.queuedCommands.Pop();
-				}
-
-				queue.queuedCommands.Iterate(Transfer(queue, collector.collection));
-			}
-		}
-
 		QueueImplOpenGL& queue;
-		uint32_t removeCount;
-		uint32_t totalCount;
 	};
 
 	bool Repeat() {
@@ -287,7 +228,7 @@ struct QueueImplOpenGL : public IRender::Queue {
 		while (!queuedCommands.Empty()) {
 			ResourceCommandImplOpenGL command = queuedCommands.Top();
 			queuedCommands.Pop();
-			if (command && command.GetOperation() == ResourceCommandImplOpenGL::OP_DELETE) {
+			if (command.GetOperation() == ResourceCommandImplOpenGL::OP_DELETE) {
 				command.Invoke(*this);
 			}
 		}
@@ -299,12 +240,12 @@ struct QueueImplOpenGL : public IRender::Queue {
 		while (!queuedCommands.Empty()) {
 			ResourceCommandImplOpenGL command = queuedCommands.Top();
 			queuedCommands.Pop();
-			if (command) {
-				if (command.IsActionOnce()) {
+			if (command.GetOperation() != ResourceCommandImplOpenGL::OP_NOP) {
+				if (command.GetResource() == nullptr) { // yield?
+					return false;
+				} else if (command.GetOperation() != ResourceCommandImplOpenGL::OP_EXECUTE) {
 					command.Invoke(*this);
 				}
-			} else {
-				return false;
 			}
 		}
 
@@ -1940,7 +1881,7 @@ void ZRenderOpenGL::MergeQueue(Queue* target, Queue* source) {
 void ZRenderOpenGL::YieldQueue(Queue* queue) {
 	QueueImplOpenGL* q = static_cast<QueueImplOpenGL*>(queue);
 	assert(queue != nullptr);
-	q->QueueCommand(ResourceCommandImplOpenGL());
+	q->QueueCommand(ResourceCommandImplOpenGL(ResourceCommandImplOpenGL::OP_EXECUTE, nullptr));
 }
 
 void ZRenderOpenGL::DeleteQueue(Queue* queue) {

@@ -22,8 +22,8 @@ void ZRenderQueue::InvokeRenderQueuesParallel(IRender& render, std::vector<ZRend
 	if (queues.empty()) return;
 
 	// cleanup stage
+	std::vector<IRender::Queue*> cleanupQueues;
 	while (true) {
-		std::vector<IRender::Queue*> cleanupQueues;
 		for (size_t i = 0; i < queues.size(); i++) {
 			ZRenderQueue* q = queues[i];
 			if (q->invokeCounter.load(std::memory_order_acquire) != 0) {
