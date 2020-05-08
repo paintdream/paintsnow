@@ -203,11 +203,11 @@ struct QueueImplOpenGL : public IRender::Queue {
 		QueueImplOpenGL& queue;
 	};
 
-	bool Repeat() {
-		return queuedCommands.Iterate(Scanner(*this));
+	void Repeat() {
+		queuedCommands.Iterate(Scanner(*this));
 	}
 
-	bool Consume() {
+	void Consume() {
 		ResourceCommandImplOpenGL command;
 		while (!queuedCommands.Empty()) {
 			ResourceCommandImplOpenGL& command = queuedCommands.Top();
@@ -215,16 +215,14 @@ struct QueueImplOpenGL : public IRender::Queue {
 
 			if (!command.Invoke(*this)) {
 				queuedCommands.Pop();
-				return false;
+				break;
 			}
 
 			queuedCommands.Pop();
 		}
-
-		return true;
 	}
 
-	bool Clear() {
+	void Clear() {
 		while (!queuedCommands.Empty()) {
 			ResourceCommandImplOpenGL command = queuedCommands.Top();
 			queuedCommands.Pop();
@@ -232,24 +230,20 @@ struct QueueImplOpenGL : public IRender::Queue {
 				command.Invoke(*this);
 			}
 		}
-
-		return true;
 	}
 
-	bool Cleanup() {
+	void Cleanup() {
 		while (!queuedCommands.Empty()) {
 			ResourceCommandImplOpenGL command = queuedCommands.Top();
 			queuedCommands.Pop();
 			if (command.GetOperation() != ResourceCommandImplOpenGL::OP_NOP) {
 				if (command.GetResource() == nullptr) { // yield?
-					return false;
+					break;
 				} else if (command.GetOperation() != ResourceCommandImplOpenGL::OP_EXECUTE) {
 					command.Invoke(*this);
 				}
 			}
 		}
-
-		return true;
 	}
 
 	DeviceImplOpenGL* device;
@@ -1834,10 +1828,10 @@ IRender::Device* ZRenderOpenGL::GetQueueDevice(Queue* queue) {
 	return q->device;
 }
 
-bool ZRenderOpenGL::PresentQueues(Queue** queues, uint32_t count, PresentOption option) {
+void ZRenderOpenGL::PresentQueues(Queue** queues, uint32_t count, PresentOption option) {
 	GL_GUARD();
 	ClearDeletedQueues();
-	bool (QueueImplOpenGL::*op)() = &QueueImplOpenGL::Consume;
+	void (QueueImplOpenGL::*op)() = &QueueImplOpenGL::Consume;
 	switch (option) {
 	case PresentOption::CONSUME:
 		op = &QueueImplOpenGL::Consume;
@@ -1853,15 +1847,10 @@ bool ZRenderOpenGL::PresentQueues(Queue** queues, uint32_t count, PresentOption 
 		break;
 	}
 
-	bool success = true;
 	for (uint32_t k = 0; k < count; k++) {
 		QueueImplOpenGL* q = static_cast<QueueImplOpenGL*>(queues[k]);
-		if (!(q->*op)()) {
-			success = false;
-		}
+		(q->*op)();
 	}
-
-	return success;
 }
 
 bool ZRenderOpenGL::SupportParallelPresent(Device* device) {

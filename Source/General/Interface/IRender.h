@@ -220,7 +220,7 @@ namespace PaintsNow {
 
 		// The only API that requires calling on device thread.
 		enum PresentOption { CONSUME, REPEAT, CLEANUP, CLEAR };
-		virtual bool PresentQueues(Queue** queues, uint32_t count, PresentOption option) = 0;
+		virtual void PresentQueues(Queue** queues, uint32_t count, PresentOption option) = 0;
 
 		// Device
 		virtual Device* CreateDevice(const String& description) = 0;

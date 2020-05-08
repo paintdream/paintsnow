@@ -23,7 +23,7 @@ namespace PaintsNow {
 		virtual void SetDeviceResolution(Device* device, const Int2& resolution) override;
 		virtual void DeleteDevice(Device* device) override;
 
-		virtual bool PresentQueues(Queue** queues, uint32_t count, PresentOption option) override;
+		virtual void PresentQueues(Queue** queues, uint32_t count, PresentOption option) override;
 		virtual bool SupportParallelPresent(Device* device) override;
 
 		// Queue

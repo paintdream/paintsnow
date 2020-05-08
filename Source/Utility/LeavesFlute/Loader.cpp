@@ -54,7 +54,7 @@ public:
 	}
 
 	virtual bool SupportParallelPresent(Device* device) override { return false; }
-	virtual bool PresentQueues(Queue** queue, uint32_t count, PresentOption option) override { return true; }
+	virtual void PresentQueues(Queue** queue, uint32_t count, PresentOption option) override {}
 	virtual void DeleteQueue(Queue* queue) override {}
 	virtual void YieldQueue(Queue* queue) override {}
 	virtual void MergeQueue(Queue* target, Queue* src) override {}
