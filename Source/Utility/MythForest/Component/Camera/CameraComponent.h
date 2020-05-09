@@ -167,9 +167,9 @@ namespace PaintsNow {
 			virtual void DispatchEvent(Event& event, Entity* entity) override;
 			void OnTickHost(Engine& engine, Entity* entity);
 			void OnTickCameraViewPort(Engine& engine, RenderPort& renderPort);
-			void Instancing(Engine& engine);
 			void UpdateTaskData(Engine& engine, Entity* hostEntity);
-			void CommitRenderRequests(Engine& engine);
+			void Instancing(Engine& engine, TaskData& taskData);
+			void CommitRenderRequests(Engine& engine, TaskData& taskData);
 
 			void CollectLightComponent(Engine& engine, LightComponent* lightComponent, std::vector<std::pair<TShared<RenderPolicy>, LightElement> >& lightElements, const MatrixFloat4x4& worldTransform, const MatrixFloat4x4& cameraTransform) const;
 			void CollectEnvCubeComponent(EnvCubeComponent* envCubeComponent, std::vector<std::pair<TShared<RenderPolicy>, EnvCubeElement> >& envCubeElements, const MatrixFloat4x4& worldMatrix) const;

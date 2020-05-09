@@ -133,16 +133,15 @@ void CameraComponent::DispatchEvent(Event& event, Entity* entity) {
 	}
 }
 
-void CameraComponent::Instancing(Engine& engine) {
+void CameraComponent::Instancing(Engine& engine, TaskData& taskData) {
 	// instancing
 	// do not sort at this moment.
 	IRender& render = engine.interfaces.render;
 	uint32_t entityCount = 0;
 	uint32_t visibleEntityCount = 0;
-	TShared<TaskData> taskData = nextTaskData;
 
-	for (size_t j = 0; j < taskData->warpData.size(); j++) {
-		TaskData::WarpData& warpData = taskData->warpData[j];
+	for (size_t j = 0; j < taskData.warpData.size(); j++) {
+		TaskData::WarpData& warpData = taskData.warpData[j];
 		TaskData::WarpData::InstanceGroupMap& instanceGroup = warpData.instanceGroups;
 		entityCount += warpData.entityCount;
 		visibleEntityCount += warpData.visibleEntityCount;
@@ -246,7 +245,6 @@ void CameraComponent::UpdateTaskData(Engine& engine, Entity* hostEntity) {
 
 		captureData.visData = visData;
 		CollectComponentsFromEntity(engine, *nextTaskData, worldInstanceData, captureData, rootEntity);
-		Instancing(engine);
 	}
 }
 
@@ -269,13 +267,21 @@ T* QueryPort(IRender& render, std::map<RenderPolicy*, RenderStage::Port*>& polic
 	return nullptr;
 }
 
-void CameraComponent::CommitRenderRequests(Engine& engine) {
+void CameraComponent::CommitRenderRequests(Engine& engine, TaskData& taskData) {
 	// commit to RenderFlowComponent
+	// update data updaters
 	if (renderFlowComponent) {
-		std::map<RenderPolicy*, RenderStage::Port*> policyPortMap;
 		IRender& render = engine.interfaces.render;
-		TShared<TaskData> taskData = nextTaskData;
-		const Float3& viewPosition = taskData->worldGlobalData.viewPosition;
+		std::vector<TaskData::WarpData>& warpData = taskData.warpData;
+		for (size_t i = 0; i < warpData.size(); i++) {
+			TaskData::WarpData& w = warpData[i];
+			for (size_t k = 0; k < w.dataUpdaters.size(); k++) {
+				w.dataUpdaters[k]->Update(render, renderFlowComponent->GetResourceQueue());
+			}
+		}
+		
+		std::map<RenderPolicy*, RenderStage::Port*> policyPortMap;
+		const Float3& viewPosition = taskData.worldGlobalData.viewPosition;
 
 		TShared<NsSnowyStream::TextureResource> cubeMapTexture;
 		TShared<NsSnowyStream::TextureResource> skyMapTexture;
@@ -284,8 +290,8 @@ void CameraComponent::CommitRenderRequests(Engine& engine) {
 		RenderPortCommandQueue* lastCommandQueue = nullptr;
 		IRender::Resource* lastRenderState = nullptr;
 
-		for (size_t j = 0; j < taskData->warpData.size(); j++) {
-			TaskData::WarpData& warpData = taskData->warpData[j];
+		for (size_t j = 0; j < taskData.warpData.size(); j++) {
+			TaskData::WarpData& warpData = taskData.warpData[j];
 
 			// warpData.resourceQueue
 			TaskData::WarpData::InstanceGroupMap& instanceGroups = warpData.instanceGroups;
@@ -381,6 +387,7 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 	TShared<TaskData> taskData = prevTaskData;
 	CameraComponentConfig::WorldGlobalData& worldGlobalData = taskData->worldGlobalData;
 	std::vector<TaskData::WarpData>& warpData = taskData->warpData;
+	IRender& render = engine.interfaces.render;
 
 	if (Flag() & CAMERACOMPONENT_SMOOTH_TRACK) {
 		const float ratio = 0.75f;
@@ -394,18 +401,8 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 	
 	worldGlobalData.viewProjectionMatrix = worldGlobalData.viewMatrix * worldGlobalData.projectionMatrix;
 
-	// update data updaters
-	IRender& render = engine.interfaces.render;
-	for (size_t i = 0; i < warpData.size(); i++) {
-		TaskData::WarpData& w = warpData[i];
-		for (size_t k = 0; k < w.dataUpdaters.size(); k++) {
-			w.dataUpdaters[k]->Update(render, renderFlowComponent->GetResourceQueue());
-		}
-	}
-
 	// update camera view settings
 	if (renderFlowComponent) {
-		IRender::Queue* renderQueue = renderFlowComponent->GetResourceQueue();
 		// update buffers
 		if (Flag() & (CAMERACOMPONENT_SMOOTH_TRACK | CAMERACOMPONENT_SUBPIXEL_JITTER)) {
 			for (size_t i = 0; i < warpData.size(); i++) {
@@ -464,7 +461,6 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 void CameraComponent::OnTickHost(Engine& engine, Entity* hostEntity) {
 	if (rootEntity != nullptr && (rootEntity->Flag() & Entity::ENTITY_HAS_SPACE)) {
 		UpdateTaskData(engine, hostEntity);
-		CommitRenderRequests(engine);
 	}
 }
 
@@ -604,7 +600,15 @@ void CameraComponent::CollectEnvCubeComponent(EnvCubeComponent* envCubeComponent
 	envCubeElements.emplace_back(std::make_pair(envCubeComponent->renderPolicy, std::move(element)));
 }
 
-void CameraComponent::CompleteCollect(Engine& engine, TaskData& taskData) {}
+void CameraComponent::CompleteCollect(Engine& engine, TaskData& taskData) {
+	Kernel& kernel = engine.GetKernel();
+	if (kernel.GetCurrentWarpIndex() != GetWarpIndex()) {
+		kernel.QueueRoutine(this, CreateTaskContextFree(Wrap(this, &CameraComponent::CompleteCollect), std::ref(engine), std::ref(taskData)));
+	} else {
+		Instancing(engine, taskData);
+		CommitRenderRequests(engine, taskData);
+	}
+}
 
 void CameraComponent::CollectLightComponent(Engine& engine, LightComponent* lightComponent, std::vector<std::pair<TShared<RenderPolicy>, LightElement> >& lightElements, const MatrixFloat4x4& worldMatrix, const MatrixFloat4x4& cameraTransform) const {
 	LightElement element;
