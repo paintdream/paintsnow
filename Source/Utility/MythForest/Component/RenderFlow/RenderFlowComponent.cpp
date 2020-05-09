@@ -337,10 +337,10 @@ void RenderFlowComponent::DispatchEvent(Event& event, Entity* entity) {
 			YieldThread();
 		}
 
+		Render(event.engine);
+
 		Flag() |= RENDERFLOWCOMPONENT_RENDER_SYNC_TICKING;
 		engine.GetKernel().QueueRoutine(this, CreateTaskContextFree(Wrap(this, &RenderFlowComponent::RenderSyncTick), std::ref(engine)));
-
-		Render(event.engine);
 	} else if (event.eventID == Event::EVENT_TICK) {
 		// No operations on trivial tick
 	}

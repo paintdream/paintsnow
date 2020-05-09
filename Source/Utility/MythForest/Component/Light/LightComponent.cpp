@@ -99,12 +99,14 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 		depthStencilDescription.state.format = IRender::Resource::TextureDescription::FLOAT;
 		depthStencilDescription.state.layout = IRender::Resource::TextureDescription::DEPTH;
 
-		TShared<NsSnowyStream::TextureResource> texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateRandomLocation("LightShadowBake", shadowGrid()), false, 0, nullptr);
-		texture->description.dimension = dim;
-		texture->description.state.format = IRender::Resource::TextureDescription::FLOAT;
-		texture->description.state.layout = IRender::Resource::TextureDescription::DEPTH;
-		texture->GetResourceManager().InvokeUpload(texture(), taskData->renderQueue);
-		shadowGrid->texture = texture;
+		if (!shadowGrid->texture) {
+			TShared<NsSnowyStream::TextureResource> texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateRandomLocation("LightShadowBake", shadowGrid()), false, 0, nullptr);
+			texture->description.dimension = dim;
+			texture->description.state.format = IRender::Resource::TextureDescription::FLOAT;
+			texture->description.state.layout = IRender::Resource::TextureDescription::DEPTH;
+			texture->GetResourceManager().InvokeUpload(texture(), taskData->renderQueue);
+			shadowGrid->texture = texture;
+		}
 	}
 
 	if (!(taskData->Flag() & TINY_MODIFIED)) {
@@ -267,6 +269,7 @@ void LightComponent::TaskData::RenderFrame(Engine& engine) {
 
 	engine.interfaces.render.PresentQueues(&renderQueues[0], safe_cast<uint32_t>(renderQueues.size()), IRender::CONSUME);
 	shadowGrid->Flag() &= ~TINY_MODIFIED;
+
 	Flag() &= ~TINY_MODIFIED;
 	Cleanup(engine.interfaces.render);
 	ReleaseObject();

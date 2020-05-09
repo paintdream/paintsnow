@@ -638,23 +638,27 @@ void VisibilityComponent::DispatchTasks(Engine& engine) {
 	ThreadPool& threadPool = kernel.threadPool;
 	while (!bakePoints.empty()) {
 		BakePoint bakePoint = bakePoints.top();
-		Entity* entity = hostEntity;
-		// find idle task
-		while (n < tasks.size()) {
-			TaskData& task = tasks[n];
-			TAtomic<uint32_t>& finalStatus = reinterpret_cast<TAtomic<uint32_t>&>(task.status);
-			if (task.status == TaskData::STATUS_START) {
-				finalStatus.store(TaskData::STATUS_DISPATCHED, std::memory_order_release);
-				threadPool.Push(CreateCoTaskContextFree(kernel, Wrap(this, &VisibilityComponent::CoTaskAssembleTask), std::ref(engine), std::ref(task), bakePoint));
-				break;
+		Cell& cell = cells[bakePoint.coord];
+		// already baked?
+		if (cell.incompleteness != 0) {
+			Entity* entity = hostEntity;
+			// find idle task
+			while (n < tasks.size()) {
+				TaskData& task = tasks[n];
+				TAtomic<uint32_t>& finalStatus = reinterpret_cast<TAtomic<uint32_t>&>(task.status);
+				if (task.status == TaskData::STATUS_START) {
+					finalStatus.store(TaskData::STATUS_DISPATCHED, std::memory_order_release);
+					threadPool.Push(CreateCoTaskContextFree(kernel, Wrap(this, &VisibilityComponent::CoTaskAssembleTask), std::ref(engine), std::ref(task), bakePoint));
+					break;
+				}
+
+				n++;
 			}
 
-			n++;
+			// no more slots ... go next frame
+			if (n == tasks.size())
+				break;
 		}
- 
-		// no more slots ... go next frame
-		if (n == tasks.size())
-			break;
 
 		bakePoints.pop();
 	}

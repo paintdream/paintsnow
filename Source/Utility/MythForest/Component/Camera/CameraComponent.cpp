@@ -37,7 +37,7 @@ CameraComponent::TaskData::WarpData::WarpData() : entityCount(0), visibleEntityC
 
 CameraComponent::CameraComponent(TShared<RenderFlowComponent> prenderFlowComponent, const String& name)
 : collectedEntityCount(0), collectedVisibleEntityCount(0), viewDistance(256), rootEntity(nullptr), jitterIndex(0), renderFlowComponent(prenderFlowComponent), cameraViewPortName(name) {
-	Flag() |= CAMERACOMPONENT_PERSPECTIVE;
+	Flag() |= CAMERACOMPONENT_PERSPECTIVE | CAMERACOMPONENT_UPDATE_COMMITTED;
 }
 
 void CameraComponent::UpdateJitterMatrices(CameraComponentConfig::WorldGlobalData& worldGlobalData) {
@@ -214,38 +214,39 @@ MatrixFloat4x4 CameraComponent::ComputeSmoothTrackTransform() const {
 
 void CameraComponent::UpdateTaskData(Engine& engine, Entity* hostEntity) {
 	// Next collection ready? 
-	if (nextTaskData->pendingCount.load(std::memory_order_acquire) == 0) {
-		std::swap(prevTaskData, nextTaskData);
-		// Tick new collection
-		nextTaskData->Cleanup(engine.interfaces.render);
+	if (!(Flag() & CAMERACOMPONENT_UPDATE_COMMITTED)) return;
+	Flag() &= ~CAMERACOMPONENT_UPDATE_COMMITTED;
 
-		WorldInstanceData worldInstanceData;
-		CaptureData captureData;
-		TransformComponent* transformComponent = hostEntity->GetUniqueComponent(UniqueType<TransformComponent>());
-		MatrixFloat4x4 localTransform;
-		if (transformComponent != nullptr) {
-			// set smooth track
-			if (Flag() & CAMERACOMPONENT_SMOOTH_TRACK) {
-				currentState = targetState;
-				targetState.rotation = transformComponent->GetRotationQuaternion();
-				targetState.translation = transformComponent->GetTranslation();
-				targetState.scale = transformComponent->GetScale();
-			}
+	std::swap(prevTaskData, nextTaskData);
+	// Tick new collection
+	nextTaskData->Cleanup(engine.interfaces.render);
 
-			localTransform = transformComponent->GetTransform();
+	WorldInstanceData worldInstanceData;
+	CaptureData captureData;
+	TransformComponent* transformComponent = hostEntity->GetUniqueComponent(UniqueType<TransformComponent>());
+	MatrixFloat4x4 localTransform;
+	if (transformComponent != nullptr) {
+		// set smooth track
+		if (Flag() & CAMERACOMPONENT_SMOOTH_TRACK) {
+			currentState = targetState;
+			targetState.rotation = transformComponent->GetRotationQuaternion();
+			targetState.translation = transformComponent->GetTranslation();
+			targetState.scale = transformComponent->GetScale();
 		}
 
-		UpdateRootMatrices(localTransform);
-		UpdateCaptureData(captureData, localTransform);
-
-		// Must called from entity thread
-		assert(engine.GetKernel().GetCurrentWarpIndex() == rootEntity->GetWarpIndex());
-		VisibilityComponent* visibilityComponent = rootEntity->GetUniqueComponent(UniqueType<VisibilityComponent>());
-		const Bytes& visData = visibilityComponent != nullptr ? visibilityComponent->QuerySample(Float3(localTransform(3, 0), localTransform(3, 1), localTransform(3, 2))) : Bytes::Null();
-
-		captureData.visData = visData;
-		CollectComponentsFromEntity(engine, *nextTaskData, worldInstanceData, captureData, rootEntity);
+		localTransform = transformComponent->GetTransform();
 	}
+
+	UpdateRootMatrices(localTransform);
+	UpdateCaptureData(captureData, localTransform);
+
+	// Must called from entity thread
+	assert(engine.GetKernel().GetCurrentWarpIndex() == rootEntity->GetWarpIndex());
+	VisibilityComponent* visibilityComponent = rootEntity->GetUniqueComponent(UniqueType<VisibilityComponent>());
+	const Bytes& visData = visibilityComponent != nullptr ? visibilityComponent->QuerySample(Float3(localTransform(3, 0), localTransform(3, 1), localTransform(3, 2))) : Bytes::Null();
+
+	captureData.visData = visData;
+	CollectComponentsFromEntity(engine, *nextTaskData, worldInstanceData, captureData, rootEntity);
 }
 
 template <class T>
@@ -383,8 +384,17 @@ void CameraComponent::CommitRenderRequests(Engine& engine, TaskData& taskData) {
 }
 
 void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPort) {
+	TShared<TaskData> taskData;
+	if ((Flag() & CAMERACOMPONENT_UPDATE_COLLECTED)) {
+		taskData = nextTaskData;
+		CommitRenderRequests(engine, *taskData);
+		Flag() &= ~CAMERACOMPONENT_UPDATE_COLLECTED;
+		Flag() |= CAMERACOMPONENT_UPDATE_COMMITTED;
+	} else {
+		taskData = prevTaskData;
+	}
+
 	// Update jitter
-	TShared<TaskData> taskData = prevTaskData;
 	CameraComponentConfig::WorldGlobalData& worldGlobalData = taskData->worldGlobalData;
 	std::vector<TaskData::WarpData>& warpData = taskData->warpData;
 	IRender& render = engine.interfaces.render;
@@ -404,6 +414,7 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 	// update camera view settings
 	if (renderFlowComponent) {
 		// update buffers
+		IRender::Queue* renderQueue = renderFlowComponent->GetResourceQueue();
 		if (Flag() & (CAMERACOMPONENT_SMOOTH_TRACK | CAMERACOMPONENT_SUBPIXEL_JITTER)) {
 			for (size_t i = 0; i < warpData.size(); i++) {
 				TaskData::WarpData& w = warpData[i];
@@ -426,7 +437,7 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 							desc.dynamic = 1;
 							desc.format = IRender::Resource::BufferDescription::FLOAT;
 							desc.data = std::move(data);
-							render.UploadResource(it->second.renderQueue, it->second.buffers[i], &desc);
+							render.UploadResource(renderQueue, it->second.buffers[i], &desc);
 						}
 					}
 				}
@@ -606,7 +617,7 @@ void CameraComponent::CompleteCollect(Engine& engine, TaskData& taskData) {
 		kernel.QueueRoutine(this, CreateTaskContextFree(Wrap(this, &CameraComponent::CompleteCollect), std::ref(engine), std::ref(taskData)));
 	} else {
 		Instancing(engine, taskData);
-		CommitRenderRequests(engine, taskData);
+		Flag() |= CAMERACOMPONENT_UPDATE_COLLECTED;
 	}
 }
 
@@ -619,7 +630,7 @@ void CameraComponent::CollectLightComponent(Engine& engine, LightComponent* ligh
 		for (size_t i = 0; i < shadowGrids.size(); i++) {
 			TShared<LightComponent::ShadowGrid>& grid = shadowGrids[i];
 			RenderPortLightSource::LightElement::Shadow shadow;
-			shadow.shadowTexture = grid->texture;
+			shadow.shadowTexture = grid->Flag() & TINY_MODIFIED ? nullptr : grid->texture;
 			shadow.shadowMatrix = grid->shadowMatrix;
 			element.shadows.emplace_back(std::move(shadow));
 		}
