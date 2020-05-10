@@ -12,6 +12,7 @@ namespace UnrealBuildTool.Rules
 
 		public LeavesExporter(ReadOnlyTargetRules Target) : base(Target)
 		{
+			PrivatePCHHeaderFile = "Private/LeavesExporterPCH.h";
 			MinFilesUsingPrecompiledHeaderOverride = 1;
 			bFasterWithoutUnity = true;
 			PublicIncludePaths.AddRange(
@@ -77,7 +78,6 @@ namespace UnrealBuildTool.Rules
 				LibraryPath = Path.Combine(LibraryPath, "Release");
 
 				PublicLibraryPaths.Add(LibraryPath);
-				PublicAdditionalLibraries.Add("iconv32.lib");
 				PublicAdditionalLibraries.Add("LibEvent.lib");
 				PublicAdditionalLibraries.Add(Path.Combine(LibraryPath, "PaintsNow.lib"));
 				PublicAdditionalLibraries.Add(Path.Combine(LibraryPath, "BridgeSunset.lib"));

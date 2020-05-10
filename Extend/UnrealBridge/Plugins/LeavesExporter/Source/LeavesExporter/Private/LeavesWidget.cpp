@@ -372,10 +372,10 @@ void SLeavesWidget::OnExportTextureResource(UTexture* t, T op) {
 		textureResource->description.dimension.z() = groupCount;
 
 		// Build buffers ...
-		TArray<uint8> buffer;
+		TArray64<uint8> buffer;
 
 		for (int32 i = 0; i < mipCount; i++) {
-			TArray<uint8> data;
+			TArray64<uint8> data;
 			if (res.GetMipData(data, i)) {
 				// Convert to RGBA8
 				if (res.GetFormat() == TSF_BGRA8) {
