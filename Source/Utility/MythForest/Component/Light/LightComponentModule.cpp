@@ -79,12 +79,12 @@ void LightComponentModule::RequestSetLightRange(IScript::Request& request, IScri
 	lightComponent->SetRange(range);
 }
 
-void LightComponentModule::RequestBindLightShadowStream(IScript::Request& request, IScript::Delegate<LightComponent> lightComponent, uint32_t layer, IScript::Delegate<StreamComponent> streamComponent, const UShort2& res, float gridSize) {
+void LightComponentModule::RequestBindLightShadowStream(IScript::Request& request, IScript::Delegate<LightComponent> lightComponent, uint32_t layer, IScript::Delegate<StreamComponent> streamComponent, const UShort2& res, float gridSize, float scale) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(lightComponent);
 	CHECK_DELEGATE(streamComponent);
 	CHECK_THREAD_IN_MODULE(lightComponent);
 	CHECK_THREAD_IN_MODULE(streamComponent);
 
-	lightComponent->BindShadowStream(engine, layer, streamComponent.Get(), res, gridSize);
+	lightComponent->BindShadowStream(engine, layer, streamComponent.Get(), res, gridSize, scale);
 }

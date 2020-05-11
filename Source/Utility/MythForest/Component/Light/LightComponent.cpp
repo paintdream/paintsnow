@@ -63,7 +63,7 @@ std::vector<TShared<LightComponent::ShadowGrid> > LightComponent::UpdateShadow(E
 	return grids;
 }
 
-void LightComponent::BindShadowStream(Engine& engine, uint32_t layer, TShared<StreamComponent> streamComponent, const UShort2& res, float size) {
+void LightComponent::BindShadowStream(Engine& engine, uint32_t layer, TShared<StreamComponent> streamComponent, const UShort2& res, float size, float scale) {
 	if (shadowLayers.size() <= layer) {
 		shadowLayers.resize(layer + 1);
 	}
@@ -73,10 +73,10 @@ void LightComponent::BindShadowStream(Engine& engine, uint32_t layer, TShared<St
 		shadowLayer = TShared<ShadowLayer>::From(new ShadowLayer(engine));
 	}
 	
-	shadowLayer->Initialize(engine, streamComponent, res, size);
+	shadowLayer->Initialize(engine, streamComponent, res, size, scale);
 }
 
-LightComponent::ShadowLayer::ShadowLayer(Engine& engine) : gridSize(1) {
+LightComponent::ShadowLayer::ShadowLayer(Engine& engine) : gridSize(1), scale(1) {
 }
 
 TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engine, const UShort3& coord, TShared<SharedTiny> tiny, TShared<SharedTiny> context) {
@@ -490,12 +490,13 @@ TObject<IReflect>& ShadowLayerConfig::WorldInstanceData::operator () (IReflect& 
 
 	return *this;
 }
-void LightComponent::ShadowLayer::Initialize(Engine& engine, TShared<StreamComponent> component, const UShort2& res, float size) {
+void LightComponent::ShadowLayer::Initialize(Engine& engine, TShared<StreamComponent> component, const UShort2& res, float size, float s) {
 	Uninitialize(engine);
 
 	streamComponent = component;
 	resolution = res;
 	gridSize = size;
+	scale = s;
 
 	if (streamComponent) {
 		streamComponent->SetLoadHandler(Wrap(this, &ShadowLayer::StreamLoadHandler));
@@ -548,7 +549,7 @@ TShared<LightComponent::ShadowGrid> LightComponent::ShadowLayer::UpdateShadow(En
 	TShared<ShadowContext> shadowContext = TShared<ShadowContext>::From(new ShadowContext());
 	shadowContext->rootEntity = rootEntity;
 	shadowContext->cameraWorldMatrix = cameraTransform;
-	shadowContext->lightTransformMatrix = lightTransform;
+	shadowContext->lightTransformMatrix = Scale(lightTransform, Float4(scale, scale, scale, 1));
 	TShared<ShadowGrid> grid = streamComponent->Load(engine, coord, shadowContext())->QueryInterface(UniqueType<ShadowGrid>());
 	assert(grid);
 	// printf("COORD: %d, %d, %d\n", coord.x(), coord.y(), coord.z());

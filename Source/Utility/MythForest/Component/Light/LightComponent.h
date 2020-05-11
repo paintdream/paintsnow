@@ -127,7 +127,7 @@ namespace PaintsNow {
 			};
 
 			std::vector<TShared<ShadowGrid> > UpdateShadow(Engine& engine, const MatrixFloat4x4& viewTransform, const MatrixFloat4x4& lightTransform, Entity* rootEntity);
-			void BindShadowStream(Engine& engine, uint32_t layer, TShared<StreamComponent> streamComponent, const UShort2& res, float gridSize);
+			void BindShadowStream(Engine& engine, uint32_t layer, TShared<StreamComponent> streamComponent, const UShort2& res, float gridSize, float scale);
 
 		protected:
 			class ShadowContext : public TReflected<ShadowContext, SharedTiny> {
@@ -145,7 +145,7 @@ namespace PaintsNow {
 				void CollectRenderableComponent(Engine& engine, TaskData& taskData, RenderableComponent* renderableComponent, TaskData::WarpData& warpData, const WorldInstanceData& instanceData);
 				void CollectComponents(Engine& engine, TaskData& taskData, const WorldInstanceData& instanceData, const CaptureData& captureData, Entity* rootEntity);
 				void CompleteCollect(Engine& engine, TaskData& taskData);
-				void Initialize(Engine& engine, TShared<StreamComponent> streamComponent, const UShort2& res, float size);
+				void Initialize(Engine& engine, TShared<StreamComponent> streamComponent, const UShort2& res, float size, float scale);
 				void Uninitialize(Engine& engine);
 
 				TShared<ShadowGrid> UpdateShadow(Engine& engine, const MatrixFloat4x4& cameraTransform, const MatrixFloat4x4& lightTransform, Entity* rootEntity);
@@ -157,6 +157,7 @@ namespace PaintsNow {
 				TShared<TaskData> currentTask;
 				uint32_t layer;
 				float gridSize;
+				float scale;
 				UShort2 resolution;
 			};
 
