@@ -6,7 +6,7 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsSnowyStream;
 using namespace PaintsNow::ShaderMacro;
 
-StandardTransformVS::StandardTransformVS() : enableInstancing(true), enableSkinning(false), enableViewProjectionMatrix(true), enableVertexColor(false), enableVertexNormal(true), enableInstancedColor(false), enableVertexTangent(true), enableRasterCoord(false) {
+StandardTransformVS::StandardTransformVS() : enableInstancing(true), enableSkinning(false), enableViewProjectionMatrix(true), enableVertexColor(false), enableVertexNormal(true), enableInstancedColor(false), enableVertexTangent(true), enableRasterCoord(false), enableClampedNear(false), enableClampedFar(false) {
 	instanceBuffer.description.usage = IRender::Resource::BufferDescription::INSTANCED;
 	vertexPositionBuffer.description.usage = IRender::Resource::BufferDescription::VERTEX;
 	vertexNormalBuffer.description.usage = IRender::Resource::BufferDescription::VERTEX;
@@ -24,55 +24,64 @@ String StandardTransformVS::GetShaderText() {
 	std::vector<MatrixFloat4x4> boneMatries; // temp fix 
 	return UnifyShaderCode(
 		float4 position = float4(0, 0, 0, 1);
-		position.xyz = vertexPosition;
-		if (enableSkinning) {
-			// skinning
-			float4 sumPosition = float4(0, 0, 0, 0);
-			for (int i = 0; i < 4; i++) {
-				sumPosition += mult_vec(boneMatries[int(boneIndex[i])], position) * boneWeight[i];
-			}
-
-			position.xyz = sumPosition.xyz / sumPosition.w;
+	position.xyz = vertexPosition;
+	if (enableSkinning) {
+		// skinning
+		float4 sumPosition = float4(0, 0, 0, 0);
+		for (int i = 0; i < 4; i++) {
+			sumPosition += mult_vec(boneMatries[int(boneIndex[i])], position) * boneWeight[i];
 		}
 
-		position = mult_vec(worldMatrix, position);
-		if (enableViewProjectionMatrix) {
-			rasterPosition = mult_vec(viewProjectionMatrix, position);
+		position.xyz = sumPosition.xyz / sumPosition.w;
+	}
+
+	position = mult_vec(worldMatrix, position);
+
+	if (enableViewProjectionMatrix) {
+		rasterPosition = mult_vec(viewProjectionMatrix, position);
+	} else {
+		rasterPosition = position;
+	}
+
+	viewNormal = float3(0, 0, 1);
+	viewTangent = float3(1, 0, 0);
+	viewBinormal = float3(0, 1, 0);
+	texCoord = vertexTexCoord;
+	if (enableVertexNormal) {
+		float4 normal = vertexNormal * float(2.0 / 255.0) - float4(1.0, 1.0, 1.0, 1.0);
+		float4x4 viewWorldMatrix = mult_mat(viewMatrix, worldMatrix);
+		if (enableVertexTangent) {
+			float4 tangent = vertexTangent * float(2.0 / 255.0) - float4(1.0, 1.0, 1.0, 1.0);
+			viewTangent = mult_vec(float3x3(viewWorldMatrix), tangent.xyz);
+			viewBinormal = mult_vec(float3x3(viewWorldMatrix), normal.xyz);
+			viewNormal = cross(viewBinormal, viewTangent);
+			viewBinormal *= tangent.w;
 		} else {
-			rasterPosition = position;
+			// Not precise when non-uniform scaling applied
+			viewNormal = mult_vec(float3x3(viewWorldMatrix), normal.xyz);
 		}
-		viewNormal = float3(0, 0, 1);
-		viewTangent = float3(1, 0, 0);
-		viewBinormal = float3(0, 1, 0);
-		texCoord = vertexTexCoord;
-		if (enableVertexNormal) {
-			float4 normal = vertexNormal * float(2.0 / 255.0) - float4(1.0, 1.0, 1.0, 1.0);
-			float4x4 viewWorldMatrix = mult_mat(viewMatrix, worldMatrix);
-			if (enableVertexTangent) {
-				float4 tangent = vertexTangent * float(2.0 / 255.0) - float4(1.0, 1.0, 1.0, 1.0);
-				viewTangent = mult_vec(float3x3(viewWorldMatrix), tangent.xyz);
-				viewBinormal = mult_vec(float3x3(viewWorldMatrix), normal.xyz);
-				viewNormal = cross(viewBinormal, viewTangent);
-				viewBinormal *= tangent.w;
-			} else {
-				// Not precise when non-uniform scaling applied
-				viewNormal = mult_vec(float3x3(viewWorldMatrix), normal.xyz);
-			}
-		}
+	}
 
-		tintColor = float4(1, 1, 1, 1);
-		if (enableVertexColor) {
-			tintColor *= vertexColor;
-		}
+	tintColor = float4(1, 1, 1, 1);
+	if (enableVertexColor) {
+		tintColor *= vertexColor;
+	}
 
-		if (enableInstancedColor) {
-			tintColor *= instancedColor;
-		}
+	if (enableInstancedColor) {
+		tintColor *= instancedColor;
+	}
 
-		if (enableRasterCoord) {
-			rasterCoord = rasterPosition.xy * float(2.0) - float2(1.0, 1.0);
-		}
-	);
+	if (enableRasterCoord) {
+		rasterCoord = rasterPosition.xy * float(2.0) - float2(1.0, 1.0);
+	}
+
+	if (enableClampedFar) {
+		rasterPosition.z = max(rasterPosition.z, -1);
+	}
+
+	if (enableClampedNear) {
+		rasterPosition.z = min(rasterPosition.z, 1);
+	});
 }
 
 TObject<IReflect>& StandardTransformVS::operator () (IReflect& reflect) {
@@ -88,6 +97,8 @@ TObject<IReflect>& StandardTransformVS::operator () (IReflect& reflect) {
 		ReflectProperty(enableViewProjectionMatrix)[IShader::BindConst<bool>()];
 		ReflectProperty(enableInstancedColor)[IShader::BindConst<bool>()];
 		ReflectProperty(enableRasterCoord)[IShader::BindConst<bool>()];
+		ReflectProperty(enableClampedNear)[IShader::BindConst<bool>()];
+		ReflectProperty(enableClampedFar)[IShader::BindConst<bool>()];
 
 		ReflectProperty(instanceBuffer)[IShader::BindOption(enableInstancing)];
 		ReflectProperty(globalBuffer);

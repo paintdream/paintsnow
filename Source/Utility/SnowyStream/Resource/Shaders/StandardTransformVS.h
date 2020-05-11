@@ -62,6 +62,8 @@ namespace PaintsNow {
 			bool enableInstancedColor;
 			bool enableVertexTangent;
 			bool enableRasterCoord;
+			bool enableClampedNear;
+			bool enableClampedFar;
 		};
 	}
 }

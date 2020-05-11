@@ -10,6 +10,7 @@ ConstMapPass::ConstMapPass() {
 	vertexTransform.enableVertexColor = false;
 	vertexTransform.enableVertexTangent = false;
 	vertexTransform.enableInstancedColor = true;
+	// vertexTransform.enableClampedFar = true;
 }
 
 TObject<IReflect>& ConstMapPass::operator () (IReflect& reflect) {

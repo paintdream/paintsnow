@@ -16,9 +16,15 @@ String ShadowMaskFS::GetShaderText() {
 	float4 position = float4(rasterCoord.x, rasterCoord.y, depth, 1);
 	position = position * float(2) - float4(1, 1, 1, 1);
 	position = mult_vec(reprojectionMatrix, position);
-	position.xyz = position.xyz / position.w * float(0.5) + float3(0.5, 0.5, 0.5);
-	float refDepth = textureLod(shadowTexture, position.xy, float(0)).x;
-	shadow = float4(step(refDepth, position.z + 0.01), 0, 0, 0);
+	position.xyz = position.xyz / position.w;
+	float3 uv = abs(position.xyz);
+	if (uv.x >= 1 || uv.y >= 1 || uv.z >= 1) {
+		shadow = float4(0, 0, 0, 0);
+	} else {
+		position.xyz = position.xyz * float(0.5) + float3(0.5, 0.5, 0.5);
+		float refDepth = textureLod(shadowTexture, position.xy, float(0)).x;
+		shadow = float4(step(refDepth, position.z + 0.01), 0, 0, 0);
+	}
 	);
 }
 
