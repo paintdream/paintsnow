@@ -53,9 +53,7 @@ bool GLErrorGuard::enableGuard = true;
 
 class DeviceImplOpenGL : public IRender::Device {
 public:
-	DeviceImplOpenGL(IRender& r) : lastProgramID(0), lastFrameBufferID(0), render(r) {
-		lastRenderState.pass = ~lastRenderState.pass; // force flush at first time.
-	}
+	DeviceImplOpenGL(IRender& r) : lastProgramID(0), lastFrameBufferID(0), render(r) {}
 
 	IRender& render;
 	Int2 resolution;
@@ -1193,165 +1191,155 @@ struct ResourceImplOpenGL<IRender::Resource::ShaderDescription> : public Resourc
 	void Cleanup() {
 		GL_GUARD();
 
-		for (size_t i = 0; i < programs.size(); i++) {
-			Program& program = programs[i];
-			if (program.programID != 0) {
-				glDeleteProgram(program.programID);
-			}
-
-			for (size_t i = 0; i < program.shaderIDs.size(); i++) {
-				glDeleteShader(program.shaderIDs[i]);
-			}
+		if (program.programID != 0) {
+			glDeleteProgram(program.programID);
 		}
 
-		programs.clear();
+		for (size_t i = 0; i < program.shaderIDs.size(); i++) {
+			glDeleteShader(program.shaderIDs[i]);
+		}
 	}
 
 	virtual void Upload(QueueImplOpenGL& queue) override {
 		GL_GUARD();
 		Cleanup();
 
-		Resource::ShaderDescription& d = UpdateDescription();
-		for (size_t k = 0; k < d.passes.size(); k++) {
-			Resource::ShaderDescription::Pass& pass = d.passes[k];
-			programs.resize(pass.slot + 1);
-			Program& program = programs[pass.slot];
-			GLuint programID = glCreateProgram();
-			program.programID = programID;
+		Resource::ShaderDescription& pass = UpdateDescription();
+		GLuint programID = glCreateProgram();
+		program.programID = programID;
 
-			std::vector<IShader*> shaders[Resource::ShaderDescription::END];
-			String common;
-			for (size_t i = 0; i < pass.entries.size(); i++) {
-				const std::pair<Resource::ShaderDescription::Stage, IShader*>& component = pass.entries[i];
+		std::vector<IShader*> shaders[Resource::ShaderDescription::END];
+		String common;
+		for (size_t i = 0; i < pass.entries.size(); i++) {
+			const std::pair<Resource::ShaderDescription::Stage, IShader*>& component = pass.entries[i];
 
-				if (component.first == Resource::ShaderDescription::GLOBAL) {
-					common += component.second->GetShaderText();
-				} else {
-					shaders[component.first].emplace_back(component.second);
-				}
+			if (component.first == Resource::ShaderDescription::GLOBAL) {
+				common += component.second->GetShaderText();
+			} else {
+				shaders[component.first].emplace_back(component.second);
+			}
+		}
+
+		std::vector<String> textureNames;
+		std::vector<String> uniformBufferNames;
+		std::vector<String> sharedBufferNames;
+
+		for (size_t k = 0; k < Resource::ShaderDescription::END; k++) {
+			std::vector<IShader*>& pieces = shaders[k];
+			if (pieces.empty()) continue;
+
+			GLuint shaderType = GL_VERTEX_SHADER;
+			switch (k) {
+			case Resource::ShaderDescription::VERTEX:
+				shaderType = GL_VERTEX_SHADER;
+				break;
+			case Resource::ShaderDescription::TESSELLATION_CONTROL:
+				shaderType = GL_TESS_CONTROL_SHADER;
+				break;
+			case Resource::ShaderDescription::TESSELLATION_EVALUATION:
+				shaderType = GL_TESS_EVALUATION_SHADER;
+				break;
+			case Resource::ShaderDescription::GEOMETRY:
+				shaderType = GL_GEOMETRY_SHADER;
+				break;
+			case Resource::ShaderDescription::FRAGMENT:
+				shaderType = GL_FRAGMENT_SHADER;
+				break;
+			case Resource::ShaderDescription::COMPUTE:
+				shaderType = GL_COMPUTE_SHADER;
+				program.isComputeShader = 1;
+				break;
 			}
 
-			std::vector<String> textureNames;
-			std::vector<String> uniformBufferNames;
-			std::vector<String> sharedBufferNames;
+			GLuint shaderID = glCreateShader(shaderType);
+			String body = "void main(void) {\n";
+			String head = "";
+			uint32_t inputIndex = 0, outputIndex = 0, textureIndex = 0;
+			for (size_t n = 0; n < pieces.size(); n++) {
+				IShader* shader = pieces[n];
+				// Generate declaration
+				ShaderDeclarationOpenGL declaration((Resource::ShaderDescription::Stage)k, inputIndex, outputIndex, textureIndex);
+				(*shader)(declaration);
+				declaration.Complete();
 
-			for (size_t k = 0; k < Resource::ShaderDescription::END; k++) {
-				std::vector<IShader*>& pieces = shaders[k];
-				if (pieces.empty()) continue;
+				body += declaration.initialization + shader->GetShaderText() + declaration.finalization + "\n";
+				head += declaration.declaration;
 
-				GLuint shaderType = GL_VERTEX_SHADER;
-				switch (k) {
-					case Resource::ShaderDescription::VERTEX:
-						shaderType = GL_VERTEX_SHADER;
-						break;
-					case Resource::ShaderDescription::TESSELLATION_CONTROL:
-						shaderType = GL_TESS_CONTROL_SHADER;
-						break;
-					case Resource::ShaderDescription::TESSELLATION_EVALUATION:
-						shaderType = GL_TESS_EVALUATION_SHADER;
-						break;
-					case Resource::ShaderDescription::GEOMETRY:
-						shaderType = GL_GEOMETRY_SHADER;
-						break;
-					case Resource::ShaderDescription::FRAGMENT:
-						shaderType = GL_FRAGMENT_SHADER;
-						break;
-					case Resource::ShaderDescription::COMPUTE:
-						shaderType = GL_COMPUTE_SHADER;
-						program.isComputeShader = 1;
-						break;
-				}
-
-				GLuint shaderID = glCreateShader(shaderType);
-				String body = "void main(void) {\n";
-				String head = "";
-				uint32_t inputIndex = 0, outputIndex = 0, textureIndex = 0;
-				for (size_t n = 0; n < pieces.size(); n++) {
-					IShader* shader = pieces[n];
-					// Generate declaration
-					ShaderDeclarationOpenGL declaration((Resource::ShaderDescription::Stage)k, inputIndex, outputIndex, textureIndex);
-					(*shader)(declaration);
-					declaration.Complete();
-
-					body += declaration.initialization + shader->GetShaderText() + declaration.finalization + "\n";
-					head += declaration.declaration;
-
-					std::copy(declaration.textureNames.begin(), declaration.textureNames.end(), std::back_inserter(textureNames));
-					std::copy(declaration.uniformBufferNames.begin(), declaration.uniformBufferNames.end(), std::back_inserter(uniformBufferNames));
-					std::copy(declaration.sharedBufferNames.begin(), declaration.sharedBufferNames.end(), std::back_inserter(sharedBufferNames));
-				}
-
-				body += "\n}\n"; // make a call to our function
-
-				String fullShader = frameCode + common + head + body;
-				const char* source[] = { fullShader.c_str() };
-				glShaderSource(shaderID, 1, source, nullptr);
-				glCompileShader(shaderID);
-
-				// printf("Shader code: %s\n", fullShader.c_str());
-
-				int success;
-				glGetShaderiv(shaderID, GL_COMPILE_STATUS, &success);
-
-				if (success == 0) {
-					const int MAX_INFO_LOG_SIZE = 4096;
-					char info[MAX_INFO_LOG_SIZE] = { 0 };
-					glGetShaderInfoLog(shaderID, MAX_INFO_LOG_SIZE - 1, nullptr, info);
-					fprintf(stderr, "ZRenderOpenGL::CompileShader(): %s\n", info);
-					fprintf(stderr, "ZRenderOpenGL::CompileShader(): %s\n", fullShader.c_str());
-					// assert(false);
-					if (d.compileCallback) {
-						d.compileCallback(d, (uint32_t)k, info, fullShader);
-					}
-					Cleanup();
-					return;
-				} else if (d.compileCallback) {
-					d.compileCallback(d, (uint32_t)k, "", fullShader);
-				}
-
-				glAttachShader(programID, shaderID);
-				program.shaderIDs.emplace_back(shaderID);
+				std::copy(declaration.textureNames.begin(), declaration.textureNames.end(), std::back_inserter(textureNames));
+				std::copy(declaration.uniformBufferNames.begin(), declaration.uniformBufferNames.end(), std::back_inserter(uniformBufferNames));
+				std::copy(declaration.sharedBufferNames.begin(), declaration.sharedBufferNames.end(), std::back_inserter(sharedBufferNames));
 			}
 
-			glLinkProgram(programID);
+			body += "\n}\n"; // make a call to our function
+
+			String fullShader = frameCode + common + head + body;
+			const char* source[] = { fullShader.c_str() };
+			glShaderSource(shaderID, 1, source, nullptr);
+			glCompileShader(shaderID);
+
+			// printf("Shader code: %s\n", fullShader.c_str());
+
 			int success;
-			glGetProgramiv(programID, GL_LINK_STATUS, &success);
+			glGetShaderiv(shaderID, GL_COMPILE_STATUS, &success);
+
 			if (success == 0) {
 				const int MAX_INFO_LOG_SIZE = 4096;
 				char info[MAX_INFO_LOG_SIZE] = { 0 };
-				glGetProgramInfoLog(programID, MAX_INFO_LOG_SIZE - 1, nullptr, info);
-				fprintf(stderr, "ZRenderOpenGL::LinkProgram(): %s\n", info);
-				if (d.compileCallback) {
-					d.compileCallback(d, (uint32_t)k, info, "<Link>");
-				}
+				glGetShaderInfoLog(shaderID, MAX_INFO_LOG_SIZE - 1, nullptr, info);
+				fprintf(stderr, "ZRenderOpenGL::CompileShader(): %s\n", info);
+				fprintf(stderr, "ZRenderOpenGL::CompileShader(): %s\n", fullShader.c_str());
 				// assert(false);
+				if (pass.compileCallback) {
+					pass.compileCallback(pass, (IRender::Resource::ShaderDescription::Stage)k, info, fullShader);
+				}
 				Cleanup();
 				return;
-			} else if (d.compileCallback) {
-				d.compileCallback(d, (uint32_t)k, "", "<Link>");
+			} else if (pass.compileCallback) {
+				pass.compileCallback(pass, (IRender::Resource::ShaderDescription::Stage)k, "", fullShader);
 			}
 
-			// Query texture locations.
-			std::vector<GLuint>& textureLocations = program.textureLocations;
-			textureLocations.reserve(textureNames.size());
-			for (size_t n = 0; n < textureNames.size(); n++) {
-				textureLocations.emplace_back(glGetUniformLocation(program.programID, textureNames[n].c_str()));
-			}
+			glAttachShader(programID, shaderID);
+			program.shaderIDs.emplace_back(shaderID);
+		}
 
-			// Query uniform blocks locations
-			std::vector<GLuint>& uniformBufferLocations = program.uniformBufferLocations;
-			uniformBufferLocations.reserve(uniformBufferNames.size());
-			for (size_t m = 0; m < uniformBufferNames.size(); m++) {
-				uniformBufferLocations.emplace_back(glGetUniformBlockIndex(program.programID, uniformBufferNames[m].c_str()));
+		glLinkProgram(programID);
+		int success;
+		glGetProgramiv(programID, GL_LINK_STATUS, &success);
+		if (success == 0) {
+			const int MAX_INFO_LOG_SIZE = 4096;
+			char info[MAX_INFO_LOG_SIZE] = { 0 };
+			glGetProgramInfoLog(programID, MAX_INFO_LOG_SIZE - 1, nullptr, info);
+			fprintf(stderr, "ZRenderOpenGL::LinkProgram(): %s\n", info);
+			if (pass.compileCallback) {
+				pass.compileCallback(pass, IRender::Resource::ShaderDescription::END, info, "<Link>");
 			}
+			// assert(false);
+			Cleanup();
+			return;
+		} else if (pass.compileCallback) {
+			pass.compileCallback(pass, IRender::Resource::ShaderDescription::END, "", "<Link>");
+		}
 
-			// Query shared buffer locations (SSBO)
-			std::vector<GLuint>& sharedBufferLocations = program.sharedBufferLocations;
-			sharedBufferLocations.reserve(sharedBufferNames.size());
+		// Query texture locations.
+		std::vector<GLuint>& textureLocations = program.textureLocations;
+		textureLocations.reserve(textureNames.size());
+		for (size_t n = 0; n < textureNames.size(); n++) {
+			textureLocations.emplace_back(glGetUniformLocation(program.programID, textureNames[n].c_str()));
+		}
 
-			for (size_t t = 0; t < sharedBufferNames.size(); t++) {
-				sharedBufferLocations.emplace_back(glGetProgramResourceIndex(program.programID, GL_SHADER_STORAGE_BLOCK, sharedBufferNames[t].c_str()));
-			}
+		// Query uniform blocks locations
+		std::vector<GLuint>& uniformBufferLocations = program.uniformBufferLocations;
+		uniformBufferLocations.reserve(uniformBufferNames.size());
+		for (size_t m = 0; m < uniformBufferNames.size(); m++) {
+			uniformBufferLocations.emplace_back(glGetUniformBlockIndex(program.programID, uniformBufferNames[m].c_str()));
+		}
+
+		// Query shared buffer locations (SSBO)
+		std::vector<GLuint>& sharedBufferLocations = program.sharedBufferLocations;
+		sharedBufferLocations.reserve(sharedBufferNames.size());
+
+		for (size_t t = 0; t < sharedBufferNames.size(); t++) {
+			sharedBufferLocations.emplace_back(glGetProgramResourceIndex(program.programID, GL_SHADER_STORAGE_BLOCK, sharedBufferNames[t].c_str()));
 		}
 	}
 
@@ -1365,7 +1353,7 @@ struct ResourceImplOpenGL<IRender::Resource::ShaderDescription> : public Resourc
 		delete this;
 	}
 
-	std::vector<Program> programs;
+	Program program;
 };
 
 template <>
@@ -1667,10 +1655,8 @@ struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> : public Resou
 
 		Shader* shader = static_cast<Shader*>(d.shaderResource);
 		assert(shader != nullptr);
-		if (shader->programs.empty()) return; // shader failed?
 
-		assert(queue.device->lastRenderState.pass < shader->programs.size());
-		const Shader::Program& program = shader->programs[queue.device->lastRenderState.pass];
+		const Shader::Program& program = shader->program;
 		GLuint programID = program.programID;
 		if (queue.device->lastProgramID != programID) {
 			glUseProgram(queue.device->lastProgramID = programID);

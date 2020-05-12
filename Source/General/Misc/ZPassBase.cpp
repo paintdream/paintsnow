@@ -48,11 +48,7 @@ IRender::Resource* ZPassBase::Compile(IRender& render, IRender::Queue* queue) {
 	(*this)(allShaders);
 
 	// concat shader text
-	IRender::Resource::ShaderDescription::Pass pass;
-	pass.tech = "Shading"; // will generated from reflections later on
-	pass.slot = 0;
-	std::swap(pass.entries, allShaders.shaders);
-	shaderDescription.passes.emplace_back(std::move(pass));
+	shaderDescription.entries = std::move(allShaders.shaders);
 
 	// commit
 	render.UploadResource(queue, shader, &shaderDescription);

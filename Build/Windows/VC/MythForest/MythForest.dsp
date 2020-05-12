@@ -401,6 +401,10 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Space\SpaceComponentModul
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\StencilMaskRenderStage.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Stream\StreamComponent.cpp
 # End Source File
 # Begin Source File
@@ -790,6 +794,10 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Space\SpaceComponentModul
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Explorer\SpaceTraversal.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\StencilMaskRenderStage.h
 # End Source File
 # Begin Source File
 

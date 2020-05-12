@@ -438,7 +438,8 @@ LightComponent::TaskData::TaskData(Engine& engine, uint32_t warpCount, const USh
 	render.UploadResource(renderQueue, clearResource, &cls);
 
 	IRender::Resource::RenderStateDescription rs;
-	rs.pass = 0;
+	rs.stencilOpFail = IRender::Resource::RenderStateDescription::KEEP;
+	rs.stencilOpPass = IRender::Resource::RenderStateDescription::REPLACE;
 	rs.cull = 0;
 	rs.fill = 1;
 	rs.alphaBlend = 0;

@@ -115,14 +115,8 @@ namespace PaintsNow {
 					GLOBAL, VERTEX, TESSELLATION_CONTROL, TESSELLATION_EVALUATION, GEOMETRY, FRAGMENT, COMPUTE, END
 				};
 
-				struct Pass {
-					String tech;
-					uint32_t slot; // up to 63
-					std::vector<std::pair<Stage, IShader* > > entries;
-				};
-
-				TWrapper<void, ShaderDescription&, uint32_t, const String&, const String&> compileCallback;
-				std::vector<Pass> passes;
+				TWrapper<void, ShaderDescription&, Stage, const String&, const String&> compileCallback;
+				std::vector<std::pair<Stage, IShader* > > entries;
 			};
 
 			// Executable
@@ -130,6 +124,10 @@ namespace PaintsNow {
 				RenderStateDescription() { memset(this, 0, sizeof(*this)); }
 				enum Test {
 					DISABLED, ALWAYS, LESS, LESS_EQUAL, GREATER, GREATER_EQUAL, EQUAL
+				};
+
+				enum StencilOp {
+					KEEP, REPLACE, INCREASE, DECREASE
 				};
 
 				inline bool operator < (const RenderStateDescription& rhs) const {
@@ -144,7 +142,8 @@ namespace PaintsNow {
 					return memcmp(this, &rhs, sizeof(*this)) != 0;
 				}
 
-				uint32_t pass : 4;
+				uint32_t stencilOpFail : 2;
+				uint32_t stencilOpPass : 2;
 				uint32_t cull : 1;
 				uint32_t fill : 1;
 				uint32_t alphaBlend : 1;
