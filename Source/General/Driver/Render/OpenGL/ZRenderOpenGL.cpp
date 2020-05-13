@@ -1385,6 +1385,19 @@ struct ResourceImplOpenGL<IRender::Resource::RenderStateDescription> : public Re
 		return GL_NONE;
 	}
 
+	static GLuint GetStencilOp(uint8_t type) {
+		switch (type) {
+			case Resource::RenderStateDescription::KEEP:
+				return GL_KEEP;
+			case Resource::RenderStateDescription::REPLACE:
+				return GL_REPLACE;
+			case Resource::RenderStateDescription::INCREASE:
+				return GL_INCR;
+			case Resource::RenderStateDescription::DECREASE:
+				return GL_DECR;
+		}
+	}
+
 	virtual void Execute(QueueImplOpenGL& queue) override {
 		GL_GUARD();
 
@@ -1420,7 +1433,7 @@ struct ResourceImplOpenGL<IRender::Resource::RenderStateDescription> : public Re
 		} else {
 			glEnable(GL_STENCIL_TEST);
 			glStencilFunc(stencilTest, d.stencilValue, d.stencilMask);
-			glStencilOp(GL_KEEP, GL_KEEP, d.stencilWrite ? GL_REPLACE : GL_KEEP);
+			glStencilOp(GetStencilOp(d.stencilOpFail), GL_KEEP, GetStencilOp(d.stencilOpPass));
 		}
 		
 		glStencilMask(d.stencilWrite ? 0xFFFFFFFF : 0);

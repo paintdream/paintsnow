@@ -71,7 +71,7 @@ uint32_t ZPassBase::Updater::GetTextureCount() const {
 
 Bytes ZPassBase::Updater::MakeKeyFromString(const String& s) {
 	Bytes ret;
-	ret.Append((const uint8_t*)s.c_str(), s.size());
+	ret.Append((const uint8_t*)s.c_str(), safe_cast<uint32_t>(s.size()));
 	return ret;
 }
 

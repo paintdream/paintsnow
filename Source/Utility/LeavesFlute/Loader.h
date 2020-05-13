@@ -103,7 +103,6 @@ namespace PaintsNow {
 			Loader();
 			virtual ~Loader();
 			void Load(const CmdLine& cmdLine);
-			void LoadOne(const CmdLine::Option& path);
 			void SetFactory(const void*& ptr, String& param, const String& key, const std::map<String, CmdLine::Option>& factoryMap);
 
 			const TFactoryBase<IFrame>* frameFactory;

@@ -5,15 +5,8 @@
 #include "../../General/Driver/Filter/LZW/ZFilterLZW.h"
 #include "../../General/Driver/Filter/LZMA/ZFilterLZMA.h"
 
-#include "../RayForce/LibLoader.h"
-
-#if defined(__linux__)
-#include <dlfcn.h>
-#include <signal.h>
-typedef bool (*DynamicInit)(PaintsNow::IScript::Request* script, PaintsNow::UniqueAllocator* allocator);
-#elif defined(_WIN32)
-#include <windows.h>
-typedef bool (WINAPI* DynamicInit)(PaintsNow::IScript::Request* script, PaintsNow::UniqueAllocator* allocator);
+#ifdef _WIN32
+#include <Windows.h>
 #endif
 
 using namespace PaintsNow;
@@ -46,17 +39,10 @@ LeavesFlute::LeavesFlute(bool ng, Interfaces& inters, const TWrapper<IArchive*, 
 					snowyStream(inters, bridgeSunset, subArchiveCreator, Wrap(this, &LeavesFlute::OnConsoleOutput)),
 					mythForest(inters, snowyStream, bridgeSunset),
 					heartVioliner(inters.thread, inters.timer, bridgeSunset),
-					rayForce(inters.thread, snowyStream, bridgeSunset),
 					remembery(inters.thread, inters.archive, inters.database, bridgeSunset),
 					galaxyWeaver(inters.thread, inters.tunnel, bridgeSunset, snowyStream, mythForest),
 					consoleThread(nullptr)
-#if defined(_WIN32) || defined(WIN32)
-, comBridge(inters.thread)
-#endif
 {
-#if defined(_WIN32) || defined(WIN32)
-	rayForce.Register(&comBridge);
-#endif
 	ScanModules scanModules;
 	(*this)(scanModules);
 	std::swap(modules, scanModules.modules);
@@ -450,14 +436,6 @@ void LeavesFlute::OnRender() {
 	}
 }
 
-void LeavesFlute::RequestLoadLibrary(IScript::Request& request, const String& path) {
-	String root = interfaces.archive.GetRootPath();
-	void* mod = LibLoader::DynamicLoadLibrary(root + path, "Instance", this, &request);
-	request.DoLock();
-	request << (mod != nullptr);
-	request.UnLock();
-}
-
 class ExpandParamsScriptTask : public WarpTiny, public TaskRepeat {
 public:
 	ExpandParamsScriptTask(Kernel& k, const String& p, const std::vector<String>& params, Interfaces& inters) : kernel(k), path(p), value(params), interfaces(inters) {}
@@ -823,7 +801,6 @@ TObject<IReflect>& LeavesFlute::operator () (IReflect& reflect) {
 	if (reflect.IsReflectProperty()) {
 		// dependency order
 		ReflectProperty(bridgeSunset)[ScriptLibrary = "BridgeSunset"];
-		ReflectProperty(rayForce)[ScriptLibrary = "RayForce"];
 		ReflectProperty(remembery)[ScriptLibrary = "Remembery"];
 		ReflectProperty(echoLegend)[ScriptLibrary = "EchoLegend"];
 		ReflectProperty(heartVioliner)[ScriptLibrary = "HeartVioliner"];
@@ -837,7 +814,6 @@ TObject<IReflect>& LeavesFlute::operator () (IReflect& reflect) {
 		ReflectMethod(RequestExit)[ScriptMethod = "Exit"];
 		ReflectMethod(RequestPrint)[ScriptMethod = "Print"];
 		ReflectMethod(RequestForward)[ScriptMethod = "Forward"];
-		ReflectMethod(RequestLoadLibrary)[ScriptMethod = "LoadLibrary"];
 		ReflectMethod(RequestSetAppTitle)[ScriptMethod = "SetAppTitle"];
 		ReflectMethod(RequestShowCursor)[ScriptMethod = "ShowCursor"];
 		ReflectMethod(RequestWarpCursor)[ScriptMethod = "WrapCursor"];

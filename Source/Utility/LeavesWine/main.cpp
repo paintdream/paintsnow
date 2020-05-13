@@ -136,9 +136,6 @@ public:
 };
 
 int main(int argc, char* argv[]) {
-#if defined(_WIN32) || defined(WIN32)
-	::CoInitialize(nullptr);
-#endif
 	IMGUI_CHECKVERSION();
 
 	ImGui::CreateContext();
@@ -182,8 +179,5 @@ int main(int argc, char* argv[]) {
 	ImGui_ImplGLUT_Shutdown();
 	ImGui::DestroyContext();
 
-#if defined(_WIN32) || defined(WIN32)
-	::CoUninitialize();
-#endif
 	return 0;
 }

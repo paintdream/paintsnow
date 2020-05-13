@@ -16,15 +16,9 @@
 #include "../../Utility/HeartVioliner/HeartVioliner.h"
 #include "../../Utility/SnowyStream/SnowyStream.h"
 #include "../../Utility/MythForest/MythForest.h"
-#include "../../Utility/RayForce/RayForce.h"
 #include "../../Utility/EchoLegend/EchoLegend.h"
 #include "../../Utility/Remembery/Remembery.h"
 #include "../../Utility/GalaxyWeaver/GalaxyWeaver.h"
-
-#if defined(_WIN32) || defined(WIN32)
-// Add COM Support
-#include "../../Utility/RayForce/COM/ComBridge.h"
-#endif
 
 namespace PaintsNow {
 	namespace NsLeavesFlute {
@@ -42,7 +36,6 @@ namespace PaintsNow {
 			void RequestListenConsole(IScript::Request& request, IScript::Request::Ref callback);
 			void RequestPrint(IScript::Request& request, const String& text);
 			void RequestExit(IScript::Request& request);
-			void RequestLoadLibrary(IScript::Request& request, const String& path);
 			void RequestGetFullPath(IScript::Request& request, const String& path);
 			void RequestWarpCursor(IScript::Request& request, Int2 position);
 			void RequestShowCursor(IScript::Request& request, const String& type);
@@ -82,18 +75,10 @@ namespace PaintsNow {
 			NsSnowyStream::SnowyStream snowyStream;
 			NsMythForest::MythForest mythForest;
 			NsHeartVioliner::HeartVioliner heartVioliner;
-			NsRayForce::RayForce rayForce;
 			NsRemembery::Remembery remembery;
 			NsGalaxyWeaver::GalaxyWeaver galaxyWeaver;
 
-#if defined(_WIN32) || defined(WIN32)
-			NsRayForce::ComBridge comBridge;
-#endif
-
 		protected:
-#ifdef __linux__
-			std::list<void*> dynamicRefs;
-#endif
 			IThread::Thread* consoleThread;
 			IScript::Request::Ref listenConsole;
 			String newAppTitle;

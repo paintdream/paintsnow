@@ -17,7 +17,6 @@ static bool DumpHandler() {
 
 static void RegisterDump() {
 #if defined(_WIN32) || defined(WIN32)
-	::CoInitialize(nullptr);
 	ZDebuggerWin dumper;
 	time_t t;
 	time(&t);
@@ -36,10 +35,6 @@ int main(int argc, char* argv[]) {
 
 	Loader loader;
 	loader.Load(cmdLine);
-
-#if defined(_WIN32) || defined(WIN32)
-	::CoUninitialize();
-#endif
 
 	return 0;
 }

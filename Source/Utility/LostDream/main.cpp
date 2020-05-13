@@ -25,10 +25,6 @@ extern "C" int _CrtDbgReport() {
 #endif
 
 int main(void) {
-#if defined(_WIN32) || defined(WIN32)
-	::CoInitialize(nullptr);
-#endif
-
 	LostDream lostDream;
 	lostDream.RegisterQualifier(TFactory<Memory, LostDream::Qualifier>(), 1);
 	lostDream.RegisterQualifier(TFactory<Serialization, LostDream::Qualifier>(), 1);
@@ -37,10 +33,6 @@ int main(void) {
 	lostDream.RegisterQualifier(TFactory<Annotation, LostDream::Qualifier>(), 1);
 
 	lostDream.RunQualifiers(true, 0, 4);
-	
-#if defined(_WIN32) || defined(WIN32)
-	::CoUninitialize();
-#endif
 	return 0;
 }
 

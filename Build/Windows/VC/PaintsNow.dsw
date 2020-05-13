@@ -93,9 +93,6 @@ Package=<4>
     Project_Dep_Name PaintsNow
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name RayForce
-    End Project Dependency
-    Begin Project Dependency
     Project_Dep_Name Remembery
     End Project Dependency
     Begin Project Dependency
@@ -163,18 +160,6 @@ Package=<4>
 ###############################################################################
 
 Project: "PaintsNow"=.\PaintsNow\PaintsNow.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
-Project: "RayForce"=.\RayForce\RayForce.dsp - Package Owner=<4>
 
 Package=<5>
 {{{

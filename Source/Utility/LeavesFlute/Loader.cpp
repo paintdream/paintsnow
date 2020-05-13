@@ -1,5 +1,4 @@
 #include "Loader.h"
-#include "../../Utility/RayForce/LibLoader.h"
 // #include <vld.h>
 #include "../LeavesFlute/Platform.h"
 
@@ -76,9 +75,6 @@ Loader::Loader() : frameFactory(nullptr), renderFactory(nullptr), threadFactory(
 
 Loader::~Loader() {}
 
-void Loader::LoadOne(const CmdLine::Option& option) {
-	LibLoader::DynamicLoadLibrary(option.name, "Config", static_cast<LeavesApi*>(&config));
-}
 
 void Loader::SetFactory(const void*& ptr, String& param, const String& key, const std::map<String, CmdLine::Option>& factoryMap) {
 	const std::map<String, CmdLine::Option>::const_iterator p = factoryMap.find(key);
@@ -111,10 +107,6 @@ void Loader::Load(const CmdLine& cmdLine) {
 
 	bool nogui = true;
 	bool enableModuleLog = false;
-	for (std::list<CmdLine::Option>::const_iterator it = modules.begin(); it != modules.end(); ++it) {
-		LoadOne(*it);
-	}
-
 	const std::map<String, CmdLine::Option>& configMap = cmdLine.GetConfigMap();
 	std::string entry = "Entry";
 	uint32_t threadCount = 4;

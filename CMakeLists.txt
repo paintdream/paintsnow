@@ -735,25 +735,6 @@ ADD_LIBRARY (MythForest ${MYTHFOREST_SRC})
 
 # ---------------------------------------------------------------- #
 
-FILE (GLOB_RECURSE RAYFORCE_SRC
-		"${PROJECT_SOURCE_DIR}/Source/Utility/RayForce/*.h"
-		"${PROJECT_SOURCE_DIR}/Source/Utility/RayForce/*.cpp"
-)
-
-FOREACH (FILE ${RAYFORCE_SRC}) 
-	GET_FILENAME_COMPONENT(PARENT_DIR "${FILE}" PATH)
-
-	# skip src or include and changes /'s to \\'s
-	STRING(REGEX REPLACE "(\\./)?(src|include)/?" "" GROUP "${PARENT_DIR}")
-	STRING(REPLACE "/" "\\" GROUP "${GROUP}")
-	STRING(REPLACE "${LOCAL_SOURCE_DIR}" "" GROUP "${GROUP}")
-	SOURCE_GROUP("${GROUP}" FILES "${FILE}")
-ENDFOREACH (FILE ${RAYFORCE_SRC})
-
-ADD_LIBRARY (RayForce ${RAYFORCE_SRC})
-
-# ---------------------------------------------------------------- #
-
 FILE (GLOB_RECURSE REMEMBERY_SRC
 		"${PROJECT_SOURCE_DIR}/Source/Utility/Remembery/*.h"
 		"${PROJECT_SOURCE_DIR}/Source/Utility/Remembery/*.cpp"
@@ -813,7 +794,7 @@ ENDFOREACH (FILE ${LEAVESWING_SRC})
 ADD_EXECUTABLE (LeavesWing ${LEAVESWING_SRC})
 
 SET (PAINTSNOW_LIBRARIES
-	LeavesFlute Remembery MythForest SnowyStream RayForce BridgeSunset HeartVioliner EchoLegend FlameWork GalaxyWeaver PaintsNow
+	LeavesFlute Remembery MythForest SnowyStream BridgeSunset HeartVioliner EchoLegend FlameWork GalaxyWeaver PaintsNow
 )
 
 IF (CMAKE_COMPILER_IS_GNUCXX)
@@ -854,19 +835,7 @@ IF (CMAKE_COMPILER_IS_GNUCXX)
 
 ENDIF (CMAKE_COMPILER_IS_GNUCXX)
 
-
-
 TARGET_LINK_LIBRARIES (LeavesWing ${PAINTSNOW_LIBRARIES})
-
-
-IF (NOT CMAKE_COMPILER_IS_GNUCXX)
-
-SET_TARGET_PROPERTIES (LeavesWing PROPERTIES LINK_FLAGS_DEBUG "uafxcwd.lib /nodefaultlib:uafxcwd.lib")
-SET_TARGET_PROPERTIES (LeavesWing PROPERTIES LINK_FLAGS_RELWITHDEBINFO "uafxcw.lib /nodefaultlib:uafxcw.lib")
-SET_TARGET_PROPERTIES (LeavesWing PROPERTIES LINK_FLAGS_RELEASE "uafxcw.lib /nodefaultlib:uafxcw.lib")
-SET_TARGET_PROPERTIES (LeavesWing PROPERTIES LINK_FLAGS_MINSIZEREL "uafxcw.lib /nodefaultlib:uafxcw.lib")
-
-ENDIF (NOT CMAKE_COMPILER_IS_GNUCXX)
 
 
 FILE (GLOB_RECURSE LOSTDREAM_SRC
@@ -877,15 +846,6 @@ FILE (GLOB_RECURSE LOSTDREAM_SRC
 ADD_EXECUTABLE (LostDream ${LOSTDREAM_SRC})
 
 TARGET_LINK_LIBRARIES (LostDream ${PAINTSNOW_LIBRARIES})
-
-IF (NOT CMAKE_COMPILER_IS_GNUCXX)
-
-# SET_TARGET_PROPERTIES (LostDream PROPERTIES LINK_FLAGS_DEBUG "uafxcwd.lib /nodefaultlib:uafxcwd.lib")
-# SET_TARGET_PROPERTIES (LostDream PROPERTIES LINK_FLAGS_RELWITHDEBINFO "uafxcw.lib /nodefaultlib:uafxcw.lib")
-# SET_TARGET_PROPERTIES (LostDream PROPERTIES LINK_FLAGS_RELEASE "uafxcw.lib /nodefaultlib:uafxcw.lib")
-# SET_TARGET_PROPERTIES (LostDream PROPERTIES LINK_FLAGS_MINSIZEREL "uafxcw.lib /nodefaultlib:uafxcw.lib")
-
-ENDIF (NOT CMAKE_COMPILER_IS_GNUCXX)
 
 # ---------------------------------------------------------------- #
 
@@ -912,17 +872,8 @@ ADD_EXECUTABLE (LeavesWine ${LEAVESWINE_SRC} )
 TARGET_LINK_LIBRARIES (LeavesWine ${PAINTSNOW_LIBRARIES})
 
 
-IF (NOT CMAKE_COMPILER_IS_GNUCXX)
-
-SET_TARGET_PROPERTIES (LeavesWine PROPERTIES LINK_FLAGS_DEBUG "uafxcwd.lib /nodefaultlib:uafxcwd.lib")
-SET_TARGET_PROPERTIES (LeavesWine PROPERTIES LINK_FLAGS_RELWITHDEBINFO "uafxcw.lib /nodefaultlib:uafxcw.lib")
-SET_TARGET_PROPERTIES (LeavesWine PROPERTIES LINK_FLAGS_RELEASE "uafxcw.lib /nodefaultlib:uafxcw.lib")
-SET_TARGET_PROPERTIES (LeavesWine PROPERTIES LINK_FLAGS_MINSIZEREL "uafxcw.lib /nodefaultlib:uafxcw.lib")
-
-ELSE (NOT CMAKE_COMPILER_IS_GNUCXX)
-
+IF (CMAKE_COMPILER_IS_GNUCXX)
 ADD_DEFINITIONS(-fPIC)
-
 ENDIF (NOT CMAKE_COMPILER_IS_GNUCXX)
 
 # ---------------------------------------------------------------- #
@@ -930,9 +881,6 @@ ENDIF (NOT CMAKE_COMPILER_IS_GNUCXX)
 FILE (GLOB_RECURSE LEAVESWIND_SRC
 		"${PROJECT_SOURCE_DIR}/Source/Utility/LeavesWind/*.h"
 		"${PROJECT_SOURCE_DIR}/Source/Utility/LeavesWind/*.cpp"
-		"${PROJECT_SOURCE_DIR}/Source/Utility/LeavesWind/*.def"
-		"${PROJECT_SOURCE_DIR}/Source/Utility/LeavesWind/*.idl"
-		# "${PROJECT_SOURCE_DIR}/Source/Utility/LeavesWind/*.rc"
 )
 
 FOREACH (FILE ${LEAVESWIND_SRC}) 
@@ -950,14 +898,7 @@ ADD_LIBRARY (LeavesWind SHARED ${LEAVESWIND_SRC} )
 TARGET_LINK_LIBRARIES (LeavesWind ${PAINTSNOW_LIBRARIES})
 
 
-IF (NOT CMAKE_COMPILER_IS_GNUCXX)
-
-SET_TARGET_PROPERTIES (LeavesWind PROPERTIES LINK_FLAGS_DEBUG "uafxcwd.lib /nodefaultlib:uafxcwd.lib")
-SET_TARGET_PROPERTIES (LeavesWind PROPERTIES LINK_FLAGS_RELWITHDEBINFO "uafxcw.lib /nodefaultlib:uafxcw.lib")
-SET_TARGET_PROPERTIES (LeavesWind PROPERTIES LINK_FLAGS_RELEASE "uafxcw.lib /nodefaultlib:uafxcw.lib")
-SET_TARGET_PROPERTIES (LeavesWind PROPERTIES LINK_FLAGS_MINSIZEREL "uafxcw.lib /nodefaultlib:uafxcw.lib")
-
-ELSE (NOT CMAKE_COMPILER_IS_GNUCXX)
+IF (CMAKE_COMPILER_IS_GNUCXX)
 
 ADD_DEFINITIONS(-fPIC)
 
