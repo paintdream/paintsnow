@@ -64,7 +64,6 @@ namespace PaintsNow {
 			virtual void Print(const String& text);
 
 		protected:
-			void ClearDynamicLibraryRefs();
 			Interfaces& interfaces;
 			std::vector<IScript::Library*> modules;
 

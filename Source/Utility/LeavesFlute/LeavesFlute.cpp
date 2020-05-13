@@ -7,6 +7,8 @@
 
 #ifdef _WIN32
 #include <Windows.h>
+#else
+#include <signal.h>
 #endif
 
 using namespace PaintsNow;
@@ -89,7 +91,6 @@ LeavesFlute::~LeavesFlute() {
 	interfaces.script.Reset();
 
 	Uninitialize();
-	ClearDynamicLibraryRefs();
 }
 
 void LeavesFlute::EnterStdinLoop() {
@@ -391,16 +392,6 @@ void LeavesFlute::Print(const String& str) {
 	printf("\n");
 #else
 	printf("%s\n", text.c_str());
-#endif
-}
-
-void LeavesFlute::ClearDynamicLibraryRefs() {
-#ifdef __linux__
-	for (std::list<void*>::iterator t = dynamicRefs.begin(); t != dynamicRefs.end(); ++t) {
-		dlclose(*t);
-	}
-
-	dynamicRefs.clear();
 #endif
 }
 
