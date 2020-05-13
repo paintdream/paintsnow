@@ -103,8 +103,6 @@ function require(name, ...)
 			print("Load module " .. name .. " failed!")
 			print("Compiler log: " .. errMsg)
 		end
-	elseif LuaBridge then
-		mod = LuaBridge.Require(GetFullPath(path))
 	end
 
 	package.loaded[name] = mod

@@ -1385,19 +1385,6 @@ struct ResourceImplOpenGL<IRender::Resource::RenderStateDescription> : public Re
 		return GL_NONE;
 	}
 
-	static GLuint GetStencilOp(uint8_t type) {
-		switch (type) {
-			case Resource::RenderStateDescription::KEEP:
-				return GL_KEEP;
-			case Resource::RenderStateDescription::REPLACE:
-				return GL_REPLACE;
-			case Resource::RenderStateDescription::INCREASE:
-				return GL_INCR;
-			case Resource::RenderStateDescription::DECREASE:
-				return GL_DECR;
-		}
-	}
-
 	virtual void Execute(QueueImplOpenGL& queue) override {
 		GL_GUARD();
 
@@ -1408,7 +1395,7 @@ struct ResourceImplOpenGL<IRender::Resource::RenderStateDescription> : public Re
 		if (d.cull) {
 			glEnable(GL_CULL_FACE);
 			glFrontFace(GL_CCW);
-			glCullFace(GL_BACK);
+			glCullFace(d.cullFrontFace ? GL_FRONT : GL_BACK);
 		} else {
 			glDisable(GL_CULL_FACE);
 		}
@@ -1433,7 +1420,7 @@ struct ResourceImplOpenGL<IRender::Resource::RenderStateDescription> : public Re
 		} else {
 			glEnable(GL_STENCIL_TEST);
 			glStencilFunc(stencilTest, d.stencilValue, d.stencilMask);
-			glStencilOp(GetStencilOp(d.stencilOpFail), GL_KEEP, GetStencilOp(d.stencilOpPass));
+			glStencilOp(d.stencilReplaceFail ? GL_REPLACE : GL_KEEP, d.stencilReplaceZFail ? GL_REPLACE : GL_KEEP, d.stencilReplacePass ? GL_REPLACE : GL_KEEP);
 		}
 		
 		glStencilMask(d.stencilWrite ? 0xFFFFFFFF : 0);

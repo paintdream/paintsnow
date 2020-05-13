@@ -47,8 +47,7 @@ static void GenerateDrawCall(IDrawCallProvider::OutputRenderData& renderData, Sh
 	drawCall.indexBufferResource.offset = slice.primitiveOffset * sizeof(Int3);
 
 	IRender::Resource::RenderStateDescription& renderState = renderData.renderStateDescription;
-	renderState.stencilOpFail = IRender::Resource::RenderStateDescription::KEEP;
-	renderState.stencilOpPass = IRender::Resource::RenderStateDescription::REPLACE;
+	renderState.stencilReplacePass = 1;
 	renderState.cull = 1;
 	renderState.fill = 1;
 	renderState.colorWrite = 1;

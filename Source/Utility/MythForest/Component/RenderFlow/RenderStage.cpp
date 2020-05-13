@@ -10,8 +10,7 @@ RenderStage::RenderStage(uint32_t colorAttachmentCount) : renderState(nullptr), 
 
 	// Initialize state
 	IRender::Resource::RenderStateDescription& s = renderStateDescription;
-	s.stencilOpFail = IRender::Resource::RenderStateDescription::KEEP;
-	s.stencilOpPass = IRender::Resource::RenderStateDescription::REPLACE;
+	s.stencilReplacePass = 1;
 	s.cull = 1;
 	s.fill = 1;
 	s.alphaBlend = 0;

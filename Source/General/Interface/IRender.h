@@ -126,10 +126,6 @@ namespace PaintsNow {
 					DISABLED, ALWAYS, LESS, LESS_EQUAL, GREATER, GREATER_EQUAL, EQUAL
 				};
 
-				enum StencilOp {
-					KEEP, REPLACE, INCREASE, DECREASE
-				};
-
 				inline bool operator < (const RenderStateDescription& rhs) const {
 					return memcmp(this, &rhs, sizeof(*this)) < 0;
 				}
@@ -142,8 +138,10 @@ namespace PaintsNow {
 					return memcmp(this, &rhs, sizeof(*this)) != 0;
 				}
 
-				uint32_t stencilOpFail : 2;
-				uint32_t stencilOpPass : 2;
+				uint32_t stencilReplacePass : 1;
+				uint32_t stencilReplaceFail : 1;
+				uint32_t stencilReplaceZFail : 1;
+				uint32_t cullFrontFace : 1;
 				uint32_t cull : 1;
 				uint32_t fill : 1;
 				uint32_t alphaBlend : 1;

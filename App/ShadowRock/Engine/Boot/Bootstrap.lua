@@ -16,9 +16,6 @@ require("Engine/Boot/Lang/Print")
 require("Engine/Boot/Lang/Iterator")
 require("Engine/Boot/Lang/Console")
 
--- Plugins
-require("Engine/Boot/Plugin/LuaBridge")
-
 -- Typed support
 require("Engine/Boot/Typed/Loader")
 
