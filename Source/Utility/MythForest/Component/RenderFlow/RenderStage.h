@@ -92,10 +92,6 @@ namespace PaintsNow {
 		public:
  			// gcc do not support referencing base type in template class. manunaly specified here.
 			typedef TReflected<GeneralRenderStageRect<T>, GeneralRenderStage<T> > BaseClass;
-			enum {
-				GENERALRENDERSTAGERECT_INITDRAWCALL = RENDERSTAGE_CUSTOM_BEGIN,
-				GENERALRENDERSTAGERECT_CUSTOM_BEGIN = RENDERSTAGE_CUSTOM_BEGIN << 1
-			};
 			GeneralRenderStageRect(uint32_t colorAttachmentCount = 1) : BaseClass(colorAttachmentCount) {}
 			virtual void PrepareResources(Engine& engine, IRender::Queue* queue) override {
 				// create specified shader resource (if not exists)
@@ -121,27 +117,19 @@ namespace PaintsNow {
 					drawCallDescription.indexBufferResource.buffer = quadMeshResource->bufferCollection.indexBuffer;
 					drawCallDescription.shaderResource = BaseClass::GetShaderResource();
 					BaseClass::drawCallResource = render.CreateResource(queue, IRender::Resource::RESOURCE_DRAWCALL);
-					Flag() |= GENERALRENDERSTAGERECT_INITDRAWCALL;
 				} else {
 					// recapture all data (uniforms by default)
 					size_t count = BaseClass::newResources.size();
 					updater.Update(render, queue, drawCallDescription, BaseClass::newResources, bufferData, 1 << IRender::Resource::BufferDescription::UNIFORM);
 					assert(count == BaseClass::newResources.size()); // must not adding new resource(s)
-					if (!(Flag() & GENERALRENDERSTAGERECT_INITDRAWCALL)) {
-						IRender::Resource::DrawCallDescription copy = drawCallDescription;
-						render.UploadResource(queue, BaseClass::drawCallResource, &copy);
-					}
 				}
+				
+				IRender::Resource::DrawCallDescription copy = drawCallDescription;
+				render.UploadResource(queue, BaseClass::drawCallResource, &copy);
 			}
 
 			virtual void Commit(Engine& engine, std::vector<ZRenderQueue*>& queues, IRender::Queue* instantQueue) override {
 				IRender& render = engine.interfaces.render;
-				if (Flag() & GENERALRENDERSTAGERECT_INITDRAWCALL) {
-					IRender::Resource::DrawCallDescription copy = drawCallDescription;
-					render.UploadResource(instantQueue, BaseClass::drawCallResource, &copy);
-					Flag() |= ~GENERALRENDERSTAGERECT_INITDRAWCALL;
-				}
-
 				render.ExecuteResource(instantQueue, BaseClass::drawCallResource);
 			}
 

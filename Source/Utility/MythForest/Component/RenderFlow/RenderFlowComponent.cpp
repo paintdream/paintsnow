@@ -310,30 +310,29 @@ void RenderFlowComponent::SetMainResolution(Engine& engine, bool sizeOnly) {
 
 void RenderFlowComponent::RenderSyncTick(Engine& engine) {
 	if (Flag() & TINY_ACTIVATED) {
-		if (resourceQueue.WaitUpdate()) {
-			IRender::Queue* queue = resourceQueue.GetQueue();
-			SetMainResolution(engine, false);
+		IRender::Queue* queue = resourceQueue.GetQueue();
+		SetMainResolution(engine, false);
 
-			IRender::Device* device = engine.snowyStream.GetRenderDevice();
-			// Cleanup modified flag for all ports
-			for (size_t k = 0; k < cachedRenderStages.size(); k++) {
-				RenderStage* stage = cachedRenderStages[k];
-				if (stage != nullptr) {
-					for (size_t j = 0; j < stage->GetPorts().size(); j++) {
-						stage->GetPorts()[j].port->Flag() &= ~TINY_MODIFIED;
-					}
+		IRender::Device* device = engine.snowyStream.GetRenderDevice();
+		// Cleanup modified flag for all ports
+		for (size_t k = 0; k < cachedRenderStages.size(); k++) {
+			RenderStage* stage = cachedRenderStages[k];
+			if (stage != nullptr) {
+				for (size_t j = 0; j < stage->GetPorts().size(); j++) {
+					stage->GetPorts()[j].port->Flag() &= ~TINY_MODIFIED;
 				}
 			}
-
-			for (size_t i = 0; i < cachedRenderStages.size(); i++) {
-				RenderStage* stage = cachedRenderStages[i];
-				if (stage != nullptr) {
-					stage->Tick(engine, queue);
-				}
-			}
-
-			resourceQueue.UpdateFrame(engine.interfaces.render);
 		}
+
+		for (size_t i = 0; i < cachedRenderStages.size(); i++) {
+			RenderStage* stage = cachedRenderStages[i];
+			if (stage != nullptr) {
+				stage->Tick(engine, queue);
+			}
+		}
+
+		resourceQueue.UpdateFrame(engine.interfaces.render);
+		Flag() |= RENDERFLOWCOMPONENT_RENDER_SYNC_TICKED;
 	}
 
 	Flag() &= ~RENDERFLOWCOMPONENT_RENDER_SYNC_TICKING;
@@ -341,15 +340,19 @@ void RenderFlowComponent::RenderSyncTick(Engine& engine) {
 
 void RenderFlowComponent::DispatchEvent(Event& event, Entity* entity) {
 	if (event.eventID == Event::EVENT_FRAME) {
-		Engine& engine = event.engine;
-		const Tiny::FLAG condition = RENDERFLOWCOMPONENT_RENDER_SYNC_TICKING | TINY_ACTIVATED;
-		while ((Flag() & condition) == condition) {
-			YieldThread();
-		}
+		if (Flag() & TINY_ACTIVATED) {
+			Engine& engine = event.engine;
+			const Tiny::FLAG condition = RENDERFLOWCOMPONENT_RENDER_SYNC_TICKING | TINY_ACTIVATED;
+			while ((Flag() & condition) == condition) {
+				YieldThread();
+			}
 
-		Flag() |= RENDERFLOWCOMPONENT_RENDER_SYNC_TICKING;
-		engine.GetKernel().QueueRoutine(this, CreateTaskContextFree(Wrap(this, &RenderFlowComponent::RenderSyncTick), std::ref(engine)));
-		Render(event.engine);
+			Flag() |= RENDERFLOWCOMPONENT_RENDER_SYNC_TICKING;
+			engine.GetKernel().QueueRoutine(this, CreateTaskContextFree(Wrap(this, &RenderFlowComponent::RenderSyncTick), std::ref(engine)));
+			if (Flag() & RENDERFLOWCOMPONENT_RENDER_SYNC_TICKED) {
+				Render(event.engine);
+			}
+		}
 	} else if (event.eventID == Event::EVENT_TICK) {
 		// No operations on trivial tick
 	}
