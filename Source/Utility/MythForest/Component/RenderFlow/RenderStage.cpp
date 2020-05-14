@@ -36,13 +36,9 @@ RenderStage::RenderStage(uint32_t colorAttachmentCount) : renderState(nullptr), 
 	t.colorBufferStorages.resize(colorAttachmentCount);
 }
 
-void RenderStage::PrepareResources(Engine& engine) {
+void RenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	IRender& render = engine.interfaces.render;
 	IRender::Device* device = engine.snowyStream.GetRenderDevice();
-	assert(renderQueue.GetQueue() == nullptr);
-	renderQueue.Initialize(render, device);
-
-	IRender::Queue* queue = renderQueue.GetQueue();
 
 	assert(renderState == nullptr);
 	assert(renderTarget == nullptr);
@@ -119,22 +115,15 @@ void RenderStage::UpdateRenderTarget(Engine& engine, IRender::Queue* resourceQue
 	}
 }
 
-void RenderStage::UpdatePass(Engine& engine) {
+void RenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 	IRender& render = engine.interfaces.render;
-	IRender::Queue* queue = renderQueue.GetQueue();
 	render.ExecuteResource(queue, renderTarget);
 	render.ExecuteResource(queue, renderState);
 	render.ExecuteResource(queue, clear);
 }
 
-void RenderStage::UpdateComplete(Engine& engine) {
+void RenderStage::Initialize(Engine& engine, IRender::Queue* queue) {
 	IRender& render = engine.interfaces.render;
-	renderQueue.UpdateFrame(render);
-}
-
-void RenderStage::Initialize(Engine& engine) {
-	IRender& render = engine.interfaces.render;
-	IRender::Queue* queue = renderQueue.GetQueue();
 	for (size_t i = 0; i < nodePorts.size(); i++) {
 		Port* port = nodePorts[i].port;
 		for (size_t j = 0; j < port->GetLinks().size(); j++) {
@@ -147,17 +136,15 @@ void RenderStage::Initialize(Engine& engine) {
 	}
 
 	UpdateRenderTarget(engine, queue, false);
-	UpdatePass(engine);
-	UpdateComplete(engine);
+	UpdatePass(engine, queue);
 
 	Flag() |= TINY_ACTIVATED;
 }
 
-void RenderStage::Uninitialize(Engine& engine) {
+void RenderStage::Uninitialize(Engine& engine, IRender::Queue* queue) {
 	Flag() &= ~TINY_ACTIVATED;
 
 	IRender& render = engine.interfaces.render;
-	IRender::Queue* queue = renderQueue.GetQueue();
 	for (size_t k = 0; k < nodePorts.size(); k++) {
 		nodePorts[k].port->Uninitialize(render, queue);
 	}
@@ -183,21 +170,17 @@ void RenderStage::Uninitialize(Engine& engine) {
 	if (clear != nullptr) {
 		render.DeleteResource(queue, clear);
 	}
-
-	renderQueue.UpdateFrame(render);
-	renderQueue.Uninitialize(render);
 }
 
-void RenderStage::Tick(Engine& engine) {
+void RenderStage::Tick(Engine& engine, IRender::Queue* queue) {
 	Tiny::FLAG flag = Flag().load(std::memory_order_relaxed);
 	for (size_t i = 0; i < nodePorts.size(); i++) {
-		nodePorts[i].port->Tick(engine);
+		nodePorts[i].port->Tick(engine, queue);
 		flag |= nodePorts[i].port->Flag().load(std::memory_order_relaxed);
 	}
 
 	if (flag & TINY_MODIFIED) {
-		UpdatePass(engine);
-		UpdateComplete(engine);
+		UpdatePass(engine, queue);
 		Flag() &= ~TINY_MODIFIED;
 	}
 }
@@ -210,17 +193,10 @@ const IRender::Resource::RenderTargetDescription& RenderStage::GetRenderTargetDe
 	return renderTargetDescription;
 }
 
-IRender::Queue* RenderStage::GetStageRenderQueue() const {
-	return renderQueue.GetQueue();
-}
-
-void RenderStage::PrepareRenderQueues(Engine& engine, std::vector<ZRenderQueue*>& queues) {
+void RenderStage::Commit(Engine& engine, std::vector<ZRenderQueue*>& queues, IRender::Queue* instantQueue) {
 	assert(Flag() & TINY_ACTIVATED);
-
-	queues.emplace_back(&renderQueue);
-	IRender::Queue* queue = renderQueue.GetQueue();
 	for (size_t i = 0; i < nodePorts.size(); i++) {
-		nodePorts[i].port->PrepareRenderQueues(queues);
+		nodePorts[i].port->Commit(queues);
 	}
 }
 

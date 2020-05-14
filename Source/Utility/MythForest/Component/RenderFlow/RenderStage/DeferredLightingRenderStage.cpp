@@ -32,7 +32,7 @@ TObject<IReflect>& DeferredLightingRenderStage::operator () (IReflect& reflect) 
 	return *this;
 }
 
-void DeferredLightingRenderStage::PrepareResources(Engine& engine) {
+void DeferredLightingRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	IRender& render = engine.interfaces.render;
 	SnowyStream& snowyStream = engine.snowyStream;
 	OutputColor.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateRandomLocation("RT", &OutputColor), false, 0, nullptr);
@@ -40,10 +40,10 @@ void DeferredLightingRenderStage::PrepareResources(Engine& engine) {
 	OutputColor.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::RGBA;
 	OutputColor.renderTargetTextureResource->description.state.immutable = false;
 
-	BaseClass::PrepareResources(engine);
+	BaseClass::PrepareResources(engine, queue);
 }
 
-void DeferredLightingRenderStage::UpdatePass(Engine& engine) {
+void DeferredLightingRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 	DeferredLightingPass& Pass = GetPass();
 	ScreenTransformVS& screenTransform = Pass.screenTransform;
 	screenTransform.vertexBuffer.resource = quadMeshResource->bufferCollection.positionBuffer;
@@ -60,7 +60,7 @@ void DeferredLightingRenderStage::UpdatePass(Engine& engine) {
 		renderStateDescription.stencilTest = LightSource->stencilMask != 0 ? IRender::Resource::RenderStateDescription::EQUAL : IRender::Resource::RenderStateDescription::DISABLED;
 		renderStateDescription.stencilWrite = 0;
 		IRender& render = engine.interfaces.render;
-		render.UploadResource(renderQueue.GetQueue(), renderState, &renderStateDescription);
+		render.UploadResource(queue, renderState, &renderStateDescription);
 	}
 
 	StandardLightingFS& standardLighting = Pass.standardLighting;
@@ -112,5 +112,5 @@ void DeferredLightingRenderStage::UpdatePass(Engine& engine) {
 	standardLighting.lightCount = count;
 	standardLighting.lightTexture.resource = LightTexture.textureResource->GetTexture();
 
-	BaseClass::UpdatePass(engine);
+	BaseClass::UpdatePass(engine, queue);
 }

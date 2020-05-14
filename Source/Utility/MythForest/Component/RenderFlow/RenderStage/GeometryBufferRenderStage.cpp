@@ -33,7 +33,7 @@ TObject<IReflect>& GeometryBufferRenderStage::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void GeometryBufferRenderStage::PrepareResources(Engine& engine) {
+void GeometryBufferRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	IRender& render = engine.interfaces.render;
 	SnowyStream& snowyStream = engine.snowyStream;
 
@@ -52,5 +52,5 @@ void GeometryBufferRenderStage::PrepareResources(Engine& engine) {
 	Depth.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::DEPTH;
 	Depth.renderTargetTextureResource->description.state.immutable = false;
 
-	BaseClass::PrepareResources(engine);
+	BaseClass::PrepareResources(engine, queue);
 }

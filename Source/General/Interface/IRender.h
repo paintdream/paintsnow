@@ -115,6 +115,7 @@ namespace PaintsNow {
 					GLOBAL, VERTEX, TESSELLATION_CONTROL, TESSELLATION_EVALUATION, GEOMETRY, FRAGMENT, COMPUTE, END
 				};
 
+				String name;
 				TWrapper<void, ShaderDescription&, Stage, const String&, const String&> compileCallback;
 				std::vector<std::pair<Stage, IShader* > > entries;
 			};
@@ -216,7 +217,7 @@ namespace PaintsNow {
 		};
 
 		// The only API that requires calling on device thread.
-		enum PresentOption { CONSUME, REPEAT, CLEANUP, CLEAR };
+		enum PresentOption { CONSUME, REPEAT, UPDATE, CLEAR };
 		virtual void PresentQueues(Queue** queues, uint32_t count, PresentOption option) = 0;
 
 		// Device

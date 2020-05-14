@@ -42,7 +42,6 @@ namespace PaintsNow {
 			void Optimize(bool enableParallelPresent);
 			void Render(Engine& engine);
 			void RenderSyncTick(Engine& engine);
-			IRender::Queue* GetResourceQueue() const;
 			
 		protected:
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
@@ -51,7 +50,8 @@ namespace PaintsNow {
 			Int2 mainResolution;
 			std::map<String, std::pair<RenderStage*, String> > symbolMap;
 			std::vector<RenderStage*> cachedRenderStages;
-			IRender::Queue* resourceQueue;
+			ZRenderQueue resourceQueue;
+			IRender::Queue* instantQueue;
 		};
 	}
 }

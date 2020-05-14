@@ -14,10 +14,11 @@ namespace PaintsNow {
 	class ZRenderQueue {
 	public:
 		ZRenderQueue();
+		~ZRenderQueue();
 		void Initialize(IRender& render, IRender::Device* device);
 		void Uninitialize(IRender& render);
-		void InvokeRender(IRender& render);
-		static void InvokeRenderQueuesParallel(IRender& render, std::vector<ZRenderQueue*>& queues);
+		void InvokeRender(IRender& render, IRender::PresentOption option);
+		static void InvokeRenderQueuesParallel(IRender& render, std::vector<ZRenderQueue*>& queues, IRender::PresentOption option);
 		void UpdateFrame(IRender& render);
 		IRender::Queue* GetQueue() const;
 		bool WaitUpdate() const;

@@ -23,7 +23,7 @@ TObject<IReflect>& DepthBoundingRenderStage::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void DepthBoundingRenderStage::PrepareResources(Engine& engine) {
+void DepthBoundingRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	SnowyStream& snowyStream = engine.snowyStream;
 	OutputDepth.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateRandomLocation("RT", &OutputDepth), false, 0, nullptr);
 	OutputDepth.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::HALF_FLOAT;
@@ -31,10 +31,10 @@ void DepthBoundingRenderStage::PrepareResources(Engine& engine) {
 	OutputDepth.renderTargetTextureResource->description.state.sample = IRender::Resource::TextureDescription::POINT;
 	OutputDepth.renderTargetTextureResource->description.state.immutable = false;
 
-	BaseClass::PrepareResources(engine);
+	BaseClass::PrepareResources(engine, queue);
 }
 
-void DepthBoundingRenderStage::UpdatePass(Engine& engine) {
+void DepthBoundingRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 	DepthBoundingPass& Pass = GetPass();
 	ScreenTransformVS& screenTransform = Pass.transform;
 	screenTransform.vertexBuffer.resource = quadMeshResource->bufferCollection.positionBuffer;
@@ -42,5 +42,5 @@ void DepthBoundingRenderStage::UpdatePass(Engine& engine) {
 	minmax.depthTexture.resource = InputDepth.textureResource->GetTexture();
 	const UShort3& dim = OutputDepth.renderTargetTextureResource->description.dimension;
 	minmax.invScreenSize = Float2(dim.x() == 0 ? 0 : 1.0f / dim.x(), dim.y() == 0 ? 0 : 1.0f / dim.y());
-	BaseClass::UpdatePass(engine);
+	BaseClass::UpdatePass(engine, queue);
 }

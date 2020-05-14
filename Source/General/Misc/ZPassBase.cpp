@@ -49,6 +49,7 @@ IRender::Resource* ZPassBase::Compile(IRender& render, IRender::Queue* queue) {
 
 	// concat shader text
 	shaderDescription.entries = std::move(allShaders.shaders);
+	shaderDescription.name = ToString();
 
 	// commit
 	render.UploadResource(queue, shader, &shaderDescription);

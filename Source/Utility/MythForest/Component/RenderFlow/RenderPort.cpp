@@ -14,12 +14,10 @@ bool RenderPort::BeginFrame(IRender& render) {
 	return true;
 }
 
-void RenderPort::EndFrame(IRender& render) {
+void RenderPort::EndFrame(IRender& render) {}
 
-}
-
-void RenderPort::Tick(Engine& engine) {
-	eventTickHooks(engine, *this);
+void RenderPort::Tick(Engine& engine, IRender::Queue* queue) {
+	eventTickHooks(engine, *this, queue);
 }
 
 void RenderPort::Initialize(IRender& render, IRender::Queue* mainQueue) {}
@@ -32,5 +30,5 @@ void RenderPort::UpdateRenderStage() {
 	}
 }
 
-void RenderPort::PrepareRenderQueues(std::vector<ZRenderQueue*>& queues) {}
+void RenderPort::Commit(std::vector<ZRenderQueue*>& queues) {}
 bool RenderPort::UpdateDataStream(RenderPort& source) { return true; }

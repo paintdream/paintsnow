@@ -6,6 +6,10 @@ ZRenderQueue::ZRenderQueue() : queue(nullptr) {
 	invokeCounter.store(0, std::memory_order_relaxed);
 }
 
+ZRenderQueue::~ZRenderQueue() {
+	assert(queue == nullptr);
+}
+
 void ZRenderQueue::Initialize(IRender& render, IRender::Device* device) {
 	assert(queue == nullptr);
 	queue = render.CreateQueue(device);
@@ -18,42 +22,50 @@ void ZRenderQueue::Uninitialize(IRender& render) {
 	queue = nullptr;
 }
 
-void ZRenderQueue::InvokeRenderQueuesParallel(IRender& render, std::vector<ZRenderQueue*>& queues) {
+void ZRenderQueue::InvokeRenderQueuesParallel(IRender& render, std::vector<ZRenderQueue*>& queues, IRender::PresentOption option) {
 	if (queues.empty()) return;
 
 	// cleanup stage
-	std::vector<IRender::Queue*> cleanupQueues;
+	std::vector<IRender::Queue*> renderQueues;
 	while (true) {
 		for (size_t i = 0; i < queues.size(); i++) {
 			ZRenderQueue* q = queues[i];
-			if (q->invokeCounter.load(std::memory_order_acquire) != 0) {
-				cleanupQueues.emplace_back(q->queue);
-				--q->invokeCounter;
+			if (q->invokeCounter.load(std::memory_order_acquire) > 1) {
+				renderQueues.emplace_back(q->queue);
+				q->invokeCounter.fetch_sub(1, std::memory_order_relaxed);
 			}
 		}
 
-		if (cleanupQueues.empty()) break;
+		if (renderQueues.empty()) break;
 
-		render.PresentQueues(&cleanupQueues[0], (uint32_t)cleanupQueues.size(), IRender::CLEANUP);
-		cleanupQueues.clear();
+		render.PresentQueues(&renderQueues[0], (uint32_t)renderQueues.size(), IRender::UPDATE);
+		renderQueues.clear();
 	}
 
-	std::vector<IRender::Queue*> renderQueues;
 	for (size_t i = 0; i < queues.size(); i++) {
-		renderQueues.emplace_back(queues[i]->queue);
+		ZRenderQueue* q = queues[i];
+		if (q->invokeCounter.load(std::memory_order_acquire) != 0) {
+			renderQueues.emplace_back(q->GetQueue());
+			q->invokeCounter.fetch_sub(1, std::memory_order_relaxed);
+		}
 	}
 
-	render.PresentQueues(&renderQueues[0], (uint32_t)renderQueues.size(), IRender::REPEAT);
+	if (!renderQueues.empty()) {
+		render.PresentQueues(&renderQueues[0], (uint32_t)renderQueues.size(), option);
+	}
 }
 
-void ZRenderQueue::InvokeRender(IRender& render) {
+void ZRenderQueue::InvokeRender(IRender& render, IRender::PresentOption option) {
 	assert(queue != nullptr);
-	while (invokeCounter.load(std::memory_order_acquire) != 0) {
-		render.PresentQueues(&queue, 1, IRender::CLEANUP);
-		--invokeCounter;
+	while (invokeCounter.load(std::memory_order_acquire) > 1) {
+		render.PresentQueues(&queue, 1, IRender::UPDATE);
+		invokeCounter.fetch_sub(1, std::memory_order_relaxed);
 	}
 
-	render.PresentQueues(&queue, 1, IRender::REPEAT);
+	if (invokeCounter.load(std::memory_order_relaxed) != 0) {
+		render.PresentQueues(&queue, 1, option);
+		invokeCounter.fetch_sub(1, std::memory_order_relaxed);
+	}
 }
 
 void ZRenderQueue::UpdateFrame(IRender& render) {

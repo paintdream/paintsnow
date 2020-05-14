@@ -17,17 +17,17 @@ namespace PaintsNow {
 		class RenderPort : public TReflected<RenderPort, GraphPort<SharedTiny> > {
 		public:
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-			virtual void Initialize(IRender& render, IRender::Queue* mainQueue);
-			virtual void Uninitialize(IRender& render, IRender::Queue* mainQueue);
+			virtual void Initialize(IRender& render, IRender::Queue* queue);
+			virtual void Uninitialize(IRender& render, IRender::Queue* queue);
 			virtual bool UpdateDataStream(RenderPort& source);
-			virtual void PrepareRenderQueues(std::vector<ZRenderQueue*>& queues);
+			virtual void Commit(std::vector<ZRenderQueue*>& queues);
 			virtual bool BeginFrame(IRender& render);
 			virtual void EndFrame(IRender& render);
-			virtual void Tick(Engine& engine);
+			virtual void Tick(Engine& engine, IRender::Queue* queue);
 			void UpdateRenderStage();
 
 			std::vector<String> publicSymbols;
-			TEvent<Engine&, RenderPort&> eventTickHooks;
+			TEvent<Engine&, RenderPort&, IRender::Queue*> eventTickHooks;
 		};
 
 		template <class T>
@@ -36,7 +36,7 @@ namespace PaintsNow {
 			TRenderPortReference() : targetRenderPort(nullptr) {}
 			virtual void Initialize(IRender& render, IRender::Queue* mainQueue) override {}
 			virtual void Uninitialize(IRender& render, IRender::Queue* mainQueue) override {}
-			virtual void Tick(Engine& engine) override {
+			virtual void Tick(Engine& engine, IRender::Queue* queue) override {
 				RenderPort::Flag().store(targetRenderPort->Flag().load(std::memory_order_relaxed), std::memory_order_relaxed);
 			}
 

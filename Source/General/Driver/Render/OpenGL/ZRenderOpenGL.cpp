@@ -230,7 +230,7 @@ struct QueueImplOpenGL : public IRender::Queue {
 		}
 	}
 
-	void Cleanup() {
+	void Update() {
 		while (!queuedCommands.Empty()) {
 			ResourceCommandImplOpenGL command = queuedCommands.Top();
 			queuedCommands.Pop();
@@ -1186,6 +1186,7 @@ struct ResourceImplOpenGL<IRender::Resource::ShaderDescription> : public Resourc
 		std::vector<GLuint> textureLocations;
 		std::vector<GLuint> uniformBufferLocations;
 		std::vector<GLuint> sharedBufferLocations;
+		String shaderName;
 	};
 
 	void Cleanup() {
@@ -1207,6 +1208,7 @@ struct ResourceImplOpenGL<IRender::Resource::ShaderDescription> : public Resourc
 		Resource::ShaderDescription& pass = UpdateDescription();
 		GLuint programID = glCreateProgram();
 		program.programID = programID;
+		program.shaderName = pass.name;
 
 		std::vector<IShader*> shaders[Resource::ShaderDescription::END];
 		String common;
@@ -1825,8 +1827,8 @@ void ZRenderOpenGL::PresentQueues(Queue** queues, uint32_t count, PresentOption 
 	case PresentOption::REPEAT:
 		op = &QueueImplOpenGL::Repeat;
 		break;
-	case PresentOption::CLEANUP:
-		op = &QueueImplOpenGL::Cleanup;
+	case PresentOption::UPDATE:
+		op = &QueueImplOpenGL::Update;
 		break;
 	case PresentOption::CLEAR:
 		op = &QueueImplOpenGL::Clear;

@@ -9,7 +9,7 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
-RenderFlowComponent::RenderFlowComponent() : resourceQueue(nullptr) {
+RenderFlowComponent::RenderFlowComponent() {
 	Flag() |= RENDERFLOWCOMPONENT_SYNC_DEVICE_RESOLUTION;
 }
 
@@ -117,25 +117,23 @@ void RenderFlowComponent::Compile() {
 	std::swap(result, cachedRenderStages);
 }
 
-IRender::Queue* RenderFlowComponent::GetResourceQueue() const {
-	return resourceQueue;
-}
-
 // Notice that this function is called in render device thread
 void RenderFlowComponent::Render(Engine& engine) {
 	if (Flag() & TINY_ACTIVATED) {
 		// Commit resource queue first
 		IRender& render = engine.interfaces.render;
-		render.PresentQueues(&resourceQueue, 1, IRender::CONSUME);
+		resourceQueue.InvokeRender(render, IRender::CONSUME);
 		assert(cachedRenderStages[cachedRenderStages.size() - 1] == nullptr);
+
 		for (size_t n = 0, m = 0; n < cachedRenderStages.size(); n++) {
 			if (cachedRenderStages[n] == nullptr) {
 				std::vector<ZRenderQueue*> renderQueues;
 				for (size_t i = m; i < n; i++) {
-					cachedRenderStages[i]->PrepareRenderQueues(engine, renderQueues);
+					cachedRenderStages[i]->Commit(engine, renderQueues, instantQueue);
 				}
 
-				ZRenderQueue::InvokeRenderQueuesParallel(render, renderQueues);
+				ZRenderQueue::InvokeRenderQueuesParallel(render, renderQueues, IRender::REPEAT);
+				render.PresentQueues(&instantQueue, 1, IRender::CONSUME);
 				m = n + 1;
 			}
 		}
@@ -233,12 +231,15 @@ void RenderFlowComponent::Initialize(Engine& engine, Entity* entity) {
 
 	IRender::Device* device = engine.snowyStream.GetRenderDevice();
 	IRender& render = engine.interfaces.render;
-	resourceQueue = render.CreateQueue(device);
+	resourceQueue.Initialize(render, device);
+	instantQueue = render.CreateQueue(device);
+
+	IRender::Queue* queue = resourceQueue.GetQueue();
 
 	for (size_t n = 0; n < cachedRenderStages.size(); n++) {
 		RenderStage* renderStage = cachedRenderStages[n];
 		if (renderStage != nullptr) {
-			renderStage->PrepareResources(engine);
+			renderStage->PrepareResources(engine, queue);
 		}
 	}
 
@@ -248,14 +249,14 @@ void RenderFlowComponent::Initialize(Engine& engine, Entity* entity) {
 	for (size_t i = 0; i < cachedRenderStages.size(); i++) {
 		RenderStage* renderStage = cachedRenderStages[i];
 		if (renderStage != nullptr) {
-			renderStage->Initialize(engine);
+			renderStage->Initialize(engine, queue);
 		}
 	}
 
 	for (size_t j = 0; j < cachedRenderStages.size(); j++) {
 		RenderStage* renderStage = cachedRenderStages[j];
 		if (renderStage != nullptr) {
-			renderStage->Tick(engine);
+			renderStage->Tick(engine, queue);
 		}
 	}
 
@@ -263,12 +264,15 @@ void RenderFlowComponent::Initialize(Engine& engine, Entity* entity) {
 }
 
 void RenderFlowComponent::Uninitialize(Engine& engine, Entity* entity) {
+	IRender::Queue* queue = resourceQueue.GetQueue();
 	for (size_t i = 0; i < allNodes.size(); i++) {
-		allNodes[i]->Uninitialize(engine);
+		allNodes[i]->Uninitialize(engine, queue);
 	}
 
 	IRender& render = engine.interfaces.render;
-	render.DeleteQueue(resourceQueue);
+	resourceQueue.Uninitialize(render);
+	render.DeleteQueue(instantQueue);
+	instantQueue = nullptr;
 
 	// Deactivate this
 	Flag() &= ~TINY_ACTIVATED;
@@ -292,10 +296,11 @@ void RenderFlowComponent::SetMainResolution(Engine& engine, bool sizeOnly) {
 
 	uint32_t width = mainResolution.x(), height = mainResolution.y();
 	if (updateResolution) {
+		IRender::Queue* queue = resourceQueue.GetQueue();
 		for (size_t i = 0; i < cachedRenderStages.size(); i++) {
 			RenderStage* renderStage = cachedRenderStages[i];
 			if (renderStage != nullptr) {
-				renderStage->SetMainResolution(engine, resourceQueue, width, height, sizeOnly);
+				renderStage->SetMainResolution(engine, queue, width, height, sizeOnly);
 			}
 		}
 
@@ -305,24 +310,29 @@ void RenderFlowComponent::SetMainResolution(Engine& engine, bool sizeOnly) {
 
 void RenderFlowComponent::RenderSyncTick(Engine& engine) {
 	if (Flag() & TINY_ACTIVATED) {
-		SetMainResolution(engine, false);
+		if (resourceQueue.WaitUpdate()) {
+			IRender::Queue* queue = resourceQueue.GetQueue();
+			SetMainResolution(engine, false);
 
-		IRender::Device* device = engine.snowyStream.GetRenderDevice();
-		// Cleanup modified flag for all ports
-		for (size_t k = 0; k < cachedRenderStages.size(); k++) {
-			RenderStage* stage = cachedRenderStages[k];
-			if (stage != nullptr) {
-				for (size_t j = 0; j < stage->GetPorts().size(); j++) {
-					stage->GetPorts()[j].port->Flag() &= ~TINY_MODIFIED;
+			IRender::Device* device = engine.snowyStream.GetRenderDevice();
+			// Cleanup modified flag for all ports
+			for (size_t k = 0; k < cachedRenderStages.size(); k++) {
+				RenderStage* stage = cachedRenderStages[k];
+				if (stage != nullptr) {
+					for (size_t j = 0; j < stage->GetPorts().size(); j++) {
+						stage->GetPorts()[j].port->Flag() &= ~TINY_MODIFIED;
+					}
 				}
 			}
-		}
 
-		for (size_t i = 0; i < cachedRenderStages.size(); i++) {
-			RenderStage* stage = cachedRenderStages[i];
-			if (stage != nullptr) {
-				stage->Tick(engine);
+			for (size_t i = 0; i < cachedRenderStages.size(); i++) {
+				RenderStage* stage = cachedRenderStages[i];
+				if (stage != nullptr) {
+					stage->Tick(engine, queue);
+				}
 			}
+
+			resourceQueue.UpdateFrame(engine.interfaces.render);
 		}
 	}
 
@@ -337,10 +347,9 @@ void RenderFlowComponent::DispatchEvent(Event& event, Entity* entity) {
 			YieldThread();
 		}
 
-		Render(event.engine);
-
 		Flag() |= RENDERFLOWCOMPONENT_RENDER_SYNC_TICKING;
 		engine.GetKernel().QueueRoutine(this, CreateTaskContextFree(Wrap(this, &RenderFlowComponent::RenderSyncTick), std::ref(engine)));
+		Render(event.engine);
 	} else if (event.eventID == Event::EVENT_TICK) {
 		// No operations on trivial tick
 	}

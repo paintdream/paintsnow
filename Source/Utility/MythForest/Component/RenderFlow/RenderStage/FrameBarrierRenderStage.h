@@ -16,12 +16,11 @@ namespace PaintsNow {
 		public:
 			FrameBarrierRenderStage();
 
-			virtual void SetMainResolution(Engine& engine, uint32_t width, uint32_t height);
-			virtual void PrepareResources(Engine& engine);
-			virtual void UpdateRenderTarget(Engine& engine);
-			virtual void UpdatePass(Engine& engine);
-			virtual void UpdateComplete(Engine& engine);
-			virtual void PrepareRenderQueues(Engine& engine, std::vector<ZRenderQueue*>& queues) override;
+			virtual void SetMainResolution(Engine& engine, IRender::Queue* queue, uint32_t width, uint32_t height, bool resizeOnly) override;
+			virtual void PrepareResources(Engine& engine, IRender::Queue* queue) override;
+			virtual void UpdateRenderTarget(Engine& engine, IRender::Queue* queue, bool resizeOnly) override;
+			virtual void UpdatePass(Engine& engine, IRender::Queue* queue) override;
+			virtual void Tick(Engine& engine, IRender::Queue* queue) override;
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
 			RenderPortTextureInput Front;

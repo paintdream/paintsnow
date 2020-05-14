@@ -36,7 +36,7 @@ void RenderPortCommandQueue::Uninitialize(IRender& render, IRender::Queue* mainQ
 	renderQueue.Uninitialize(render);
 }
 
-void RenderPortCommandQueue::PrepareRenderQueues(std::vector<ZRenderQueue*>& queues) {
+void RenderPortCommandQueue::Commit(std::vector<ZRenderQueue*>& queues) {
 	queues.emplace_back(&renderQueue);
 }
 

@@ -16,16 +16,16 @@ TObject<IReflect>& WidgetRenderStage::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void WidgetRenderStage::PrepareResources(Engine& engine) {
+void WidgetRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	// prepare color buffers
 	// OutputColor.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateRandomLocation("RT", &OutputColor), false, 0, nullptr);
 	// OutputColor.renderTargetTextureResource->state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 	// OutputColor.renderTargetTextureResource->state.layout = IRender::Resource::TextureDescription::RGBA;
 	renderTargetDescription.isBackBuffer = true;
 
-	BaseClass::PrepareResources(engine);
+	BaseClass::PrepareResources(engine, queue);
 }
 
-void WidgetRenderStage::UpdatePass(Engine& engine) {
-	BaseClass::UpdatePass(engine);
+void WidgetRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
+	BaseClass::UpdatePass(engine, queue);
 }

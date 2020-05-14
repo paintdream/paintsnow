@@ -268,7 +268,7 @@ T* QueryPort(IRender& render, std::map<RenderPolicy*, RenderStage::Port*>& polic
 	return nullptr;
 }
 
-void CameraComponent::CommitRenderRequests(Engine& engine, TaskData& taskData) {
+void CameraComponent::CommitRenderRequests(Engine& engine, TaskData& taskData, IRender::Queue* queue) {
 	// commit to RenderFlowComponent
 	// update data updaters
 	if (renderFlowComponent) {
@@ -277,7 +277,7 @@ void CameraComponent::CommitRenderRequests(Engine& engine, TaskData& taskData) {
 		for (size_t i = 0; i < warpData.size(); i++) {
 			TaskData::WarpData& w = warpData[i];
 			for (size_t k = 0; k < w.dataUpdaters.size(); k++) {
-				w.dataUpdaters[k]->Update(render, renderFlowComponent->GetResourceQueue());
+				w.dataUpdaters[k]->Update(render, queue);
 			}
 		}
 		
@@ -383,11 +383,11 @@ void CameraComponent::CommitRenderRequests(Engine& engine, TaskData& taskData) {
 	}
 }
 
-void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPort) {
+void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPort, IRender::Queue* queue) {
 	TShared<TaskData> taskData;
 	if ((Flag() & CAMERACOMPONENT_UPDATE_COLLECTED)) {
 		taskData = nextTaskData;
-		CommitRenderRequests(engine, *taskData);
+		CommitRenderRequests(engine, *taskData, queue);
 		Flag() &= ~CAMERACOMPONENT_UPDATE_COLLECTED;
 		Flag() |= CAMERACOMPONENT_UPDATE_COMMITTED;
 	} else {
@@ -414,7 +414,6 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 	// update camera view settings
 	if (renderFlowComponent) {
 		// update buffers
-		IRender::Queue* renderQueue = renderFlowComponent->GetResourceQueue();
 		if (Flag() & (CAMERACOMPONENT_SMOOTH_TRACK | CAMERACOMPONENT_SUBPIXEL_JITTER)) {
 			for (size_t i = 0; i < warpData.size(); i++) {
 				TaskData::WarpData& w = warpData[i];
@@ -437,7 +436,7 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 							desc.dynamic = 1;
 							desc.format = IRender::Resource::BufferDescription::FLOAT;
 							desc.data = std::move(data);
-							render.UploadResource(renderQueue, it->second.buffers[i], &desc);
+							render.UploadResource(queue, it->second.buffers[i], &desc);
 						}
 					}
 				}

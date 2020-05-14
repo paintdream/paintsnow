@@ -18,7 +18,7 @@ namespace PaintsNow {
 			GeometryBufferRenderStage();
 
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-			virtual void PrepareResources(Engine& engine) override;
+			virtual void PrepareResources(Engine& engine, IRender::Queue* queue) override;
 
 			RenderPortCameraView CameraView;
 			RenderPortCommandQueue Primitives;		// input primitives

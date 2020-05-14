@@ -22,7 +22,7 @@ TObject<IReflect>& ShadowMaskRenderStage::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void ShadowMaskRenderStage::PrepareResources(Engine& engine) {
+void ShadowMaskRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	SnowyStream& snowyStream = engine.snowyStream;
 	OutputMask.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateRandomLocation("RT", &OutputMask), false, 0, nullptr);
 	OutputMask.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
@@ -31,10 +31,10 @@ void ShadowMaskRenderStage::PrepareResources(Engine& engine) {
 
 	emptyShadowMask = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), "[Runtime]/TextureResource/Black", true, 0, nullptr);
 
-	BaseClass::PrepareResources(engine);
+	BaseClass::PrepareResources(engine, queue);
 }
 
-void ShadowMaskRenderStage::UpdatePass(Engine& engine) {
+void ShadowMaskRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 	ShadowMaskPass& Pass = GetPass();
 	ScreenTransformVS& screenTransform = Pass.transform;
 	screenTransform.vertexBuffer.resource = quadMeshResource->bufferCollection.positionBuffer;
@@ -58,5 +58,5 @@ void ShadowMaskRenderStage::UpdatePass(Engine& engine) {
 	}
 
 	// assert(LightSource->lightElements.empty() || mask.shadowTexture.resource != emptyShadowMask->GetTexture());
-	BaseClass::UpdatePass(engine);
+	BaseClass::UpdatePass(engine, queue);
 }

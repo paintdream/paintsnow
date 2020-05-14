@@ -26,18 +26,15 @@ namespace PaintsNow {
 				RENDERSTAGE_CUSTOM_BEGIN = TINY_CUSTOM_BEGIN << 2
 			};
 
-			virtual void PrepareResources(Engine& engine);
-			virtual void Initialize(Engine& engine);
-			virtual void Uninitialize(Engine& engine);
+			virtual void PrepareResources(Engine& engine, IRender::Queue* resourceQueue);
+			virtual void Initialize(Engine& engine, IRender::Queue* resourceQueue);
+			virtual void Uninitialize(Engine& engine, IRender::Queue* resourceQueue);
 
 			virtual void SetMainResolution(Engine& engine, IRender::Queue* resourceQueue, uint32_t width, uint32_t height, bool sizeOnly);
 			virtual void UpdateRenderTarget(Engine& engine, IRender::Queue* resourceQueue, bool sizeOnly);
-			virtual void UpdatePass(Engine& engine);
-			virtual void UpdateComplete(Engine& engine);
-			virtual void Tick(Engine& engine);
-
-			virtual void PrepareRenderQueues(Engine& engine, std::vector<ZRenderQueue*>& queues);
-			IRender::Queue* GetStageRenderQueue() const;
+			virtual void UpdatePass(Engine& engine, IRender::Queue* resourceQueue);
+			virtual void Tick(Engine& engine, IRender::Queue* resourceQueue);
+			virtual void Commit(Engine& engine, std::vector<ZRenderQueue*>& queues, IRender::Queue* instantQueue);
 
 			IRender::Resource* GetRenderTargetResource() const;
 			const IRender::Resource::RenderTargetDescription& GetRenderTargetDescription() const;
@@ -48,8 +45,6 @@ namespace PaintsNow {
 			IRender::Resource::ClearDescription clearDescription;
 
 		protected:
-			ZRenderQueue renderQueue;
-
 			IRender::Resource* renderState;
 			IRender::Resource* renderTarget;
 			IRender::Resource* clear;
@@ -66,16 +61,12 @@ namespace PaintsNow {
  			// gcc do not support referencing base type in template class. manunaly specified here.
 			typedef TReflected<GeneralRenderStage<T>, RenderStage> BaseClass;
 			GeneralRenderStage(uint32_t colorAttachmentCount = 1) : BaseClass(colorAttachmentCount) {}
-			virtual void PrepareResources(Engine& engine) override {
+			virtual void PrepareResources(Engine& engine, IRender::Queue* queue) override {
 				// create specified shader resource (if not exists)
 				String path = NsSnowyStream::ShaderResource::GetShaderPathPrefix() + UniqueType<T>::Get()->GetSubName();
 				sharedShader = engine.snowyStream.CreateReflectedResource(UniqueType<NsSnowyStream::ShaderResource>(), path, true, 0, nullptr);
-				sharedShader->GetResourceManager().InvokeUpload(sharedShader(), BaseClass::renderQueue.GetQueue());
-				assert(sharedShader);
-
 				shaderInstance.Reset(static_cast<NsSnowyStream::ShaderResourceImpl<T>*>(sharedShader->Clone()));
-
-				BaseClass::PrepareResources(engine);
+				BaseClass::PrepareResources(engine, queue);
 			}
 
 		protected:
@@ -101,25 +92,24 @@ namespace PaintsNow {
 		public:
  			// gcc do not support referencing base type in template class. manunaly specified here.
 			typedef TReflected<GeneralRenderStageRect<T>, GeneralRenderStage<T> > BaseClass;
+			enum {
+				GENERALRENDERSTAGERECT_INITDRAWCALL = RENDERSTAGE_CUSTOM_BEGIN,
+				GENERALRENDERSTAGERECT_CUSTOM_BEGIN = RENDERSTAGE_CUSTOM_BEGIN << 1
+			};
 			GeneralRenderStageRect(uint32_t colorAttachmentCount = 1) : BaseClass(colorAttachmentCount) {}
-			virtual void PrepareResources(Engine& engine) override {
+			virtual void PrepareResources(Engine& engine, IRender::Queue* queue) override {
 				// create specified shader resource (if not exists)
 				const String path = "[Runtime]/MeshResource/StandardSquare";
 				quadMeshResource = engine.snowyStream.CreateReflectedResource(UniqueType<NsSnowyStream::MeshResource>(), path, true, 0, nullptr);
-				if (!(quadMeshResource->Flag() & NsSnowyStream::ResourceBase::RESOURCE_UPLOADED)) {
-					quadMeshResource->GetResourceManager().InvokeUpload(quadMeshResource(), BaseClass::renderQueue.GetQueue());
-				}
-
-				assert(quadMeshResource);
-				BaseClass::PrepareResources(engine);
+				assert(quadMeshResource->Flag() & NsSnowyStream::ResourceBase::RESOURCE_UPLOADED);
+				BaseClass::PrepareResources(engine, queue);
 			}
 
 			// Helper functions
-			virtual void UpdatePass(Engine& engine) override {
-				BaseClass::UpdatePass(engine);
+			virtual void UpdatePass(Engine& engine, IRender::Queue* queue) override {
+				BaseClass::UpdatePass(engine, queue);
 
 				IRender& render = engine.interfaces.render;
-				IRender::Queue* queue = BaseClass::renderQueue.GetQueue();
 				ZPassBase::Updater& updater = BaseClass::GetPassUpdater();
 				std::vector<Bytes> bufferData;
 				updater.Capture(drawCallDescription, bufferData, 1 << IRender::Resource::BufferDescription::UNIFORM);
@@ -131,16 +121,28 @@ namespace PaintsNow {
 					drawCallDescription.indexBufferResource.buffer = quadMeshResource->bufferCollection.indexBuffer;
 					drawCallDescription.shaderResource = BaseClass::GetShaderResource();
 					BaseClass::drawCallResource = render.CreateResource(queue, IRender::Resource::RESOURCE_DRAWCALL);
+					Flag() |= GENERALRENDERSTAGERECT_INITDRAWCALL;
 				} else {
 					// recapture all data (uniforms by default)
 					size_t count = BaseClass::newResources.size();
 					updater.Update(render, queue, drawCallDescription, BaseClass::newResources, bufferData, 1 << IRender::Resource::BufferDescription::UNIFORM);
 					assert(count == BaseClass::newResources.size()); // must not adding new resource(s)
+					if (!(Flag() & GENERALRENDERSTAGERECT_INITDRAWCALL)) {
+						IRender::Resource::DrawCallDescription copy = drawCallDescription;
+						render.UploadResource(queue, BaseClass::drawCallResource, &copy);
+					}
+				}
+			}
+
+			virtual void Commit(Engine& engine, std::vector<ZRenderQueue*>& queues, IRender::Queue* instantQueue) override {
+				IRender& render = engine.interfaces.render;
+				if (Flag() & GENERALRENDERSTAGERECT_INITDRAWCALL) {
+					IRender::Resource::DrawCallDescription copy = drawCallDescription;
+					render.UploadResource(instantQueue, BaseClass::drawCallResource, &copy);
+					Flag() |= ~GENERALRENDERSTAGERECT_INITDRAWCALL;
 				}
 
-				IRender::Resource::DrawCallDescription copy = drawCallDescription;
-				render.UploadResource(queue, BaseClass::drawCallResource, &copy);
-				render.ExecuteResource(queue, BaseClass::drawCallResource);
+				render.ExecuteResource(instantQueue, BaseClass::drawCallResource);
 			}
 
 		protected:

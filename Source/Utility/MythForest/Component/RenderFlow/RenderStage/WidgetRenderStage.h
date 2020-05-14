@@ -15,8 +15,8 @@ namespace PaintsNow {
 		class WidgetRenderStage : public TReflected<WidgetRenderStage, RenderStage> {
 		public:
 			WidgetRenderStage();
-			virtual void PrepareResources(Engine& engine) override;
-			virtual void UpdatePass(Engine& engine) override;
+			virtual void PrepareResources(Engine& engine, IRender::Queue* queue) override;
+			virtual void UpdatePass(Engine& engine, IRender::Queue* queue) override;
 
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 

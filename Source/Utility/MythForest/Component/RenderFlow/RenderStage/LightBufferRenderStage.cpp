@@ -25,7 +25,7 @@ TObject<IReflect>& LightBufferRenderStage::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void LightBufferRenderStage::PrepareResources(Engine& engine) {
+void LightBufferRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	SnowyStream& snowyStream = engine.snowyStream;
 	LightTexture.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateRandomLocation("RT", &LightTexture), false, 0, nullptr);
 	LightTexture.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_SHORT;
@@ -33,15 +33,15 @@ void LightBufferRenderStage::PrepareResources(Engine& engine) {
 	LightTexture.renderTargetTextureResource->description.state.sample = IRender::Resource::TextureDescription::POINT;
 	LightTexture.renderTargetTextureResource->description.state.immutable = false;
 
-	BaseClass::PrepareResources(engine);
+	BaseClass::PrepareResources(engine, queue);
 }
 
-void LightBufferRenderStage::Uninitialize(Engine& engine) {
+void LightBufferRenderStage::Uninitialize(Engine& engine, IRender::Queue* queue) {
 	IRender& render = engine.interfaces.render;
-	BaseClass::Uninitialize(engine);
+	BaseClass::Uninitialize(engine, queue);
 }
 
-void LightBufferRenderStage::UpdatePass(Engine& engine) {
+void LightBufferRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 	LightBufferPass& Pass = GetPass();
 	ScreenTransformVS& screenTransform = Pass.transform;
 	screenTransform.vertexBuffer.resource = quadMeshResource->bufferCollection.positionBuffer;
@@ -80,5 +80,5 @@ void LightBufferRenderStage::UpdatePass(Engine& engine) {
 	}
 
 	// assemble block data
-	BaseClass::UpdatePass(engine);
+	BaseClass::UpdatePass(engine, queue);
 }

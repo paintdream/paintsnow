@@ -16,7 +16,7 @@ TObject<IReflect>& DeviceRenderStage::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void DeviceRenderStage::PrepareResources(Engine& engine) {
+void DeviceRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	renderTargetDescription.isBackBuffer = true;
 	assert(InputColor.GetLinks().size() == 1);
 	RenderPort* renderPort = static_cast<RenderPort*>(InputColor.GetLinks()[0].port);
@@ -28,9 +28,9 @@ void DeviceRenderStage::PrepareResources(Engine& engine) {
 	input->renderTargetTextureResource = nullptr;
 	(static_cast<RenderStage*>(input->GetNode()))->renderTargetDescription.isBackBuffer = true;
 
-	BaseClass::PrepareResources(engine);
+	BaseClass::PrepareResources(engine, queue);
 }
 
-void DeviceRenderStage::UpdatePass(Engine& engine) {
-	BaseClass::UpdatePass(engine);
+void DeviceRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
+	BaseClass::UpdatePass(engine, queue);
 }

@@ -21,7 +21,7 @@ TObject<IReflect>& ForwardLightingRenderStage::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void ForwardLightingRenderStage::PrepareResources(Engine& engine) {
+void ForwardLightingRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	IRender& render = engine.interfaces.render;
 	SnowyStream& snowyStream = engine.snowyStream;
 	OutputColor.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateRandomLocation("RT", &OutputColor), false, 0, nullptr);
@@ -29,9 +29,9 @@ void ForwardLightingRenderStage::PrepareResources(Engine& engine) {
 	OutputColor.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::RGBA;
 	OutputColor.renderTargetTextureResource->description.state.immutable = false;
 
-	BaseClass::PrepareResources(engine);
+	BaseClass::PrepareResources(engine, queue);
 }
 
-void ForwardLightingRenderStage::UpdatePass(Engine& engine) {
-	BaseClass::UpdatePass(engine);
+void ForwardLightingRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
+	BaseClass::UpdatePass(engine, queue);
 }

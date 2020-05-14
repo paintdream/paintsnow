@@ -19,7 +19,7 @@ namespace PaintsNow {
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 			virtual void Initialize(IRender& render, IRender::Queue* mainQueue) override;
 			virtual void Uninitialize(IRender& render, IRender::Queue* mainQueue) override;
-			virtual void PrepareRenderQueues(std::vector<ZRenderQueue*>& queues) override;
+			virtual void Commit(std::vector<ZRenderQueue*>& queues) override;
 			virtual bool UpdateDataStream(RenderPort& source) override;
 
 			virtual bool BeginFrame(IRender& render);

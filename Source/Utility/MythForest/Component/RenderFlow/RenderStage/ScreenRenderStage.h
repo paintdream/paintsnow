@@ -16,8 +16,8 @@ namespace PaintsNow {
 		class ScreenRenderStage : public TReflected<ScreenRenderStage, GeneralRenderStageRect<NsSnowyStream::ScreenPass> > {
 		public:
 			ScreenRenderStage(const String& config = "1");
-			virtual void PrepareResources(Engine& engine);
-			virtual void UpdatePass(Engine& engine);
+			virtual void PrepareResources(Engine& engine, IRender::Queue* queue) override;
+			virtual void UpdatePass(Engine& engine, IRender::Queue* queue) override;
 
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 

@@ -18,9 +18,9 @@ namespace PaintsNow {
 		class PhaseLightRenderStage : public TReflected<PhaseLightRenderStage, GeneralRenderStageRect<NsSnowyStream::MultiHashTracePass> > {
 		public:
 			PhaseLightRenderStage();
-			virtual void PrepareResources(Engine& engine) override;
-			virtual void UpdatePass(Engine& engine) override;
-			virtual void Tick(Engine& engine) override;
+			virtual void PrepareResources(Engine& engine, IRender::Queue* queue) override;
+			virtual void UpdatePass(Engine& engine, IRender::Queue* queue) override;
+			virtual void Tick(Engine& engine, IRender::Queue* queue) override;
 
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 

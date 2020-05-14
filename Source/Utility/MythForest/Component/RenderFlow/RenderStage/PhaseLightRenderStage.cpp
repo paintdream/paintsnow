@@ -25,16 +25,16 @@ TObject<IReflect>& PhaseLightRenderStage::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void PhaseLightRenderStage::PrepareResources(Engine& engine) {
-	BaseClass::PrepareResources(engine);
+void PhaseLightRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
+	BaseClass::PrepareResources(engine, queue);
 }
 
-void PhaseLightRenderStage::Tick(Engine& engine) {
+void PhaseLightRenderStage::Tick(Engine& engine, IRender::Queue* queue) {
 	Flag() |= TINY_MODIFIED;
-	RenderStage::Tick(engine);
+	RenderStage::Tick(engine, queue);
 }
 
-void PhaseLightRenderStage::UpdatePass(Engine& engine) {
+void PhaseLightRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 	const std::vector<RenderPortPhaseLightView::PhaseInfo>& phases = PhaseLightView.phases;
 	MultiHashTracePass& pass = GetPass();
 	MultiHashTraceFS& fs = pass.shaderMultiHashTrace;
@@ -56,6 +56,6 @@ void PhaseLightRenderStage::UpdatePass(Engine& engine) {
 			fs.offsets[i] = Float2((float)rand() / RAND_MAX * inv.x(), (float)rand() / RAND_MAX * inv.y());
 		}
 
-		BaseClass::UpdatePass(engine);
+		BaseClass::UpdatePass(engine, queue);
 	}
 }
