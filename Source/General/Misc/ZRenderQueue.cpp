@@ -13,7 +13,6 @@ ZRenderQueue::~ZRenderQueue() {
 void ZRenderQueue::Initialize(IRender& render, IRender::Device* device) {
 	assert(queue == nullptr);
 	queue = render.CreateQueue(device);
-	render.YieldQueue(queue); // push a barrier first
 }
 
 void ZRenderQueue::Uninitialize(IRender& render) {
@@ -57,12 +56,12 @@ void ZRenderQueue::InvokeRenderQueuesParallel(IRender& render, std::vector<ZRend
 
 void ZRenderQueue::InvokeRender(IRender& render, IRender::PresentOption option) {
 	assert(queue != nullptr);
-	while (invokeCounter.load(std::memory_order_acquire) > 1) {
-		render.PresentQueues(&queue, 1, IRender::UPDATE);
-		invokeCounter.fetch_sub(1, std::memory_order_relaxed);
-	}
+	if (invokeCounter.load(std::memory_order_relaxed) > 0) {
+		while (invokeCounter.load(std::memory_order_acquire) > 1) {
+			render.PresentQueues(&queue, 1, IRender::UPDATE);
+			invokeCounter.fetch_sub(1, std::memory_order_relaxed);
+		}
 
-	if (invokeCounter.load(std::memory_order_relaxed) != 0) {
 		render.PresentQueues(&queue, 1, option);
 		invokeCounter.fetch_sub(1, std::memory_order_relaxed);
 	}

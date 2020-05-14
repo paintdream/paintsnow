@@ -260,6 +260,7 @@ void RenderFlowComponent::Initialize(Engine& engine, Entity* entity) {
 		}
 	}
 
+	resourceQueue.UpdateFrame(render);
 	BaseClass::Initialize(engine, entity);
 }
 
@@ -332,7 +333,6 @@ void RenderFlowComponent::RenderSyncTick(Engine& engine) {
 		}
 
 		resourceQueue.UpdateFrame(engine.interfaces.render);
-		Flag() |= RENDERFLOWCOMPONENT_RENDER_SYNC_TICKED;
 	}
 
 	Flag() &= ~RENDERFLOWCOMPONENT_RENDER_SYNC_TICKING;
@@ -349,9 +349,7 @@ void RenderFlowComponent::DispatchEvent(Event& event, Entity* entity) {
 
 			Flag() |= RENDERFLOWCOMPONENT_RENDER_SYNC_TICKING;
 			engine.GetKernel().QueueRoutine(this, CreateTaskContextFree(Wrap(this, &RenderFlowComponent::RenderSyncTick), std::ref(engine)));
-			if (Flag() & RENDERFLOWCOMPONENT_RENDER_SYNC_TICKED) {
-				Render(event.engine);
-			}
+			Render(event.engine);
 		}
 	} else if (event.eventID == Event::EVENT_TICK) {
 		// No operations on trivial tick
