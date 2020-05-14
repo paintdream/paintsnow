@@ -22,7 +22,7 @@ uint32_t ModelComponent::CreateOverrider(TShared<ShaderResource> shaderResourceT
 		it = std::binary_insert(shaderOverriders, shaderResourceTemplate);
 	}
 	
-	return (it - shaderOverriders.begin() + 1) * safe_cast<uint32_t>(materialResources.size());
+	return safe_cast<uint32_t>((it - shaderOverriders.begin() + 1) * materialResources.size());
 }
 
 static void GenerateDrawCall(IDrawCallProvider::OutputRenderData& renderData, ShaderResource* shaderResource, std::vector<IRender::Resource*>& meshBuffers, const IAsset::MeshGroup& slice, const MeshResource::BufferCollection& bufferCollection) {

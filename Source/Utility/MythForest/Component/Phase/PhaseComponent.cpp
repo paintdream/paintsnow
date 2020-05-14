@@ -151,8 +151,8 @@ void PhaseComponent::Step(Engine& engine, uint32_t bounceCount) {
 		} while (to == from);
 
 		UpdatePointBounce bounce;
-		bounce.fromPhaseIndex = from - &phases[0];
-		bounce.toPhaseIndex = to - &phases[0];
+		bounce.fromPhaseIndex = safe_cast<uint32_t>(from - &phases[0]);
+		bounce.toPhaseIndex = safe_cast<uint32_t>(to - &phases[0]);
 
 		bakePointBounces.push(bounce);
 	}
@@ -281,7 +281,7 @@ void PhaseComponent::TickRender(Engine& engine) {
 
 			// Save data asynchronized
 			uint32_t frameIndex = engine.GetFrameIndex();
-			engine.GetKernel().QueueRoutine(this, CreateTaskContextFree(Wrap(this, &PhaseComponent::CoTaskWriteDebugTexture), std::ref(engine), frameIndex * tasks.size() + i, std::move(task.texture->description.data), task.texture));
+			engine.GetKernel().QueueRoutine(this, CreateTaskContextFree(Wrap(this, &PhaseComponent::CoTaskWriteDebugTexture), std::ref(engine), safe_cast<uint32_t>(frameIndex * tasks.size() + i), std::move(task.texture->description.data), task.texture));
 			finalStatus.store(TaskData::STATUS_BAKED, std::memory_order_release);
 		}
 	}
