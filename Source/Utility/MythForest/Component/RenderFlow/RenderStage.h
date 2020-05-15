@@ -8,7 +8,7 @@
 
 #include "RenderPort.h"
 #include "../../Engine.h"
-#include "../../../../General/Misc/ZRenderQueue.h"
+#include "../../../../General/Misc/ZFencedRenderQueue.h"
 #include "../../../SnowyStream/SnowyStream.h"
 #include "../../../SnowyStream/Resource/MeshResource.h"
 
@@ -34,7 +34,7 @@ namespace PaintsNow {
 			virtual void UpdateRenderTarget(Engine& engine, IRender::Queue* resourceQueue, bool sizeOnly);
 			virtual void UpdatePass(Engine& engine, IRender::Queue* resourceQueue);
 			virtual void Tick(Engine& engine, IRender::Queue* resourceQueue);
-			virtual void Commit(Engine& engine, std::vector<ZRenderQueue*>& queues, IRender::Queue* instantQueue);
+			virtual void Commit(Engine& engine, std::vector<ZFencedRenderQueue*>& queues, IRender::Queue* instantQueue);
 
 			IRender::Resource* GetRenderTargetResource() const;
 			const IRender::Resource::RenderTargetDescription& GetRenderTargetDescription() const;
@@ -128,7 +128,8 @@ namespace PaintsNow {
 				render.UploadResource(queue, BaseClass::drawCallResource, &copy);
 			}
 
-			virtual void Commit(Engine& engine, std::vector<ZRenderQueue*>& queues, IRender::Queue* instantQueue) override {
+			virtual void Commit(Engine& engine, std::vector<ZFencedRenderQueue*>& queues, IRender::Queue* instantQueue) override {
+				BaseClass::Commit(engine, queues, instantQueue);
 				IRender& render = engine.interfaces.render;
 				render.ExecuteResource(instantQueue, BaseClass::drawCallResource);
 			}

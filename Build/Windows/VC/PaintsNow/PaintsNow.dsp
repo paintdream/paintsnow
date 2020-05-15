@@ -493,11 +493,11 @@ SOURCE=..\..\..\..\Source\General\Misc\ZRemoteProxy.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\General\Misc\ZRenderQueue.cpp
+SOURCE=..\..\..\..\Source\General\Misc\ZFencedRenderQueue.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\General\Misc\ZRenderQueue.h
+SOURCE=..\..\..\..\Source\General\Misc\ZFencedRenderQueue.h
 # End Source File
 # Begin Source File
 

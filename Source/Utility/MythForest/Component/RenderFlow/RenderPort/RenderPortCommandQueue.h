@@ -7,7 +7,7 @@
 #define __RENDERPORTCOMMANDQUEUE_H__
 
 #include "../RenderPort.h"
-#include "../../../../../General/Misc/ZRenderQueue.h"
+#include "../../../../../General/Misc/ZFencedRenderQueue.h"
 #include "../../Renderable/RenderableComponent.h"
 
 namespace PaintsNow {
@@ -19,7 +19,7 @@ namespace PaintsNow {
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 			virtual void Initialize(IRender& render, IRender::Queue* mainQueue) override;
 			virtual void Uninitialize(IRender& render, IRender::Queue* mainQueue) override;
-			virtual void Commit(std::vector<ZRenderQueue*>& queues) override;
+			virtual void Commit(std::vector<ZFencedRenderQueue*>& queues) override;
 			virtual bool UpdateDataStream(RenderPort& source) override;
 
 			virtual bool BeginFrame(IRender& render);
@@ -29,7 +29,7 @@ namespace PaintsNow {
 			void CheckinState(IRender& render, IRender::Resource* stateResource);
 
 		protected:
-			ZRenderQueue renderQueue;
+			ZFencedRenderQueue renderQueue;
 		};
 	}
 }

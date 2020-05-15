@@ -1,24 +1,24 @@
-// ZRenderQueue.h
+// ZFencedRenderQueue.h
 // PaintDream (paintdream@paintdream.com)
 // 2019-1-7
 //
 
-#ifndef __ZRENDERQUEUE_H__
-#define __ZRENDERQUEUE_H__
+#ifndef __ZFENCEDRENDERQUEUE_H__
+#define __ZFENCEDRENDERQUEUE_H__
 
 #include "../../General/Interface/IRender.h"
 #include "../../Core/Template/TAtomic.h"
 
 namespace PaintsNow {
 	// repeatable render queue
-	class ZRenderQueue {
+	class ZFencedRenderQueue {
 	public:
-		ZRenderQueue();
-		~ZRenderQueue();
+		ZFencedRenderQueue();
+		~ZFencedRenderQueue();
 		void Initialize(IRender& render, IRender::Device* device);
 		void Uninitialize(IRender& render);
 		void InvokeRender(IRender& render, IRender::PresentOption option);
-		static void InvokeRenderQueuesParallel(IRender& render, std::vector<ZRenderQueue*>& queues, IRender::PresentOption option);
+		static void InvokeRenderQueuesParallel(IRender& render, std::vector<ZFencedRenderQueue*>& queues, IRender::PresentOption option);
 		void UpdateFrame(IRender& render);
 		IRender::Queue* GetQueue() const;
 		bool WaitUpdate() const;
@@ -29,4 +29,4 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __ZRENDERQUEUE_H__
+#endif // __ZFENCEDRENDERQUEUE_H__

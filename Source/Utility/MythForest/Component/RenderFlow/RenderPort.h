@@ -11,7 +11,7 @@
 #include "../../../../Core/System/Graph.h"
 
 namespace PaintsNow {
-	class ZRenderQueue;
+	class ZFencedRenderQueue;
 	namespace NsMythForest {
 		class Engine;
 		class RenderPort : public TReflected<RenderPort, GraphPort<SharedTiny> > {
@@ -20,7 +20,7 @@ namespace PaintsNow {
 			virtual void Initialize(IRender& render, IRender::Queue* queue);
 			virtual void Uninitialize(IRender& render, IRender::Queue* queue);
 			virtual bool UpdateDataStream(RenderPort& source);
-			virtual void Commit(std::vector<ZRenderQueue*>& queues);
+			virtual void Commit(std::vector<ZFencedRenderQueue*>& queues);
 			virtual bool BeginFrame(IRender& render);
 			virtual void EndFrame(IRender& render);
 			virtual void Tick(Engine& engine, IRender::Queue* queue);

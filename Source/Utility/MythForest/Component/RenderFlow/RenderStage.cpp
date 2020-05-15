@@ -116,10 +116,6 @@ void RenderStage::UpdateRenderTarget(Engine& engine, IRender::Queue* resourceQue
 }
 
 void RenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
-	IRender& render = engine.interfaces.render;
-	render.ExecuteResource(queue, renderTarget);
-	render.ExecuteResource(queue, renderState);
-	render.ExecuteResource(queue, clear);
 }
 
 void RenderStage::Initialize(Engine& engine, IRender::Queue* queue) {
@@ -193,11 +189,16 @@ const IRender::Resource::RenderTargetDescription& RenderStage::GetRenderTargetDe
 	return renderTargetDescription;
 }
 
-void RenderStage::Commit(Engine& engine, std::vector<ZRenderQueue*>& queues, IRender::Queue* instantQueue) {
+void RenderStage::Commit(Engine& engine, std::vector<ZFencedRenderQueue*>& queues, IRender::Queue* instantQueue) {
 	assert(Flag() & TINY_ACTIVATED);
 	for (size_t i = 0; i < nodePorts.size(); i++) {
 		nodePorts[i].port->Commit(queues);
 	}
+
+	IRender& render = engine.interfaces.render;
+	render.ExecuteResource(instantQueue, renderTarget);
+	render.ExecuteResource(instantQueue, renderState);
+	render.ExecuteResource(instantQueue, clear);
 }
 
 void RenderStage::SetMainResolution(Engine& engine, IRender::Queue* resourceQueue, uint32_t width, uint32_t height, bool updateSizeOnly) {

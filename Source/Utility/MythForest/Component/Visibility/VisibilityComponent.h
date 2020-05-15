@@ -10,7 +10,7 @@
 #include "../../Component.h"
 #include "../Explorer/SpaceTraversal.h"
 #include "../../../../Core/Template/TBuffer.h"
-#include "../../../../General/Misc/ZRenderQueue.h"
+#include "../../../../General/Misc/ZFencedRenderQueue.h"
 #include "../../../SnowyStream/Resource/ShaderResource.h"
 #include "../../../SnowyStream/Resource/TextureResource.h"
 #include "../../../SnowyStream/Resource/MeshResource.h"

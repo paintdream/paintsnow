@@ -30,5 +30,5 @@ void RenderPort::UpdateRenderStage() {
 	}
 }
 
-void RenderPort::Commit(std::vector<ZRenderQueue*>& queues) {}
+void RenderPort::Commit(std::vector<ZFencedRenderQueue*>& queues) {}
 bool RenderPort::UpdateDataStream(RenderPort& source) { return true; }
