@@ -53,7 +53,7 @@ void SnowyStream::Initialize() {
 void SnowyStream::TickDevice(IDevice& device) {
 	if (&device == &interfaces.render) {
 		if (resourceQueue != nullptr) {
-			interfaces.render.PresentQueues(&resourceQueue, 1, IRender::CONSUME);
+			interfaces.render.PresentQueues(&resourceQueue, 1, IRender::PRESENT_EXECUTE_ALL);
 		}
 	}
 }

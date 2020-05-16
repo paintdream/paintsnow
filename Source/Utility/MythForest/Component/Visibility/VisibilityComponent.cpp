@@ -293,7 +293,7 @@ void VisibilityComponent::TickRender(Engine& engine) {
 	// check pipeline state
 	if (renderQueue == nullptr) return; // not inited.
 	IRender& render = engine.interfaces.render;
-	render.PresentQueues(&renderQueue, 1, IRender::CONSUME);
+	render.PresentQueues(&renderQueue, 1, IRender::PRESENT_EXECUTE_ALL);
 
 	// read previous results back and collect ready ones
 	std::vector<IRender::Queue*> bakeQueues;
@@ -318,7 +318,7 @@ void VisibilityComponent::TickRender(Engine& engine) {
 
 	// Commit bakes
 	if (!bakeQueues.empty()) {
-		render.PresentQueues(&bakeQueues[0], safe_cast<uint32_t>(bakeQueues.size()), IRender::CONSUME);
+		render.PresentQueues(&bakeQueues[0], safe_cast<uint32_t>(bakeQueues.size()), IRender::PRESENT_EXECUTE_ALL);
 	}
 }
 

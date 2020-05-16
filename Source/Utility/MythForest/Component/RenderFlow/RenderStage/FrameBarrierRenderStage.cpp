@@ -38,6 +38,8 @@ void FrameBarrierRenderStage::PrepareResources(Engine& engine, IRender::Queue* q
 void FrameBarrierRenderStage::SetMainResolution(Engine& engine, IRender::Queue* queue, uint32_t width, uint32_t height, bool resizeOnly) {}
 void FrameBarrierRenderStage::UpdateRenderTarget(Engine& engine, IRender::Queue* queue, bool resizeOnly) {}
 void FrameBarrierRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {}
+void FrameBarrierRenderStage::Commit(Engine& engine, std::vector<ZFencedRenderQueue*>& queues, IRender::Queue* queue) {}
+
 void FrameBarrierRenderStage::Tick(Engine& engine, IRender::Queue* queue) {
 	// Force update source 
 	RenderStage* renderStage = Front.linkedRenderStage;

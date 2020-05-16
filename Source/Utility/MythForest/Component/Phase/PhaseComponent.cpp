@@ -257,7 +257,7 @@ void PhaseComponent::TickRender(Engine& engine) {
 
 	IRender& render = engine.interfaces.render;
 	Kernel& kernel = engine.GetKernel();
-	render.PresentQueues(&renderQueue, 1, IRender::CONSUME);
+	render.PresentQueues(&renderQueue, 1, IRender::PRESENT_EXECUTE_ALL);
 
 	std::vector<IRender::Queue*> bakeQueues;
 	for (size_t i = 0; i < tasks.size(); i++) {
@@ -288,7 +288,7 @@ void PhaseComponent::TickRender(Engine& engine) {
 
 	// Commit bakes
 	if (!bakeQueues.empty()) {
-		render.PresentQueues(&bakeQueues[0], safe_cast<uint32_t>(bakeQueues.size()), IRender::CONSUME);
+		render.PresentQueues(&bakeQueues[0], safe_cast<uint32_t>(bakeQueues.size()), IRender::PRESENT_EXECUTE_ALL);
 	}
 }
 

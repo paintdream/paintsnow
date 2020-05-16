@@ -17,15 +17,15 @@ namespace PaintsNow {
 		~ZFencedRenderQueue();
 		void Initialize(IRender& render, IRender::Device* device);
 		void Uninitialize(IRender& render);
-		void InvokeRender(IRender& render, IRender::PresentOption option);
-		static void InvokeRenderQueuesParallel(IRender& render, std::vector<ZFencedRenderQueue*>& queues, IRender::PresentOption option);
+		void InvokeRender(IRender& render);
+		static void InvokeRenderQueuesParallel(IRender& render, std::vector<ZFencedRenderQueue*>& queues);
 		void UpdateFrame(IRender& render);
 		IRender::Queue* GetQueue() const;
 		bool WaitUpdate() const;
 
 	protected:
 		IRender::Queue* queue;
-		TAtomic<int32_t> invokeCounter;
+		TAtomic<int32_t> yieldCount;
 	};
 }
 

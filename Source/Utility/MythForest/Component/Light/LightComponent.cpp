@@ -267,7 +267,7 @@ void LightComponent::TaskData::RenderFrame(Engine& engine) {
 		renderQueues.emplace_back(warp.renderQueue);
 	}
 
-	engine.interfaces.render.PresentQueues(&renderQueues[0], safe_cast<uint32_t>(renderQueues.size()), IRender::CONSUME);
+	engine.interfaces.render.PresentQueues(&renderQueues[0], safe_cast<uint32_t>(renderQueues.size()), IRender::PRESENT_EXECUTE_ALL);
 	shadowGrid->Flag() &= ~TINY_MODIFIED;
 
 	Flag() &= ~TINY_MODIFIED;

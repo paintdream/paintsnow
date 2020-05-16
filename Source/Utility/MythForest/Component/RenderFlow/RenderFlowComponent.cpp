@@ -122,7 +122,7 @@ void RenderFlowComponent::Render(Engine& engine) {
 	if (Flag() & TINY_ACTIVATED) {
 		// Commit resource queue first
 		IRender& render = engine.interfaces.render;
-		resourceQueue.InvokeRender(render, IRender::CONSUME);
+		resourceQueue.InvokeRender(render);
 		assert(cachedRenderStages[cachedRenderStages.size() - 1] == nullptr);
 
 		for (size_t n = 0, m = 0; n < cachedRenderStages.size(); n++) {
@@ -132,8 +132,8 @@ void RenderFlowComponent::Render(Engine& engine) {
 					cachedRenderStages[i]->Commit(engine, renderQueues, instantQueue);
 				}
 
-				render.PresentQueues(&instantQueue, 1, IRender::CONSUME);
-				ZFencedRenderQueue::InvokeRenderQueuesParallel(render, renderQueues, IRender::REPEAT);
+				render.PresentQueues(&instantQueue, 1, IRender::PRESENT_EXECUTE_ALL);
+				ZFencedRenderQueue::InvokeRenderQueuesParallel(render, renderQueues);
 				m = n + 1;
 			}
 		}
@@ -202,7 +202,7 @@ private:
 void RenderFlowComponent::Optimize(bool enableParallelPresent) {
 	// Optimize render stage texture storages
 	// Tint by order
-	
+
 	RenderTargetTextureCombiner combine;
 	for (size_t i = 0; i < cachedRenderStages.size(); i++) {
 		RenderStage* renderStage = cachedRenderStages[i];
@@ -243,7 +243,7 @@ void RenderFlowComponent::Initialize(Engine& engine, Entity* entity) {
 		}
 	}
 
-	SetMainResolution(engine, true);
+	SetMainResolution(engine, false);
 	Optimize(engine.interfaces.render.SupportParallelPresent(engine.snowyStream.GetRenderDevice()));
 
 	for (size_t i = 0; i < cachedRenderStages.size(); i++) {
@@ -312,7 +312,7 @@ void RenderFlowComponent::SetMainResolution(Engine& engine, bool sizeOnly) {
 void RenderFlowComponent::RenderSyncTick(Engine& engine) {
 	if (Flag() & TINY_ACTIVATED) {
 		IRender::Queue* queue = resourceQueue.GetQueue();
-		SetMainResolution(engine, false);
+		SetMainResolution(engine, true);
 
 		IRender::Device* device = engine.snowyStream.GetRenderDevice();
 		// Cleanup modified flag for all ports
@@ -347,9 +347,10 @@ void RenderFlowComponent::DispatchEvent(Event& event, Entity* entity) {
 				YieldThread();
 			}
 
+			Render(event.engine);
+
 			Flag() |= RENDERFLOWCOMPONENT_RENDER_SYNC_TICKING;
 			engine.GetKernel().QueueRoutine(this, CreateTaskContextFree(Wrap(this, &RenderFlowComponent::RenderSyncTick), std::ref(engine)));
-			Render(event.engine);
 		}
 	} else if (event.eventID == Event::EVENT_TICK) {
 		// No operations on trivial tick

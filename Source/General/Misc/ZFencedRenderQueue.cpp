@@ -3,7 +3,7 @@
 using namespace PaintsNow;
 
 ZFencedRenderQueue::ZFencedRenderQueue() : queue(nullptr) {
-	invokeCounter.store(0, std::memory_order_relaxed);
+	yieldCount.store(0, std::memory_order_relaxed);
 }
 
 ZFencedRenderQueue::~ZFencedRenderQueue() {
@@ -13,6 +13,7 @@ ZFencedRenderQueue::~ZFencedRenderQueue() {
 void ZFencedRenderQueue::Initialize(IRender& render, IRender::Device* device) {
 	assert(queue == nullptr);
 	queue = render.CreateQueue(device);
+	render.YieldQueue(queue);
 }
 
 void ZFencedRenderQueue::Uninitialize(IRender& render) {
@@ -21,7 +22,7 @@ void ZFencedRenderQueue::Uninitialize(IRender& render) {
 	queue = nullptr;
 }
 
-void ZFencedRenderQueue::InvokeRenderQueuesParallel(IRender& render, std::vector<ZFencedRenderQueue*>& queues, IRender::PresentOption option) {
+void ZFencedRenderQueue::InvokeRenderQueuesParallel(IRender& render, std::vector<ZFencedRenderQueue*>& queues) {
 	if (queues.empty()) return;
 
 	// cleanup stage
@@ -29,45 +30,39 @@ void ZFencedRenderQueue::InvokeRenderQueuesParallel(IRender& render, std::vector
 	while (true) {
 		for (size_t i = 0; i < queues.size(); i++) {
 			ZFencedRenderQueue* q = queues[i];
-			if (q->invokeCounter.load(std::memory_order_acquire) > 1) {
+			if (q->yieldCount.load(std::memory_order_acquire) != 0) {
 				renderQueues.emplace_back(q->queue);
-				q->invokeCounter.fetch_sub(1, std::memory_order_relaxed);
+				q->yieldCount.fetch_sub(1, std::memory_order_relaxed);
 			}
 		}
 
 		if (renderQueues.empty()) break;
 
-		render.PresentQueues(&renderQueues[0], (uint32_t)renderQueues.size(), IRender::UPDATE);
+		render.PresentQueues(&renderQueues[0], (uint32_t)renderQueues.size(), IRender::PRESENT_CONSUME_YIELD);
 		renderQueues.clear();
 	}
 
 	for (size_t i = 0; i < queues.size(); i++) {
 		ZFencedRenderQueue* q = queues[i];
-		if (q->invokeCounter.load(std::memory_order_acquire) != 0) {
-			renderQueues.emplace_back(q->GetQueue());
-		}
+		renderQueues.emplace_back(q->GetQueue());
 	}
 
-	if (!renderQueues.empty()) {
-		render.PresentQueues(&renderQueues[0], (uint32_t)renderQueues.size(), option);
-	}
+	render.PresentQueues(&renderQueues[0], (uint32_t)renderQueues.size(), IRender::PRESENT_REPEAT_TO_YIELD);
 }
 
-void ZFencedRenderQueue::InvokeRender(IRender& render, IRender::PresentOption option) {
+void ZFencedRenderQueue::InvokeRender(IRender& render) {
 	assert(queue != nullptr);
-	if (invokeCounter.load(std::memory_order_relaxed) > 0) {
-		while (invokeCounter.load(std::memory_order_acquire) > 1) {
-			render.PresentQueues(&queue, 1, IRender::UPDATE);
-			invokeCounter.fetch_sub(1, std::memory_order_relaxed);
-		}
-
-		render.PresentQueues(&queue, 1, option);
+	while (yieldCount.load(std::memory_order_acquire) != 0) {
+		render.PresentQueues(&queue, 1, IRender::PRESENT_CONSUME_YIELD);
+		yieldCount.fetch_sub(1, std::memory_order_relaxed);
 	}
+
+	render.PresentQueues(&queue, 1, IRender::PRESENT_EXECUTE_TO_YIELD);
 }
 
 void ZFencedRenderQueue::UpdateFrame(IRender& render) {
 	render.YieldQueue(queue);
-	++invokeCounter;
+	++yieldCount;
 }
 
 IRender::Queue* ZFencedRenderQueue::GetQueue() const {
@@ -75,5 +70,5 @@ IRender::Queue* ZFencedRenderQueue::GetQueue() const {
 }
 
 bool ZFencedRenderQueue::WaitUpdate() const {
-	return invokeCounter.load(std::memory_order_relaxed) == 0;
+	return yieldCount.load(std::memory_order_relaxed) == 0;
 }

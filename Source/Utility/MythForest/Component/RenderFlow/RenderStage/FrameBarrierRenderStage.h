@@ -21,6 +21,7 @@ namespace PaintsNow {
 			virtual void UpdateRenderTarget(Engine& engine, IRender::Queue* queue, bool resizeOnly) override;
 			virtual void UpdatePass(Engine& engine, IRender::Queue* queue) override;
 			virtual void Tick(Engine& engine, IRender::Queue* queue) override;
+			virtual void Commit(Engine& engine, std::vector<ZFencedRenderQueue*>& queues, IRender::Queue* instantQueue) override;
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
 			RenderPortTextureInput Front;

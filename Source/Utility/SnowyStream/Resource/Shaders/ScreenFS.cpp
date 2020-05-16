@@ -32,9 +32,9 @@ String ScreenFS::GetShaderText() {
 		);
 
 		float4 bloomColor = float4(0, 0, 0, 0);
-		//bloomColor += texture(inputBloomTexture0, rasterCoord);
-		//bloomColor += texture(inputBloomTexture1, rasterCoord);
-		//bloomColor += texture(inputBloomTexture2, rasterCoord);
+		bloomColor += texture(inputBloomTexture0, rasterCoord);
+		// bloomColor += texture(inputBloomTexture1, rasterCoord);
+		// bloomColor += texture(inputBloomTexture2, rasterCoord);
 
 		float3 color = texture(inputColorTexture, rasterCoord).xyz;
 		color = mult_vec(ACESInputMat, color + bloomColor.xyz);

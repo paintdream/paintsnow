@@ -217,7 +217,14 @@ namespace PaintsNow {
 		};
 
 		// The only API that requires calling on device thread.
-		enum PresentOption { CONSUME, REPEAT, UPDATE, CLEAR };
+		enum PresentOption {
+			PRESENT_EXECUTE_ALL,
+			PRESENT_REPEAT_TO_YIELD,
+			PRESENT_EXECUTE_TO_YIELD,
+			PRESENT_CONSUME_YIELD,
+			PRESENT_CLEAR_ALL
+		};
+
 		virtual void PresentQueues(Queue** queues, uint32_t count, PresentOption option) = 0;
 
 		// Device
