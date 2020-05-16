@@ -30,8 +30,7 @@ namespace PaintsNow {
 			virtual void Initialize(Engine& engine, IRender::Queue* resourceQueue);
 			virtual void Uninitialize(Engine& engine, IRender::Queue* resourceQueue);
 
-			virtual void SetMainResolution(Engine& engine, IRender::Queue* resourceQueue, uint32_t width, uint32_t height, bool sizeOnly);
-			virtual void UpdateRenderTarget(Engine& engine, IRender::Queue* resourceQueue, bool sizeOnly);
+			virtual void SetMainResolution(Engine& engine, IRender::Queue* resourceQueue, uint32_t width, uint32_t height);
 			virtual void UpdatePass(Engine& engine, IRender::Queue* resourceQueue);
 			virtual void Tick(Engine& engine, IRender::Queue* resourceQueue);
 			virtual void Commit(Engine& engine, std::vector<ZFencedRenderQueue*>& queues, IRender::Queue* instantQueue);
@@ -49,7 +48,6 @@ namespace PaintsNow {
 			IRender::Resource* renderTarget;
 			IRender::Resource* clear;
 			IRender::Resource* drawCallResource;
-			UShort2 mainResolution;
 			Char2 resolutionShift;
 			Char2 reserved;
 			std::vector<IRender::Resource*> newResources;

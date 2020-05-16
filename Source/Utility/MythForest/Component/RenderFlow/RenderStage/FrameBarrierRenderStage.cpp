@@ -35,8 +35,7 @@ void FrameBarrierRenderStage::PrepareResources(Engine& engine, IRender::Queue* q
 	// RenderStage::PrepareResources(engine);
 }
 
-void FrameBarrierRenderStage::SetMainResolution(Engine& engine, IRender::Queue* queue, uint32_t width, uint32_t height, bool resizeOnly) {}
-void FrameBarrierRenderStage::UpdateRenderTarget(Engine& engine, IRender::Queue* queue, bool resizeOnly) {}
+void FrameBarrierRenderStage::SetMainResolution(Engine& engine, IRender::Queue* queue, uint32_t width, uint32_t height) {}
 void FrameBarrierRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {}
 void FrameBarrierRenderStage::Commit(Engine& engine, std::vector<ZFencedRenderQueue*>& queues, IRender::Queue* queue) {}
 
@@ -45,12 +44,12 @@ void FrameBarrierRenderStage::Tick(Engine& engine, IRender::Queue* queue) {
 	RenderStage* renderStage = Front.linkedRenderStage;
 	if (renderStage != nullptr) {
 		if (Front.textureResource->description.state != Next.renderTargetTextureResource->description.state
-			|| renderStage->renderTargetDescription.width != Next.renderTargetTextureResource->description.dimension.x()
-			|| renderStage->renderTargetDescription.height != Next.renderTargetTextureResource->description.dimension.y()) {
+			|| Front.textureResource->description.dimension.x() != Next.renderTargetTextureResource->description.dimension.x()
+			|| Front.textureResource->description.dimension.y() != Next.renderTargetTextureResource->description.dimension.y()) {
 
 			Next.renderTargetTextureResource->description.state = Front.textureResource->description.state;
-			Next.renderTargetTextureResource->description.dimension.x() = renderStage->renderTargetDescription.width;
-			Next.renderTargetTextureResource->description.dimension.y() = renderStage->renderTargetDescription.height;
+			Next.renderTargetTextureResource->description.dimension.x() = Front.textureResource->description.dimension.x();
+			Next.renderTargetTextureResource->description.dimension.y() = Front.textureResource->description.dimension.y();
 			Next.renderTargetTextureResource->GetResourceManager().InvokeUpload(Next.renderTargetTextureResource(), queue);
 			Front.textureResource->GetResourceManager().InvokeUpload(Front.textureResource(), queue);
 		}

@@ -16,9 +16,8 @@ namespace PaintsNow {
 		public:
 			FrameBarrierRenderStage();
 
-			virtual void SetMainResolution(Engine& engine, IRender::Queue* queue, uint32_t width, uint32_t height, bool resizeOnly) override;
+			virtual void SetMainResolution(Engine& engine, IRender::Queue* queue, uint32_t width, uint32_t height) override;
 			virtual void PrepareResources(Engine& engine, IRender::Queue* queue) override;
-			virtual void UpdateRenderTarget(Engine& engine, IRender::Queue* queue, bool resizeOnly) override;
 			virtual void UpdatePass(Engine& engine, IRender::Queue* queue) override;
 			virtual void Tick(Engine& engine, IRender::Queue* queue) override;
 			virtual void Commit(Engine& engine, std::vector<ZFencedRenderQueue*>& queues, IRender::Queue* instantQueue) override;

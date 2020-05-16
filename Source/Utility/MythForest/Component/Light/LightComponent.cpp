@@ -137,9 +137,6 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 		// Prepare render target
 		IRender::Resource::RenderTargetDescription desc;
 		desc.colorBufferStorages.resize(1);
-		desc.isBackBuffer = 0;
-		desc.width = resolution.x();
-		desc.height = resolution.y();
 		IRender::Resource::RenderTargetDescription::Storage& s = desc.colorBufferStorages[0];
 		s.resource = dummyColorAttachment->GetTexture();
 		desc.depthStencilStorage.resource = shadowGrid->texture->GetTexture();

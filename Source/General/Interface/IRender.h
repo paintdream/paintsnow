@@ -157,12 +157,10 @@ namespace PaintsNow {
 			};
 
 			struct RenderTargetDescription : public Description {
-				RenderTargetDescription() : width(0), height(0), isBackBuffer(0) {}
+				RenderTargetDescription() {}
 
 				// attachments
-				uint16_t isBackBuffer : 1;
-				uint16_t height : 15;
-				uint16_t width;
+				UShort2Pair range;
 
 				struct Storage {
 					Storage() : mipLevel(0), resource(nullptr) {}
@@ -171,7 +169,7 @@ namespace PaintsNow {
 				};
 
 				Storage depthStencilStorage;
-				std::vector<Storage> colorBufferStorages;
+				std::vector<Storage> colorBufferStorages; // 0 for backbuffer
 			};
 
 			struct ClearDescription : public Description {

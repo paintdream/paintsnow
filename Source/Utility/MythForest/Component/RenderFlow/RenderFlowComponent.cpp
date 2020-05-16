@@ -243,7 +243,7 @@ void RenderFlowComponent::Initialize(Engine& engine, Entity* entity) {
 		}
 	}
 
-	SetMainResolution(engine, false);
+	SetMainResolution(engine);
 	Optimize(engine.interfaces.render.SupportParallelPresent(engine.snowyStream.GetRenderDevice()));
 
 	for (size_t i = 0; i < cachedRenderStages.size(); i++) {
@@ -280,7 +280,7 @@ void RenderFlowComponent::Uninitialize(Engine& engine, Entity* entity) {
 	BaseClass::Uninitialize(engine, entity);
 }
 
-void RenderFlowComponent::SetMainResolution(Engine& engine, bool sizeOnly) {
+void RenderFlowComponent::SetMainResolution(Engine& engine) {
 	bool updateResolution = false;
 	IRender::Device* device = engine.snowyStream.GetRenderDevice();
 	if (Flag() & RENDERFLOWCOMPONENT_SYNC_DEVICE_RESOLUTION) {
@@ -301,7 +301,7 @@ void RenderFlowComponent::SetMainResolution(Engine& engine, bool sizeOnly) {
 		for (size_t i = 0; i < cachedRenderStages.size(); i++) {
 			RenderStage* renderStage = cachedRenderStages[i];
 			if (renderStage != nullptr) {
-				renderStage->SetMainResolution(engine, queue, width, height, sizeOnly);
+				renderStage->SetMainResolution(engine, queue, width, height);
 			}
 		}
 
@@ -312,7 +312,7 @@ void RenderFlowComponent::SetMainResolution(Engine& engine, bool sizeOnly) {
 void RenderFlowComponent::RenderSyncTick(Engine& engine) {
 	if (Flag() & TINY_ACTIVATED) {
 		IRender::Queue* queue = resourceQueue.GetQueue();
-		SetMainResolution(engine, true);
+		SetMainResolution(engine);
 
 		IRender::Device* device = engine.snowyStream.GetRenderDevice();
 		// Cleanup modified flag for all ports

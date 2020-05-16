@@ -4,7 +4,7 @@
 using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 
-DeviceRenderStage::DeviceRenderStage(const String& config) {}
+DeviceRenderStage::DeviceRenderStage(const String& config) : BaseClass(0) {}
 
 TObject<IReflect>& DeviceRenderStage::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
@@ -16,8 +16,13 @@ TObject<IReflect>& DeviceRenderStage::operator () (IReflect& reflect) {
 	return *this;
 }
 
+void DeviceRenderStage::SetMainResolution(Engine& engine, IRender::Queue* queue, uint32_t width, uint32_t height) {}
+void DeviceRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {}
+void DeviceRenderStage::Commit(Engine& engine, std::vector<ZFencedRenderQueue*>& queues, IRender::Queue* queue) {}
+
+void DeviceRenderStage::Tick(Engine& engine, IRender::Queue* queue) {}
+
 void DeviceRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
-	renderTargetDescription.isBackBuffer = true;
 	assert(InputColor.GetLinks().size() == 1);
 	RenderPort* renderPort = static_cast<RenderPort*>(InputColor.GetLinks()[0].port);
 	assert(renderPort != nullptr);
@@ -26,11 +31,7 @@ void DeviceRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) 
 
 	// Clear source node renderTarget
 	input->renderTargetTextureResource = nullptr;
-	(static_cast<RenderStage*>(input->GetNode()))->renderTargetDescription.isBackBuffer = true;
+	(static_cast<RenderStage*>(input->GetNode()))->renderTargetDescription.colorBufferStorages.clear();
 
-	BaseClass::PrepareResources(engine, queue);
-}
-
-void DeviceRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
-	BaseClass::UpdatePass(engine, queue);
+	// BaseClass::PrepareResources(engine, queue);
 }

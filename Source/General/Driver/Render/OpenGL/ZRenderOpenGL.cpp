@@ -1568,11 +1568,12 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> : public R
 		Resource::RenderTargetDescription& d = UpdateDescription();
 		Resource::ClearDescription& lastClear = queue.device->lastClear;
 
+		// Not back buffer
 		if (vertexArrayID == 0) {
 			glGenVertexArrays(1, &vertexArrayID);
 		}
 
-		if (!d.isBackBuffer) {
+		if (!d.colorBufferStorages.empty()) {
 			// currently formats are not configurable for depth & stencil buffer
 			GL_GUARD();
 			if (frameBufferID == 0) {
@@ -1589,7 +1590,6 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> : public R
 				assert(t->textureID != 0);
 				// do not support other types :D
 				assert(t->GetDescription().state.layout == IRender::Resource::TextureDescription::DEPTH_STENCIL || t->GetDescription().state.layout == IRender::Resource::TextureDescription::DEPTH);
-				assert(t->GetDescription().dimension.x() == d.width && t->GetDescription().dimension.y() == d.height);
 
 				if (t->GetDescription().state.sample == IRender::Resource::TextureDescription::RENDERBUFFER) {
 					glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, t->renderbufferID);
@@ -1606,7 +1606,6 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> : public R
 				ResourceImplOpenGL<IRender::Resource::TextureDescription>* t = static_cast<ResourceImplOpenGL<IRender::Resource::TextureDescription>*>(storage.resource);
 				assert(t != nullptr);
 				assert(t->textureID != 0);
-				assert(t->GetDescription().dimension.x() == d.width && t->GetDescription().dimension.y() == d.height);
 				if (t->GetDescription().state.sample == IRender::Resource::TextureDescription::RENDERBUFFER) {
 					glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + (GLsizei)i, GL_RENDERBUFFER, t->renderbufferID);
 				} else {
@@ -1649,7 +1648,27 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> : public R
 		queue.device->lastFrameBufferID = frameBufferID;
 		glBindFramebuffer(GL_FRAMEBUFFER, frameBufferID);
 		glBindVertexArray(vertexArrayID);
-		glViewport(0, 0, d.width, d.height);
+		UShort2Pair range = d.range;
+
+		if (range.second.x() == 0) {
+			if (d.colorBufferStorages.empty()) {
+				range.second.x() = queue.device->resolution.x();
+			} else {
+				ResourceImplOpenGL<TextureDescription>* texture = static_cast<ResourceImplOpenGL<TextureDescription>*>(d.colorBufferStorages[0].resource);
+				range.second.x() = texture->GetDescription().dimension.x();
+			}
+		}
+
+		if (range.second.y() == 0) {
+			if (d.colorBufferStorages.empty()) {
+				range.second.y() = queue.device->resolution.y();
+			} else {
+				ResourceImplOpenGL<TextureDescription>* texture = static_cast<ResourceImplOpenGL<TextureDescription>*>(d.colorBufferStorages[0].resource);
+				range.second.y() = texture->GetDescription().dimension.y();
+			}
+		}
+
+		glViewport(range.first.x(), range.first.y(), range.second.x() - range.first.x(), range.second.y() - range.first.y());
 
 		if (frameBufferID != 0) {
 			const size_t MAX_ID = 8;

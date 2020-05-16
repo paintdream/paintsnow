@@ -105,9 +105,6 @@ void VisibilityComponent::Initialize(Engine& engine, Entity* entity) {
 
 		IRender::Resource::RenderTargetDescription desc;
 		desc.colorBufferStorages.resize(1);
-		desc.isBackBuffer = 0;
-		desc.width = resolution.x();
-		desc.height = resolution.y();
 		IRender::Resource::RenderTargetDescription::Storage& s = desc.colorBufferStorages[0];
 		s.resource = texture->GetTexture();
 		desc.depthStencilStorage.resource = depthStencilResource;

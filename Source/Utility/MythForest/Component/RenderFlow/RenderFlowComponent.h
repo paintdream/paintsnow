@@ -45,7 +45,7 @@ namespace PaintsNow {
 			
 		protected:
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-			void SetMainResolution(Engine& engine, bool sizeOnly);
+			void SetMainResolution(Engine& engine);
 
 			Int2 mainResolution;
 			std::map<String, std::pair<RenderStage*, String> > symbolMap;

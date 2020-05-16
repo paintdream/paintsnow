@@ -30,9 +30,6 @@ RenderStage::RenderStage(uint32_t colorAttachmentCount) : renderState(nullptr), 
 	c.clearStencilBit = clearMask;
 
 	IRender::Resource::RenderTargetDescription& t = renderTargetDescription;
-	t.isBackBuffer = false;
-	t.width = 0; // Invalid by default
-	t.height = 0;
 	t.colorBufferStorages.resize(colorAttachmentCount);
 }
 
@@ -49,16 +46,12 @@ void RenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	clear = render.CreateResource(queue, IRender::Resource::RESOURCE_CLEAR);
 	render.UploadResource(queue, clear, &clearDescription);
 	renderTarget = render.CreateResource(queue, IRender::Resource::RESOURCE_RENDERTARGET);
-
-	// would be uploaded soon
-	// IRender::Resource::RenderTargetDescription copy = renderTargetDescription;
-	// render.UploadResource(queue, renderTarget, &copy);
 }
 
 
 class AutoAdaptRenderTarget : public IReflect {
 public:
-	AutoAdaptRenderTarget(IRender& r, IRender::Queue* q, uint32_t w, uint32_t h, bool sizeOnly) : IReflect(true, false), render(r), queue(q), width(w), height(h), updateSizeOnly(sizeOnly) {}
+	AutoAdaptRenderTarget(IRender& r, IRender::Queue* q, uint32_t w, uint32_t h) : IReflect(true, false), render(r), queue(q), width(w), height(h) {}
 
 	virtual void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) {
 		static Unique unique = UniqueType<RenderPortRenderTarget>::Get();
@@ -70,13 +63,11 @@ public:
 					dimension.x() = width;
 					dimension.y() = height;
 
-					if (!updateSizeOnly) {
-						rt.bindingStorage.resource = rt.renderTargetTextureResource->GetTexture();
+					rt.bindingStorage.resource = rt.renderTargetTextureResource->GetTexture();
 
-						// Update texture
-						IRender::Resource::TextureDescription desc = rt.renderTargetTextureResource->description;
-						render.UploadResource(queue, rt.renderTargetTextureResource->instance, &desc);
-					}
+					// Update texture
+					IRender::Resource::TextureDescription desc = rt.renderTargetTextureResource->description;
+					render.UploadResource(queue, rt.renderTargetTextureResource->instance, &desc);
 				}
 			}
 		}
@@ -88,32 +79,7 @@ public:
 	IRender::Queue* queue;
 	uint32_t width;
 	uint32_t height;
-	bool updateSizeOnly;
 };
-
-void RenderStage::UpdateRenderTarget(Engine& engine, IRender::Queue* resourceQueue, bool updateSizeOnly) {
-	if (!(Flag() & RENDERSTAGE_ADAPT_MAIN_RESOLUTION)) return;
-
-	// by now we have no color-free render buffers
-	assert(!renderTargetDescription.colorBufferStorages.empty());
-	IRender& render = engine.interfaces.render;
-	
-	uint16_t width = mainResolution.x();
-	uint16_t height = mainResolution.y();
-	assert(width != 0 && height != 0);
-	renderTargetDescription.width = resolutionShift.x() > 0 ? Max(width >> resolutionShift.x(), 2) : width << resolutionShift.x();
-	renderTargetDescription.height = resolutionShift.y() > 0 ? Max(height >> resolutionShift.y(), 2) : height << resolutionShift.y();
-
-	AutoAdaptRenderTarget adapt(render, resourceQueue, renderTargetDescription.width, renderTargetDescription.height, updateSizeOnly);
-	(*this)(adapt);
-
-	if (!updateSizeOnly) {
-		// Commit
-		assert(renderTarget != nullptr);
-		IRender::Resource::RenderTargetDescription copy = renderTargetDescription;
-		render.UploadResource(resourceQueue, renderTarget, &copy);
-	}
-}
 
 void RenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 }
@@ -131,8 +97,12 @@ void RenderStage::Initialize(Engine& engine, IRender::Queue* queue) {
 		port->Initialize(render, queue);
 	}
 
-	UpdateRenderTarget(engine, queue, false);
 	UpdatePass(engine, queue);
+
+	if (renderTarget != nullptr) {
+		IRender::Resource::RenderTargetDescription copy = renderTargetDescription;
+		render.UploadResource(queue, renderTarget, &copy);
+	}
 
 	Flag() |= TINY_ACTIVATED;
 }
@@ -201,12 +171,18 @@ void RenderStage::Commit(Engine& engine, std::vector<ZFencedRenderQueue*>& queue
 	render.ExecuteResource(instantQueue, clear);
 }
 
-void RenderStage::SetMainResolution(Engine& engine, IRender::Queue* resourceQueue, uint32_t width, uint32_t height, bool updateSizeOnly) {
+void RenderStage::SetMainResolution(Engine& engine, IRender::Queue* resourceQueue, uint32_t width, uint32_t height) {
+	if (!(Flag() & RENDERSTAGE_ADAPT_MAIN_RESOLUTION)) return;	
 	// By default, create render buffer with resolution provided
 	// For some stages(e.g. cascaded bloom generator), we must override this function to adapt the new value
+	// by now we have no color-free render buffers
+	IRender& render = engine.interfaces.render;
+	assert(width != 0 && height != 0);
+	width = resolutionShift.x() > 0 ? Max(width >> resolutionShift.x(), 2u) : width << resolutionShift.x();
+	height = resolutionShift.y() > 0 ? Max(height >> resolutionShift.y(), 2u) : height << resolutionShift.y();
 
-	mainResolution = UShort2(width, height);
+	AutoAdaptRenderTarget adapt(render, resourceQueue, width, height);
+	(*this)(adapt);
 
-	UpdateRenderTarget(engine, resourceQueue, updateSizeOnly);
 	Flag() |= TINY_MODIFIED;
 }

@@ -405,8 +405,6 @@ void PhaseComponent::TaskAssembleTaskBounce(Engine& engine, TaskData& task, cons
 	Phase& toPhase = phases[bakePoint.toPhaseIndex];
 	storage.resource = toPhase.irradiance->GetTexture();
 	desc.colorBufferStorages.emplace_back(std::move(storage));
-	desc.width = resolution.x();
-	desc.height = resolution.y();
 	// task.texture = toPhase.irradiance;
 	task.texture = nullptr;
 
@@ -435,8 +433,6 @@ void PhaseComponent::CoTaskAssembleTaskShadow(Engine& engine, TaskData& task, co
 	IRender& render = engine.interfaces.render;
 	assert(task.status == TaskData::STATUS_DISPATCHED);
 	IRender::Resource::RenderTargetDescription desc;
-	desc.width = resolution.x();
-	desc.height = resolution.y();
 
 	const Shadow& shadow = shadows[bakePoint.shadowIndex];
 	desc.depthStencilStorage.resource = shadow.shadow->GetTexture();
@@ -483,9 +479,6 @@ void PhaseComponent::CoTaskAssembleTaskSetup(Engine& engine, TaskData& task, con
 		storage.resource = rt[k]->GetTexture();
 		desc.colorBufferStorages.emplace_back(std::move(storage));
 	}
-
-	desc.width = resolution.x();
-	desc.height = resolution.y();
 
 	render.UploadResource(task.renderQueue, task.renderTarget, &desc);
 	render.ExecuteResource(task.renderQueue, task.renderTarget);
