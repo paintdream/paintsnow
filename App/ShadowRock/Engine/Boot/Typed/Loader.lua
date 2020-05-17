@@ -119,13 +119,13 @@ if EnableTypedlua then
 
 	-- register API prototypes
 	local mapTypes = {
-		["int"] = "number",
-		["short"] = "number",
-		["char"] = "number",
+		["int"] = "integer",
+		["short"] = "integer",
+		["char"] = "integer",
 		["float"] = "number",
 		["double"] = "number",
-		["__int64"] = "number",
-		["long"] = "number",
+		["__int64"] = "integer",
+		["long"] = "integer",
 		["string"] = "string",
 		["String"] = "string",
 		["bool"] = "boolean",

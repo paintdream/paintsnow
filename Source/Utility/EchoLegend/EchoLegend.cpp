@@ -1,6 +1,7 @@
 #include "EchoLegend.h"
 #include "Listener.h"
 #include "Connection.h"
+#include <sstream>
 
 using namespace PaintsNow;
 using namespace PaintsNow::NsEchoLegend;
@@ -160,14 +161,15 @@ void EchoLegend::RequestParseURL(IScript::Request& request, const String& url) {
 	std::list<std::pair<String, String> > query;
 	network.ParseUri(url, user, host, port, path, query, fragment);
 	bridgeSunset.GetKernel().YieldCurrentWarp();
+	std::stringstream ss;
+	ss << host << ":" << port;
 
 	request.DoLock();
 	request << begintable
 		<< key("User") << user
-		<< key("Host") << host
+		<< key("Host") << ss.str()
 		<< key("Path") << path
 		<< key("Fragment") << fragment
-		<< key("Port") << port
 		<< key("Query") << beginarray;
 
 	for (std::list<std::pair<String, String> >::const_iterator p = query.begin(); p != query.end(); ++p) {

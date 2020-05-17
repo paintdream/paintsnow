@@ -37,12 +37,12 @@ TObject<IReflect>& Honey::operator () (IReflect& reflect) {
 }
 
 void Honey::WriteLine(IScript::Request& request) {
-	request << begintable;
+	request << beginarray;
 	for (size_t j = 0; j < resolver.setters.size(); j++) {
 		std::pair<SchemaResolver::Set, size_t>& setter = resolver.setters[j];
 		setter.first(request, const_cast<char*>(reinterpret_cast<const char*>(metaData->Get())) + setter.second);
 	}
-	request << endtable;
+	request << endarray;
 }
 
 HoneyData::HoneyData() : index(0), count(0), dynamicObject(nullptr), request(nullptr) {

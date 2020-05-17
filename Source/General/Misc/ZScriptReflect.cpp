@@ -93,7 +93,7 @@ void ZScriptReflect::Property(IReflectObject& s, Unique typeID, Unique refTypeID
 		if (s.IsIterator()) {
 			IIterator& it = static_cast<IIterator&>(s);
 			// uint64_t count;
-			IScript::Request::TableStart ts;
+			IScript::Request::ArrayStart ts;
 			if (read) {
 				request >> ts;
 				it.Initialize((size_t)ts.count);

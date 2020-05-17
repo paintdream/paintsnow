@@ -54,6 +54,8 @@ namespace PaintsNow {
 			void RequestPostZipperData(IScript::Request& request, IScript::Delegate<Zipper> zipper, const String& path, const String& data);
 			void RequestWriteZipper(IScript::Request& request, IScript::Delegate<File> file, IScript::Delegate<Zipper> zipper);
 
+			void RequestParseJson(IScript::Request& request, const String& str);
+
 			void RequestNewFile(IScript::Request& request, const String& path, bool write);
 			void RequestDeleteFile(IScript::Request& request, const String& path);
 			void RequestFileExists(IScript::Request& request, const String& path);

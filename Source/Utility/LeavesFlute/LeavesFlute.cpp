@@ -587,7 +587,7 @@ struct InspectCustomStructure : public IReflect {
 				request << key("Pointer") << false;
 				request << key("Optional") << false;
 				request << key("List") << false;
-				request << key("Fields") << begintable << endtable;
+				request << key("Fields") << beginarray << endarray;
 				request << key("Type") << String("ErrorType");
 				request << endtable;
 				assert(false);
@@ -597,7 +597,7 @@ struct InspectCustomStructure : public IReflect {
 			request << key("Optional") << (isDelegate && optional);
 			request << key("Pointer") << count.empty();
 			request << key("List") << isIterator;
-			request << key("Fields") << begintable;
+			request << key("Fields") << beginarray;
 
 			if (subfield) {
 				int c = atoi(count.c_str());
@@ -606,7 +606,7 @@ struct InspectCustomStructure : public IReflect {
 				}
 			}
 
-			request << endtable;
+			request << endarray;
 			request << key("Type") << (name + count);
 			request << endtable;
 		}

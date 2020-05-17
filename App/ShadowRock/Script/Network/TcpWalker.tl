@@ -1,16 +1,38 @@
 local TcpWalker = { __index = _ENV }
 setmetatable(TcpWalker, TcpWalker)
 
---[[
-local function Write(walker, connection, options)
-	options.action = "tcpwalker_request"
-	local url = EchoLegend.MakeURL("", "", walker.Port, walker.Path, options)
-	-- print(url)
-	EchoLegend.WriteConnectionHttpRequest(connection, url, "GET", { cookie = walker.cookie })
+local Json = require("Engine/Network/Json")
+local Core = require("Engine/Core")
+
+interface User
+	Id : string
+	Host : string
+	Target : string
 end
 
-local function Read(walker, connection, instance)
-	EchoLegend.ReadConnectionHttpRequest(connection, function (uri, method, header, data)
+local dispatcher : WorkDispatcher = Core.Any()
+
+TcpWalker.Dispatcher = dispatcher
+TcpWalker.LoginPath = ""
+TcpWalker.Host = ""
+TcpWalker.Path = ""
+TcpWalker.Id = ""
+TcpWalker.Password = ""
+TcpWalker.Cookie = ""
+TcpWalker.Loggedin = false
+
+local initUsers : { User } = {}
+TcpWalker.OnlineUsers = initUsers
+
+function TcpWalker:Write(connection : Connection, options)
+	table.insert(options, { "action", "tcpwalker_request" })
+	local url = EchoLegend.MakeURL(self.Id, self.Host, self.Path, options, "")
+	-- print(url)
+	connection:WriteConnectionHttpRequest(url, "GET", { { "cookie", self.Cookie } }, "")
+end
+
+function TcpWalker:Read(connection : Connection, instance)
+	connection:ReadConnectionHttpRequest(function (uri : string, method : string, header : string, data : string)
 		local object
 		if string.len(data) < 10 then -- wp auth failed!
 			object = { Status = "ERROR", Info = "Expired" }
@@ -23,137 +45,124 @@ local function Read(walker, connection, instance)
 	end)
 end
 
-local function Request(walker, options)
+function TcpWalker:Request(options : { any })
 	local instance = Core.Instance()
-	local connection = EchoLegend.OpenConnection(walker.Host, walker.Port, true, function (connection, status)
+	local connection = self.Dispatcher:OpenConnection(self.Host, true, function (connection : Connection, status : any)
 		-- print("Http code: " .. status)
 		if status == "Connected" then
-			Write(walker, connection, options)
+			self:Write(connection, options)
 		elseif type(status) == "number" and status >= 200 and status <= 499 then
-			Read(walker, connection, instance)
+			self:Read(connection, instance)
 		end
-	end)
+	end, false)
 
-	EchoLegend.ActivateConnection(connection)
+	connection:ActivateConnection()
 	return Core.StepListen()
 end
 
-function Create(login, url, id, password)
-	local part = EchoLegend.ParseURL(url)
-	local lg = EchoLegend.ParseURL(login)
-	return { LoginPath = lg.Path, Host = part.Host, Port = part.Port, path = part.Path, Id = id, Password = password, OnlineUsers = {} }
-end
-
-function Enumerate(walker)
+function TcpWalker:Enumerate()
 	-- print("Enumerate Tcpwalker users ...")
-	local object = Request(walker, { Action = "Enumerate" })
+	local object = self:Request({ { "Action", "Enumerate" } })
 	-- print("Reading result...")
 	if object and object.Status ~= "ERROR" and object.data and type(object.data) == "table" then
 		-- scan for active connections
-		local onlineUsers = {}
+		local onlineUsers : { User } = {}
 		-- print("Got data" .. #object.data)
 		for k, v in pairs(object.data) do
-			local user = {
+			local user : User = {
 				Id = v["0"],
-				IP = v["1"],
-				Port = v["2"],
+				Host = v["1"] .. ":" .. v["2"],
 				Target = v["3"],
 			}
 
 			table.insert(onlineUsers, user)
 		end
 
-		walker.OnlineUsers = onlineUsers
+		self.OnlineUsers = onlineUsers
 	end
 end
 
-function Connect(walker, id)
-	-- Core.Invoke(function ()
-		return Request(walker, { Action = "Connect", Target = id })
-	-- end)
+function TcpWalker:Connect(id : string)
+	return self:Request({ { "Action", "Connect" }, { "Target", id } })
 end
 
-function Disconnect(walker, id)
-	-- Must wrap request call in a new coroutine
-	-- Otherwise normal tcp sockets will not be able to send any packet from now on Windows System.
-	-- I don't know if it is a bug in libevent2 or lua....
-	-- So just wrap it.
-	Core.Invoke(function ()
- 		Request(walker, { Action = "Disconnect" })
+function TcpWalker:Disconnect(id : string)
+ 	return self:Request({ { "Action", "Disconnect" }, { "Target", id } })
+end
+
+function TcpWalker:LoginCallback(instance, connection : Connection, uri : string, method : string, header : { any }, data : string)
+	for _, item in ipairs(header) do
+		local key : string = item[1]
+		local cookie : string = item[2]
+		if key == "Set-Cookie" then
+			local c = string.sub(cookie, 1, string.find(cookie, ";"))
+
+			if not string.find(c, "WP+Cookie+check", 1, true) then
+				self:Write(connection, { { "Action", "Login" } })
+				self.Cookie = c
+				self.Loggedin = true
+			else
+				Core.Post(instance)
+				print("TcpWalker connection established")
+			end
+		end
+	end
+end
+
+function TcpWalker:OnConnected(connection : Connection)
+	connection:GetConnectionInfo(function (srcIP : string, srcPort : integer, dstIP : string, dstPort : integer)
+		-- print(">>>> PORT " .. srcPort)
+		print("LOGIN Path: " .. self.LoginPath)
+		local data = "log=" .. self.Id .. "&pwd=" .. self.Password
+		local headers : { number : any } = {
+			{ "Content-Type", "application/x-www-form-urlencoded; charset=UTF-8" },
+			{ "Connection", "keep-alive" },
+			{ "Host", self.Host },
+		}
+
+		connection:WriteConnectionHttpRequest(self.LoginPath, "POST", headers, data)
 	end)
 end
 
-function Login(walker)
+function TcpWalker:Login()
 	local instance = Core.Instance()
 
 	-- only 'Content-Type' and 'Connection' are required for php server
-	local headers = {
-		["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8",
-		["Connection"] = "keep-alive",
-		-- ["User-Agent"] = "curl/7.35.0",
-		["Host"] = walker.host,
-		-- ["Accept"] = "*/*",
-		-- ["Content-Length"] = 24,
-	}
-	
-	local login = false
-
-	local connection = EchoLegend.OpenConnection(walker.Host, walker.Port, true, function (connection, status)
+	self.Loggedin = false
+	local connection : Connection = self.Dispatcher:OpenConnection(self.Host, true, function (connection : Connection, status : any)
 		if status == "Connected" then
-			EchoLegend.GetConnectionInfo(connection, function (srcIP, srcPort, dstIP, dstPort)
-				-- print(">>>> PORT " .. srcPort)
-				print("LOGIN Path: " .. walker.LoginPath)
-				local data = "log=" .. walker.Id .. "&pwd=" .. walker.Password
-				EchoLegend.WriteConnectionHttpRequest(connection, walker.LoginPath, "POST", headers, data)
-			end)
+			self:OnConnected(connection)
 		elseif type(status) == "number" and status >= 200 and status <= 499 then
-			if not login then
-				EchoLegend.ReadConnectionHttpRequest(connection, function (uri, method, header, data)
-					print("RESDATA " .. data)
-					local cookie = header["Set-Cookie"]
-					if cookie then
-						local c
-						if type(cookie) == "table" then
-							for k, v in ipairs(cookie) do
-								if string.find(v, '/wp-admin', 1, true) then
-									c = string.sub(v, 1, string.find(v, ";"))
-									break
-								end
-							end
-						else
-							c = string.sub(cookie, 1, string.find(cookie, ";"))
-						end
-							
-							
-						local options = {}
-						if not string.find(c, "WP+Cookie+check", 1, true) then
-							walker.cookie = c
-							Write(walker, connection, { Action = "Login" })
-							login = true
-						else
-							Core.Post(instance)
-							print("TcpWalker connection established")
-						end
-					end
+			if not self.Loggedin then
+				connection:ReadConnectionHttpRequest(function (uri : string, method : string, header : { any }, data : string)
+					local a : any = self
+					a:LoginCallback(instance, connection, uri, method, header, data)
 				end)
 			else
-				EchoLegend.GetConnectionInfo(connection, function (srcIP, srcPort, dstIP, dstPort)
-					walker.bindHost = srcIP
-					walker.bindPort = srcPort
-				end)
-
-				print("Login finished")
-				Read(walker, connection, instance)
+				self:Read(connection, instance)
 			end
 		end
-	end)
+	end, false)
 
-	EchoLegend.ActivateConnection(connection)
+	connection:ActivateConnection()
 	Core.StepListen()
 
-	print("Connection result")
-	return login
+	return self.Loggedin
 end
-]]
+
+function TcpWalker.New(dispatcher : WorkDispatcher, login : string, url : string, id, password)
+	local part = EchoLegend.ParseURL(url)
+	local lg = EchoLegend.ParseURL(login)
+	return setmetatable({
+		WorkDispatcher = dispatcher,
+		LoginPath = lg.Path,
+		Host = part.Host,
+		Path = part.Path,
+		Id = id,
+		Password = password,
+		OnlineUsers = {},
+		Loggedin = false
+	}, { __index = TcpWalker })
+end
 
 return TcpWalker

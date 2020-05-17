@@ -1,7 +1,7 @@
 local Json = {}
 
-function Json:Parse(str : string)
-	-- return require("MIME://application/json", str)
+function Json.Parse(str : string) : any
+	return SnowyStream.ParseJson(str)
 end
 
 local function Stringify(data) : string

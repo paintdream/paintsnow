@@ -131,10 +131,13 @@ void ZRemoteProxy::Cleanup() {
 
 		tunnel.DeactivateDispatcher(dispatcher);
 
-		if (dispThread != nullptr) {
-			DoLock();
-			threadApi.Wait(finalizeEvent, mutex);
-			UnLock();
+		if (finalizeEvent != nullptr) {
+			while (dispThread != nullptr) {
+				DoLock();
+				threadApi.Wait(finalizeEvent, mutex, 50);
+				UnLock();
+			}
+
 			threadApi.DeleteEvent(finalizeEvent);
 		}
 
@@ -180,6 +183,7 @@ bool ZRemoteProxy::ThreadProc(IThread::Thread* thread, size_t context) {
 
 	tunnel.CloseDispatcher(disp);
 
+	dispThread = nullptr;
 	if (finalizeEvent != nullptr) {
 		threadApi.Signal(finalizeEvent, true);
 	}
@@ -797,21 +801,21 @@ void ZRemoteProxy::Request::RequestQueryObject(IScript::Request& request, IScrip
 	// fetch object
 	ObjectInfo& info = base.IsNative() ? localActiveObjects[base.GetRaw()] : globalRoutines;
 	request.DoLock();
-	request << begintable;
+	request << beginarray;
 
 	for (size_t i = 0; i < info.collection.size(); i++) {
 		request << begintable;
 		const ObjectInfo::Entry& entry = info.collection[i];
 		request << IScript::Request::Key("Name") << entry.name;
-		request << IScript::Request::Key("Arguments") << begintable;
+		request << IScript::Request::Key("Arguments") << beginarray;
 		for (size_t j = 1; j < entry.params.size(); j++) {
 			request << entry.params[j].type->typeName;
 		}
-		request << endtable;
+		request << endarray;
 		request << endtable;
 	}
 
-	request << endtable;
+	request << endarray;
 	request.UnLock();
 }
 

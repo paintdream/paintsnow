@@ -120,7 +120,6 @@ bool Connection::Activate() {
 	return ret;
 }
 
-
 IScript::Request::Ref Connection::GetCallback() const {
 	return callback;
 }

@@ -55,11 +55,11 @@ void Remembery::RequestStep(IScript::Request& request, IScript::Delegate<Honey> 
 	bridgeSunset.GetKernel().YieldCurrentWarp();
 
 	request.DoLock();
-	request << begintable;
+	request << beginarray;
 	for (uint32_t i = 0; i < count; i++) {
 		if (!honey->Step()) break;
 		honey->WriteLine(request);
 	}
-	request << endtable;
+	request << endarray;
 	request.UnLock();
 }

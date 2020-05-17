@@ -29,6 +29,7 @@
 #include "Resource/Passes/WaterPass.h"
 #include "Resource/Passes/WidgetPass.h"
 #include "../../General/Misc/ZMemoryStream.h"
+#include "../../General/Driver/Filter/Json/Core/json.h"
 #include <iterator>
 
 using namespace PaintsNow;
@@ -91,6 +92,7 @@ TObject<IReflect>& SnowyStream::operator () (IReflect& reflect) {
 		ReflectMethod(RequestImportResourceConfig)[ScriptMethod = "ImportResourceConfig"];
 		ReflectMethod(RequestExportResourceConfig)[ScriptMethod = "ExportResourceConfig"];
 
+		ReflectMethod(RequestParseJson)[ScriptMethod = "ParseJson"];
 		ReflectMethod(RequestNewFile)[ScriptMethod = "NewFile"];
 		ReflectMethod(RequestDeleteFile)[ScriptMethod = "DeleteFile"];
 		ReflectMethod(RequestFlushFile)[ScriptMethod = "FlushFile"];
@@ -114,6 +116,59 @@ TObject<IReflect>& SnowyStream::operator () (IReflect& reflect) {
 	}
 
 	return *this;
+}
+
+static void WriteValue(IScript::Request& request, const Json::Value& value) {
+	using namespace Json;
+	Value::const_iterator it;
+	size_t i;
+
+	switch (value.type()) {
+	case nullValue:
+		request << nil;
+		break;
+	case intValue:
+		request << value.asInt64();
+		break;
+	case uintValue:
+		request << value.asUInt64();
+		break;
+	case realValue:
+		request << value.asDouble();
+		break;
+	case stringValue:
+		request << value.asString();
+		break;
+	case booleanValue:
+		request << value.asBool();
+		break;
+	case arrayValue:
+		request << beginarray;
+		for (i = 0; i < value.size(); i++) {
+			WriteValue(request, value[i]);
+		}
+		request << endarray;
+		break;
+	case objectValue:
+		request << begintable;
+		for (it = value.begin(); it != value.end(); ++it) {
+			request << key(it.name());
+			WriteValue(request, *it);
+		}
+		request << endtable;
+	}
+}
+
+void SnowyStream::RequestParseJson(IScript::Request& request, const String& str) {
+	using namespace Json;
+
+	Reader reader;
+	Value document;
+	reader.parse(str, document);
+
+	request.DoLock();
+	WriteValue(request, document);
+	request.UnLock();
 }
 
 void SnowyStream::RequestImportResourceConfig(IScript::Request& request, std::vector<std::pair<String, String> >& config) {
@@ -384,9 +439,9 @@ void SnowyStream::RequestQueryFiles(IScript::Request& request, const String& p) 
 	bridgeSunset.GetKernel().YieldCurrentWarp();
 
 	request.DoLock();
-	request << begintable;
+	request << beginarray;
 	archive.Query(path, Wrap(&handler, &QueryHandler::Accept));
-	request << endtable;
+	request << endarray;
 	request.UnLock();
 }
 
@@ -427,11 +482,11 @@ private:
 		if (GetExtReferCount() == 0 && callback) {
 			request.DoLock();
 			request.Push();
-			request << begintable;
+			request << beginarray;
 			for (size_t i = 0; i < resourceList.size(); i++) {
 				request << resourceList[i];
 			}
-			request << endtable;
+			request << endarray;
 			request.Call(sync, callback);
 			request.Pop();
 			request.UnLock();

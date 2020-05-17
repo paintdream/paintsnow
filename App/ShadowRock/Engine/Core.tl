@@ -449,6 +449,12 @@ local function Return(status, ...)
 	return ...
 end
 
+local anyone : any = {}
+
+function Core.Any() : any
+	return anyone
+end
+
 function Core.Instance()
 	return coroutine.running()
 end
