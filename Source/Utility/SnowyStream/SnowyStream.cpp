@@ -128,10 +128,10 @@ static void WriteValue(IScript::Request& request, const Json::Value& value) {
 		request << nil;
 		break;
 	case intValue:
-		request << value.asInt64();
+		request << (int64_t)value.asInt64();
 		break;
 	case uintValue:
-		request << value.asUInt64();
+		request << (uint64_t)value.asUInt64();
 		break;
 	case realValue:
 		request << value.asDouble();
@@ -145,7 +145,7 @@ static void WriteValue(IScript::Request& request, const Json::Value& value) {
 	case arrayValue:
 		request << beginarray;
 		for (i = 0; i < value.size(); i++) {
-			WriteValue(request, value[i]);
+			WriteValue(request, value[(Value::ArrayIndex)i]);
 		}
 		request << endarray;
 		break;
