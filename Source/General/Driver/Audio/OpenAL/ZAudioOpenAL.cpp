@@ -178,30 +178,6 @@ void ZAudioOpenAL::SetBufferStream(IAudio::Buffer* buf, IAudio::Decoder& stream,
 	BufferImpl* buffer = static_cast<BufferImpl*>(buf);
 	SwitchBufferType(buffer, online);
 	if (!online) {
-		/*
-		Block one[2];
-		Block two[2];
-		size_t length = sizeof(Block);
-		stream.Read(&one[0], length);
-		stream.Read(&one[1], length);
-		stream.Seek(IStreamBase::BEGIN, 0);
-		length = sizeof(Block) * 2;
-		stream.Read(&two[0], length);
-
-		size_t last = 0;
-		size_t count = 0;
-		for (size_t i = 0; i < sizeof(Block) * 2; i++) {
-			if (one[0][i] != two[0][i]) {
-				int a = one[0][i];
-				int b = two[0][i];
-				last = i;
-				count++;
-			}
-		}
-
-		int c = 0;
-		*/
-
 		// change buffer type
 		size_t length;
 		size_t validLength = 0;

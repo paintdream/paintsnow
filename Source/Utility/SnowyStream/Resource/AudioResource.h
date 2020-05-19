@@ -19,10 +19,16 @@ namespace PaintsNow {
 			virtual void Attach(IAudio& device, void* deviceContext);
 			virtual void Detach(IAudio& device, void* deviceContext);
 
+			virtual bool operator << (IStreamBase& stream) override;
+			virtual bool operator >> (IStreamBase& stream) const override;
+			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+
 			IAudio::Buffer* GetAudioBuffer();
 
 		protected:
 			IAudio::Buffer* audioBuffer;
+			IStreamBase* onlineStream;
+			Bytes payload;
 		};
 	}
 }

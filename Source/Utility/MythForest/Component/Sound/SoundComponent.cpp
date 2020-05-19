@@ -11,7 +11,7 @@ void SoundComponent::Initialize(Engine& engine, Entity* entity) {
 	IAudio& audio = engine.interfaces.audio;
 
 	source = audio.CreateSource();
-	audio.SetSourceBuffer(source, audioResource->GetAudioBuffer());
+	stepWrapper = audio.SetSourceBuffer(source, audioResource->GetAudioBuffer());
 }
 
 void SoundComponent::Uninitialize(Engine& engine, Entity* entity) {
