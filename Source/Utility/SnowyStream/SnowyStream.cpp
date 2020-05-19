@@ -164,11 +164,12 @@ void SnowyStream::RequestParseJson(IScript::Request& request, const String& str)
 
 	Reader reader;
 	Value document;
-	reader.parse(str, document);
-
-	request.DoLock();
-	WriteValue(request, document);
-	request.UnLock();
+	
+	if (reader.parse(str, document)) {
+		request.DoLock();
+		WriteValue(request, document);
+		request.UnLock();
+	}
 }
 
 void SnowyStream::RequestImportResourceConfig(IScript::Request& request, std::vector<std::pair<String, String> >& config) {

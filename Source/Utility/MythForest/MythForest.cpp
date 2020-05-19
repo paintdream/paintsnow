@@ -34,6 +34,7 @@ MythForest::MythForest(Interfaces& interfaces, NsSnowyStream::SnowyStream& snowy
 	envCubeComponentModule(engine),
 	eventListenerComponentModule(engine),
 	explorerComponentModule(engine),
+	cacheComponentModule(engine),
 	cameraComponentModule(engine),
 	computeComponentModule(engine),
 	fieldComponentModule(engine),
@@ -89,6 +90,7 @@ TObject<IReflect>& MythForest::operator () (IReflect& reflect) {
 	
 		ReflectProperty(animationComponentModule)[ScriptLibrary = "AnimationComponentModule"];
 		ReflectProperty(batchComponentModule)[ScriptLibrary = "BatchComponentModule"];
+		ReflectProperty(cacheComponentModule)[ScriptLibrary = "CacheComponentModule"];
 		ReflectProperty(cameraComponentModule)[ScriptLibrary = "CameraComponentModule"];
 		ReflectProperty(computeComponentModule)[ScriptLibrary = "ComputeComponentModule"];
 		ReflectProperty(envCubeComponentModule)[ScriptLibrary = "EnvCubeComponentModule"];

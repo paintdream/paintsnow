@@ -12,6 +12,7 @@
 #include "Engine.h"
 #include "Component/Animation/AnimationComponentModule.h"
 #include "Component/Batch/BatchComponentModule.h"
+#include "Component/Cache/CacheComponentModule.h"
 #include "Component/Camera/CameraComponentModule.h"
 #include "Component/Compute/ComputeComponentModule.h"
 #include "Component/EnvCube/EnvCubeComponentModule.h"
@@ -86,6 +87,7 @@ namespace PaintsNow {
 
 			AnimationComponentModule animationComponentModule;
 			BatchComponentModule batchComponentModule;
+			CacheComponentModule cacheComponentModule;
 			CameraComponentModule cameraComponentModule;
 			ComputeComponentModule computeComponentModule;
 			EnvCubeComponentModule envCubeComponentModule;
