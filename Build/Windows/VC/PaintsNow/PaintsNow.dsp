@@ -465,7 +465,15 @@ SOURCE=..\..\..\..\Source\General\Misc\ZMemoryStream.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\General\Misc\ZLocalStream.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\General\Misc\ZMemoryStream.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\General\Misc\ZLocalStream.h
 # End Source File
 # Begin Source File
 

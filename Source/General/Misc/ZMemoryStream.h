@@ -24,7 +24,7 @@ namespace PaintsNow {
 		virtual bool WriteDummy(size_t& len);
 		virtual bool Seek(SEEK_OPTION option, long offset);
 		virtual void Flush();
-		virtual size_t GetOffset() const;
+		size_t GetOffset() const;
 		size_t GetTotalLength() const;
 		size_t GetMaxLength() const;
 

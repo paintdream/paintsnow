@@ -26,6 +26,9 @@ namespace PaintsNow {
 			IAudio::Buffer* GetAudioBuffer();
 
 		protected:
+			void Cleanup();
+
+		protected:
 			IAudio::Buffer* audioBuffer;
 			IStreamBase* onlineStream;
 			Bytes payload;
