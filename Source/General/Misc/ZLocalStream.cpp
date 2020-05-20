@@ -19,6 +19,8 @@ bool ZLocalStream::operator << (IStreamBase& stream) {
 	stream >> length;
 	baseStream = static_cast<IStreamBase*>(stream.Clone());
 	assert(baseStream != nullptr);
+	stream.Seek(IStreamBase::CUR, length); // skip the stream
+
 	return true;
 }
 

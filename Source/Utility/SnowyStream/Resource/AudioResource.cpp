@@ -43,17 +43,25 @@ bool AudioResource::operator << (IStreamBase& stream) {
 
 	// ignore payload, treat as online stream!
 	IStreamBase& baseStream = stream.GetBaseStream();
-	onlineStream = static_cast<IStreamBase*>(baseStream.Clone());
-
+	localStream << baseStream;
 	return true;
 }
 
 bool AudioResource::operator >> (IStreamBase& stream) const {
-	assert(!payload.Empty());
 	if (!(BaseClass::operator >> (stream))) {
 		return false;
 	}
 
 	IStreamBase& baseStream = stream.GetBaseStream();
-	return baseStream << payload;
+	return localStream >> baseStream;
+}
+
+ZLocalStream& AudioResource::GetLocalStream() {
+	return localStream;
+}
+
+IReflectObject* AudioResource::Clone() const {
+	AudioResource* clone = new AudioResource(resourceManager, "");
+	// TODO:
+	return clone;
 }

@@ -8,6 +8,7 @@
 
 #include "../ResourceBase.h"
 #include "../../../General/Interface/IAudio.h"
+#include "../../../General/Misc/ZLocalStream.h"
 
 namespace PaintsNow {
 	namespace NsSnowyStream {
@@ -22,16 +23,17 @@ namespace PaintsNow {
 			virtual bool operator << (IStreamBase& stream) override;
 			virtual bool operator >> (IStreamBase& stream) const override;
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+			virtual IReflectObject* Clone() const override;
 
 			IAudio::Buffer* GetAudioBuffer();
+			ZLocalStream& GetLocalStream();
 
 		protected:
 			void Cleanup();
 
 		protected:
 			IAudio::Buffer* audioBuffer;
-			IStreamBase* onlineStream;
-			Bytes payload;
+			ZLocalStream localStream;
 		};
 	}
 }
