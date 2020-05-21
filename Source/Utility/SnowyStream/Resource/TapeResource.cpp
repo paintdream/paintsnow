@@ -3,32 +3,22 @@
 using namespace PaintsNow;
 using namespace PaintsNow::NsSnowyStream;
 
-TapeResource::TapeResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID) : BaseClass(manager, uniqueID), packetProvider(nullptr), packetStream(nullptr) {
+TapeResource::TapeResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID) : BaseClass(manager, uniqueID), packet(nullptr) {
 	Flag() |= RESOURCE_STREAM;
 }
 TapeResource::~TapeResource() {
+	Close();
 }
 
 void TapeResource::Close() {
-	if (packetProvider != nullptr) {
-		delete packetProvider;
-		packetProvider = nullptr;
-	}
-
-	if (packetStream != nullptr) {
-		packetStream->ReleaseObject();
-		packetStream = nullptr;
+	if (packet != nullptr) {
+		delete packet;
+		packet = nullptr;
 	}
 }
 
 void TapeResource::Download(IArchive& archive, void* deviceContext) {
-	Close();
-
-	size_t length;
-	packetStream = archive.Open(streamPath, true, length, nullptr);
-	if (packetStream != nullptr) {
-		packetProvider = new ZPacket(*packetStream);
-	}
+	// no operations ...
 }
 
 void TapeResource::Upload(IArchive& archive, void* deviceContext) {
@@ -43,5 +33,33 @@ void TapeResource::Detach(IArchive& archive, void* deviceContext) {
 }
 
 ZPacket* TapeResource::GetPacket() {
-	return packetProvider;
+	return packet;
+}
+
+
+bool TapeResource::operator << (IStreamBase& stream) {
+	if (!(BaseClass::operator << (stream))) {
+		return false;
+	}
+
+	// ignore payload, treat as online stream!
+	IStreamBase& baseStream = stream.GetBaseStream();
+	localStream << baseStream;
+	return true;
+}
+
+bool TapeResource::operator >> (IStreamBase& stream) const {
+	if (!(BaseClass::operator >> (stream))) {
+		return false;
+	}
+
+	IStreamBase& baseStream = stream.GetBaseStream();
+	return localStream >> baseStream;
+}
+
+
+IReflectObject* TapeResource::Clone() const {
+	TapeResource* clone = new TapeResource(resourceManager, "");
+	// TODO:
+	return clone;
 }

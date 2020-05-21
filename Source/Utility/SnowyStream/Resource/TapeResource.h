@@ -9,6 +9,7 @@
 #include "../ResourceBase.h"
 #include "../../../Core/Interface/IArchive.h"
 #include "../../../General/Misc/ZPacket.h"
+#include "../../../General/Misc/ZLocalStream.h"
 
 namespace PaintsNow {
 	namespace NsSnowyStream {
@@ -23,12 +24,14 @@ namespace PaintsNow {
 			virtual void Detach(IArchive& device, void* deviceContext);
 
 			ZPacket* GetPacket();
+			virtual bool operator << (IStreamBase& stream) override;
+			virtual bool operator >> (IStreamBase& stream) const override;
+			virtual IReflectObject* Clone() const override;
 
 		protected:
 			void Close();
-			ZPacket* packetProvider;
-			IStreamBase* packetStream;
-			String streamPath;
+			ZPacket* packet;
+			ZLocalStream localStream;
 		};
 	}
 }
