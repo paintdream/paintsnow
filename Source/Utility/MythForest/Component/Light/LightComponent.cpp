@@ -255,7 +255,7 @@ void LightComponent::InstanceGroup::Reset() {
 	}
 }
 
-void LightComponent::TaskData::RenderFrame(Engine& engine) {
+void ShadowLayerConfig::TaskData::RenderFrame(Engine& engine) {
 	// engine.mythForest.StartCaptureFrame("lightdebug", "");
 	std::vector<IRender::Queue*> renderQueues;
 	renderQueues.emplace_back(renderQueue);
@@ -411,9 +411,9 @@ void LightComponent::ShadowLayer::CollectComponents(Engine& engine, TaskData& ta
 	}
 }
 
-LightComponent::TaskData::WarpData::WarpData() : renderQueue(nullptr) {}
+ShadowLayerConfig::TaskData::WarpData::WarpData() : renderQueue(nullptr) {}
 
-LightComponent::TaskData::TaskData(Engine& engine, uint32_t warpCount, const UShort2& resolution) : pendingCount(0) {
+ShadowLayerConfig::TaskData::TaskData(Engine& engine, uint32_t warpCount, const UShort2& resolution) : pendingCount(0) {
 	warpData.resize(warpCount);
 	IRender& render = engine.interfaces.render;
 	IRender::Device* device = engine.snowyStream.GetRenderDevice();
@@ -453,7 +453,7 @@ LightComponent::TaskData::TaskData(Engine& engine, uint32_t warpCount, const USh
 	renderTargetResource = render.CreateResource(renderQueue, IRender::Resource::RESOURCE_RENDERTARGET);
 }
 
-void LightComponent::TaskData::Destroy(IRender& render) {
+void ShadowLayerConfig::TaskData::Destroy(IRender& render) {
 	for (size_t i = 0; i < warpData.size(); i++) {
 		render.DeleteQueue(warpData[i].renderQueue);
 	}
@@ -464,12 +464,12 @@ void LightComponent::TaskData::Destroy(IRender& render) {
 	render.DeleteQueue(renderQueue);
 }
 
-void LightComponent::TaskData::Cleanup(IRender& render) {
+void ShadowLayerConfig::TaskData::Cleanup(IRender& render) {
 	rootEntity = nullptr;
 	shadowGrid = nullptr;
 }
 
-TObject<IReflect>& LightComponent::TaskData::operator () (IReflect& reflect) {
+TObject<IReflect>& ShadowLayerConfig::TaskData::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectProperty()) {
