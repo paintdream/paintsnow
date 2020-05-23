@@ -32,13 +32,15 @@ local function SetFrameMonitorOnTitle(deltaTime : number, cameraComponent : Came
 		local fps = string.format("%3.2f", math.min(1000 * #fpsBuffer / sumFrame, 999.99))
 		local tps = string.format("%3.2f", math.min(1000 * #tickBuffer / sumTick, 999.99))
 		local eye = string.format("%3.2f, %3.2f, %3.2f", position[1], position[2], position[3])
-		local render = tostring(cameraComponent:GetCollectedVisibleEntityCount()) .. "/" .. tostring(cameraComponent:GetCollectedEntityCount()) .. "/" .. tostring(spaceComponent:GetEntityCount()) .. ")"
+		local render = tostring(cameraComponent:GetCollectedVisibleEntityCount()) .. "/" .. tostring(cameraComponent:GetCollectedEntityCount()) .. "/" .. tostring(spaceComponent:GetEntityCount())
+		local triangle = tostring(cameraComponent:GetCollectedTriangleCount())
 
 		System.SetAppTitle("ShadowRock DEMO"
 			.. " | FPS: " .. fps
 			.. " | TPS: " .. tps
 			.. " | Eye: " .. eye
-			.. " | Render " .. render)
+			.. " | Render " .. render
+			.. " | Triangles " .. triangle)
 	end
 end
 
@@ -88,8 +90,8 @@ local function InitializeWorld(databasePath : string)
 	cameraController:UpdatePerspective()
 	
 	local phaseComponent = cameraController.phaseComponent
-	phaseComponent:BindRootEntity(scene.rootEntity)
-	phaseComponent:Update({ 5, 1.5, 5})
+	-- phaseComponent:BindRootEntity(scene.rootEntity)
+	-- phaseComponent:Update({ 5, 1.5, 5})
 
 	local lastMousePos = { 0, 0 }
 	local moveSpeed = 1.0

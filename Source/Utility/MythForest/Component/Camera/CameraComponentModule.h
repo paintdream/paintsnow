@@ -23,6 +23,7 @@ namespace PaintsNow {
 			void RequestNew(IScript::Request& request, IScript::Delegate<RenderFlowComponent> renderFlowComponent, const String& cameraViewPortName);
 			void RequestGetCollectedEntityCount(IScript::Request& request, IScript::Delegate<CameraComponent> camera);
 			void RequestGetCollectedVisibleEntityCount(IScript::Request& request, IScript::Delegate<CameraComponent> camera);
+			void RequestGetCollectedTriangleCount(IScript::Request& request, IScript::Delegate<CameraComponent> camera);
 			void RequestBindRootEntity(IScript::Request& request, IScript::Delegate<CameraComponent> camera, IScript::Delegate<Entity> entity);
 			void RequestComputeCastRayFromPoint(IScript::Request& request, IScript::Delegate<CameraComponent> camera, Float2& screenPosition);
 			void RequestSetPerspective(IScript::Request& request, IScript::Delegate<CameraComponent> camera, float d, float n, float f, float r);

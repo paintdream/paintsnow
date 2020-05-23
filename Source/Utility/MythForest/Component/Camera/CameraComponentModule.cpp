@@ -24,6 +24,7 @@ TObject<IReflect>& CameraComponentModule::operator () (IReflect& reflect) {
 		ReflectMethod(RequestGetVisibleDistance)[ScriptMethod = "GetVisibleDistance"];
 		ReflectMethod(RequestGetCollectedEntityCount)[ScriptMethod = "GetCollectedEntityCount"];
 		ReflectMethod(RequestGetCollectedVisibleEntityCount)[ScriptMethod = "GetCollectedVisibleEntityCount"];
+		ReflectMethod(RequestGetCollectedTriangleCount)[ScriptMethod = "GetCollectedTriangleCount"];
 		ReflectMethod(RequestSetProjectionJitter)[ScriptMethod = "SetProjectionJitter"];
 		ReflectMethod(RequestSetSmoothTrack)[ScriptMethod = "SetSmoothTrack"];
 	}
@@ -55,6 +56,18 @@ void CameraComponentModule::RequestGetCollectedEntityCount(IScript::Request& req
 
 	request.DoLock();
 	request << camera->GetCollectedEntityCount();
+	request.UnLock();
+}
+
+void CameraComponentModule::RequestGetCollectedTriangleCount(IScript::Request& request, IScript::Delegate<CameraComponent> camera) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(camera);
+	CHECK_THREAD_IN_MODULE(camera);
+
+	engine.GetKernel().YieldCurrentWarp();
+
+	request.DoLock();
+	request << camera->GetCollectedTriangleCount();
 	request.UnLock();
 }
 

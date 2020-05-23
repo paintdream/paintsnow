@@ -125,6 +125,7 @@ namespace PaintsNow {
 					std::vector<NsSnowyStream::IDrawCallProvider::DataUpdater*> dataUpdaters;
 					uint32_t entityCount;
 					uint32_t visibleEntityCount;
+					uint64_t triangleCount;
 				};
 
 				std::vector<WarpData> warpData;
@@ -159,6 +160,7 @@ namespace PaintsNow {
 			void BindRootEntity(Engine& engine, Entity* entity);
 			uint32_t GetCollectedEntityCount() const;
 			uint32_t GetCollectedVisibleEntityCount() const;
+			uint32_t GetCollectedTriangleCount() const;
 			RenderFlowComponent* GetRenderFlowComponent() const;
 
 			// collected cache
@@ -193,6 +195,7 @@ namespace PaintsNow {
 			Entity* rootEntity;
 			uint32_t collectedEntityCount;
 			uint32_t collectedVisibleEntityCount;
+			uint32_t collectedTriangleCount;
 			uint32_t jitterIndex;
 
 			// applied if CAMERACOMPONENT_SMOOTH_TRACK enabled

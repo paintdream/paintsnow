@@ -33,7 +33,7 @@ enum {
 	STENCIL_LIGHTING = 0x80
 };
 
-CameraComponent::TaskData::WarpData::WarpData() : entityCount(0), visibleEntityCount(0) {}
+CameraComponent::TaskData::WarpData::WarpData() : entityCount(0), visibleEntityCount(0), triangleCount(0) {}
 
 CameraComponent::CameraComponent(TShared<RenderFlowComponent> prenderFlowComponent, const String& name)
 : collectedEntityCount(0), collectedVisibleEntityCount(0), viewDistance(256), rootEntity(nullptr), jitterIndex(0), renderFlowComponent(prenderFlowComponent), cameraViewPortName(name) {
@@ -139,12 +139,14 @@ void CameraComponent::Instancing(Engine& engine, TaskData& taskData) {
 	IRender& render = engine.interfaces.render;
 	uint32_t entityCount = 0;
 	uint32_t visibleEntityCount = 0;
+	uint32_t triangleCount = 0;
 
 	for (size_t j = 0; j < taskData.warpData.size(); j++) {
 		TaskData::WarpData& warpData = taskData.warpData[j];
 		TaskData::WarpData::InstanceGroupMap& instanceGroup = warpData.instanceGroups;
 		entityCount += warpData.entityCount;
 		visibleEntityCount += warpData.visibleEntityCount;
+		triangleCount += warpData.triangleCount;
 
 		for (TaskData::WarpData::InstanceGroupMap::iterator it = instanceGroup.begin(); it != instanceGroup.end(); ++it) {
 			InstanceGroup& group = (*it).second;
@@ -194,6 +196,7 @@ void CameraComponent::Instancing(Engine& engine, TaskData& taskData) {
 
 	collectedEntityCount = entityCount;
 	collectedVisibleEntityCount = visibleEntityCount;
+	collectedTriangleCount = triangleCount;
 }
 
 MatrixFloat4x4 CameraComponent::ComputeSmoothTrackTransform() const {
@@ -485,6 +488,8 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 	for (size_t k = 0; k < drawCalls.size(); k++) {
 		// ZPassBase& Pass = provider->GetPass(k);
 		NsSnowyStream::IDrawCallProvider::OutputRenderData& drawCall = drawCalls[k];
+		warpData.triangleCount += drawCall.drawCallDescription.indexBufferResource.length / sizeof(Int3);
+
 		const IRender::Resource::DrawCallDescription& drawCallTemplate = drawCall.drawCallDescription;
 		AnimationComponent* animationComponent = instanceData.animationComponent();
 
@@ -598,7 +603,6 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 			}
 		}
 
-
 		group.instanceCount++;
 	}
 }
@@ -649,6 +653,11 @@ uint32_t CameraComponent::GetCollectedEntityCount() const {
 uint32_t CameraComponent::GetCollectedVisibleEntityCount() const {
 	return collectedVisibleEntityCount;
 }
+
+uint32_t CameraComponent::GetCollectedTriangleCount() const {
+	return collectedTriangleCount;
+}
+
 
 void CameraComponent::CollectComponents(Engine& engine, TaskData& taskData, const WorldInstanceData& instanceData, const CaptureData& captureData, Entity* entity) {
 	Tiny::FLAG rootFlag = entity->Flag().load(std::memory_order_acquire);
@@ -804,6 +813,7 @@ void CameraComponent::TaskData::Cleanup(IRender& render) {
 		data.lightElements.clear();
 		data.entityCount = 0;
 		data.visibleEntityCount = 0;
+		data.triangleCount = 0;
 	}
 }
 
@@ -837,6 +847,7 @@ TObject<IReflect>& CameraComponent::operator () (IReflect& reflect) {
 
 		ReflectProperty(collectedEntityCount);
 		ReflectProperty(collectedVisibleEntityCount);
+		ReflectProperty(collectedTriangleCount);
 		ReflectProperty(jitterIndex)[Runtime];
 
 		ReflectProperty(nearPlane);
