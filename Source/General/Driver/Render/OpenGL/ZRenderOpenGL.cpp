@@ -769,7 +769,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> : public Resour
 		glTexParameteri(textureType, GL_TEXTURE_MAG_FILTER, d.state.sample == Resource::TextureDescription::POINT ? GL_NEAREST : GL_LINEAR);
 			
 		// free memory
-		// d.data.Clear();
+		d.data.Clear();
 	}
 
 	virtual void Download(QueueImplOpenGL& queue) override {

@@ -31,7 +31,7 @@ String StandardLightingFS::GetShaderText() {
 	float2 AB = float2(-1.04, 1.04) * a + r.zw;
 	env = env * AB.x + AB.y;
 	mainColor = float4(0, 0, 0, 1);
-	mainColor.xyz += diff.xyz * float3(1.0, 1.0, 1.0);
+	// mainColor.xyz += diff.xyz * float3(1.0, 1.0, 1.0); // ambient
 	mainColor.xyz += env * spec;
 
 	float4 idx = texture(lightTexture, rasterCoord.xy);

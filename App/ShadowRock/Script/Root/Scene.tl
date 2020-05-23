@@ -129,7 +129,7 @@ function Scene.New(database : Database?, clock : Clock)
 		sunTransformComponent:UpdateTransform()
 		sun:AddEntityComponent(sunTransformComponent)
 		local lightComponent : LightComponent = LightComponentModule.New()
-		lightComponent:SetLightColor({5, 5, 5})
+		lightComponent:SetLightColor({2, 2, 2})
 		lightComponent:SetLightRange({1000, 1000, 1000})
 		lightComponent:SetLightAttenuation(0.1)
 		lightComponent:SetLightDirectional(true)
@@ -142,7 +142,6 @@ function Scene.New(database : Database?, clock : Clock)
 		sun:AddEntityComponent(lightComponent)
 		spaceComponent:InsertEntity(sun)
 
-		--[[
 		print("\tAdding point lights")
 		math.randomseed(20)
 		local colors : { integer : any } = {
@@ -150,13 +149,13 @@ function Scene.New(database : Database?, clock : Clock)
 		}
 		for k = 1, 8 do 
 			local c = colors[k]
-			local r = math.random(20,40)
+			local r = math.random(20, 40)
 			for j = 1, 3 do
 				c[j] = c[j] * r
 			end
 		end
 
-		for i = 1, 64 do 
+		for i = 1, 32 do 
 			local light = MythForest.NewEntity(-(((1))))
 			local lightTransformComponent = TransformComponentModule.New()
 			lightTransformComponent:SetRotation({0.25 * math.pi, 0.75 * math.pi, 0})
@@ -172,7 +171,6 @@ function Scene.New(database : Database?, clock : Clock)
 			light:AddEntityComponent(lightComponent)
 			spaceComponent:InsertEntity(light)
 		end
-		]]
 	end
 
 	local RuntimeVisibilityProbe = require("Script/Prefabs/Components/Visibility/RuntimeVisibilityProbe")
