@@ -6,13 +6,13 @@
 #ifndef __TEXTVIEWCOMPONENT_H__
 #define __TEXTVIEWCOMPONENT_H__
 
-#include "../../Component.h"
+#include "../../Component/Renderable/RenderableComponent.h"
 #include "../../../SnowyStream/SnowyStream.h"
 #include "../../../SnowyStream/Resource/FontResource.h"
 
 namespace PaintsNow {
 	namespace NsMythForest {
-		class TextViewComponent : public TAllocatedTiny<TextViewComponent, Component> {
+		class TextViewComponent : public TAllocatedTiny<TextViewComponent, RenderableComponent> {
 		public:
 			enum {
 				TEXTVIEWCOMPONENT_SELECT_REV_COLOR = COMPONENT_CUSTOM_BEGIN,
@@ -20,6 +20,7 @@ namespace PaintsNow {
 			};
 			TextViewComponent();
 			virtual ~TextViewComponent();
+			virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) override;
 		
 			struct Descriptor {
 				Descriptor(int h, int fs);
@@ -87,12 +88,13 @@ namespace PaintsNow {
 		public:
 			TShared<NsSnowyStream::FontResource> mainFont;
 			String text;
+
 			Int2 size;
 			Int2 scroll;
 			Int2 fullSize;
-			int passwordChar;
-			int cursorChar;
-			int cursorPos;
+			int32_t passwordChar;
+			int32_t cursorChar;
+			int32_t cursorPos;
 			uint32_t fontSize;
 			Float4 cursorColor;
 			Int2 selectRange;

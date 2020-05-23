@@ -181,6 +181,11 @@ static int Utf8ToUnicode(const unsigned char* s, int size) {
 TextViewComponent::Descriptor::Descriptor(int h, int s) : totalWidth(0), firstOffset(h) {}
 TextViewComponent::Descriptor::Char::Char(int c, int off) : xCoord(c), offset(off) {}
 
+uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) {
+	// TODO: migrate the following code here.
+	return 0;
+}
+
 /*
 void TextViewComponent::FireRender(IRender& render, WidgetPass& Pass, const Int2Pair& rect, const Int2& totalSize, const Int2& padding) {
 	std::vector<Descriptor> info;
