@@ -4,31 +4,7 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
-TextViewComponent::TextCursorOption::TextCursorOption() : reverseColor(false) {}
-TextViewComponent::TextRangeOption::TextRangeOption() : reverseColor(false) {}
-
-TObject<IReflect>& TextViewComponent::TextCursorOption::operator () (IReflect& reflect) {
-	BaseClass::operator () (reflect);
-	if (reflect.IsReflectProperty()) {
-		ReflectProperty(reverseColor)[ScriptVariable = "ReverseColor"];
-		ReflectProperty(color)[ScriptVariable = "Color"];
-		ReflectProperty(ch)[ScriptVariable = "Char"];
-	}
-
-	return *this;
-}
-
-TObject<IReflect>& TextViewComponent::TextRangeOption::operator () (IReflect& reflect) {
-	BaseClass::operator () (reflect);
-	if (reflect.IsReflectProperty()) {
-		ReflectProperty(reverseColor)[ScriptVariable = "ReverseColor"];
-		ReflectProperty(color)[ScriptVariable = "Color"];
-	}
-
-	return *this;
-}
-
-static int GetUtf8Size(char c) {
+static inline int GetUtf8Size(char c) {
 	int t = 1 << 7;
 	int r = c;
 	int count = 0;
@@ -36,230 +12,125 @@ static int GetUtf8Size(char c) {
 		r = r << 1;
 		count++;
 	}
+
 	return count == 0 ? 1 : count;
 }
 
-class TextViewComponent::TagParser {
-public:
-	enum TYPE { TEXT = 0, RETURN, COLOR, ALIGN };
-	struct Node {
-		Node(TYPE t, size_t off) : type(t), offset(off) {}
-		virtual ~Node() {}
-		virtual bool IsClose() const { return false; }
-		TYPE type;
-		size_t offset;
-		virtual void Print() const = 0;
-	};
+void TextViewComponent::TagParser::Parse(const char* start, const char* end) {
+	Clear();
 
-	struct NodeText : public Node {
-	public:
-		NodeText(size_t offset, const char* s, size_t len) : Node(TEXT, offset), length((int)len) {
-			text = new char[len + 1];
-			bool slash = false;
-			char* p = text;
-			for (size_t i = 0; i < len; i++) {
-				// if (!(slash = (!slash && s[i] == '\\'))) {
-				*p++ = s[i];
-				// }
-			}
-			*p = '\0';
-			length = (int)(p - text);
+	bool less = false;
+	const char* q = nullptr;
+	const char* p = nullptr;
+	bool slash = false;
+	for (p = start, q = start; p != end; ++p) {
+		int i = GetUtf8Size(*p);
+		if (i != 1) {
+			p += i - 1;
+			continue;
 		}
 
-		virtual ~NodeText() {
-			delete[] text;
-		}
-
-		virtual void Print() const {
-			printf("NodeText: %s\n", text);
-		}
-
-		char* text;
-		int length;
-	};
-
-	struct NodeReturn : public Node {
-		NodeReturn(size_t offset) : Node(RETURN, offset) {}
-		virtual void Print() const {
-			printf("NodeReturn\n");
-		}
-	};
-
-	struct NodeAlign : public Node {
-		enum ALIGN_TYPE { LEFT, RIGHT, CENTER };
-		NodeAlign(size_t offset, ALIGN_TYPE type) : Node(ALIGN, offset), align(type) {}
-		virtual void Print() const {
-			printf("ALIGN TYPE: %d\n", align);
-		}
-
-		ALIGN_TYPE align;
-	};
-
-	struct NodeColor : public Node {
-		NodeColor(size_t offset, int v, bool c = false) : Node(COLOR, offset), value(v), close(c) {}
-
-		virtual void Print() const {
-			printf("NodeColor: %d\n", value);
-		}
-
-		virtual bool IsClose() const {
-			return close;
-		}
-
-		int value;
-		bool close;
-	};
-
-	void Parse(const char* str, bool append = false) {
-		if (!append)
-			Clear();
-
-		bool less = false;
-
-		const char* q = nullptr;
-		const char* p = nullptr;
-		bool slash = false;
-		for (p = str, q = str; *p != '\0'; ++p) {
-			int i = GetUtf8Size(*p);
-			if (i != 1) {
-				p += i - 1;
-				continue;
+		if (*p == '\\') {
+			slash = true;
+		} else {
+			uint32_t offset = safe_cast<uint32_t>(q - start);
+			if (*p == '<' && !slash) {
+				PushText(offset, q, p);
+				less = true;
+				q = p + 1;
+			} else if (*p == '>' && less && !slash) {
+				assert(q != nullptr);
+				PushFormat(offset, q, p);
+				less = false;
+				q = p + 1;
+			} else if (*p == '\n' && !less) {
+				PushText(offset, q, p);
+				PushReturn(offset);
+				q = p + 1;
 			}
 
-			if (*p == '\\') {
-				slash = true;
-			} else {
-				if (*p == '<' && !slash) {
-					PushText(q - str, q, p);
-					less = true;
-					q = p + 1;
-				} else if (*p == '>' && less && !slash) {
-					assert(q != nullptr);
-					PushFormat(q - str, q, p);
-					less = false;
-					q = p + 1;
-				} else if (*p == '\n' && !less) {
-					PushText(q - str, q, p);
-					PushReturn(q - str);
-					q = p + 1;
-				}
+			slash = false;
+		}
+	}
 
-				slash = false;
+	PushText(q - start, q, p);
+}
+
+void TextViewComponent::TagParser::PushReturn(size_t offset) {
+	nodes.emplace_back(Node(Node::RETURN, offset));
+}
+
+bool TextViewComponent::TagParser::ParseAttrib(const char*& valueString, bool& isClose, const char* start, const char* end, const char* attrib) {
+	assert(attrib != nullptr);
+	bool ret = false;
+	valueString = nullptr;
+	isClose = false;
+	const uint32_t len = safe_cast<uint32_t>(strlen(attrib));
+	const char* format = start;
+
+	if ((size_t)(end - start) >= len && memcmp(format, attrib, len) == 0) {
+		// find "="
+		const char* t;
+		for (t = format + len; *t != '\0'; ++t) {
+			if (*t == '=')
+				break;
+		}
+
+		while (*t != '\0' && !isalnum(*t)) t++;
+
+		if (*t != '\0')
+			valueString = start + (t - format);
+
+		ret = true;
+	} else if (format[0] == '/' && (size_t)(end - start) >= len + 1 && memcmp(format + 1, attrib, len) == 0) {
+		isClose = true;
+		ret = true;
+	}
+
+	return ret;
+}
+
+void TextViewComponent::TagParser::PushFormat(size_t offset, const char* start, const char* end) {
+	const char* valueString;
+	bool isClose;
+
+	if (ParseAttrib(valueString, isClose, start, end, "color")) {
+		if (isClose) {
+			nodes.emplace_back(Node(Node::COLOR_CLOSED, offset));
+		} else {
+			if (valueString != nullptr) {
+				nodes.emplace_back(Node(Node::COLOR, valueString - start + offset));
 			}
 		}
-
-		PushText(q - str, q, p);
-	}
-
-	void Push(Node* node) {
-		nodes.emplace_back(node);
-	}
-
-	void PushReturn(size_t offset) {
-		NodeReturn* ret = new NodeReturn(offset);
-		Push(ret);
-	}
-
-	bool ParseAttrib(const char*& valueString, bool& isClose, const char* start, const char* end, const char* attrib) {
-		assert(attrib != nullptr);
-		bool ret = false;
-		valueString = nullptr;
-		isClose = false;
-		const size_t len = strlen(attrib);
-		char* format = new char[end - start + 1];
-		memcpy(format, start, sizeof(char)* (end - start));
-		format[end - start] = '\0';
-
-		if (strncmp(format, attrib, len) == 0) {
-			// find "="
-			const char* t;
-			for (t = format + len; *t != '\0'; ++t) {
-				if (*t == '=')
-					break;
-			}
-
-			while (*t != '\0' && !isalnum(*t)) t++;
-
-			if (*t != '\0')
-				valueString = start + (t - format);
-			ret = true;
-		} else if (format[0] == '/' && strncmp(format + 1, attrib, len) == 0) {
-			isClose = true;
-			ret = true;
+	} else if (ParseAttrib(valueString, isClose, start, end, "align")) {
+		Node::TYPE t = Node::ALIGN_LEFT;
+		static const char* right = "right";
+		static const char* center = "center";
+		if ((size_t)(end - valueString) >= strlen(right) && memcmp(valueString, right, strlen(right)) == 0) {
+			t = Node::ALIGN_RIGHT;
+		} else if ((size_t)(end - valueString) >= strlen(center) && memcmp(valueString, center, strlen(center)) == 0) {
+			t = Node::ALIGN_CENTER;
 		}
 
-		delete[] format;
-
-		return ret;
+		nodes.emplace_back(Node(t, valueString - start + offset));
 	}
+}
 
-	void PushFormat(size_t offset, const char* start, const char* end) {
-		const char* valueString;
-		bool isClose;
-		if (ParseAttrib(valueString, isClose, start, end, "color")) {
-			if (isClose) {
-				NodeColor* p = new NodeColor(offset, 0, true);
-				Push(p);
-			} else {
-				if (valueString != nullptr) {
-					int value;
-					sscanf(valueString, "%x", &value);
-					NodeColor* p = new NodeColor(offset, value);
-					Push(p);
-				}
-			}
-		} else if (ParseAttrib(valueString, isClose, start, end, "align")) {
-			NodeAlign::ALIGN_TYPE t = NodeAlign::LEFT;
-			static const char* right = "right";
-			static const char* center = "center";
-			if (memcmp(valueString, right, strlen(right)) == 0) {
-				t = NodeAlign::RIGHT;
-			} else if (memcmp(valueString, center, strlen(center)) == 0) {
-				t = NodeAlign::CENTER;
-			}
-
-			NodeAlign* p = new NodeAlign(offset, t);
-			Push(p);
-		}
+void TextViewComponent::TagParser::PushText(size_t offset, const char* start, const char* end) {
+	if (start != end) {
+		nodes.emplace_back(Node(Node::TEXT, offset, end - start));
 	}
+}
 
-	void PushText(size_t offset, const char* start, const char* end) {
-		if (start != end) {
-			NodeText* text = new NodeText(offset, start, end - start);
-			Push(text);
-		}
-	}
+void TextViewComponent::TagParser::Clear() {
+	nodes.clear();
+}
 
-	void Clear() {
-		for (std::list<Node*>::iterator it = nodes.begin(); it != nodes.end(); ++it) {
-			delete *it;
-		}
-
-		nodes.clear();
-	}
-
-	~TagParser() {
-		Clear();
-	}
-
-	void Print() {
-		for (std::list<Node*>::iterator it = nodes.begin(); it != nodes.end(); ++it) {
-			(*it)->Print();
-		}
-	}
-
-	std::list<Node*> nodes;
-};
-
-
-TextViewComponent::TextViewComponent() : textLength(0), passwordChar(0), cursorChar(0), cursorPos(0), fontSize(12) {
-	parser = new TagParser();
+TextViewComponent::TextViewComponent() : passwordChar(0), cursorChar(0), cursorPos(0), fontSize(12) {
 	Flag() |= (TEXTVIEWCOMPONENT_CURSOR_REV_COLOR | TEXTVIEWCOMPONENT_SELECT_REV_COLOR);
 }
 
-TextViewComponent::~TextViewComponent() {
-	delete parser;
-}
+TextViewComponent::~TextViewComponent() {}
 
 const Int2& TextViewComponent::GetFullSize() const {
 	return fullSize;
@@ -271,18 +142,12 @@ void TextViewComponent::Scroll(const Int2& pt) {
 
 void TextViewComponent::TextChange() {
 	widthInfo = std::vector<Descriptor>();
-	/*
-	if (mainFont) {
-		widthInfo = std::vector<Descriptor>();
-	//	fullSize = PerformRender(Int2Pair(Int2(0, 0), size), widthInfo, Int2(1, 1), nullptr);
-	}*/
 }
 
 void TextViewComponent::SetText(const String& t) {
-	// String withspace = text + " ";
 	text = t;
-	parser->Parse(text.c_str());
-	textLength = text.length();
+	parser.Parse(text.data(), text.data() + text.size());
+
 	TextChange();
 }
 
@@ -520,13 +385,6 @@ int TextViewComponent::GetLineCount() const {
 	return (int)widthInfo.size();
 }
 
-void TextViewComponent::AppendText(const String& text) {
-	if (parser != nullptr) {
-		parser->Parse(text.c_str(), true);
-		TextChange();
-	}
-}
-
 void TextViewComponent::SetPasswordChar(int ch) {
 	passwordChar = ch;
 }
@@ -565,7 +423,7 @@ struct LocatePos {
 	}
 };
 
-int TextViewComponent::Locate(Int2& rowCol, const Int2& pt, bool isPtRowCol) const {
+int32_t TextViewComponent::Locate(Int2& rowCol, const Int2& pt, bool isPtRowCol) const {
 	if (widthInfo.empty()) {
 		rowCol = Int2(0, 0);
 		return 0;
@@ -577,7 +435,7 @@ int TextViewComponent::Locate(Int2& rowCol, const Int2& pt, bool isPtRowCol) con
 
 		rowCol.y() = Max(0, Min((int)desc.allOffsets.size(), pt.y()));
 		if (rowCol.y() == (int)desc.allOffsets.size()) {
-			return (int)textLength;
+			return safe_cast<uint32_t>(text.size());
 		} else {
 			return desc.allOffsets[rowCol.y()].offset;
 		}
@@ -597,7 +455,7 @@ int TextViewComponent::Locate(Int2& rowCol, const Int2& pt, bool isPtRowCol) con
 			if (q != widthInfo.end() && !(*q).allOffsets.empty()) {
 				return q->firstOffset;
 			} else {
-				return (int)textLength;
+				return safe_cast<uint32_t>(text.size());
 			}
 		} else {
 			return t->offset;
@@ -606,7 +464,7 @@ int TextViewComponent::Locate(Int2& rowCol, const Int2& pt, bool isPtRowCol) con
 }
 
 bool TextViewComponent::IsEmpty() const {
-	return parser->nodes.empty();
+	return text.empty();
 }
 
 void TextViewComponent::SetUpdateMark() {

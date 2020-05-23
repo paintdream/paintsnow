@@ -24,8 +24,6 @@ namespace PaintsNow {
 			void RequestGetText(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent);
 			void RequestSetText(IScript::Request& request, IScript::Delegate<TextViewComponent> window, const String& text);
 			void RequestLocateText(IScript::Request& request, IScript::Delegate<TextViewComponent> window, Int2& offset, bool isRowCol);
-			void RequestSetTextRangeOption(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent, Int2& range, TextViewComponent::TextRangeOption& rangeOption);
-			void RequestSetTextCursorOption(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent, int pos, TextViewComponent::TextCursorOption& cursorOption);
 		};
 	}
 }

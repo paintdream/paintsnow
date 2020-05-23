@@ -20,24 +20,6 @@ namespace PaintsNow {
 			};
 			TextViewComponent();
 			virtual ~TextViewComponent();
-
-			class TextRangeOption : public TReflected<TextRangeOption, IReflectObjectComplex> {
-			public:
-				TextRangeOption();
-				Float4 color;
-				bool reverseColor;
-				virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-			};
-
-			class TextCursorOption : public TReflected<TextCursorOption, IReflectObjectComplex> {
-			public:
-				TextCursorOption();
-				Float4 color;
-				String ch;
-				bool reverseColor;
-
-				virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-			};
 		
 			struct Descriptor {
 				Descriptor(int h, int fs);
@@ -54,7 +36,7 @@ namespace PaintsNow {
 				std::vector<Char> allOffsets;
 			};
 
-			int Locate(Int2& rowCol, const Int2& pt, bool isPtRowCol) const;
+			int32_t Locate(Int2& rowCol, const Int2& pt, bool isPtRowCol) const;
 			void SetText(const String& text);
 			void Scroll(const Int2& pt);
 			void SetUpdateMark();
@@ -62,7 +44,6 @@ namespace PaintsNow {
 		protected:
 			int GetLineCount() const;
 			void SetPasswordChar(int ch);
-			virtual void AppendText(const String& text);
 			void SetSize(const Int2& size);
 			bool IsEmpty() const;
 			const Int2& GetSize() const;
@@ -72,8 +53,35 @@ namespace PaintsNow {
 			void TextChange();
 			Int2 Fix(int offset) const;
 
-			class TagParser;
-			TagParser* parser;
+			class TagParser {
+			public:
+				struct Node {
+					enum TYPE { TEXT = 0, RETURN, COLOR, COLOR_CLOSED, ALIGN_LEFT, ALIGN_RIGHT, ALIGN_CENTER };
+
+					Node(TYPE t, uint32_t off, uint32_t len = 0) : type(t), offset(off), length(0) {}
+					virtual ~Node() {}
+
+					TYPE type;
+					uint32_t offset;
+					uint32_t length;
+				};
+
+				~TagParser() {
+					Clear();
+				}
+
+				void Parse(const char* start, const char* end);
+				void PushReturn(uint32_t offset);
+				bool ParseAttrib(const char*& valueString, bool& isClose, const char* start, const char* end, const char* attrib);
+				void PushFormat(uint32_t offset, const char* start, const char* end);
+				void PushText(uint32_t offset, const char* start, const char* end);
+				void Clear();
+
+			private:
+				std::vector<Node> nodes;
+			};
+
+			TagParser parser;
 			std::vector<Descriptor> widthInfo;
 
 		public:
@@ -82,7 +90,6 @@ namespace PaintsNow {
 			Int2 size;
 			Int2 scroll;
 			Int2 fullSize;
-			size_t textLength;
 			int passwordChar;
 			int cursorChar;
 			int cursorPos;

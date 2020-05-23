@@ -8,7 +8,6 @@ using namespace PaintsNow::NsSnowyStream;
 TextViewComponentModule::TextViewComponentModule(Engine& engine) : BaseClass(engine) {}
 TextViewComponentModule::~TextViewComponentModule() {}
 
-
 TObject<IReflect>& TextViewComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 	if (reflect.IsReflectMethod()) {
@@ -17,8 +16,6 @@ TObject<IReflect>& TextViewComponentModule::operator () (IReflect& reflect) {
 		ReflectMethod(RequestGetText)[ScriptMethod = "GetText"];
 		ReflectMethod(RequestSetText)[ScriptMethod = "SetText"];
 		ReflectMethod(RequestLocateText)[ScriptMethod = "LocateText"];
-		ReflectMethod(RequestSetTextRangeOption)[ScriptMethod = "SetTextRangeOption"];
-		ReflectMethod(RequestSetTextCursorOption)[ScriptMethod = "SetTextCursorOption"];
 	}
 
 	return *this;
@@ -34,39 +31,6 @@ void TextViewComponentModule::RequestNew(IScript::Request& request) {
 	request.DoLock();
 	request << textViewComponent;
 	request.UnLock();
-}
-
-void TextViewComponentModule::RequestSetTextRangeOption(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent, Int2& range, TextViewComponent::TextRangeOption& option) {
-	CHECK_REFERENCES_NONE();
-	CHECK_DELEGATE(textViewComponent);
-
-	if (range.x() > range.y()) {
-		std::swap(range.x(), range.y());
-	}
-
-	textViewComponent->selectRange = range;
-	textViewComponent->selectColor = option.color;
-	if (option.reverseColor) {
-		textViewComponent->Flag() |= TextViewComponent::TEXTVIEWCOMPONENT_SELECT_REV_COLOR;
-	} else {
-		textViewComponent->Flag() &= ~TextViewComponent::TEXTVIEWCOMPONENT_SELECT_REV_COLOR;
-	}
-	textViewComponent->SetUpdateMark();
-}
-
-void TextViewComponentModule::RequestSetTextCursorOption(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent, int pos, TextViewComponent::TextCursorOption& option) {
-	CHECK_REFERENCES_NONE();
-	CHECK_DELEGATE(textViewComponent);
-	
-	textViewComponent->cursorPos = pos;
-	textViewComponent->cursorChar = option.ch[0];
-	textViewComponent->cursorColor = option.color;
-	if (option.reverseColor) {
-		textViewComponent->Flag() |= TextViewComponent::TEXTVIEWCOMPONENT_CURSOR_REV_COLOR;
-	} else {
-		textViewComponent->Flag() &= ~TextViewComponent::TEXTVIEWCOMPONENT_CURSOR_REV_COLOR;
-	}
-	textViewComponent->SetUpdateMark();
 }
 
 void TextViewComponentModule::RequestSetFont(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent, const String& font, int64_t fontSize, float reinforce) {
