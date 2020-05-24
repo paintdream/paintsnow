@@ -26,11 +26,11 @@ namespace PaintsNow {
 			struct Char {
 				Char() { memset(this, 0, sizeof(*this)); }
 				IFontBase::CHARINFO info;
-				Int2Pair rect;
+				Short2Pair rect;
 			};
 
 			const Char& Get(IFontBase& fontBase, IFontBase::FONTCHAR ch, int32_t size);
-			IRender::Resource* GetFontTexture(uint32_t size, Int2& texSize);
+			IRender::Resource* GetFontTexture(uint32_t size, Short2& texSize);
 
 		protected:
 			class Slice {
@@ -46,7 +46,7 @@ namespace PaintsNow {
 			protected:
 				typedef unordered_map<IFontBase::FONTCHAR, Char> hmap;
 				hmap cache;
-				Int2Pair lastRect;
+				Short2Pair lastRect;
 				std::vector<uint32_t> buffer;
 				int16_t width;
 				uint16_t fontSize;
@@ -54,9 +54,9 @@ namespace PaintsNow {
 				IRender::Resource* cacheTexture;
 				bool modified;
 
-				Int2 GetTextureSize() const;
+				Short2 GetTextureSize() const;
 				void UpdateFontTexture(ResourceManager& resourceManager);
-				Int2Pair AllocRect(const Int2& size);
+				Short2Pair AllocRect(const Short2& size);
 			};
 
 		private:

@@ -63,21 +63,19 @@ void TextViewComponentModule::RequestSetText(IScript::Request& request, IScript:
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(textViewComponent);
 
-	textViewComponent->SetText(text);
-	textViewComponent->Flag() |= Tiny::TINY_MODIFIED;
-	textViewComponent->SetUpdateMark();
+	textViewComponent->SetText(engine, text);
 }
 
-void TextViewComponentModule::RequestLocateText(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent, Int2& offset, bool isRowCol) {
+void TextViewComponentModule::RequestLocateText(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent, Short2& offset, bool isRowCol) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(textViewComponent);
 
-	Int2 rowCol;
+	Short2 rowCol;
 
 	// TODO: fix offset
 	int loc = textViewComponent->Locate(rowCol, offset/* - textViewComponent->clippedRect.first*/, isRowCol);
 	engine.GetKernel().YieldCurrentWarp();
 	request.DoLock();
-	request << Int3(rowCol.x(), rowCol.y(), loc);
+	request << Short3(rowCol.x(), rowCol.y(), loc);
 	request.UnLock();
 }

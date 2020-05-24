@@ -1809,12 +1809,20 @@ struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> : public Resou
 			glDispatchCompute(d.instanceCounts.x(), d.instanceCounts.y(), d.instanceCounts.z());
 		} else {
 			const Buffer* indexBuffer = static_cast<const Buffer*>(d.indexBufferResource.buffer);
-			uint32_t indexBufferLength = d.indexBufferResource.length == 0 ? indexBuffer->length : d.indexBufferResource.length;
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer->bufferID);
-			if (d.instanceCounts.x() == 0) {
-				glDrawElements(GL_TRIANGLES, (GLsizei)indexBufferLength / sizeof(GLuint), GL_UNSIGNED_INT, (const void*)((size_t)d.indexBufferResource.offset));
+			if (indexBuffer != nullptr) {
+				uint32_t indexBufferLength = d.indexBufferResource.length == 0 ? indexBuffer->length : d.indexBufferResource.length;
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer->bufferID);
+				if (d.instanceCounts.x() == 0) {
+					glDrawElements(GL_TRIANGLES, (GLsizei)indexBufferLength / sizeof(GLuint), GL_UNSIGNED_INT, (const void*)((size_t)d.indexBufferResource.offset));
+				} else {
+					glDrawElementsInstanced(GL_TRIANGLES, (GLsizei)indexBufferLength / sizeof(GLuint), GL_UNSIGNED_INT, (const void*)((size_t)d.indexBufferResource.offset), (GLsizei)d.instanceCounts.x());
+				}
 			} else {
-				glDrawElementsInstanced(GL_TRIANGLES, (GLsizei)indexBufferLength / sizeof(GLuint), GL_UNSIGNED_INT, (const void*)((size_t)d.indexBufferResource.offset), (GLsizei)d.instanceCounts.x());
+				if (d.instanceCounts.x() == 0) {
+					glDrawArrays(GL_TRIANGLE_FAN, d.indexBufferResource.offset, d.indexBufferResource.length);
+				} else {
+					glDrawArraysInstanced(GL_TRIANGLE_FAN, d.indexBufferResource.offset, d.indexBufferResource.length, (GLsizei)d.instanceCounts.x());
+				}
 			}
 		}
 	}

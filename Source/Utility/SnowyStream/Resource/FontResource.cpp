@@ -64,7 +64,7 @@ TObject<IReflect>& FontResource::operator () (IReflect& reflect) {
 	return *this;
 }
 
-IRender::Resource* FontResource::GetFontTexture(uint32_t size, Int2& texSize) {
+IRender::Resource* FontResource::GetFontTexture(uint32_t size, Short2& texSize) {
 	std::map<uint32_t, Slice>::iterator it = sliceMap.find(size);
 	if (it == sliceMap.end()) {
 		return nullptr;
@@ -104,7 +104,7 @@ void FontResource::Slice::Uninitialize(ResourceManager& resourceManager) {
 	}*/
 }
 
-Int2Pair FontResource::Slice::AllocRect(const Int2& size) {
+Short2Pair FontResource::Slice::AllocRect(const Short2& size) {
 	assert(size.x() <= (int)width);
 	if (lastRect.second.x() + size.x() > (int)width) {
 		// new line
@@ -112,8 +112,8 @@ Int2Pair FontResource::Slice::AllocRect(const Int2& size) {
 		lastRect.first.y() = lastRect.second.y();
 	}
 
-	int height = Max(lastRect.second.y() - lastRect.first.y(), size.y());
-	Int2Pair w;
+	uint16_t height = Max((int16_t)(lastRect.second.y() - lastRect.first.y()), size.y());
+	Short2Pair w;
 	w.first.x() = lastRect.second.x();
 	w.second.x() = w.first.x() + size.x();
 	w.second.y() = lastRect.first.y() + height;
@@ -139,8 +139,8 @@ void FontResource::Slice::UpdateFontTexture(ResourceManager& resourceManager) {
 	}
 }
 
-Int2 FontResource::Slice::GetTextureSize() const {
-	return Int2((int)width, lastRect.second.y());
+Short2 FontResource::Slice::GetTextureSize() const {
+	return Short2((uint16_t)width, lastRect.second.y());
 }
 
 const FontResource::Char& FontResource::Slice::Get(ResourceManager& resourceManager, IFontBase& fontBase, IFontBase::FONTCHAR ch) {
@@ -152,9 +152,9 @@ const FontResource::Char& FontResource::Slice::Get(ResourceManager& resourceMana
 		Char c;
 		String data;
 		c.info = fontBase.RenderTexture(font, data, ch, fontSize, 0);
-		c.rect = AllocRect(Int2(c.info.width, c.info.height));
+		c.rect = AllocRect(Short2(c.info.width, c.info.height));
 
-		Int2Pair& r = c.rect;
+		Short2Pair& r = c.rect;
 		if ((int)buffer.size() < r.second.y() * width) {
 			buffer.resize(r.second.y() * width);
 		}

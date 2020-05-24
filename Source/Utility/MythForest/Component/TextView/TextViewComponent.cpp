@@ -54,7 +54,7 @@ void TextViewComponent::TagParser::Parse(const char* start, const char* end) {
 		}
 	}
 
-	PushText(q - start, q, p);
+	PushText(safe_cast<uint32_t>(q - start), q, p);
 }
 
 void TextViewComponent::TagParser::PushReturn(uint32_t offset) {
@@ -100,7 +100,7 @@ void TextViewComponent::TagParser::PushFormat(uint32_t offset, const char* start
 			nodes.emplace_back(Node(Node::COLOR_CLOSED, offset));
 		} else {
 			if (valueString != nullptr) {
-				nodes.emplace_back(Node(Node::COLOR, valueString - start + offset));
+				nodes.emplace_back(Node(Node::COLOR, (uint32_t)(valueString - start) + offset));
 			}
 		}
 	} else if (ParseAttrib(valueString, isClose, start, end, "align")) {
@@ -113,13 +113,13 @@ void TextViewComponent::TagParser::PushFormat(uint32_t offset, const char* start
 			t = Node::ALIGN_CENTER;
 		}
 
-		nodes.emplace_back(Node(t, valueString - start + offset));
+		nodes.emplace_back(Node(t, (uint32_t)(valueString - start) + offset));
 	}
 }
 
 void TextViewComponent::TagParser::PushText(uint32_t offset, const char* start, const char* end) {
 	if (start != end) {
-		nodes.emplace_back(Node(Node::TEXT, offset, end - start));
+		nodes.emplace_back(Node(Node::TEXT, offset, safe_cast<uint32_t>(end - start)));
 	}
 }
 
@@ -150,19 +150,19 @@ void TextViewComponent::Uninitialize(Engine& engine, Entity* entity) {
 
 TextViewComponent::~TextViewComponent() {}
 
-const Int2& TextViewComponent::GetFullSize() const {
+const Short2& TextViewComponent::GetFullSize() const {
 	return fullSize;
 }
 
-void TextViewComponent::Scroll(const Int2& pt) {
+void TextViewComponent::Scroll(const Short2& pt) {
 	scroll = pt;
 }
 
-void TextViewComponent::SetText(const String& t) {
+void TextViewComponent::SetText(Engine& engine, const String& t) {
 	text = t;
 	parser.Parse(text.data(), text.data() + text.size());
 
-	Flag() |= TINY_MODIFIED;
+	UpdateRenderData(engine);
 }
 
 static int Utf8ToUnicode(const unsigned char* s, int size) {
@@ -192,46 +192,25 @@ static int Utf8ToUnicode(const unsigned char* s, int size) {
 	return data;
 }
 
-TextViewComponent::Descriptor::Descriptor(int h, int s) : totalWidth(0), firstOffset(h) {}
-TextViewComponent::Descriptor::Char::Char(int c, int off) : xCoord(c), offset(off) {}
+TextViewComponent::Descriptor::Descriptor(int16_t h, int16_t s) : totalWidth(0), firstOffset(h) {}
+TextViewComponent::Descriptor::Char::Char(int16_t c, int16_t off) : xCoord(c), offset(off) {}
 
-uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) {
-	if (Flag() & TINY_MODIFIED) {
-		// Update buffers
-		std::vector<Float4> bufferData;
-
-		// do update
-		// IRender& render = fontResource->GetResourceManager().GetInterfaces()->render;
-		
-		Flag() &= ~TINY_MODIFIED;
-	}
-
-	// TODO: migrate the following code here.
-	return 0;
-}
-
-/*
-void TextViewComponent::UpdateRenderResource(IRender& render, IRender::Queue* queue, const Int2Pair& rect, const Int2& totalSize, const Int2& padding) {
-	std::vector<Descriptor> info;
-	PerformRender(render, rect, info, totalSize, padding, &Pass);
-	std::swap(info, lines);
-}
-
-Int2 TextViewComponent::PerformRender(IRender& render, const Int2Pair& range, std::vector<Descriptor>& widthRecords, const Int2& totalSize, const Int2& padding, WidgetPass* Pass) const {
-	Int2 size;
+void TextViewComponent::UpdateRenderData(Engine& engine) {
 	if (!fontResource) {
-		return Int2(0, 0);
+		return;
 	}
 
-	Int2 fullSize;
-	// const double EPSILON = 1e-6;
-	assert(parser != nullptr);
+	// Update buffers
+	std::vector<Float4> bufferData;
+	IFontBase& fontBase = engine.interfaces.fontBase;
+	IRender& render = engine.interfaces.render;
 
-	int ws = range.second.x() - range.first.x(); //, wh = range.second.y() - range.first.y();
+	Short2 fullSize;
+	int ws = size.x();
 	int h = fontSize + padding.y();
 	assert(h != 0);
 
-	Int2 start = scroll;
+	Short2 start = scroll;
 	int count = 0;
 	int currentWidth = -start.x();
 	int maxWidth = 0;
@@ -240,36 +219,35 @@ Int2 TextViewComponent::PerformRender(IRender& render, const Int2Pair& range, st
 	// if (currentWidth < 0) currentWidth = 0;
 	// if (currentHeight < 0) currentHeight = 0;
 	bool full = false;
-	const TagParser* s = parser;
-
-	int align = TagParser::NodeAlign::LEFT;
-
-	Int2 texSize;
+	bool showCursor = false;
+	bool selectRevColor = !!(Flag() & TEXTVIEWCOMPONENT_SELECT_REV_COLOR);
+	bool cursorRevColor = !!(Flag() & TEXTVIEWCOMPONENT_CURSOR_REV_COLOR);
+	int align = TagParser::Node::ALIGN_LEFT;
+	Short2 texSize;
 	fontResource->GetFontTexture(fontSize, texSize);
 
-	const FontResource::Char& cursor = fontResource->Get(cursorChar, fontSize);
-	Int2 current;
-	const FontResource::Char& pwd = fontResource->Get(passwordChar, fontSize);
+	const FontResource::Char& cursor = fontResource->Get(fontBase, cursorChar, fontSize);
+	Short2 current;
+	const FontResource::Char& pwd = fontResource->Get(fontBase, passwordChar, fontSize);
 	Float4 color(1, 1, 1, 1);
-	widthRecords.emplace_back(Descriptor(currentHeight, 0));
+	lines.emplace_back(Descriptor(currentHeight, 0));
 	FontResource::Char info;
-	bool showCursor = false;
+	std::stringstream ss;
 
-	for (std::list<TagParser::Node*>::const_iterator it = s->nodes.begin(); it != s->nodes.end(); ++it) {
-		const TagParser::Node* node = *it;
-		if (node->type == TagParser::TEXT) {
-			const TagParser::NodeText* text = static_cast<const TagParser::NodeText*>(node);
-			int size = 1;
-			for (const char* p = text->text; p < text->text + text->length; p += size) {
+	for (size_t i = 0; i < parser.nodes.size(); i++) {
+		const TagParser::Node& node = parser.nodes[i];
+		if (node.type == TagParser::Node::TEXT) {
+			int step = 1;
+			for (const char* p = text.data() + node.offset; p < text.data() + node.offset + node.length; p += step) {
 				// use utf-8 as default encoding
-				size = GetUtf8Size(*p);
-				info = passwordChar != 0 ? pwd : fontResource->Get(Utf8ToUnicode((const unsigned char*)p, size), fontSize);
+				step = GetUtf8Size(*p);
+				info = passwordChar != 0 ? pwd : fontResource->Get(fontBase, Utf8ToUnicode((const unsigned char*)p, step), fontSize);
 
 				int temp = info.info.adv.x() + padding.x();
 				currentWidth += temp;
 				maxWidth = maxWidth > currentWidth ? maxWidth : currentWidth;
 
-				if (currentHeight > range.second.y() - range.first.y() - h) {
+				if (currentHeight > size.y() - h) {
 					full = true;
 					//	break;
 				}
@@ -279,25 +257,25 @@ Int2 TextViewComponent::PerformRender(IRender& render, const Int2Pair& range, st
 				}
 
 				if (currentWidth + start.x() >= ws) {
-					widthRecords.emplace_back(Descriptor(currentHeight, (int)text->offset));
+					lines.emplace_back(Descriptor(currentHeight, node.offset));
 					currentWidth = -start.x();
 					currentHeight += h;
-					p -= size;
+					p -= step;
 
 					count++;
 					continue;
 				}
 
-				int offset = (int)(text->offset + (p - text->text));
-				widthRecords.back().allOffsets.emplace_back(Descriptor::Char(currentWidth - temp / 2, offset));
-				widthRecords.back().totalWidth = currentWidth + start.x();
+				int16_t offset = (int16_t)(p - text.data());
+				lines.back().allOffsets.emplace_back(Descriptor::Char(currentWidth - temp / 2, offset));
+				lines.back().totalWidth = currentWidth + start.x();
 
-				if (Pass != nullptr && !full && currentHeight >= 0) {
+				if (!full && currentHeight >= 0) {
 					int wt = info.info.width;
 					int ht = info.info.height;
 					int centerOffset = (temp - info.info.width) / 2;
-					int alignOffset = (size_t)count >= this->lines.size() ? 0 : align == TagParser::NodeAlign::LEFT ? 0 : align == TagParser::NodeAlign::CENTER ? (ws - this->lines[count].totalWidth) / 2 : (ws - this->lines[count].totalWidth);
-					current = Int2(currentWidth - temp + range.first.x() + alignOffset + info.info.bearing.x(), currentHeight + range.first.y() + (h - ht) - info.info.delta.y());
+					int alignOffset = (size_t)count >= this->lines.size() ? 0 : align == TagParser::Node::ALIGN_LEFT ? 0 : align == TagParser::Node::ALIGN_CENTER ? (ws - this->lines[count].totalWidth) / 2 : (ws - this->lines[count].totalWidth);
+					current = Short2(currentWidth - temp + alignOffset + info.info.bearing.x(), currentHeight + (h - ht) - info.info.delta.y());
 
 					Float4 c = color;
 					if (selectRange.x() <= offset && selectRange.y() > offset) {
@@ -309,8 +287,8 @@ Int2 TextViewComponent::PerformRender(IRender& render, const Int2Pair& range, st
 						}
 					}
 
-					Int2 end(current.x() + wt, current.y() + ht);
-					RenderCharacter(render, *Pass, range, Int2Pair(current, end), info.rect, c, totalSize, fontSize);
+					Short2 end(current.x() + wt, current.y() + ht);
+					RenderCharacter(ss, Short2Pair(current, end), info.rect, c, fontSize);
 
 					// if cursor ?
 					if (!showCursor && cursorPos <= offset && cursorChar != 0) {
@@ -322,35 +300,31 @@ Int2 TextViewComponent::PerformRender(IRender& render, const Int2Pair& range, st
 							c = cursorColor;
 						}
 
-						Int2 m(current.x() + cursor.info.width, current.y() + cursor.info.height);
-						RenderCharacter(render, *Pass, range, Int2Pair(current, m), cursor.rect, c, totalSize, fontSize);
+						Short2 m(current.x() + cursor.info.width, current.y() + cursor.info.height);
+						RenderCharacter(ss, Short2Pair(current, m), cursor.rect, c, fontSize);
 						showCursor = true;
 					}
 				}
 			} // end for
 
 			if (full) break;
-		} else if (node->type == TagParser::ALIGN) {
-			TagParser::NodeAlign* p = (TagParser::NodeAlign*)node;
-			align = p->align;
-		} else if (node->type == TagParser::RETURN) {
-			widthRecords.emplace_back(Descriptor(start.x(), (int)node->offset));
+		} else if (node.type == TagParser::Node::ALIGN_LEFT || node.type == TagParser::Node::ALIGN_RIGHT || node.type == TagParser::Node::ALIGN_CENTER) {
+			align = node.type;
+		} else if (node.type == TagParser::Node::RETURN) {
+			lines.emplace_back(Descriptor(start.x(), (int16_t)node.offset));
 			currentWidth = -start.x();
 			currentHeight += h;
 			count++;
-		} else if (node->type == TagParser::COLOR) {
+		} else if (node.type == TagParser::Node::COLOR) {
 			// TODO: render!
-			if (Pass != nullptr) {
-				const TagParser::NodeColor* c = static_cast<const TagParser::NodeColor*>(node);
-				if (!c->IsClose()) {
-					color = Float4((float)((c->value >> 16) & 0xff) / 255, (float)((c->value >> 8) & 0xff) / 255, (float)(c->value & 0xff) / 255, 1);
-				}
-			}
+			int value = 0;
+			sscanf(text.data() + node.offset, "%x", &value);
+			color = Float4((float)((value >> 16) & 0xff) / 255, (float)((value >> 8) & 0xff) / 255, (float)(value & 0xff) / 255, 1);
 		}
 	}
 
 	// if cursor ?
-	if (Pass != nullptr && !full && currentHeight >= 0 && !showCursor && cursorChar != 0) {
+	if (!full && currentHeight >= 0 && !showCursor && cursorChar != 0) {
 		Float4 c;
 		current.x() += info.info.width;
 		current.y() += info.info.delta.y() - cursor.info.delta.y() + info.info.height - cursor.info.height;
@@ -361,8 +335,8 @@ Int2 TextViewComponent::PerformRender(IRender& render, const Int2Pair& range, st
 			c = cursorColor;
 		}
 
-		Int2 m(current.x() + cursor.info.width, current.y() + cursor.info.height);
-		RenderCharacter(render, *Pass, range, Int2Pair(current, m), cursor.rect, c, totalSize, fontSize);
+		Short2 m(current.x() + cursor.info.width, current.y() + cursor.info.height);
+		RenderCharacter(ss, Short2Pair(current, m), cursor.rect, c, fontSize);
 		showCursor = true;
 	}
 
@@ -372,58 +346,55 @@ Int2 TextViewComponent::PerformRender(IRender& render, const Int2Pair& range, st
 	fullSize.x() = maxWidth + start.x();
 	fullSize.y() = currentHeight + start.y();
 
-	return fullSize;
+	// do update
 }
 
-void TextViewComponent::RenderCharacter(IRender& render, WidgetPass& Pass, const Int2Pair& range, const Int2Pair& rect, const Int2Pair& info, const Float4& color, const Int2& totalSize, uint32_t fontSize) const {
-	Int2 fontTexSize;
+uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) {
+
+	// TODO: migrate the following code here.
+	return 0;
+}
+
+void TextViewComponent::RenderCharacter(std::stringstream& stream, const Short2Pair& rect, const Short2Pair& uv, const Float4& color, uint32_t fontSize) {
+	Short2 fontTexSize;
 	IRender::Resource* texture = fontResource->GetFontTexture(fontSize, fontTexSize);
 	if (texture != nullptr) {
-		Int2Pair inv = rect;
-		inv.first.y() = range.second.y() - inv.first.y() + range.first.y();
-		inv.second.y() = range.second.y() - inv.second.y() + range.first.y();
-		std::swap(inv.first.y(), inv.second.y());
-		Float4 position = Float4(
-			(float)rect.first.x() / totalSize.x(),
-			1.0f - (float)rect.second.y() / totalSize.y(),
-			(float)rect.second.x() / totalSize.x(),
-			1.0f - (float)rect.first.y() / totalSize.y()
+		Float4 pos((float)rect.first.x(), (float)(size.y() - rect.second.y()), (float)rect.second.y(), (float)(size.y() - rect.first.y()));
+		Float4 tex = Float4(
+			(float)uv.first.x() / fontTexSize.x(),
+			(float)uv.first.y() / fontTexSize.y(),
+			(float)uv.second.x() / fontTexSize.x(),
+			(float)uv.second.y() / fontTexSize.y()
 		);
 
-		Float4 texCoord = Float4(
-			(float)info.first.x() / fontTexSize.x(),
-			(float)info.first.y() / fontTexSize.y(),
-			(float)info.second.x() / fontTexSize.x(),
-			(float)info.second.y() / fontTexSize.y()
-		);
+		// Add triangles
+		Float4 item[4] = {
+			Float4(pos[0], pos[1], tex[0], tex[1]),
+			Float4(pos[2], pos[1], tex[2], tex[1]),
+			Float4(pos[2], pos[3], tex[2], tex[3]),
+			Float4(pos[0], pos[3], tex[0], tex[3]),
+		};
 
-		Float4 texCoordMark(0.5f, 0.5f, 0.5f, 0.5f);
-		Float4 texCoordScale(1, 1, 1, 1);
-
-		Pass.widgetTransform.inputPositionRect = position * 2.0f - 1.0f;
-		Pass.widgetTransform.inputTexCoordRect = texCoord;
-		Pass.widgetTransform.inputTexCoordMark = texCoordMark;
-		Pass.widgetTransform.inputTexCoordScale = texCoordScale;
-		Pass.widgetShading.mainTexture.resource = texture;
-		// Pass.FireRender(render);
+		stream.write((const char*)item, sizeof(item));
 	}
-}*/
 
-int TextViewComponent::GetLineCount() const {
-	return (int)lines.size();
+	// TODO: texture change
+}
+
+uint32_t TextViewComponent::GetLineCount() const {
+	return safe_cast<uint32_t>(lines.size());
 }
 
 void TextViewComponent::SetPasswordChar(int ch) {
 	passwordChar = ch;
 }
 
-void TextViewComponent::SetSize(const Int2& s) {
+void TextViewComponent::SetSize(Engine& engine, const Short2& s) {
 	size = s;
-
-	Flag() |= TINY_MODIFIED;
+	UpdateRenderData(engine);
 }
 
-const Int2& TextViewComponent::GetSize() const {
+const Short2& TextViewComponent::GetSize() const {
 	return size;
 }
 
@@ -440,29 +411,29 @@ struct LocatePosOffset {
 };
 
 struct LocateLine {
-	bool operator () (const TextViewComponent::Descriptor& desc, const Int2& pt) {
+	bool operator () (const TextViewComponent::Descriptor& desc, const Short2& pt) {
 		return desc.yCoord < pt.y();
 	}
 };
 
 struct LocatePos {
-	bool operator () (const TextViewComponent::Descriptor::Char& desc, const Int2& pt) {
+	bool operator () (const TextViewComponent::Descriptor::Char& desc, const Short2& pt) {
 		return desc.xCoord < pt.x();
 	}
 };
 
-int32_t TextViewComponent::Locate(Int2& rowCol, const Int2& pt, bool isPtRowCol) const {
+int32_t TextViewComponent::Locate(Short2& rowCol, const Short2& pt, bool isPtRowCol) const {
 	if (lines.empty()) {
-		rowCol = Int2(0, 0);
+		rowCol = Short2(0, 0);
 		return 0;
 	}
 
 	if (isPtRowCol) {
-		rowCol.x() = Max(0, Min((int)lines.size() - 1, pt.x()));
 		const Descriptor& desc = lines[rowCol.y()];
+		rowCol.x() = Max((int16_t)0, Min((int16_t)(lines.size() - 1), pt.x()));
+		rowCol.y() = Max((int16_t)0, Min((int16_t)(desc.allOffsets.size()), pt.y()));
 
-		rowCol.y() = Max(0, Min((int)desc.allOffsets.size(), pt.y()));
-		if (rowCol.y() == (int)desc.allOffsets.size()) {
+		if (rowCol.y() == desc.allOffsets.size()) {
 			return safe_cast<uint32_t>(text.size());
 		} else {
 			return desc.allOffsets[rowCol.y()].offset;
@@ -472,11 +443,11 @@ int32_t TextViewComponent::Locate(Int2& rowCol, const Int2& pt, bool isPtRowCol)
 		if (p == lines.end()) {
 			--p;
 		}
-		rowCol.x() = (int)(p - lines.begin());
+		rowCol.x() = (int16_t)(p - lines.begin());
 
 		std::vector<TextViewComponent::Descriptor::Char>::const_iterator t = std::lower_bound(p->allOffsets.begin(), p->allOffsets.end(), pt, LocatePos());
 
-		rowCol.y() = (int)(t - p->allOffsets.begin());
+		rowCol.y() = (int16_t)(t - p->allOffsets.begin());
 		if (t == p->allOffsets.end()) {
 			std::vector<Descriptor>::const_iterator q = p;
 			q++;

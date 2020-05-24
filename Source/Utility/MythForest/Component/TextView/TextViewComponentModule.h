@@ -23,7 +23,7 @@ namespace PaintsNow {
 			void RequestSetFont(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent, const String& font, int64_t fontSize, float reinforce);
 			void RequestGetText(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent);
 			void RequestSetText(IScript::Request& request, IScript::Delegate<TextViewComponent> window, const String& text);
-			void RequestLocateText(IScript::Request& request, IScript::Delegate<TextViewComponent> window, Int2& offset, bool isRowCol);
+			void RequestLocateText(IScript::Request& request, IScript::Delegate<TextViewComponent> window, Short2& offset, bool isRowCol);
 
 		protected:
 			TShared<NsSnowyStream::MaterialResource> defaultTextMaterial;

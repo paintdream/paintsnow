@@ -10,6 +10,7 @@
 #include "../../../SnowyStream/SnowyStream.h"
 #include "../../../SnowyStream/Resource/FontResource.h"
 #include "../../../SnowyStream/Resource/MaterialResource.h"
+#include <sstream>
 
 namespace PaintsNow {
 	namespace NsMythForest {
@@ -27,35 +28,38 @@ namespace PaintsNow {
 			virtual void Uninitialize(Engine& engine, Entity* entity) override;
 		
 			struct Descriptor {
-				Descriptor(int h, int fs);
-				int totalWidth;
-				int yCoord;
-				int firstOffset;
+				Descriptor(int16_t h, int16_t fs);
+				int16_t totalWidth;
+				int16_t yCoord;
+				int16_t firstOffset;
 
 				struct Char {
-					Char(int c = 0, int off = 0);
-					int xCoord;
-					int offset;
+					Char(int16_t c = 0, int16_t off = 0);
+					int16_t xCoord;
+					int16_t offset;
 				};
 
 				std::vector<Char> allOffsets;
 			};
 
-			int32_t Locate(Int2& rowCol, const Int2& pt, bool isPtRowCol) const;
-			void SetText(const String& text);
-			void Scroll(const Int2& pt);
+			int32_t Locate(Short2& rowCol, const Short2& pt, bool isPtRowCol) const;
+			void SetText(Engine& engine, const String& text);
+			void Scroll(const Short2& pt);
 			void SetUpdateMark();
 
 		protected:
-			int GetLineCount() const;
+			void SetSize(Engine& engine, const Short2& size);
+			void UpdateRenderData(Engine& engine);
+			void RenderCharacter(std::stringstream& stream, const Short2Pair& rect, const Short2Pair& uv, const Float4& color, uint32_t fontSize);
+
+			uint32_t GetLineCount() const;
 			void SetPasswordChar(int ch);
-			void SetSize(const Int2& size);
 			bool IsEmpty() const;
-			const Int2& GetSize() const;
-			const Int2& GetFullSize() const;
-			void SetPadding(const Int2& padding);
-			Int2 SelectText(const Int2Pair& offsetRect) const;
-			Int2 Fix(int offset) const;
+			const Short2& GetSize() const;
+			const Short2& GetFullSize() const;
+			void SetPadding(const Short2& padding);
+			Short2 SelectText(const Short2Pair& offsetRect) const;
+			Short2 Fix(int offset) const;
 
 			class TagParser {
 			public:
@@ -81,7 +85,6 @@ namespace PaintsNow {
 				void PushText(uint32_t offset, const char* start, const char* end);
 				void Clear();
 
-			private:
 				std::vector<Node> nodes;
 			};
 
@@ -96,15 +99,16 @@ namespace PaintsNow {
 			TShared<NsSnowyStream::MaterialResource> materialResource;
 			String text;
 
-			Int2 size;
-			Int2 scroll;
-			Int2 fullSize;
+			Short2 size;
+			Short2 scroll;
+			Short2 fullSize;
+			Short2 padding;
 			int32_t passwordChar;
 			int32_t cursorChar;
 			int32_t cursorPos;
 			uint32_t fontSize;
 			Float4 cursorColor;
-			Int2 selectRange;
+			Short2 selectRange;
 			Float4 selectColor;
 		};
 	}
