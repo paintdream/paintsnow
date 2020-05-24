@@ -56,7 +56,7 @@ void TextViewComponent::TagParser::Parse(const char* start, const char* end) {
 	PushText(q - start, q, p);
 }
 
-void TextViewComponent::TagParser::PushReturn(size_t offset) {
+void TextViewComponent::TagParser::PushReturn(uint32_t offset) {
 	nodes.emplace_back(Node(Node::RETURN, offset));
 }
 
@@ -90,7 +90,7 @@ bool TextViewComponent::TagParser::ParseAttrib(const char*& valueString, bool& i
 	return ret;
 }
 
-void TextViewComponent::TagParser::PushFormat(size_t offset, const char* start, const char* end) {
+void TextViewComponent::TagParser::PushFormat(uint32_t offset, const char* start, const char* end) {
 	const char* valueString;
 	bool isClose;
 
@@ -116,7 +116,7 @@ void TextViewComponent::TagParser::PushFormat(size_t offset, const char* start, 
 	}
 }
 
-void TextViewComponent::TagParser::PushText(size_t offset, const char* start, const char* end) {
+void TextViewComponent::TagParser::PushText(uint32_t offset, const char* start, const char* end) {
 	if (start != end) {
 		nodes.emplace_back(Node(Node::TEXT, offset, end - start));
 	}
