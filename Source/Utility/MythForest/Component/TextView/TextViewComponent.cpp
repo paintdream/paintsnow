@@ -1,4 +1,5 @@
 #include "TextViewComponent.h"
+#include "../../MythForest.h"
 
 using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
@@ -126,8 +127,25 @@ void TextViewComponent::TagParser::Clear() {
 	nodes.clear();
 }
 
-TextViewComponent::TextViewComponent() : passwordChar(0), cursorChar(0), cursorPos(0), fontSize(12) {
+TextViewComponent::TextViewComponent(TShared<MaterialResource> material) : materialResource(material), unitCoordBuffer(nullptr), passwordChar(0), cursorChar(0), cursorPos(0), fontSize(12) {
 	Flag() |= (TEXTVIEWCOMPONENT_CURSOR_REV_COLOR | TEXTVIEWCOMPONENT_SELECT_REV_COLOR);
+}
+
+void TextViewComponent::Initialize(Engine& engine, Entity* entity) {
+	BaseClass::Initialize(engine, entity);
+	IRender& render = engine.interfaces.render;
+	IRender::Queue* queue = engine.mythForest.GetWarpResourceQueue();
+
+	unitCoordBuffer = render.CreateResource(queue, IRender::Resource::RESOURCE_BUFFER);
+}
+
+void TextViewComponent::Uninitialize(Engine& engine, Entity* entity) {
+	IRender& render = engine.interfaces.render;
+	IRender::Queue* queue = engine.mythForest.GetWarpResourceQueue();
+	render.DeleteResource(queue, unitCoordBuffer);
+	unitCoordBuffer = nullptr;
+
+	BaseClass::Uninitialize(engine, entity);
 }
 
 TextViewComponent::~TextViewComponent() {}
@@ -140,15 +158,11 @@ void TextViewComponent::Scroll(const Int2& pt) {
 	scroll = pt;
 }
 
-void TextViewComponent::TextChange() {
-	widthInfo = std::vector<Descriptor>();
-}
-
 void TextViewComponent::SetText(const String& t) {
 	text = t;
 	parser.Parse(text.data(), text.data() + text.size());
 
-	TextChange();
+	Flag() |= TINY_MODIFIED;
 }
 
 static int Utf8ToUnicode(const unsigned char* s, int size) {
@@ -182,20 +196,30 @@ TextViewComponent::Descriptor::Descriptor(int h, int s) : totalWidth(0), firstOf
 TextViewComponent::Descriptor::Char::Char(int c, int off) : xCoord(c), offset(off) {}
 
 uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) {
+	if (Flag() & TINY_MODIFIED) {
+		// Update buffers
+		std::vector<Float4> bufferData;
+
+		// do update
+		// IRender& render = fontResource->GetResourceManager().GetInterfaces()->render;
+		
+		Flag() &= ~TINY_MODIFIED;
+	}
+
 	// TODO: migrate the following code here.
 	return 0;
 }
 
 /*
-void TextViewComponent::FireRender(IRender& render, WidgetPass& Pass, const Int2Pair& rect, const Int2& totalSize, const Int2& padding) {
+void TextViewComponent::UpdateRenderResource(IRender& render, IRender::Queue* queue, const Int2Pair& rect, const Int2& totalSize, const Int2& padding) {
 	std::vector<Descriptor> info;
 	PerformRender(render, rect, info, totalSize, padding, &Pass);
-	std::swap(info, widthInfo);
+	std::swap(info, lines);
 }
 
 Int2 TextViewComponent::PerformRender(IRender& render, const Int2Pair& range, std::vector<Descriptor>& widthRecords, const Int2& totalSize, const Int2& padding, WidgetPass* Pass) const {
 	Int2 size;
-	if (!mainFont) {
+	if (!fontResource) {
 		return Int2(0, 0);
 	}
 
@@ -221,11 +245,11 @@ Int2 TextViewComponent::PerformRender(IRender& render, const Int2Pair& range, st
 	int align = TagParser::NodeAlign::LEFT;
 
 	Int2 texSize;
-	mainFont->GetFontTexture(fontSize, texSize);
+	fontResource->GetFontTexture(fontSize, texSize);
 
-	const FontResource::Char& cursor = mainFont->Get(cursorChar, fontSize);
+	const FontResource::Char& cursor = fontResource->Get(cursorChar, fontSize);
 	Int2 current;
-	const FontResource::Char& pwd = mainFont->Get(passwordChar, fontSize);
+	const FontResource::Char& pwd = fontResource->Get(passwordChar, fontSize);
 	Float4 color(1, 1, 1, 1);
 	widthRecords.emplace_back(Descriptor(currentHeight, 0));
 	FontResource::Char info;
@@ -239,7 +263,7 @@ Int2 TextViewComponent::PerformRender(IRender& render, const Int2Pair& range, st
 			for (const char* p = text->text; p < text->text + text->length; p += size) {
 				// use utf-8 as default encoding
 				size = GetUtf8Size(*p);
-				info = passwordChar != 0 ? pwd : mainFont->Get(Utf8ToUnicode((const unsigned char*)p, size), fontSize);
+				info = passwordChar != 0 ? pwd : fontResource->Get(Utf8ToUnicode((const unsigned char*)p, size), fontSize);
 
 				int temp = info.info.adv.x() + padding.x();
 				currentWidth += temp;
@@ -272,7 +296,7 @@ Int2 TextViewComponent::PerformRender(IRender& render, const Int2Pair& range, st
 					int wt = info.info.width;
 					int ht = info.info.height;
 					int centerOffset = (temp - info.info.width) / 2;
-					int alignOffset = (size_t)count >= this->widthInfo.size() ? 0 : align == TagParser::NodeAlign::LEFT ? 0 : align == TagParser::NodeAlign::CENTER ? (ws - this->widthInfo[count].totalWidth) / 2 : (ws - this->widthInfo[count].totalWidth);
+					int alignOffset = (size_t)count >= this->lines.size() ? 0 : align == TagParser::NodeAlign::LEFT ? 0 : align == TagParser::NodeAlign::CENTER ? (ws - this->lines[count].totalWidth) / 2 : (ws - this->lines[count].totalWidth);
 					current = Int2(currentWidth - temp + range.first.x() + alignOffset + info.info.bearing.x(), currentHeight + range.first.y() + (h - ht) - info.info.delta.y());
 
 					Float4 c = color;
@@ -353,7 +377,7 @@ Int2 TextViewComponent::PerformRender(IRender& render, const Int2Pair& range, st
 
 void TextViewComponent::RenderCharacter(IRender& render, WidgetPass& Pass, const Int2Pair& range, const Int2Pair& rect, const Int2Pair& info, const Float4& color, const Int2& totalSize, uint32_t fontSize) const {
 	Int2 fontTexSize;
-	IRender::Resource* texture = mainFont->GetFontTexture(fontSize, fontTexSize);
+	IRender::Resource* texture = fontResource->GetFontTexture(fontSize, fontTexSize);
 	if (texture != nullptr) {
 		Int2Pair inv = rect;
 		inv.first.y() = range.second.y() - inv.first.y() + range.first.y();
@@ -383,11 +407,10 @@ void TextViewComponent::RenderCharacter(IRender& render, WidgetPass& Pass, const
 		Pass.widgetShading.mainTexture.resource = texture;
 		// Pass.FireRender(render);
 	}
-}
-*/
+}*/
 
 int TextViewComponent::GetLineCount() const {
-	return (int)widthInfo.size();
+	return (int)lines.size();
 }
 
 void TextViewComponent::SetPasswordChar(int ch) {
@@ -396,7 +419,8 @@ void TextViewComponent::SetPasswordChar(int ch) {
 
 void TextViewComponent::SetSize(const Int2& s) {
 	size = s;
-	TextChange();
+
+	Flag() |= TINY_MODIFIED;
 }
 
 const Int2& TextViewComponent::GetSize() const {
@@ -415,7 +439,6 @@ struct LocatePosOffset {
 	}
 };
 
-
 struct LocateLine {
 	bool operator () (const TextViewComponent::Descriptor& desc, const Int2& pt) {
 		return desc.yCoord < pt.y();
@@ -429,14 +452,14 @@ struct LocatePos {
 };
 
 int32_t TextViewComponent::Locate(Int2& rowCol, const Int2& pt, bool isPtRowCol) const {
-	if (widthInfo.empty()) {
+	if (lines.empty()) {
 		rowCol = Int2(0, 0);
 		return 0;
 	}
 
 	if (isPtRowCol) {
-		rowCol.x() = Max(0, Min((int)widthInfo.size() - 1, pt.x()));
-		const Descriptor& desc = widthInfo[rowCol.y()];
+		rowCol.x() = Max(0, Min((int)lines.size() - 1, pt.x()));
+		const Descriptor& desc = lines[rowCol.y()];
 
 		rowCol.y() = Max(0, Min((int)desc.allOffsets.size(), pt.y()));
 		if (rowCol.y() == (int)desc.allOffsets.size()) {
@@ -445,11 +468,11 @@ int32_t TextViewComponent::Locate(Int2& rowCol, const Int2& pt, bool isPtRowCol)
 			return desc.allOffsets[rowCol.y()].offset;
 		}
 	} else {
-		std::vector<Descriptor>::const_iterator p = std::lower_bound(widthInfo.begin(), widthInfo.end(), pt, LocateLine());
-		if (p == widthInfo.end()) {
+		std::vector<Descriptor>::const_iterator p = std::lower_bound(lines.begin(), lines.end(), pt, LocateLine());
+		if (p == lines.end()) {
 			--p;
 		}
-		rowCol.x() = (int)(p - widthInfo.begin());
+		rowCol.x() = (int)(p - lines.begin());
 
 		std::vector<TextViewComponent::Descriptor::Char>::const_iterator t = std::lower_bound(p->allOffsets.begin(), p->allOffsets.end(), pt, LocatePos());
 
@@ -457,7 +480,7 @@ int32_t TextViewComponent::Locate(Int2& rowCol, const Int2& pt, bool isPtRowCol)
 		if (t == p->allOffsets.end()) {
 			std::vector<Descriptor>::const_iterator q = p;
 			q++;
-			if (q != widthInfo.end() && !(*q).allOffsets.empty()) {
+			if (q != lines.end() && !(*q).allOffsets.empty()) {
 				return q->firstOffset;
 			} else {
 				return safe_cast<uint32_t>(text.size());

@@ -93,7 +93,7 @@ Unique ResourceBase::GetDeviceUnique() const {
 	return Unique();
 }
 
-bool ResourceBase::LoadExternalResource(IStreamBase& streamBase, size_t length) {
+bool ResourceBase::LoadExternalResource(Interfaces& interfaces, IStreamBase& streamBase, size_t length) {
 	return false; // by default no external resource supported.
 }
 

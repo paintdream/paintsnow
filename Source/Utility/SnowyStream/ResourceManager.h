@@ -19,14 +19,13 @@ namespace PaintsNow {
 		class DeviceResourceBase;
 		class ResourceManager : public TReflected<ResourceManager, SharedTiny>, public ISyncObject {
 		public:
-			ResourceManager(IThread& threadApi, IUniformResourceManager& hostManager, Interfaces* interfaces, const TWrapper<void, const String&>& errorHandler, void* context);
+			ResourceManager(IThread& threadApi, IUniformResourceManager& hostManager, const TWrapper<void, const String&>& errorHandler, void* context);
 			virtual ~ResourceManager();
 			typedef String UniqueLocation;
 			virtual ResourceBase* Insert(const UniqueLocation& uniqueLocation, ResourceBase* resource);
 			void Remove(ResourceBase* resource);
 			void RemoveAll();
 			virtual Unique GetDeviceUnique() const = 0;
-			Interfaces* GetInterfaces() const;
 			void Report(const String& err);
 			void* GetContext() const;
 
@@ -50,7 +49,7 @@ namespace PaintsNow {
 		template <class T>
 		class DeviceResourceManager : public ResourceManager {
 		public:
-			DeviceResourceManager(IThread& threadApi, IUniformResourceManager& hostManager, Interfaces* inters, T& dev, const TWrapper<void, const String&>& errorHandler, void* context) : ResourceManager(threadApi, hostManager, inters, errorHandler, context), device(dev) {}
+			DeviceResourceManager(IThread& threadApi, IUniformResourceManager& hostManager, T& dev, const TWrapper<void, const String&>& errorHandler, void* context) : ResourceManager(threadApi, hostManager, errorHandler, context), device(dev) {}
 			virtual Unique GetDeviceUnique() const {
 				return UniqueType<T>::Get();
 			}

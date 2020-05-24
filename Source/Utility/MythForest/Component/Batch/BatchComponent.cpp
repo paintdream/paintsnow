@@ -1,6 +1,6 @@
 #include "BatchComponent.h"
 #include "../Renderable/RenderableComponent.h"
-#include "../../../SnowyStream/SnowyStream.h"
+#include "../../../MythForest/MythForest.h"
 
 using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
@@ -15,7 +15,7 @@ BatchComponent::~BatchComponent() {
 void BatchComponent::InstanceInitialize(Engine& engine) {
 	if (referenceCount == 0) {
 		IRender& render = engine.interfaces.render;
-		IRender::Queue* queue = engine.snowyStream.GetResourceQueue();
+		IRender::Queue* queue = engine.mythForest.GetWarpResourceQueue();
 		buffer = render.CreateResource(queue, IRender::Resource::RESOURCE_BUFFER);
 	}
 
@@ -26,7 +26,7 @@ void BatchComponent::InstanceUninitialize(Engine& engine) {
 	assert(referenceCount != 0);
 	if (--referenceCount == 0) {
 		IRender& render = engine.interfaces.render;
-		IRender::Queue* queue = engine.snowyStream.GetResourceQueue();
+		IRender::Queue* queue = engine.mythForest.GetWarpResourceQueue();
 		render.DeleteResource(queue, buffer);
 		currentData.Clear();
 		Flag() &= ~Tiny::TINY_MODIFIED;

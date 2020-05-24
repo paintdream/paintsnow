@@ -12,7 +12,6 @@
 
 namespace PaintsNow {
 	namespace NsSnowyStream {
-		// standard pbr deferred shading Pass using ggx prdf
 		class WidgetPass : public TReflected<WidgetPass, ZPassBase> {
 		public:
 			WidgetPass();

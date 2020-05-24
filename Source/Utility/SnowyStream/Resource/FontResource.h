@@ -11,17 +11,17 @@
 
 namespace PaintsNow {
 	namespace NsSnowyStream {
-		class FontResource : public TReflected<FontResource, GraphicResourceBase> {
+		class FontResource : public TReflected<FontResource, DeviceResourceBase<IFontBase> > {
 		public:
 			FontResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID);
 			virtual ~FontResource();
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 			virtual bool LoadExternalResource(IStreamBase& streamBase, size_t length);
 
-			virtual void Upload(IRender& render, void* deviceContext) override;
-			virtual void Download(IRender& render, void* deviceContext) override;
-			virtual void Attach(IRender& render, void* deviceContext) override;
-			virtual void Detach(IRender& render, void* deviceContext) override;
+			virtual void Upload(IFontBase& font, void* deviceContext) override;
+			virtual void Download(IFontBase& font, void* deviceContext) override;
+			virtual void Attach(IFontBase& font, void* deviceContext) override;
+			virtual void Detach(IFontBase& font, void* deviceContext) override;
 
 			struct Char {
 				Char() { memset(this, 0, sizeof(*this)); }
@@ -29,14 +29,14 @@ namespace PaintsNow {
 				Int2Pair rect;
 			};
 
-			const Char& Get(IFontBase::FONTCHAR ch, int32_t size);
+			const Char& Get(IFontBase& fontBase, IFontBase::FONTCHAR ch, int32_t size);
 			IRender::Resource* GetFontTexture(uint32_t size, Int2& texSize);
 
 		protected:
 			class Slice {
 			public:
 				Slice(uint32_t size);
-				const Char& Get(ResourceManager& resourceManager, IFontBase::FONTCHAR ch);
+				const Char& Get(ResourceManager& resourceManager, IFontBase& font, IFontBase::FONTCHAR ch);
 				void Initialize(ResourceManager& resourceManager);
 				void Uninitialize(ResourceManager& resourceManager);
 				IRender::Resource* GetFontTexture(ResourceManager& resourceManager);

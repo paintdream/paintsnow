@@ -10,6 +10,7 @@
 #include "ResourceManager.h"
 
 namespace PaintsNow {
+	class Interfaces;
 	namespace NsSnowyStream {
 		class IUniformResourceManager {
 		public:
@@ -40,7 +41,7 @@ namespace PaintsNow {
 			void SetLocation(const ResourceManager::UniqueLocation& location);
 
 			virtual Unique GetDeviceUnique() const;
-			virtual bool LoadExternalResource(IStreamBase& streamBase, size_t length);
+			virtual bool LoadExternalResource(Interfaces& interfaces, IStreamBase& streamBase, size_t length);
 			virtual bool Compress(const String& compressType);
 
 			struct Dependency {

@@ -5,7 +5,10 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
-TextViewComponentModule::TextViewComponentModule(Engine& engine) : BaseClass(engine) {}
+TextViewComponentModule::TextViewComponentModule(Engine& engine) : BaseClass(engine) {
+	defaultTextMaterial = engine.snowyStream.CreateReflectedResource(UniqueType<MaterialResource>(), "[Runtime]/MaterialResource/Widget");
+}
+
 TextViewComponentModule::~TextViewComponentModule() {}
 
 TObject<IReflect>& TextViewComponentModule::operator () (IReflect& reflect) {
@@ -24,7 +27,7 @@ TObject<IReflect>& TextViewComponentModule::operator () (IReflect& reflect) {
 void TextViewComponentModule::RequestNew(IScript::Request& request) {
 	CHECK_REFERENCES_NONE();
 
-	TShared<TextViewComponent> textViewComponent = TShared<TextViewComponent>::From(allocator->New());
+	TShared<TextViewComponent> textViewComponent = TShared<TextViewComponent>::From(allocator->New(defaultTextMaterial));
 	textViewComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
 
 	engine.GetKernel().YieldCurrentWarp();
@@ -40,7 +43,7 @@ void TextViewComponentModule::RequestSetFont(IScript::Request& request, IScript:
 	// Get font
 	TShared<FontResource> fontResource = engine.snowyStream.CreateReflectedResource(UniqueType<FontResource>(), font);
 	if (fontResource) {
-		textViewComponent->mainFont = fontResource;
+		textViewComponent->fontResource = fontResource;
 		textViewComponent->fontSize = safe_cast<uint32_t>(fontSize);
 		textViewComponent->SetUpdateMark();
 	}

@@ -25,7 +25,7 @@ namespace PaintsNow {
 			virtual void DispatchEvent(Event& event, Entity* entity) override;
 			virtual FLAG GetEntityFlagMask() const;
 
-			IRender::Resource* AcquireBoneMatrixBuffer(IRender::Queue* queue);
+			IRender::Resource* AcquireBoneMatrixBuffer(IRender& render, IRender::Queue* queue);
 
 			void Attach(const String& name, TShared<Entity> entity);
 			void Detach(TShared<Entity> entity);

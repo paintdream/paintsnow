@@ -59,18 +59,33 @@ MythForest::MythForest(Interfaces& interfaces, NsSnowyStream::SnowyStream& snowy
 	visibilityComponentModule(engine),
 	widgetComponentModule(engine) {
 	entityAllocator = TShared<Entity::Allocator>::From(new Entity::Allocator());
+	warpResourceQueues.resize(engine.GetKernel().GetWarpCount(), nullptr);
 }
 
 MythForest::~MythForest() {
 }
 
 void MythForest::Initialize() {
+	IRender::Device* device = engine.snowyStream.GetRenderDevice();
+	IRender& render = engine.interfaces.render;
+
+	for (size_t i = 0; i < warpResourceQueues.size(); i++) {
+		warpResourceQueues[i] = render.CreateQueue(device);
+	}
+
 	ModuleRegistar registar(engine);
 	(*this)(registar);
 }
 
 void MythForest::Uninitialize() {
 	engine.Clear();
+	IRender& render = engine.interfaces.render;
+
+	for (size_t i = 0; i < warpResourceQueues.size(); i++) {
+		render.DeleteQueue(warpResourceQueues[i]);
+	}
+
+	warpResourceQueues.clear();
 }
 
 Engine& MythForest::GetEngine() {
@@ -140,7 +155,13 @@ TObject<IReflect>& MythForest::operator () (IReflect& reflect) {
 
 void MythForest::TickDevice(IDevice& device) {
 	if (&device == &engine.interfaces.render) {
+		IRender& render = engine.interfaces.render;
+		for (size_t i = 0; i < warpResourceQueues.size(); i++) {
+			render.PresentQueues(&warpResourceQueues[i], 1, IRender::PRESENT_EXECUTE_ALL);
+		}
+
 		engine.TickFrame();
+
 		uint64_t t = ITimer::GetSystemClock();
 		currentFrameTime = t - lastFrameTick;
 		lastFrameTick = t;
@@ -320,6 +341,10 @@ void MythForest::RequestRaycast(IScript::Request& request, IScript::Delegate<Ent
 
 void MythForest::RequestCaptureFrame(IScript::Request& request, const String& path, const String& options) {
 	InvokeCaptureFrame(path, options);
+}
+
+IRender::Queue* MythForest::GetWarpResourceQueue() {
+	return warpResourceQueues[engine.GetKernel().GetCurrentWarpIndex()];
 }
 
 //

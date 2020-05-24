@@ -1,6 +1,7 @@
 #include "AnimationComponent.h"
 #include "../Transform/TransformComponent.h"
 #include "../Event/EventListenerComponent.h"
+#include "../../MythForest.h"
 
 using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
@@ -15,7 +16,6 @@ AnimationComponent::AnimationComponent(TShared<SkeletonResource> resource) : ske
 }
 
 AnimationComponent::~AnimationComponent() {
-	skeletonResource->ClearBoneMatrixBuffer(boneMatrixBuffer);
 }
 
 Tiny::FLAG AnimationComponent::GetEntityFlagMask() const {
@@ -79,12 +79,13 @@ void AnimationComponent::Initialize(Engine& engine, Entity* entity) {
 }
 
 void AnimationComponent::Uninitialize(Engine& engine, Entity* entity) {
+	skeletonResource->ClearBoneMatrixBuffer(engine.interfaces.render, engine.mythForest.GetWarpResourceQueue(), boneMatrixBuffer);
 	BaseClass::Uninitialize(engine, entity);
 }
 
-IRender::Resource* AnimationComponent::AcquireBoneMatrixBuffer(IRender::Queue* queue) {
+IRender::Resource* AnimationComponent::AcquireBoneMatrixBuffer(IRender& render, IRender::Queue* queue) {
 	if (boneMatrixBuffer == nullptr) {
-		skeletonResource->UpdateBoneMatrixBuffer(boneMatrixBuffer, boneMatrices, queue);
+		skeletonResource->UpdateBoneMatrixBuffer(render, queue, boneMatrixBuffer, boneMatrices);
 	}
 
 	return boneMatrixBuffer;

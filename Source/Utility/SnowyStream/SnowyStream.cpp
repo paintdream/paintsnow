@@ -533,7 +533,8 @@ void SnowyStream::RequestLoadExternalResourceData(IScript::Request& request, ISc
 	size_t len = externalData.size();
 	ms.Write(externalData.c_str(), len);
 	ms.Seek(IStreamBase::BEGIN, 0);
-	bool result = resource->LoadExternalResource(ms, len);
+	bool result = resource->LoadExternalResource(interfaces, ms, len);
+
 	if (result) {
 		resource->GetResourceManager().InvokeUpload(resource.Get(), resource->GetResourceManager().GetContext());
 	}
@@ -682,7 +683,7 @@ void SnowyStream::Uninitialize() {
 }
 
 template <class T>
-void RegisterPass(ResourceManager& resourceManager, UniqueType<T> type) {
+TShared<ShaderResource> RegisterPass(ResourceManager& resourceManager, UniqueType<T> type) {
 	ShaderResourceImpl<T>* shaderResource = new ShaderResourceImpl<T>(resourceManager, "", ResourceBase::RESOURCE_ETERNAL);
 	ZPassBase& pass = shaderResource->GetPass();
 	Unique unique = pass.GetUnique();
@@ -695,7 +696,9 @@ void RegisterPass(ResourceManager& resourceManager, UniqueType<T> type) {
 
 	shaderResource->SetLocation(ShaderResource::GetShaderPathPrefix() + name);
 	resourceManager.Insert(shaderResource->GetLocation(), shaderResource);
-	shaderResource->ReleaseObject();
+
+	TShared<ShaderResource> res = TShared<ShaderResource>::From(shaderResource);
+	return res;
 }
 
 void SnowyStream::RegisterBuiltinPasses() {
@@ -715,7 +718,12 @@ void SnowyStream::RegisterBuiltinPasses() {
 	RegisterPass(*resourceManager(), UniqueType<ScreenPass>());
 	RegisterPass(*resourceManager(), UniqueType<ShadowMaskPass>());
 	RegisterPass(*resourceManager(), UniqueType<StandardPass>());
-	RegisterPass(*resourceManager(), UniqueType<WidgetPass>());
+	TShared<ShaderResource> widgetShader = RegisterPass(*resourceManager(), UniqueType<WidgetPass>());
+
+	TShared<MaterialResource> widgetMaterialResource = TShared<MaterialResource>::From(new MaterialResource(*resourceManager, "[Runtime]/MaterialResource/Widget"));
+	widgetMaterialResource->Flag() |= ResourceBase::RESOURCE_ETERNAL;
+	resourceManager->Insert(widgetMaterialResource->GetLocation(), widgetMaterialResource());
+
 	// RegisterPass(*resourceManager(), UniqueType<CustomMaterialPass>());
 	/*
 	RegisterPass(*resourceManager(), UniqueType<ForwardLightingPass>());
@@ -732,7 +740,7 @@ void SnowyStream::RegisterReflectedSerializers() {
 	// PaintsNow recommends database-managed resource dependencies ...
 
 	RegisterReflectedSerializer(UniqueType<AudioResource>(), interfaces.audio, nullptr);
-	RegisterReflectedSerializer(UniqueType<FontResource>(), interfaces.render, resourceQueue);
+	RegisterReflectedSerializer(UniqueType<FontResource>(), interfaces.fontBase, nullptr);
 	RegisterReflectedSerializer(UniqueType<MaterialResource>(), interfaces.render, resourceQueue);
 	RegisterReflectedSerializer(UniqueType<ShaderResource>(), interfaces.render, resourceQueue);
 	RegisterReflectedSerializer(UniqueType<MeshResource>(), interfaces.render, resourceQueue);
@@ -932,10 +940,6 @@ void SnowyStream::RequestSetShaderResourceComplete(IScript::Request& request, IS
 
 IRender::Device* SnowyStream::GetRenderDevice() const {
 	return renderDevice;
-}
-
-IRender::Queue* SnowyStream::GetResourceQueue() const {
-	return resourceQueue;
 }
 
 IReflectObject* MetaResourceExternalPersist::Clone() const {

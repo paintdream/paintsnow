@@ -9,6 +9,7 @@
 #include "../../Component/Renderable/RenderableComponent.h"
 #include "../../../SnowyStream/SnowyStream.h"
 #include "../../../SnowyStream/Resource/FontResource.h"
+#include "../../../SnowyStream/Resource/MaterialResource.h"
 
 namespace PaintsNow {
 	namespace NsMythForest {
@@ -18,9 +19,12 @@ namespace PaintsNow {
 				TEXTVIEWCOMPONENT_SELECT_REV_COLOR = COMPONENT_CUSTOM_BEGIN,
 				TEXTVIEWCOMPONENT_CURSOR_REV_COLOR = COMPONENT_CUSTOM_BEGIN << 1,
 			};
-			TextViewComponent();
+
+			TextViewComponent(TShared<NsSnowyStream::MaterialResource> materialResource);
 			virtual ~TextViewComponent();
 			virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) override;
+			virtual void Initialize(Engine& engine, Entity* entity) override;
+			virtual void Uninitialize(Engine& engine, Entity* entity) override;
 		
 			struct Descriptor {
 				Descriptor(int h, int fs);
@@ -51,7 +55,6 @@ namespace PaintsNow {
 			const Int2& GetFullSize() const;
 			void SetPadding(const Int2& padding);
 			Int2 SelectText(const Int2Pair& offsetRect) const;
-			void TextChange();
 			Int2 Fix(int offset) const;
 
 			class TagParser {
@@ -83,10 +86,14 @@ namespace PaintsNow {
 			};
 
 			TagParser parser;
-			std::vector<Descriptor> widthInfo;
+			std::vector<Descriptor> lines;
+
+		protected:
+			IRender::Resource* unitCoordBuffer;
 
 		public:
-			TShared<NsSnowyStream::FontResource> mainFont;
+			TShared<NsSnowyStream::FontResource> fontResource;
+			TShared<NsSnowyStream::MaterialResource> materialResource;
 			String text;
 
 			Int2 size;

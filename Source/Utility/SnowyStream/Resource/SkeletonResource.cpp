@@ -72,18 +72,11 @@ const std::vector<MatrixFloat4x4>& SkeletonResource::GetOffsetTransforms() const
 	return offsetMatrices;
 }
 
-void SkeletonResource::UpdateBoneMatrixBuffer(IRender::Resource*& buffer, const std::vector<MatrixFloat4x4>& data, IRender::Queue* queue) {
-	IRender& render = resourceManager.GetInterfaces()->render;
-	if (queue == nullptr) {
-		queue = reinterpret_cast<IRender::Queue*>(resourceManager.GetContext());
-	}
-
+void SkeletonResource::UpdateBoneMatrixBuffer(IRender& render, IRender::Queue* queue, IRender::Resource*& buffer, const std::vector<MatrixFloat4x4>& data) {
 	UpdateBuffer(render, queue, buffer, const_cast<std::vector<MatrixFloat4x4>&>(data), IRender::Resource::BufferDescription::UNIFORM);
 }
 
-void SkeletonResource::ClearBoneMatrixBuffer(IRender::Resource*& buffer) {
-	IRender& render = resourceManager.GetInterfaces()->render;
-	IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(resourceManager.GetContext());
+void SkeletonResource::ClearBoneMatrixBuffer(IRender& render, IRender::Queue* queue, IRender::Resource*& buffer) {
 	ClearBuffer(render, queue, buffer);
 }
 

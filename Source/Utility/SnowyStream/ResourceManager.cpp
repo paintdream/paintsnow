@@ -7,7 +7,7 @@ using namespace PaintsNow::NsSnowyStream;
 
 static const String uniExtension = ".pod";
 
-ResourceManager::ResourceManager(IThread& threadApi, IUniformResourceManager& hostManager, Interfaces* inters, const TWrapper<void, const String&>& err, void* c) : ISyncObject(threadApi), uniformResourceManager(hostManager), interfaces(inters), errorHandler(err), context(c) {
+ResourceManager::ResourceManager(IThread& threadApi, IUniformResourceManager& hostManager, const TWrapper<void, const String&>& err, void* c) : ISyncObject(threadApi), uniformResourceManager(hostManager), errorHandler(err), context(c) {
 }
 
 ResourceManager::~ResourceManager() {
@@ -17,10 +17,6 @@ ResourceManager::~ResourceManager() {
 void ResourceManager::Report(const String& err) {
 	if (errorHandler)
 		errorHandler(err);
-}
-
-Interfaces* ResourceManager::GetInterfaces() const {
-	return interfaces;
 }
 
 void ResourceManager::RemoveAll() {

@@ -22,12 +22,12 @@ namespace PaintsNow {
 			SnowyStream(Interfaces& interfaces, NsBridgeSunset::BridgeSunset& bs, const TWrapper<IArchive*, IStreamBase&, size_t>& subArchiveCreator, const TWrapper<void, const String&>& errorHandler);
 			virtual ~SnowyStream();
 			IRender::Device* GetRenderDevice() const;
-			IRender::Queue* GetResourceQueue() const;
 
 			virtual void TickDevice(IDevice& device);
 			virtual void Initialize() override;
 			virtual void Uninitialize() override;
-			virtual void Reset();
+			void Reset();
+
 			virtual Interfaces& GetInterfaces() const;
 			virtual TShared<ResourceBase> CreateResource(const String& location, const String& extension = "", bool openExisting = true, Tiny::FLAG flag = 0, IStreamBase* sourceStream = nullptr) override;
 			virtual bool PersistResource(TShared<ResourceBase> resource, const String& extension = "") override;
@@ -84,7 +84,7 @@ namespace PaintsNow {
 
 				std::map<Unique, TShared<ResourceManager> >::iterator it = resourceManagers.find(unique);
 				if (it == resourceManagers.end()) {
-					ResourceManager* resourceManager = new DeviceResourceManager<T>(interfaces.thread, *this, &interfaces, device, errorHandler, context);
+					ResourceManager* resourceManager = new DeviceResourceManager<T>(interfaces.thread, *this, device, errorHandler, context);
 					RegisterResourceManager(unique, resourceManager);
 					resourceManager->ReleaseObject();
 				}

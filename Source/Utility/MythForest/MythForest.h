@@ -48,6 +48,7 @@ namespace PaintsNow {
 			MythForest(Interfaces& interfaces, NsSnowyStream::SnowyStream& snowyStream, NsBridgeSunset::BridgeSunset& bridgeSunset);
 			virtual ~MythForest();
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+			IRender::Queue* GetWarpResourceQueue();
 
 			// static int main(int argc, char* argv[]);
 			virtual void TickDevice(IDevice& device) override;
@@ -117,6 +118,7 @@ namespace PaintsNow {
 
 			uint64_t lastFrameTick;
 			uint64_t currentFrameTime;
+			std::vector<IRender::Queue*> warpResourceQueues;
 		};
 	}
 }

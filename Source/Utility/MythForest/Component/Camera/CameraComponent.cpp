@@ -588,7 +588,7 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 				ZPassBase::Parameter& parameter = updater[IShader::BindInput::BONE_TRANSFORMS];
 				if (parameter) {
 					group.animationComponent = animationComponent; // hold reference
-					group.drawCallDescription.bufferResources[parameter.slot].buffer = animationComponent->AcquireBoneMatrixBuffer(queue);
+					group.drawCallDescription.bufferResources[parameter.slot].buffer = animationComponent->AcquireBoneMatrixBuffer(render, queue);
 				}
 			}
 		} else {

@@ -125,7 +125,7 @@ namespace PaintsNow {
 					std::vector<NsSnowyStream::IDrawCallProvider::DataUpdater*> dataUpdaters;
 					uint32_t entityCount;
 					uint32_t visibleEntityCount;
-					uint64_t triangleCount;
+					uint32_t triangleCount;
 				};
 
 				std::vector<WarpData> warpData;

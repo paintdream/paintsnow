@@ -229,7 +229,7 @@ void LightComponent::ShadowLayer::CollectRenderableComponent(Engine& engine, Tas
 				ZPassBase::Parameter& parameter = updater[IShader::BindInput::BONE_TRANSFORMS];
 				if (parameter) {
 					group.animationComponent = animationComponent; // hold reference
-					group.drawCallDescription.bufferResources[parameter.slot].buffer = animationComponent->AcquireBoneMatrixBuffer(warpData.renderQueue);
+					group.drawCallDescription.bufferResources[parameter.slot].buffer = animationComponent->AcquireBoneMatrixBuffer(render, warpData.renderQueue);
 				}
 			}
 		} else {
@@ -510,7 +510,7 @@ void LightComponent::ShadowLayer::Initialize(Engine& engine, TShared<StreamCompo
 	texture->description.dimension = UShort3(res.x(), res.y(), 1);
 	texture->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 	texture->description.state.layout = IRender::Resource::TextureDescription::RGBA;
-	texture->GetResourceManager().InvokeUpload(texture(), engine.snowyStream.GetResourceQueue());
+	texture->GetResourceManager().InvokeUpload(texture(), engine.mythForest.GetWarpResourceQueue());
 
 	dummyColorAttachment = texture;
 

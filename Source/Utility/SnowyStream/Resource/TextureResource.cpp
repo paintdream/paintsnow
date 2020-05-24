@@ -177,8 +177,8 @@ bool TextureResource::Compress(const String& compressionType) {
 	}
 }
 
-bool TextureResource::LoadExternalResource(IStreamBase& streamBase, size_t length) {
-	IImage& imageBase = resourceManager.GetInterfaces()->image;
+bool TextureResource::LoadExternalResource(Interfaces& interfaces, IStreamBase& streamBase, size_t length) {
+	IImage& imageBase = interfaces.image;
 	IImage::Image* image = imageBase.Create(1, 1, IRender::Resource::TextureDescription::RGB, IRender::Resource::TextureDescription::Format::UNSIGNED_BYTE);
 	if (image == nullptr) return false;
 	bool success = imageBase.Load(image, streamBase, length);

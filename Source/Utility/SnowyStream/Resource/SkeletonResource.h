@@ -29,8 +29,8 @@ namespace PaintsNow {
 			const BoneAnimation& GetBoneAnimation() const;
 			const std::vector<MatrixFloat4x4>& GetOffsetTransforms() const;
 
-			void UpdateBoneMatrixBuffer(IRender::Resource*& buffer, const std::vector<MatrixFloat4x4>& data, IRender::Queue* q = nullptr);
-			void ClearBoneMatrixBuffer(IRender::Resource*& buffer);
+			void UpdateBoneMatrixBuffer(IRender& render, IRender::Queue* queue, IRender::Resource*& buffer, const std::vector<MatrixFloat4x4>& data);
+			void ClearBoneMatrixBuffer(IRender& render, IRender::Queue* queue, IRender::Resource*& buffer);
 
 		protected:
 			void PrepareTransform(std::vector<MatrixFloat4x4>& transforms, size_t i);

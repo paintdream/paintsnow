@@ -13,34 +13,26 @@ bool FontResource::LoadExternalResource(IStreamBase& streamBase, size_t length) 
 	return streamBase.ReadBlock(const_cast<char*>(rawFontData.data()), length);
 }
 
-void FontResource::Attach(IRender& render, void* deviceContext) {
-	GraphicResourceBase::Attach(render, deviceContext);
-	
+void FontResource::Attach(IFontBase& fontBase, void* deviceContext) {
 }
 
-void FontResource::Detach(IRender& render, void* deviceContext) {
+void FontResource::Detach(IFontBase& fontBase, void* deviceContext) {
 	for (std::map<uint32_t, Slice>::iterator it = sliceMap.begin(); it != sliceMap.end(); ++it) {
 		it->second.Uninitialize(resourceManager);
 	}
 	sliceMap.clear();
 
 	if (font != nullptr) {
-		IFontBase& fontBase = resourceManager.GetInterfaces()->fontBase;
 		fontBase.Close(font);
 		font = nullptr;
 	}
-
-	GraphicResourceBase::Detach(render, deviceContext);
 }
 
-void FontResource::Upload(IRender& render, void* deviceContext) {
-	IFontBase& fontBase = resourceManager.GetInterfaces()->fontBase;
-
+void FontResource::Upload(IFontBase& fontBase, void* deviceContext) {
 	if (font == nullptr && !rawFontData.empty()) {
 		// load font resource from memory
 		ZMemoryStream ms(rawFontData.size(), false);
 		size_t len = rawFontData.size();
-		IFontBase& fontBase = resourceManager.GetInterfaces()->fontBase;
 		if (ms.WriteBlock(rawFontData.data(), len)) {
 			ms.Seek(IStreamBase::BEGIN, 0);
 			font = fontBase.Load(ms, len);
@@ -53,7 +45,7 @@ void FontResource::Upload(IRender& render, void* deviceContext) {
 	}
 }
 
-void FontResource::Download(IRender& render, void* deviceContext) {
+void FontResource::Download(IFontBase& fontBase, void* deviceContext) {
 }
 
 TObject<IReflect>& FontResource::operator () (IReflect& reflect) {
@@ -82,7 +74,7 @@ IRender::Resource* FontResource::GetFontTexture(uint32_t size, Int2& texSize) {
 	}
 }
 
-const FontResource::Char& FontResource::Get(IFontBase::FONTCHAR ch, int32_t size) {
+const FontResource::Char& FontResource::Get(IFontBase& fontBase, IFontBase::FONTCHAR ch, int32_t size) {
 	size = size == 0 ? 12 : size;
 
 	Slice& slice = sliceMap[size];
@@ -92,14 +84,12 @@ const FontResource::Char& FontResource::Get(IFontBase::FONTCHAR ch, int32_t size
 		slice.Initialize(resourceManager);
 	}
 
-	return slice.Get(resourceManager, ch);
+	return slice.Get(resourceManager, fontBase, ch);
 }
 
 FontResource::Slice::Slice(uint32_t size = 0) : cacheTexture(nullptr), font(nullptr), fontSize(size), modified(false), width(512) {}
 
 void FontResource::Slice::Initialize(ResourceManager& resourceManager) {
-	IFontBase& fontBase = resourceManager.GetInterfaces()->fontBase;
-	IRender& render = resourceManager.GetInterfaces()->render;
 	assert(cacheTexture == nullptr);
 	assert(false);
 	
@@ -107,8 +97,6 @@ void FontResource::Slice::Initialize(ResourceManager& resourceManager) {
 }
 
 void FontResource::Slice::Uninitialize(ResourceManager& resourceManager) {
-	IFontBase& fontBase = resourceManager.GetInterfaces()->fontBase;
-	IRender& render = resourceManager.GetInterfaces()->render;
 	/*
 	if (cacheTexture != nullptr) {
 		render.DeleteTexture(cacheTexture);
@@ -146,7 +134,7 @@ IRender::Resource* FontResource::Slice::GetFontTexture(ResourceManager& resource
 
 void FontResource::Slice::UpdateFontTexture(ResourceManager& resourceManager) {
 	if (lastRect.second.y() != 0) {
-		IRender& render = resourceManager.GetInterfaces()->render;
+		// IFontBase& fontBase = resourceManager.GetInterfaces()->render;
 		// render.WriteTexture(cacheTexture, 0, width, lastRect.second.y(), &buffer[0], IRender::Resource::TextureDescription::RGBA, IRender::Resource::TextureDescription::UNSIGNED_BYTE);
 	}
 }
@@ -155,13 +143,11 @@ Int2 FontResource::Slice::GetTextureSize() const {
 	return Int2((int)width, lastRect.second.y());
 }
 
-const FontResource::Char& FontResource::Slice::Get(ResourceManager& resourceManager, IFontBase::FONTCHAR ch) {
+const FontResource::Char& FontResource::Slice::Get(ResourceManager& resourceManager, IFontBase& fontBase, IFontBase::FONTCHAR ch) {
 	hmap::iterator p = cache.find(ch);
 	if (p != cache.end()) {
 		return (*p).second;
 	} else {
-		IFontBase& fontBase = resourceManager.GetInterfaces()->fontBase;
-		IRender& render = resourceManager.GetInterfaces()->render;
 		assert(font != nullptr);
 		Char c;
 		String data;

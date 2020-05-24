@@ -24,6 +24,9 @@ namespace PaintsNow {
 			void RequestGetText(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent);
 			void RequestSetText(IScript::Request& request, IScript::Delegate<TextViewComponent> window, const String& text);
 			void RequestLocateText(IScript::Request& request, IScript::Delegate<TextViewComponent> window, Int2& offset, bool isRowCol);
+
+		protected:
+			TShared<NsSnowyStream::MaterialResource> defaultTextMaterial;
 		};
 	}
 }
