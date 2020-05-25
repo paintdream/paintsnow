@@ -1819,9 +1819,9 @@ struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> : public Resou
 				}
 			} else {
 				if (d.instanceCounts.x() == 0) {
-					glDrawArrays(GL_TRIANGLE_FAN, d.indexBufferResource.offset, d.indexBufferResource.length);
+					glDrawArrays(GL_TRIANGLES, d.indexBufferResource.offset, d.indexBufferResource.length);
 				} else {
-					glDrawArraysInstanced(GL_TRIANGLE_FAN, d.indexBufferResource.offset, d.indexBufferResource.length, (GLsizei)d.instanceCounts.x());
+					glDrawArraysInstanced(GL_TRIANGLES, d.indexBufferResource.offset, d.indexBufferResource.length, (GLsizei)d.instanceCounts.x());
 				}
 			}
 		}

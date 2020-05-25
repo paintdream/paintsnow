@@ -93,6 +93,7 @@ namespace PaintsNow {
 
 		protected:
 			IRender::Resource* unitCoordBuffer;
+			IRender::Resource* indexBuffer;
 
 		public:
 			TShared<NsSnowyStream::FontResource> fontResource;

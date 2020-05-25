@@ -127,7 +127,7 @@ void TextViewComponent::TagParser::Clear() {
 	nodes.clear();
 }
 
-TextViewComponent::TextViewComponent(TShared<MaterialResource> material) : materialResource(material), unitCoordBuffer(nullptr), passwordChar(0), cursorChar(0), cursorPos(0), fontSize(12) {
+TextViewComponent::TextViewComponent(TShared<MaterialResource> material) : materialResource(material), unitCoordBuffer(nullptr), indexBuffer(nullptr), passwordChar(0), cursorChar(0), cursorPos(0), fontSize(12) {
 	Flag() |= (TEXTVIEWCOMPONENT_CURSOR_REV_COLOR | TEXTVIEWCOMPONENT_SELECT_REV_COLOR);
 }
 
@@ -137,11 +137,13 @@ void TextViewComponent::Initialize(Engine& engine, Entity* entity) {
 	IRender::Queue* queue = engine.mythForest.GetWarpResourceQueue();
 
 	unitCoordBuffer = render.CreateResource(queue, IRender::Resource::RESOURCE_BUFFER);
+	indexBuffer = render.CreateResource(queue, IRender::Resource::RESOURCE_BUFFER);
 }
 
 void TextViewComponent::Uninitialize(Engine& engine, Entity* entity) {
 	IRender& render = engine.interfaces.render;
 	IRender::Queue* queue = engine.mythForest.GetWarpResourceQueue();
+	render.DeleteResource(queue, indexBuffer);
 	render.DeleteResource(queue, unitCoordBuffer);
 	unitCoordBuffer = nullptr;
 
@@ -204,6 +206,7 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 	std::vector<Float4> bufferData;
 	IFontBase& fontBase = engine.interfaces.fontBase;
 	IRender& render = engine.interfaces.render;
+	IRender::Queue* queue = engine.mythForest.GetWarpResourceQueue();
 
 	Short2 fullSize;
 	int ws = size.x();
@@ -347,6 +350,29 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 	fullSize.y() = currentHeight + start.y();
 
 	// do update
+	IRender::Resource::BufferDescription bufferDescription;
+	bufferDescription.usage = IRender::Resource::BufferDescription::VERTEX;
+	bufferDescription.component = 4;
+	bufferDescription.format = IRender::Resource::BufferDescription::UNSIGNED_SHORT;
+	bufferDescription.dynamic = 1;
+	std::string str = ss.str();
+
+	bufferDescription.data.Assign((const uint8_t*)str.data(), safe_cast<uint32_t>(str.size()));
+	render.UploadResource(queue, unitCoordBuffer, &bufferDescription);
+
+	uint16_t quadCount = safe_cast<uint16_t>(str.size() / (sizeof(UShort4) * 4));
+	UShort3* p = reinterpret_cast<UShort3*>(const_cast<char*>(str.data()));
+	for (uint16_t i = 0; i < quadCount; i++) {
+		UShort3& t = p[i * 2];
+		t.x() = i; t.y() = i + 1; t.z() = i + 2;
+		UShort3& s = p[i * 2 + 1];
+		s.x() = i; s.y() = i + 2; s.z() = i + 3;
+	}
+
+	bufferDescription.usage = IRender::Resource::BufferDescription::INDEX;
+	bufferDescription.data.Assign((const uint8_t*)str.data(), safe_cast<uint32_t>(sizeof(UShort3) * 2 * quadCount));
+
+	render.UploadResource(queue, indexBuffer, &bufferDescription);
 }
 
 uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) {
@@ -359,20 +385,20 @@ void TextViewComponent::RenderCharacter(std::stringstream& stream, const Short2P
 	Short2 fontTexSize;
 	IRender::Resource* texture = fontResource->GetFontTexture(fontSize, fontTexSize);
 	if (texture != nullptr) {
-		Float4 pos((float)rect.first.x(), (float)(size.y() - rect.second.y()), (float)rect.second.y(), (float)(size.y() - rect.first.y()));
-		Float4 tex = Float4(
-			(float)uv.first.x() / fontTexSize.x(),
-			(float)uv.first.y() / fontTexSize.y(),
-			(float)uv.second.x() / fontTexSize.x(),
-			(float)uv.second.y() / fontTexSize.y()
+		UShort4 pos(rect.first.x(), (size.y() - rect.second.y()), rect.second.y(), (size.y() - rect.first.y()));
+		UShort4 tex = UShort4(
+			uv.first.x() / fontTexSize.x(),
+			uv.first.y() / fontTexSize.y(),
+			uv.second.x() / fontTexSize.x(),
+			uv.second.y() / fontTexSize.y()
 		);
 
 		// Add triangles
-		Float4 item[4] = {
-			Float4(pos[0], pos[1], tex[0], tex[1]),
-			Float4(pos[2], pos[1], tex[2], tex[1]),
-			Float4(pos[2], pos[3], tex[2], tex[3]),
-			Float4(pos[0], pos[3], tex[0], tex[3]),
+		UShort4 item[4] = {
+			UShort4(pos[0], pos[1], tex[0], tex[1]),
+			UShort4(pos[2], pos[1], tex[2], tex[1]),
+			UShort4(pos[2], pos[3], tex[2], tex[3]),
+			UShort4(pos[0], pos[3], tex[0], tex[3]),
 		};
 
 		stream.write((const char*)item, sizeof(item));
