@@ -480,18 +480,16 @@ public:
 
 private:
 	inline void Finalize(IScript::Request& request) {
-		if (GetExtReferCount() == 0 && callback) {
-			request.DoLock();
-			request.Push();
-			request << beginarray;
-			for (size_t i = 0; i < resourceList.size(); i++) {
-				request << resourceList[i];
-			}
-			request << endarray;
-			request.Call(sync, callback);
-			request.Pop();
-			request.UnLock();
+		request.DoLock();
+		request.Push();
+		request << beginarray;
+		for (size_t i = 0; i < resourceList.size(); i++) {
+			request << resourceList[i];
 		}
+		request << endarray;
+		request.Call(sync, callback);
+		request.Pop();
+		request.UnLock();
 	}
 
 	inline void RoutineCreateResource(void* context, bool run, uint32_t index) {
@@ -499,12 +497,14 @@ private:
 			resourceList[index] = snowyStream.CreateResource(pathList[index], resType, true);
 		}
 
-		assert(context != nullptr);
-		NsBridgeSunset::BridgeSunset& bridgeSunset = *reinterpret_cast<NsBridgeSunset::BridgeSunset*>(context);
-		IScript::Request& request = bridgeSunset.AllocateRequest();
-		Finalize(request);
-		bridgeSunset.FreeRequest(request);
-		ReleaseObject();
+		if (GetExtReferCount() == 0 && callback) {
+			assert(context != nullptr);
+			NsBridgeSunset::BridgeSunset& bridgeSunset = *reinterpret_cast<NsBridgeSunset::BridgeSunset*>(context);
+			IScript::Request& request = bridgeSunset.AllocateRequest();
+			Finalize(request);
+			bridgeSunset.FreeRequest(request);
+			ReleaseObject();
+		}
 	}
 
 	std::vector<String> pathList;
@@ -549,7 +549,7 @@ void SnowyStream::RequestInspectResource(IScript::Request& request, IScript::Del
 	CHECK_DELEGATE(resource);
 	bridgeSunset.GetKernel().YieldCurrentWarp();
 
-	Tiny::FLAG flag = resource->Flag().load();
+	Tiny::FLAG flag = resource->Flag().load(std::memory_order_relaxed);
 	std::vector<ResourceBase::Dependency> dependencies;
 	resource->GetDependencies(dependencies);
 

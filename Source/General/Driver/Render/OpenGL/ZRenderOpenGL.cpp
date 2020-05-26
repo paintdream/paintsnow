@@ -1011,6 +1011,7 @@ public:
 	};
 
 	virtual void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) {
+		// static Unique uniqueBindOffset = UniqueType<IShader::BindOffset>::Get();
 		static Unique uniqueBindInput = UniqueType<IShader::BindInput>::Get();
 		static Unique uniqueBindOutput = UniqueType<IShader::BindOutput>::Get();
 		static Unique uniqueBindTexture = UniqueType<IShader::BindTexture>::Get();
@@ -1730,16 +1731,24 @@ struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> : public Resou
 			assert(buffer != nullptr);
 			uint32_t k;
 			GLuint bufferElementType = GL_FLOAT;
+			GLuint bufferElementSize = sizeof(float);
 			if (buffer->usage != IRender::Resource::BufferDescription::UNIFORM) {
 				switch (buffer->format) {
 				case IRender::Resource::Description::UNSIGNED_BYTE:
 					bufferElementType = GL_UNSIGNED_BYTE;
+					bufferElementSize = sizeof(unsigned char);
 					break;
 				case IRender::Resource::Description::UNSIGNED_SHORT:
 					bufferElementType = GL_UNSIGNED_SHORT;
+					bufferElementSize = sizeof(unsigned short);
 					break;
 				case IRender::Resource::Description::FLOAT:
 					bufferElementType = GL_FLOAT;
+					bufferElementSize = sizeof(float);
+					break;
+				case IRender::Resource::Description::UNSIGNED_INT:
+					bufferElementType = GL_UNSIGNED_INT;
+					bufferElementSize = sizeof(unsigned int);
 					break;
 				}
 			}
@@ -1753,7 +1762,7 @@ struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> : public Resou
 					GL_GUARD();
 					glEnableVertexAttribArray(vertexBufferBindingCount);
 					glBindBuffer(GL_ARRAY_BUFFER, buffer->bufferID);
-					glVertexAttribPointer(vertexBufferBindingCount, bufferComponent, bufferElementType, GL_FALSE, 0, reinterpret_cast<void*>((size_t)bufferRange.offset));
+					glVertexAttribPointer(vertexBufferBindingCount, bufferComponent, bufferElementType, GL_FALSE, buffer->component * bufferElementSize, reinterpret_cast<void*>((size_t)bufferRange.offset));
 					vertexBufferBindingCount++;
 					break;
 				}
@@ -1764,7 +1773,7 @@ struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> : public Resou
 					glBindBuffer(GL_ARRAY_BUFFER, buffer->bufferID);
 					for (k = 0; k < bufferComponent; k += 4) {
 						glEnableVertexAttribArray(vertexBufferBindingCount);
-						glVertexAttribPointer(vertexBufferBindingCount, Min(4u, bufferComponent - k), bufferElementType, GL_FALSE, bufferComponent * sizeof(float), reinterpret_cast<void*>((size_t)bufferRange.offset + sizeof(float) * k));
+						glVertexAttribPointer(vertexBufferBindingCount, Min(4u, bufferComponent - k), bufferElementType, GL_FALSE, buffer->component * bufferElementSize, reinterpret_cast<void*>((size_t)bufferRange.offset + sizeof(float) * k));
 						glVertexAttribDivisor(vertexBufferBindingCount, 1);
 						vertexBufferBindingCount++;
 					}

@@ -125,6 +125,27 @@ namespace PaintsNow {
 			typedef BindOption Type;
 		};
 
+		class BindOffset : public TReflected<BindOffset, TMetaBinding<uint32_t> > {
+		public:
+			BindOffset(uint32_t offset) : BaseClass(offset) {}
+			virtual TObject<IReflect>& operator () (IReflect& reflect) override {
+				BaseClass::operator () (reflect);
+				return *this;
+			}
+
+			template <class T, class D>
+			inline const BindOffset& FilterField(T* t, D* d) const {
+				return *this; // do nothing
+			}
+
+			template <class T, class D>
+			struct RealType {
+				typedef BindOffset Type;
+			};
+
+			typedef BindOffset Type;
+		};
+
 		class BindInput : public TReflected<BindInput, TMetaBinding<uint32_t> > {
 		public:
 			enum SCHEMA {
