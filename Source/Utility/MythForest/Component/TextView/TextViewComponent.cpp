@@ -156,6 +156,10 @@ const Short2& TextViewComponent::GetFullSize() const {
 	return fullSize;
 }
 
+void TextViewComponent::SetPadding(const Short2& value) {
+	padding = value;
+}
+
 void TextViewComponent::Scroll(const Short2& pt) {
 	scroll = pt;
 }

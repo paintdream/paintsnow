@@ -45,20 +45,53 @@ void MeshResource::Upload(IRender& render, void* deviceContext) {
 	deviceMemoryUsage = 0;
 
 	SpinLock(critical);
-	bool preserve = mapCount.load(std::memory_order_relaxed) != 0;
 
-	deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.indexBuffer, meshCollection.indices, Description::INDEX, preserve);
-	deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.positionBuffer, meshCollection.vertices, Description::VERTEX, preserve);
-	deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.normalBuffer, meshCollection.normals, Description::VERTEX, preserve);
-	deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.tangentBuffer, meshCollection.tangents, Description::VERTEX, preserve);
-	deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.colorBuffer, meshCollection.colors, Description::VERTEX, preserve);
-	deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.boneIndexBuffer, meshCollection.boneIndices, Description::VERTEX, preserve);
-	deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.boneWeightBuffer, meshCollection.boneWeights, Description::VERTEX, preserve);
+	assert(!meshCollection.vertices.empty());
+	assert(meshCollection.boneIndices.size() == meshCollection.boneWeights.size());
+
+	uint32_t cnt = 0;
+	cnt += bufferCollection.hasNormalBuffer = !meshCollection.normals.empty();
+	cnt += bufferCollection.hasTangentBuffer = !meshCollection.tangents.empty();
+	cnt += bufferCollection.hasColorBuffer = !meshCollection.colors.empty();
+	bufferCollection.hasIndexWeightBuffer = !meshCollection.indices.empty();
+
+	std::vector<UChar4> normalTangentColorData(meshCollection.normals.size() * cnt);
+	if (cnt != 0) {
+		for (size_t i = 0; i < meshCollection.vertices.size(); i++) {
+			uint32_t offset = 0;
+			if (bufferCollection.hasNormalBuffer) {
+				normalTangentColorData[i * cnt + offset++] = meshCollection.normals[i];
+			}
+
+			if (bufferCollection.hasTangentBuffer) {
+				normalTangentColorData[i * cnt + offset++] = meshCollection.tangents[i];
+			}
+
+			if (bufferCollection.hasColorBuffer) {
+				normalTangentColorData[i * cnt + offset++] = meshCollection.colors[i];
+			}
+		}
+	}
+
+	std::vector<UChar4> boneData(meshCollection.boneIndices.size() * 2);
+	for (size_t i = 0; i < meshCollection.boneIndices.size(); i++) {
+		boneData[i * 2] = meshCollection.boneIndices[i];
+		boneData[i * 2 + 1] = meshCollection.boneWeights[i];
+	}
+
+	deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.indexBuffer, meshCollection.indices, Description::INDEX);
+	deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.positionBuffer, meshCollection.vertices, Description::VERTEX);
+	deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.normalTangentColorBuffer, normalTangentColorData, Description::VERTEX, cnt);
+	deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.boneIndexWeightBuffer, boneData, Description::VERTEX, 2);
 
 	bufferCollection.texCoordBuffers.resize(meshCollection.texCoords.size(), nullptr);
 	for (size_t i = 0; i < meshCollection.texCoords.size(); i++) {
 		IAsset::TexCoord& texCoord = meshCollection.texCoords[i];
-		deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.texCoordBuffers[i], texCoord.coords, Description::VERTEX, preserve);
+		deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.texCoordBuffers[i], texCoord.coords, Description::VERTEX);
+	}
+
+	if (mapCount.load(std::memory_order_relaxed) == 0) {
+		meshCollection = IAsset::MeshCollection();
 	}
 
 	SpinUnLock(critical);
@@ -81,11 +114,8 @@ void MeshResource::Detach(IRender& render, void* deviceContext) {
 
 	ClearBuffer(render, queue, bufferCollection.indexBuffer);
 	ClearBuffer(render, queue, bufferCollection.positionBuffer);
-	ClearBuffer(render, queue, bufferCollection.normalBuffer);
-	ClearBuffer(render, queue, bufferCollection.tangentBuffer);
-	ClearBuffer(render, queue, bufferCollection.colorBuffer);
-	ClearBuffer(render, queue, bufferCollection.boneIndexBuffer);
-	ClearBuffer(render, queue, bufferCollection.boneWeightBuffer);
+	ClearBuffer(render, queue, bufferCollection.normalTangentColorBuffer);
+	ClearBuffer(render, queue, bufferCollection.boneIndexWeightBuffer);
 
 	for (size_t i = 0; i < bufferCollection.texCoordBuffers.size(); i++) {
 		ClearBuffer(render, queue, bufferCollection.texCoordBuffers[i]);
@@ -101,7 +131,7 @@ void MeshResource::Download(IRender& render, void* deviceContext) {
 }
 
 // BufferCollection
-MeshResource::BufferCollection::BufferCollection() : indexBuffer(nullptr), positionBuffer(nullptr), normalBuffer(nullptr), tangentBuffer(nullptr), colorBuffer(nullptr), boneIndexBuffer(nullptr), boneWeightBuffer(nullptr) {}
+MeshResource::BufferCollection::BufferCollection() : indexBuffer(nullptr), positionBuffer(nullptr), normalTangentColorBuffer(nullptr), boneIndexWeightBuffer(nullptr), hasNormalBuffer(false), hasTangentBuffer(false), hasColorBuffer(false), hasIndexWeightBuffer(false) {}
 
 TObject<IReflect>& MeshResource::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
@@ -120,45 +150,51 @@ TObject<IReflect>& MeshResource::BufferCollection::operator () (IReflect& reflec
 	if (reflect.IsReflectProperty()) {
 		ReflectProperty(indexBuffer)[Runtime][IShader::BindInput(IShader::BindInput::INDEX)];
 		ReflectProperty(positionBuffer)[Runtime][IShader::BindInput(IShader::BindInput::POSITION)];
-		ReflectProperty(normalBuffer)[Runtime][IShader::BindInput(IShader::BindInput::NORMAL)];
-		ReflectProperty(tangentBuffer)[Runtime][IShader::BindInput(IShader::BindInput::TANGENT)];
-		ReflectProperty(colorBuffer)[Runtime][IShader::BindInput(IShader::BindInput::COLOR)];
-		ReflectProperty(boneIndexBuffer)[Runtime][IShader::BindInput(IShader::BindInput::BONE_INDEX)];
-		ReflectProperty(boneWeightBuffer)[Runtime][IShader::BindInput(IShader::BindInput::BONE_WEIGHT)];
+		ReflectProperty(normalTangentColorBuffer)[Runtime][IShader::BindInput(IShader::BindInput::NORMAL)][IShader::BindInput(IShader::BindInput::TANGENT)][IShader::BindInput(IShader::BindInput::COLOR)];
+		ReflectProperty(boneIndexWeightBuffer)[Runtime][IShader::BindInput(IShader::BindInput::BONE_INDEX)][IShader::BindInput(IShader::BindInput::BONE_WEIGHT)];
 		ReflectProperty(texCoordBuffers)[Runtime][IShader::BindInput(IShader::BindInput::TEXCOORD)];
 	}
 
 	return *this;
 }
 
-void MeshResource::BufferCollection::GetDescription(std::vector<ZPassBase::Parameter>& desc, ZPassBase::Updater& updater) const {
+void MeshResource::BufferCollection::GetDescription(std::vector<ZPassBase::Parameter>& desc, std::vector<std::pair<uint32_t, uint32_t> >& offsets, ZPassBase::Updater& updater) const {
 	// Do not pass index buffer
 	if (positionBuffer != nullptr) {
 		desc.emplace_back(updater[IShader::BindInput::POSITION]);
+		offsets.emplace_back(std::make_pair(0, 3));
 	}
 
-	if (normalBuffer != nullptr) {
-		desc.emplace_back(updater[IShader::BindInput::NORMAL]);
+	if (normalTangentColorBuffer != nullptr) {
+		uint32_t offset = 0;
+		if (hasNormalBuffer) {
+			desc.emplace_back(updater[IShader::BindInput::NORMAL]);
+			offsets.emplace_back(std::make_pair(offset, 4));
+			offset += sizeof(UChar4);
+		}
+
+		if (hasNormalBuffer) {
+			desc.emplace_back(updater[IShader::BindInput::TANGENT]);
+			offsets.emplace_back(std::make_pair(offset, 4));
+			offset += sizeof(UChar4);
+		}
+
+		if (hasColorBuffer) {
+			desc.emplace_back(updater[IShader::BindInput::COLOR]);
+			offsets.emplace_back(std::make_pair(offset, 4));
+		}
 	}
 
-	if (tangentBuffer != nullptr) {
-		desc.emplace_back(updater[IShader::BindInput::TANGENT]);
-	}
-
-	if (colorBuffer != nullptr) {
-		desc.emplace_back(updater[IShader::BindInput::COLOR]);
-	}
-
-	if (boneIndexBuffer != nullptr) {
+	if (boneIndexWeightBuffer != nullptr) {
 		desc.emplace_back(updater[IShader::BindInput::BONE_INDEX]);
-	}
-
-	if (boneWeightBuffer != nullptr) {
+		offsets.emplace_back(std::make_pair(0, 4));
 		desc.emplace_back(updater[IShader::BindInput::BONE_WEIGHT]);
+		offsets.emplace_back(std::make_pair((uint32_t)sizeof(UChar4), 4));
 	}
 
 	for (uint32_t i = 0; i < texCoordBuffers.size(); i++) {
 		desc.emplace_back(updater[IShader::BindInput::SCHEMA(IShader::BindInput::TEXCOORD + i)]);
+		offsets.emplace_back(std::make_pair(0, 4));
 	}
 }
 
@@ -167,24 +203,23 @@ void MeshResource::BufferCollection::UpdateData(std::vector<IRender::Resource*>&
 		data.emplace_back(positionBuffer);
 	}
 
-	if (normalBuffer != nullptr) {
-		data.emplace_back(normalBuffer);
+	if (normalTangentColorBuffer != nullptr) {
+		if (hasNormalBuffer) {
+			data.emplace_back(normalTangentColorBuffer);
+		}
+
+		if (hasTangentBuffer) {
+			data.emplace_back(normalTangentColorBuffer);
+		}
+
+		if (hasColorBuffer) {
+			data.emplace_back(normalTangentColorBuffer);
+		}
 	}
 
-	if (tangentBuffer != nullptr) {
-		data.emplace_back(tangentBuffer);
-	}
-
-	if (colorBuffer != nullptr) {
-		data.emplace_back(colorBuffer);
-	}
-
-	if (boneIndexBuffer != nullptr) {
-		data.emplace_back(boneIndexBuffer);
-	}
-
-	if (boneWeightBuffer != nullptr) {
-		data.emplace_back(boneWeightBuffer);
+	if (boneIndexWeightBuffer != nullptr) {
+		data.emplace_back(boneIndexWeightBuffer);
+		data.emplace_back(boneIndexWeightBuffer);
 	}
 
 	for (size_t i = 0; i < texCoordBuffers.size(); i++) {

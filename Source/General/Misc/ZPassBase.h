@@ -57,7 +57,7 @@ namespace PaintsNow {
 			uint8_t slot; // N'st slot of buffer/texture
 			uint16_t stride;
 			uint16_t offset;
-			uint16_t length;
+			uint32_t length;
 			void* internalAddress;
 			Unique type;
 		};

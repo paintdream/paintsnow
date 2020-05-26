@@ -47,6 +47,12 @@ namespace PaintsNow {
 			void Scroll(const Short2& pt);
 			void SetUpdateMark();
 
+		public:
+			TShared<NsSnowyStream::FontResource> fontResource;
+			TShared<NsSnowyStream::MaterialResource> materialResource;
+			uint32_t fontSize;
+			String text;
+
 		protected:
 			void SetSize(Engine& engine, const Short2& size);
 			void UpdateRenderData(Engine& engine);
@@ -58,8 +64,6 @@ namespace PaintsNow {
 			const Short2& GetSize() const;
 			const Short2& GetFullSize() const;
 			void SetPadding(const Short2& padding);
-			Short2 SelectText(const Short2Pair& offsetRect) const;
-			Short2 Fix(int offset) const;
 
 			class TagParser {
 			public:
@@ -88,18 +92,12 @@ namespace PaintsNow {
 				std::vector<Node> nodes;
 			};
 
-			TagParser parser;
-			std::vector<Descriptor> lines;
-
 		protected:
 			IRender::Resource* unitCoordBuffer;
 			IRender::Resource* indexBuffer;
 
-		public:
-			TShared<NsSnowyStream::FontResource> fontResource;
-			TShared<NsSnowyStream::MaterialResource> materialResource;
-			String text;
-
+			TagParser parser;
+			std::vector<Descriptor> lines;
 			Short2 size;
 			Short2 scroll;
 			Short2 fullSize;
@@ -107,7 +105,6 @@ namespace PaintsNow {
 			int32_t passwordChar;
 			int32_t cursorChar;
 			int32_t cursorPos;
-			uint32_t fontSize;
 			Float4 cursorColor;
 			Short2 selectRange;
 			Float4 selectColor;

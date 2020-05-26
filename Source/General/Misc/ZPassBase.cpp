@@ -146,10 +146,10 @@ void ZPassBase::Updater::Property(IReflectObject& s, Unique typeID, Unique refTy
 							size = subRange.y();
 						}
 					} else {
-						size = safe_cast<uint16_t>(typeID->GetSize());
+						size = safe_cast<uint32_t>(typeID->GetSize());
 					}
 
-					output.length = safe_cast<uint16_t>(size);
+					output.length = size;
 					bufferSize[bindBuffer] += size;
 				} else {
 #ifdef _DEBUG

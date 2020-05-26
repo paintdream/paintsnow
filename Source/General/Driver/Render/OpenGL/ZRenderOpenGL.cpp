@@ -1773,7 +1773,7 @@ struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> : public Resou
 					glBindBuffer(GL_ARRAY_BUFFER, buffer->bufferID);
 					for (k = 0; k < bufferComponent; k += 4) {
 						glEnableVertexAttribArray(vertexBufferBindingCount);
-						glVertexAttribPointer(vertexBufferBindingCount, Min(4u, bufferComponent - k), bufferElementType, GL_FALSE, buffer->component * bufferElementSize, reinterpret_cast<void*>((size_t)bufferRange.offset + sizeof(float) * k));
+						glVertexAttribPointer(vertexBufferBindingCount, Min(4u, bufferComponent - k), bufferElementType, GL_FALSE, bufferComponent * sizeof(float), reinterpret_cast<void*>((size_t)bufferRange.offset + sizeof(float) * k));
 						glVertexAttribDivisor(vertexBufferBindingCount, 1);
 						vertexBufferBindingCount++;
 					}

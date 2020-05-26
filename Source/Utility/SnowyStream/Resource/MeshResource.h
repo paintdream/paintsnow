@@ -33,16 +33,17 @@ namespace PaintsNow {
 			struct BufferCollection : public TReflected<BufferCollection, IReflectObjectComplex> {
 				BufferCollection();
 				virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-				void GetDescription(std::vector<ZPassBase::Parameter>& desc, ZPassBase::Updater& updater) const;
+				void GetDescription(std::vector<ZPassBase::Parameter>& desc, std::vector<std::pair<uint32_t, uint32_t> >& offsets, ZPassBase::Updater& updater) const;
 				void UpdateData(std::vector<IRender::Resource*>& data) const;
 
 				IRender::Resource* indexBuffer;
 				IRender::Resource* positionBuffer;
-				IRender::Resource* normalBuffer;
-				IRender::Resource* tangentBuffer;
-				IRender::Resource* colorBuffer;
-				IRender::Resource* boneIndexBuffer;
-				IRender::Resource* boneWeightBuffer;
+				IRender::Resource* normalTangentColorBuffer;
+				IRender::Resource* boneIndexWeightBuffer;
+				bool hasNormalBuffer;
+				bool hasTangentBuffer;
+				bool hasColorBuffer;
+				bool hasIndexWeightBuffer;
 				std::vector<IRender::Resource*> texCoordBuffers;
 			} bufferCollection;
 		};

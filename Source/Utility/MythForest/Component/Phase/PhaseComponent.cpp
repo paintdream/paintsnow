@@ -352,8 +352,9 @@ void PhaseComponent::ResolveTasks(Engine& engine) {
 								IRender::Resource* buffer = render.CreateResource(queue, IRender::Resource::RESOURCE_BUFFER);
 								IRender::Resource::BufferDescription desc;
 								desc.data = std::move(data);
+								desc.format = IRender::Resource::BufferDescription::FLOAT;
 								desc.usage = IRender::Resource::BufferDescription::INSTANCED;
-								desc.component = desc.data.GetSize() / (group.instanceCount * sizeof(float));
+								desc.component = 0;
 								render.UploadResource(queue, buffer, &desc);
 
 								// assign instanced buffer	

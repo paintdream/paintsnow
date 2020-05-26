@@ -547,6 +547,7 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 
 				IRender::Resource::BufferDescription desc;
 				desc.data = std::move(bufferData);
+				desc.format = IRender::Resource::BufferDescription::FLOAT;
 				desc.usage = IRender::Resource::BufferDescription::INSTANCED;
 				desc.component = 0;
 				render.UploadResource(queue, buffer, &desc);

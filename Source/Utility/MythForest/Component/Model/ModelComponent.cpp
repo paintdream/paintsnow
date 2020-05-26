@@ -31,14 +31,19 @@ static void GenerateDrawCall(IDrawCallProvider::OutputRenderData& renderData, Sh
 	drawCall.shaderResource = shaderResource->GetShaderResource();
 
 	std::vector<ZPassBase::Parameter> outputs;
-	bufferCollection.GetDescription(outputs, updater);
+	std::vector<std::pair<uint32_t, uint32_t> > offsets;
+	bufferCollection.GetDescription(outputs, offsets, updater);
 
 	// match resource
 	for (size_t k = 0; k < outputs.size(); k++) {
 		if (outputs[k]) {
 			uint8_t slot = outputs[k].slot;
+			assert(outputs[k].offset == 0);
+
 			if (slot >= drawCall.bufferResources.size()) drawCall.bufferResources.resize(slot + 1);
 			drawCall.bufferResources[slot].buffer = meshBuffers[k];
+			drawCall.bufferResources[slot].offset = offsets[k].first;
+			drawCall.bufferResources[slot].component = offsets[k].second;
 		}
 	}
 

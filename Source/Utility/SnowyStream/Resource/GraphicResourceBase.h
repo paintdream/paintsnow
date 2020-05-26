@@ -45,12 +45,12 @@ namespace PaintsNow {
 			}
 
 			template <class T>
-			static inline size_t UpdateBuffer(IRender& render, IRender::Queue* queue, IRender::Resource*& buffer, std::vector<T>& data, IRender::Resource::BufferDescription::Usage usage, bool preserveLocal = true) {
+			static inline size_t UpdateBuffer(IRender& render, IRender::Queue* queue, IRender::Resource*& buffer, std::vector<T>& data, IRender::Resource::BufferDescription::Usage usage, uint32_t groupSize = 1) {
 				size_t size = data.size();
 				if (!data.empty()) {
 					IRender::Resource::BufferDescription description;
 					description.data.Resize(safe_cast<uint32_t>(data.size() * sizeof(T)));
-					description.component = sizeof(T) / sizeof(typename T::type);
+					description.component = sizeof(T) / sizeof(typename T::type) * groupSize;
 					description.usage = usage;
 					description.format = MapFormat<typename T::type>::format;
 					memcpy(description.data.GetData(), &data[0], data.size() * sizeof(T));
@@ -60,7 +60,6 @@ namespace PaintsNow {
 					}
 
 					render.UploadResource(queue, buffer, &description);
-					if (!preserveLocal) data.clear();
 				}
 
 				return size;

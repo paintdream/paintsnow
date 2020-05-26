@@ -186,8 +186,9 @@ void CameraComponent::Instancing(Engine& engine, TaskData& taskData) {
 			TaskData::PolicyData& policyData = ip->second;
 			IRender::Resource::BufferDescription desc;
 			desc.data = std::move(policyData.instanceData);
+			desc.format = IRender::Resource::BufferDescription::FLOAT;
 			desc.usage = IRender::Resource::BufferDescription::INSTANCED;
-			desc.component = 0; // already overrided by BufferRange.
+			desc.component = 0;
 			render.UploadResource(policyData.portQueue, policyData.instanceBuffer, &desc);
 
 			policyData.instanceData.Clear();
