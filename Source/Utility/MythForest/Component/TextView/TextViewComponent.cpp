@@ -231,24 +231,24 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 	bool cursorRevColor = !!(Flag() & TEXTVIEWCOMPONENT_CURSOR_REV_COLOR);
 	int align = TagParser::Node::ALIGN_LEFT;
 	Short2 texSize;
-	fontResource->GetFontTexture(fontSize, texSize);
+	fontResource->GetFontTexture(render, queue, fontSize, texSize);
 
-	const FontResource::Char& cursor = fontResource->Get(fontBase, cursorChar, fontSize);
+	const FontResource::Char& cursor = fontResource->Get(render, queue, fontBase, cursorChar, fontSize);
 	Short2 current;
-	const FontResource::Char& pwd = fontResource->Get(fontBase, passwordChar, fontSize);
+	const FontResource::Char& pwd = fontResource->Get(render, queue, fontBase, passwordChar, fontSize);
 	Float4 color(1, 1, 1, 1);
 	lines.emplace_back(Descriptor(currentHeight, 0));
 	FontResource::Char info;
 	std::stringstream ss;
 
-	for (size_t i = 0; i < parser.nodes.size(); i++) {
-		const TagParser::Node& node = parser.nodes[i];
+	for (size_t j = 0; j < parser.nodes.size(); j++) {
+		const TagParser::Node& node = parser.nodes[j];
 		if (node.type == TagParser::Node::TEXT) {
 			int step = 1;
 			for (const char* p = text.data() + node.offset; p < text.data() + node.offset + node.length; p += step) {
 				// use utf-8 as default encoding
 				step = GetUtf8Size(*p);
-				info = passwordChar != 0 ? pwd : fontResource->Get(fontBase, Utf8ToUnicode((const unsigned char*)p, step), fontSize);
+				info = passwordChar != 0 ? pwd : fontResource->Get(render, queue, fontBase, Utf8ToUnicode((const unsigned char*)p, step), fontSize);
 
 				int temp = info.info.adv.x() + padding.x();
 				currentWidth += temp;
@@ -295,7 +295,7 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 					}
 
 					Short2 end(current.x() + wt, current.y() + ht);
-					RenderCharacter(ss, Short2Pair(current, end), info.rect, c, fontSize);
+					RenderCharacter(render, queue, ss, Short2Pair(current, end), info.rect, c, fontSize);
 
 					// if cursor ?
 					if (!showCursor && cursorPos <= offset && cursorChar != 0) {
@@ -308,7 +308,7 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 						}
 
 						Short2 m(current.x() + cursor.info.width, current.y() + cursor.info.height);
-						RenderCharacter(ss, Short2Pair(current, m), cursor.rect, c, fontSize);
+						RenderCharacter(render, queue, ss, Short2Pair(current, m), cursor.rect, c, fontSize);
 						showCursor = true;
 					}
 				}
@@ -323,7 +323,6 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 			currentHeight += h;
 			count++;
 		} else if (node.type == TagParser::Node::COLOR) {
-			// TODO: render!
 			int value = 0;
 			sscanf(text.data() + node.offset, "%x", &value);
 			color = Float4((float)((value >> 16) & 0xff) / 255, (float)((value >> 8) & 0xff) / 255, (float)(value & 0xff) / 255, 1);
@@ -343,7 +342,7 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 		}
 
 		Short2 m(current.x() + cursor.info.width, current.y() + cursor.info.height);
-		RenderCharacter(ss, Short2Pair(current, m), cursor.rect, c, fontSize);
+		RenderCharacter(render, queue, ss, Short2Pair(current, m), cursor.rect, c, fontSize);
 		showCursor = true;
 	}
 
@@ -385,9 +384,9 @@ uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData>& outp
 	return 0;
 }
 
-void TextViewComponent::RenderCharacter(std::stringstream& stream, const Short2Pair& rect, const Short2Pair& uv, const Float4& color, uint32_t fontSize) {
+void TextViewComponent::RenderCharacter(IRender& render, IRender::Queue* queue, std::stringstream& stream, const Short2Pair& rect, const Short2Pair& uv, const Float4& color, uint32_t fontSize) {
 	Short2 fontTexSize;
-	IRender::Resource* texture = fontResource->GetFontTexture(fontSize, fontTexSize);
+	IRender::Resource* texture = fontResource->GetFontTexture(render, queue, fontSize, fontTexSize);
 	if (texture != nullptr) {
 		UShort4 pos(rect.first.x(), (size.y() - rect.second.y()), rect.second.y(), (size.y() - rect.first.y()));
 		UShort4 tex = UShort4(

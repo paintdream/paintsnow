@@ -733,6 +733,10 @@ void SnowyStream::RegisterBuiltinPasses() {
 	RegisterPass(*resourceManager(), UniqueType<WaterPass>());*/
 }
 
+IRender::Queue* SnowyStream::GetResourceQueue() const {
+	return resourceQueue;
+}
+
 void SnowyStream::RegisterReflectedSerializers() {
 	assert(resourceSerializers.empty()); // can only be registerred once
 
@@ -740,7 +744,7 @@ void SnowyStream::RegisterReflectedSerializers() {
 	// PaintsNow recommends database-managed resource dependencies ...
 
 	RegisterReflectedSerializer(UniqueType<AudioResource>(), interfaces.audio, nullptr);
-	RegisterReflectedSerializer(UniqueType<FontResource>(), interfaces.fontBase, nullptr);
+	RegisterReflectedSerializer(UniqueType<FontResource>(), interfaces.fontBase, this);
 	RegisterReflectedSerializer(UniqueType<MaterialResource>(), interfaces.render, resourceQueue);
 	RegisterReflectedSerializer(UniqueType<ShaderResource>(), interfaces.render, resourceQueue);
 	RegisterReflectedSerializer(UniqueType<MeshResource>(), interfaces.render, resourceQueue);

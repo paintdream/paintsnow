@@ -56,7 +56,7 @@ namespace PaintsNow {
 		protected:
 			void SetSize(Engine& engine, const Short2& size);
 			void UpdateRenderData(Engine& engine);
-			void RenderCharacter(std::stringstream& stream, const Short2Pair& rect, const Short2Pair& uv, const Float4& color, uint32_t fontSize);
+			void RenderCharacter(IRender& render, IRender::Queue* queue, std::stringstream& stream, const Short2Pair& rect, const Short2Pair& uv, const Float4& color, uint32_t fontSize);
 
 			uint32_t GetLineCount() const;
 			void SetPasswordChar(int ch);

@@ -85,9 +85,9 @@ void MeshResource::Upload(IRender& render, void* deviceContext) {
 	deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.boneIndexWeightBuffer, boneData, Description::VERTEX, 2);
 
 	bufferCollection.texCoordBuffers.resize(meshCollection.texCoords.size(), nullptr);
-	for (size_t i = 0; i < meshCollection.texCoords.size(); i++) {
-		IAsset::TexCoord& texCoord = meshCollection.texCoords[i];
-		deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.texCoordBuffers[i], texCoord.coords, Description::VERTEX);
+	for (size_t j = 0; j < meshCollection.texCoords.size(); j++) {
+		IAsset::TexCoord& texCoord = meshCollection.texCoords[j];
+		deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.texCoordBuffers[j], texCoord.coords, Description::VERTEX);
 	}
 
 	if (mapCount.load(std::memory_order_relaxed) == 0) {

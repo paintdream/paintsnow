@@ -1,6 +1,7 @@
 #include "FontResource.h"
 #include "../../../Core/Interface/IArchive.h"
 #include "../../../General/Misc/ZMemoryStream.h"
+#include "../../SnowyStream/SnowyStream.h"
 
 using namespace PaintsNow;
 using namespace PaintsNow::NsSnowyStream;
@@ -17,9 +18,14 @@ void FontResource::Attach(IFontBase& fontBase, void* deviceContext) {
 }
 
 void FontResource::Detach(IFontBase& fontBase, void* deviceContext) {
+	SnowyStream* snowyStream = reinterpret_cast<SnowyStream*>(deviceContext);
+	IRender& render = snowyStream->GetInterfaces().render;
+	IRender::Queue* queue = snowyStream->GetResourceQueue();
+
 	for (std::map<uint32_t, Slice>::iterator it = sliceMap.begin(); it != sliceMap.end(); ++it) {
-		it->second.Uninitialize(resourceManager);
+		it->second.Uninitialize(render, queue, resourceManager);
 	}
+
 	sliceMap.clear();
 
 	if (font != nullptr) {
@@ -64,49 +70,50 @@ TObject<IReflect>& FontResource::operator () (IReflect& reflect) {
 	return *this;
 }
 
-IRender::Resource* FontResource::GetFontTexture(uint32_t size, Short2& texSize) {
+IRender::Resource* FontResource::GetFontTexture(IRender& render, IRender::Queue* queue, uint32_t size, Short2& texSize) {
 	std::map<uint32_t, Slice>::iterator it = sliceMap.find(size);
 	if (it == sliceMap.end()) {
 		return nullptr;
 	} else {
 		texSize = it->second.GetTextureSize();
-		return it->second.GetFontTexture(resourceManager);
+		return it->second.GetFontTexture(render, queue, resourceManager);
 	}
 }
 
-const FontResource::Char& FontResource::Get(IFontBase& fontBase, IFontBase::FONTCHAR ch, int32_t size) {
+const FontResource::Char& FontResource::Get(IRender& render, IRender::Queue* queue, IFontBase& fontBase, IFontBase::FONTCHAR ch, int32_t size) {
 	size = size == 0 ? 12 : size;
 
 	Slice& slice = sliceMap[size];
 	if (slice.fontSize == 0) { // not initialized?
 		slice.fontSize = size;
 		slice.font = font;
-		slice.Initialize(resourceManager);
+		slice.Initialize(render, queue, resourceManager);
 	}
 
 	return slice.Get(resourceManager, fontBase, ch);
 }
 
-FontResource::Slice::Slice(uint32_t size = 0) : cacheTexture(nullptr), font(nullptr), fontSize(size), modified(false), width(512) {}
+FontResource::Slice::Slice(uint16_t fs, uint16_t d) : cacheTexture(nullptr), font(nullptr), fontSize(fs), modified(false), dim(d) {
+	buffer.Resize(dim * dim * sizeof(uint8_t));
+}
 
-void FontResource::Slice::Initialize(ResourceManager& resourceManager) {
+void FontResource::Slice::Initialize(IRender& render, IRender::Queue* queue, ResourceManager& resourceManager) {
 	assert(cacheTexture == nullptr);
 	assert(false);
 	
-	// cacheTexture = render.CreateTexture(IRender::Resource_2D, 1, IRender::COMPRESS_RGBA8, false, true);
+	cacheTexture = render.CreateResource(queue, IRender::Resource::RESOURCE_TEXTURE);
 }
 
-void FontResource::Slice::Uninitialize(ResourceManager& resourceManager) {
-	/*
+void FontResource::Slice::Uninitialize(IRender& render, IRender::Queue* queue, ResourceManager& resourceManager) {
 	if (cacheTexture != nullptr) {
-		render.DeleteTexture(cacheTexture);
+		render.DeleteResource(queue, cacheTexture);
 		cacheTexture = nullptr;
-	}*/
+	}
 }
 
 Short2Pair FontResource::Slice::AllocRect(const Short2& size) {
-	assert(size.x() <= (int)width);
-	if (lastRect.second.x() + size.x() > (int)width) {
+	assert(size.x() <= (int)dim);
+	if (lastRect.second.x() + size.x() > (int)dim) {
 		// new line
 		lastRect.second.x() = 0;
 		lastRect.first.y() = lastRect.second.y();
@@ -123,24 +130,31 @@ Short2Pair FontResource::Slice::AllocRect(const Short2& size) {
 	return w;
 }
 
-IRender::Resource* FontResource::Slice::GetFontTexture(ResourceManager& resourceManager) {
+IRender::Resource* FontResource::Slice::GetFontTexture(IRender& render, IRender::Queue* queue, ResourceManager& resourceManager) {
 	if (modified) {
-		UpdateFontTexture(resourceManager);
+		UpdateFontTexture(render, queue, resourceManager);
 		modified = false;
 	}
 
 	return cacheTexture;
 }
 
-void FontResource::Slice::UpdateFontTexture(ResourceManager& resourceManager) {
+void FontResource::Slice::UpdateFontTexture(IRender& render, IRender::Queue* queue, ResourceManager& resourceManager) {
 	if (lastRect.second.y() != 0) {
-		// IFontBase& fontBase = resourceManager.GetInterfaces()->render;
-		// render.WriteTexture(cacheTexture, 0, width, lastRect.second.y(), &buffer[0], IRender::Resource::TextureDescription::RGBA, IRender::Resource::TextureDescription::UNSIGNED_BYTE);
+		IRender::Resource::TextureDescription desc;
+		desc.data = buffer;
+		desc.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
+		desc.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
+		desc.state.layout = IRender::Resource::TextureDescription::R;
+		desc.dimension.x() = dim;
+		desc.dimension.y() = dim;
+
+		render.UploadResource(queue, cacheTexture, &desc);
 	}
 }
 
 Short2 FontResource::Slice::GetTextureSize() const {
-	return Short2((uint16_t)width, lastRect.second.y());
+	return Short2(dim, dim);
 }
 
 const FontResource::Char& FontResource::Slice::Get(ResourceManager& resourceManager, IFontBase& fontBase, IFontBase::FONTCHAR ch) {
@@ -155,19 +169,14 @@ const FontResource::Char& FontResource::Slice::Get(ResourceManager& resourceMana
 		c.rect = AllocRect(Short2(c.info.width, c.info.height));
 
 		Short2Pair& r = c.rect;
-		if ((int)buffer.size() < r.second.y() * width) {
-			buffer.resize(r.second.y() * width);
-		}
+		uint8_t* target = buffer.GetData();
 
 		const uint32_t* p = (const uint32_t*)data.data();
 		for (int j = r.first.y(); j < r.second.y(); j++) {
 			for (int i = r.first.x(); i < r.second.x(); i++) {
-				buffer[j * width + i] = *p++;
-				// printf("%02X ", (unsigned char)(buffer[j * width + i] >> 24));
+				target[j * dim + i] = *p++;
 			}
-			// printf("\n");
 		}
-		// printf("\n");
 
 		modified = true;
 		return cache[ch] = c;

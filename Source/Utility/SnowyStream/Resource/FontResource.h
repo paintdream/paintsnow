@@ -29,17 +29,17 @@ namespace PaintsNow {
 				Short2Pair rect;
 			};
 
-			const Char& Get(IFontBase& fontBase, IFontBase::FONTCHAR ch, int32_t size);
-			IRender::Resource* GetFontTexture(uint32_t size, Short2& texSize);
+			const Char& Get(IRender& render, IRender::Queue* queue, IFontBase& fontBase, IFontBase::FONTCHAR ch, int32_t size);
+			IRender::Resource* GetFontTexture(IRender& render, IRender::Queue* queue, uint32_t size, Short2& texSize);
 
 		protected:
 			class Slice {
 			public:
-				Slice(uint32_t size);
+				Slice(uint16_t size = 0, uint16_t dim = 0);
 				const Char& Get(ResourceManager& resourceManager, IFontBase& font, IFontBase::FONTCHAR ch);
-				void Initialize(ResourceManager& resourceManager);
-				void Uninitialize(ResourceManager& resourceManager);
-				IRender::Resource* GetFontTexture(ResourceManager& resourceManager);
+				void Initialize(IRender& render, IRender::Queue* queue, ResourceManager& resourceManager);
+				void Uninitialize(IRender& render, IRender::Queue* queue, ResourceManager& resourceManager);
+				IRender::Resource* GetFontTexture(IRender& render, IRender::Queue* queue, ResourceManager& resourceManager);
 
 				friend class FontResource;
 
@@ -47,15 +47,16 @@ namespace PaintsNow {
 				typedef unordered_map<IFontBase::FONTCHAR, Char> hmap;
 				hmap cache;
 				Short2Pair lastRect;
-				std::vector<uint32_t> buffer;
-				int16_t width;
+				Bytes buffer;
+				uint16_t dim;
 				uint16_t fontSize;
 				IFontBase::Font* font;
 				IRender::Resource* cacheTexture;
 				bool modified;
+				bool reserved[3];
 
 				Short2 GetTextureSize() const;
-				void UpdateFontTexture(ResourceManager& resourceManager);
+				void UpdateFontTexture(IRender& render, IRender::Queue* queue, ResourceManager& resourceManager);
 				Short2Pair AllocRect(const Short2& size);
 			};
 
