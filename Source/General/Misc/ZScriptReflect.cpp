@@ -55,8 +55,6 @@ const std::map<Unique, ZScriptReflect::Type>& ZScriptReflect::GetGlobalMap() {
 		Declare<uint16_t>::Register("uint16_t", globalReflectParserMap);
 		Declare<uint32_t>::Register("uint32_t", globalReflectParserMap);
 		Declare<uint64_t>::Register("uint64_t", globalReflectParserMap);
-		Declare<long>::Register("long", globalReflectParserMap);
-		Declare<unsigned long>::Register("unsigned long", globalReflectParserMap);
 		inited = true;
 	}
 
