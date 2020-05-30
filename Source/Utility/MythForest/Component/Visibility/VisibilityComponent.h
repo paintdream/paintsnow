@@ -72,7 +72,7 @@ namespace PaintsNow {
 				IRender::Queue* renderQueue;
 				IRender::Resource* renderTarget;
 				TShared<NsSnowyStream::TextureResource> texture;
-				std::vector<NsSnowyStream::IDrawCallProvider::DataUpdater*> dataUpdaters;
+				std::vector<NsSnowyStream::IDataUpdater*> dataUpdaters;
 				Bytes data;
 				std::vector<std::map<size_t, InstanceGroup> > instanceGroups;
 			};

@@ -326,7 +326,7 @@ void PhaseComponent::ResolveTasks(Engine& engine) {
 
 				for (size_t i = 0; i < task.warpData.size(); i++) {
 					WarpData& warpData = task.warpData[i];
-					std::vector<IDrawCallProvider::DataUpdater*>& dataUpdaters = warpData.dataUpdaters;
+					std::vector<IDataUpdater*>& dataUpdaters = warpData.dataUpdaters;
 
 					for (size_t k = 0; k < dataUpdaters.size(); k++) {
 						dataUpdaters[k]->Update(render, queue);

@@ -106,7 +106,7 @@ IFontBase::CHARINFO ZFontFreetype::RenderTexture(Font* font, String& texture, FO
 	FT_BitmapGlyph& bitmap_glyph = (FT_BitmapGlyph&)glyph;
 	FT_Bitmap& bitmap = bitmap_glyph->bitmap;
 
-	const int size = 4 * bitmap.width * bitmap.rows;
+	const int size = bitmap.width * bitmap.rows;
 	texture.resize(size);
 	unsigned char* data = (unsigned char*)texture.data();
 //	static char buf[256];
@@ -126,15 +126,15 @@ IFontBase::CHARINFO ZFontFreetype::RenderTexture(Font* font, String& texture, FO
 	// printf("\n");
 
 	IFontBase::CHARINFO info;
-	info.height = bitmap.rows;
-	info.width = bitmap.width;
-	info.adv.x() = face->glyph->advance.x / 64;
+	info.height = safe_cast<uint16_t>(bitmap.rows);
+	info.width = safe_cast<uint16_t>(bitmap.width);
+	info.adv.x() = safe_cast<uint16_t>(face->glyph->advance.x / 64);
 	// info.adv.x() = face->glyph->metrics.horiAdvance;
-	info.adv.y() = face->glyph->advance.y / 64;
-	info.bearing.x() = face->glyph->metrics.horiBearingX/ 64;
-	info.bearing.y() = face->glyph->metrics.horiBearingY / 64;
-	info.delta.x() = bitmap_glyph->left;
-	info.delta.y() = (bitmap_glyph->top - info.height);
+	info.adv.y() = safe_cast<uint16_t>(face->glyph->advance.y / 64);
+	info.bearing.x() = safe_cast<uint16_t>(face->glyph->metrics.horiBearingX / 64);
+	info.bearing.y() = safe_cast<uint16_t>(face->glyph->metrics.horiBearingY / 64);
+	info.delta.x() = safe_cast<uint16_t>(bitmap_glyph->left);
+	info.delta.y() = safe_cast<uint16_t>(bitmap_glyph->top - info.height);
 
 	FT_Done_Glyph(glyph);
 	return info;

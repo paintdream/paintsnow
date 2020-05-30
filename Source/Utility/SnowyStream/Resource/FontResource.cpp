@@ -6,7 +6,7 @@
 using namespace PaintsNow;
 using namespace PaintsNow::NsSnowyStream;
 
-FontResource::FontResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID) : BaseClass(manager, uniqueID), font(nullptr), reinforce(0) {}
+FontResource::FontResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID) : BaseClass(manager, uniqueID), font(nullptr), dim(512), weight(0) {}
 FontResource::~FontResource() {}
 
 bool FontResource::LoadExternalResource(IStreamBase& streamBase, size_t length) {
@@ -60,7 +60,8 @@ TObject<IReflect>& FontResource::operator () (IReflect& reflect) {
 	if (reflect.IsReflectProperty()) {
 		// serializable
 		ReflectProperty(rawFontData);
-		ReflectProperty(reinforce);
+		ReflectProperty(dim);
+		ReflectProperty(weight);
 
 		// runtime
 		ReflectProperty(sliceMap)[Runtime];
@@ -70,50 +71,54 @@ TObject<IReflect>& FontResource::operator () (IReflect& reflect) {
 	return *this;
 }
 
-IRender::Resource* FontResource::GetFontTexture(IRender& render, IRender::Queue* queue, uint32_t size, Short2& texSize) {
-	std::map<uint32_t, Slice>::iterator it = sliceMap.find(size);
-	if (it == sliceMap.end()) {
-		return nullptr;
-	} else {
-		texSize = it->second.GetTextureSize();
-		return it->second.GetFontTexture(render, queue, resourceManager);
-	}
-}
-
 const FontResource::Char& FontResource::Get(IRender& render, IRender::Queue* queue, IFontBase& fontBase, IFontBase::FONTCHAR ch, int32_t size) {
 	size = size == 0 ? 12 : size;
 
+	SpinLock(critical);
 	Slice& slice = sliceMap[size];
+	SpinUnLock(critical);
+
 	if (slice.fontSize == 0) { // not initialized?
 		slice.fontSize = size;
 		slice.font = font;
-		slice.Initialize(render, queue, resourceManager);
+		slice.dim = dim;
 	}
 
-	return slice.Get(resourceManager, fontBase, ch);
+	const FontResource::Char& ret = slice.Get(render, queue, fontBase, ch);
+	TAtomic<uint32_t>& lock = reinterpret_cast<TAtomic<uint32_t>&>(slice.critical);
+
+	if (lock.load(std::memory_order_acquire) == 2u) {
+		// need update
+		Flag() |= TINY_MODIFIED;
+	}
+
+	return ret;
 }
 
-FontResource::Slice::Slice(uint16_t fs, uint16_t d) : cacheTexture(nullptr), font(nullptr), fontSize(fs), modified(false), dim(d) {
+FontResource::Slice::Slice(uint16_t fs, uint16_t d) : font(nullptr), fontSize(fs), critical(0), dim(d) {
 	buffer.Resize(dim * dim * sizeof(uint8_t));
 }
 
-void FontResource::Slice::Initialize(IRender& render, IRender::Queue* queue, ResourceManager& resourceManager) {
-	assert(cacheTexture == nullptr);
-	assert(false);
-	
-	cacheTexture = render.CreateResource(queue, IRender::Resource::RESOURCE_TEXTURE);
-}
-
 void FontResource::Slice::Uninitialize(IRender& render, IRender::Queue* queue, ResourceManager& resourceManager) {
-	if (cacheTexture != nullptr) {
-		render.DeleteResource(queue, cacheTexture);
-		cacheTexture = nullptr;
+	for (size_t i = 0; i < cacheTextures.size(); i++) {
+		render.DeleteResource(queue, cacheTextures[i]());
 	}
+
+	cacheTextures.clear();
 }
 
-Short2Pair FontResource::Slice::AllocRect(const Short2& size) {
-	assert(size.x() <= (int)dim);
-	if (lastRect.second.x() + size.x() > (int)dim) {
+Short2Pair FontResource::Slice::AllocRect(IRender& render, IRender::Queue* queue, const Short2& size) {
+	assert(size.x() <= dim);
+	assert(size.y() <= dim);
+
+	if (lastRect.second.y() + size.y() > dim || cacheTextures.empty()) {
+		IRender::Resource* texture = render.CreateResource(queue, IRender::Resource::RESOURCE_TEXTURE);
+		cacheTextures.push_back(texture);
+		lastRect.first.y() = 0;
+		lastRect.second.y() = size.y();
+	}
+
+	if (lastRect.second.x() + size.x() > dim) {
 		// new line
 		lastRect.second.x() = 0;
 		lastRect.first.y() = lastRect.second.y();
@@ -127,46 +132,73 @@ Short2Pair FontResource::Slice::AllocRect(const Short2& size) {
 	w.first.y() = w.second.y() - size.y();
 	lastRect = w;
 
+	assert(!cacheTextures.empty());
+	cacheTextures.back().Tag(1); // set dirty
+
 	return w;
 }
 
-IRender::Resource* FontResource::Slice::GetFontTexture(IRender& render, IRender::Queue* queue, ResourceManager& resourceManager) {
-	if (modified) {
-		UpdateFontTexture(render, queue, resourceManager);
-		modified = false;
+void FontResource::Slice::UpdateFontTexture(IRender& render, IRender::Queue* queue) {
+	TAtomic<uint32_t>& lock = reinterpret_cast<TAtomic<uint32_t>&>(critical);
+
+	if (SpinLock(lock) == 2u) {
+		for (size_t i = 0; i < cacheTextures.size(); i++) {
+			TTagged<IRender::Resource*, 2>& ptr = cacheTextures[i];
+
+			if (ptr.Tag()) {
+				IRender::Resource::TextureDescription desc;
+				desc.data = buffer;
+				desc.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
+				desc.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
+				desc.state.layout = IRender::Resource::TextureDescription::R;
+				desc.dimension.x() = dim;
+				desc.dimension.y() = dim;
+
+				render.UploadResource(queue, ptr(), &desc);
+				ptr.Tag(0);
+			}
+		}
 	}
-
-	return cacheTexture;
-}
-
-void FontResource::Slice::UpdateFontTexture(IRender& render, IRender::Queue* queue, ResourceManager& resourceManager) {
-	if (lastRect.second.y() != 0) {
-		IRender::Resource::TextureDescription desc;
-		desc.data = buffer;
-		desc.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
-		desc.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
-		desc.state.layout = IRender::Resource::TextureDescription::R;
-		desc.dimension.x() = dim;
-		desc.dimension.y() = dim;
-
-		render.UploadResource(queue, cacheTexture, &desc);
-	}
+	
+	SpinUnLock(lock);
 }
 
 Short2 FontResource::Slice::GetTextureSize() const {
 	return Short2(dim, dim);
 }
 
-const FontResource::Char& FontResource::Slice::Get(ResourceManager& resourceManager, IFontBase& fontBase, IFontBase::FONTCHAR ch) {
+uint16_t FontResource::GetFontTextureSize() const {
+	return dim;
+}
+
+void FontResource::Update(IRender& render, IRender::Queue* queue) {
+	if (Flag() & TINY_MODIFIED) {
+		for (std::map<uint32_t, Slice>::iterator it = sliceMap.begin(); it != sliceMap.end(); it++) {
+			TAtomic<uint32_t>& lock = reinterpret_cast<TAtomic<uint32_t>&>(it->second.critical);
+			if (lock.load(std::memory_order_acquire) == 2u) {
+				it->second.UpdateFontTexture(render, queue);
+			}
+		}
+
+		Flag() &= ~TINY_MODIFIED;
+	}
+}
+
+const FontResource::Char& FontResource::Slice::Get(IRender& render, IRender::Queue* queue, IFontBase& fontBase, IFontBase::FONTCHAR ch) {
+	TAtomic<uint32_t>& lock = reinterpret_cast<TAtomic<uint32_t>&>(critical);
+	SpinLock(lock);
 	hmap::iterator p = cache.find(ch);
 	if (p != cache.end()) {
+		SpinUnLock(lock);
 		return (*p).second;
 	} else {
 		assert(font != nullptr);
 		Char c;
 		String data;
 		c.info = fontBase.RenderTexture(font, data, ch, fontSize, 0);
-		c.rect = AllocRect(Short2(c.info.width, c.info.height));
+		c.rect = AllocRect(render, queue, Short2(c.info.width, c.info.height));
+		c.textureResource = cacheTextures.back()();
+		SpinUnLock(lock);
 
 		Short2Pair& r = c.rect;
 		uint8_t* target = buffer.GetData();
@@ -178,8 +210,11 @@ const FontResource::Char& FontResource::Slice::Get(ResourceManager& resourceMana
 			}
 		}
 
-		modified = true;
-		return cache[ch] = c;
+		SpinLock(lock);
+		Char& ret = cache[ch] = c;
+		SpinUnLock(lock, 2u);
+	
+		return ret;
 	}
 }
 

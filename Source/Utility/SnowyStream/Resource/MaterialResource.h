@@ -22,15 +22,10 @@ namespace PaintsNow {
 				float viewReference;
 			};
 
-			class DataUpdater {
-			public:
-				virtual void Update(IRender& render, IRender::Queue* queue) = 0;
-			};
-
 			struct OutputRenderData {
 				IRender::Resource::DrawCallDescription drawCallDescription;
 				IRender::Resource::RenderStateDescription renderStateDescription;
-				DataUpdater* dataUpdater;
+				IDataUpdater* dataUpdater;
 				TShared<ShaderResource> shaderResource;
 				TShared<SharedTiny> host;
 			};

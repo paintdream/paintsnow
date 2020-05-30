@@ -24,12 +24,13 @@ namespace PaintsNow {
 	class IFontBase : public IDevice {
 	public:
 		typedef uint32_t FONTCHAR;
+
 		struct CHARINFO {
-			int height;
-			int width;
-			Int2 adv;
-			Int2 delta;
-			Int2 bearing;
+			uint16_t height;
+			uint16_t width;
+			UShort2 adv;
+			UShort2 delta;
+			UShort2 bearing;
 		};
 
 		class Font {};

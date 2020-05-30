@@ -14,7 +14,7 @@ namespace PaintsNow {
 	namespace NsMythForest {
 		// Manages Vertex/Uniform/Instance buffers statically
 		class RenderableComponent;
-		class BatchComponent : public TAllocatedTiny<BatchComponent, Component>, public NsSnowyStream::IDrawCallProvider::DataUpdater {
+		class BatchComponent : public TAllocatedTiny<BatchComponent, Component>, public NsSnowyStream::IDataUpdater {
 		public:
 			BatchComponent();
 			virtual ~BatchComponent();

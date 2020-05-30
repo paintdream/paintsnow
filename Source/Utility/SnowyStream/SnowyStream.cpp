@@ -910,7 +910,7 @@ void SnowyStream::CreateBuiltinResources() {
 	}
 
 	CreateBuiltinSolidTexture("[Runtime]/TextureResource/Black", UChar4(0, 0, 0, 0));
-	CreateBuiltinSolidTexture("[Runtime]/TextureResource/White", UChar4(0, 0, 0, 0));
+	CreateBuiltinSolidTexture("[Runtime]/TextureResource/White", UChar4(255, 255, 255, 255));
 	CreateBuiltinSolidTexture("[Runtime]/TextureResource/MissingBaseColor", UChar4(255, 0, 255, 255));
 	CreateBuiltinSolidTexture("[Runtime]/TextureResource/MissingNormal", UChar4(127, 127, 255, 255));
 	CreateBuiltinSolidTexture("[Runtime]/TextureResource/MissingMaterial", UChar4(255, 255, 0, 0));

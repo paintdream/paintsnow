@@ -7,11 +7,13 @@
 #define __FONTRESOURCE_H__
 
 #include "GraphicResourceBase.h"
+#include "TextureResource.h"
 #include "../../../General/Interface/IFontBase.h"
+#include "../../../Core/Template/TTagged.h"
 
 namespace PaintsNow {
 	namespace NsSnowyStream {
-		class FontResource : public TReflected<FontResource, DeviceResourceBase<IFontBase> > {
+		class FontResource : public TReflected<FontResource, DeviceResourceBase<IFontBase> >, public IDataUpdater {
 		public:
 			FontResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID);
 			virtual ~FontResource();
@@ -22,49 +24,50 @@ namespace PaintsNow {
 			virtual void Download(IFontBase& font, void* deviceContext) override;
 			virtual void Attach(IFontBase& font, void* deviceContext) override;
 			virtual void Detach(IFontBase& font, void* deviceContext) override;
+			virtual void Update(IRender& render, IRender::Queue* queue) override;
+			uint16_t GetFontTextureSize() const;
 
 			struct Char {
 				Char() { memset(this, 0, sizeof(*this)); }
+
 				IFontBase::CHARINFO info;
 				Short2Pair rect;
+				IRender::Resource* textureResource;
 			};
 
 			const Char& Get(IRender& render, IRender::Queue* queue, IFontBase& fontBase, IFontBase::FONTCHAR ch, int32_t size);
-			IRender::Resource* GetFontTexture(IRender& render, IRender::Queue* queue, uint32_t size, Short2& texSize);
 
 		protected:
 			class Slice {
 			public:
 				Slice(uint16_t size = 0, uint16_t dim = 0);
-				const Char& Get(ResourceManager& resourceManager, IFontBase& font, IFontBase::FONTCHAR ch);
-				void Initialize(IRender& render, IRender::Queue* queue, ResourceManager& resourceManager);
+				const Char& Get(IRender& render, IRender::Queue* queue, IFontBase& font, IFontBase::FONTCHAR ch);
 				void Uninitialize(IRender& render, IRender::Queue* queue, ResourceManager& resourceManager);
-				IRender::Resource* GetFontTexture(IRender& render, IRender::Queue* queue, ResourceManager& resourceManager);
 
 				friend class FontResource;
 
 			protected:
 				typedef unordered_map<IFontBase::FONTCHAR, Char> hmap;
+				uint32_t critical;
 				hmap cache;
 				Short2Pair lastRect;
 				Bytes buffer;
 				uint16_t dim;
 				uint16_t fontSize;
 				IFontBase::Font* font;
-				IRender::Resource* cacheTexture;
-				bool modified;
-				bool reserved[3];
+				std::vector<TTagged<IRender::Resource*, 2> > cacheTextures;
 
 				Short2 GetTextureSize() const;
-				void UpdateFontTexture(IRender& render, IRender::Queue* queue, ResourceManager& resourceManager);
-				Short2Pair AllocRect(const Short2& size);
+				void UpdateFontTexture(IRender& render, IRender::Queue* queue);
+				Short2Pair AllocRect(IRender& render, IRender::Queue* queue, const Short2& size);
 			};
 
 		private:
 			std::map<uint32_t, Slice> sliceMap;
 			IFontBase::Font* font;
 			String rawFontData;
-			float reinforce;
+			uint16_t dim;
+			uint16_t weight;
 		};
 	}
 }

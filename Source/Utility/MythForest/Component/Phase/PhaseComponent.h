@@ -84,7 +84,7 @@ namespace PaintsNow {
 				std::map<NsSnowyStream::ShaderResource*, GlobalBufferItem> worldGlobalBufferMap;
 				InstanceGroupMap instanceGroups;
 				std::vector<IRender::Resource*> runtimeResources;
-				std::vector<NsSnowyStream::IDrawCallProvider::DataUpdater*> dataUpdaters;
+				std::vector<NsSnowyStream::IDataUpdater*> dataUpdaters;
 			};
 
 			struct TaskData {

@@ -12,6 +12,11 @@
 
 namespace PaintsNow {
 	namespace NsSnowyStream {
+		class IDataUpdater {
+		public:
+			virtual void Update(IRender& render, IRender::Queue* queue) = 0;
+		};
+
 		template <class T>
 		struct MapFormat {};
 

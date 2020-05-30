@@ -211,6 +211,7 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 	IFontBase& fontBase = engine.interfaces.fontBase;
 	IRender& render = engine.interfaces.render;
 	IRender::Queue* queue = engine.mythForest.GetWarpResourceQueue();
+	textureRange.clear();
 
 	Short2 fullSize;
 	int ws = size.x();
@@ -231,7 +232,7 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 	bool cursorRevColor = !!(Flag() & TEXTVIEWCOMPONENT_CURSOR_REV_COLOR);
 	int align = TagParser::Node::ALIGN_LEFT;
 	Short2 texSize;
-	fontResource->GetFontTexture(render, queue, fontSize, texSize);
+	// fontResource->GetFontTexture(render, queue, fontSize, texSize);
 
 	const FontResource::Char& cursor = fontResource->Get(render, queue, fontBase, cursorChar, fontSize);
 	Short2 current;
@@ -295,7 +296,7 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 					}
 
 					Short2 end(current.x() + wt, current.y() + ht);
-					RenderCharacter(render, queue, ss, Short2Pair(current, end), info.rect, c, fontSize);
+					RenderCharacter(info.textureResource, ss, Short2Pair(current, end), info.rect, c, fontSize);
 
 					// if cursor ?
 					if (!showCursor && cursorPos <= offset && cursorChar != 0) {
@@ -308,7 +309,7 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 						}
 
 						Short2 m(current.x() + cursor.info.width, current.y() + cursor.info.height);
-						RenderCharacter(render, queue, ss, Short2Pair(current, m), cursor.rect, c, fontSize);
+						RenderCharacter(info.textureResource, ss, Short2Pair(current, m), cursor.rect, c, fontSize);
 						showCursor = true;
 					}
 				}
@@ -332,6 +333,7 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 	// if cursor ?
 	if (!full && currentHeight >= 0 && !showCursor && cursorChar != 0) {
 		Float4 c;
+		const FontResource::Char& ch = fontResource->Get(render, queue, fontBase, Utf8ToUnicode((const unsigned char*)&cursorChar, GetUtf8Size(cursorChar >> 24)), fontSize);
 		current.x() += info.info.width;
 		current.y() += info.info.delta.y() - cursor.info.delta.y() + info.info.height - cursor.info.height;
 		// current.x() -= cursor.info.width;
@@ -342,7 +344,7 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 		}
 
 		Short2 m(current.x() + cursor.info.width, current.y() + cursor.info.height);
-		RenderCharacter(render, queue, ss, Short2Pair(current, m), cursor.rect, c, fontSize);
+		RenderCharacter(ch.textureResource, ss, Short2Pair(current, m), cursor.rect, c, fontSize);
 		showCursor = true;
 	}
 
@@ -384,30 +386,33 @@ uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData>& outp
 	return 0;
 }
 
-void TextViewComponent::RenderCharacter(IRender& render, IRender::Queue* queue, std::stringstream& stream, const Short2Pair& rect, const Short2Pair& uv, const Float4& color, uint32_t fontSize) {
+void TextViewComponent::RenderCharacter(IRender::Resource* textureResource, std::stringstream& stream, const Short2Pair& rect, const Short2Pair& uv, const Float4& color, uint32_t fontSize) {
 	Short2 fontTexSize;
-	IRender::Resource* texture = fontResource->GetFontTexture(render, queue, fontSize, fontTexSize);
-	if (texture != nullptr) {
-		UShort4 pos(rect.first.x(), (size.y() - rect.second.y()), rect.second.y(), (size.y() - rect.first.y()));
-		UShort4 tex = UShort4(
-			uv.first.x() / fontTexSize.x(),
-			uv.first.y() / fontTexSize.y(),
-			uv.second.x() / fontTexSize.x(),
-			uv.second.y() / fontTexSize.y()
-		);
+	UShort4 pos(rect.first.x(), (size.y() - rect.second.y()), rect.second.y(), (size.y() - rect.first.y()));
+	UShort4 tex = UShort4(
+		uv.first.x() / fontTexSize.x(),
+		uv.first.y() / fontTexSize.y(),
+		uv.second.x() / fontTexSize.x(),
+		uv.second.y() / fontTexSize.y()
+	);
 
-		// Add triangles
-		UShort4 item[4] = {
-			UShort4(pos[0], pos[1], tex[0], tex[1]),
-			UShort4(pos[2], pos[1], tex[2], tex[1]),
-			UShort4(pos[2], pos[3], tex[2], tex[3]),
-			UShort4(pos[0], pos[3], tex[0], tex[3]),
-		};
+	// Add triangles
+	UShort4 item[4] = {
+		UShort4(pos[0], pos[1], tex[0], tex[1]),
+		UShort4(pos[2], pos[1], tex[2], tex[1]),
+		UShort4(pos[2], pos[3], tex[2], tex[3]),
+		UShort4(pos[0], pos[3], tex[0], tex[3]),
+	};
 
-		stream.write((const char*)item, sizeof(item));
+	stream.write((const char*)item, sizeof(item));
+
+	if (textureRange.empty()) {
+		textureRange.emplace_back(std::make_pair(textureResource, 1));
+	} else if (textureRange.back().first != textureResource) {
+		textureRange.emplace_back(std::make_pair(textureResource, textureRange.back().second));
+	} else {
+		textureRange.back().second++;
 	}
-
-	// TODO: texture change
 }
 
 uint32_t TextViewComponent::GetLineCount() const {

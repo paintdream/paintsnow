@@ -77,7 +77,7 @@ namespace PaintsNow {
 					};
 
 					std::map<NsSnowyStream::ShaderResource*, GlobalBufferItem> worldGlobalBufferMap;
-					std::vector<NsSnowyStream::IDrawCallProvider::DataUpdater*> dataUpdaters;
+					std::vector<NsSnowyStream::IDataUpdater*> dataUpdaters;
 				};
 
 				std::vector<WarpData> warpData;

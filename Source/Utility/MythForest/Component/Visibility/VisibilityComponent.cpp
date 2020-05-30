@@ -397,7 +397,7 @@ void VisibilityComponent::CollectRenderableComponent(Engine& engine, TaskData& t
 		assert(drawCalls.size() < sizeof(RenderableComponent) - 1);
 
 		for (size_t i = 0; i < drawCalls.size(); i++) {
-			IDrawCallProvider::DataUpdater* dataUpdater = drawCalls[i].dataUpdater;
+			IDataUpdater* dataUpdater = drawCalls[i].dataUpdater;
 			InstanceGroup& group = instanceGroups[(size_t)renderableComponent + i];
 			if (group.instanceCount == 0) {
 				std::binary_insert(task.dataUpdaters, dataUpdater);
