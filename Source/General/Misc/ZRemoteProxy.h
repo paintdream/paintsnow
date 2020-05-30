@@ -401,8 +401,8 @@ namespace PaintsNow {
 				bool response;
 				bool deferred;
 				std::vector<Variant> vars;
-				std::vector<std::pair<uint64_t, long> > localDelta;
-				std::vector<std::pair<uint64_t, long> > remoteDelta;
+				std::vector<std::pair<uint64_t, uint32_t> > localDelta;
+				std::vector<std::pair<uint64_t, uint32_t> > remoteDelta;
 			};
 
 			void OnConnection(ITunnel::EVENT event);
@@ -412,7 +412,7 @@ namespace PaintsNow {
 			void Run();
 			IScript::Request::Ref ReferenceEx(const IScript::BaseDelegate* base);
 			void DereferenceEx(IScript::BaseDelegate* base);
-			void ApplyDelta(std::map<IScript::Object*, ObjectInfo>& info, const std::vector<std::pair<uint64_t, long> >& delta, bool retrieve);
+			void ApplyDelta(std::map<IScript::Object*, ObjectInfo>& info, const std::vector<std::pair<uint64_t, uint32_t> >& delta, bool retrieve);
 			void QueryObjectInterface(ObjectInfo& objectInfo, const IScript::BaseDelegate& d, const TWrapper<void, IScript::Request&, IReflectObject&, const Ref&>& callback, IReflectObject& target);
 
 		public:
