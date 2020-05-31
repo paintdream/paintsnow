@@ -45,7 +45,7 @@ TObject<IReflect>& StandardParameterFS::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectProperty()) {
-		ReflectProperty(baseColorTexture);
+		ReflectProperty(baseColorTexture)[IShader::BindInput(IShader::BindInput::MAINTEXTURE)];
 		ReflectProperty(normalTexture);
 		ReflectProperty(mixtureTexture);
 

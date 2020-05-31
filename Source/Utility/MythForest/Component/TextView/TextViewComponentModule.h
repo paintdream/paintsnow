@@ -19,7 +19,7 @@ namespace PaintsNow {
 			virtual ~TextViewComponentModule();
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
-			void RequestNew(IScript::Request& request);
+			void RequestNew(IScript::Request& request, IScript::Delegate<NsSnowyStream::FontResource> fontResource);
 			void RequestSetFont(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent, const String& font, int64_t fontSize, float reinforce);
 			void RequestGetText(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent);
 			void RequestSetText(IScript::Request& request, IScript::Delegate<TextViewComponent> window, const String& text);

@@ -127,7 +127,7 @@ void TextViewComponent::TagParser::Clear() {
 	nodes.clear();
 }
 
-TextViewComponent::TextViewComponent(TShared<MaterialResource> material) : materialResource(material), unitCoordBuffer(nullptr), indexBuffer(nullptr), passwordChar(0), cursorChar(0), cursorPos(0), fontSize(12) {
+TextViewComponent::TextViewComponent(TShared<FontResource> font, TShared<MaterialResource> material) : materialResource(material), fontResource(font), unitCoordBuffer(nullptr), indexBuffer(nullptr), passwordChar(0), cursorChar(0), cursorPos(0), fontSize(12) {
 	Flag() |= (TEXTVIEWCOMPONENT_CURSOR_REV_COLOR | TEXTVIEWCOMPONENT_SELECT_REV_COLOR);
 }
 
@@ -381,8 +381,45 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 }
 
 uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) {
+	OutputRenderData drawCall;
+	IRender::Resource::RenderStateDescription& renderState = drawCall.renderStateDescription;
+	renderState.stencilReplacePass = 1;
+	renderState.cull = 1;
+	renderState.fill = 1;
+	renderState.colorWrite = 1;
+	renderState.alphaBlend = 0;
+	renderState.depthTest = IRender::Resource::RenderStateDescription::GREATER_EQUAL;
+	renderState.depthWrite = 0;
+	renderState.stencilTest = IRender::Resource::RenderStateDescription::ALWAYS;
+	renderState.stencilWrite = 0;
+	renderState.stencilMask = 0;
+	renderState.stencilValue = 0;
 
-	// TODO: migrate the following code here.
+	drawCall.dataUpdater = fontResource();
+	ZPassBase::Updater& updater = materialResource->mutationShaderResource->GetPassUpdater();
+	size_t slot = updater[IShader::BindInput::UNITCOORD].slot;
+	drawCall.drawCallDescription.bufferResources.resize(slot + 1);
+	IRender::Resource::DrawCallDescription::BufferRange& rangePosition = drawCall.drawCallDescription.bufferResources[slot];
+	rangePosition.buffer = unitCoordBuffer;
+	rangePosition.component = 4;
+	IRender::Resource::DrawCallDescription::BufferRange& rangeIndex = drawCall.drawCallDescription.indexBufferResource;
+	rangeIndex.buffer = indexBuffer;
+
+	size_t texSlot = updater[IShader::BindInput::MAINTEXTURE].slot;
+	drawCall.drawCallDescription.textureResources.resize(texSlot + 1);
+	drawCall.shaderResource = materialResource->mutationShaderResource;
+
+	uint32_t n = 0;
+	for (size_t i = 0; i < textureRange.size(); i++) {
+		uint32_t k = textureRange[i].second;
+		drawCall.drawCallDescription.textureResources[texSlot] = textureRange[i].first;
+		drawCall.drawCallDescription.indexBufferResource.offset = n * sizeof(Int3) * 2;
+		drawCall.drawCallDescription.indexBufferResource.length = (k - n) * sizeof(Int3) * 2;
+		outputDrawCalls.emplace_back(drawCall);
+		n = k;
+	}
+
+	outputDrawCalls.emplace_back(std::move(drawCall));
 	return 0;
 }
 

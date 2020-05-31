@@ -21,7 +21,7 @@ namespace PaintsNow {
 				TEXTVIEWCOMPONENT_CURSOR_REV_COLOR = COMPONENT_CUSTOM_BEGIN << 1,
 			};
 
-			TextViewComponent(TShared<NsSnowyStream::MaterialResource> materialResource);
+			TextViewComponent(TShared<NsSnowyStream::FontResource> fontResource, TShared<NsSnowyStream::MaterialResource> materialResource);
 			virtual ~TextViewComponent();
 			virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) override;
 			virtual void Initialize(Engine& engine, Entity* entity) override;

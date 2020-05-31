@@ -6,7 +6,7 @@ using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
 TextViewComponentModule::TextViewComponentModule(Engine& engine) : BaseClass(engine) {
-	defaultTextMaterial = engine.snowyStream.CreateReflectedResource(UniqueType<MaterialResource>(), "[Runtime]/MaterialResource/Widget");
+	defaultTextMaterial = engine.snowyStream.CreateReflectedResource(UniqueType<MaterialResource>(), "[Runtime]/MaterialResource/Text");
 }
 
 TextViewComponentModule::~TextViewComponentModule() {}
@@ -24,10 +24,11 @@ TObject<IReflect>& TextViewComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void TextViewComponentModule::RequestNew(IScript::Request& request) {
+void TextViewComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<FontResource> fontResource) {
 	CHECK_REFERENCES_NONE();
 
-	TShared<TextViewComponent> textViewComponent = TShared<TextViewComponent>::From(allocator->New(defaultTextMaterial));
+	TShared<FontResource> res = fontResource.Get();
+	TShared<TextViewComponent> textViewComponent = TShared<TextViewComponent>::From(allocator->New(res, defaultTextMaterial));
 	textViewComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
 
 	engine.GetKernel().YieldCurrentWarp();
