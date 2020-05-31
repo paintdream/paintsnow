@@ -89,52 +89,52 @@ TObject<IReflect>& StandardTransformVS::operator () (IReflect& reflect) {
 
 	if (reflect.IsReflectProperty()) {
 		// options first
-		ReflectProperty(enableInstancing)[IShader::BindConst<bool>()];
-		ReflectProperty(enableSkinning)[IShader::BindConst<bool>()];
-		ReflectProperty(enableVertexNormal)[IShader::BindConst<bool>()];
-		ReflectProperty(enableVertexColor)[IShader::BindConst<bool>()];
-		ReflectProperty(enableVertexTangent)[IShader::BindConst<bool>()];
-		ReflectProperty(enableViewProjectionMatrix)[IShader::BindConst<bool>()];
-		ReflectProperty(enableInstancedColor)[IShader::BindConst<bool>()];
-		ReflectProperty(enableRasterCoord)[IShader::BindConst<bool>()];
-		ReflectProperty(enableClampedNear)[IShader::BindConst<bool>()];
-		ReflectProperty(enableClampedFar)[IShader::BindConst<bool>()];
+		ReflectProperty(enableInstancing)[BindConst<bool>()];
+		ReflectProperty(enableSkinning)[BindConst<bool>()];
+		ReflectProperty(enableVertexNormal)[BindConst<bool>()];
+		ReflectProperty(enableVertexColor)[BindConst<bool>()];
+		ReflectProperty(enableVertexTangent)[BindConst<bool>()];
+		ReflectProperty(enableViewProjectionMatrix)[BindConst<bool>()];
+		ReflectProperty(enableInstancedColor)[BindConst<bool>()];
+		ReflectProperty(enableRasterCoord)[BindConst<bool>()];
+		ReflectProperty(enableClampedNear)[BindConst<bool>()];
+		ReflectProperty(enableClampedFar)[BindConst<bool>()];
 
-		ReflectProperty(instanceBuffer)[IShader::BindOption(enableInstancing)];
+		ReflectProperty(instanceBuffer)[BindOption(enableInstancing)];
 		ReflectProperty(globalBuffer);
 		ReflectProperty(vertexPositionBuffer);
-		ReflectProperty(vertexNormalBuffer)[IShader::BindOption(enableVertexNormal)];
-		ReflectProperty(vertexTangentBuffer)[IShader::BindOption(enableVertexTangent)];
-		ReflectProperty(vertexColorBuffer)[IShader::BindOption(enableVertexColor)];
+		ReflectProperty(vertexNormalBuffer)[BindOption(enableVertexNormal)];
+		ReflectProperty(vertexTangentBuffer)[BindOption(enableVertexTangent)];
+		ReflectProperty(vertexColorBuffer)[BindOption(enableVertexColor)];
 		ReflectProperty(vertexTexCoordBuffer);
 
-		ReflectProperty(boneIndexBuffer)[IShader::BindOption(enableSkinning)];
-		ReflectProperty(boneWeightBuffer)[IShader::BindOption(enableSkinning)];
-		ReflectProperty(boneMatricesBuffer)[IShader::BindOption(enableSkinning)];
+		ReflectProperty(boneIndexBuffer)[BindOption(enableSkinning)];
+		ReflectProperty(boneWeightBuffer)[BindOption(enableSkinning)];
+		ReflectProperty(boneMatricesBuffer)[BindOption(enableSkinning)];
 
 		static std::vector<float4x4> boneMatries(128); // Just make reflection happy
-		ReflectProperty(boneMatries)[IShader::BindOption(enableSkinning)][boneMatricesBuffer][IShader::BindInput(IShader::BindInput::BONE_TRANSFORMS)];
-		ReflectProperty(boneIndex)[IShader::BindOption(enableSkinning)][boneIndexBuffer][IShader::BindInput(IShader::BindInput::BONE_INDEX)];
-		ReflectProperty(boneWeight)[IShader::BindOption(enableSkinning)][boneWeightBuffer][IShader::BindInput(IShader::BindInput::BONE_WEIGHT)];
+		ReflectProperty(boneMatries)[BindOption(enableSkinning)][boneMatricesBuffer][BindInput(BindInput::BONE_TRANSFORMS)];
+		ReflectProperty(boneIndex)[BindOption(enableSkinning)][boneIndexBuffer][BindInput(BindInput::BONE_INDEX)];
+		ReflectProperty(boneWeight)[BindOption(enableSkinning)][boneWeightBuffer][BindInput(BindInput::BONE_WEIGHT)];
 
-		ReflectProperty(worldMatrix)[enableInstancing ? instanceBuffer : globalBuffer][IShader::BindInput(IShader::BindInput::TRANSFORM_WORLD)];
-		ReflectProperty(instancedColor)[enableInstancing ? instanceBuffer : globalBuffer][IShader::BindOption(enableInstancedColor)][IShader::BindInput(IShader::BindInput::COLOR_INSTANCED)];
-		ReflectProperty(viewMatrix)[globalBuffer][IShader::BindOption(enableViewProjectionMatrix)][IShader::BindInput(IShader::BindInput::TRANSFORM_VIEW)];
-		ReflectProperty(viewProjectionMatrix)[globalBuffer][IShader::BindOption(enableViewProjectionMatrix)][IShader::BindInput(IShader::BindInput::TRANSFORM_VIEWPROJECTION)];
+		ReflectProperty(worldMatrix)[enableInstancing ? instanceBuffer : globalBuffer][BindInput(BindInput::TRANSFORM_WORLD)];
+		ReflectProperty(instancedColor)[enableInstancing ? instanceBuffer : globalBuffer][IShader::BindOption(enableInstancedColor)][BindInput(BindInput::COLOR_INSTANCED)];
+		ReflectProperty(viewMatrix)[globalBuffer][IShader::BindOption(enableViewProjectionMatrix)][BindInput(BindInput::TRANSFORM_VIEW)];
+		ReflectProperty(viewProjectionMatrix)[globalBuffer][IShader::BindOption(enableViewProjectionMatrix)][BindInput(BindInput::TRANSFORM_VIEWPROJECTION)];
 
-		ReflectProperty(vertexPosition)[vertexPositionBuffer][IShader::BindInput(IShader::BindInput::POSITION)];
-		ReflectProperty(vertexNormal)[vertexNormalBuffer][IShader::BindInput(IShader::BindInput::NORMAL)];
-		ReflectProperty(vertexTangent)[vertexTangentBuffer][IShader::BindInput(IShader::BindInput::TANGENT)];
-		ReflectProperty(vertexColor)[vertexColorBuffer][IShader::BindInput(IShader::BindInput::COLOR)];
-		ReflectProperty(vertexTexCoord)[vertexTexCoordBuffer][IShader::BindInput(IShader::BindInput::TEXCOORD)];
+		ReflectProperty(vertexPosition)[vertexPositionBuffer][BindInput(BindInput::POSITION)];
+		ReflectProperty(vertexNormal)[vertexNormalBuffer][BindInput(BindInput::NORMAL)];
+		ReflectProperty(vertexTangent)[vertexTangentBuffer][BindInput(BindInput::TANGENT)];
+		ReflectProperty(vertexColor)[vertexColorBuffer][BindInput(BindInput::COLOR)];
+		ReflectProperty(vertexTexCoord)[vertexTexCoordBuffer][BindInput(BindInput::TEXCOORD)];
 
-		ReflectProperty(rasterPosition)[IShader::BindOutput(IShader::BindOutput::HPOSITION)];
-		ReflectProperty(texCoord)[IShader::BindOutput(IShader::BindOutput::TEXCOORD)];
-		ReflectProperty(viewNormal)[IShader::BindOutput(IShader::BindOutput::TEXCOORD + 1)];
-		ReflectProperty(viewTangent)[IShader::BindOutput(IShader::BindOutput::TEXCOORD + 2)];
-		ReflectProperty(viewBinormal)[IShader::BindOutput(IShader::BindOutput::TEXCOORD + 3)];
-		ReflectProperty(rasterCoord)[IShader::BindOption(enableRasterCoord)][IShader::BindOutput(IShader::BindOutput::TEXCOORD + 4)];
-		ReflectProperty(tintColor)[IShader::BindOutput(IShader::BindOutput::COLOR)];
+		ReflectProperty(rasterPosition)[BindOutput(BindOutput::HPOSITION)];
+		ReflectProperty(texCoord)[BindOutput(BindOutput::TEXCOORD)];
+		ReflectProperty(viewNormal)[BindOutput(BindOutput::TEXCOORD + 1)];
+		ReflectProperty(viewTangent)[BindOutput(BindOutput::TEXCOORD + 2)];
+		ReflectProperty(viewBinormal)[BindOutput(BindOutput::TEXCOORD + 3)];
+		ReflectProperty(rasterCoord)[BindOption(enableRasterCoord)][BindOutput(BindOutput::TEXCOORD + 4)];
+		ReflectProperty(tintColor)[BindOutput(BindOutput::COLOR)];
 	}
 
 	return *this;

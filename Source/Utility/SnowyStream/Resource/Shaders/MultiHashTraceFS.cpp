@@ -27,14 +27,14 @@ TObject<IReflect>& MultiHashTraceFS::operator () (IReflect& reflect) {
 		ReflectProperty(dstNormalRoughnessMetallicTexture);
 
 		ReflectProperty(uniformBuffer);
-		ReflectProperty(rasterCoord)[IShader::BindInput(IShader::BindInput::TEXCOORD)];
-		ReflectProperty(dstInverseProjection)[uniformBuffer][IShader::BindInput(IShader::BindInput::GENERAL)];
-		ReflectProperty(srcProjection)[uniformBuffer][IShader::BindInput(IShader::BindInput::GENERAL)];
-		ReflectProperty(srcInverseProjection)[uniformBuffer][IShader::BindInput(IShader::BindInput::GENERAL)];
-		ReflectProperty(offsets)[uniformBuffer][IShader::BindInput(IShader::BindInput::GENERAL)];
-		ReflectProperty(srcOrigin)[uniformBuffer][IShader::BindInput(IShader::BindInput::GENERAL)];
-		ReflectProperty(sigma)[uniformBuffer][IShader::BindInput(IShader::BindInput::GENERAL)];
-		ReflectProperty(dstLit)[IShader::BindOutput(IShader::BindOutput::COLOR)];
+		ReflectProperty(rasterCoord)[BindInput(BindInput::TEXCOORD)];
+		ReflectProperty(dstInverseProjection)[uniformBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(srcProjection)[uniformBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(srcInverseProjection)[uniformBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(offsets)[uniformBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(srcOrigin)[uniformBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(sigma)[uniformBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(dstLit)[BindOutput(BindOutput::COLOR)];
 	}
 
 	return *this;

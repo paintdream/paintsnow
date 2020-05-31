@@ -24,14 +24,14 @@ TObject<IReflect>& DeferredCompactEncodeFS::operator () (IReflect& reflect) {
 
 	if (reflect.IsReflectProperty()) {
 		// inputs
-		ReflectProperty(outputColor)[IShader::BindInput(IShader::BindInput::LOCAL)];
-		ReflectProperty(outputNormal)[IShader::BindInput(IShader::BindInput::LOCAL)];
-		ReflectProperty(occlusion)[IShader::BindInput(IShader::BindInput::LOCAL)];
-		ReflectProperty(metallic)[IShader::BindInput(IShader::BindInput::LOCAL)];
-		ReflectProperty(roughness)[IShader::BindInput(IShader::BindInput::LOCAL)];
+		ReflectProperty(outputColor)[BindInput(BindInput::LOCAL)];
+		ReflectProperty(outputNormal)[BindInput(BindInput::LOCAL)];
+		ReflectProperty(occlusion)[BindInput(BindInput::LOCAL)];
+		ReflectProperty(metallic)[BindInput(BindInput::LOCAL)];
+		ReflectProperty(roughness)[BindInput(BindInput::LOCAL)];
 
-		ReflectProperty(encodeBaseColorOcclusion)[IShader::BindOutput(IShader::BindOutput::COLOR)];
-		ReflectProperty(encodeNormalRoughnessMetallic)[IShader::BindOutput(IShader::BindOutput::COLOR)];
+		ReflectProperty(encodeBaseColorOcclusion)[BindOutput(BindOutput::COLOR)];
+		ReflectProperty(encodeNormalRoughnessMetallic)[BindOutput(BindOutput::COLOR)];
 	}
 
 	return *this;
@@ -76,17 +76,17 @@ TObject<IReflect>& DeferredCompactDecodeFS::operator () (IReflect& reflect) {
 		ReflectProperty(ShadowTexture);
 		ReflectProperty(uniformProjectionBuffer);
 
-		ReflectProperty(inverseProjectionMatrix)[uniformProjectionBuffer][IShader::BindInput(IShader::BindInput::TRANSFORM_VIEWPROJECTION_INV)];
-		ReflectProperty(rasterCoord)[IShader::BindInput(IShader::BindInput::TEXCOORD)];
+		ReflectProperty(inverseProjectionMatrix)[uniformProjectionBuffer][BindInput(BindInput::TRANSFORM_VIEWPROJECTION_INV)];
+		ReflectProperty(rasterCoord)[BindInput(BindInput::TEXCOORD)];
 		
-		ReflectProperty(viewPosition)[IShader::BindOutput(IShader::BindOutput::LOCAL)];
-		ReflectProperty(viewNormal)[IShader::BindOutput(IShader::BindOutput::LOCAL)];
-		ReflectProperty(baseColor)[IShader::BindOutput(IShader::BindOutput::LOCAL)];
-		ReflectProperty(depth)[IShader::BindOutput(IShader::BindOutput::LOCAL)];
-		ReflectProperty(occlusion)[IShader::BindOutput(IShader::BindOutput::LOCAL)];
-		ReflectProperty(metallic)[IShader::BindOutput(IShader::BindOutput::LOCAL)];
-		ReflectProperty(roughness)[IShader::BindOutput(IShader::BindOutput::LOCAL)];
-		ReflectProperty(shadow)[IShader::BindOutput(IShader::BindOutput::LOCAL)];
+		ReflectProperty(viewPosition)[BindOutput(BindOutput::LOCAL)];
+		ReflectProperty(viewNormal)[BindOutput(BindOutput::LOCAL)];
+		ReflectProperty(baseColor)[BindOutput(BindOutput::LOCAL)];
+		ReflectProperty(depth)[BindOutput(BindOutput::LOCAL)];
+		ReflectProperty(occlusion)[BindOutput(BindOutput::LOCAL)];
+		ReflectProperty(metallic)[BindOutput(BindOutput::LOCAL)];
+		ReflectProperty(roughness)[BindOutput(BindOutput::LOCAL)];
+		ReflectProperty(shadow)[BindOutput(BindOutput::LOCAL)];
 	}
 
 	return *this;

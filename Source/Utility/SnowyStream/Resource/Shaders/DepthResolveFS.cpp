@@ -25,9 +25,9 @@ TObject<IReflect>& DepthResolveFS::operator () (IReflect& reflect) {
 		// inputs
 		ReflectProperty(depthTexture);
 		ReflectProperty(uniformBuffer);
-		ReflectProperty(rasterCoord)[IShader::BindInput(IShader::BindInput::TEXCOORD)];
-		ReflectProperty(resolveParam)[uniformBuffer][IShader::BindInput(IShader::BindInput::GENERAL)];
-		ReflectProperty(outputDepth)[IShader::BindOutput(IShader::BindOutput::COLOR)];
+		ReflectProperty(rasterCoord)[BindInput(BindInput::TEXCOORD)];
+		ReflectProperty(resolveParam)[uniformBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(outputDepth)[BindOutput(BindOutput::COLOR)];
 	}
 
 	return *this;

@@ -309,7 +309,19 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\TerrainResource.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\TextPass.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\TextResource.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\TextShadingFS.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\TextTransformVS.cpp
 # End Source File
 # Begin Source File
 
@@ -577,7 +589,19 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\TerrainResource.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\TextPass.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\TextResource.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\TextShadingFS.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\TextTransformVS.h
 # End Source File
 # Begin Source File
 

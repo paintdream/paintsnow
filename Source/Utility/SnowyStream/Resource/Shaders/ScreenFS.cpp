@@ -53,8 +53,8 @@ TObject<IReflect>& ScreenFS::operator () (IReflect& reflect) {
 		ReflectProperty(inputBloomTexture0);
 		ReflectProperty(inputBloomTexture1);
 		ReflectProperty(inputBloomTexture2);
-		ReflectProperty(rasterCoord)[IShader::BindInput(IShader::BindInput::TEXCOORD)];
-		ReflectProperty(outputColor)[IShader::BindOutput(IShader::BindOutput::COLOR)];
+		ReflectProperty(rasterCoord)[BindInput(BindInput::TEXCOORD)];
+		ReflectProperty(outputColor)[BindOutput(BindOutput::COLOR)];
 
 		ReflectProperty(bloomIntensity)[IShader::BindConst<float>()];
 	}

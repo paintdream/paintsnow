@@ -45,10 +45,10 @@ TObject<IReflect>& ScreenSpaceTraceFS::operator () (IReflect& reflect) {
 		ReflectProperty(viewProjectionMatrix)[traceBuffer];
 		ReflectProperty(invScreenSize)[traceBuffer];
 
-		ReflectProperty(worldPosition)[IShader::BindInput(IShader::BindInput::LOCAL)];
-		ReflectProperty(traceDirection)[IShader::BindInput(IShader::BindInput::LOCAL)];
-		ReflectProperty(rasterCoord)[IShader::BindInput(IShader::BindInput::LOCAL)];
-		ReflectProperty(traceCoord)[IShader::BindOutput(IShader::BindOutput::LOCAL)];
+		ReflectProperty(worldPosition)[BindInput(BindInput::LOCAL)];
+		ReflectProperty(traceDirection)[BindInput(BindInput::LOCAL)];
+		ReflectProperty(rasterCoord)[BindInput(BindInput::LOCAL)];
+		ReflectProperty(traceCoord)[BindOutput(BindOutput::LOCAL)];
 	}
 
 	return *this;

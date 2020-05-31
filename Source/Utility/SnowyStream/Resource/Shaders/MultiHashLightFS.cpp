@@ -18,13 +18,13 @@ TObject<IReflect>& MultiHashLightFS::operator () (IReflect& reflect) {
 		ReflectProperty(lightDepthTexture);
 		ReflectProperty(lightParamBuffer);
 
-		ReflectProperty(rasterCoord)[IShader::BindInput(IShader::BindInput::TEXCOORD)];
-		ReflectProperty(invProjectionMatrix)[IShader::BindInput(IShader::BindInput::GENERAL)];
-		ReflectProperty(lightProjectionMatrix)[IShader::BindInput(IShader::BindInput::GENERAL)];
-		ReflectProperty(lightColor)[lightParamBuffer][IShader::BindInput(IShader::BindInput::GENERAL)];
-		ReflectProperty(lightAttenuation)[lightParamBuffer][IShader::BindInput(IShader::BindInput::GENERAL)];
+		ReflectProperty(rasterCoord)[BindInput(BindInput::TEXCOORD)];
+		ReflectProperty(invProjectionMatrix)[BindInput(BindInput::GENERAL)];
+		ReflectProperty(lightProjectionMatrix)[BindInput(BindInput::GENERAL)];
+		ReflectProperty(lightColor)[lightParamBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(lightAttenuation)[lightParamBuffer][BindInput(BindInput::GENERAL)];
 
-		ReflectProperty(blendColor)[IShader::BindOutput(IShader::BindOutput::COLOR)];
+		ReflectProperty(blendColor)[BindOutput(BindOutput::COLOR)];
 	}
 
 	return *this;

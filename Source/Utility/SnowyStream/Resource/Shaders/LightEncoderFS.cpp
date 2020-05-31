@@ -68,14 +68,14 @@ TObject<IReflect>& LightEncoderFS::operator () (IReflect& reflect) {
 		// inputs
 		ReflectProperty(depthTexture);
 		ReflectProperty(lightBuffer);
-		ReflectProperty(rasterCoord)[IShader::BindInput(IShader::BindInput::TEXCOORD)];
+		ReflectProperty(rasterCoord)[BindInput(BindInput::TEXCOORD)];
 
-		ReflectProperty(inverseProjectionMatrix)[lightBuffer][IShader::BindInput(IShader::BindInput::TRANSFORM_VIEWPROJECTION_INV)];
-		ReflectProperty(invScreenSize)[lightBuffer][IShader::BindInput(IShader::BindInput::GENERAL)];
-		ReflectProperty(lightCount)[lightBuffer][IShader::BindInput(IShader::BindInput::GENERAL)];
-		ReflectProperty(reserved)[lightBuffer][IShader::BindInput(IShader::BindInput::GENERAL)];
-		ReflectProperty(lightInfos)[lightBuffer][IShader::BindInput(IShader::BindInput::GENERAL)];
-		ReflectProperty(outputIndex)[IShader::BindOutput(IShader::BindOutput::COLOR)];
+		ReflectProperty(inverseProjectionMatrix)[lightBuffer][BindInput(BindInput::TRANSFORM_VIEWPROJECTION_INV)];
+		ReflectProperty(invScreenSize)[lightBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(lightCount)[lightBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(reserved)[lightBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(lightInfos)[lightBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(outputIndex)[BindOutput(BindOutput::COLOR)];
 	}
 
 	return *this;

@@ -20,7 +20,7 @@ TObject<IReflect>& MultiHashGatherFS::operator () (IReflect& reflect) {
 		ReflectProperty(refNormalRoughnessMetallicTexture);
 
 		ReflectProperty(gatherParamBuffer);
-		ReflectProperty(blendColor)[IShader::BindOutput(IShader::BindOutput::COLOR)];
+		ReflectProperty(blendColor)[BindOutput(BindOutput::COLOR)];
 	}
 
 	return *this;

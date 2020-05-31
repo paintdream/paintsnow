@@ -25,6 +25,7 @@
 #include "Resource/Passes/ShadowMaskPass.h"
 #include "Resource/Passes/StandardPass.h"
 #include "Resource/Passes/TerrainPass.h"
+#include "Resource/Passes/TextPass.h"
 #include "Resource/Passes/VolumePass.h"
 #include "Resource/Passes/WaterPass.h"
 #include "Resource/Passes/WidgetPass.h"
@@ -683,7 +684,7 @@ void SnowyStream::Uninitialize() {
 }
 
 template <class T>
-TShared<ShaderResource> RegisterPass(ResourceManager& resourceManager, UniqueType<T> type) {
+void RegisterPass(ResourceManager& resourceManager, UniqueType<T> type, const String& matName = "") {
 	ShaderResourceImpl<T>* shaderResource = new ShaderResourceImpl<T>(resourceManager, "", ResourceBase::RESOURCE_ETERNAL);
 	ZPassBase& pass = shaderResource->GetPass();
 	Unique unique = pass.GetUnique();
@@ -697,8 +698,11 @@ TShared<ShaderResource> RegisterPass(ResourceManager& resourceManager, UniqueTyp
 	shaderResource->SetLocation(ShaderResource::GetShaderPathPrefix() + name);
 	resourceManager.Insert(shaderResource->GetLocation(), shaderResource);
 
-	TShared<ShaderResource> res = TShared<ShaderResource>::From(shaderResource);
-	return res;
+	if (!matName.empty()) {
+		TShared<MaterialResource> materialResource = TShared<MaterialResource>::From(new MaterialResource(resourceManager, String("[Runtime]/MaterialResource/") + matName));
+		materialResource->Flag() |= ResourceBase::RESOURCE_ETERNAL;
+		resourceManager.Insert(materialResource->GetLocation(), materialResource());
+	}
 }
 
 void SnowyStream::RegisterBuiltinPasses() {
@@ -718,11 +722,8 @@ void SnowyStream::RegisterBuiltinPasses() {
 	RegisterPass(*resourceManager(), UniqueType<ScreenPass>());
 	RegisterPass(*resourceManager(), UniqueType<ShadowMaskPass>());
 	RegisterPass(*resourceManager(), UniqueType<StandardPass>());
-	TShared<ShaderResource> widgetShader = RegisterPass(*resourceManager(), UniqueType<WidgetPass>());
-
-	TShared<MaterialResource> widgetMaterialResource = TShared<MaterialResource>::From(new MaterialResource(*resourceManager, "[Runtime]/MaterialResource/Widget"));
-	widgetMaterialResource->Flag() |= ResourceBase::RESOURCE_ETERNAL;
-	resourceManager->Insert(widgetMaterialResource->GetLocation(), widgetMaterialResource());
+	RegisterPass(*resourceManager(), UniqueType<WidgetPass>(), "Widget");
+	RegisterPass(*resourceManager(), UniqueType<TextPass>(), "Text");
 
 	// RegisterPass(*resourceManager(), UniqueType<CustomMaterialPass>());
 	/*

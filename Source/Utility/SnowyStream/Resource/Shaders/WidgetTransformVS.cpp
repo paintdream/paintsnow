@@ -22,7 +22,6 @@ String WidgetTransformVS::GetShaderText() {
 		texCoordRect = inputTexCoordRect;
 		texCoordMark = inputTexCoordMark;
 		texCoordScale = inputTexCoordScale;
-		tintColor = inputTintColor;	
 	);
 }
 
@@ -38,14 +37,12 @@ TObject<IReflect>& WidgetTransformVS::operator () (IReflect& reflect) {
 		ReflectProperty(inputTexCoordRect)[instanceBuffer][BindInput(BindInput::TEXCOORD + 1)];
 		ReflectProperty(inputTexCoordMark)[instanceBuffer][BindInput(BindInput::TEXCOORD + 2)];
 		ReflectProperty(inputTexCoordScale)[instanceBuffer][BindInput(BindInput::TEXCOORD + 3)];
-		ReflectProperty(inputTintColor)[instanceBuffer][BindInput(BindInput::COLOR)];
 
 		ReflectProperty(position)[BindOutput(BindOutput::HPOSITION)];
 		ReflectProperty(texCoord)[BindOutput(BindOutput::TEXCOORD)];
 		ReflectProperty(texCoordRect)[BindOutput(BindOutput::TEXCOORD + 1)];
 		ReflectProperty(texCoordMark)[BindOutput(BindOutput::TEXCOORD + 2)];
 		ReflectProperty(texCoordScale)[BindOutput(BindOutput::TEXCOORD + 3)];
-		ReflectProperty(tintColor)[BindOutput(BindOutput::COLOR)];
 	}
 
 	return *this;

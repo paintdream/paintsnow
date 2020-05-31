@@ -49,8 +49,8 @@ TObject<IReflect>& AntiAliasingFS::operator () (IReflect& reflect) {
 		ReflectProperty(lastInputTexture);
 		ReflectProperty(depthTexture);
 		ReflectProperty(uniformBuffer);
-		ReflectProperty(rasterCoord)[IShader::BindInput(IShader::BindInput::TEXCOORD)];
-		ReflectProperty(outputColor)[IShader::BindOutput(IShader::BindOutput::COLOR)];
+		ReflectProperty(rasterCoord)[BindInput(BindInput::TEXCOORD)];
+		ReflectProperty(outputColor)[BindOutput(BindOutput::COLOR)];
 
 		ReflectProperty(reprojectionMatrix)[uniformBuffer];
 		ReflectProperty(invScreenSize)[uniformBuffer];

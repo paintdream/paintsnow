@@ -23,14 +23,12 @@ namespace PaintsNow {
 
 			// Input attribs
 			Float3 unitPositionTexCoord;
-			float _padding;
 
 			// instanced
-			Float4 inputPositionRect; // instanced ..
+			Float4 inputPositionRect;
 			Float4 inputTexCoordRect;
 			Float4 inputTexCoordMark;
 			Float4 inputTexCoordScale;
-			Float4 inputTintColor;
 
 		protected:
 			// Output vars
@@ -41,7 +39,6 @@ namespace PaintsNow {
 			Float4 texCoordRect;
 			Float4 texCoordMark;
 			Float4 texCoordScale;
-			Float4 tintColor;
 		};
 	}
 }

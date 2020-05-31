@@ -81,17 +81,17 @@ TObject<IReflect>& StandardLightingFS::operator () (IReflect& reflect) {
 		ReflectProperty(lightBuffer);
 		ReflectProperty(paramBuffer);
 
-		ReflectProperty(viewPosition)[IShader::BindInput(IShader::BindInput::LOCAL)];
-		ReflectProperty(viewNormal)[IShader::BindInput(IShader::BindInput::LOCAL)];
-		ReflectProperty(baseColor)[IShader::BindInput(IShader::BindInput::LOCAL)];
-		ReflectProperty(metallic)[IShader::BindInput(IShader::BindInput::LOCAL)];
-		ReflectProperty(roughness)[IShader::BindInput(IShader::BindInput::LOCAL)];
-		ReflectProperty(shadow)[IShader::BindInput(IShader::BindInput::LOCAL)];
-		ReflectProperty(occlusion)[IShader::BindInput(IShader::BindInput::LOCAL)];
-		ReflectProperty(invWorldNormalMatrix)[paramBuffer][IShader::BindInput(IShader::BindInput::GENERAL)];
-		ReflectProperty(cubeLevelInv)[paramBuffer][IShader::BindInput(IShader::BindInput::GENERAL)];
-		ReflectProperty(lightInfos)[lightBuffer][IShader::BindInput(IShader::BindInput::GENERAL)];
-		ReflectProperty(mainColor)[IShader::BindOutput(IShader::BindOutput::COLOR)];
+		ReflectProperty(viewPosition)[BindInput(BindInput::LOCAL)];
+		ReflectProperty(viewNormal)[BindInput(BindInput::LOCAL)];
+		ReflectProperty(baseColor)[BindInput(BindInput::LOCAL)];
+		ReflectProperty(metallic)[BindInput(BindInput::LOCAL)];
+		ReflectProperty(roughness)[BindInput(BindInput::LOCAL)];
+		ReflectProperty(shadow)[BindInput(BindInput::LOCAL)];
+		ReflectProperty(occlusion)[BindInput(BindInput::LOCAL)];
+		ReflectProperty(invWorldNormalMatrix)[paramBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(cubeLevelInv)[paramBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(lightInfos)[lightBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(mainColor)[BindOutput(BindOutput::COLOR)];
 	}
 	
 	return *this;

@@ -45,13 +45,13 @@ TObject<IReflect>& StandardParameterFS::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectProperty()) {
-		ReflectProperty(baseColorTexture)[IShader::BindInput(IShader::BindInput::MAINTEXTURE)];
+		ReflectProperty(baseColorTexture)[BindInput(BindInput::MAINTEXTURE)];
 		ReflectProperty(normalTexture);
 		ReflectProperty(mixtureTexture);
 
-		ReflectProperty(enableBaseColorTexture)[IShader::BindConst<bool>()];
-		ReflectProperty(enableNormalTexture)[IShader::BindConst<bool>()];
-		ReflectProperty(enableMaterialTexture)[IShader::BindConst<bool>()];
+		ReflectProperty(enableBaseColorTexture)[BindConst<bool>()];
+		ReflectProperty(enableNormalTexture)[BindConst<bool>()];
+		ReflectProperty(enableMaterialTexture)[BindConst<bool>()];
 
 		/*
 		ReflectProperty(paramBuffer);
@@ -59,18 +59,18 @@ TObject<IReflect>& StandardParameterFS::operator () (IReflect& reflect) {
 		ReflectProperty(timestamp)[paramBuffer];
 		ReflectProperty(reserved)[paramBuffer];*/
 
-		ReflectProperty(texCoord)[IShader::BindInput(IShader::BindInput::TEXCOORD)];
-		ReflectProperty(viewNormal)[IShader::BindInput(IShader::BindInput::TEXCOORD)];
-		ReflectProperty(viewTangent)[IShader::BindInput(IShader::BindOutput::TEXCOORD)];
-		ReflectProperty(viewBinormal)[IShader::BindInput(IShader::BindOutput::TEXCOORD)];
-		ReflectProperty(tintColor)[IShader::BindInput(IShader::BindOutput::TEXCOORD)];
+		ReflectProperty(texCoord)[BindInput(BindInput::TEXCOORD)];
+		ReflectProperty(viewNormal)[BindInput(BindInput::TEXCOORD)];
+		ReflectProperty(viewTangent)[BindInput(BindInput::TEXCOORD)];
+		ReflectProperty(viewBinormal)[BindInput(BindInput::TEXCOORD)];
+		ReflectProperty(tintColor)[BindInput(BindInput::TEXCOORD)];
 
-		ReflectProperty(outputColor)[IShader::BindOutput(IShader::BindOutput::LOCAL)];
-		ReflectProperty(outputNormal)[IShader::BindOutput(IShader::BindOutput::LOCAL)];
-		ReflectProperty(alpha)[IShader::BindOutput(IShader::BindOutput::LOCAL)];
-		ReflectProperty(metallic)[IShader::BindOutput(IShader::BindOutput::LOCAL)];
-		ReflectProperty(roughness)[IShader::BindOutput(IShader::BindOutput::LOCAL)];
-		ReflectProperty(occlusion)[IShader::BindOutput(IShader::BindOutput::LOCAL)];
+		ReflectProperty(outputColor)[BindOutput(BindOutput::LOCAL)];
+		ReflectProperty(outputNormal)[BindOutput(BindOutput::LOCAL)];
+		ReflectProperty(alpha)[BindOutput(BindOutput::LOCAL)];
+		ReflectProperty(metallic)[BindOutput(BindOutput::LOCAL)];
+		ReflectProperty(roughness)[BindOutput(BindOutput::LOCAL)];
+		ReflectProperty(occlusion)[BindOutput(BindOutput::LOCAL)];
 	}
 
 	return *this;

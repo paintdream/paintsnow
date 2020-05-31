@@ -28,9 +28,9 @@ TObject<IReflect>& BloomFS::operator () (IReflect& reflect) {
 		ReflectProperty(screenTexture);
 		ReflectProperty(uniformBloomBuffer);
 
-		ReflectProperty(invScreenSize)[uniformBloomBuffer][IShader::BindInput(IShader::BindInput::GENERAL)];
-		ReflectProperty(rasterCoord)[IShader::BindInput(IShader::BindInput::TEXCOORD)];
-		ReflectProperty(outputColor)[IShader::BindOutput(IShader::BindOutput::COLOR)];
+		ReflectProperty(invScreenSize)[uniformBloomBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(rasterCoord)[BindInput(BindInput::TEXCOORD)];
+		ReflectProperty(outputColor)[BindOutput(BindOutput::COLOR)];
 	}
 
 	return *this;

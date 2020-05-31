@@ -19,7 +19,7 @@ String WidgetShadingFS::GetShaderText() {
 		newCoord.xy += texCoordScale.zw * (offset.xy - offset.zw);
 		newCoord.xy += texCoordScale.xy * offset.zw;
 		float2 coord = lerp(texCoordRect.xy, texCoordRect.zw, newCoord.xy);
-		target = texture(mainTexture, coord.xy) * tintColor.xyzw;
+		target = texture(mainTexture, coord.xy);
 	);
 }
 
@@ -27,13 +27,12 @@ TObject<IReflect>& WidgetShadingFS::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectProperty()) {
-		ReflectProperty(mainTexture);
+		ReflectProperty(mainTexture)[BindInput(BindInput::MAINTEXTURE)];
 
 		ReflectProperty(texCoord)[BindInput(BindInput::TEXCOORD)];
 		ReflectProperty(texCoordRect)[BindInput(BindInput::TEXCOORD)];
 		ReflectProperty(texCoordScale)[BindInput(BindInput::TEXCOORD)];
 		ReflectProperty(texCoordMark)[BindInput(BindInput::TEXCOORD)];
-		ReflectProperty(tintColor)[BindInput(BindInput::COLOR)];
 		ReflectProperty(target)[BindOutput(BindOutput::COLOR)];
 	}
 

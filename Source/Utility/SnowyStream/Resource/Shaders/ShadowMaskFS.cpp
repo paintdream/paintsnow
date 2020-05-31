@@ -36,9 +36,9 @@ TObject<IReflect>& ShadowMaskFS::operator () (IReflect& reflect) {
 		ReflectProperty(depthTexture);
 		ReflectProperty(uniformBuffer);
 
-		ReflectProperty(rasterCoord)[IShader::BindInput(IShader::BindInput::TEXCOORD)];
-		ReflectProperty(reprojectionMatrix)[uniformBuffer][IShader::BindInput(IShader::BindInput::GENERAL)];
-		ReflectProperty(shadow)[IShader::BindOutput(IShader::BindOutput::COLOR)];
+		ReflectProperty(rasterCoord)[BindInput(BindInput::TEXCOORD)];
+		ReflectProperty(reprojectionMatrix)[uniformBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(shadow)[BindOutput(BindOutput::COLOR)];
 	}
 
 	return *this;
