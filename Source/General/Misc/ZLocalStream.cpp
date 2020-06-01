@@ -7,6 +7,13 @@ ZLocalStream::~ZLocalStream() {
 	Cleanup();
 }
 
+ZLocalStream& ZLocalStream::operator = (const ZLocalStream& rhs) {
+	Cleanup();
+	length = rhs.length;
+	baseStream = static_cast<IStreamBase*>(baseStream->Clone());
+	return *this;
+}
+
 void ZLocalStream::Cleanup() {
 	if (baseStream != nullptr) {
 		baseStream->ReleaseObject();

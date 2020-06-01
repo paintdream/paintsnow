@@ -80,7 +80,7 @@ void BridgeSunset::ScriptUninitialize(IScript::Request& request) {
 
 	SpinLock(requestCritical);
 	std::stack<IScript::Request*> s;
-	s = std::move(requests);
+	std::swap(s, requests);
 	SpinUnLock(requestCritical);
 
 	script.DoLock();

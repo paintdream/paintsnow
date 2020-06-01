@@ -28,6 +28,8 @@ namespace PaintsNow {
 
 		Bytes& GetPayload();
 		const Bytes& GetPayload() const;
+
+		ZLocalStream& operator = (const ZLocalStream& localStream);
 	
 	protected:
 		void Cleanup();

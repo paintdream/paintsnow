@@ -62,6 +62,13 @@ bool ZMemoryStream::CheckSize(size_t& len) {
 	return true;
 }
 
+IReflectObject* ZMemoryStream::Clone() const {
+	// Not clonable by now
+	// TODO:
+	assert(false);
+	return nullptr;
+}
+
 bool ZMemoryStream::Transfer(IStreamBase& stream, size_t& len) {
 	if (!CheckSize(len)) {
 		return false;

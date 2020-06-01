@@ -62,6 +62,8 @@ ZLocalStream& AudioResource::GetLocalStream() {
 
 IReflectObject* AudioResource::Clone() const {
 	AudioResource* clone = new AudioResource(resourceManager, "");
+	assert(audioBuffer == nullptr); // must not attach
+	clone->localStream = localStream;
 	// TODO:
 	return clone;
 }

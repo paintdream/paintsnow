@@ -7,6 +7,7 @@
 #define __RENDERPOLICY_H__
 
 #include "../../../../Core/System/Tiny.h"
+#include "../../../../General/Interface/IRender.h"
 
 namespace PaintsNow {
 	namespace NsMythForest {
@@ -17,6 +18,8 @@ namespace PaintsNow {
 
 			String renderPortName;
 			uint32_t priority;
+			IRender::Resource::RenderStateDescription renderStateTemplate;
+			IRender::Resource::RenderStateDescription renderStateMask;
 		};
 	}
 }
