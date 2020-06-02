@@ -241,7 +241,8 @@ namespace PaintsNow {
 	/* grammar checking */ \
 	if (false) { \
 		code; \
-	}
+	} \
+	return "";
 #else
 #define UnifyShaderCode(code) \
 	code;
