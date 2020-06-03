@@ -463,8 +463,8 @@ void SnowyStream::RequestNewResource(IScript::Request& request, const String& pa
 
 class TaskResourceCreator final : public TReflected<TaskResourceCreator, SharedTiny> {
 public:
-	TaskResourceCreator(BridgeSunset& bs, SnowyStream& ss, const std::vector<String>& pl, const String& type, IScript::Request::Ref cb) : bridgeSunset(bs), snowyStream(ss), callback(cb) {
-		pathList = pl; resType = type;
+	TaskResourceCreator(BridgeSunset& bs, SnowyStream& ss, rvalue<std::vector<String> >& pl, rvalue<String> type, IScript::Request::Ref cb) : bridgeSunset(bs), snowyStream(ss), callback(cb), resType(std::move(type)) {
+		std::swap(pathList, (std::vector<String>&)pl);
 		resourceList.resize(pathList.size());
 	}
 	
