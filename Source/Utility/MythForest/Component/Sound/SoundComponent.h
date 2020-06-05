@@ -14,6 +14,11 @@ namespace PaintsNow {
 	namespace NsMythForest {
 		class SoundComponent : public TAllocatedTiny<SoundComponent, Component> {
 		public:
+			enum {
+				SOUNDCOMPONENT_ONLINE = COMPONENT_CUSTOM_BEGIN,
+				SOUNDCOMPONENT_CUSTOM_BEGIN = COMPONENT_CUSTOM_BEGIN << 1
+			};
+
 			SoundComponent(TShared<NsSnowyStream::AudioResource> audioResource, IScript::Request::Ref callback);
 			virtual ~SoundComponent();
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
@@ -34,6 +39,7 @@ namespace PaintsNow {
 
 		protected:
 			IAudio::Source* source;
+			IStreamBase* decoder;
 			TShared<NsSnowyStream::AudioResource> audioResource;
 			TWrapper<size_t> stepWrapper;
 			IScript::Request::Ref callback;

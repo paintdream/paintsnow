@@ -21,7 +21,7 @@ namespace PaintsNow {
 
 		virtual Buffer* CreateBuffer() = 0;
 
-		class Decoder : public IStreamBase {
+		class Decoder : public TReflected<Decoder, IStreamBase> {
 		public:
 			enum FORMAT {
 				MONO8 = 0, 

@@ -4,19 +4,27 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
-SoundComponent::SoundComponent(TShared<AudioResource> resource, IScript::Request::Ref r) : callback(r), source(nullptr) {
+SoundComponent::SoundComponent(TShared<AudioResource> resource, IScript::Request::Ref r) : callback(r), source(nullptr), decoder(nullptr) {
 	audioResource.Reset(static_cast<AudioResource*>(resource->Clone()));
+	Flag() |= SOUNDCOMPONENT_ONLINE;
 }
 
 void SoundComponent::Initialize(Engine& engine, Entity* entity) {
 	IAudio& audio = engine.interfaces.audio;
+	IFilterBase& audioFilterBase = engine.interfaces.audioFilterBase;
 
 	source = audio.CreateSource();
+	decoder = audioFilterBase.CreateFilter(audioResource->GetLocalStream());
+	assert(decoder->QueryInterface(UniqueType<IAudio::Decoder>()) != nullptr);
 	stepWrapper = audio.SetSourceBuffer(source, audioResource->GetAudioBuffer());
+	audio.SetBufferStream(audioResource->GetAudioBuffer(), static_cast<IAudio::Decoder&>(*decoder), IsOnline());
 }
 
 void SoundComponent::Uninitialize(Engine& engine, Entity* entity) {
 	engine.interfaces.audio.DeleteSource(source);
+	decoder->ReleaseObject();
+	source = nullptr;
+	decoder = nullptr;
 }
 
 void SoundComponent::ScriptUninitialize(IScript::Request& request) {
@@ -30,7 +38,7 @@ void SoundComponent::ScriptUninitialize(IScript::Request& request) {
 }
 
 bool SoundComponent::IsOnline() const {
-	return callback;
+	return !!(Flag() & SOUNDCOMPONENT_ONLINE);
 }
 
 int64_t SoundComponent::GetDuration() const {
@@ -95,7 +103,7 @@ void SoundComponent::Stop(Engine& engine) {
 }
 
 void SoundComponent::Seek(Engine& engine, double time) {
-	audioResource->GetAudioBuffer();
+
 	// buffer->decoder->Seek(IStreamBase::BEGIN, (long)(time * buffer->decoder->GetSampleRate()));
 	// engine.interfaces.audio.Seek(source, IStreamBase::CUR, time);
 }
