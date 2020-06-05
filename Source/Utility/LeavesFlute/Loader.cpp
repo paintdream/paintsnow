@@ -71,7 +71,7 @@ public:
 	virtual void DeleteResource(Queue* queue, Resource* resource) override {}
 };
 
-Loader::Loader() : frameFactory(nullptr), renderFactory(nullptr), threadFactory(nullptr), audioFactory(nullptr), archiveFactory(nullptr), scriptFactory(nullptr), networkFactory(nullptr), timerFactory(nullptr), imageFactory(nullptr), filterFactory(nullptr), fontFactory(nullptr), decoderFactory(nullptr), databaseFactory(nullptr), leavesFlute(nullptr) {}
+Loader::Loader() : frameFactory(nullptr), renderFactory(nullptr), threadFactory(nullptr), audioFactory(nullptr), archiveFactory(nullptr), scriptFactory(nullptr), networkFactory(nullptr), timerFactory(nullptr), imageFactory(nullptr), assetFilterFactory(nullptr), fontFactory(nullptr), audioFilterFactory(nullptr), databaseFactory(nullptr), leavesFlute(nullptr) {}
 
 Loader::~Loader() {}
 
@@ -277,12 +277,12 @@ void Loader::Load(const CmdLine& cmdLine) {
 
 
 #if !defined(CMAKE_PAINTSNOW) || ADD_AUDIO_LAME
-	static const TFactory<ZDecoderLAME, IAudio::Decoder> sdecoderFactory;
-	decoderFactory = &sdecoderFactory;
-	config.RegisterFactory("IAudio::Decoder", "ZDecoderLAME", sdecoderFactory);
+	static const TFactory<ZFilterLAME, IFilterBase> sdecoderFactory;
+	audioFilterFactory = &sdecoderFactory;
+	config.RegisterFactory("IFIlterBase::Audio", "ZDecoderLAME", sdecoderFactory);
 #endif
 
-	assert(decoderFactory != nullptr);
+	assert(audioFilterFactory != nullptr);
 
 #if !defined(CMAKE_PAINTSNOW) || ADD_DATABASE_SQLITE3_BUILTIN
 	static const TFactory<ZDatabaseSqlite, IDatabase> sdatabaseFactory;
@@ -341,9 +341,9 @@ void Loader::Load(const CmdLine& cmdLine) {
 #endif
 
 #if !defined(CMAKE_PAINTSNOW) || ADD_FILTER_POD_BUILTIN
-	static const TFactory<ZFilterPod, IFilterBase> sfilterFactory;
-	filterFactory = &sfilterFactory;
-	config.RegisterFactory("IFilterBase", "ZFilterPod", sfilterFactory);
+	static const TFactory<ZFilterPod, IFilterBase> sassetFilterFactory;
+	assetFilterFactory = &sassetFilterFactory;
+	config.RegisterFactory("IFilterBase::Asset", "ZFilterPod", sassetFilterFactory);
 #else
 	static const TFactory<NoFilter, IFilterBase> sfilterFactory;
 	filterFactory = &sfilterFactory;
@@ -363,9 +363,9 @@ void Loader::Load(const CmdLine& cmdLine) {
 	SetFactory(reinterpret_cast<const void*&>(timerFactory), paramTimer, "ITimer", factoryMap);
 	SetFactory(reinterpret_cast<const void*&>(timerFactoryForFrame), paramTimerFrame, "ITimerForFrame", factoryMap);
 	SetFactory(reinterpret_cast<const void*&>(imageFactory), paramImage, "IImage", factoryMap);
-	SetFactory(reinterpret_cast<const void*&>(filterFactory), paramFont, "IFilterBase", factoryMap);
+	SetFactory(reinterpret_cast<const void*&>(assetFilterFactory), paramAssetFilter, "IFilterBase::Asset", factoryMap);
 	SetFactory(reinterpret_cast<const void*&>(fontFactory), paramFont, "IFontBase", factoryMap);
-	SetFactory(reinterpret_cast<const void*&>(decoderFactory), paramDecoder, "IAudio::Decoder", factoryMap);
+	SetFactory(reinterpret_cast<const void*&>(audioFilterFactory), paramAudio, "IFilterBase::Audio", factoryMap);
 	SetFactory(reinterpret_cast<const void*&>(databaseFactory), paramDatabase, "IDatabase", factoryMap);
 
 	thread = (*threadFactory)(paramThread);
@@ -383,11 +383,12 @@ void Loader::Load(const CmdLine& cmdLine) {
 		IArchive* archive = (*archiveFactory)(paramArchive);
 		IRandom* random = (*randomFactory)(paramRandom);
 		IDatabase* database = (*databaseFactory)(paramDatabase);
-		IFilterBase* filter = (*filterFactory)(paramFilter);
+		IFilterBase* assetFilter = (*assetFilterFactory)(paramAssetFilter);
+		IFilterBase* audioFilter = (*audioFilterFactory)(paramAudioFilter);
 		IFontBase* font = (*fontFactory)(paramFont);
 
 		{
-			Interfaces interfaces(*archive, *audio, *database, *filter, *font, *frame, *image, *network, *random, *render, *script, *nativeScript, *thread, *timer, *tunnel);
+			Interfaces interfaces(*archive, *audio, *database, *assetFilter, *audioFilter, *font, *frame, *image, *network, *random, *render, *script, *nativeScript, *thread, *timer, *tunnel);
 			LeavesFlute leavesFlute(nogui, interfaces, subArchiveCreator, threadCount, warpCount);
 			config.PostRuntimeState(&leavesFlute, LeavesApi::RUNTIME_INITIALIZE);
 			this->leavesFlute = &leavesFlute;
@@ -408,7 +409,8 @@ void Loader::Load(const CmdLine& cmdLine) {
 		}
 
 		font->ReleaseDevice();
-		filter->ReleaseDevice();
+		assetFilter->ReleaseDevice();
+		audioFilter->ReleaseDevice();
 		database->ReleaseDevice();
 		random->ReleaseDevice();
 		tunnel->ReleaseDevice();

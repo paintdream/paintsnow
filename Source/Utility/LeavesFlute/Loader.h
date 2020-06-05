@@ -62,7 +62,7 @@
 #endif
 
 #if !defined(CMAKE_PAINTSNOW) || ADD_AUDIO_LAME
-#include "../../General/Driver/Audio/Decoder/LAME/ZDecoderLAME.h"
+#include "../../General/Driver/Filter/LAME/ZFilterLAME.h"
 #endif
 
 #if !defined(CMAKE_PAINTSNOW) || ADD_FONT_FREETYPE
@@ -131,12 +131,12 @@ namespace PaintsNow {
 			String paramTimerFrame;
 			const TFactoryBase<IImage>* imageFactory;
 			String paramImage;
-			const TFactoryBase<IFilterBase>* filterFactory;
-			String paramFilter;
+			const TFactoryBase<IFilterBase>* assetFilterFactory;
+			String paramAssetFilter;
 			const TFactoryBase<IFontBase>* fontFactory;
 			String paramFont;
-			const TFactoryBase<IAudio::Decoder>* decoderFactory;
-			String paramDecoder;
+			const TFactoryBase<IFilterBase>* audioFilterFactory;
+			String paramAudioFilter;
 			const TFactoryBase<IDatabase>* databaseFactory;
 			String paramDatabase;
 			const TFactoryBase<IDebugger>* debuggerFactory;

@@ -174,12 +174,12 @@ void SnowyStream::RequestParseJson(IScript::Request& request, const String& str)
 }
 
 void SnowyStream::RequestImportResourceConfig(IScript::Request& request, std::vector<std::pair<String, String> >& config) {
-	interfaces.filterBase.ImportConfig(config);
+	interfaces.assetFilterBase.ImportConfig(config);
 }
 
 void SnowyStream::RequestExportResourceConfig(IScript::Request& request) {
 	std::vector<std::pair<String, String> > config;
-	interfaces.filterBase.ExportConfig(config);
+	interfaces.assetFilterBase.ExportConfig(config);
 
 	bridgeSunset.GetKernel().YieldCurrentWarp();
 	request.DoLock();
@@ -703,6 +703,8 @@ void RegisterPass(ResourceManager& resourceManager, UniqueType<T> type, const St
 		materialResource->Flag() |= ResourceBase::RESOURCE_ETERNAL;
 		resourceManager.Insert(materialResource->GetLocation(), materialResource());
 	}
+
+	shaderResource->ReleaseObject();
 }
 
 void SnowyStream::RegisterBuiltinPasses() {
@@ -792,7 +794,7 @@ TShared<ResourceBase> SnowyStream::CreateResource(const String& path, const Stri
 	// Find resource serializer
 	unordered_map<String, std::pair<Unique, TShared<ResourceSerializerBase> > >::iterator p = resourceSerializers.find(extension);
 	IArchive& archive = interfaces.archive;
-	IFilterBase& protocol = interfaces.filterBase;
+	IFilterBase& protocol = interfaces.assetFilterBase;
 
 	TShared<ResourceBase> resource;
 	if (p != resourceSerializers.end()) {
@@ -827,7 +829,7 @@ bool SnowyStream::MapResource(TShared<ResourceBase> resource, const String& exte
 	assert(resource);
 	String typeExtension = extension.empty() ? GetReflectedExtension(resource->GetUnique()) : extension;
 	IArchive& archive = interfaces.archive;
-	IFilterBase& protocol = interfaces.filterBase;
+	IFilterBase& protocol = interfaces.assetFilterBase;
 
 	unordered_map<String, std::pair<Unique, TShared<ResourceSerializerBase> > >::iterator p = resourceSerializers.find(typeExtension);
 	if (p != resourceSerializers.end()) {
@@ -845,7 +847,7 @@ bool SnowyStream::PersistResource(TShared<ResourceBase> resource, const String& 
 	assert(resource);
 	String typeExtension = extension.empty() ? GetReflectedExtension(resource->GetUnique()) : extension;
 	IArchive& archive = interfaces.archive;
-	IFilterBase& protocol = interfaces.filterBase;
+	IFilterBase& protocol = interfaces.assetFilterBase;
 
 	unordered_map<String, std::pair<Unique, TShared<ResourceSerializerBase> > >::iterator p = resourceSerializers.find(typeExtension);
 	if (p != resourceSerializers.end()) {

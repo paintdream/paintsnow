@@ -31,13 +31,14 @@ namespace PaintsNow {
 	class Interfaces {
 	public:
 		Interfaces(IArchive& parchive, IAudio& paudio, IDatabase& pdatabase, 
-			IFilterBase& pfilterBase, IFontBase& pfontBase, IFrame& pframe, IImage& image, INetwork& pnetwork, IRandom& prandom, IRender& prender,
+			IFilterBase& passetFilterBase, IFilterBase& paudioFilterBase, IFontBase& pfontBase, IFrame& pframe, IImage& image, INetwork& pnetwork, IRandom& prandom, IRender& prender,
 			IScript& pscript, IScript& pnativeScript, IThread& pthread, ITimer& ptimer, ITunnel& ptunnel);
 
 		IArchive& archive;
 		IAudio& audio;
 		IDatabase& database;
-		IFilterBase& filterBase;
+		IFilterBase& assetFilterBase;
+		IFilterBase& audioFilterBase;
 		IFontBase& fontBase;
 		IFrame& frame;
 		IImage& image;

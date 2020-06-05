@@ -175,8 +175,8 @@ IF (ADD_AUDIO_LAME)
 	ENDIF (NOT HAVE_LAME_H AND NOT HAVE_LAME_OTHER_H)
 
 	FILE (GLOB_RECURSE LAME_SRC
-		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Audio/Decoder/LAME/*.h"
-		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Audio/Decoder/LAME/*.cpp"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Filter/LAME/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Filter/LAME/*.cpp"
 	)
 
 	SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${LAME_SRC})

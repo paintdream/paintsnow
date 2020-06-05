@@ -461,7 +461,11 @@ SOURCE=..\..\..\..\Source\General\Misc\ZDynamicObject.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\General\Misc\ZMemoryStream.cpp
+SOURCE=..\..\..\..\Source\General\Misc\ZFencedRenderQueue.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\General\Misc\ZFencedRenderQueue.h
 # End Source File
 # Begin Source File
 
@@ -469,11 +473,15 @@ SOURCE=..\..\..\..\Source\General\Misc\ZLocalStream.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\General\Misc\ZMemoryStream.h
+SOURCE=..\..\..\..\Source\General\Misc\ZLocalStream.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\General\Misc\ZLocalStream.h
+SOURCE=..\..\..\..\Source\General\Misc\ZMemoryStream.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\General\Misc\ZMemoryStream.h
 # End Source File
 # Begin Source File
 
@@ -498,14 +506,6 @@ SOURCE=..\..\..\..\Source\General\Misc\ZRemoteProxy.cpp
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\General\Misc\ZRemoteProxy.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\General\Misc\ZFencedRenderQueue.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\General\Misc\ZFencedRenderQueue.h
 # End Source File
 # Begin Source File
 
@@ -566,22 +566,6 @@ SOURCE=..\..\..\..\Source\General\Driver\Audio\OpenAL\ZAudioOpenAL.cpp
 
 SOURCE=..\..\..\..\Source\General\Driver\Audio\OpenAL\ZAudioOpenAL.h
 # End Source File
-# End Group
-# Begin Group "Decoder"
-
-# PROP Default_Filter ""
-# Begin Group "LAME"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\General\Driver\Audio\Decoder\LAME\ZDecoderLAME.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\General\Driver\Audio\Decoder\LAME\ZDecoderLAME.h
-# End Source File
-# End Group
 # End Group
 # End Group
 # Begin Group "Filter"
@@ -1057,6 +1041,18 @@ SOURCE=..\..\..\..\Source\General\Driver\Filter\BPTC\ZFilterBPTC.cpp
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\General\Driver\Filter\BPTC\ZFilterBPTC.h
+# End Source File
+# End Group
+# Begin Group "LAME"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\General\Driver\Filter\LAME\ZFilterLAME.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\General\Driver\Filter\LAME\ZFilterLAME.h
 # End Source File
 # End Group
 # End Group

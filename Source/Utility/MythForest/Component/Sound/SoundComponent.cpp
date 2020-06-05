@@ -4,7 +4,8 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
-SoundComponent::SoundComponent(TShared<AudioResource> resource, IScript::Request::Ref r) : audioResource(resource), callback(r), source(nullptr) {
+SoundComponent::SoundComponent(TShared<AudioResource> resource, IScript::Request::Ref r) : callback(r), source(nullptr) {
+	audioResource.Reset(static_cast<AudioResource*>(resource->Clone()));
 }
 
 void SoundComponent::Initialize(Engine& engine, Entity* entity) {
@@ -94,8 +95,9 @@ void SoundComponent::Stop(Engine& engine) {
 }
 
 void SoundComponent::Seek(Engine& engine, double time) {
+	audioResource->GetAudioBuffer();
 	// buffer->decoder->Seek(IStreamBase::BEGIN, (long)(time * buffer->decoder->GetSampleRate()));
-	// audio.Seek(source, IStreamBase::CUR, time);
+	// engine.interfaces.audio.Seek(source, IStreamBase::CUR, time);
 }
 
 void SoundComponent::Rewind(Engine& engine) {
