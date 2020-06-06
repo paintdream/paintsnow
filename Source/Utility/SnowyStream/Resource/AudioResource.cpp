@@ -3,34 +3,35 @@
 using namespace PaintsNow;
 using namespace PaintsNow::NsSnowyStream;
 
-AudioResource::AudioResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID) : BaseClass(manager, uniqueID), audioBuffer(nullptr) {
+AudioResource::AudioResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID) : BaseClass(manager, uniqueID) {
 	Flag() |= RESOURCE_STREAM;
 }
 
-void AudioResource::Download(IAudio& audio, void* deviceContext) {
+void AudioResource::Download(IFilterBase& device, void* deviceContext) {
 }
 
-void AudioResource::Upload(IAudio& audio, void* deviceContext) {
+void AudioResource::Upload(IFilterBase& device, void* deviceContext) {
 	// no operations ...
 }
 
-void AudioResource::Attach(IAudio& audio, void* deviceContext) {
-	audioBuffer = audio.CreateBuffer();
+void AudioResource::Attach(IFilterBase& device, void* deviceContext) {
+	assert(audioStream == nullptr);
+	audioStream = device.CreateFilter(rawStream)->QueryInterface(UniqueType<IAudio::Decoder>());
 }
 
-void AudioResource::Detach(IAudio& audio, void* deviceContext) {
-	audio.DeleteBuffer(audioBuffer);
+IAudio::Decoder* AudioResource::GetAudioStream() const {
+	return audioStream;
 }
 
-IAudio::Buffer* AudioResource::GetAudioBuffer() {
-	return audioBuffer;
+void AudioResource::Detach(IFilterBase& device, void* deviceContext) {
+	audioStream->ReleaseObject();
+	audioStream = nullptr;
 }
 
 TObject<IReflect>& AudioResource::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectProperty()) {
-		ReflectProperty(audioBuffer)[Runtime];
 	}
 
 	return *this;
@@ -43,7 +44,7 @@ bool AudioResource::operator << (IStreamBase& stream) {
 
 	// ignore payload, treat as online stream!
 	IStreamBase& baseStream = stream.GetBaseStream();
-	localStream << baseStream;
+	rawStream << baseStream;
 	return true;
 }
 
@@ -53,17 +54,11 @@ bool AudioResource::operator >> (IStreamBase& stream) const {
 	}
 
 	IStreamBase& baseStream = stream.GetBaseStream();
-	return localStream >> baseStream;
-}
-
-ZLocalStream& AudioResource::GetLocalStream() {
-	return localStream;
+	return rawStream >> baseStream;
 }
 
 IReflectObject* AudioResource::Clone() const {
 	AudioResource* clone = new AudioResource(resourceManager, "");
-	assert(audioBuffer == nullptr); // must not attach
-	clone->localStream = localStream;
-	// TODO:
+	clone->rawStream = rawStream;
 	return clone;
 }

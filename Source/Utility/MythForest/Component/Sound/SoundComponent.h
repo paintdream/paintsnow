@@ -38,8 +38,8 @@ namespace PaintsNow {
 			bool IsPlaying() const;
 
 		protected:
-			IAudio::Source* source;
-			IStreamBase* decoder;
+			IAudio::Source* audioSource;
+			IAudio::Buffer* audioBuffer;
 			TShared<NsSnowyStream::AudioResource> audioResource;
 			TWrapper<size_t> stepWrapper;
 			IScript::Request::Ref callback;

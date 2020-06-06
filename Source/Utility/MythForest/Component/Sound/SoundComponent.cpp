@@ -4,27 +4,25 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
-SoundComponent::SoundComponent(TShared<AudioResource> resource, IScript::Request::Ref r) : callback(r), source(nullptr), decoder(nullptr) {
-	audioResource.Reset(static_cast<AudioResource*>(resource->Clone()));
+SoundComponent::SoundComponent(TShared<AudioResource> resource, IScript::Request::Ref r) : callback(r), audioSource(nullptr), audioBuffer(nullptr) {
 	Flag() |= SOUNDCOMPONENT_ONLINE;
+
+	audioResource.Reset(static_cast<AudioResource*>(resource->Clone()));
 }
 
 void SoundComponent::Initialize(Engine& engine, Entity* entity) {
 	IAudio& audio = engine.interfaces.audio;
-	IFilterBase& audioFilterBase = engine.interfaces.audioFilterBase;
 
-	source = audio.CreateSource();
-	decoder = audioFilterBase.CreateFilter(audioResource->GetLocalStream());
-	assert(decoder->QueryInterface(UniqueType<IAudio::Decoder>()) != nullptr);
-	stepWrapper = audio.SetSourceBuffer(source, audioResource->GetAudioBuffer());
-	audio.SetBufferStream(audioResource->GetAudioBuffer(), static_cast<IAudio::Decoder&>(*decoder), IsOnline());
+	audioBuffer = audio.CreateBuffer();
+	audioSource = audio.CreateSource();
+	audio.SetBufferStream(audioBuffer, *audioResource->GetAudioStream(), IsOnline());
+	stepWrapper = audio.SetSourceBuffer(audioSource, audioBuffer);
 }
 
 void SoundComponent::Uninitialize(Engine& engine, Entity* entity) {
-	engine.interfaces.audio.DeleteSource(source);
-	decoder->ReleaseObject();
-	source = nullptr;
-	decoder = nullptr;
+	IAudio& audio = engine.interfaces.audio;
+	audio.DeleteSource(audioSource);
+	audio.DeleteBuffer(audioBuffer);
 }
 
 void SoundComponent::ScriptUninitialize(IScript::Request& request) {
@@ -89,25 +87,25 @@ SoundComponent::~SoundComponent() {
 
 void SoundComponent::Play(Engine& engine) {
 	Flag() |= TINY_ACTIVATED;
-	engine.interfaces.audio.Play(source);
+	engine.interfaces.audio.Play(audioSource);
 }
 
 void SoundComponent::Pause(Engine& engine) {
 	Flag() &= ~TINY_ACTIVATED;
-	engine.interfaces.audio.Pause(source);
+	engine.interfaces.audio.Pause(audioSource);
 }
 
 void SoundComponent::Stop(Engine& engine) {
 	Flag() &= ~TINY_ACTIVATED;
-	engine.interfaces.audio.Stop(source);
+	engine.interfaces.audio.Stop(audioSource);
 }
 
 void SoundComponent::Seek(Engine& engine, double time) {
-
-	// buffer->decoder->Seek(IStreamBase::BEGIN, (long)(time * buffer->decoder->GetSampleRate()));
-	// engine.interfaces.audio.Seek(source, IStreamBase::CUR, time);
+	IAudio::Decoder* audioStream = audioResource->GetAudioStream();
+	audioStream->Seek(IStreamBase::BEGIN, (long)(time * audioStream->GetSampleRate()));
+	// engine.interfaces.audio.Seek(audioSource, IStreamBase::CUR, time);
 }
 
 void SoundComponent::Rewind(Engine& engine) {
-	engine.interfaces.audio.Rewind(source);
+	engine.interfaces.audio.Rewind(audioSource);
 }

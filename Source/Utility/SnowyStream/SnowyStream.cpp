@@ -746,7 +746,7 @@ void SnowyStream::RegisterReflectedSerializers() {
 	// Commented resources may have dependencies, so we do not serialize/deserialize them at once.
 	// PaintsNow recommends database-managed resource dependencies ...
 
-	RegisterReflectedSerializer(UniqueType<AudioResource>(), interfaces.audio, nullptr);
+	RegisterReflectedSerializer(UniqueType<AudioResource>(), interfaces.audioFilterBase, nullptr);
 	RegisterReflectedSerializer(UniqueType<FontResource>(), interfaces.fontBase, this);
 	RegisterReflectedSerializer(UniqueType<MaterialResource>(), interfaces.render, resourceQueue);
 	RegisterReflectedSerializer(UniqueType<ShaderResource>(), interfaces.render, resourceQueue);

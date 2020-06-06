@@ -12,28 +12,26 @@
 
 namespace PaintsNow {
 	namespace NsSnowyStream {
-		class AudioResource : public TReflected<AudioResource, DeviceResourceBase<IAudio> > {
+		class AudioResource : public TReflected<AudioResource, DeviceResourceBase<IFilterBase> > {
 		public:
 			AudioResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID);
-			virtual void Download(IAudio& device, void* deviceContext);
-			virtual void Upload(IAudio& device, void* deviceContext);
-			virtual void Attach(IAudio& device, void* deviceContext);
-			virtual void Detach(IAudio& device, void* deviceContext);
+			virtual void Download(IFilterBase& device, void* deviceContext);
+			virtual void Upload(IFilterBase& device, void* deviceContext);
+			virtual void Attach(IFilterBase& device, void* deviceContext);
+			virtual void Detach(IFilterBase& device, void* deviceContext);
 
 			virtual bool operator << (IStreamBase& stream) override;
 			virtual bool operator >> (IStreamBase& stream) const override;
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 			virtual IReflectObject* Clone() const override;
-
-			IAudio::Buffer* GetAudioBuffer();
-			ZLocalStream& GetLocalStream();
+			IAudio::Decoder* GetAudioStream() const;
 
 		protected:
 			void Cleanup();
 
 		protected:
-			IAudio::Buffer* audioBuffer;
-			ZLocalStream localStream;
+			IAudio::Decoder* audioStream;
+			ZLocalStream rawStream;
 		};
 	}
 }
