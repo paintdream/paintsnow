@@ -130,9 +130,9 @@ TObject<IReflect>& StandardTransformVS::operator () (IReflect& reflect) {
 
 		ReflectProperty(rasterPosition)[BindOutput(BindOutput::HPOSITION)];
 		ReflectProperty(texCoord)[BindOutput(BindOutput::TEXCOORD)];
-		ReflectProperty(viewNormal)[BindOutput(BindOutput::TEXCOORD + 1)];
-		ReflectProperty(viewTangent)[BindOutput(BindOutput::TEXCOORD + 2)];
-		ReflectProperty(viewBinormal)[BindOutput(BindOutput::TEXCOORD + 3)];
+		ReflectProperty(viewNormal)[BindOption(enableVertexNormal)][BindOutput(BindOutput::TEXCOORD + 1)];
+		ReflectProperty(viewTangent)[BindOption(enableVertexTangent)][BindOutput(BindOutput::TEXCOORD + 2)];
+		ReflectProperty(viewBinormal)[BindOption(enableVertexTangent)][BindOutput(BindOutput::TEXCOORD + 3)];
 		ReflectProperty(rasterCoord)[BindOption(enableRasterCoord)][BindOutput(BindOutput::TEXCOORD + 4)];
 		ReflectProperty(tintColor)[BindOutput(BindOutput::COLOR)];
 	}

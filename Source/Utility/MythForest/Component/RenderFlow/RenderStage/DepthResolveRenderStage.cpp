@@ -22,7 +22,7 @@ TObject<IReflect>& DepthResolveRenderStage::operator () (IReflect& reflect) {
 
 void DepthResolveRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	SnowyStream& snowyStream = engine.snowyStream;
-	OutputDepth.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateRandomLocation("RT", &OutputDepth), false, 0, nullptr);
+	OutputDepth.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("RT", &OutputDepth), false, 0, nullptr);
 	OutputDepth.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::FLOAT;
 	OutputDepth.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::R;
 	OutputDepth.renderTargetTextureResource->description.state.immutable = false;

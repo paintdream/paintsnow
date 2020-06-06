@@ -142,6 +142,7 @@ function Scene.New(database : Database?, clock : Clock)
 		sun:AddEntityComponent(lightComponent)
 		spaceComponent:InsertEntity(sun)
 
+		--[[
 		print("\tAdding point lights")
 		math.randomseed(20)
 		local colors : { integer : any } = {
@@ -171,6 +172,7 @@ function Scene.New(database : Database?, clock : Clock)
 			light:AddEntityComponent(lightComponent)
 			spaceComponent:InsertEntity(light)
 		end
+		]]
 	end
 
 	local RuntimeVisibilityProbe = require("Script/Prefabs/Components/Visibility/RuntimeVisibilityProbe")

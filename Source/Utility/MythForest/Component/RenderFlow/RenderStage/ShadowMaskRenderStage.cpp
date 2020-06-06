@@ -24,7 +24,7 @@ TObject<IReflect>& ShadowMaskRenderStage::operator () (IReflect& reflect) {
 
 void ShadowMaskRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	SnowyStream& snowyStream = engine.snowyStream;
-	OutputMask.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateRandomLocation("RT", &OutputMask), false, 0, nullptr);
+	OutputMask.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("RT", &OutputMask), false, 0, nullptr);
 	OutputMask.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 	OutputMask.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::R;
 	OutputMask.renderTargetTextureResource->description.state.immutable = false;

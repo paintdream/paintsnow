@@ -27,7 +27,7 @@ TObject<IReflect>& LightBufferRenderStage::operator () (IReflect& reflect) {
 
 void LightBufferRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	SnowyStream& snowyStream = engine.snowyStream;
-	LightTexture.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateRandomLocation("RT", &LightTexture), false, 0, nullptr);
+	LightTexture.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("RT", &LightTexture), false, 0, nullptr);
 	LightTexture.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_SHORT;
 	LightTexture.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::RGBA;
 	LightTexture.renderTargetTextureResource->description.state.sample = IRender::Resource::TextureDescription::POINT;

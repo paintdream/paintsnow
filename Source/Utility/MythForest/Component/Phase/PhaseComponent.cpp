@@ -55,7 +55,7 @@ void PhaseComponentConfig::InstanceGroup::Reset() {
 	instanceCount = 0;
 }
 
-PhaseComponent::PhaseComponent(TShared<RenderFlowComponent> renderFlow, const String& portName) : hostEntity(nullptr), maxTracePerTick(8), renderQueue(nullptr), clearResource(nullptr), stateResource(nullptr), range(32, 32, 32), resolution(512, 512), lightCollector(this), renderFlowComponent(renderFlow), lightPhaseViewPortName(portName), rootEntity(nullptr) {}
+PhaseComponent::PhaseComponent(TShared<RenderFlowComponent> renderFlow, const String& portName) : hostEntity(nullptr), maxTracePerTick(8), renderQueue(nullptr), clearResource(nullptr), stateResource(nullptr), stateShadowResource(nullptr), range(32, 32, 32), resolution(512, 512), lightCollector(this), renderFlowComponent(renderFlow), lightPhaseViewPortName(portName), rootEntity(nullptr) {}
 
 PhaseComponent::~PhaseComponent() {}
 
@@ -65,6 +65,17 @@ void PhaseComponent::Initialize(Engine& engine, Entity* entity) {
 		assert(hostEntity == nullptr);
 		assert(renderQueue == nullptr);
 		hostEntity = entity;
+
+		String location = ResourceBase::GenerateLocation("PhaseEmptyColorAttachment", (void*)(((size_t)resolution.x() << 16) | resolution.y()));
+		emptyColorAttachment = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), location);
+
+		if (!emptyColorAttachment) {
+			emptyColorAttachment = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), location, false, 0, nullptr);
+			emptyColorAttachment->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
+			emptyColorAttachment->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
+			emptyColorAttachment->description.state.layout = IRender::Resource::TextureDescription::R;
+			emptyColorAttachment->GetResourceManager().InvokeUpload(emptyColorAttachment(), engine.snowyStream.GetResourceQueue());
+		}
 
 		SnowyStream& snowyStream = engine.snowyStream;
 		const String path = "[Runtime]/MeshResource/StandardSquare";
@@ -85,6 +96,12 @@ void PhaseComponent::Initialize(Engine& engine, Entity* entity) {
 		clear.clearStencilBit = IRender::Resource::ClearDescription::DISCARD_LOAD | IRender::Resource::ClearDescription::DISCARD_STORE;
 		render.UploadResource(renderQueue, clearResource, &clear);
 
+		clearShadowResource = render.CreateResource(renderQueue, IRender::Resource::RESOURCE_CLEAR);
+		clear.clearColorBit = IRender::Resource::ClearDescription::DISCARD_LOAD | IRender::Resource::ClearDescription::DISCARD_STORE;
+		clear.clearDepthBit = 0;
+		clear.clearStencilBit = IRender::Resource::ClearDescription::DISCARD_LOAD | IRender::Resource::ClearDescription::DISCARD_STORE;
+		render.UploadResource(renderQueue, clearShadowResource, &clear);
+
 		stateResource = render.CreateResource(renderQueue, IRender::Resource::RESOURCE_RENDERSTATE);
 		IRender::Resource::RenderStateDescription state;
 		state.cull = 1;
@@ -96,6 +113,18 @@ void PhaseComponent::Initialize(Engine& engine, Entity* entity) {
 		state.stencilTest = IRender::Resource::RenderStateDescription::DISABLED;
 		state.stencilWrite = 0;
 		render.UploadResource(renderQueue, stateResource, &state);
+
+		state.cull = 1;
+		state.fill = 1;
+		state.alphaBlend = 0;
+		state.colorWrite = 0;
+		state.depthTest = IRender::Resource::RenderStateDescription::GREATER_EQUAL;
+		state.depthWrite = 1;
+		state.stencilTest = IRender::Resource::RenderStateDescription::DISABLED;
+		state.stencilWrite = 0;
+		state.cullFrontFace = 1;
+		stateShadowResource = render.CreateResource(renderQueue, IRender::Resource::RESOURCE_RENDERSTATE);
+		render.UploadResource(renderQueue, stateShadowResource, &state);
 	}
 }
 
@@ -125,10 +154,12 @@ void PhaseComponent::Uninitialize(Engine& engine, Entity* entity) {
 		phases.clear();
 
 		render.DeleteResource(queue, clearResource);
+		render.DeleteResource(queue, clearShadowResource);
 		render.DeleteResource(queue, stateResource);
+		render.DeleteResource(queue, stateShadowResource);
 		render.DeleteQueue(renderQueue);
 
-		clearResource = stateResource = nullptr;
+		clearResource = clearShadowResource = stateResource = stateShadowResource = nullptr;
 		renderQueue = nullptr;
 		hostEntity = nullptr;
 
@@ -186,33 +217,33 @@ void PhaseComponent::Setup(Engine& engine, uint32_t phaseCount, uint32_t taskCou
 		phase.tracePipeline->GetPassUpdater().Update(render, renderQueue, phase.drawCallDescription, phase.uniformBuffers, bufferData, 1 << IRender::Resource::BufferDescription::UNIFORM);
 		phase.drawCallResource = render.CreateResource(renderQueue, IRender::Resource::RESOURCE_DRAWCALL);
 
-		phase.depth = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateRandomLocation("PhaseDepth", &phase), false, 0, nullptr);
+		phase.depth = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseDepth", &phase), false, 0, nullptr);
 		phase.depth->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
 		phase.depth->description.state.format = IRender::Resource::TextureDescription::FLOAT;
 		phase.depth->description.state.layout = IRender::Resource::TextureDescription::DEPTH;
 		phase.depth->GetResourceManager().InvokeUpload(phase.depth(), renderQueue);
 
-		phase.irradiance = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateRandomLocation("PhaseIrradiance", &phase), false, 0, nullptr);
+		phase.irradiance = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseIrradiance", &phase), false, 0, nullptr);
 		phase.irradiance->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
 		phase.irradiance->description.state.format = IRender::Resource::TextureDescription::HALF_FLOAT;
 
 		phase.irradiance->description.state.layout = IRender::Resource::TextureDescription::RGBA;
 		phase.irradiance->GetResourceManager().InvokeUpload(phase.irradiance(), renderQueue);
 
-		phase.baseColorOcclusion = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateRandomLocation("PhaseBaseColorOcclusion", &phase), false, 0, nullptr);
+		phase.baseColorOcclusion = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseBaseColorOcclusion", &phase), false, 0, nullptr);
 		phase.baseColorOcclusion->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
 		phase.baseColorOcclusion->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 		phase.baseColorOcclusion->description.state.layout = IRender::Resource::TextureDescription::RGBA;
 		phase.baseColorOcclusion->GetResourceManager().InvokeUpload(phase.baseColorOcclusion(), renderQueue);
 
-		phase.normalRoughnessMetallic = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateRandomLocation("PhaseNormalRoughness", &phase), false, 0, nullptr);
+		phase.normalRoughnessMetallic = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseNormalRoughness", &phase), false, 0, nullptr);
 		phase.normalRoughnessMetallic->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
 		phase.normalRoughnessMetallic->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 		phase.normalRoughnessMetallic->description.state.layout = IRender::Resource::TextureDescription::RGBA;
 		phase.normalRoughnessMetallic->GetResourceManager().InvokeUpload(phase.normalRoughnessMetallic(), renderQueue);
 
 		// create noise texture
-		phase.noiseTexture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateRandomLocation("PhaseNoise", &phase), false, 0, nullptr);
+		phase.noiseTexture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseNoise", &phase), false, 0, nullptr);
 		phase.noiseTexture->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
 		phase.noiseTexture->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 		phase.noiseTexture->description.state.layout = IRender::Resource::TextureDescription::RGBA;
@@ -251,6 +282,8 @@ void PhaseComponent::DispatchEvent(Event& event, Entity* entity) {
 	}
 }
 
+// #include "../../../MythForest/MythForest.h"
+
 void PhaseComponent::TickRender(Engine& engine) {
 	// check pipeline state
 	if (renderQueue == nullptr) return; // not inited.
@@ -272,9 +305,12 @@ void PhaseComponent::TickRender(Engine& engine) {
 				status = TaskData::STATUS_DOWNLOADED;
 			}
 
+			// engine.mythForest.StartCaptureFrame("cap", "");
 			render.YieldQueue(task.renderQueue);
 			bakeQueues.emplace_back(task.renderQueue);
 			finalStatus.store(status, std::memory_order_release);
+			// render.PresentQueues(&task.renderQueue, 1, IRender::PRESENT_EXECUTE_ALL);
+			// engine.mythForest.EndCaptureFrame();
 		} else if (task.status == TaskData::STATUS_DOWNLOADED) {
 			render.CompleteDownloadResource(task.renderQueue, task.texture->GetTexture());
 			bakeQueues.emplace_back(task.renderQueue);
@@ -300,9 +336,26 @@ void PhaseComponent::CoTaskWriteDebugTexture(Engine& engine, uint32_t index, Byt
 		IStreamBase* stream = engine.interfaces.archive.Open(ss.str(), true, length);
 		IRender::Resource::TextureDescription& description = texture->description;
 		IImage& image = engine.interfaces.image;
-		IImage::Image* png = image.Create(description.dimension.x(), description.dimension.y(), (IRender::Resource::TextureDescription::Layout)description.state.layout, (IRender::Resource::TextureDescription::Format)description.state.format);
+		IRender::Resource::TextureDescription::Layout layout = (IRender::Resource::TextureDescription::Layout)description.state.layout;
+		IRender::Resource::TextureDescription::Format format = (IRender::Resource::TextureDescription::Format)description.state.format;
+		length = data.GetSize();
+
+		if (layout == IRender::Resource::TextureDescription::DEPTH) {
+			layout = IRender::Resource::TextureDescription::R;
+			format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
+			size_t count = description.dimension.x() * description.dimension.y();
+			const float* base = (const float*)data.GetData();
+			uint8_t* target = (uint8_t*)data.GetData();
+			length = sizeof(uint8_t) * count;
+
+			for (size_t i = 0; i < count; i++) {
+				target[i] = (uint8_t)(Clamp(base[i], 0.f, 1.0f) * 0xff);
+			}
+		}
+		
+		IImage::Image* png = image.Create(description.dimension.x(), description.dimension.y(), layout, format);
 		void* buffer = image.GetBuffer(png);
-		memcpy(buffer, data.GetData(), data.GetSize());
+		memcpy(buffer, data.GetData(), length);
 		image.Save(png, *stream, "png");
 		image.Delete(png);
 		// write png
@@ -437,15 +490,18 @@ void PhaseComponent::CoTaskAssembleTaskShadow(Engine& engine, TaskData& task, co
 
 	const Shadow& shadow = shadows[bakePoint.shadowIndex];
 	desc.depthStencilStorage.resource = shadow.shadow->GetTexture();
+	IRender::Resource::RenderTargetDescription::Storage color;
+	color.resource = emptyColorAttachment->GetTexture(); // Don't care
+	desc.colorBufferStorages.emplace_back(std::move(color));
 
 	render.UploadResource(task.renderQueue, task.renderTarget, &desc);
 	render.ExecuteResource(task.renderQueue, task.renderTarget);
-	render.ExecuteResource(task.renderQueue, stateResource);
-	render.ExecuteResource(task.renderQueue, clearResource);
+	render.ExecuteResource(task.renderQueue, stateShadowResource);
+	render.ExecuteResource(task.renderQueue, clearShadowResource);
 
 	task.pipeline = shadowPipeline();
-	// task.texture = shadow.shadow;
-	task.texture = nullptr;
+	task.texture = shadow.shadow;
+	// task.texture = nullptr;
 	Collect(engine, task, shadow.viewProjectionMatrix);
 }
 
@@ -506,7 +562,7 @@ void PhaseComponent::DispatchTasks(Engine& engine) {
 				const UpdatePointShadow& shadow = bakePointShadows.top();
 				threadPool.Push(CreateCoTaskContextFree(kernel, Wrap(this, &PhaseComponent::CoTaskAssembleTaskShadow), std::ref(engine), std::ref(task), shadow));
 				bakePointShadows.pop();
-			} else if (!bakePointSetups.empty()) {
+			} /*else if (!bakePointSetups.empty()) {
 				const UpdatePointSetup& setup = bakePointSetups.top();
 				threadPool.Push(CreateCoTaskContextFree(kernel, Wrap(this, &PhaseComponent::CoTaskAssembleTaskSetup), std::ref(engine), std::ref(task), setup));
 				bakePointSetups.pop();
@@ -516,7 +572,7 @@ void PhaseComponent::DispatchTasks(Engine& engine) {
 				bakePointBounces.pop();
 			} else {
 				finalStatus.store(TaskData::STATUS_DISPATCHED, std::memory_order_relaxed);
-			}
+			}*/
 		}
 	}
 }
@@ -626,7 +682,7 @@ void PhaseComponent::CollectRenderableComponent(Engine& engine, TaskData& taskDa
 }
 
 void PhaseComponent::CompleteUpdateLights(Engine& engine, std::vector<LightElement>& elements) {
-	MatrixFloat4x4 projectionMatrix = Ortho(range * 4.0f);
+	MatrixFloat4x4 projectionMatrix = Ortho(range);
 	bakePointShadows = std::stack<UpdatePointShadow>();
 	shadows.resize(elements.size());
 
@@ -635,7 +691,7 @@ void PhaseComponent::CompleteUpdateLights(Engine& engine, std::vector<LightEleme
 		Shadow& shadow = shadows[i];
 		const LightElement& lightElement = elements[i];
 		if (!shadow.shadow) {
-			shadow.shadow = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateRandomLocation("PhaseShadow", &shadow), false, 0, nullptr);
+			shadow.shadow = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseShadow", &shadow), false, 0, nullptr);
 			shadow.shadow->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
 			shadow.shadow->description.state.format = IRender::Resource::TextureDescription::FLOAT;
 			shadow.shadow->description.state.layout = IRender::Resource::TextureDescription::DEPTH;
@@ -644,7 +700,11 @@ void PhaseComponent::CompleteUpdateLights(Engine& engine, std::vector<LightEleme
 
 		shadow.lightElement = lightElement;
 		Float3 view = (Float3)lightElement.position;
-		Float3 dir = -view;
+		Float3 dir = view;
+		if (dir.SquareLength() < 1e-6) {
+			dir = Float3(0, 0, -1);
+		}
+
 		Float3 up(RandFloat(), RandFloat(), RandFloat());
 
 		shadow.viewProjectionMatrix = LookAt(view, dir, up) * projectionMatrix;
@@ -688,7 +748,7 @@ void PhaseComponent::LightCollector::CollectComponents(Engine& engine, TaskData&
 						element.position = Float4(-worldMatrix(2, 0), -worldMatrix(2, 1), -worldMatrix(2, 2), 0);
 					} else {
 						// Only directional light by now
-						// element.position = Float4(worldMatrix(3, 0), worldMatrix(3, 1), worldMatrix(3, 2), 1);
+						element.position = Float4(worldMatrix(3, 0), worldMatrix(3, 1), worldMatrix(3, 2), 1);
 					}
 
 					const Float3& color = lightComponent->GetColor();

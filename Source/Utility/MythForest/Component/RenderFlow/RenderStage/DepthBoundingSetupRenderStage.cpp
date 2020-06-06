@@ -25,7 +25,7 @@ TObject<IReflect>& DepthBoundingSetupRenderStage::operator () (IReflect& reflect
 
 void DepthBoundingSetupRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	SnowyStream& snowyStream = engine.snowyStream;
-	OutputDepth.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateRandomLocation("RT", &OutputDepth), false, 0, nullptr);
+	OutputDepth.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("RT", &OutputDepth), false, 0, nullptr);
 	OutputDepth.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::HALF_FLOAT;
 	OutputDepth.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::RG;
 	OutputDepth.renderTargetTextureResource->description.state.sample = IRender::Resource::TextureDescription::POINT;

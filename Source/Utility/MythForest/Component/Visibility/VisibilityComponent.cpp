@@ -97,7 +97,7 @@ void VisibilityComponent::Initialize(Engine& engine, Entity* entity) {
 		task.renderQueue = render.CreateQueue(device);
 
 		TShared<TextureResource>& texture = task.texture;
-		texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateRandomLocation("VisBake", &task), false, 0, nullptr);
+		texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("VisBake", &task), false, 0, nullptr);
 		texture->description.dimension = dim;
 		texture->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 		texture->description.state.layout = IRender::Resource::TextureDescription::RGBA;

@@ -37,17 +37,17 @@ void GeometryBufferRenderStage::PrepareResources(Engine& engine, IRender::Queue*
 	IRender& render = engine.interfaces.render;
 	SnowyStream& snowyStream = engine.snowyStream;
 
-	BaseColorOcclusion.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateRandomLocation("RT", &BaseColorOcclusion), false, 0, nullptr);
+	BaseColorOcclusion.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("RT", &BaseColorOcclusion), false, 0, nullptr);
 	BaseColorOcclusion.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 	BaseColorOcclusion.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::RGBA;
 	BaseColorOcclusion.renderTargetTextureResource->description.state.immutable = false;
 
-	NormalRoughnessMetallic.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateRandomLocation("RT", &NormalRoughnessMetallic), false, 0, nullptr);
+	NormalRoughnessMetallic.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("RT", &NormalRoughnessMetallic), false, 0, nullptr);
 	NormalRoughnessMetallic.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 	NormalRoughnessMetallic.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::RGBA;
 	NormalRoughnessMetallic.renderTargetTextureResource->description.state.immutable = false;
 
-	Depth.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateRandomLocation("RT", &Depth), false, 0, nullptr);
+	Depth.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("RT", &Depth), false, 0, nullptr);
 	Depth.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::FLOAT;
 	Depth.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::DEPTH;
 	Depth.renderTargetTextureResource->description.state.immutable = false;

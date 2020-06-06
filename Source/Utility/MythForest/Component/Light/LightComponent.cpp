@@ -100,7 +100,7 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 		depthStencilDescription.state.layout = IRender::Resource::TextureDescription::DEPTH;
 
 		if (!shadowGrid->texture) {
-			TShared<NsSnowyStream::TextureResource> texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateRandomLocation("LightShadowBake", shadowGrid()), false, 0, nullptr);
+			TShared<NsSnowyStream::TextureResource> texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("LightShadowBake", shadowGrid()), false, 0, nullptr);
 			texture->description.dimension = dim;
 			texture->description.state.format = IRender::Resource::TextureDescription::FLOAT;
 			texture->description.state.layout = IRender::Resource::TextureDescription::DEPTH;
@@ -437,7 +437,7 @@ ShadowLayerConfig::TaskData::TaskData(Engine& engine, uint32_t warpCount, const 
 
 	IRender::Resource::RenderStateDescription rs;
 	rs.stencilReplacePass = 1;
-	rs.cull = 0;
+	rs.cull = 1;
 	rs.cullFrontFace = 1;
 	rs.fill = 1;
 	rs.alphaBlend = 0;
@@ -507,10 +507,10 @@ void LightComponent::ShadowLayer::Initialize(Engine& engine, TShared<StreamCompo
 		pipeline = engine.snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), path, true, 0, nullptr)->QueryInterface(UniqueType<ShaderResourceImpl<ConstMapPass> >());
 	}
 
-	TShared<NsSnowyStream::TextureResource> texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateRandomLocation("LightShadowBakeDummy", this), false, 0, nullptr);
+	TShared<NsSnowyStream::TextureResource> texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("LightShadowBakeDummy", this), false, 0, nullptr);
 	texture->description.dimension = UShort3(res.x(), res.y(), 1);
 	texture->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
-	texture->description.state.layout = IRender::Resource::TextureDescription::RGBA;
+	texture->description.state.layout = IRender::Resource::TextureDescription::R;
 	texture->GetResourceManager().InvokeUpload(texture(), engine.mythForest.GetWarpResourceQueue());
 
 	dummyColorAttachment = texture;

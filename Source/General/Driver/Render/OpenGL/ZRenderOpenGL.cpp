@@ -2025,6 +2025,7 @@ public:
 		glewExperimental = true;
 		glewInit();
 		printf("%s\n%s\n", glGetString(GL_VERSION), glGetString(GL_VENDOR));
+		glDisable(GL_MULTISAMPLE);
 
 		/*
 		GLint extCount = 0;

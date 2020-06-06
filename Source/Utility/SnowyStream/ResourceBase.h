@@ -32,7 +32,7 @@ namespace PaintsNow {
 				RESOURCE_CUSTOM_BEGIN = TINY_CUSTOM_BEGIN << 6
 			};
 
-			static ResourceManager::UniqueLocation GenerateRandomLocation(const String& prefix, const void* ptr);
+			static ResourceManager::UniqueLocation GenerateLocation(const String& prefix, const void* ptr);
 			typedef Void DriverType;
 			ResourceBase(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueLocation);
 			virtual ~ResourceBase();

@@ -74,9 +74,10 @@ IRender::Resource::TextureDescription::Format FreeImageImpl::GetDataType() const
 
 bool FreeImageImpl::New(size_t w, size_t h, IRender::Resource::TextureDescription::Layout lo, IRender::Resource::TextureDescription::Format dt) {
 	assert(bitmap == nullptr);
-	assert(dataType == IRender::Resource::TextureDescription::UNSIGNED_BYTE); // only ub supported
 	layout = lo;
 	dataType = dt;
+
+	assert(dataType == IRender::Resource::TextureDescription::UNSIGNED_BYTE); // only ub supported
 	bitmap = FreeImage_Allocate((int)w, (int)h, (int)GetBPP());
 	if (bitmap != nullptr) {
 		width = w;

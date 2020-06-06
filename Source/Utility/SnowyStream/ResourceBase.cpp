@@ -82,7 +82,7 @@ void ResourceBase::ReleaseObject() {
 	SharedTiny::ReleaseObject();
 }
 
-ResourceManager::UniqueLocation ResourceBase::GenerateRandomLocation(const String& prefix, const void* ptr) {
+ResourceManager::UniqueLocation ResourceBase::GenerateLocation(const String& prefix, const void* ptr) {
 	std::stringstream ss;
 	ss << "[Temporary]/" << prefix << "/" << std::hex << (size_t)ptr;
 	return ss.str();

@@ -218,7 +218,9 @@ namespace PaintsNow {
 			Float3 range;
 			IRender::Queue* renderQueue;
 			IRender::Resource* clearResource;
+			IRender::Resource* clearShadowResource;
 			IRender::Resource* stateResource;
+			IRender::Resource* stateShadowResource;
 
 			TShared<NsSnowyStream::ShaderResourceImpl<NsSnowyStream::MultiHashTracePass> > tracePipeline;
 			TShared<NsSnowyStream::ShaderResourceImpl<NsSnowyStream::MultiHashSetupPass> > setupPipeline;
@@ -252,6 +254,7 @@ namespace PaintsNow {
 			LightCollector lightCollector;
 			Entity* rootEntity;
 			String debugPath;
+			TShared<NsSnowyStream::TextureResource> emptyColorAttachment;
 		};
 	}
 }

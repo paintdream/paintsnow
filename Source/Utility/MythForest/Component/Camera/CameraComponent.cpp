@@ -188,7 +188,7 @@ void CameraComponent::Instancing(Engine& engine, TaskData& taskData) {
 			desc.data = std::move(policyData.instanceData);
 			desc.format = IRender::Resource::BufferDescription::FLOAT;
 			desc.usage = IRender::Resource::BufferDescription::INSTANCED;
-			desc.component = 0;
+			desc.component = 0; // will be overridden by drawcall.
 			render.UploadResource(policyData.portQueue, policyData.instanceBuffer, &desc);
 
 			policyData.instanceData.Clear();
