@@ -90,8 +90,8 @@ local function InitializeWorld(databasePath : string)
 	cameraController:UpdatePerspective()
 	
 	local phaseComponent = cameraController.phaseComponent
-	-- phaseComponent:BindRootEntity(scene.rootEntity)
-	-- phaseComponent:Update({ 5, 1.5, 5})
+	phaseComponent:BindRootEntity(scene.rootEntity)
+	phaseComponent:Update({ 5, 1.5, 5})
 
 	local lastMousePos = { 0, 0 }
 	local moveSpeed = 1.0

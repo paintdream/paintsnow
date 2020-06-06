@@ -351,10 +351,10 @@ void PhaseComponent::ResolveTasks(Engine& engine) {
 								assert(output.slot < group.drawCallDescription.bufferResources.size());
 								IRender::Resource* buffer = render.CreateResource(queue, IRender::Resource::RESOURCE_BUFFER);
 								IRender::Resource::BufferDescription desc;
-								desc.data = std::move(data);
 								desc.format = IRender::Resource::BufferDescription::FLOAT;
 								desc.usage = IRender::Resource::BufferDescription::INSTANCED;
-								desc.component = 0;
+								desc.component = data.GetSize() / (group.instanceCount * sizeof(float));
+								desc.data = std::move(data);
 								render.UploadResource(queue, buffer, &desc);
 
 								// assign instanced buffer	

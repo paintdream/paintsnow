@@ -18,7 +18,7 @@ namespace PaintsNow {
 			FontResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID);
 			virtual ~FontResource();
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-			virtual bool LoadExternalResource(IStreamBase& streamBase, size_t length);
+			virtual bool LoadExternalResource(Interfaces& interfaces, IStreamBase& streamBase, size_t length) override;
 
 			virtual void Upload(IFontBase& font, void* deviceContext) override;
 			virtual void Download(IFontBase& font, void* deviceContext) override;
