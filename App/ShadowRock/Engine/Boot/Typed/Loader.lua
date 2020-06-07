@@ -139,16 +139,15 @@ if EnableTL then
 		if not r then
 			local stmt = {}
 			if not t.Pointer then
-				table.insert(stmt, "global " .. t.Type .. " = record")
+				table.insert(stmt, "global " .. t.Type .. " = record" .. "\n")
 				regTypes[t.Type] = true
-				table.insert(stmt, " = {\n")
 				local mid = {}
 				for k, v in SortedPairs(t.Fields) do
 					table.insert(mid, "\t" .. (type(k) == "string" and ("\"" .. k .. "\"") or k)  .. ": " .. Bootstrap.GetTypeName(v, regTypes))	
 				end
-				table.insert(stmt, table.concat(mid, ",\n"))
+				table.insert(stmt, table.concat(mid, "\n"))
 				-- table.insert(stmt, "\t\"__rawpointer\" : integer")
-				table.insert(stmt, "\n}\n")
+				table.insert(stmt, "\nend\n")
 
 				regTypes[t.Type] = table.concat(stmt)
 			end
