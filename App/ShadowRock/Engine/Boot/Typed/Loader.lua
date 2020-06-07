@@ -108,17 +108,21 @@ if EnableTL then
 
 	-- register API prototypes
 	local mapTypes = {
-		["int"] = "integer",
-		["short"] = "integer",
-		["char"] = "integer",
+		--["int"] = "integer",
+		["int"] = "number",
+		--["short"] = "integer",
+		["short"] = "number",
+		--["char"] = "integer",
 		["float"] = "number",
 		["double"] = "number",
-		["__int64"] = "integer",
-		["long"] = "integer",
+		--["__int64"] = "integer",
+		["__int64"] = "number",
+		--["long"] = "integer",
+		["long"] = "number",
 		["string"] = "string",
 		["String"] = "string",
 		["bool"] = "boolean",
-		["vector"] = "{integer:any}",
+		["vector"] = "{any}",
 		["BaseDelegate"] = "any",
 		["Ref"] = "any",
 		["PlaceHolder"] = "any",
@@ -143,7 +147,11 @@ if EnableTL then
 				regTypes[t.Type] = true
 				local mid = {}
 				for k, v in SortedPairs(t.Fields) do
-					table.insert(mid, "\t" .. (type(k) == "string" and ("\"" .. k .. "\"") or k)  .. ": " .. Bootstrap.GetTypeName(v, regTypes))	
+					if type(k) == "string" then
+						table.insert(mid, "\t" .. k .. ": " .. Bootstrap.GetTypeName(v, regTypes))	
+					else
+						table.insert(mid, "\t" .. Bootstrap.GetTypeName(v, regTypes))	
+					end
 				end
 				table.insert(stmt, table.concat(mid, "\n"))
 				-- table.insert(stmt, "\t\"__rawpointer\" : integer")

@@ -3301,6 +3301,7 @@ local function require_module(module_name, lax, env, result)
    if modules[module_name] then
       return modules[module_name], true
    end
+
    modules[module_name] = UNKNOWN
 
    local found, fd, tried = tl.search_module(module_name, true)

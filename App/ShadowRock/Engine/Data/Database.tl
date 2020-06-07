@@ -1,10 +1,12 @@
+require("Runtime/Interface")
+
 local Database = record
 	Handle : Hive
 end
 
 rawset(Database as { string : any }, "__index", Database)
 
-function Database:Execute(sql : string, data) : Honey
+function Database:Execute(sql : string, data : HoneyData) : Honey
 	return self.Handle:Execute(sql, data)
 end
 

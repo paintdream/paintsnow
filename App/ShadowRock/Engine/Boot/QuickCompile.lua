@@ -45,7 +45,7 @@ function QuickCompile:CompileOne(filename, outputfile)
 	local title = string.sub(filename, 1, filenamelength - 3)
 	print("Compiling: " .. filename .. " ...")
 	-- read file content
-	local result, err = tl.process(filename)
+	local result, err = tl.process(filename, self.env)
 	if result then
 		local ok = report_all_errors(result)
 		if not ok then
@@ -96,7 +96,7 @@ function QuickCompile:BuildUpdatedOne(filename, tree, forceRecompile)
 
 	tree[filename] = false
 	-- check if it was already up to date
-	local title = filename:match("(.-)%.[tl|tlm]")
+	local title = filename:match("(.-)%.tl")
 	local outputfile = title .. ".lua"
 	if not forceRecompile then
 		local source = SnowyStream.NewFile(filename, false)
@@ -107,7 +107,7 @@ function QuickCompile:BuildUpdatedOne(filename, tree, forceRecompile)
 				local content = SnowyStream.ReadFile(source, SnowyStream.GetFileSize(source))
 
 				for k in string.gmatch(content, "require.-[%\'%\"](.-)[%\'%\"]") do
-					deps = deps or self:BuildUpdatedOne(k .. ".tl", tree) or self:BuildUpdatedOne(k .. ".tlm", tree)
+					deps = deps or self:BuildUpdatedOne(k .. ".tl", tree)
 				end
 
 				if not deps then
@@ -142,7 +142,7 @@ function QuickCompile:BuildUpdatedRecursive(path, tree, forceRecompile)
 		for index, file in ipairs(SnowyStream.QueryFiles(path)) do
 			self:BuildUpdatedRecursive(path .. file, tree, forceRecompile)
 		end
-	elseif string.endswith(path, ".tl") or string.endswith(path, ".tlm") then
+	elseif string.endswith(path, ".tl") then
 		self:BuildUpdatedOne(path, tree, forceRecompile)
 	end
 end
@@ -157,8 +157,30 @@ function QuickCompile:CompileRecursive(path, forceRecompile)
 	end
 end
 
+local function CollectRuntimeModules(path, mods)
+	if string.endswith(path, "/") then
+		for index, file in ipairs(SnowyStream.QueryFiles(path)) do
+			CollectRuntimeModules(path .. file, mods)
+		end
+	elseif string.endswith(path, ".tl") and path ~= "Runtime/Interface" then
+		table.insert(mods, path:sub(1, #path - 3))
+	end
+end
+
 function QuickCompile.New()
 	local compiler = {}
+	-- add enviroment
+	local runtimeModules = { "Runtime/Interface" }
+	CollectRuntimeModules("Runtime/", runtimeModules)
+	local res, err = tl.process("Engine/Init.tl", nil, nil, runtimeModules)
+	if err then
+		print("ERROR: " .. err)
+		return
+	end
+
+	report_errors(res)
+	assert(res.env)
+	compiler.env = res.env
 	return setmetatable(compiler, { __index = QuickCompile })
 end
 

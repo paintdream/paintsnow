@@ -94,24 +94,18 @@ if EnableTL then
 		for name, desc in SortedPairs(Inspect(collection.__delegate__)) do
 			if type(desc) == "table" then
 				local paramsList = {}
-				local selfParamsList = {}
 				local firstParam = desc.Params[1]
 				local typeName = type(firstParam) == "table" and firstParam.Type or ""
 				for index, t in ipairs(desc.Params) do
 					t.Type = SimplyName(t.Type)
 					local name = GetTypeName(t, regTypes)
 					table.insert(paramsList, name)
-					if index == 1 and typeName:find("PaintsNow::Ns") then
-						table.insert(selfParamsList, "self")
-					else
-						table.insert(selfParamsList, name)
-					end
 				end
 
 				local declare = "\t" .. name .. ": function (" .. table.concat(paramsList, ", ") .. ") : any"
 				table.insert(tld, declare)
 				if typeName:find("PaintsNow::Ns") and name ~= "New" then
-					local selfDeclare = "\t\"" .. name .. "\": function (" .. table.concat(selfParamsList, ", ") .. ") : any"
+					local selfDeclare = "\t" .. name .. ": function (" .. table.concat(paramsList, ", ") .. ") : any"
 					methodTldMap[typeName] = methodTldMap[typeName] or {}
 					table.insert(methodTldMap[typeName], selfDeclare)
 				end
