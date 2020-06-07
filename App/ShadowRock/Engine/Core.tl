@@ -268,7 +268,7 @@ Usage:
 
 --]====================================================================]
 
-local Core = {}
+local Core = record end
 
 local function RecursiveMerge(g, t)
 	for k, v in pairs(t) do
@@ -750,7 +750,7 @@ function Core.Run(state)
 	local package : any = require(state.CurrentPackage)
 	local routine = package[state.CurrentRoutine]
 	if not routine or type(routine) ~= "function" then
-		error("Instance.Execute() : Invalid package function " .. state.CurrentRoutine .. " in package " .. state.CurrentPackage)	
+		error("Instance.Execute() : Invalid package function " .. tostring(state.CurrentRoutine) .. " in package " .. tostring(state.CurrentPackage))	
 	end
 
 	return routine(state)
@@ -785,7 +785,7 @@ function Core.Load(str, binary, name)
 	local f = load(str, name or "chunk", binary and "b" or "t", { })
 	if f then
 		local record : { integer : any } = { }
-		local function LoadEx(node : { any: any }?)
+		local function LoadEx(node : { any: any })
 			if type(node) == "table" then
 				local r = node.__ref
 				if r then
@@ -943,7 +943,7 @@ local function EncodeEx(object, formatDict, refDict)
 	for k, v in pairs(object) do
 		table.insert(format, "b")
 		local typeMask : integer = 0
-		local kt : any, kc : any, vt : any, vc : any
+		local kt, kc, vt, vc
 
 		typeMask, kt, kc = WriteMask(typeMask, k, maskKeyRef, maskKeyTable)
 		typeMask, vt, vc = WriteMask(typeMask, v, maskValueRef, maskValueTable)

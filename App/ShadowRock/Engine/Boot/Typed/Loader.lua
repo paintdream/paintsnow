@@ -3,7 +3,7 @@ TypedDescriptions = {}
 
 if EnableTL then
 	print("Overriding io.open/close")
-	exts = { "", ".tl", ".tld", ".lua" }
+	exts = { "", ".tl", ".lua" }
 	io = io or {}
 	local orgOpen = io.open
 	local orgClose = io.close
@@ -48,6 +48,9 @@ if EnableTL then
 	io.close = function (f)
 		return type(f) ~= "table" and oldclose(f)
 	end
+
+	os = {}
+	os.getenv = function() return end
 
 	tl = nil
 end

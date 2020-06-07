@@ -1,6 +1,6 @@
 local Activity = {}
-local Core = require("Engine/Core")
 --[[
+local Core = require("Engine/Core")
 local Playback = require("Engine/Data/Playback")
 
 local State = { Time = 0.0 }

@@ -155,7 +155,7 @@ if EnableTL then
 		if methodTldMap[v.name] then
 			table.insert(interfaces, table.concat(methodTldMap[v.name], "\n"))
 		end
-		table.insert(interfaces, "\n")
+		table.insert(interfaces, "end\n")
 	end
 
 	-- add defination of interfaces
@@ -170,7 +170,7 @@ if EnableTL then
 	local function WriteTldsRecurive(modname, collection)
 		if type(collection) == "table" and TypedDescriptions[modname] then
 			local tlddef = fileHeader .. TypedDescriptions[modname]
-			local tldPath = "Runtime/".. modname .. ".tld"
+			local tldPath = "Runtime/".. modname .. ".tl"
 			local content = SnowyStream.FetchFileData(tldPath)
 			if not content or content ~= tlddef then
 				print("Update runtime defs: " .. tldPath .. ". [" .. string.len(tlddef) .. " Bytes]")

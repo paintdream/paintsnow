@@ -20,9 +20,11 @@ local function Expand(t, newLine, depth)
 	end
 end
 
+--[[
 print = function (...)
 	local args = { ... }
 	if #args ~= 0 then
 		return Print(Expand(args, true, 2))
 	end
 end
+]]

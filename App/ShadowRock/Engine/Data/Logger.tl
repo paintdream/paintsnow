@@ -1,4 +1,7 @@
-local Logger = {}
+local Logger = record
+
+end
+
 Logger.WARNING = "Warning ->"
 Logger.ERROR = "Error  ->"
 Logger.INFO = "Info   ->"
