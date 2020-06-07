@@ -31,14 +31,12 @@ TObject<IReflect>& HeartVioliner::operator () (IReflect& reflect) {
 }
 
 
-void HeartVioliner::RequestNewQueue(IScript::Request& request) {
+TShared<Queue> HeartVioliner::RequestNewQueue(IScript::Request& request) {
 	TShared<Queue> q = TShared<Queue>::From(new Queue());
 	q->SetWarpIndex(bridgeSunset.GetKernel().GetCurrentWarpIndex());
 	bridgeSunset.GetKernel().YieldCurrentWarp();
 
-	request.DoLock();
-	request << q;
-	request.UnLock();
+	return q;
 }
 
 void HeartVioliner::RequestStart(IScript::Request& request, IScript::Delegate<Clock> clock) {
@@ -56,16 +54,11 @@ void HeartVioliner::RequestPause(IScript::Request& request, IScript::Delegate<Cl
 	clock->Pause();
 }
 
-void HeartVioliner::RequestNow(IScript::Request& request, IScript::Delegate<Clock> clock) {
+int64_t HeartVioliner::RequestNow(IScript::Request& request, IScript::Delegate<Clock> clock) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(clock);
 	CHECK_THREAD_IN_LIBRARY(clock);
-	int64_t n = clock->Now();
-	bridgeSunset.GetKernel().YieldCurrentWarp();
-
-	request.DoLock();
-	request << n;
-	request.UnLock();
+	return clock->Now();
 }
 
 void HeartVioliner::RequestPush(IScript::Request& request, IScript::Delegate<Queue> queue, int64_t timeStamp, IScript::Request::Ref obj) {
@@ -98,14 +91,11 @@ void HeartVioliner::RequestListen(IScript::Request& request, IScript::Delegate<Q
 	queue->Listen(request, listener);
 }
 
-void HeartVioliner::RequestNewClock(IScript::Request& request, int64_t interval, int64_t start) {
+TShared<Clock> HeartVioliner::RequestNewClock(IScript::Request& request, int64_t interval, int64_t start) {
 	TShared<Clock> c = TShared<Clock>::From(new Clock(timerFactory, bridgeSunset, interval, start, true));
 	c->SetWarpIndex(bridgeSunset.GetKernel().GetCurrentWarpIndex());
 	bridgeSunset.GetKernel().YieldCurrentWarp();
-
-	request.DoLock();
-	request << c;
-	request.UnLock();
+	return c;
 }
 
 void HeartVioliner::RequestSetClock(IScript::Request& request, IScript::Delegate<Clock> clock, int64_t start) {

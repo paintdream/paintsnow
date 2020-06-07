@@ -21,14 +21,14 @@ namespace PaintsNow {
 			EchoLegend(IThread& threadApi, INetwork& network, NsBridgeSunset::BridgeSunset& b);
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 			virtual void ScriptUninitialize(IScript::Request& request);
-			void RequestOpenDispatcher(IScript::Request& request);
+			TShared<WorkDispatcher> RequestOpenDispatcher(IScript::Request& request);
 			void RequestActivateDispatcher(IScript::Request& request, IScript::Delegate<WorkDispatcher> dispatcher);
 			void RequestDeactivateDispatcher(IScript::Request& request, IScript::Delegate<WorkDispatcher> dispatcher);
-			void RequestOpenListener(IScript::Request& request, IScript::Delegate<WorkDispatcher> dispatcher, const String& ip, bool http, IScript::Request::Ref eventHandler, IScript::Request::Ref callback, IScript::Request::Ref connectCallback, bool packetMode);
+			TShared<Listener> RequestOpenListener(IScript::Request& request, IScript::Delegate<WorkDispatcher> dispatcher, const String& ip, bool http, IScript::Request::Ref eventHandler, IScript::Request::Ref callback, IScript::Request::Ref connectCallback, bool packetMode);
 			void RequestActivateListener(IScript::Request& request, IScript::Delegate<Listener> listener);
 			void RequestGetListenerInfo(IScript::Request& request, IScript::Delegate<Listener> listener, IScript::Request::Ref callback);
 			void RequestDeactivateListener(IScript::Request& request, IScript::Delegate<Listener> listener);
-			void RequestOpenConnection(IScript::Request& request, IScript::Delegate<WorkDispatcher> dispatcher, const String& ip, bool http, IScript::Request::Ref connectCallback, bool packetMode);
+			TShared<Connection> RequestOpenConnection(IScript::Request& request, IScript::Delegate<WorkDispatcher> dispatcher, const String& ip, bool http, IScript::Request::Ref connectCallback, bool packetMode);
 			void RequestActivateConnection(IScript::Request& request, IScript::Delegate<Connection> listener);
 			void RequestDeactivateConnection(IScript::Request& request, IScript::Delegate<Connection> listener);
 			void RequestGetConnectionInfo(IScript::Request& request, IScript::Delegate<Connection> connection, IScript::Request::Ref callback);

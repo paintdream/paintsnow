@@ -17,8 +17,8 @@ namespace PaintsNow {
 			virtual ~Remembery();
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
-			void RequestNewDatabase(IScript::Request& request, const String& path, const String& username, const String& password, bool createOnNonExist);
-			void RequestExecute(IScript::Request& request, IScript::Delegate<Hive> hive, const String& sql, HoneyData& honeyData);
+			TShared<Hive> RequestNewDatabase(IScript::Request& request, const String& path, const String& username, const String& password, bool createOnNonExist);
+			TShared<Honey> RequestExecute(IScript::Request& request, IScript::Delegate<Hive> hive, const String& sql, HoneyData& honeyData);
 			void RequestStep(IScript::Request& request, IScript::Delegate<Honey> honey, uint32_t count);
 
 		private:

@@ -39,14 +39,12 @@ void GalaxyWeaver::RequestSetWeaverConnectionCallback(IScript::Request& request,
 	weaver->SetConnectionCallback(request, callback);
 }
 
-void GalaxyWeaver::RequestNewWeaver(IScript::Request& request, const String& config) {
+TShared<Weaver> GalaxyWeaver::RequestNewWeaver(IScript::Request& request, const String& config) {
 	TShared<Weaver> weaver = TShared<Weaver>::From(new Weaver(bridgeSunset, snowyStream, mythForest, network, config));
 	weaver->SetWarpIndex(bridgeSunset.GetKernel().GetCurrentWarpIndex());
 	bridgeSunset.GetKernel().YieldCurrentWarp();
 
-	request.DoLock();
-	request << weaver;
-	request.UnLock();
+	return weaver;
 }
 
 void GalaxyWeaver::RequestStartWeaver(IScript::Request& request, IScript::Delegate<Weaver> weaver) {

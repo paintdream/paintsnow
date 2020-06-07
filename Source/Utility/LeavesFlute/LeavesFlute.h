@@ -36,12 +36,12 @@ namespace PaintsNow {
 			void RequestListenConsole(IScript::Request& request, IScript::Request::Ref callback);
 			void RequestPrint(IScript::Request& request, const String& text);
 			void RequestExit(IScript::Request& request);
-			void RequestGetFullPath(IScript::Request& request, const String& path);
+			String RequestGetFullPath(IScript::Request& request, const String& path);
 			void RequestWarpCursor(IScript::Request& request, Int2 position);
 			void RequestShowCursor(IScript::Request& request, const String& type);
 			void RequestSetAppTitle(IScript::Request& request, const String& title);
 			void RequestSetScreenSize(IScript::Request& request, Int2& size);
-			void RequestGetScreenSize(IScript::Request& request);
+			Int2 RequestGetScreenSize(IScript::Request& request);
 			void RequestForward(IScript::Request& request, IScript::Request::Ref ref);
 			void RequestInspect(IScript::Request& request, IScript::BaseDelegate d);
 

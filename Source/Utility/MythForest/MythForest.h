@@ -68,16 +68,16 @@ namespace PaintsNow {
 			void RequestEnumerateComponentModules(IScript::Request& request);
 
 			// Entity-Component System APIs.
-			void RequestNewEntity(IScript::Request& request, int32_t warp);
+			TShared<Entity> RequestNewEntity(IScript::Request& request, int32_t warp);
 			void RequestAddEntityComponent(IScript::Request& request, IScript::Delegate<Entity> entity, IScript::Delegate<Component> component);
 			void RequestRemoveEntityComponent(IScript::Request& request, IScript::Delegate<Entity> entity, IScript::Delegate<Component> component);
 			void RequestUpdateEntity(IScript::Request& request, IScript::Delegate<Entity> entity);
 			void RequestGetEntityComponents(IScript::Request& request, IScript::Delegate<Entity> entity);
 			void RequestGetEntityComponentDetails(IScript::Request& request, IScript::Delegate<Entity> entity);
-			void RequestGetComponentType(IScript::Request& request, IScript::Delegate<Component> component);
-			void RequestGetUniqueEntityComponent(IScript::Request& request, IScript::Delegate<Entity> entity, const String& componentName);
+			String RequestGetComponentType(IScript::Request& request, IScript::Delegate<Component> component);
+			TShared<Component> RequestGetUniqueEntityComponent(IScript::Request& request, IScript::Delegate<Entity> entity, const String& componentName);
 			void RequestClearEntityComponents(IScript::Request& request, IScript::Delegate<Entity> entity);
-			void RequestGetFrameTickTime(IScript::Request& request);
+			uint64_t RequestGetFrameTickTime(IScript::Request& request);
 			void RequestRaycast(IScript::Request& request, IScript::Delegate<Entity> entity, const Float3& from, const Float3& dir, uint32_t count);
 			void RequestCaptureFrame(IScript::Request& request, const String& path, const String& options);
 

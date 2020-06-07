@@ -250,10 +250,8 @@ void LeavesFlute::RequestSetScreenSize(IScript::Request& request, Int2& size) {
 	interfaces.frame.SetWindowSize(size);
 }
 
-void LeavesFlute::RequestGetScreenSize(IScript::Request& request) {
-	request.DoLock();
-	request << interfaces.frame.GetWindowSize();
-	request.UnLock();
+Int2 LeavesFlute::RequestGetScreenSize(IScript::Request& request) {
+	return interfaces.frame.GetWindowSize();
 }
 
 void LeavesFlute::RequestWarpCursor(IScript::Request& request, Int2 position) {
@@ -368,11 +366,8 @@ void LeavesFlute::RequestPrint(IScript::Request& request, const String& text) {
 	Print(text);
 }
 
-void LeavesFlute::RequestGetFullPath(IScript::Request& request, const String& path) {
-	String prefix = interfaces.archive.GetRootPath();
-	request.DoLock();
-	request << prefix + path;
-	request.UnLock();
+String LeavesFlute::RequestGetFullPath(IScript::Request& request, const String& path) {
+	return interfaces.archive.GetRootPath() + path;
 }
 
 void LeavesFlute::OnConsoleOutput(const String& text) {
@@ -763,6 +758,10 @@ struct InspectProcs : public IReflect {
 				}
 
 				request << endarray;
+				request << key("Returns");
+				request << begintable;
+				InspectCustomStructure::ProcessMember(request, retValue.type, false, true);
+				request << endtable;
 				request << endtable;
 				break;
 			}

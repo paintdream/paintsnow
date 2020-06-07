@@ -6,15 +6,15 @@ using namespace PaintsNow::NsBridgeSunset;
 
 FlameWork::FlameWork(IThread& threadApi, IScript& ns, BridgeSunset& bs) : nativeScript(ns), bridgeSunset(bs) {}
 
-void FlameWork::RequestCompileNativeCode(IScript::Request& request, const String& code) {
+TShared<Native> FlameWork::RequestCompileNativeCode(IScript::Request& request, const String& code) {
 	TShared<Native> native = TShared<Native>::From(new Native(nativeScript));
 	if (native->Compile(code)) {
 		native->SetWarpIndex(bridgeSunset.GetKernel().GetCurrentWarpIndex());
 		bridgeSunset.GetKernel().YieldCurrentWarp();
 
-		request.DoLock();
-		request << native;
-		request.UnLock();
+		return native;
+	} else {
+		return nullptr;
 	}
 }
 

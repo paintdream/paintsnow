@@ -41,7 +41,7 @@ TObject<IReflect>& EchoLegend::operator () (IReflect& reflect) {
 }
 
 
-void EchoLegend::RequestOpenListener(IScript::Request& request, IScript::Delegate<WorkDispatcher> dispatcher, const String& ip, bool http, IScript::Request::Ref eventHandler, IScript::Request::Ref callback, IScript::Request::Ref connectCallback, bool packetMode) {
+TShared<Listener> EchoLegend::RequestOpenListener(IScript::Request& request, IScript::Delegate<WorkDispatcher> dispatcher, const String& ip, bool http, IScript::Request::Ref eventHandler, IScript::Request::Ref callback, IScript::Request::Ref connectCallback, bool packetMode) {
 	CHECK_REFERENCES_WITH_TYPE(eventHandler U connectCallback U callback, IScript::Request::FUNCTION U IScript::Request::FUNCTION U IScript::Request::FUNCTION);
 	CHECK_DELEGATE(dispatcher);
 	CHECK_THREAD_IN_LIBRARY(dispatcher);
@@ -52,9 +52,10 @@ void EchoLegend::RequestOpenListener(IScript::Request& request, IScript::Delegat
 	if (p->IsValid()) {
 		p->SetWarpIndex(bridgeSunset.GetKernel().GetCurrentWarpIndex());
 		bridgeSunset.GetKernel().YieldCurrentWarp();
-		request.DoLock();
-		request << p;
-		request.UnLock();
+
+		return p;
+	} else {
+		return nullptr;
 	}
 }
 
@@ -78,7 +79,7 @@ void EchoLegend::RequestGetListenerInfo(IScript::Request& request, IScript::Dele
 	listener->GetInfo(request, callback);
 }
 
-void EchoLegend::RequestOpenConnection(IScript::Request& request, IScript::Delegate<WorkDispatcher> dispatcher, const String& ip, bool http, IScript::Request::Ref connectCallback, bool packetMode) {
+TShared<Connection> EchoLegend::RequestOpenConnection(IScript::Request& request, IScript::Delegate<WorkDispatcher> dispatcher, const String& ip, bool http, IScript::Request::Ref connectCallback, bool packetMode) {
 	CHECK_REFERENCES_WITH_TYPE(connectCallback, IScript::Request::FUNCTION);
 	CHECK_DELEGATE(dispatcher);
 
@@ -91,9 +92,9 @@ void EchoLegend::RequestOpenConnection(IScript::Request& request, IScript::Deleg
 		c->SetWarpIndex(bridgeSunset.GetKernel().GetCurrentWarpIndex());
 		bridgeSunset.GetKernel().YieldCurrentWarp();
 
-		request.DoLock();
-		request << c;
-		request.UnLock();
+		return c;
+	} else {
+		return nullptr;
 	}
 }
 
@@ -188,15 +189,15 @@ void EchoLegend::RequestMakeURL(IScript::Request& request, const String& user, c
 	request.UnLock();
 }
 
-void EchoLegend::RequestOpenDispatcher(IScript::Request& request) {
+TShared<WorkDispatcher> EchoLegend::RequestOpenDispatcher(IScript::Request& request) {
 	ITunnel::Dispatcher* disp = network.OpenDispatcher();
 	if (disp != nullptr) {
 		TShared<WorkDispatcher> dispatcher = TShared<WorkDispatcher>::From(new WorkDispatcher(bridgeSunset, network, disp));
 		dispatcher->SetWarpIndex(bridgeSunset.GetKernel().GetCurrentWarpIndex());
 		bridgeSunset.GetKernel().YieldCurrentWarp();
-		request.DoLock();
-		request << dispatcher;
-		request.UnLock();
+		return dispatcher;
+	} else {
+		return nullptr;
 	}
 }
 

@@ -187,7 +187,7 @@ void SnowyStream::RequestExportResourceConfig(IScript::Request& request) {
 	request.UnLock();
 }
 
-void SnowyStream::RequestNewZipper(IScript::Request& request, const String& path) {
+TShared<Zipper> SnowyStream::RequestNewZipper(IScript::Request& request, const String& path) {
 	if (subArchiveCreator) {
 		bridgeSunset.GetKernel().YieldCurrentWarp();
 		size_t length;
@@ -195,11 +195,7 @@ void SnowyStream::RequestNewZipper(IScript::Request& request, const String& path
 		if (stream != nullptr) {
 			IArchive* a = subArchiveCreator(*stream, length);
 			if (a != nullptr) {
-				Zipper* zipper = new Zipper(a, stream);
-				request.DoLock();
-				request << zipper;
-				request.UnLock();
-				zipper->ReleaseObject();
+				return TShared<Zipper>::From(new Zipper(a, stream));
 			} else {
 				delete a;
 				request.Error("SnowyStream::CreateZipper(): Cannot open stream.");
@@ -210,6 +206,8 @@ void SnowyStream::RequestNewZipper(IScript::Request& request, const String& path
 	} else {
 		request.Error("SnowyStream::CreateZipper(): No archive creator found.");
 	}
+
+	return nullptr;
 }
 
 void SnowyStream::RequestPostZipperData(IScript::Request& request, IScript::Delegate<Zipper> zipper, const String& path, const String& data) {
@@ -247,7 +245,7 @@ void SnowyStream::RequestFileExists(IScript::Request& request, const String& pat
 }
 
 
-void SnowyStream::RequestFetchFileData(IScript::Request& request, const String& path) {
+String SnowyStream::RequestFetchFileData(IScript::Request& request, const String& path) {
 	bridgeSunset.GetKernel().YieldCurrentWarp();
 	size_t length;
 	IArchive& archive = interfaces.archive;
@@ -257,20 +255,17 @@ void SnowyStream::RequestFetchFileData(IScript::Request& request, const String& 
 		String buf;
 		buf.resize(length);
 		if (stream->Read(const_cast<char*>(buf.data()), length)) {
-			request.DoLock();
-			request << buf;
-			request.UnLock();
+			stream->ReleaseObject();
+			return buf;
 		}
-
-		stream->ReleaseObject();
 	} else {
 		const char* builtin = request.GetScript()->QueryUniformResource(path, length);
 		if (builtin != nullptr) {
-			request.DoLock();
-			request << String(builtin, length);
-			request.UnLock();
+			return String(builtin, length);
 		}
 	}
+
+	return "";
 }
 
 void SnowyStream::RequestCloseFile(IScript::Request& request, IScript::Delegate<File> file) {
@@ -286,7 +281,7 @@ void SnowyStream::RequestDeleteFile(IScript::Request& request, const String& pat
 	interfaces.archive.Delete(path);
 }
 
-void SnowyStream::RequestNewFile(IScript::Request& request, const String& path, bool write) {
+TShared<File> SnowyStream::RequestNewFile(IScript::Request& request, const String& path, bool write) {
 	CHECK_REFERENCES_NONE();
 	bridgeSunset.GetKernel().YieldCurrentWarp();
 	IArchive& archive = interfaces.archive;
@@ -294,33 +289,22 @@ void SnowyStream::RequestNewFile(IScript::Request& request, const String& path, 
 	uint64_t modifiedTime = 0;
 	IStreamBase* stream = path == ":memory:" ? new ZMemoryStream(0x1000, true) : archive.Open(path, write, length, &modifiedTime);
 	if (stream != nullptr) {
-		TShared<File> file = TShared<File>::From(new File(stream, length, modifiedTime));
-		request.DoLock();
-		request << file;
-		request.UnLock();
+		return TShared<File>::From(new File(stream, length, modifiedTime));
+	} else {
+		return nullptr;
 	}
 }
 
-void SnowyStream::RequestGetFileLastModifiedTime(IScript::Request& request, IScript::Delegate<File> file) {
+uint64_t SnowyStream::RequestGetFileLastModifiedTime(IScript::Request& request, IScript::Delegate<File> file) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(file);
-	bridgeSunset.GetKernel().YieldCurrentWarp();
-	uint64_t lastModifiedTime = file->GetLastModifiedTime();
-
-	request.DoLock();
-	request << lastModifiedTime;
-	request.UnLock();
+	return file->GetLastModifiedTime();
 }
 
-void SnowyStream::RequestGetFileSize(IScript::Request& request, IScript::Delegate<File> file) {
+uint64_t SnowyStream::RequestGetFileSize(IScript::Request& request, IScript::Delegate<File> file) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(file);
-	size_t length = file->GetLength();
-	bridgeSunset.GetKernel().YieldCurrentWarp();
-
-	request.DoLock();
-	request << length;
-	request.UnLock();
+	return file->GetLength();
 }
 
 void SnowyStream::RequestReadFile(IScript::Request& request, IScript::Delegate<File> file, int64_t length, IScript::Request::Ref callback) {
@@ -447,17 +431,16 @@ void SnowyStream::RequestQueryFiles(IScript::Request& request, const String& p) 
 	request.UnLock();
 }
 
-void SnowyStream::RequestNewResource(IScript::Request& request, const String& path, const String& expectedResType, bool createAlways) {
+TShared<ResourceBase> SnowyStream::RequestNewResource(IScript::Request& request, const String& path, const String& expectedResType, bool createAlways) {
 	TShared<ResourceBase> resource = CreateResource(path, expectedResType, !createAlways);
 	bridgeSunset.GetKernel().YieldCurrentWarp();
 
 	if (resource) {
 		resource->GetResourceManager().InvokeUpload(resource());
-		request.DoLock();
-		request << resource;
-		request.UnLock();
+		return resource;
 	} else {
 		request.Error(String("Unable to create resource ") + path);
+		return nullptr;
 	}
 }
 
@@ -568,22 +551,23 @@ void SnowyStream::RequestInspectResource(IScript::Request& request, IScript::Del
 	request.UnLock();
 }
 
-void SnowyStream::RequestCloneResource(IScript::Request& request, IScript::Delegate<ResourceBase> resource, const String& path) {
+TShared<ResourceBase> SnowyStream::RequestCloneResource(IScript::Request& request, IScript::Delegate<ResourceBase> resource, const String& path) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(resource);
 	
 	ResourceManager& resourceManager = resource->GetResourceManager();
 	TShared<ResourceBase> exist = resourceManager.LoadExist(path);
 	if (!exist) {
-		ResourceBase* p = static_cast<ResourceBase*>(resource->Clone());
-		if (p != nullptr) {
-			resourceManager.Insert(path, p);
-			request << p;
-			p->ReleaseObject();
+		TShared<ResourceBase> p = TShared<ResourceBase>::From(static_cast<ResourceBase*>(resource->Clone()));
+		if (p) {
+			resourceManager.Insert(path, p());
+			return p;
 		}
 	} else {
 		request.Error(String("SnowyStream::CloneResource() : The path ") + path + " already exists");
 	}
+
+	return nullptr;
 }
 
 void SnowyStream::RequestMapResource(IScript::Request& request, IScript::Delegate<ResourceBase> resource, const String& typeExtension) {

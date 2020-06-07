@@ -76,7 +76,7 @@ namespace PaintsNow {
 	(MUST_CHECK_REFERENCE_ONCE); \
 	if (engine.GetKernel().GetCurrentWarpIndex() != warpTiny->GetWarpIndex()) { \
 		request.Error("Threading routine failed on " #warpTiny); \
-		return; \
+		assert(false); \
 	}
 	}
 }

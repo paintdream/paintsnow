@@ -192,25 +192,19 @@ void BridgeSunset::RequestQueueRoutine(IScript::Request& request, IScript::Deleg
 	}
 }
 
-void BridgeSunset::RequestGetWarpCount(IScript::Request& request) {
+uint32_t BridgeSunset::RequestGetWarpCount(IScript::Request& request) {
 	CHECK_REFERENCES_NONE();
-
-	GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << GetKernel().GetWarpCount();
-	request.UnLock();
+	return GetKernel().GetWarpCount();
 }
 
-void BridgeSunset::RequestNewGraph(IScript::Request& request, int32_t startupWarp) {
+TShared<RoutineGraph> BridgeSunset::RequestNewGraph(IScript::Request& request, int32_t startupWarp) {
 	CHECK_REFERENCES_NONE();
 
 	TShared<RoutineGraph> graph = TShared<RoutineGraph>::From(new RoutineGraph());
 	graph->SetWarpIndex(GetKernel().GetCurrentWarpIndex());
 	GetKernel().YieldCurrentWarp();
 
-	request.DoLock();
-	request << graph;
-	request.UnLock();
+	return graph;
 }
 
 void BridgeSunset::RequestQueueGraphRoutine(IScript::Request& request, IScript::Delegate<RoutineGraph> graph, IScript::Delegate<WarpTiny> unit, IScript::Request::Ref callback) {

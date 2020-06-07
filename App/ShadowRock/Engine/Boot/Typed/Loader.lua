@@ -126,7 +126,8 @@ if EnableTL then
 		["BaseDelegate"] = "any",
 		["Ref"] = "any",
 		["PlaceHolder"] = "any",
-		["WarpTiny"] = "any"
+		["WarpTiny"] = "any",
+		["void"] = "any"
 	}
 
 	function Bootstrap.GetTypeName(t, regTypes)

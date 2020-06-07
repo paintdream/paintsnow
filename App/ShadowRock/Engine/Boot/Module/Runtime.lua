@@ -8,18 +8,23 @@ local function CollectIndexersRecursive(modname, collection)
 			for name, desc in SortedPairs(Inspect(collection.__delegate__)) do
 				if type(desc) == "table" then
 					local mainName
-					for i, param in ipairs(desc.Params) do
-						if type(param) == "table" and param.Type:find("PaintsNow::Ns") then
-							if i == 1 then
-								mainName = param.Type
-								methodMap[mainName] = methodMap[mainName] or {}
-								methodMap[mainName][name] = collection[name]
-							elseif mainName and param.Type ~= mainName then
-								dependMap[mainName] = dependMap[mainName] or {}
-								dependMap[mainName][param.Type] = true
+					local function Register(params)
+						for i, param in ipairs(params) do
+							if type(param) == "table" and param.Type:find("PaintsNow::Ns") then
+								if i == 1 then
+									mainName = param.Type
+									methodMap[mainName] = methodMap[mainName] or {}
+									methodMap[mainName][name] = collection[name]
+								elseif mainName and param.Type ~= mainName then
+									dependMap[mainName] = dependMap[mainName] or {}
+									dependMap[mainName][param.Type] = true
+								end
 							end
 						end
 					end
+
+					Register(desc.Params)
+					Register(desc.Returns)
 				end
 			end
 		end
@@ -94,6 +99,7 @@ if EnableTL then
 		for name, desc in SortedPairs(Inspect(collection.__delegate__)) do
 			if type(desc) == "table" then
 				local paramsList = {}
+				local returnList = {}
 				local firstParam = desc.Params[1]
 				local typeName = type(firstParam) == "table" and firstParam.Type or ""
 				for index, t in ipairs(desc.Params) do
@@ -102,10 +108,16 @@ if EnableTL then
 					table.insert(paramsList, name)
 				end
 
-				local declare = "\t" .. name .. ": function (" .. table.concat(paramsList, ", ") .. ") : any"
+				for index, t in ipairs(desc.Returns) do
+					t.Type = SimplyName(t.Type)
+					local name = GetTypeName(t, regTypes)
+					table.insert(returnList, name)
+				end
+
+				local declare = "\t" .. name .. ": function (" .. table.concat(paramsList, ", ") .. ") : (" .. table.concat(returnList, ", ") .. ")"
 				table.insert(tld, declare)
 				if typeName:find("PaintsNow::Ns") and name ~= "New" then
-					local selfDeclare = "\t" .. name .. ": function (" .. table.concat(paramsList, ", ") .. ") : any"
+					local selfDeclare = "\t" .. name .. ": function (" .. table.concat(paramsList, ", ") .. ") : (" .. table.concat(returnList, ", ") .. ")"
 					methodTldMap[typeName] = methodTldMap[typeName] or {}
 					table.insert(methodTldMap[typeName], selfDeclare)
 				end

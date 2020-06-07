@@ -32,12 +32,12 @@ namespace PaintsNow {
 			void ContinueScriptDispatcher(IScript::Request& request, IHost* host, size_t paramCount, const TWrapper<void, IScript::Request&>& continuer);
 
 		protected:
-			void RequestNewGraph(IScript::Request& request, int32_t startupWarp);
+			TShared<RoutineGraph> RequestNewGraph(IScript::Request& request, int32_t startupWarp);
 			void RequestQueueGraphRoutine(IScript::Request& request, IScript::Delegate<RoutineGraph> graph, IScript::Delegate<WarpTiny> unit, IScript::Request::Ref callback);
 			void RequestConnectGraphRoutine(IScript::Request& request, IScript::Delegate<RoutineGraph> graph, int32_t prev, int32_t next);
 			void RequestExecuteGraph(IScript::Request& request, IScript::Delegate<RoutineGraph> graph);
 			void RequestQueueRoutine(IScript::Request& request, IScript::Delegate<WarpTiny> unit, IScript::Request::Ref callback);
-			void RequestGetWarpCount(IScript::Request& request);
+			uint32_t RequestGetWarpCount(IScript::Request& request);
 
 			ThreadPool threadPool;
 			Kernel kernel;
@@ -51,7 +51,7 @@ namespace PaintsNow {
 	(MUST_CHECK_REFERENCE_ONCE); \
 	if (bridgeSunset.GetKernel().GetCurrentWarpIndex() != warpTiny->GetWarpIndex()) { \
 		request.Error("Threading routine failed on " #warpTiny); \
-		return; \
+		assert(false); \
 	}
 
 #if defined(_MSC_VER) && _MSC_VER <= 1200

@@ -20,7 +20,7 @@ namespace PaintsNow {
 			// int main(int argc, char* argv[]);
 			// <Output> argv[0] -> returns a pointer to 
 
-			void RequestCompileNativeCode(IScript::Request& request, const String& code);
+			TShared<Native> RequestCompileNativeCode(IScript::Request& request, const String& code);
 			void RequestExecuteNative(IScript::Request& request, IScript::Delegate<Native> native, const String& entry, std::vector<String>& params);
 
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;

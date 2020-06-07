@@ -39,36 +39,36 @@ namespace PaintsNow {
 
 		public:
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-			void RequestNewResource(IScript::Request& request, const String& path, const String& expectedResType, bool createAlways);
+			TShared<ResourceBase> RequestNewResource(IScript::Request& request, const String& path, const String& expectedResType, bool createAlways);
 			void RequestNewResourcesAsync(IScript::Request& request, std::vector<String>& pathList, String& expectedResType, IScript::Request::Ref callback);
 			void RequestLoadExternalResourceData(IScript::Request& request, IScript::Delegate<ResourceBase> resource, const String& externalPath);
 			void RequestInspectResource(IScript::Request& request, IScript::Delegate<ResourceBase> resource);
 			void RequestPersistResource(IScript::Request& request, IScript::Delegate<ResourceBase> resource, const String& extension);
 			void RequestMapResource(IScript::Request& request, IScript::Delegate<ResourceBase> resource, const String& extension);
-			void RequestCloneResource(IScript::Request& request, IScript::Delegate<ResourceBase>, const String& path);
+			TShared<ResourceBase> RequestCloneResource(IScript::Request& request, IScript::Delegate<ResourceBase>, const String& path);
 			void RequestUnmapResource(IScript::Request& request, IScript::Delegate<ResourceBase> resource);
 			void RequestCompressResourceAsync(IScript::Request& request, IScript::Delegate<ResourceBase> resource, String& compressType, IScript::Request::Ref callback);
 			void RequestImportResourceConfig(IScript::Request& request, std::vector<std::pair<String, String> >& version);
 			void RequestExportResourceConfig(IScript::Request& request);
 
-			void RequestNewZipper(IScript::Request& request, const String& path);
+			TShared<Zipper> RequestNewZipper(IScript::Request& request, const String& path);
 			void RequestPostZipperData(IScript::Request& request, IScript::Delegate<Zipper> zipper, const String& path, const String& data);
 			void RequestWriteZipper(IScript::Request& request, IScript::Delegate<File> file, IScript::Delegate<Zipper> zipper);
 
 			void RequestParseJson(IScript::Request& request, const String& str);
 
-			void RequestNewFile(IScript::Request& request, const String& path, bool write);
+			TShared<File> RequestNewFile(IScript::Request& request, const String& path, bool write);
 			void RequestDeleteFile(IScript::Request& request, const String& path);
 			void RequestFileExists(IScript::Request& request, const String& path);
 			void RequestFlushFile(IScript::Request& request, IScript::Delegate<File> file);
 			void RequestReadFile(IScript::Request& request, IScript::Delegate<File> file, int64_t length, IScript::Request::Ref callback);
-			void RequestGetFileSize(IScript::Request& request, IScript::Delegate<File> file);
-			void RequestGetFileLastModifiedTime(IScript::Request& request, IScript::Delegate<File> file);
+			uint64_t RequestGetFileSize(IScript::Request& request, IScript::Delegate<File> file);
+			uint64_t RequestGetFileLastModifiedTime(IScript::Request& request, IScript::Delegate<File> file);
 			void RequestWriteFile(IScript::Request& request, IScript::Delegate<File> file, const String& content, IScript::Request::Ref callback);
 			void RequestCloseFile(IScript::Request& request, IScript::Delegate<File> file);
 			void RequestSeekFile(IScript::Request& request, IScript::Delegate<File> file, const String& type, int64_t offset);
 			void RequestQueryFiles(IScript::Request& request, const String& path);
-			void RequestFetchFileData(IScript::Request& request, const String& path);
+			String RequestFetchFileData(IScript::Request& request, const String& path);
 
 			void RequestSetShaderResourceCode(IScript::Request& request, IScript::Delegate<ShaderResource> shaderResource, const String& stage, const String& text, const std::vector<std::pair<String, String> >& config);
 			void RequestSetShaderResourceInput(IScript::Request& request, IScript::Delegate<ShaderResource> shaderResource, const String& stage, const String& type, const String& name, const std::vector<std::pair<String, String> >& config);

@@ -27,7 +27,7 @@ namespace PaintsNow {
 			/// </summary>
 			/// <param name = "interval"> Specifies the clock interval in milliseconds</param>
 			/// <returns> Clock object </returns>
-			void RequestNewClock(IScript::Request& request, int64_t interval, int64_t start);
+			TShared<Clock> RequestNewClock(IScript::Request& request, int64_t interval, int64_t start);
 			void RequestSetClock(IScript::Request& request, IScript::Delegate<Clock> clock, int64_t time);
 
 			/// <summary>
@@ -64,13 +64,13 @@ namespace PaintsNow {
 			/// </summary>
 			/// <param name = "clock"> Specifies the clock object </param>
 			/// <returns> The current time of the clock specified. </returns>
-			void RequestNow(IScript::Request& request, IScript::Delegate<Clock> clock);
+			int64_t RequestNow(IScript::Request& request, IScript::Delegate<Clock> clock);
 
 			/// <summary>
 			/// Create a priority queue.
 			/// </summary>
 			/// <returns> Queue object </returns>
-			void RequestNewQueue(IScript::Request& request);
+			TShared<Queue> RequestNewQueue(IScript::Request& request);
 
 			/// <summary>
 			/// Create a listener/recorder/logger on specified queue.

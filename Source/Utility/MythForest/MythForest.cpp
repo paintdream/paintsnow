@@ -168,21 +168,12 @@ void MythForest::TickDevice(IDevice& device) {
 	}
 }
 
-void MythForest::RequestGetFrameTickTime(IScript::Request& request) {
-	engine.GetKernel().YieldCurrentWarp();
-
-	request.DoLock();
-	request << currentFrameTime;
-	request.UnLock();
+uint64_t MythForest::RequestGetFrameTickTime(IScript::Request& request) {
+	return currentFrameTime;
 }
 
-void MythForest::RequestNewEntity(IScript::Request& request, int32_t warp) {
-	TShared<Entity> entity = CreateEntity(warp);
-
-	engine.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << entity;
-	request.UnLock();
+TShared<Entity> MythForest::RequestNewEntity(IScript::Request& request, int32_t warp) {
+	return CreateEntity(warp);
 }
 
 void MythForest::RequestEnumerateComponentModules(IScript::Request& request) {
@@ -230,7 +221,7 @@ void MythForest::RequestRemoveEntityComponent(IScript::Request& request, IScript
 	entity->RemoveComponent(engine, component.Get());
 }
 
-void MythForest::RequestGetUniqueEntityComponent(IScript::Request& request, IScript::Delegate<Entity> entity, const String& componentName) {
+TShared<Component> MythForest::RequestGetUniqueEntityComponent(IScript::Request& request, IScript::Delegate<Entity> entity, const String& componentName) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(entity);
 	CHECK_THREAD_IN_MODULE(entity);
@@ -240,11 +231,11 @@ void MythForest::RequestGetUniqueEntityComponent(IScript::Request& request, IScr
 		Component* component = module->GetEntityUniqueComponent(entity.Get()); // Much more faster 
 		if (component != nullptr) {
 			engine.GetKernel().YieldCurrentWarp();
-			request.DoLock();
-			request << component;
-			request.UnLock();
+			return component;
 		}
 	}
+
+	return nullptr;
 }
 
 void MythForest::RequestGetEntityComponentDetails(IScript::Request& request, IScript::Delegate<Entity> entity) {
@@ -292,14 +283,12 @@ void MythForest::RequestGetEntityComponents(IScript::Request& request, IScript::
 	request.UnLock();
 }
 
-void MythForest::RequestGetComponentType(IScript::Request& request, IScript::Delegate<Component> component) {
+String MythForest::RequestGetComponentType(IScript::Request& request, IScript::Delegate<Component> component) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(component);
 	CHECK_THREAD_IN_MODULE(component);
 
-	request.DoLock();
-	request << component->GetUnique()->GetSubName();
-	request.UnLock();
+	return component->GetUnique()->GetSubName();
 }
 
 void MythForest::RequestClearEntityComponents(IScript::Request& request, IScript::Delegate<Entity> entity) {
