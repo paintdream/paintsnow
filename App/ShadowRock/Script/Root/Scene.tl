@@ -10,7 +10,7 @@ Scene.spaceComponent = spaceComponentPrototype
 local entityPrototype : Entity = anyone
 Scene.rootEntity = entityPrototype
 
-function Scene.New(database : Database?, clock : Clock)
+function Scene.New(database : Database, clock : Clock)
 	local meta = {}
 	local rootEntity = MythForest.NewEntity(-1)
 	local spaceComponent = SpaceComponentModule.New(-1, true)

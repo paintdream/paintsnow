@@ -270,12 +270,12 @@ Usage:
 
 local Core = record end
 
-local function RecursiveMerge(g, t)
+local function RecursiveMerge(g : any, t : any) : any
 	for k, v in pairs(t) do
 		if type(v) == "table" then
 			local w = g[k] or {}
 			assert(type(w) == "table")
-			g[k] = RecursiveMerge(w, v)
+			g[k] = RecursiveMerge(w as any, v as any) as any
 		else
 			g[k] = v
 		end

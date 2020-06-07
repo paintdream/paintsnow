@@ -4,13 +4,13 @@
 ]]
 local Core = require("Engine/Core")
 
-interface ConnectionRecord
+local ConnectionRecord = record
 	Handle : any
 	Src : string
 	Dst : string
 end
 
-local Terminal = {}
+local Terminal = record end
 local Peers : { any : ConnectionRecord } = {}
 
 -- uniform global dispatcher
@@ -24,7 +24,7 @@ function Terminal.StateHandler(connection : Connection, isConnect : boolean, src
 	return true
 end
 
-function Terminal.DataHandler(connection : Connection, data : string, method : string?, header : string?, extraData : string?)
+function Terminal.DataHandler(connection : Connection, data : string, method : string, header : string, extraData : string)
 	return true
 end
 
@@ -120,8 +120,8 @@ function Terminal:EventHandler(connection : Connection, status : string)
 	end
 end
 
-function Terminal:HttpRequest(host : string, path : string, method : string, options : { string : string }, header : { string : string }, callback : (string)->())
-	local connection : Connection? = dispatcher:OpenConnection(host, true, function (connection : Connection, status : any)
+function Terminal:HttpRequest(host : string, path : string, method : string, options : { string : string }, header : { string : string }, callback : function (string) : any )
+	local connection : Connection = dispatcher:OpenConnection(host, true, function (connection : Connection, status : any)
 		local statusCode = tonumber(status) or 0
 		if status == "Connected" then
 			local opts : { number : any } = {}
@@ -180,13 +180,13 @@ end
 
 function Terminal.New(ip : string, 
 			dataHandler : any,
-			stateHandler : (any, boolean, string, string)->(boolean),
+			stateHandler : function (any, boolean, string, string) : (boolean),
 			http : boolean)
 	local instance = Core.Instance()
 	local eventHandler = http and Terminal.EventHandlerHttp or Terminal.EventHandler
 	local terminal = setmetatable({ IP = ip, Peers = {}, DataHandler = dataHandler, StateHandler = stateHandler }, { __index = Terminal })
 
-	local listener : Listener? = dispatcher:OpenListener(ip, http, function (listener, event)
+	local listener : Listener = dispatcher:OpenListener(ip, http, function (listener, event)
 		if event == "Connected" then
 			listener:GetListenerInfo(function (ip)
 				print("Listener created on IP: " .. ip)

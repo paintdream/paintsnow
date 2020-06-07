@@ -34,7 +34,7 @@ end
 local exit = 0
 
 local function report_all_errors(result)
-   local has_errors = report_errors("Type error", result.type_errors) or report_errors("Syntax error", result.syntax_errors)
+   local has_errors = report_errors("Syntax error", result.syntax_errors)
    report_errors("unknown variable", result.unknowns)
    return not has_errors
 end

@@ -108,10 +108,10 @@ if EnableTL then
 					end
 				end
 
-				local declare = "\t" .. name .. ": function (" .. table.concat(paramsList, ", ") .. ") -> (any)"
+				local declare = "\t" .. name .. ": function (" .. table.concat(paramsList, ", ") .. ") : any"
 				table.insert(tld, declare)
 				if typeName:find("PaintsNow::Ns") and name ~= "New" then
-					local selfDeclare = "\t\"" .. name .. "\": function (" .. table.concat(selfParamsList, ", ") .. ") -> (any)"
+					local selfDeclare = "\t\"" .. name .. "\": function (" .. table.concat(selfParamsList, ", ") .. ") : any"
 					methodTldMap[typeName] = methodTldMap[typeName] or {}
 					table.insert(methodTldMap[typeName], selfDeclare)
 				end

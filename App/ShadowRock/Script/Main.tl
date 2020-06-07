@@ -177,7 +177,7 @@ local function InitializeWorld(databasePath : string)
 					local position = cameraTransform:GetTranslation()
 					local mat = cameraTransform:GetAxises()
 					local target = (Vector.New(mat[3]) * (-1) + Vector.New(mat[1]) * to[1] * cameraController.aspect + Vector.New(mat[2]) * to[2]) * 100.0
-					local results : { any }? = scene.rootEntity:Raycast(position, target, 1)
+					local results : { any } = scene.rootEntity:Raycast(position, target, 1)
 					if results then
 						for i, result in ipairs(results) do
 							local formComponent : FormComponent = result.Parent:GetUniqueEntityComponent("FormComponent")
@@ -228,7 +228,7 @@ function Main.Main()
 	local databasePath = "Weaver/Repository.db"
 
 	Debug.CompressResource = function ()
-		local database : Database? = Database.New(databasePath)
+		local database : Database = Database.New(databasePath)
 		if database then
 			local compressor = require("Script/Util/RepositoryCompressor")
 			compressor.Compress(database)

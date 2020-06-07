@@ -1,10 +1,10 @@
-local TcpWalker = { __index = _ENV }
-setmetatable(TcpWalker, TcpWalker)
+local TcpWalker = record end
+TcpWalker.__index = TcpWalker
 
 local Json = require("Engine/Network/Json")
 local Core = require("Engine/Core")
 
-interface User
+local User = record
 	Id : string
 	Host : string
 	Target : string

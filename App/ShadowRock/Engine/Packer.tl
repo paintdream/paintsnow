@@ -5,8 +5,8 @@
 local Packer = {}
 
 local function NeedUpdate(srcPath : string, dstPath : string)
-	local src : File? = SnowyStream.NewFile(srcPath, false)
-	local dst : File? = SnowyStream.NewFile(dstPath, false)
+	local src : File = SnowyStream.NewFile(srcPath, false)
+	local dst : File = SnowyStream.NewFile(dstPath, false)
 	local result = true
 	if src and dst then
 		local srcLastModifiedTime : number = SnowyStream.GetFileLastModifiedTime(src)
@@ -33,7 +33,7 @@ local function NewResourceHandler(type : string)
 		
 		print("Packing [" .. ext:lower() .. "] => " .. dst)
 
-		local res : ResourceBase? = SnowyStream.NewResource(dstWithExt, type, true)
+		local res : ResourceBase = SnowyStream.NewResource(dstWithExt, type, true)
 		local success = false
 		if res then
 			local data = SnowyStream.FetchFileData(src)
@@ -59,7 +59,7 @@ end
 local HandlerTextureResource = NewResourceHandler("TextureResource")
 local HandlerFontResource = NewResourceHandler("FontResource")
 
-local dispatchers : { string : (string, string, string) -> (boolean) } = {
+local dispatchers : { string : function (string, string, string) : boolean } = {
 	["ttf"] = HandlerFontResource,
 	["otf"] = HandlerFontResource,
 	["ttc"] = HandlerFontResource,
@@ -82,7 +82,7 @@ local function DoImport(src : string, dest : string)
 		if folder and name and ext then
 			local dispatcher = dispatchers[ext]
 			if dispatcher then
-				local dfolder : string?, dname : string? = dest:match('(.-/)(.*)%.(.*)')
+				local dfolder, dname : string, string = dest:match('(.-/)(.*)%.(.*)')
 				if dfolder and dname then
 					dispatcher(src, dfolder .. dname, ext:lower())
 				end

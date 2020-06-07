@@ -2,7 +2,7 @@ local RepositoryCompressor = {}
 RepositoryCompressor.__index = RepositoryCompressor
 local Database = require("Engine/Data/Database")
 
-function RepositoryCompressor.Compress(database : Database?)
+function RepositoryCompressor.Compress(database : Database)
 	if database then
 		print("\tCompressing resources ...")
 
@@ -16,7 +16,7 @@ function RepositoryCompressor.Compress(database : Database?)
 
 		for _, line in database:Lines("select Path from `Resources` where `TypeID` == " .. texID .. ";", 64) do
 			local path = table.unpack(line)
-			local textureResource : ResourceBase? = SnowyStream.NewResource(path, "TextureResource", false)
+			local textureResource : ResourceBase = SnowyStream.NewResource(path, "TextureResource", false)
 			if textureResource then
 				local resource = textureResource
 				runningCount = runningCount + 1

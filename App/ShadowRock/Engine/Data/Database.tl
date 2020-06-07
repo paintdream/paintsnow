@@ -1,4 +1,4 @@
-local Database = {}
+local Database = record end
 Database.__index = Database
 local anyone : any = {}
 local hive : Hive = anyone
@@ -18,7 +18,7 @@ function Database:Lines(sql : string, cacheCount : integer, data)
 
 	local cache : { integer : any } = {}
 
-	return function (t, k : integer?)
+	return function (t, k : integer)
 		if k == nil or k == cacheCount then
 			-- reinit
 			local s : any = honey:Step(cacheCount)
@@ -57,7 +57,7 @@ function Database:Query(sql : string, data)
 end
 
 function Database.New(path : string)
-	local handle : Hive? = Remembery.NewDatabase(path, "", "", true)
+	local handle : Hive = Remembery.NewDatabase(path, "", "", true)
 	local meta = {}
 	meta.Handle = handle
 	return setmetatable(meta, { __index = Database })
