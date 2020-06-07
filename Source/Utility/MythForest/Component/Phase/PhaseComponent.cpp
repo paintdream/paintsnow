@@ -562,7 +562,7 @@ void PhaseComponent::DispatchTasks(Engine& engine) {
 				const UpdatePointShadow& shadow = bakePointShadows.top();
 				threadPool.Push(CreateCoTaskContextFree(kernel, Wrap(this, &PhaseComponent::CoTaskAssembleTaskShadow), std::ref(engine), std::ref(task), shadow));
 				bakePointShadows.pop();
-			} /*else if (!bakePointSetups.empty()) {
+			} else if (!bakePointSetups.empty()) {
 				const UpdatePointSetup& setup = bakePointSetups.top();
 				threadPool.Push(CreateCoTaskContextFree(kernel, Wrap(this, &PhaseComponent::CoTaskAssembleTaskSetup), std::ref(engine), std::ref(task), setup));
 				bakePointSetups.pop();
@@ -572,7 +572,7 @@ void PhaseComponent::DispatchTasks(Engine& engine) {
 				bakePointBounces.pop();
 			} else {
 				finalStatus.store(TaskData::STATUS_DISPATCHED, std::memory_order_relaxed);
-			}*/
+			}
 		}
 	}
 }
@@ -698,9 +698,16 @@ void PhaseComponent::CompleteUpdateLights(Engine& engine, std::vector<LightEleme
 			shadow.shadow->GetResourceManager().InvokeUpload(shadow.shadow(), renderQueue);
 		}
 
+		assert(hostEntity != nullptr);
+		TransformComponent* transformComponent = hostEntity->GetUniqueComponent(UniqueType<TransformComponent>());
+		Float3 center;
+		if (transformComponent != nullptr) {
+			center = transformComponent->GetQuickTranslation();
+		}
+
 		shadow.lightElement = lightElement;
 		Float3 view = (Float3)lightElement.position;
-		Float3 dir = view;
+		Float3 dir = -view;
 		if (dir.SquareLength() < 1e-6) {
 			dir = Float3(0, 0, -1);
 		}
