@@ -2,7 +2,7 @@
 -- Util bootstrap, do not use require here
 
 -- TODO: Remove this line in release build
-EnableTypedlua = false
+EnableTL = false
 
 print("Loading Entry ...")
 local Bootstrap = require("Engine/Boot/Bootstrap")

@@ -1,9 +1,9 @@
 local exts = { "", ".lua" }
 TypedDescriptions = {}
 
-if EnableTypedlua then
+if EnableTL then
 	print("Overriding io.open/close")
-	exts = { "", ".tl", ".tlm", ".lua" }
+	exts = { "", ".tl", ".tld", ".lua" }
 	io = io or {}
 	local orgOpen = io.open
 	local orgClose = io.close
@@ -41,17 +41,18 @@ if EnableTypedlua then
 			setmetatable(file, simfile)
 			return file
 		end
+
+		return nil, "Enable to find " .. f
 	end
 
 	io.close = function (f)
 		return type(f) ~= "table" and oldclose(f)
 	end
 
-	typedlua = nil
+	tl = nil
 end
 
 function package.searchpath(name, filter, ...)
-	local isTld = string.find(filter, ".tld;")
 	if TypedDescriptions[name] then
 		if isTld then
 			return name
@@ -60,7 +61,7 @@ function package.searchpath(name, filter, ...)
 		end
 	end
 
-	for i, v in ipairs(isTld and { ".tld" } or exts) do
+	for i, v in ipairs(exts) do
 		local c = name .. v
 		if SnowyStream.FileExists(c) then
 			return c
@@ -85,18 +86,7 @@ function require(name, ...)
 
 	local content = SnowyStream.FetchFileData(path)
 	if content then
-		-- Pass current _ENV to sub module
-		-- local code = typedlua.compile(content, name, false)
-		-- print(code)
-		local loadproc = load
-		local lowerPath = string.lower(path)
-		if EnableTypedlua then
-			if string.endswith(lowerPath, ".tl") or string.endswith(lowerPath, ".tlm") then
-				loadproc = typedlua.loadstring
-			end
-		end
-
-		local chunk, errMsg = loadproc(content, name, "t", _ENV)
+		local chunk, errMsg = load(content, name, "t", _ENV)
 		if chunk then
 			mod = chunk(name)
 		else
@@ -109,13 +99,9 @@ function require(name, ...)
 	return mod
 end
 
-if EnableTypedlua then
-	print("Initializing typedlua ...")
-	typedlua = require("typedlua/loader")
-	tlchecker = require("typedlua/tlchecker")
-	tlst = require("typedlua/tlst")
-	tlparser = require("typedlua/tlparser")
-	tlcode = require("typedlua/tlcode")
+if EnableTL then
+	print("Initializing tl ...")
+	tl = require("tl")
 
 	-- register API prototypes
 	local mapTypes = {
@@ -150,7 +136,7 @@ if EnableTypedlua then
 		if not r then
 			local stmt = {}
 			if not t.Pointer then
-				table.insert(stmt, "typealias " .. t.Type)
+				table.insert(stmt, "global " .. t.Type .. " = record")
 				regTypes[t.Type] = true
 				table.insert(stmt, " = {\n")
 				local mid = {}

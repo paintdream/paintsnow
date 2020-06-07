@@ -1,6 +1,6 @@
 -- Import necessary utilities first
 local QuickSense = {}
-EnableTypedLua = true
+EnableTL = true
 Util = load(SnowyStream.FetchFileData("Engine/Boot/Bootstrap.lua"))()
 
 -- Prepare quick scene environment
