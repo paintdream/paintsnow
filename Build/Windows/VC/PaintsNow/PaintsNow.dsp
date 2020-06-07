@@ -1167,10 +1167,6 @@ SOURCE=..\..\..\..\Source\Core\Driver\Script\Lua\Core\lbaselib.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Core\Driver\Script\Lua\Core\lbitlib.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\..\..\Source\Core\Driver\Script\Lua\Core\lcode.c
 # End Source File
 # Begin Source File
@@ -1239,6 +1235,10 @@ SOURCE=..\..\..\..\Source\Core\Driver\Script\Lua\Core\liolib.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Core\Driver\Script\Lua\Core\ljumptab.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Core\Driver\Script\Lua\Core\llex.c
 # End Source File
 # Begin Source File
@@ -1283,6 +1283,10 @@ SOURCE=..\..\..\..\Source\Core\Driver\Script\Lua\Core\lopcodes.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Core\Driver\Script\Lua\Core\lopnames.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Core\Driver\Script\Lua\Core\loslib.c
 # End Source File
 # Begin Source File
@@ -1295,51 +1299,7 @@ SOURCE=..\..\..\..\Source\Core\Driver\Script\Lua\Core\lparser.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Core\Driver\Script\Lua\Core\lpcap.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Core\Driver\Script\Lua\Core\lpcap.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Core\Driver\Script\Lua\Core\lpcode.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Core\Driver\Script\Lua\Core\lpcode.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Core\Driver\Script\Lua\Core\lpprint.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Core\Driver\Script\Lua\Core\lpprint.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\..\..\Source\Core\Driver\Script\Lua\Core\lprefix.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Core\Driver\Script\Lua\Core\lptree.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Core\Driver\Script\Lua\Core\lptree.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Core\Driver\Script\Lua\Core\lptypes.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Core\Driver\Script\Lua\Core\lpvm.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Core\Driver\Script\Lua\Core\lpvm.h
 # End Source File
 # Begin Source File
 
