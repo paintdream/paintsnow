@@ -3546,6 +3546,9 @@ local standard_library = {
                a_type({ typename = "function", args = { STRING, NUMBER, NUMBER }, rets = { VARARG_NUMBER } }),
             },
          }),
+         ["dump"] = a_type({ typename = "function", args = { FUNCTION, BOOLEAN }, rets = { STRING }}),
+         ["pack"] = a_type({ typename = "function", args = { STRING, VARARG_ANY }, rets = { STRING }}),
+         ["unpack"] = a_type({ typename = "function", args = { STRING, STRING }, rets = { VARARG_ANY }}),
          ["format"] = a_type({ typename = "function", args = { STRING, VARARG_ANY }, rets = { STRING } }),
       },
    }),
@@ -3599,6 +3602,7 @@ local standard_library = {
          a_type({ typename = "function", args = {}, rets = { ALPHA, BETA } }),
       }, }),
    ["pcall"] = a_type({ typename = "function", args = { VARARG_ANY }, rets = { BOOLEAN, ANY } }),
+   ["xpcall"] = a_type({ typename = "function", args = { VARARG_ANY }, rets = { BOOLEAN, ANY } }),
    ["assert"] = a_type({
       typename = "poly",
       types = {

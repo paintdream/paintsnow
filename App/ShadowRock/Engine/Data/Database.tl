@@ -1,8 +1,8 @@
-local Database = record end
-Database.__index = Database
-local anyone : any = {}
-local hive : Hive = anyone
-Database.Handle = hive
+local Database = record
+	Handle : Hive
+end
+
+rawset(Database as { string : any }, "__index", Database)
 
 function Database:Execute(sql : string, data) : Honey
 	return self.Handle:Execute(sql, data)
