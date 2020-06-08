@@ -57,11 +57,7 @@ end
 
 function package.searchpath(name, filter, ...)
 	if TypedDescriptions[name] then
-		if isTld then
-			return name
-		else
-			return nil, "No tld file for Buildin module " .. name
-		end
+		return nil, "No tld file for Buildin module " .. name
 	end
 
 	for i, v in ipairs(exts) do
@@ -108,16 +104,16 @@ if EnableTL then
 
 	-- register API prototypes
 	local mapTypes = {
-		--["int"] = "integer",
+		--["int"] = "number",
 		["int"] = "number",
-		--["short"] = "integer",
+		--["short"] = "number",
 		["short"] = "number",
-		--["char"] = "integer",
+		--["char"] = "number",
 		["float"] = "number",
 		["double"] = "number",
-		--["__int64"] = "integer",
+		--["__int64"] = "number",
 		["__int64"] = "number",
-		--["long"] = "integer",
+		--["long"] = "number",
 		["long"] = "number",
 		["string"] = "string",
 		["String"] = "string",
@@ -155,13 +151,13 @@ if EnableTL then
 					end
 				end
 				table.insert(stmt, table.concat(mid, "\n"))
-				-- table.insert(stmt, "\t\"__rawpointer\" : integer")
+				-- table.insert(stmt, "\t\"__rawpointer\" : number")
 				table.insert(stmt, "\nend\n")
 
 				regTypes[t.Type] = table.concat(stmt)
 			end
 		end
 
-		return (t.List and "{ integer : " or "") .. t.Type .. (t.List and " }" or "")
+		return (t.List and "{ number : " or "") .. t.Type .. (t.List and " }" or "")
 	end
 end

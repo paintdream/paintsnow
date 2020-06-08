@@ -45,7 +45,7 @@ function QuickCompile:CompileOne(filename, outputfile)
 	local title = string.sub(filename, 1, filenamelength - 3)
 	print("Compiling: " .. filename .. " ...")
 	-- read file content
-	local result, err = tl.process(filename, self.env)
+	local result, err = tl.process(filename, self.env, nil, self.runtimeModules)
 	if result then
 		local ok = report_all_errors(result)
 		if not ok then
@@ -181,6 +181,7 @@ function QuickCompile.New()
 	report_errors(res)
 	assert(res.env)
 	compiler.env = res.env
+	compiler.runtimeModules = runtimeModules
 	return setmetatable(compiler, { __index = QuickCompile })
 end
 

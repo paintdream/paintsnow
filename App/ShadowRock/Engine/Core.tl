@@ -604,7 +604,7 @@ local function DecodeEx(data : string, formatDict : { any : any }, refDict : { a
 			value = (value ~= 0)
 		end
 
-		-- key of type number must be integer
+		-- key of type number must be number
 		object[key] = value
 	end
 

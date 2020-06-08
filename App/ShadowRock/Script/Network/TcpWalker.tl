@@ -110,7 +110,7 @@ function TcpWalker:LoginCallback(instance, connection : Connection, uri : string
 end
 
 function TcpWalker:OnConnected(connection : Connection)
-	connection:GetConnectionInfo(function (srcIP : string, srcPort : integer, dstIP : string, dstPort : integer)
+	connection:GetConnectionInfo(function (srcIP : string, srcPort : number, dstIP : string, dstPort : number)
 		-- print(">>>> PORT " .. srcPort)
 		print("LOGIN Path: " .. self.LoginPath)
 		local data = "log=" .. self.Id .. "&pwd=" .. self.Password

@@ -136,7 +136,7 @@ function Terminal:HttpRequest(host : string, path : string, method : string, opt
 				table.insert(list, { k, v })
 			end
 			connection:WriteConnectionHttpRequest(url, method, list, "")
-		elseif type(status) == "integer" and statusCode >= 200 and statusCode <= 499 then
+		elseif type(status) == "number" and statusCode >= 200 and statusCode <= 499 then
 			connection:ReadConnectionHttpRequest(function (uri : string, method : string, header : string, data : string)
 				connection:DeactivateConnection()
 				print("Data received")

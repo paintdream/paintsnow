@@ -1,4 +1,6 @@
 -- save extra space introduced by typedlua
+-- deprecated
+--[[
 local orgSetmetatable = setmetatable
 setmetatable = function (obj, meta)
 	if type(obj) == "userdata" then
@@ -20,3 +22,4 @@ setmetatable = function (obj, meta)
 		return orgSetmetatable(obj, meta)
 	end
 end
+]]

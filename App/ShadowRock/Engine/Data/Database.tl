@@ -2,15 +2,16 @@ require("Runtime/Interface")
 
 local Database = record
 	Handle : Hive
+	__index : any
 end
 
-rawset(Database as { string : any }, "__index", Database)
+Database.__index = Database
 
 function Database:Execute(sql : string, data : HoneyData) : Honey
 	return self.Handle:Execute(sql, data)
 end
 
-function Database:Lines(sql : string, cacheCount : integer, data)
+function Database:Lines(sql : string, cacheCount : number, data)
 	if cacheCount == nil then
 		cacheCount = -1
 	end
@@ -18,9 +19,9 @@ function Database:Lines(sql : string, cacheCount : integer, data)
 	local honey = self:Execute(sql, data)
 	if not honey then return function () return end end
 
-	local cache : { integer : any } = {}
+	local cache : { any } = {}
 
-	return function (t, k : integer)
+	return function (t, k : number)
 		if k == nil or k == cacheCount then
 			-- reinit
 			local s : any = honey:Step(cacheCount)

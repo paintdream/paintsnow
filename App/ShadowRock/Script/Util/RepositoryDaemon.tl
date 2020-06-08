@@ -33,8 +33,8 @@ function RepositoryDaemon:New(localAddress : string, sqlTemplatePath, databasePa
 	if weaver then
 		local resources : { any } = {}
 		local names : { any } = {}
-		local nameMap : { string : integer } = {}
-		local resourceMap : { string : integer } = {}
+		local nameMap : { string : number } = {}
+		local resourceMap : { string : number } = {}
 		local entities : { any } = {}
 		local entityGroups : { any } = {}
 		local components : { any } = {}
@@ -70,31 +70,31 @@ function RepositoryDaemon:New(localAddress : string, sqlTemplatePath, databasePa
 				table.insert(resources, { #resources + 1, typeID, path })
 				resourceMap[path .. "." .. ext] = #resources
 			end,
-			RpcPostEntity = function (entityID : integer, groupID : integer, name : string)
+			RpcPostEntity = function (entityID : number, groupID : number, name : string)
 				table.insert(entities, { entityID, groupID, name })
 			end,
-			RpcPostEntityGroup = function (groupID : integer, name : string)
+			RpcPostEntityGroup = function (groupID : number, name : string)
 				table.insert(entityGroups, { groupID, name })
 			end,
-			RpcPostEntityComponent = function (entityID : integer, component : integer)
+			RpcPostEntityComponent = function (entityID : number, component : number)
 				table.insert(entityComponents, { entityID, component })
 			end,
-			RpcPostModelComponent = function (componentID : integer, resource : string, viewDistance : number)
+			RpcPostModelComponent = function (componentID : number, resource : string, viewDistance : number)
 				table.insert(components, { componentID, AllocateName("ModelComponent", "Component") })
 				table.insert(modelComponents, { componentID, resource, viewDistance })
 			end,
-			RpcPostModelComponentMaterial = function (componentID : integer, meshGroupID : integer, resource : string)
+			RpcPostModelComponentMaterial = function (componentID : number, meshGroupID : number, resource : string)
 				table.insert(modelComponentMaterials, { componentID, meshGroupID, resource })
 			end,
-			RpcPostTransformComponent = function (componentID : integer, position : float3, scale : float3, rotation : float3)
+			RpcPostTransformComponent = function (componentID : number, position : float3, scale : float3, rotation : float3)
 				table.insert(components, { componentID, AllocateName("TransformComponent", "Component") })
 				table.insert(transformComponents, { componentID, position[1], position[2], position[3], scale[1], rotation[1], rotation[2], rotation[3] })	
 			end,
-			RpcPostSpaceComponent = function (componentID : integer, groupID : integer)
+			RpcPostSpaceComponent = function (componentID : number, groupID : number)
 				table.insert(components, { componentID, AllocateName("SpaceComponent", "Component") })
 				table.insert(spaceComponents, { componentID, groupID })
 			end,
-			RpcPostEnvCubeComponent = function (componentID : integer, texturePath : string)
+			RpcPostEnvCubeComponent = function (componentID : number, texturePath : string)
 				table.insert(components, { componentID, AllocateName("EnvCubeComponent", "Component")})
 				table.insert(envCubeComponents, { componentID, texturePath })
 			end,
@@ -122,7 +122,7 @@ function RepositoryDaemon:New(localAddress : string, sqlTemplatePath, databasePa
 				end
 				
 				print("RepositoryDaemon: Collecting resource dependencies ...")
-				local resourceDependencies : { { integer } } = {}
+				local resourceDependencies : { { number } } = {}
 				for path, index in pairs(resourceMap) do
 					local res : ResourceBase = SnowyStream.NewResource(path, "", false)	
 					if res then

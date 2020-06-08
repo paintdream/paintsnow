@@ -6,8 +6,8 @@ local Core = require("Engine/Core")
 local Database = require("Engine/Data/Database")
 local Vector = require("Engine/Math/Vector")
 
-local fpsBuffer : { integer } = {}
-local tickBuffer : { integer } = {}
+local fpsBuffer : { number } = {}
+local tickBuffer : { number } = {}
 local bufferIndex = 1
 
 local function SetFrameMonitorOnTitle(deltaTime : number, cameraComponent : CameraComponent, transformComponent : TransformComponent, spaceComponent : SpaceComponent)
@@ -105,7 +105,7 @@ local function InitializeWorld(databasePath : string)
 		print("PhaseStep: " .. (stepPhase and "[ON] " or "[OFF] BOUNCE: ") .. tostring(stepBounceCount))
 	end
 
-	eventListenerComponent:SetEventHandler(function (eventType : integer, eventData)
+	eventListenerComponent:SetEventHandler(function (eventType : number, eventData)
 		if eventType == "EVENT_TICK" then
 			local deltaTime : number = eventData
 			SetFrameMonitorOnTitle(deltaTime, cameraComponent, cameraTransform, spaceComponent)

@@ -145,7 +145,7 @@ function Scene.New(database : Database, clock : Clock)
 		--[[
 		print("\tAdding point lights")
 		math.randomseed(20)
-		local colors : { integer : any } = {
+		local colors : { number : any } = {
 			{1, 0, 0},{0, 1, 0}, {0, 0, 1}, {1, 1, 0}, {0, 1, 1}, {1, 0, 1}, {1, 1, 1}, {2, 2, 2}
 		}
 		for k = 1, 8 do 
