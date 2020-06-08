@@ -34,39 +34,28 @@ TObject<IReflect>& LayoutComponentModule::operator () (IReflect& reflect) {
 
 	return *this;
 }
-void LayoutComponentModule::RequestNew(IScript::Request& request) {
+
+TShared<LayoutComponent> LayoutComponentModule::RequestNew(IScript::Request& request) {
 	CHECK_REFERENCES_NONE();
 
 	TShared<LayoutComponent> layoutComponent = TShared<LayoutComponent>::From(allocator->New());
 	layoutComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
 
-	engine.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << layoutComponent;
-	request.UnLock();
+	return layoutComponent;
 }
 
-
-void LayoutComponentModule::RequestGetClippedRect(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent) {
+Float4 LayoutComponentModule::RequestGetClippedRect(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(layoutComponent);
 
-	Float4 ret = (Float4)layoutComponent->clippedRect;
-	engine.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << ret;
-	request.UnLock();
+	return (Float4)layoutComponent->clippedRect;
 }
 
-void LayoutComponentModule::RequestGetRect(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent) {
+Float4 LayoutComponentModule::RequestGetRect(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(layoutComponent);
 
-	Float4 ret = Float4(layoutComponent->rect);
-	engine.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << ret;
-	request.UnLock();
+	return Float4(layoutComponent->rect);
 }
 
 void LayoutComponentModule::RequestSetLayout(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent, const String& layout) {
@@ -90,39 +79,24 @@ void LayoutComponentModule::RequestSetFitContent(IScript::Request& request, IScr
 	layoutComponent->SetUpdateMark();
 }
 
-void LayoutComponentModule::RequestGetFitContent(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent) {
+bool LayoutComponentModule::RequestGetFitContent(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(layoutComponent);
-	Float2 size = layoutComponent->scrollSize;
-	engine.GetKernel().YieldCurrentWarp();
-	
-	request.DoLock();
-	request << !!(layoutComponent->Flag() & LayoutComponent::LAYOUT_ADAPTABLE);
-	request.UnLock();
+	return !!(layoutComponent->Flag() & LayoutComponent::LAYOUT_ADAPTABLE);
 }
 
-void LayoutComponentModule::RequestGetScrollSize(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent) {
+Float2 LayoutComponentModule::RequestGetScrollSize(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(layoutComponent);
 
-	Float2 size = layoutComponent->scrollSize;
-	engine.GetKernel().YieldCurrentWarp();
-
-	request.DoLock();
-	request << size;
-	request.UnLock();
+	return layoutComponent->scrollSize;
 }
 
-void LayoutComponentModule::RequestGetScrollOffset(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent) {
+Float2 LayoutComponentModule::RequestGetScrollOffset(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(layoutComponent);
 
-	Float2 offset = layoutComponent->scrollOffset;
-
-	engine.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << offset;
-	request.UnLock();
+	return layoutComponent->scrollOffset;
 }
 
 void LayoutComponentModule::RequestSetScrollOffset(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent, Float2& position) {
@@ -151,25 +125,17 @@ void LayoutComponentModule::RequestSetWeight(IScript::Request& request, IScript:
 	layoutComponent->SetUpdateMark();
 }
 
-void LayoutComponentModule::RequestGetWeight(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent) {
+int32_t LayoutComponentModule::RequestGetWeight(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(layoutComponent);
-
-	engine.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << layoutComponent->weight;
-	request.UnLock();
+	return layoutComponent->weight;
 }
 
-void LayoutComponentModule::RequestGetSize(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent) {
+Float4 LayoutComponentModule::RequestGetSize(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(layoutComponent);
 
-	Float4 size = Float4(layoutComponent->size);
-	engine.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << size;
-	request.UnLock();
+	return Float4(layoutComponent->size);
 }
 
 void LayoutComponentModule::RequestSetSize(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent, Float4& size) {
@@ -189,15 +155,11 @@ void LayoutComponentModule::RequestSetPadding(IScript::Request& request, IScript
 	layoutComponent->SetUpdateMark();
 }
 
-void LayoutComponentModule::RequestGetPadding(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent) {
+Float4 LayoutComponentModule::RequestGetPadding(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(layoutComponent);
 
-	Float4 padding = Float4(layoutComponent->padding);
-	engine.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << padding;
-	request.UnLock();
+	return Float4(layoutComponent->padding);
 }
 
 void LayoutComponentModule::RequestSetMargin(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent, Float4& size) {
@@ -208,16 +170,11 @@ void LayoutComponentModule::RequestSetMargin(IScript::Request& request, IScript:
 	layoutComponent->SetUpdateMark();
 }
 
-void LayoutComponentModule::RequestGetMargin(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent) {
+Float4 LayoutComponentModule::RequestGetMargin(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(layoutComponent);
 
-	Float4 margin = Float4(layoutComponent->margin);
-	engine.GetKernel().YieldCurrentWarp();
-
-	request.DoLock();
-	request << margin;
-	request.UnLock();
+	return Float4(layoutComponent->margin);
 }
 
 

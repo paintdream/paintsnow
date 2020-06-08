@@ -19,7 +19,7 @@ namespace PaintsNow {
 			virtual ~ParticleComponentModule();
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
-			void RequestNew(IScript::Request& request);
+			TShared<ParticleComponent> RequestNew(IScript::Request& request);
 			void RequestRebuild(IScript::Request& request, IScript::Delegate<ParticleComponent> particleComponent);
 		};
 	}

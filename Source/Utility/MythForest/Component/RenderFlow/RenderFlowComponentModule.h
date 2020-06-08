@@ -19,7 +19,7 @@ namespace PaintsNow {
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 			virtual void RegisterNodeTemplate(String& key, const TFactoryBase<RenderStage>& t);
 
-			void RequestNew(IScript::Request& request);
+			TShared<RenderFlowComponent> RequestNew(IScript::Request& request);
 			void RequestNewRenderPolicy(IScript::Request& request, const String& name, uint32_t priority);
 			void RequestNewRenderStage(IScript::Request& request, IScript::Delegate<RenderFlowComponent> renderFlow, const String& name, const String& config);
 			void RequestEnumerateRenderStagePorts(IScript::Request& request, IScript::Delegate<RenderFlowComponent> renderFlowComponent, IScript::Delegate<RenderStage> renderStage);

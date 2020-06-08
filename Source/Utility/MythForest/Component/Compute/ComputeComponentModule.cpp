@@ -20,18 +20,16 @@ TObject<IReflect>& ComputeComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void ComputeComponentModule::RequestNew(IScript::Request& request) {
+TShared<ComputeComponent> ComputeComponentModule::RequestNew(IScript::Request& request) {
 	CHECK_REFERENCES_NONE();
 
 	IScript* script = engine.interfaces.script.NewScript();
 	if (script != nullptr) {
 		TShared<ComputeComponent> computeComponent = TShared<ComputeComponent>::From(allocator->New(std::ref(engine), script, *request.GetScript()));
 		computeComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
-		engine.GetKernel().YieldCurrentWarp();
-
-		request.DoLock();
-		request << computeComponent;
-		request.UnLock();
+		return computeComponent;
+	} else {
+		return nullptr;
 	}
 }
 

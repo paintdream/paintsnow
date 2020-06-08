@@ -71,16 +71,12 @@ void RenderFlowComponentModule::RegisterNodeTemplate(String& key, const TFactory
 	stageTemplates[key] = t;
 }
 
-void RenderFlowComponentModule::RequestNew(IScript::Request& request) {
+TShared<RenderFlowComponent> RenderFlowComponentModule::RequestNew(IScript::Request& request) {
 	CHECK_REFERENCES_NONE();
 
 	TShared<RenderFlowComponent> renderFlowComponent = TShared<RenderFlowComponent>::From(allocator->New());
 	renderFlowComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
-	engine.GetKernel().YieldCurrentWarp();
-
-	request.DoLock();
-	request << renderFlowComponent;
-	request.UnLock();
+	return renderFlowComponent;
 }
 
 void RenderFlowComponentModule::RequestNewRenderStage(IScript::Request& request, IScript::Delegate<RenderFlowComponent> renderFlowComponent, const String& name, const String& config) {

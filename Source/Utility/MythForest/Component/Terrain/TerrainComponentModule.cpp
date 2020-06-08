@@ -17,17 +17,13 @@ TObject<IReflect>& TerrainComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void TerrainComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<TerrainResource> terrainResource) {
+TShared<TerrainComponent> TerrainComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<TerrainResource> terrainResource) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(terrainResource);
 
 	TShared<TerrainComponent> terrainComponent = TShared<TerrainComponent>::From(allocator->New());
 	terrainComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
-
-	engine.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << terrainComponent;
-	request.UnLock();
+	return terrainComponent;
 }
 
 void TerrainComponentModule::RequestRebuild(IScript::Request& request, IScript::Delegate<TerrainComponent> terrainComponent) {

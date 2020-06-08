@@ -17,20 +17,17 @@ TObject<IReflect>& NavigateComponentModule::operator () (IReflect& reflect) {
 
 	return *this;
 }
-void NavigateComponentModule::RequestNew(IScript::Request& request) {
+
+TShared<NavigateComponent> NavigateComponentModule::RequestNew(IScript::Request& request) {
 	CHECK_REFERENCES_NONE();
 
-	TShared<NavigateComponent> fieldComponent = TShared<NavigateComponent>::From(allocator->New());
-	fieldComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
-
-	engine.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << fieldComponent;
-	request.UnLock();
+	TShared<NavigateComponent> navigateComponent = TShared<NavigateComponent>::From(allocator->New());
+	navigateComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
+	return navigateComponent;
 }
 
-void NavigateComponentModule::RequestRebuild(IScript::Request& request, IScript::Delegate<NavigateComponent> fieldComponent) {
+void NavigateComponentModule::RequestRebuild(IScript::Request& request, IScript::Delegate<NavigateComponent> navigateComponent) {
 	CHECK_REFERENCES_NONE();
-	CHECK_DELEGATE(fieldComponent);
+	CHECK_DELEGATE(navigateComponent);
 
 }

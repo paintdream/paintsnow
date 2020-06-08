@@ -22,17 +22,14 @@ TObject<IReflect>& PhaseComponentModule::operator () (IReflect& reflect) {
 
 	return *this;
 }
-void PhaseComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<RenderFlowComponent> renderFlowComponent, const String& portName) {
+
+TShared<PhaseComponent> PhaseComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<RenderFlowComponent> renderFlowComponent, const String& portName) {
 	CHECK_REFERENCES_NONE();
 
 	RenderFlowComponent* ptr = renderFlowComponent.Get();
 	TShared<PhaseComponent> phaseComponent = TShared<PhaseComponent>::From(allocator->New(ptr, portName));
 	phaseComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
-
-	engine.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << phaseComponent;
-	request.UnLock();
+	return phaseComponent;
 }
 
 void PhaseComponentModule::RequestSetup(IScript::Request& request, IScript::Delegate<PhaseComponent> phaseComponent, uint32_t phaseCount, uint32_t taskCount, const Float3& range, const UShort2& resolution) {

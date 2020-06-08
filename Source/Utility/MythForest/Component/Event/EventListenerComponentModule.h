@@ -30,7 +30,7 @@ namespace PaintsNow {
 			void OnKeyboard(const IFrame::EventKeyboard& keyboard);
 			virtual void Uninitialize() override;
 
-			void RequestNew(IScript::Request& request);
+			TShared<EventListenerComponent> RequestNew(IScript::Request& request);
 			void RequestSetEventHandler(IScript::Request& request, IScript::Delegate<EventListenerComponent> eventListenerComponent, IScript::Request::Ref callback);
 			void RequestBindEventTick(IScript::Request& request, IScript::Delegate<EventListenerComponent> eventListenerComponent, IScript::Delegate<NsHeartVioliner::Clock> clock);
 			void RequestBindEventFrame(IScript::Request& request, IScript::Delegate<EventListenerComponent> eventListenerComponent, bool enable);

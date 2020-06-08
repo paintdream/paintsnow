@@ -17,16 +17,13 @@ TObject<IReflect>& RemoteComponentModule::operator () (IReflect& reflect) {
 
 	return *this;
 }
-void RemoteComponentModule::RequestNew(IScript::Request& request) {
+
+TShared<RemoteComponent> RemoteComponentModule::RequestNew(IScript::Request& request) {
 	CHECK_REFERENCES_NONE();
 
 	TShared<RemoteComponent> remoteComponent = TShared<RemoteComponent>::From(allocator->New());
 	remoteComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
-
-	engine.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << remoteComponent;
-	request.UnLock();
+	return remoteComponent;
 }
 
 void RemoteComponentModule::RequestRebuild(IScript::Request& request, IScript::Delegate<RemoteComponent> remoteComponent) {

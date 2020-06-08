@@ -23,16 +23,15 @@ TObject<IReflect>& AnimationComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void AnimationComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<SkeletonResource> skeletonResource) {
+TShared<AnimationComponent> AnimationComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<SkeletonResource> skeletonResource) {
 	CHECK_REFERENCES_NONE();
 
 	TShared<SkeletonResource> res = skeletonResource.Get();
 	TShared<AnimationComponent> animationComponent = TShared<AnimationComponent>::From(allocator->New(res));
 	animationComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
 	engine.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << animationComponent;
-	request.UnLock();
+
+	return animationComponent;
 }
 
 void AnimationComponentModule::RequestAttach(IScript::Request& request, IScript::Delegate<AnimationComponent> animationComponent, const String& name, IScript::Delegate<Entity> entity) {

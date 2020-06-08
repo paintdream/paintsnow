@@ -18,16 +18,13 @@ TObject<IReflect>& EnvCubeComponentModule::operator () (IReflect& reflect) {
 
 	return *this;
 }
-void EnvCubeComponentModule::RequestNew(IScript::Request& request) {
+
+TShared<EnvCubeComponent> EnvCubeComponentModule::RequestNew(IScript::Request& request) {
 	CHECK_REFERENCES_NONE();
 
 	TShared<EnvCubeComponent> envCubeComponent = TShared<EnvCubeComponent>::From(allocator->New());
 	envCubeComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
-	engine.GetKernel().YieldCurrentWarp();
-
-	request.DoLock();
-	request << envCubeComponent;
-	request.UnLock();
+	return envCubeComponent;
 }
 
 void EnvCubeComponentModule::RequestSetTexture(IScript::Request& request, IScript::Delegate<EnvCubeComponent> envCubeComponent, IScript::Delegate<TextureResource> texture) {

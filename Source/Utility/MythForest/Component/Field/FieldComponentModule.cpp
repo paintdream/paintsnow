@@ -23,27 +23,20 @@ TObject<IReflect>& FieldComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void FieldComponentModule::RequestNew(IScript::Request& request) {
+TShared<FieldComponent> FieldComponentModule::RequestNew(IScript::Request& request) {
 	CHECK_REFERENCES_NONE();
 
 	TShared<FieldComponent> fieldComponent = TShared<FieldComponent>::From(allocator->New());
 	fieldComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
-	engine.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << fieldComponent;
-	request.UnLock();
+	return fieldComponent;
 }
 
-void FieldComponentModule::RequestQuery(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, const Float3& position) {
+String FieldComponentModule::RequestQuery(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, const Float3& position) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(fieldComponent);
 
 	Bytes result = (*fieldComponent.Get())[position];
-	engine.GetKernel().YieldCurrentWarp();
-
-	request.DoLock();
-	request << String((char*)result.GetData(), result.GetSize());
-	request.UnLock();
+	return String((char*)result.GetData(), result.GetSize());
 }
 
 void FieldComponentModule::RequestFromSimplygon(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, const String& shapeType) {

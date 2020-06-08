@@ -41,16 +41,14 @@ void EventListenerComponentModule::RequestSetEventHandler(IScript::Request& requ
 	eventListenerComponent->SetCallback(request, handler);
 }
 
-void EventListenerComponentModule::RequestNew(IScript::Request& request) {
+TShared<EventListenerComponent> EventListenerComponentModule::RequestNew(IScript::Request& request) {
 	CHECK_REFERENCES_NONE();
 
 	TShared<EventListenerComponent> eventListenerComponent = TShared<EventListenerComponent>::From(allocator->New());
 	eventListenerComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
 	engine.GetKernel().YieldCurrentWarp();
 
-	request.DoLock();
-	request << eventListenerComponent;
-	request.UnLock();
+	return eventListenerComponent;
 }
 
 void EventListenerComponentModule::RequestBindEventTick(IScript::Request& request, IScript::Delegate<EventListenerComponent> eventListenerComponent, IScript::Delegate<NsHeartVioliner::Clock> clock) {

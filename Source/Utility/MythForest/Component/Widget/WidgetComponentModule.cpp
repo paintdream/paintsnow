@@ -28,17 +28,12 @@ TObject<IReflect>& WidgetComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void WidgetComponentModule::RequestNew(IScript::Request& request) {
+TShared<WidgetComponent> WidgetComponentModule::RequestNew(IScript::Request& request) {
 	CHECK_REFERENCES_NONE();
 
 	TShared<WidgetComponent> widgetComponent = TShared<WidgetComponent>::From(allocator->New(*widgetMesh()));
 	widgetComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
-
-	engine.GetKernel().YieldCurrentWarp();
-
-	request.DoLock();
-	request << widgetComponent;
-	request.UnLock();
+	return widgetComponent;
 }
 
 

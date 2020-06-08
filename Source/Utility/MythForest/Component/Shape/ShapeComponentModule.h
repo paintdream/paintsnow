@@ -19,7 +19,7 @@ namespace PaintsNow {
 			virtual ~ShapeComponentModule();
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
-			void RequestNew(IScript::Request& request, IScript::Delegate<NsSnowyStream::MeshResource> meshResource);
+			TShared<ShapeComponent> RequestNew(IScript::Request& request, IScript::Delegate<NsSnowyStream::MeshResource> meshResource);
 			void RequestRebuild(IScript::Request& request, IScript::Delegate<ShapeComponent> shapeComponent, Float4& color);
 		};
 	}

@@ -17,8 +17,8 @@ namespace PaintsNow {
 			ProfileComponentModule(Engine& engine);
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
-			void RequestNew(IScript::Request& request, float historyRatio);
-			void RequestGetInterval(IScript::Request& request, IScript::Delegate<ProfileComponent> profileComponent);
+			TShared<ProfileComponent> RequestNew(IScript::Request& request, float historyRatio);
+			float RequestGetInterval(IScript::Request& request, IScript::Delegate<ProfileComponent> profileComponent);
 		};
 	}
 }

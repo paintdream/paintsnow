@@ -19,7 +19,7 @@ namespace PaintsNow {
 			virtual ~EnvCubeComponentModule();
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
-			void RequestNew(IScript::Request& request);
+			TShared<EnvCubeComponent> RequestNew(IScript::Request& request);
 			void RequestSetTexture(IScript::Request& request, IScript::Delegate<EnvCubeComponent> envCubeComponent, IScript::Delegate<NsSnowyStream::TextureResource> textureResource);
 			void RequestSetRange(IScript::Request& request, IScript::Delegate<EnvCubeComponent> envCubeComponent, Float3& range);
 		};

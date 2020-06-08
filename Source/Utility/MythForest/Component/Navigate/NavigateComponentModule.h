@@ -19,7 +19,7 @@ namespace PaintsNow {
 			virtual ~NavigateComponentModule();
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
-			void RequestNew(IScript::Request& request);
+			TShared<NavigateComponent> RequestNew(IScript::Request& request);
 			void RequestRebuild(IScript::Request& request, IScript::Delegate<NavigateComponent> fieldComponent);
 		};
 	}

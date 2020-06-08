@@ -17,7 +17,7 @@ TObject<IReflect>& ModelComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void ModelComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<MeshResource> meshResource,  IScript::Delegate<BatchComponent> batch) {
+TShared<ModelComponent> ModelComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<MeshResource> meshResource,  IScript::Delegate<BatchComponent> batch) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(meshResource);
 
@@ -31,11 +31,7 @@ void ModelComponentModule::RequestNew(IScript::Request& request, IScript::Delega
 	TShared<MeshResource> res = meshResource.Get();
 	TShared<ModelComponent> modelComponent = TShared<ModelComponent>::From(allocator->New(res, batchComponent));
 	modelComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
-
-	engine.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << modelComponent;
-	request.UnLock();
+	return modelComponent;
 }
 
 void ModelComponentModule::RequestAddMaterial(IScript::Request& request, IScript::Delegate<ModelComponent> modelComponent, uint32_t meshGroupIndex, IScript::Delegate<NsSnowyStream::MaterialResource> materialResource) {

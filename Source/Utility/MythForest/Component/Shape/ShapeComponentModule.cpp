@@ -19,18 +19,15 @@ TObject<IReflect>& ShapeComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void ShapeComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<MeshResource> mesh) {
+TShared<ShapeComponent> ShapeComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<MeshResource> mesh) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(mesh);
 
 	TShared<ShapeComponent> shapeComponent = TShared<ShapeComponent>::From(allocator->New());
 	shapeComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
 	shapeComponent->Update(engine, mesh.Get());
-	engine.GetKernel().YieldCurrentWarp();
 
-	request.DoLock();
-	request << shapeComponent;
-	request.UnLock();
+	return shapeComponent;
 }
 
 void ShapeComponentModule::RequestRebuild(IScript::Request& request, IScript::Delegate<ShapeComponent> shapeComponent, Float4& color) {

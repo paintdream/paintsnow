@@ -24,17 +24,13 @@ TObject<IReflect>& TextViewComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void TextViewComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<FontResource> fontResource) {
+TShared<TextViewComponent> TextViewComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<FontResource> fontResource) {
 	CHECK_REFERENCES_NONE();
 
 	TShared<FontResource> res = fontResource.Get();
 	TShared<TextViewComponent> textViewComponent = TShared<TextViewComponent>::From(allocator->New(res, defaultTextMaterial));
 	textViewComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
-
-	engine.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << textViewComponent;
-	request.UnLock();
+	return textViewComponent;
 }
 
 void TextViewComponentModule::RequestSetFont(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent, const String& font, int64_t fontSize, float reinforce) {
@@ -50,14 +46,10 @@ void TextViewComponentModule::RequestSetFont(IScript::Request& request, IScript:
 	}
 }
 
-void TextViewComponentModule::RequestGetText(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent) {
+String TextViewComponentModule::RequestGetText(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(textViewComponent);
-	engine.GetKernel().YieldCurrentWarp();
-
-	request.DoLock();
-	request << textViewComponent->text;
-	request.UnLock();
+	return textViewComponent->text;
 }
 
 void TextViewComponentModule::RequestSetText(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent, const String& text) {
@@ -67,7 +59,7 @@ void TextViewComponentModule::RequestSetText(IScript::Request& request, IScript:
 	textViewComponent->SetText(engine, text);
 }
 
-void TextViewComponentModule::RequestLocateText(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent, Short2& offset, bool isRowCol) {
+Short3 TextViewComponentModule::RequestLocateText(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent, Short2& offset, bool isRowCol) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(textViewComponent);
 
@@ -75,8 +67,5 @@ void TextViewComponentModule::RequestLocateText(IScript::Request& request, IScri
 
 	// TODO: fix offset
 	int loc = textViewComponent->Locate(rowCol, offset/* - textViewComponent->clippedRect.first*/, isRowCol);
-	engine.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << Short3(rowCol.x(), rowCol.y(), loc);
-	request.UnLock();
+	return Short3(rowCol.x(), rowCol.y(), loc);
 }

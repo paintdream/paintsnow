@@ -25,14 +25,10 @@ TObject<IReflect>& SpaceComponentModule::operator ()(IReflect& reflect) {
 	return *this;
 }
 
-void SpaceComponentModule::RequestNew(IScript::Request& request, int32_t warpIndex, bool sorted) {
+TShared<SpaceComponent> SpaceComponentModule::RequestNew(IScript::Request& request, int32_t warpIndex, bool sorted) {
 	TShared<SpaceComponent> spaceComponent = TShared<SpaceComponent>::From(allocator->New(warpIndex, sorted));
 	spaceComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
-
-	engine.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << spaceComponent;
-	request.UnLock();
+	return spaceComponent;
 }
 
 void SpaceComponentModule::RequestSetForwardMask(IScript::Request& request, IScript::Delegate<SpaceComponent> spaceComponent, uint32_t forwardMask) {
@@ -47,15 +43,11 @@ void SpaceComponentModule::RequestSetForwardMask(IScript::Request& request, IScr
 	}
 }
 
-void SpaceComponentModule::RequestGetEntityCount(IScript::Request& request, IScript::Delegate<SpaceComponent> spaceComponent) {
+uint32_t SpaceComponentModule::RequestGetEntityCount(IScript::Request& request, IScript::Delegate<SpaceComponent> spaceComponent) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(spaceComponent);
 	CHECK_THREAD_IN_MODULE(spaceComponent);
-	engine.GetKernel().YieldCurrentWarp();
-	
-	request.DoLock();
-	request << spaceComponent->GetEntityCount();
-	request.UnLock();
+	return spaceComponent->GetEntityCount();
 }
 
 

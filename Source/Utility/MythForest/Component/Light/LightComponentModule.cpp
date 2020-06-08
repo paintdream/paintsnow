@@ -21,17 +21,12 @@ TObject<IReflect>& LightComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void LightComponentModule::RequestNew(IScript::Request& request) {
+TShared<LightComponent> LightComponentModule::RequestNew(IScript::Request& request) {
 	CHECK_REFERENCES_NONE();
 
 	TShared<LightComponent> lightComponent = TShared<LightComponent>::From(allocator->New());
 	lightComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
-
-	engine.GetKernel().YieldCurrentWarp();
-
-	request.DoLock();
-	request << lightComponent;
-	request.UnLock();
+	return lightComponent;
 }
 
 void LightComponentModule::RequestSetLightAttenuation(IScript::Request& request, IScript::Delegate<LightComponent> lightComponent, float attenuation) {

@@ -16,17 +16,12 @@ TObject<IReflect>& VisibilityComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void VisibilityComponentModule::RequestNew(IScript::Request& request) {
+TShared<VisibilityComponent> VisibilityComponentModule::RequestNew(IScript::Request& request) {
 	CHECK_REFERENCES_NONE();
 
 	TShared<VisibilityComponent> visibilityComponent = TShared<VisibilityComponent>::From(allocator->New());
 	visibilityComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
-
-	engine.GetKernel().YieldCurrentWarp();
-
-	request.DoLock();
-	request << visibilityComponent;
-	request.UnLock();
+	return visibilityComponent;
 }
 
 void VisibilityComponentModule::RequestSetup(IScript::Request& request, IScript::Delegate<VisibilityComponent> visibilityComponent, float maxDistance, const Float3Pair& range, const UShort3& division, uint32_t frameTimeLimit, uint32_t taskCount, const UShort2& resolution) {

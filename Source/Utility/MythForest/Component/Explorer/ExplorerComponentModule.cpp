@@ -17,22 +17,19 @@ TObject<IReflect>& ExplorerComponentModule::operator () (IReflect& reflect) {
 
 	return *this;
 }
-void ExplorerComponentModule::RequestNew(IScript::Request& request, const String& componentType) {
+
+TShared<ExplorerComponent> ExplorerComponentModule::RequestNew(IScript::Request& request, const String& componentType) {
 	CHECK_REFERENCES_NONE();
 
 	// Convert componentType from string
 	unordered_map<String, Module*>::const_iterator it = engine.GetModuleMap().find(componentType);
 	if (it != engine.GetModuleMap().end()) {
-		request.DoLock();
 		request.Error(String("Unable to load component type: ") + componentType);
-		request.UnLock();
+		return nullptr;
 	} else {
-		TShared<ExplorerComponent> fieldComponent = TShared<ExplorerComponent>::From(allocator->New((*it).second->GetTinyUnique()));
-		fieldComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
-		engine.GetKernel().YieldCurrentWarp();
-		request.DoLock();
-		request << fieldComponent;
-		request.UnLock();
+		TShared<ExplorerComponent> explorerComponent = TShared<ExplorerComponent>::From(allocator->New((*it).second->GetTinyUnique()));
+		explorerComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
+		return explorerComponent;
 	}
 }
 

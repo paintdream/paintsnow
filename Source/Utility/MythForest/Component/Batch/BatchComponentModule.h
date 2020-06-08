@@ -20,7 +20,7 @@ namespace PaintsNow {
 
 		public:
 			// APIs
-			void RequestNew(IScript::Request& request);
+			TShared<BatchComponent> RequestNew(IScript::Request& request);
 			void RequestGetCaptureStatistics(IScript::Request& request, IScript::Delegate<BatchComponent> component);
 		};
 	}

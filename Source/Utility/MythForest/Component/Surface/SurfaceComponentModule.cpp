@@ -17,16 +17,12 @@ TObject<IReflect>& SurfaceComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void SurfaceComponentModule::RequestNew(IScript::Request& request) {
+TShared<SurfaceComponent> SurfaceComponentModule::RequestNew(IScript::Request& request) {
 	CHECK_REFERENCES_NONE();
 
 	TShared<SurfaceComponent> surfaceComponent = TShared<SurfaceComponent>::From(allocator->New());
 	surfaceComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
-
-	engine.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << surfaceComponent;
-	request.UnLock();
+	return surfaceComponent;
 }
 
 void SurfaceComponentModule::RequestRebuild(IScript::Request& request, IScript::Delegate<SurfaceComponent> surfaceComponent) {

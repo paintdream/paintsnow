@@ -24,14 +24,9 @@ TShared<BatchComponent> BatchComponentModule::Create() {
 	return batchComponent;
 }
 
-void BatchComponentModule::RequestNew(IScript::Request& request) {
+TShared<BatchComponent> BatchComponentModule::RequestNew(IScript::Request& request) {
 	CHECK_REFERENCES_NONE();
-
-	TShared<BatchComponent> batchComponent = Create();
-	engine.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << batchComponent;
-	request.UnLock();
+	return Create();
 }
 
 void BatchComponentModule::RequestGetCaptureStatistics(IScript::Request& request, IScript::Delegate<BatchComponent> component) {

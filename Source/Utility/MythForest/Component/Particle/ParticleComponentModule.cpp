@@ -18,16 +18,12 @@ TObject<IReflect>& ParticleComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void ParticleComponentModule::RequestNew(IScript::Request& request) {
+TShared<ParticleComponent> ParticleComponentModule::RequestNew(IScript::Request& request) {
 	CHECK_REFERENCES_NONE();
 
 	TShared<ParticleComponent> particleComponent = TShared<ParticleComponent>::From(allocator->New());
 	particleComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
-
-	engine.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << particleComponent;
-	request.UnLock();
+	return particleComponent;
 }
 
 void ParticleComponentModule::RequestRebuild(IScript::Request& request, IScript::Delegate<ParticleComponent> particleComponent) {

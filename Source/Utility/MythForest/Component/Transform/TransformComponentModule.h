@@ -18,16 +18,16 @@ namespace PaintsNow {
 
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
-			void RequestNew(IScript::Request& request);
+			TShared<TransformComponent> RequestNew(IScript::Request& request);
 			void RequestEditorRotate(IScript::Request& request, IScript::Delegate<TransformComponent> transformComponent, Float2& from, Float2& to);
 			void RequestSetRotation(IScript::Request& request, IScript::Delegate<TransformComponent> transformComponent, Float3& rotation);
-			void RequestGetRotation(IScript::Request& request, IScript::Delegate<TransformComponent> transformComponent);
+			Float3 RequestGetRotation(IScript::Request& request, IScript::Delegate<TransformComponent> transformComponent);
 			void RequestSetScale(IScript::Request& request, IScript::Delegate<TransformComponent> transformComponent, Float3& scale);
-			void RequestGetScale(IScript::Request& request, IScript::Delegate<TransformComponent> transformComponent);
+			Float3 RequestGetScale(IScript::Request& request, IScript::Delegate<TransformComponent> transformComponent);
 			void RequestSetTranslation(IScript::Request& request, IScript::Delegate<TransformComponent> transformComponent, Float3& translation);
-			void RequestGetTranslation(IScript::Request& request, IScript::Delegate<TransformComponent> transformComponent);
+			Float3 RequestGetTranslation(IScript::Request& request, IScript::Delegate<TransformComponent> transformComponent);
 			void RequestGetAxises(IScript::Request& request, IScript::Delegate<TransformComponent> transformComponent);
-			void RequestGetQuickTranslation(IScript::Request& request, IScript::Delegate<TransformComponent> transformComponent);
+			Float3 RequestGetQuickTranslation(IScript::Request& request, IScript::Delegate<TransformComponent> transformComponent);
 			void RequestUpdateTransform(IScript::Request& request, IScript::Delegate<TransformComponent> transformComponent);
 		};
 	}

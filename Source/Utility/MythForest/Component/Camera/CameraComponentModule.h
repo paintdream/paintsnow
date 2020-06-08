@@ -20,16 +20,16 @@ namespace PaintsNow {
 
 		public:
 			// Interfaces
-			void RequestNew(IScript::Request& request, IScript::Delegate<RenderFlowComponent> renderFlowComponent, const String& cameraViewPortName);
-			void RequestGetCollectedEntityCount(IScript::Request& request, IScript::Delegate<CameraComponent> camera);
-			void RequestGetCollectedVisibleEntityCount(IScript::Request& request, IScript::Delegate<CameraComponent> camera);
-			void RequestGetCollectedTriangleCount(IScript::Request& request, IScript::Delegate<CameraComponent> camera);
+			TShared<CameraComponent> RequestNew(IScript::Request& request, IScript::Delegate<RenderFlowComponent> renderFlowComponent, const String& cameraViewPortName);
+			uint32_t RequestGetCollectedEntityCount(IScript::Request& request, IScript::Delegate<CameraComponent> camera);
+			uint32_t RequestGetCollectedVisibleEntityCount(IScript::Request& request, IScript::Delegate<CameraComponent> camera);
+			uint32_t RequestGetCollectedTriangleCount(IScript::Request& request, IScript::Delegate<CameraComponent> camera);
 			void RequestBindRootEntity(IScript::Request& request, IScript::Delegate<CameraComponent> camera, IScript::Delegate<Entity> entity);
 			void RequestComputeCastRayFromPoint(IScript::Request& request, IScript::Delegate<CameraComponent> camera, Float2& screenPosition);
 			void RequestSetPerspective(IScript::Request& request, IScript::Delegate<CameraComponent> camera, float d, float n, float f, float r);
 			void RequestGetPerspective(IScript::Request& request, IScript::Delegate<CameraComponent> camera);
 			void RequestSetVisibleDistance(IScript::Request& request, IScript::Delegate<CameraComponent> camera, float distance);
-			void RequestGetVisibleDistance(IScript::Request& request, IScript::Delegate<CameraComponent> camera);
+			float RequestGetVisibleDistance(IScript::Request& request, IScript::Delegate<CameraComponent> camera);
 			void RequestSetProjectionJitter(IScript::Request& request, IScript::Delegate<CameraComponent> camera, bool jitter);
 			void RequestSetSmoothTrack(IScript::Request& request, IScript::Delegate<CameraComponent> camera, bool smoothTrack);
 		};

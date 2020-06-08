@@ -19,7 +19,7 @@ namespace PaintsNow {
 			virtual ~RemoteComponentModule();
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
-			void RequestNew(IScript::Request& request);
+			TShared<RemoteComponent> RequestNew(IScript::Request& request);
 			void RequestRebuild(IScript::Request& request, IScript::Delegate<RemoteComponent> fieldComponent);
 		};
 	}

@@ -18,15 +18,12 @@ TObject<IReflect>& CacheComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void CacheComponentModule::RequestNew(IScript::Request& request) {
+TShared<CacheComponent> CacheComponentModule::RequestNew(IScript::Request& request) {
 	CHECK_REFERENCES_NONE();
 
 	TShared<CacheComponent> cacheComponent = TShared<CacheComponent>::From(allocator->New());
 	cacheComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
-	engine.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << cacheComponent;
-	request.UnLock();
+	return cacheComponent;
 }
 
 void CacheComponentModule::RequestPushObjects(IScript::Request& request, IScript::Delegate<CacheComponent> cacheComponent, std::vector<IScript::Delegate<SharedTiny> >& objects) {

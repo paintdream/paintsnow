@@ -27,25 +27,16 @@ TObject<IReflect>& TransformComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void TransformComponentModule::RequestNew(IScript::Request& request) {
+TShared<TransformComponent> TransformComponentModule::RequestNew(IScript::Request& request) {
 	TShared<TransformComponent> transformComponent = TShared<TransformComponent>::From(allocator->New());
 	transformComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
-
-	engine.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << transformComponent;
-	request.UnLock();
+	return transformComponent;
 }
 
-void TransformComponentModule::RequestGetQuickTranslation(IScript::Request& request, IScript::Delegate<TransformComponent> transformComponent) {
+Float3 TransformComponentModule::RequestGetQuickTranslation(IScript::Request& request, IScript::Delegate<TransformComponent> transformComponent) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(transformComponent);
-	Float3 translation = transformComponent->GetQuickTranslation();
-	engine.GetKernel().YieldCurrentWarp();
-
-	request.DoLock();
-	request << translation;
-	request.UnLock();
+	return transformComponent->GetQuickTranslation();
 }
 
 void TransformComponentModule::RequestEditorRotate(IScript::Request& request, IScript::Delegate<TransformComponent> transformComponent, Float2& from, Float2& to) {
@@ -64,16 +55,11 @@ void TransformComponentModule::RequestSetRotation(IScript::Request& request, ISc
 	transformComponent->SetRotation(rotation);
 }
 
-void TransformComponentModule::RequestGetRotation(IScript::Request& request, IScript::Delegate<TransformComponent> transformComponent) {
+Float3 TransformComponentModule::RequestGetRotation(IScript::Request& request, IScript::Delegate<TransformComponent> transformComponent) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(transformComponent);
 	CHECK_THREAD_IN_MODULE(transformComponent);
-	Float3 rotation = transformComponent->GetRotation();
-
-	engine.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << rotation;
-	request.UnLock();
+	return transformComponent->GetRotation();
 }
 
 void TransformComponentModule::RequestSetScale(IScript::Request& request, IScript::Delegate<TransformComponent> transformComponent, Float3& scale) {
@@ -84,17 +70,12 @@ void TransformComponentModule::RequestSetScale(IScript::Request& request, IScrip
 	transformComponent->SetScale(scale);
 }
 
-void TransformComponentModule::RequestGetScale(IScript::Request& request, IScript::Delegate<TransformComponent> transformComponent) {
+Float3 TransformComponentModule::RequestGetScale(IScript::Request& request, IScript::Delegate<TransformComponent> transformComponent) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(transformComponent);
 	CHECK_THREAD_IN_MODULE(transformComponent);
 
-	Float3 scale = transformComponent->GetScale();
-	engine.GetKernel().YieldCurrentWarp();
-
-	request.DoLock();
-	request << scale;
-	request.UnLock();
+	return transformComponent->GetScale();
 }
 
 void TransformComponentModule::RequestSetTranslation(IScript::Request& request, IScript::Delegate<TransformComponent> transformComponent, Float3& translation) {
@@ -105,17 +86,12 @@ void TransformComponentModule::RequestSetTranslation(IScript::Request& request, 
 	transformComponent->SetTranslation(translation);
 }
 
-void TransformComponentModule::RequestGetTranslation(IScript::Request& request, IScript::Delegate<TransformComponent> transformComponent) {
+Float3 TransformComponentModule::RequestGetTranslation(IScript::Request& request, IScript::Delegate<TransformComponent> transformComponent) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(transformComponent);
 	CHECK_THREAD_IN_MODULE(transformComponent);
 
-	Float3 translation = transformComponent->GetTranslation();
-	engine.GetKernel().YieldCurrentWarp();
-
-	request.DoLock();
-	request << translation;
-	request.UnLock();
+	return transformComponent->GetTranslation();
 }
 
 void TransformComponentModule::RequestGetAxises(IScript::Request& request, IScript::Delegate<TransformComponent> transformComponent) {

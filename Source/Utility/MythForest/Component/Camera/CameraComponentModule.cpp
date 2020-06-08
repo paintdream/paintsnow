@@ -33,54 +33,39 @@ TObject<IReflect>& CameraComponentModule::operator () (IReflect& reflect) {
 }
 
 // Interfaces
-void CameraComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<RenderFlowComponent> renderFlowComponent, const String& cameraRenderPortName) {
+TShared<CameraComponent> CameraComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<RenderFlowComponent> renderFlowComponent, const String& cameraRenderPortName) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(renderFlowComponent);
 
 	RenderFlowComponent* flow = renderFlowComponent.Get();
 	TShared<CameraComponent> cameraComponent = TShared<CameraComponent>::From(allocator->New(flow, cameraRenderPortName));
 	cameraComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
-	engine.GetKernel().YieldCurrentWarp();
 
-	request.DoLock();
-	request << cameraComponent;
-	request.UnLock();
+	return cameraComponent;
 }
 
-void CameraComponentModule::RequestGetCollectedEntityCount(IScript::Request& request, IScript::Delegate<CameraComponent> camera) {
+uint32_t CameraComponentModule::RequestGetCollectedEntityCount(IScript::Request& request, IScript::Delegate<CameraComponent> camera) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(camera);
 	CHECK_THREAD_IN_MODULE(camera);
 
-	engine.GetKernel().YieldCurrentWarp();
-
-	request.DoLock();
-	request << camera->GetCollectedEntityCount();
-	request.UnLock();
+	return camera->GetCollectedEntityCount();
 }
 
-void CameraComponentModule::RequestGetCollectedTriangleCount(IScript::Request& request, IScript::Delegate<CameraComponent> camera) {
+uint32_t CameraComponentModule::RequestGetCollectedTriangleCount(IScript::Request& request, IScript::Delegate<CameraComponent> camera) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(camera);
 	CHECK_THREAD_IN_MODULE(camera);
 
-	engine.GetKernel().YieldCurrentWarp();
-
-	request.DoLock();
-	request << camera->GetCollectedTriangleCount();
-	request.UnLock();
+	return camera->GetCollectedTriangleCount();
 }
 
-void CameraComponentModule::RequestGetCollectedVisibleEntityCount(IScript::Request& request, IScript::Delegate<CameraComponent> camera) {
+uint32_t CameraComponentModule::RequestGetCollectedVisibleEntityCount(IScript::Request& request, IScript::Delegate<CameraComponent> camera) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(camera);
 	CHECK_THREAD_IN_MODULE(camera);
 
-	engine.GetKernel().YieldCurrentWarp();
-
-	request.DoLock();
-	request << camera->GetCollectedVisibleEntityCount();
-	request.UnLock();
+	return camera->GetCollectedVisibleEntityCount();
 }
 
 void CameraComponentModule::RequestBindRootEntity(IScript::Request& request, IScript::Delegate<CameraComponent> camera, IScript::Delegate<Entity> entity) {
@@ -127,15 +112,12 @@ void CameraComponentModule::RequestSetVisibleDistance(IScript::Request& request,
 	camera->viewDistance = distance;
 }
 
-void CameraComponentModule::RequestGetVisibleDistance(IScript::Request& request, IScript::Delegate<CameraComponent> camera) {
+float CameraComponentModule::RequestGetVisibleDistance(IScript::Request& request, IScript::Delegate<CameraComponent> camera) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(camera);
 	CHECK_THREAD_IN_MODULE(camera);
 
-	engine.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << camera->viewDistance;
-	request.UnLock();
+	return camera->viewDistance;
 }
 
 // Functions

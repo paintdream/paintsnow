@@ -19,11 +19,11 @@ namespace PaintsNow {
 			virtual ~TextViewComponentModule();
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
-			void RequestNew(IScript::Request& request, IScript::Delegate<NsSnowyStream::FontResource> fontResource);
+			TShared<TextViewComponent> RequestNew(IScript::Request& request, IScript::Delegate<NsSnowyStream::FontResource> fontResource);
 			void RequestSetFont(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent, const String& font, int64_t fontSize, float reinforce);
-			void RequestGetText(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent);
+			String RequestGetText(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent);
 			void RequestSetText(IScript::Request& request, IScript::Delegate<TextViewComponent> window, const String& text);
-			void RequestLocateText(IScript::Request& request, IScript::Delegate<TextViewComponent> window, Short2& offset, bool isRowCol);
+			Short3 RequestLocateText(IScript::Request& request, IScript::Delegate<TextViewComponent> window, Short2& offset, bool isRowCol);
 
 		protected:
 			TShared<NsSnowyStream::MaterialResource> defaultTextMaterial;

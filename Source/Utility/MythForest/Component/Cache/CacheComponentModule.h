@@ -17,7 +17,7 @@ namespace PaintsNow {
 			CacheComponentModule(Engine& engine);
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
-			void RequestNew(IScript::Request& request);
+			TShared<CacheComponent> RequestNew(IScript::Request& request);
 			void RequestPushObjects(IScript::Request& request, IScript::Delegate<CacheComponent> cacheComponent, std::vector<IScript::Delegate<SharedTiny> >& objects);
 			void RequestClearObjects(IScript::Request& request, IScript::Delegate<CacheComponent> cacheComponent);
 		};

@@ -25,20 +25,17 @@ TObject<IReflect>& SoundComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void SoundComponentModule::RequestNew(IScript::Request& request, String path, IScript::Request::Ref callback) {
+TShared<SoundComponent> SoundComponentModule::RequestNew(IScript::Request& request, String path, IScript::Request::Ref callback) {
 	CHECK_REFERENCES_WITH_TYPE(callback, IScript::Request::FUNCTION);
 
 	TShared<AudioResource> audioResource = engine.snowyStream.CreateReflectedResource(UniqueType<AudioResource>(), path);
 	if (audioResource) {
 		TShared<SoundComponent> soundComponent = TShared<SoundComponent>::From(allocator->New(audioResource, callback));
 		soundComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
-		engine.GetKernel().YieldCurrentWarp();
-
-		request.DoLock();
-		request << soundComponent;
-		request.UnLock();
+		return soundComponent;
 	} else {
 		request.Error(String("SoundComponentModule::RequestNewSource: invalid path '") + path + "'");
+		return nullptr;
 	}
 }
 
@@ -53,15 +50,10 @@ void SoundComponentModule::RequestSeekSource(IScript::Request& request, IScript:
 	source->Seek(engine, time);
 }
 
-void SoundComponentModule::RequestGetSourceDuration(IScript::Request& request, IScript::Delegate<SoundComponent> source) {
+int64_t SoundComponentModule::RequestGetSourceDuration(IScript::Request& request, IScript::Delegate<SoundComponent> source) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(source);
-	int64_t duration = source->GetDuration();
-	engine.GetKernel().YieldCurrentWarp();
-
-	request.DoLock();
-	request << duration;
-	request.UnLock();
+	return source->GetDuration();
 }
 
 void SoundComponentModule::RequestPlaySource(IScript::Request& request, IScript::Delegate<SoundComponent> source) {
@@ -88,6 +80,6 @@ void SoundComponentModule::RequestRewindSource(IScript::Request& request, IScrip
 	source->Rewind(engine);
 }
 
-void SoundComponentModule::RequestIsSourcePaused(IScript::Request& request, IScript::Delegate<SoundComponent> source) {
-	assert(false);
+bool SoundComponentModule::RequestIsSourcePaused(IScript::Request& request, IScript::Delegate<SoundComponent> source) {
+	return !source->IsPlaying();
 }

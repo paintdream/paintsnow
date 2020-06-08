@@ -17,7 +17,7 @@ namespace PaintsNow {
 
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
-			void RequestNew(IScript::Request& request, IScript::Delegate<NsSnowyStream::SkeletonResource> skeletonResource);
+			TShared<AnimationComponent> RequestNew(IScript::Request& request, IScript::Delegate<NsSnowyStream::SkeletonResource> skeletonResource);
 			void RequestPlay(IScript::Request& request, IScript::Delegate<AnimationComponent> animationComponent, const String& clipName, float startTime);
 			void RequestSetSpeed(IScript::Request& request, IScript::Delegate<AnimationComponent> animationComponent, float speed);
 			void RequestAttach(IScript::Request& request, IScript::Delegate<AnimationComponent> animationComponent, const String& name, IScript::Delegate<Entity> entity);

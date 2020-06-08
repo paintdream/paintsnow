@@ -18,7 +18,7 @@ namespace PaintsNow {
 
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
-			void RequestNew(IScript::Request& request, IScript::Delegate<NsSnowyStream::TerrainResource> terrainResource);
+			TShared<TerrainComponent> RequestNew(IScript::Request& request, IScript::Delegate<NsSnowyStream::TerrainResource> terrainResource);
 			void RequestRebuild(IScript::Request& request, IScript::Delegate<TerrainComponent> terrainComponent);
 		};
 	}
