@@ -35,7 +35,7 @@ if EnableTL then
 		-- override all tld requests
 		-- print("Try Load resource: " .. f)
 		local content = SnowyStream.FetchFileData(f)
-		if content then
+		if content and #content ~= 0 then
 			local file = { content = content }
 			-- print("Buildin Module " .. f)
 			setmetatable(file, simfile)
