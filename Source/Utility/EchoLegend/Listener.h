@@ -26,7 +26,7 @@ namespace PaintsNow {
 			const TWrapper<void, INetwork::EVENT> OnAccept(INetwork::Connection* connection);
 			void OnAcceptHttp(INetwork::Connection* connection, INetwork::HttpRequest* request);
 			virtual void ScriptUninitialize(IScript::Request& request);
-			void GetInfo(IScript::Request& request, IScript::Request::Ref callback);
+			String GetAddress();
 			virtual bool Activate();
 			virtual void Deactivate();
 

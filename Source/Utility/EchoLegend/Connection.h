@@ -31,11 +31,11 @@ namespace PaintsNow {
 			void OnEvent(INetwork::EVENT event);
 			void OnEventHttp(int code);
 			virtual void ScriptUninitialize(IScript::Request& request);
-			void Read(IScript::Request& request, IScript::Request::Ref callback);
-			void Write(IScript::Request& request, const String& data);
-			void GetInfo(IScript::Request& request, IScript::Request::Ref callback);
-			void ReadHttpRequest(IScript::Request& request, IScript::Request::Ref callback);
-			void ReadHttpResponse(IScript::Request& request, IScript::Request::Ref callback);
+			String Read();
+			void Write(const String& data);
+
+			void GetAddress(IScript::Request& request);
+			void ReadHttpRequest(IScript::Request& request);
 
 			void WriteHttpRequest(const String& uri, const String& method, const std::list<std::pair<String, String> >& header, const String& data);
 			void WriteHttpResponse(const String& data, int code, const String& reason, std::list<std::pair<String, String> >& header);

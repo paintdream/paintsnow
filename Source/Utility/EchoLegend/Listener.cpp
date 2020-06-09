@@ -27,16 +27,11 @@ bool Listener::IsValid() const {
 	return listener != nullptr && (!(Flag() & LISTENER_HTTP) || httpd != nullptr);
 }
 
-void Listener::GetInfo(IScript::Request& request, IScript::Request::Ref callback) {
+String Listener::GetAddress() {
 	String info;
 	network.GetListenerInfo(listener, info);
-
-	request.DoLock();
-	request.Push();
-	request.Call(sync, callback, info);
-	request.Pop();
-	request.Dereference(callback);
-	request.UnLock();
+	
+	return info;
 }
 
 void Listener::OnEvent(INetwork::EVENT event) {

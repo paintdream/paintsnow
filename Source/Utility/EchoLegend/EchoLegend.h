@@ -26,19 +26,19 @@ namespace PaintsNow {
 			void RequestDeactivateDispatcher(IScript::Request& request, IScript::Delegate<WorkDispatcher> dispatcher);
 			TShared<Listener> RequestOpenListener(IScript::Request& request, IScript::Delegate<WorkDispatcher> dispatcher, const String& ip, bool http, IScript::Request::Ref eventHandler, IScript::Request::Ref callback, IScript::Request::Ref connectCallback, bool packetMode);
 			void RequestActivateListener(IScript::Request& request, IScript::Delegate<Listener> listener);
-			void RequestGetListenerInfo(IScript::Request& request, IScript::Delegate<Listener> listener, IScript::Request::Ref callback);
+			String RequestGetListenerAddress(IScript::Request& request, IScript::Delegate<Listener> listener);
 			void RequestDeactivateListener(IScript::Request& request, IScript::Delegate<Listener> listener);
 			TShared<Connection> RequestOpenConnection(IScript::Request& request, IScript::Delegate<WorkDispatcher> dispatcher, const String& ip, bool http, IScript::Request::Ref connectCallback, bool packetMode);
 			void RequestActivateConnection(IScript::Request& request, IScript::Delegate<Connection> listener);
 			void RequestDeactivateConnection(IScript::Request& request, IScript::Delegate<Connection> listener);
-			void RequestGetConnectionInfo(IScript::Request& request, IScript::Delegate<Connection> connection, IScript::Request::Ref callback);
+			void RequestGetConnectionAddresses(IScript::Request& request, IScript::Delegate<Connection> connection);
 			void RequestWriteConnection(IScript::Request& request, IScript::Delegate<Connection> connection, const String& data);
-			void RequestReadConnection(IScript::Request& request, IScript::Delegate<Connection> connection, IScript::Request::Ref callback);
+			String RequestReadConnection(IScript::Request& request, IScript::Delegate<Connection> connection);
 			void RequestWriteConnectionHttpRequest(IScript::Request& request, IScript::Delegate<Connection> connection, const String& uri, const String& method, std::list<std::pair<String, String> >& header, const String& data);
 			void RequestWriteConnectionHttpResponse(IScript::Request& request, IScript::Delegate<Connection> connection, int code, const String& data, const String& reason, std::list<std::pair<String, String> >& header);
-			void RequestReadConnectionHttpRequest(IScript::Request& request, IScript::Delegate<Connection> connection, IScript::Request::Ref handler);
-			void RequestParseURL(IScript::Request& request, const String& input);
-			void RequestMakeURL(IScript::Request& request, const String& user, const String& host, const String& path, std::list<std::pair<String, String> >& query, const String& fragment);
+			void RequestReadConnectionHttpRequest(IScript::Request& request, IScript::Delegate<Connection> connection);
+			void RequestParseUri(IScript::Request& request, const String& input);
+			String RequestMakeUri(IScript::Request& request, const String& user, const String& host, const String& path, std::list<std::pair<String, String> >& query, const String& fragment);
 
 		protected:
 			INetwork& network;

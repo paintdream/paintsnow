@@ -173,34 +173,24 @@ void Connection::ScriptUninitialize(IScript::Request& request) {
 	SharedTiny::ScriptUninitialize(request);
 }
 
-void Connection::Read(IScript::Request& request, IScript::Request::Ref callback) {
+String Connection::Read() {
 	if (!(Flag() & TINY_ACTIVATED)) {
-		request.Error("EchoLegend::Connection::Read(callback) : Not an activated connection");
-	} else if (!callback) {
-		request.Error("EchoLegend::Connection::Read(callback) : Not a valid callback function");
-	} else {
+		assert(!(Flag() & CONNECTION_PACKET_MODE));
+
 		size_t length = 0;
 		network.ReadConnection(connection, nullptr, length);
 		String data;
 		data.resize(length);
 		network.ReadConnection(connection, const_cast<char*>(data.data()), length);
-		
-		request.DoLock();
-		request.Push();
-		request.Call(sync, callback, currentData);
-		request.Pop();
-		request.UnLock();
-	}
 
-	request.DoLock();
-	request.Dereference(callback);
-	request.UnLock();
+		return data;
+	} else {
+		return "";
+	}
 }
 
-void Connection::Write(IScript::Request& request, const String& data) {
+void Connection::Write(const String& data) {
 	if (!(Flag() & TINY_ACTIVATED)) {
-		request.Error("EchoLegend::Connection::Read(callback) : Not an activated connection");
-	} else {
 		if (Flag() & CONNECTION_PACKET_MODE) {
 			INetwork::Packet packet;
 			INetwork::PacketSizeType length = (INetwork::PacketSizeType)data.length();
@@ -210,23 +200,24 @@ void Connection::Write(IScript::Request& request, const String& data) {
 			size_t length = data.length();
 			network.WriteConnection(connection, data.data(), length);
 		}
+
 		network.Flush(connection);
 	}
 }
 
-void Connection::GetInfo(IScript::Request& request, IScript::Request::Ref callback) {
+void Connection::GetAddress(IScript::Request& request) {
 	String src, dst;
 	network.GetConnectionInfo(connection, src, dst);
 
 	request.DoLock();
-	request.Push();
-	request.Call(sync, callback, src, dst);
-	request.Pop();
-	request.Dereference(callback);
+	request << begintable
+		<< key("Source") << src
+		<< key("Destination") << dst
+		<< endtable;
 	request.UnLock();
 }
 
-void Connection::ReadHttpRequest(IScript::Request& request, IScript::Request::Ref callback) {
+void Connection::ReadHttpRequest(IScript::Request& request) {
 	if (httpRequest != nullptr) {
 		std::list<std::pair<String, String> > header;
 		network.GetHttpRequestHeader(httpRequest, header);
@@ -235,11 +226,12 @@ void Connection::ReadHttpRequest(IScript::Request& request, IScript::Request::Re
 		String data = network.GetHttpRequestData(httpRequest);
 
 		request.DoLock();
-		request.Push();
-		// request << uri << method << header << data;
-		request.Call(sync, callback, uri, method, header, data);
-		request.Dereference(callback);
-		request.Pop();
+		request << begintable
+			<< key("Uri") << uri
+			<< key("Method") << method
+			<< key("Header") << header
+			<< key("Data") << data
+			<< endtable;
 		request.UnLock();
 	}
 }

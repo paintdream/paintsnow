@@ -19,19 +19,19 @@ TObject<IReflect>& EchoLegend::operator () (IReflect& reflect) {
 	if (reflect.IsReflectMethod()) {
 		ReflectMethod(RequestOpenListener)[ScriptMethod = "OpenListener"];
 		ReflectMethod(RequestActivateListener)[ScriptMethod = "ActivateListener"];
-		ReflectMethod(RequestGetListenerInfo)[ScriptMethod = "GetListenerInfo"];
+		ReflectMethod(RequestGetListenerAddress)[ScriptMethod = "GetListenerAddress"];
 		ReflectMethod(RequestDeactivateListener)[ScriptMethod = "DeactivateListener"];
 		ReflectMethod(RequestOpenConnection)[ScriptMethod = "OpenConnection"];
 		ReflectMethod(RequestActivateConnection)[ScriptMethod = "ActivateConnection"];
 		ReflectMethod(RequestDeactivateConnection)[ScriptMethod = "DeactivateConnection"];
-		ReflectMethod(RequestGetConnectionInfo)[ScriptMethod = "GetConnectionInfo"];
+		ReflectMethod(RequestGetConnectionAddresses)[ScriptMethod = "GetConnectionAddresses"];
 		ReflectMethod(RequestWriteConnection)[ScriptMethod = "WriteConnection"];
 		ReflectMethod(RequestReadConnection)[ScriptMethod = "ReadConnection"];
 		ReflectMethod(RequestWriteConnectionHttpRequest)[ScriptMethod = "WriteConnectionHttpRequest"];
 		ReflectMethod(RequestWriteConnectionHttpResponse)[ScriptMethod = "WriteConnectionHttpResponse"];
 		ReflectMethod(RequestReadConnectionHttpRequest)[ScriptMethod = "ReadConnectionHttpRequest"];
-		ReflectMethod(RequestParseURL)[ScriptMethod = "ParseURL"];
-		ReflectMethod(RequestMakeURL)[ScriptMethod = "MakeURL"];
+		ReflectMethod(RequestParseUri)[ScriptMethod = "ParseUri"];
+		ReflectMethod(RequestMakeUri)[ScriptMethod = "MakeUri"];
 		ReflectMethod(RequestOpenDispatcher)[ScriptMethod = "OpenDispatcher"];
 		ReflectMethod(RequestActivateDispatcher)[ScriptMethod = "ActivateDispatcher"];
 		ReflectMethod(RequestDeactivateDispatcher)[ScriptMethod = "DeactivateDispatcher"];
@@ -73,10 +73,11 @@ void EchoLegend::RequestDeactivateListener(IScript::Request& request, IScript::D
 	listener->Deactivate();
 }
 
-void EchoLegend::RequestGetListenerInfo(IScript::Request& request, IScript::Delegate<Listener> listener, IScript::Request::Ref callback) {
-	CHECK_REFERENCES(callback);
+String EchoLegend::RequestGetListenerAddress(IScript::Request& request, IScript::Delegate<Listener> listener) {
+	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(listener);
-	listener->GetInfo(request, callback);
+
+	return listener->GetAddress();
 }
 
 TShared<Connection> EchoLegend::RequestOpenConnection(IScript::Request& request, IScript::Delegate<WorkDispatcher> dispatcher, const String& ip, bool http, IScript::Request::Ref connectCallback, bool packetMode) {
@@ -110,23 +111,23 @@ void EchoLegend::RequestDeactivateConnection(IScript::Request& request, IScript:
 	connection->Deactivate();
 }
 
-void EchoLegend::RequestGetConnectionInfo(IScript::Request& request, IScript::Delegate<Connection> connection, IScript::Request::Ref callback) {
+void EchoLegend::RequestGetConnectionAddresses(IScript::Request& request, IScript::Delegate<Connection> connection) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(connection);
-	connection->GetInfo(request, callback);
+	connection->GetAddress(request);
 }
 
 void EchoLegend::RequestWriteConnection(IScript::Request& request, IScript::Delegate<Connection> connection, const String& data) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(connection);
-	connection->Write(request, data);
+	connection->Write(data);
 }
 
-void EchoLegend::RequestReadConnection(IScript::Request& request, IScript::Delegate<Connection> connection, IScript::Request::Ref callback) {
-	CHECK_REFERENCES_WITH_TYPE(callback, IScript::Request::FUNCTION);
+String EchoLegend::RequestReadConnection(IScript::Request& request, IScript::Delegate<Connection> connection) {
+	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(connection);
 
-	connection->Read(request, callback);
+	return connection->Read();
 }
 
 void EchoLegend::RequestWriteConnectionHttpRequest(IScript::Request& request, IScript::Delegate<Connection> connection, const String& uri, const String& method, std::list<std::pair<String, String> >& header, const String& data) {
@@ -144,19 +145,13 @@ void EchoLegend::RequestWriteConnectionHttpResponse(IScript::Request& request, I
 }
 
 
-void EchoLegend::RequestReadConnectionHttpRequest(IScript::Request& request, IScript::Delegate<Connection> connection, IScript::Request::Ref callback) {
+void EchoLegend::RequestReadConnectionHttpRequest(IScript::Request& request, IScript::Delegate<Connection> connection) {
 	if (connection) {
-		connection->ReadHttpRequest(request, callback);
-	} else {
-		bridgeSunset.GetKernel().YieldCurrentWarp();
-		request.Error("EchoLegend::ReadConnectionHttp(connection, data) : invalid connection");
-		request.DoLock();
-		request.Dereference(callback);
-		request.UnLock();
+		connection->ReadHttpRequest(request);
 	}
 }
 
-void EchoLegend::RequestParseURL(IScript::Request& request, const String& url) {
+void EchoLegend::RequestParseUri(IScript::Request& request, const String& url) {
 	String user, host, path, fragment;
 	int port;
 	std::list<std::pair<String, String> > query;
@@ -181,12 +176,8 @@ void EchoLegend::RequestParseURL(IScript::Request& request, const String& url) {
 	request.UnLock();
 }
 
-void EchoLegend::RequestMakeURL(IScript::Request& request, const String& user, const String& host, const String& path, std::list<std::pair<String, String> >& query, const String& fragment) {
-	String result = network.MakeUri(user, host, path, query, fragment);
-	bridgeSunset.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << result;
-	request.UnLock();
+String EchoLegend::RequestMakeUri(IScript::Request& request, const String& user, const String& host, const String& path, std::list<std::pair<String, String> >& query, const String& fragment) {
+	return network.MakeUri(user, host, path, query, fragment);
 }
 
 TShared<WorkDispatcher> EchoLegend::RequestOpenDispatcher(IScript::Request& request) {
