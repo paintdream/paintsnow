@@ -6,10 +6,11 @@ local commandLine = { ... }
 
 local function Main()
     local QuickCompile = require("Engine/Boot/QuickCompile")
+    local compiler = QuickCompile.New()
     print("CommandLine: " .. table.concat(commandLine, " "))
     local forceRecompile = commandLine[1] == "true"
-    QuickCompile:CompileRecursive("Engine/", forceRecompile)
-    QuickCompile:CompileRecursive("Script/", forceRecompile)
+    compiler:CompileRecursive("Engine/", forceRecompile)
+    compiler:CompileRecursive("Script/", forceRecompile)
 
     -- Then pack resources
     local Packer = require("Engine/Packer.lua")

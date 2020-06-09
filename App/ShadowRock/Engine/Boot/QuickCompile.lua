@@ -45,10 +45,11 @@ function QuickCompile:CompileOne(filename, outputfile)
 	local title = string.sub(filename, 1, filenamelength - 3)
 	print("Compiling: " .. filename .. " ...")
 	-- read file content
-	local result, err = tl.process(filename, self.env, nil, self.runtimeModules)
+	local result, err = tl.process(filename, self.env)
 	if result then
 		local ok = report_all_errors(result)
 		if not ok then
+			error("Terminated.")
 			return
 		end
 
@@ -163,34 +164,27 @@ local function CollectRuntimeModules(path, mods)
 			CollectRuntimeModules(path .. file, mods)
 		end
 	elseif string.endswith(path, ".tl") and path ~= "Runtime/Interface" then
-		table.insert(mods, path:sub(1, #path - 3))
+		table.insert(mods, path)
 	end
 end
 
 function QuickCompile.New()
 	local compiler = {}
 	-- add enviroment
-	local runtimeModules = { "Runtime/Interface" }
+	local runtimeModules = { "Runtime/Interface.tl" }
 	CollectRuntimeModules("Runtime/", runtimeModules)
-	local res, err = tl.process("Engine/Init.tl", nil, nil, runtimeModules)
-	if err then
-		print("ERROR: " .. err)
-		return
+	local env = tl.init_env()
+	for _, mod in ipairs(runtimeModules) do
+		local res, err = tl.process(mod, env, nil)
+		if err then
+			print("Compiler initialize error: " .. err)
+			return
+		end
+		report_errors(res)
 	end
 
-	report_errors(res)
-	assert(res.env)
-	compiler.env = res.env
-	compiler.runtimeModules = runtimeModules
+	compiler.env = env
 	return setmetatable(compiler, { __index = QuickCompile })
 end
 
-local function Main(inputFileName)
-	if inputFileName then
-		local compiler = QuickCompile.New()
-		compiler:CompileRecursive(inputFileName, true)
-	end
-end
-
-Main(...)
 return QuickCompile

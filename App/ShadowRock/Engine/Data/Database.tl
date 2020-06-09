@@ -1,5 +1,3 @@
-require("Runtime/Interface")
-
 local Database = record
 	Handle : Hive
 	__index : any
@@ -11,17 +9,17 @@ function Database:Execute(sql : string, data : HoneyData) : Honey
 	return self.Handle:Execute(sql, data)
 end
 
-function Database:Lines(sql : string, cacheCount : number, data)
+function Database:Lines(sql : string, cacheCount : number, data) : function (any, number) : (any, any)
 	if cacheCount == nil then
 		cacheCount = -1
 	end
 
-	local honey = self:Execute(sql, data)
-	if not honey then return function () return end end
+	local honey = self:Execute(sql, data as HoneyData)
+	if not honey then return function (t : any, i : number) : (any, any) return nil, nil end end
 
-	local cache : { any } = {}
+	local cache : any
 
-	return function (t, k : number)
+	return function (t, k : number) : (any, any)
 		if k == nil or k == cacheCount then
 			-- reinit
 			local s : any = honey:Step(cacheCount)
@@ -30,7 +28,7 @@ function Database:Lines(sql : string, cacheCount : number, data)
 		end
 
 		-- tail call to next
-		return next(cache, k)
+		return next(cache as { any : any}, k)
 	end
 end
 
@@ -44,7 +42,7 @@ function Database:Query(sql : string, data)
 	local rowCount = 0
 	for k, line in self:Lines(sql, 5, data) do
 		local item = ""
-		for i, v in ipairs(line) do
+		for i, v in ipairs(line as { string }) do
 			if i == 1 then
 				item = tostring(v)
 			else
@@ -59,11 +57,12 @@ function Database:Query(sql : string, data)
 	print("--------------------------------------")
 end
 
-function Database.New(path : string)
+function Database.New(path : string) : Database
 	local handle : Hive = Remembery.NewDatabase(path, "", "", true)
-	local meta = {}
-	meta.Handle = handle
-	return setmetatable(meta, { __index = Database })
+	local meta = {
+		Handle = handle
+	}
+	return setmetatable(meta, Database as METATABLE) as Database
 end
 
 return Database
