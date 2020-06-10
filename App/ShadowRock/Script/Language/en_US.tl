@@ -1,9 +1,3 @@
-local t = {
-	__index = function (t, w)
-		return w
-	end
-}
+local en_US = record end
 
-setmetatable(t, t)
-
-return t
+return en_US

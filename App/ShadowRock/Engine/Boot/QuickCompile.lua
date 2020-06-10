@@ -12,8 +12,8 @@ end
 
 BootModule()
 print("QuickCompile started.")
-local tl = require("tl")
 
+local tl = require("tl")
 
 local function report_errors(category, errors)
    if not errors then

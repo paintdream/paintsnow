@@ -4,7 +4,7 @@
 
 local Packer = {}
 
-local function NeedUpdate(srcPath : string, dstPath : string)
+local function NeedUpdate(srcPath : string, dstPath : string) : boolean
 	local src : File = SnowyStream.NewFile(srcPath, false)
 	local dst : File = SnowyStream.NewFile(dstPath, false)
 	local result = true
@@ -21,11 +21,12 @@ local function NeedUpdate(srcPath : string, dstPath : string)
 	if dst then
 		SnowyStream.CloseFile(dst)
 	end
+
 	return result
 end
 
-local function NewResourceHandler(type : string)
-	return function (src : string, dst : string, ext : string)
+local function NewResourceHandler(type : string) : function (string, string, string) : (boolean)
+	return function (src : string, dst : string, ext : string) : boolean
 		local dstWithExt = dst .. ".pod"
 		if not NeedUpdate(src, dstWithExt) then
 			return true
@@ -71,7 +72,7 @@ local dispatchers : { string : function (string, string, string) : boolean } = {
 local function DoImport(src : string, dest : string)
 	-- file
 	if src:sub(#src) == "/" then
-		for index, file in ipairs(SnowyStream.QueryFiles(src)) do
+		for index, file in ipairs(SnowyStream.QueryFiles(src) as { string }) do
 			if index and file then
 				DoImport(src .. file, dest .. file)
 			end
@@ -92,7 +93,7 @@ local function DoImport(src : string, dest : string)
 end
 
 function Packer:Import(src : string, dest : string)
-	return DoImport(src, dest)
+	DoImport(src, dest)
 end
 
 function Packer:Pack(src : string, format : string)

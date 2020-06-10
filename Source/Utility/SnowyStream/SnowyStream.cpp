@@ -245,7 +245,7 @@ void SnowyStream::RequestFileExists(IScript::Request& request, const String& pat
 }
 
 
-String SnowyStream::RequestFetchFileData(IScript::Request& request, const String& path) {
+void SnowyStream::RequestFetchFileData(IScript::Request& request, const String& path) {
 	bridgeSunset.GetKernel().YieldCurrentWarp();
 	size_t length;
 	IArchive& archive = interfaces.archive;
@@ -256,16 +256,18 @@ String SnowyStream::RequestFetchFileData(IScript::Request& request, const String
 		buf.resize(length);
 		if (stream->Read(const_cast<char*>(buf.data()), length)) {
 			stream->ReleaseObject();
-			return buf;
+			request.DoLock();
+			request << buf;
+			request.UnLock();
 		}
 	} else {
 		const char* builtin = request.GetScript()->QueryUniformResource(path, length);
 		if (builtin != nullptr) {
-			return String(builtin, length);
+			request.DoLock();
+			request << String(builtin, length);
+			request.UnLock();
 		}
 	}
-
-	return "";
 }
 
 void SnowyStream::RequestCloseFile(IScript::Request& request, IScript::Delegate<File> file) {

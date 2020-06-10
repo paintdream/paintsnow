@@ -42,7 +42,7 @@ if EnableTL then
 			return file
 		end
 
-		return nil, "Enable to find " .. f
+		return nil, "Unable to find " .. f
 	end
 
 	io.close = function (f)
@@ -147,7 +147,9 @@ if EnableTL then
 					if type(k) == "string" then
 						table.insert(mid, "\t" .. k .. ": " .. Bootstrap.GetTypeName(v, regTypes))	
 					else
-						table.insert(mid, "\t" .. Bootstrap.GetTypeName(v, regTypes))	
+						--table.insert(mid, "\t" .. Bootstrap.GetTypeName(v, regTypes))	
+						table.insert(mid, "\t{ " .. Bootstrap.GetTypeName(v, regTypes) .. " }")	
+						break
 					end
 				end
 				table.insert(stmt, table.concat(mid, "\n"))

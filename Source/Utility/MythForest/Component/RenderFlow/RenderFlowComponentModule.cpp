@@ -79,24 +79,20 @@ TShared<RenderFlowComponent> RenderFlowComponentModule::RequestNew(IScript::Requ
 	return renderFlowComponent;
 }
 
-void RenderFlowComponentModule::RequestNewRenderStage(IScript::Request& request, IScript::Delegate<RenderFlowComponent> renderFlowComponent, const String& name, const String& config) {
+TShared<RenderStage> RenderFlowComponentModule::RequestNewRenderStage(IScript::Request& request, IScript::Delegate<RenderFlowComponent> renderFlowComponent, const String& name, const String& config) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(renderFlowComponent);
 	CHECK_THREAD_IN_MODULE(renderFlowComponent);
 
 	std::map<String, TFactoryBase<RenderStage> >::const_iterator it = stageTemplates.find(name);
 	if (it != stageTemplates.end()) {
-		RenderStage* renderStage = it->second(config);
+		TShared<RenderStage> renderStage = it->second(config);
 		renderStage->ReflectNodePorts();
-		renderFlowComponent->AddNode(renderStage);
-		engine.GetKernel().YieldCurrentWarp();
-
-		request.DoLock();
-		request << renderStage;
-		request.UnLock();
-		renderStage->ReleaseObject();
+		renderFlowComponent->AddNode(renderStage());
+		return renderStage;
 	} else {
 		request.Error(String("Could not find render stage: ") + name);
+		return nullptr;
 	}
 }
 
@@ -220,15 +216,11 @@ void RenderFlowComponentModule::RequestDeleteRenderStage(IScript::Request& reque
 	renderFlowComponent->RemoveNode(stage.Get());
 }
 
-void RenderFlowComponentModule::RequestNewRenderPolicy(IScript::Request& request, const String& name, uint32_t priority) {
+TShared<RenderPolicy> RenderFlowComponentModule::RequestNewRenderPolicy(IScript::Request& request, const String& name, uint32_t priority) {
 	CHECK_REFERENCES_NONE();
 
 	TShared<RenderPolicy> policy = TShared<RenderPolicy>::From(new RenderPolicy());
 	policy->renderPortName = name;
 	policy->priority = priority;
-
-	engine.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << policy;
-	request.UnLock();
+	return policy;
 }

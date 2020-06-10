@@ -7,6 +7,7 @@
 #define __RENDERFLOWCOMPONENTMODULE_H__
 
 #include "RenderFlowComponent.h"
+#include "RenderPolicy.h"
 #include "../../Module.h"
 
 namespace PaintsNow {
@@ -20,8 +21,8 @@ namespace PaintsNow {
 			virtual void RegisterNodeTemplate(String& key, const TFactoryBase<RenderStage>& t);
 
 			TShared<RenderFlowComponent> RequestNew(IScript::Request& request);
-			void RequestNewRenderPolicy(IScript::Request& request, const String& name, uint32_t priority);
-			void RequestNewRenderStage(IScript::Request& request, IScript::Delegate<RenderFlowComponent> renderFlow, const String& name, const String& config);
+			TShared<RenderPolicy> RequestNewRenderPolicy(IScript::Request& request, const String& name, uint32_t priority);
+			TShared<RenderStage> RequestNewRenderStage(IScript::Request& request, IScript::Delegate<RenderFlowComponent> renderFlow, const String& name, const String& config);
 			void RequestEnumerateRenderStagePorts(IScript::Request& request, IScript::Delegate<RenderFlowComponent> renderFlowComponent, IScript::Delegate<RenderStage> renderStage);
 			void RequestLinkRenderStagePort(IScript::Request& request, IScript::Delegate<RenderFlowComponent> renderFlowComponent, IScript::Delegate<RenderStage> from, const String& fromPortName, IScript::Delegate<RenderStage> to, const String& toPortName);
 			void RequestUnlinkRenderStagePort(IScript::Request& request, IScript::Delegate<RenderFlowComponent> renderFlowComponent, IScript::Delegate<RenderStage> from, const String& fromPortName, IScript::Delegate<RenderStage> to, const String& toPortName);

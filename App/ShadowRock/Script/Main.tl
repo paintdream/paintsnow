@@ -1,10 +1,10 @@
 -- Main.lua
 -- Application Entry Module
-local Main = {}
-Debug = require("Script/Util/Debug")
+local Main = record end
+local Debug = require("Script/Util/Debug")
 local Core = require("Engine/Core")
 local Database = require("Engine/Data/Database")
-local Vector = require("Engine/Math/Vector")
+local Vector = require("Engine/Data/Math/Vector")
 
 local fpsBuffer : { number } = {}
 local tickBuffer : { number } = {}
@@ -53,8 +53,8 @@ local function InitializeWorld(databasePath : string)
 	eventListenerComponent:BindEventUserInput(true)
 
 	print("InitializeWorld: Creating GUI ...")
-	local GUI = require("Script/Root/GUI")
-	local guiEntity = GUI.New()
+	-- local GUI = require("Script/Root/GUI")
+	-- local guiEntity = GUI.New()
 
 	print("InitializeWorld: Loading repository " .. databasePath .. " ...")
 	local database = Database.New(databasePath)
@@ -64,6 +64,7 @@ local function InitializeWorld(databasePath : string)
 	local scene = Scene.New(database, clock)
 
 	print("\tCreating Player ...")
+	--[[
 	local Player = require("Script/Prefabs/Entities/Player/StandardPlayer")
 	local playerEntity = Player.New(eventListenerComponent)
 	print("InitializeWorld: Mounting entities...")
@@ -220,6 +221,8 @@ local function InitializeWorld(databasePath : string)
 			return System.Exit()
 		end
 	end
+
+	--]]
 end
 
 function Main.Main()
@@ -246,6 +249,7 @@ function Main.Main()
 	if not s then
 		print("Error: " .. msg)
 	end
+
 end
 
 return Main

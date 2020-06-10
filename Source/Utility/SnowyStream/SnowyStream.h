@@ -68,7 +68,7 @@ namespace PaintsNow {
 			void RequestCloseFile(IScript::Request& request, IScript::Delegate<File> file);
 			void RequestSeekFile(IScript::Request& request, IScript::Delegate<File> file, const String& type, int64_t offset);
 			void RequestQueryFiles(IScript::Request& request, const String& path);
-			String RequestFetchFileData(IScript::Request& request, const String& path);
+			void RequestFetchFileData(IScript::Request& request, const String& path);
 
 			void RequestSetShaderResourceCode(IScript::Request& request, IScript::Delegate<ShaderResource> shaderResource, const String& stage, const String& text, const std::vector<std::pair<String, String> >& config);
 			void RequestSetShaderResourceInput(IScript::Request& request, IScript::Delegate<ShaderResource> shaderResource, const String& stage, const String& type, const String& name, const std::vector<std::pair<String, String> >& config);

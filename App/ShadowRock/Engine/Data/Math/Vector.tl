@@ -68,5 +68,4 @@ function Vector:__tostring() : string
 	return "{ " .. table.concat(self as { string }, ", ") .. " }"
 end
 
-rawset(Vector as { number }, "__index", Vector)
 return Vector

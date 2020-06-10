@@ -2449,6 +2449,8 @@ function tl.pretty_print_ast(ast, fast)
       ["global_declaration"] = {
          after = function(node, children)
             local out = { y = node.y, h = 0 }
+            --table.insert(out, "local") -- no globals
+            add_child(out, children[1], " ")
             if children[2] then
                add_child(out, children[1])
                table.insert(out, " =")

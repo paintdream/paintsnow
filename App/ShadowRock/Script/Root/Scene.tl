@@ -1,51 +1,52 @@
 -- derive from entity
 
-local Scene = {}
+local Scene = record
+	spaceComponent : SpaceComponent
+	rootEntity : Entity
+	__index : any
+end
+
 Scene.__index = Scene
 
 local Database = require("Engine/Data/Database")
-local anyone : any = {}
-local spaceComponentPrototype : SpaceComponent = anyone
-Scene.spaceComponent = spaceComponentPrototype
-local entityPrototype : Entity = anyone
-Scene.rootEntity = entityPrototype
 
-function Scene.New(database : Database, clock : Clock)
-	local meta = {}
+function Scene.New(database : Database, clock : Clock) : Scene
+	local meta = {} as Scene
 	local rootEntity = MythForest.NewEntity(-1)
 	local spaceComponent = SpaceComponentModule.New(-1, true)
-	rootEntity:AddEntityComponent(spaceComponent)
+	rootEntity:AddEntityComponent(spaceComponent as Component)
 	meta.spaceComponent = spaceComponent
 	meta.rootEntity = rootEntity
 
-	local eventListenerComponent : EventListenerComponent = EventListenerComponentModule.New()
+	local eventListenerComponent = EventListenerComponentModule.New()
 	eventListenerComponent:BindEventTick(clock)
 	eventListenerComponent:BindEventFrame(true)
-	rootEntity:AddEntityComponent(eventListenerComponent)
+	rootEntity:AddEntityComponent(eventListenerComponent as Component)
+
 	local batchComponent = BatchComponentModule.New()
-	local renderPolicy : RenderPolicy = RenderFlowComponentModule.NewRenderPolicy("Primitives", 0)
-	local lightPolicy : RenderPolicy = RenderFlowComponentModule.NewRenderPolicy("LightSource", 0)
+	local renderPolicy = RenderFlowComponentModule.NewRenderPolicy("Primitives", 0)
+	local lightPolicy = RenderFlowComponentModule.NewRenderPolicy("LightSource", 0)
 
 	-- add scene entities
 	if database then
 		print("\tCreating entities.")
 		local entities : { Entity } = {}
-		for _, line in database:Lines("select ID, GroupID from `Entities`;", 32) do
-			local entityID, entityGroup = table.unpack(line)
+		for _, line in database:Lines("select ID from `Entities`;", 32) do
+			local entityID = table.unpack(line as { number }) as number
 			entities[entityID] = MythForest.NewEntity(-1)
 		end
 
 		print("\tCreating model components.")
-		local components : { any } = {}
-		local shapeComponents : { any } = {}
-		local formComponents : { any } = {}
+		local components : { Component } = {}
+		local shapeComponents : { ShapeComponent } = {}
+		local formComponents : { FormComponent } = {}
 		for _, line in database:Lines("select ModelComponents.ID, Path, ViewDistance from `ModelComponents`, `Resources` where `ResourceID` == Resources.ID;", 32) do
-			local componentID, path, viewDistance = table.unpack(line)
+			local componentID, path, viewDistance = table.unpack(line as { any })
 			local meshResource = SnowyStream.NewResource(path, "MeshResource", false)
 			if not meshResource then
 				print("\tUnable to load mesh resource: " .. path)
 			else
-				components[componentID] = components[componentID] or ModelComponentModule.New(meshResource, batchComponent)
+				components[componentID] = components[componentID] or ModelComponentModule.New(meshResource, batchComponent) as Component
 				shapeComponents[componentID] = shapeComponents[componentID] or ShapeComponentModule.New(meshResource)
 				formComponents[componentID] = formComponents[componentID] or FormComponentModule.New(path)
 			end
@@ -180,7 +181,7 @@ function Scene.New(database : Database, clock : Clock)
 	rootEntity:AddEntityComponent(visibilityComponent)
 	rootEntity:AddEntityComponent(batchComponent)
  
-	return setmetatable(meta, { __index = Scene, __chain = true })
+	return setmetatable(meta, Scene as METATABLE) as Scene
 end
 
 return Scene
