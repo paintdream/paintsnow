@@ -10,35 +10,7 @@
 #include "../../Core/Interface/IScript.h"
 #include "Entity.h"
 #include "Engine.h"
-#include "Component/Animation/AnimationComponentModule.h"
-#include "Component/Batch/BatchComponentModule.h"
-#include "Component/Cache/CacheComponentModule.h"
-#include "Component/Camera/CameraComponentModule.h"
-#include "Component/Compute/ComputeComponentModule.h"
-#include "Component/EnvCube/EnvCubeComponentModule.h"
-#include "Component/Event/EventListenerComponentModule.h"
-#include "Component/Explorer/ExplorerComponentModule.h"
-#include "Component/Field/FieldComponentModule.h"
-#include "Component/Form/FormComponentModule.h"
-#include "Component/Layout/LayoutComponentModule.h"
-#include "Component/Light/LightComponentModule.h"
-#include "Component/Model/ModelComponentModule.h"
-#include "Component/Navigate/NavigateComponentModule.h"
-#include "Component/Particle/ParticleComponentModule.h"
-#include "Component/Phase/PhaseComponentModule.h"
-#include "Component/Profile/ProfileComponentModule.h"
-#include "Component/Remote/RemoteComponentModule.h"
-#include "Component/RenderFlow/RenderFlowComponentModule.h"
-#include "Component/Shape/ShapeComponentModule.h"
-#include "Component/Sound/SoundComponentModule.h"
-#include "Component/Space/SpaceComponentModule.h"
-#include "Component/Stream/StreamComponentModule.h"
-#include "Component/Surface/SurfaceComponentModule.h"
-#include "Component/Terrain/TerrainComponentModule.h"
-#include "Component/TextView/TextViewComponentModule.h"
-#include "Component/Transform/TransformComponentModule.h"
-#include "Component/Visibility/VisibilityComponentModule.h"
-#include "Component/Widget/WidgetComponentModule.h"
+#include "Module.h"
 
 namespace PaintsNow {
 
@@ -85,37 +57,6 @@ namespace PaintsNow {
 		private:
 			Engine engine;
 			TShared<Entity::Allocator> entityAllocator;
-
-			AnimationComponentModule animationComponentModule;
-			BatchComponentModule batchComponentModule;
-			CacheComponentModule cacheComponentModule;
-			CameraComponentModule cameraComponentModule;
-			ComputeComponentModule computeComponentModule;
-			EnvCubeComponentModule envCubeComponentModule;
-			EventListenerComponentModule eventListenerComponentModule;
-			ExplorerComponentModule explorerComponentModule;
-			FieldComponentModule fieldComponentModule;
-			FormComponentModule formComponentModule;
-			LayoutComponentModule layoutComponentModule;
-			LightComponentModule lightComponentModule;
-			ModelComponentModule modelComponentModule;
-			NavigateComponentModule navigateComponentModule;
-			ParticleComponentModule particleComponentModule;
-			PhaseComponentModule phaseComponentModule;
-			ProfileComponentModule profileComponentModule;
-			RemoteComponentModule remoteComponentModule;
-			RenderFlowComponentModule renderFlowComponentModule;
-			ShapeComponentModule shapeComponentModule;
-			SoundComponentModule soundComponentModule;
-			SpaceComponentModule spaceComponentModule;
-			StreamComponentModule streamComponentModule;
-			SurfaceComponentModule surfaceComponentModule;
-			TerrainComponentModule terrainComponentModule;
-			TextViewComponentModule textViewComponentModule;
-			TransformComponentModule transformComponentModule;
-			VisibilityComponentModule visibilityComponentModule;
-			WidgetComponentModule widgetComponentModule;
-
 			uint64_t lastFrameTick;
 			uint64_t currentFrameTime;
 			std::vector<IRender::Queue*> warpResourceQueues;

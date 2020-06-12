@@ -36,9 +36,8 @@ namespace PaintsNow {
 			virtual ~Engine();
 			void Clear();
 			void InstallModule(Module* module);
-			void UninstallModule(Module* module);
 			Module* GetComponentModuleFromName(const String& name) const;
-			const unordered_map<String, Module*>& GetModuleMap() const;
+			unordered_map<String, Module*>& GetModuleMap();
 			void TickFrame();
 			uint32_t GetFrameIndex() const;
 			Kernel& GetKernel();

@@ -1,4 +1,34 @@
 #include "MythForest.h"
+#include "Component/Animation/AnimationComponentModule.h"
+#include "Component/Batch/BatchComponentModule.h"
+#include "Component/Cache/CacheComponentModule.h"
+#include "Component/Camera/CameraComponentModule.h"
+#include "Component/Compute/ComputeComponentModule.h"
+#include "Component/EnvCube/EnvCubeComponentModule.h"
+#include "Component/Event/EventListenerComponentModule.h"
+#include "Component/Explorer/ExplorerComponentModule.h"
+#include "Component/Field/FieldComponentModule.h"
+#include "Component/Form/FormComponentModule.h"
+#include "Component/Layout/LayoutComponentModule.h"
+#include "Component/Light/LightComponentModule.h"
+#include "Component/Model/ModelComponentModule.h"
+#include "Component/Navigate/NavigateComponentModule.h"
+#include "Component/Particle/ParticleComponentModule.h"
+#include "Component/Phase/PhaseComponentModule.h"
+#include "Component/Profile/ProfileComponentModule.h"
+#include "Component/Remote/RemoteComponentModule.h"
+#include "Component/RenderFlow/RenderFlowComponentModule.h"
+#include "Component/Shape/ShapeComponentModule.h"
+#include "Component/Sound/SoundComponentModule.h"
+#include "Component/Space/SpaceComponentModule.h"
+#include "Component/Stream/StreamComponentModule.h"
+#include "Component/Surface/SurfaceComponentModule.h"
+#include "Component/Terrain/TerrainComponentModule.h"
+#include "Component/TextView/TextViewComponentModule.h"
+#include "Component/Transform/TransformComponentModule.h"
+#include "Component/Visibility/VisibilityComponentModule.h"
+#include "Component/Widget/WidgetComponentModule.h"
+
 #define USE_FRAME_CAPTURE !defined(CMAKE_PAINTSNOW) || ADD_DEBUGGER_RENDERDOC_BUILTIN
 
 using namespace PaintsNow;
@@ -11,55 +41,41 @@ using namespace PaintsNow::NsBridgeSunset;
 static ZDebuggerRenderDoc debugger;
 #endif
 
-
-class ModuleRegistar : public IReflect {
-public:
-	ModuleRegistar(Engine& e) : engine(e), IReflect(true, false) {}
-	virtual void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) {
-		if (!s.IsBasicObject() && s.QueryInterface(UniqueType<Module>()) != nullptr) {
-			Module& module = static_cast<Module&>(s);
-			engine.InstallModule(&module);
-		}
-	}
-	virtual void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) {}
-
-protected:
-	Engine& engine;
-};
-
 MythForest::MythForest(Interfaces& interfaces, NsSnowyStream::SnowyStream& snowyStream, NsBridgeSunset::BridgeSunset& bridgeSunset)
-	: engine(interfaces, bridgeSunset, snowyStream, *this), lastFrameTick(0), currentFrameTime(1),
-	animationComponentModule(engine),
-	batchComponentModule(engine),
-	envCubeComponentModule(engine),
-	eventListenerComponentModule(engine),
-	explorerComponentModule(engine),
-	cacheComponentModule(engine),
-	cameraComponentModule(engine),
-	computeComponentModule(engine),
-	fieldComponentModule(engine),
-	formComponentModule(engine),
-	modelComponentModule(engine, batchComponentModule),
-	navigateComponentModule(engine),
-	layoutComponentModule(engine),
-	lightComponentModule(engine),
-	particleComponentModule(engine),
-	phaseComponentModule(engine),
-	profileComponentModule(engine),
-	remoteComponentModule(engine),
-	renderFlowComponentModule(engine),
-	shapeComponentModule(engine),
-	soundComponentModule(engine),
-	spaceComponentModule(engine),
-	streamComponentModule(engine),
-	surfaceComponentModule(engine),
-	terrainComponentModule(engine),
-	textViewComponentModule(engine),
-	transformComponentModule(engine),
-	visibilityComponentModule(engine),
-	widgetComponentModule(engine) {
+	: engine(interfaces, bridgeSunset, snowyStream, *this), lastFrameTick(0), currentFrameTime(1) {
 	entityAllocator = TShared<Entity::Allocator>::From(new Entity::Allocator());
 	warpResourceQueues.resize(engine.GetKernel().GetWarpCount(), nullptr);
+
+	// add builtin modules
+	engine.InstallModule(new AnimationComponentModule(engine));
+	engine.InstallModule(new BatchComponentModule(engine));
+	engine.InstallModule(new CacheComponentModule(engine));
+	engine.InstallModule(new CameraComponentModule(engine));
+	engine.InstallModule(new ComputeComponentModule(engine));
+	engine.InstallModule(new EnvCubeComponentModule(engine));
+	engine.InstallModule(new EventListenerComponentModule(engine));
+	engine.InstallModule(new ExplorerComponentModule(engine));
+	engine.InstallModule(new FieldComponentModule(engine));
+	engine.InstallModule(new FormComponentModule(engine));
+	engine.InstallModule(new LayoutComponentModule(engine));
+	engine.InstallModule(new LightComponentModule(engine));
+	engine.InstallModule(new ModelComponentModule(engine, *engine.GetComponentModuleFromName("BatchComponent")->QueryInterface(UniqueType<BatchComponentModule>())));
+	engine.InstallModule(new NavigateComponentModule(engine));
+	engine.InstallModule(new ParticleComponentModule(engine));
+	engine.InstallModule(new PhaseComponentModule(engine));
+	engine.InstallModule(new ProfileComponentModule(engine));
+	engine.InstallModule(new RemoteComponentModule(engine));
+	engine.InstallModule(new RenderFlowComponentModule(engine));
+	engine.InstallModule(new ShapeComponentModule(engine));
+	engine.InstallModule(new SoundComponentModule(engine));
+	engine.InstallModule(new SpaceComponentModule(engine));
+	engine.InstallModule(new StreamComponentModule(engine));
+	engine.InstallModule(new SurfaceComponentModule(engine));
+	engine.InstallModule(new TerrainComponentModule(engine));
+	engine.InstallModule(new TextViewComponentModule(engine));
+	engine.InstallModule(new TransformComponentModule(engine));
+	engine.InstallModule(new VisibilityComponentModule(engine));
+	engine.InstallModule(new WidgetComponentModule(engine));
 }
 
 MythForest::~MythForest() {
@@ -72,9 +88,6 @@ void MythForest::Initialize() {
 	for (size_t i = 0; i < warpResourceQueues.size(); i++) {
 		warpResourceQueues[i] = render.CreateQueue(device);
 	}
-
-	ModuleRegistar registar(engine);
-	(*this)(registar);
 }
 
 void MythForest::Uninitialize() {
@@ -102,36 +115,11 @@ TObject<IReflect>& MythForest::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 	if (reflect.IsReflectProperty()) {
 		ReflectProperty(engine)[Runtime];
-	
-		ReflectProperty(animationComponentModule)[ScriptLibrary = "AnimationComponentModule"];
-		ReflectProperty(batchComponentModule)[ScriptLibrary = "BatchComponentModule"];
-		ReflectProperty(cacheComponentModule)[ScriptLibrary = "CacheComponentModule"];
-		ReflectProperty(cameraComponentModule)[ScriptLibrary = "CameraComponentModule"];
-		ReflectProperty(computeComponentModule)[ScriptLibrary = "ComputeComponentModule"];
-		ReflectProperty(envCubeComponentModule)[ScriptLibrary = "EnvCubeComponentModule"];
-		ReflectProperty(eventListenerComponentModule)[ScriptLibrary = "EventListenerComponentModule"];
-		ReflectProperty(explorerComponentModule)[ScriptLibrary = "ExplorerComponentModule"];
-		ReflectProperty(fieldComponentModule)[ScriptLibrary = "FieldComponentModule"];
-		ReflectProperty(formComponentModule)[ScriptLibrary = "FormComponentModule"];
-		ReflectProperty(layoutComponentModule)[ScriptLibrary = "LayoutComponentModule"];
-		ReflectProperty(lightComponentModule)[ScriptLibrary = "LightComponentModule"];
-		ReflectProperty(modelComponentModule)[ScriptLibrary = "ModelComponentModule"];
-		ReflectProperty(navigateComponentModule)[ScriptLibrary = "NavigateComponentModule"];
-		ReflectProperty(particleComponentModule)[ScriptLibrary = "ParticleComponentModule"];
-		ReflectProperty(phaseComponentModule)[ScriptLibrary = "PhaseComponentModule"];
-		ReflectProperty(profileComponentModule)[ScriptLibrary = "ProfileComponentModule"];
-		ReflectProperty(remoteComponentModule)[ScriptLibrary = "RemoteComponentModule"];
-		ReflectProperty(renderFlowComponentModule)[ScriptLibrary = "RenderFlowComponentModule"];
-		ReflectProperty(shapeComponentModule)[ScriptLibrary = "ShapeComponentModule"];
-		ReflectProperty(soundComponentModule)[ScriptLibrary = "SoundComponentModule"];
-		ReflectProperty(spaceComponentModule)[ScriptLibrary = "SpaceComponentModule"];
-		ReflectProperty(streamComponentModule)[ScriptLibrary = "StreamComponentModule"];
-		ReflectProperty(surfaceComponentModule)[ScriptLibrary = "SurfaceComponentModule"];
-		ReflectProperty(terrainComponentModule)[ScriptLibrary = "TerrainComponentModule"];
-		ReflectProperty(textViewComponentModule)[ScriptLibrary = "TextViewComponentModule"];
-		ReflectProperty(transformComponentModule)[ScriptLibrary = "TransformComponentModule"];
-		ReflectProperty(visibilityComponentModule)[ScriptLibrary = "VisibilityComponentModule"];
-		ReflectProperty(widgetComponentModule)[ScriptLibrary = "WidgetComponentModule"];
+
+		unordered_map<String, Module*>& moduleMap = engine.GetModuleMap();
+		for (unordered_map<String, Module*>::iterator it = moduleMap.begin(); it != moduleMap.end(); ++it) {
+			*CreatePropertyWriter(reflect, this, (*it).second, (*it).first.c_str())[ScriptLibrary = (*it).first + "Module"];
+		}
 	}
 
 	if (reflect.IsReflectMethod()) {
@@ -338,14 +326,17 @@ IRender::Queue* MythForest::GetWarpResourceQueue() {
 
 //
 void MythForest::OnSize(const Int2& size) {
+	EventListenerComponentModule& eventListenerComponentModule = *engine.GetComponentModuleFromName("EventListenerComponent")->QueryInterface(UniqueType<EventListenerComponentModule>());
 	eventListenerComponentModule.OnSize(size);
 }
 
 void MythForest::OnMouse(const IFrame::EventMouse& mouse) {
+	EventListenerComponentModule& eventListenerComponentModule = *engine.GetComponentModuleFromName("EventListenerComponent")->QueryInterface(UniqueType<EventListenerComponentModule>());
 	eventListenerComponentModule.OnMouse(mouse);
 }
 
 void MythForest::OnKeyboard(const IFrame::EventKeyboard& keyboard) {
+	EventListenerComponentModule& eventListenerComponentModule = *engine.GetComponentModuleFromName("EventListenerComponent")->QueryInterface(UniqueType<EventListenerComponentModule>());
 	eventListenerComponentModule.OnKeyboard(keyboard);
 }
 

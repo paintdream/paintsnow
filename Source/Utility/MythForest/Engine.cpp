@@ -29,6 +29,7 @@ Engine::~Engine() {
 void Engine::Clear() {
 	for (unordered_map<String, Module*>::iterator it = modules.begin(); it != modules.end(); ++it) {
 		(*it).second->Uninitialize();
+		(*it).second->ReleaseObject();
 	}
 
 	for (size_t i = 0; i < frameTasks.size(); i++) {
@@ -53,14 +54,6 @@ void Engine::InstallModule(Module* module) {
 	module->Initialize();
 }
 
-void Engine::UninstallModule(Module* module) {
-	unordered_map<String, Module*>::iterator it = modules.find(module->GetTinyUnique()->GetSubName());
-	if (it != modules.end()) {
-		(*it).second->Uninitialize();
-		modules.erase(it);
-	}
-}
-
 Module* Engine::GetComponentModuleFromName(const String& name) const {
 	unordered_map<String, Module*>::const_iterator it = modules.find(name);
 	if (it != modules.end()) {
@@ -70,7 +63,7 @@ Module* Engine::GetComponentModuleFromName(const String& name) const {
 	}
 }
 
-const unordered_map<String, Module*>& Engine::GetModuleMap() const {
+unordered_map<String, Module*>& Engine::GetModuleMap() {
 	return modules;
 }
 
