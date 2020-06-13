@@ -68,7 +68,6 @@ local function InitializeWorld(databasePath : string)
 	local playerEntity = Player.New(eventListenerComponent)
 	print("InitializeWorld: Mounting entities...")
 
-	--[[
 	local spaceComponent = scene.spaceComponent
 	spaceComponent:InsertEntity(playerEntity.player)
 	-- spaceComponent:InsertEntity(guiEntity) -- use scene renderer to render gui at this moment
@@ -86,7 +85,7 @@ local function InitializeWorld(databasePath : string)
 	cameraTransform:SetRotation(cameraRotation)
 	cameraTransform:UpdateTransform()
 	
-	local screenSize : float2 = System.GetScreenSize()
+	local screenSize = System.GetScreenSize() as { number }
 	cameraController.aspect = screenSize[1] / screenSize[2]
 	cameraController:UpdatePerspective()
 	
@@ -106,9 +105,28 @@ local function InitializeWorld(databasePath : string)
 		print("PhaseStep: " .. (stepPhase and "[ON] " or "[OFF] BOUNCE: ") .. tostring(stepBounceCount))
 	end
 
-	eventListenerComponent:SetEventHandler(function (eventType : number, eventData)
+	local EventKeyboard = record
+		Name : string
+		Down : boolean
+	end
+
+	local EventMouse = record
+		Button : boolean
+		Down : boolean
+		Move : boolean
+		Wheel : boolean
+		Position : float2
+	end
+
+	local EventData = record
+		Size : { number }
+		Keyboard : EventKeyboard
+		Mouse : EventMouse
+	end
+
+	eventListenerComponent:SetEventHandler(function (eventType : string, eventData : EventData)
 		if eventType == "EVENT_TICK" then
-			local deltaTime : number = eventData
+			local deltaTime = eventData as number
 			SetFrameMonitorOnTitle(deltaTime, cameraComponent, cameraTransform, spaceComponent)
 			if stepPhase then
 				phaseComponent:Step(stepBounceCount)
@@ -157,8 +175,8 @@ local function InitializeWorld(databasePath : string)
 
 			local mouse = eventData.Mouse
 			if mouse then
-				local size : float2 = System.GetScreenSize()
-				local to = Vector.New(mouse.Position) / size * 2 - { 1, 1 }
+				local size = System.GetScreenSize() as { number }
+				local to = { mouse.Position[1] / size[1] * 2 - 1, mouse.Position[2] / size[2] * 2 - 1 }
 				if mouse.Wheel then
 					if mouse.Down then
 						cameraController:Walk(moveSpeed)
@@ -166,22 +184,32 @@ local function InitializeWorld(databasePath : string)
 						cameraController:Walk(-moveSpeed)
 					end
 				elseif mouse.Down and mouse.Move then
-					local from = Vector.New(lastMousePos) / size * 2 - { 1, 1 }
+					local from = { lastMousePos[1] / size[1] * 2 - 1, lastMousePos[2] / size[2] * 2 - 1 }
 
 					if mouse.Button then
 						-- Conflicts with LeavesWine.
-						cameraController:Translate((from - to) * moveSpeed * 100)
+						local s = moveSpeed * 100
+						cameraController:Translate({ (from[1] - to[1]) * s, (from[2] - to[2]) * s} as float2)
 					else
 						cameraController:Rotate(from, to)
 					end
 				elseif mouse.Down then
-					local position = cameraTransform:GetTranslation()
-					local mat = cameraTransform:GetAxises()
-					local target = (Vector.New(mat[3]) * (-1) + Vector.New(mat[1]) * to[1] * cameraController.aspect + Vector.New(mat[2]) * to[2]) * 100.0
-					local results : { any } = scene.rootEntity:Raycast(position, target, 1)
+					local position = cameraTransform:GetTranslation() as { number }
+					local mat = cameraTransform:GetAxises() as { { number }}
+					local target = ((Vector.Attach(mat[3]) as number * (-1) + Vector.Attach(mat[1]) as number * to[1] * cameraController.aspect + Vector.Attach(mat[2]) as number * to[2]) * 100.0) as float3
+					local RaycastResult = record
+						Intersection : float3
+						Normal : float3
+						TexCoord : float2
+						Distance : number
+						Object : Component
+						Parent : Entity
+					end
+
+					local results = scene.rootEntity:Raycast(position, target, 1) as { RaycastResult }
 					if results then
 						for i, result in ipairs(results) do
-							local formComponent : FormComponent = result.Parent:GetUniqueEntityComponent("FormComponent")
+							local formComponent = result.Parent:GetUniqueEntityComponent("FormComponent") as FormComponent
 							print("[" .. tostring(i) .. "] Mouse clicked at: " .. formComponent:GetName())
 						end
 					end
@@ -197,32 +225,31 @@ local function InitializeWorld(databasePath : string)
 
 	print("InitializeWorld: World initialization finished. Waiting for system command")
 
-	local instance = Core.Instance()
-	System.ListenConsole(function (command)
+	local instance = coroutine.running()
+	System.ListenConsole(function (command : string)
 		if command:sub(1, 1) == "@" then
-			Core.Post(instance, command)
+			coroutine.resume(instance, command)
 		else
-			local func, message = load(command)
+			local func, message = load(command) as function, string
 			if func then
 				func()
 			else
-				print("Invalid command: " .. message)
+				print("Invalid command: " .. message as string)
 			end
 		end
 	end)
 
-	for command in Core.Listen() do
+	while true do
+		local command = coroutine.yield()
 		if command == "@Quit" then
 			print("Battle control terminated.")
-			local n : any = nil
-			eventListenerComponent:BindEventTick(n)
+			eventListenerComponent:BindEventTick(nil)
 			eventListenerComponent:BindEventUserInput(false)
 			eventListenerComponent:BindEventFrame(false)
-			return System.Exit()
+			System.Exit()
+			break
 		end
 	end
-
-	--]]
 end
 
 function Main.Main()

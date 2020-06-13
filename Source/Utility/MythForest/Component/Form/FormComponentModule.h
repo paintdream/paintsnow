@@ -21,7 +21,7 @@ namespace PaintsNow {
 			void RequestResize(IScript::Request& request, IScript::Delegate<FormComponent> formComponent, int32_t index);
 			void RequestSetData(IScript::Request& request, IScript::Delegate<FormComponent> formComponent, int32_t index, String& data);
 			void RequestGetData(IScript::Request& request, IScript::Delegate<FormComponent> formComponent, int32_t index);
-			void RequestGetName(IScript::Request& request, IScript::Delegate<FormComponent> formComponent);
+			String RequestGetName(IScript::Request& request, IScript::Delegate<FormComponent> formComponent);
 		};
 	}
 }

@@ -62,13 +62,10 @@ void FormComponentModule::RequestGetData(IScript::Request& request, IScript::Del
 	}
 }
 
-void FormComponentModule::RequestGetName(IScript::Request& request, IScript::Delegate<FormComponent> formComponent) {
+String FormComponentModule::RequestGetName(IScript::Request& request, IScript::Delegate<FormComponent> formComponent) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(formComponent);
 	CHECK_THREAD_IN_MODULE(formComponent);
 
-	engine.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << formComponent->name;
-	request.UnLock();
+	return formComponent->name;
 }

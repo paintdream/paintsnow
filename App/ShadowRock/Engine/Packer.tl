@@ -37,7 +37,7 @@ local function NewResourceHandler(type : string) : function (string, string, str
 		local res : ResourceBase = SnowyStream.NewResource(dstWithExt, type, true)
 		local success = false
 		if res then
-			local data = SnowyStream.FetchFileData(src)
+			local data = SnowyStream.FetchFileData(src) as string
 			if data then
 				if SnowyStream.LoadExternalResourceData(res, data) then
 					if SnowyStream.PersistResource(res, "") then
