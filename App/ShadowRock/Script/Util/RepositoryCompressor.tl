@@ -1,5 +1,9 @@
-local RepositoryCompressor = {}
+local RepositoryCompressor = record
+	__index : any
+end
+
 RepositoryCompressor.__index = RepositoryCompressor
+
 local Database = require("Engine/Data/Database")
 
 function RepositoryCompressor.Compress(database : Database)
@@ -8,15 +12,15 @@ function RepositoryCompressor.Compress(database : Database)
 
 		local texID = "1"
 		for _, line in database:Lines("select ID from `Names` where `Name` == 'TextureResource'", 1) do
-			texID = tostring(table.unpack(line))
+			texID = tostring(line as { number }[1] as number)
 		end
 
 		local runningCount = 0
 		print("TextureResource Unique ID " .. texID)
 
 		for _, line in database:Lines("select Path from `Resources` where `TypeID` == " .. texID .. ";", 64) do
-			local path = table.unpack(line)
-			local textureResource : ResourceBase = SnowyStream.NewResource(path, "TextureResource", false)
+			local path = line as { number }[1] as string
+			local textureResource = SnowyStream.NewResource(path, "TextureResource", false) as ResourceBase
 			if textureResource then
 				local resource = textureResource
 				runningCount = runningCount + 1

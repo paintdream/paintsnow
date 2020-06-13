@@ -1,6 +1,6 @@
-local StandardCamera = {}
+local StandardCamera = record end
 
-function StandardCamera.New(renderFlowComponent : RenderFlowComponent)
+function StandardCamera.New(renderFlowComponent : RenderFlowComponent) : CameraComponent
 	local camera = CameraComponentModule.New(renderFlowComponent, "CameraView")
 	camera:SetProjectionJitter(true)
 	camera:SetSmoothTrack(true)

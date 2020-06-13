@@ -1,52 +1,53 @@
-local TpsCameraController = {}
+local TpsCameraController = record
+	cameraComponent : CameraComponent
+	transformComponent : TransformComponent
+	renderFlowComponent : RenderFlowComponent
+	phaseComponent : PhaseComponent
+	entity : Entity
+	__index : any
+	speed : number
+	fov : number
+	near : number
+	far : number
+	aspect : number
+end
+
+TpsCameraController.__index = TpsCameraController
+
 local StandardCamera = require("Script/Prefabs/Components/Camera/StandardCamera")
 local StandardRenderFlow = require("Script/Prefabs/Components/RenderFlow/StandardRenderFlow")
 local Phase = require("Script/Prefabs/Components/Phase/StandardPhase")
+local Vector = require("Engine/Data/Math/Vector")
 
-local Vector = require("Engine/Math/Vector")
-local anyone : any = {}
-local entityPrototype : Entity = anyone
-local transformPrototype : TransformComponent = anyone
-local cameraPrototype : CameraComponent = anyone
-local renderFlowPrototype : RenderFlowComponent = anyone
-local phasePrototype : PhaseComponent = anyone
-
-TpsCameraController.cameraComponent = cameraPrototype
-TpsCameraController.transformComponent = transformPrototype
-TpsCameraController.renderFlowComponent = renderFlowPrototype
-TpsCameraController.phaseComponent = phasePrototype
-TpsCameraController.__index = TpsCameraController
-TpsCameraController.speed = 0.02
-TpsCameraController.fov = math.pi / 2 -- 90
-TpsCameraController.near = 0.05
-TpsCameraController.far = 1000.0
-TpsCameraController.aspect = 1.0
-TpsCameraController.cameraController = entityPrototype
-
-function TpsCameraController.New(eventListenerComponent : EventListenerComponent)
+function TpsCameraController.New(eventListenerComponent : EventListenerComponent) : TpsCameraController
+	local entity = MythForest.NewEntity(-1)
 	local renderFlowComponent = StandardRenderFlow.New(3)
 	local cameraComponent = StandardCamera.New(renderFlowComponent)
-	local cameraController = MythForest.NewEntity(-1)
 	local transformComponent = TransformComponentModule.New()
 	local phaseComponent = Phase.New(renderFlowComponent)
 
-	cameraController:AddEntityComponent(transformComponent)
-	cameraController:AddEntityComponent(renderFlowComponent)
-	cameraController:AddEntityComponent(cameraComponent)
-	cameraController:AddEntityComponent(phaseComponent)
-	cameraController:AddEntityComponent(eventListenerComponent)
+	entity:AddEntityComponent(transformComponent as Component)
+	entity:AddEntityComponent(renderFlowComponent as Component)
+	entity:AddEntityComponent(cameraComponent as Component)
+	entity:AddEntityComponent(phaseComponent as Component)
+	entity:AddEntityComponent(eventListenerComponent as Component)
 
 	-- setup phase
 	phaseComponent:Setup(16, 8, { 10, 10, 10 }, { 256, 256 })
 
-	local meta = {}
+	local meta = {} as TpsCameraController
 	meta.cameraComponent = cameraComponent
 	meta.transformComponent = transformComponent
 	meta.renderFlowComponent = renderFlowComponent
 	meta.phaseComponent = phaseComponent
-	meta.cameraController = cameraController
+	meta.entity = entity
+	meta.speed = 1
+	meta.fov = math.pi / 4
+	meta.far = 2000
+	meta.near = 0.1
+	meta.aspect = 1
 
-	return setmetatable(meta, { __index = TpsCameraController, __chain = true })
+	return setmetatable(meta, TpsCameraController as METATABLE) as TpsCameraController
 end
 
 function TpsCameraController:UpdatePerspective()
@@ -58,19 +59,21 @@ function TpsCameraController:SetSpeed(speed : number)
 end
 
 function TpsCameraController:Walk(distance : number)
-	local position = Vector.New(self.transformComponent:GetTranslation())
-	local mat = self.transformComponent:GetAxises()
-	position = position + Vector.New(mat[3]) * (-self.speed * distance)
-	self.transformComponent:SetTranslation(position)
+	local position = Vector.Attach(self.transformComponent:GetTranslation())
+	local mat = self.transformComponent:GetAxises() as {{ number }}
+	position = (position as number + (Vector.Attach(mat[3]) as number * (-self.speed * distance)) as number) as Vector
+
+	self.transformComponent:SetTranslation(position as float3)
 end
 
 function TpsCameraController:Translate(distance : float2)
-	local position = Vector.New(self.transformComponent:GetTranslation())
-	local mat = self.transformComponent:GetAxises()
-	local delta = (Vector.New(mat[1]) * distance[1] + Vector.New(mat[2]) * distance[2]) * self.speed
+	local position = Vector.Attach(self.transformComponent:GetTranslation())
+	local mat = self.transformComponent:GetAxises() as {{ number }}
+	local delta = (Vector.Attach(mat[1]) as number * (distance as { number }[1]) + Vector.Attach(mat[2]) as number * (distance as { number }[2])) * (self.speed)
 	-- print("DELTA: " .. tostring(delta[1]) .. ", " .. tostring(delta[2]) .. ", " .. tostring(delta[3]))
-	position = position + delta
-	self.transformComponent:SetTranslation(position)
+	position = (position as number + delta) as Vector
+
+	self.transformComponent:SetTranslation(position as float3)
 end
 
 function TpsCameraController:Rotate(from : float2, to : float2)

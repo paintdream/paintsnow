@@ -14,5 +14,6 @@ MakeConsole()
 print("Starting ...")
 local App = require("Script/Main")
 print("Starting Main ...")
-local Core = require("Engine/Core")
-Core.Invoke(App.Main)
+local co = coroutine.create(App.Main)
+coroutine.resume(co)
+

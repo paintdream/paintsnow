@@ -1,10 +1,6 @@
-local GUI = {}
--- derive from entity
-GUI.__index = GUI
+local GUI = record end
 
 function GUI.New()
-	-- local rootEntity = MythForest.NewEntity(-1)
-	return setmetatable({}, { __index = GUI, __chain = true })
 end
 
 return GUI

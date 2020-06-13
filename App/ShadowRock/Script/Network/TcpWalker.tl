@@ -1,74 +1,84 @@
-local TcpWalker = record end
-TcpWalker.__index = TcpWalker
-
-local Json = require("Engine/Network/Json")
-local Core = require("Engine/Core")
-
 local User = record
 	Id : string
 	Host : string
 	Target : string
 end
 
-local dispatcher : WorkDispatcher = Core.Any()
+local TcpWalker = record
+	Dispatcher : WorkDispatcher
+	LoginPath : string
+	Host : string
+	Path : string
+	Id : string
+	Password : string
+	Cookie : string
+	Loggedin : boolean
+	OnlineUsers : { User }
 
-TcpWalker.Dispatcher = dispatcher
-TcpWalker.LoginPath = ""
-TcpWalker.Host = ""
-TcpWalker.Path = ""
-TcpWalker.Id = ""
-TcpWalker.Password = ""
-TcpWalker.Cookie = ""
-TcpWalker.Loggedin = false
+	__index : any
+end
+
+TcpWalker.__index = TcpWalker
+
+local Json = require("Engine/Network/Json")
+local Core = require("Engine/Core")
 
 local initUsers : { User } = {}
-TcpWalker.OnlineUsers = initUsers
 
-function TcpWalker:Write(connection : Connection, options)
+function TcpWalker:Write(connection : Connection, options : { { string }})
 	table.insert(options, { "action", "tcpwalker_request" })
-	local url = EchoLegend.MakeURL(self.Id, self.Host, self.Path, options, "")
+	local url = EchoLegend.MakeUri(self.Id, self.Host, self.Path, options, "")
 	-- print(url)
 	connection:WriteConnectionHttpRequest(url, "GET", { { "cookie", self.Cookie } }, "")
 end
 
-function TcpWalker:Read(connection : Connection, instance)
-	connection:ReadConnectionHttpRequest(function (uri : string, method : string, header : string, data : string)
-		local object
-		if string.len(data) < 10 then -- wp auth failed!
-			object = { Status = "ERROR", Info = "Expired" }
-		else
-			object = Json.Parse(data)
-		end
-
-		-- print("OBJECT " .. object)
-		Core.Post(instance, object)
-	end)
+local HttpRequestRecord = record
+	Uri : string
+	Method : string
+	Header : { { string } }
+	Data : string
 end
 
-function TcpWalker:Request(options : { any })
-	local instance = Core.Instance()
-	local connection = self.Dispatcher:OpenConnection(self.Host, true, function (connection : Connection, status : any)
+local HttpResponseRecord = record
+	Status : number | string
+	Data : any
+	Info : string
+end
+
+function TcpWalker:Read(connection : Connection) : HttpResponseRecord
+	local result = connection:ReadConnectionHttpRequest() as HttpRequestRecord
+	local data = result.Data
+	if #data < 10 then -- wp auth failed!
+		return { Status = "ERROR", Info = "Expired" }
+	else
+		return Json.Parse(data) as HttpResponseRecord
+	end
+end
+
+function TcpWalker:Request(options : { { string } }) : HttpResponseRecord
+	local instance = coroutine.running()
+	local connection = self.Dispatcher:OpenConnection(self.Host, true, function (connection : Connection, status : string | number)
 		-- print("Http code: " .. status)
 		if status == "Connected" then
 			self:Write(connection, options)
-		elseif type(status) == "number" and status >= 200 and status <= 499 then
-			self:Read(connection, instance)
+		elseif type(status) == "number" and status as number >= 200 and status as number <= 499 then
+			coroutine.resume(instance, self:Read(connection))
 		end
 	end, false)
 
 	connection:ActivateConnection()
-	return Core.StepListen()
+	return coroutine.yield() as HttpResponseRecord
 end
 
 function TcpWalker:Enumerate()
 	-- print("Enumerate Tcpwalker users ...")
 	local object = self:Request({ { "Action", "Enumerate" } })
 	-- print("Reading result...")
-	if object and object.Status ~= "ERROR" and object.data and type(object.data) == "table" then
+	if object and object.Status ~= "ERROR" and object.Data then
 		-- scan for active connections
 		local onlineUsers : { User } = {}
 		-- print("Got data" .. #object.data)
-		for k, v in pairs(object.data) do
+		for _, v in ipairs(object.Data as { { string : string }}) do
 			local user : User = {
 				Id = v["0"],
 				Host = v["1"] .. ":" .. v["2"],
@@ -82,77 +92,88 @@ function TcpWalker:Enumerate()
 	end
 end
 
-function TcpWalker:Connect(id : string)
+function TcpWalker:Connect(id : string) : HttpResponseRecord
 	return self:Request({ { "Action", "Connect" }, { "Target", id } })
 end
 
-function TcpWalker:Disconnect(id : string)
+function TcpWalker:Disconnect(id : string) : HttpResponseRecord
  	return self:Request({ { "Action", "Disconnect" }, { "Target", id } })
 end
 
-function TcpWalker:LoginCallback(instance, connection : Connection, uri : string, method : string, header : { any }, data : string)
-	for _, item in ipairs(header) do
-		local key : string = item[1]
-		local cookie : string = item[2]
+function TcpWalker:LoginCallback(instance : thread, connection : Connection, uri : string, method : string, header : { { string } }, data : string)
+	for _, item in ipairs(header as {{ string }}) do
+		local key = item[1]
+		local cookie = item[2]
 		if key == "Set-Cookie" then
-			local c = string.sub(cookie, 1, string.find(cookie, ";"))
+			local c = string.sub(cookie, 1, (string.find(cookie, ";")))
 
 			if not string.find(c, "WP+Cookie+check", 1, true) then
 				self:Write(connection, { { "Action", "Login" } })
 				self.Cookie = c
 				self.Loggedin = true
 			else
-				Core.Post(instance)
 				print("TcpWalker connection established")
+				coroutine.resume(instance)
+				return
 			end
 		end
 	end
 end
 
-function TcpWalker:OnConnected(connection : Connection)
-	connection:GetConnectionInfo(function (srcIP : string, srcPort : number, dstIP : string, dstPort : number)
-		-- print(">>>> PORT " .. srcPort)
-		print("LOGIN Path: " .. self.LoginPath)
-		local data = "log=" .. self.Id .. "&pwd=" .. self.Password
-		local headers : { number : any } = {
-			{ "Content-Type", "application/x-www-form-urlencoded; charset=UTF-8" },
-			{ "Connection", "keep-alive" },
-			{ "Host", self.Host },
-		}
-
-		connection:WriteConnectionHttpRequest(self.LoginPath, "POST", headers, data)
-	end)
+local ConnectionRecord = record
+	Source : string
+	Destination : string
 end
 
-function TcpWalker:Login()
-	local instance = Core.Instance()
+function TcpWalker:OnConnected(connection : Connection)
+	-- print(">>>> PORT " .. srcPort)
+	print("LOGIN Path: " .. self.LoginPath)
+	local data = "log=" .. self.Id .. "&pwd=" .. self.Password
+	local headers : { number : any } = {
+		{ "Content-Type", "application/x-www-form-urlencoded; charset=UTF-8" },
+		{ "Connection", "keep-alive" },
+		{ "Host", self.Host },
+	}
+
+	connection:WriteConnectionHttpRequest(self.LoginPath, "POST", headers, data)
+end
+
+function TcpWalker:Login() : boolean
+	local instance = coroutine.running()
 
 	-- only 'Content-Type' and 'Connection' are required for php server
 	self.Loggedin = false
-	local connection : Connection = self.Dispatcher:OpenConnection(self.Host, true, function (connection : Connection, status : any)
+	local connection = self.Dispatcher:OpenConnection(self.Host, true, function (connection : Connection, status : string | number)
 		if status == "Connected" then
 			self:OnConnected(connection)
-		elseif type(status) == "number" and status >= 200 and status <= 499 then
+		elseif type(status) == "number" and status as number >= 200 and status as number <= 499 then
 			if not self.Loggedin then
-				connection:ReadConnectionHttpRequest(function (uri : string, method : string, header : { any }, data : string)
-					local a : any = self
-					a:LoginCallback(instance, connection, uri, method, header, data)
-				end)
+				local res = connection:ReadConnectionHttpRequest() as HttpRequestRecord
+				self:LoginCallback(instance, connection, res.Uri, res.Method, res.Header, res.Data)
 			else
-				self:Read(connection, instance)
+				coroutine.resume(instance, self:Read(connection))
 			end
 		end
 	end, false)
 
 	connection:ActivateConnection()
-	Core.StepListen()
+	coroutine.yield()
 
 	return self.Loggedin
 end
 
-function TcpWalker.New(dispatcher : WorkDispatcher, login : string, url : string, id, password)
-	local part = EchoLegend.ParseURL(url)
-	local lg = EchoLegend.ParseURL(login)
+local UriInfo = record
+	User : string
+	Host : string
+	Path : string
+	Fragment : string
+	Query : {{ string }}
+end
+
+function TcpWalker.New(dispatcher : WorkDispatcher, login : string, url : string, id, password) : TcpWalker
+	local part = EchoLegend.ParseUri(url) as UriInfo
+	local lg = EchoLegend.ParseUri(login) as UriInfo
+
 	return setmetatable({
 		WorkDispatcher = dispatcher,
 		LoginPath = lg.Path,
@@ -162,7 +183,7 @@ function TcpWalker.New(dispatcher : WorkDispatcher, login : string, url : string
 		Password = password,
 		OnlineUsers = {},
 		Loggedin = false
-	}, { __index = TcpWalker })
+	}, TcpWalker as METATABLE) as TcpWalker
 end
 
 return TcpWalker

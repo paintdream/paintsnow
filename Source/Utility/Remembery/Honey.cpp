@@ -238,6 +238,7 @@ bool HoneyData::IsLayoutPinned() const {
 }
 
 void HoneyData::Enter() {
+	request->DoLock();
 	request->Push();
 	*request << tableRef;
 	IScript::Request::TableStart ts;
@@ -248,6 +249,7 @@ void HoneyData::Enter() {
 void HoneyData::Leave() {
 	*request >> endtable;
 	request->Pop();
+	request->UnLock();
 }
 
 bool HoneyData::Next() {

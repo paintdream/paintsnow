@@ -2,7 +2,7 @@
 -- 
 local StandardRenderFlow = {}
 
-function StandardRenderFlow.New(bloomLayerCount : number)
+function StandardRenderFlow.New(bloomLayerCount : number) : RenderFlowComponent
 	local renderFlowComponent = RenderFlowComponentModule.New()
 	bloomLayerCount = math.max(bloomLayerCount, 1) -- at least one bloom layer
 	local strBloomLayer = tostring(bloomLayerCount)

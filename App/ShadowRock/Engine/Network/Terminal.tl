@@ -13,7 +13,7 @@ end
 local HttpRequestRecord = record
 	Uri : string
 	Method : string
-	Header : { string : string }
+	Header : { { string } }
 	Data : string
 end
 
@@ -33,7 +33,7 @@ function Terminal.StateHandler(connection : Connection, isConnect : boolean, src
 	return true
 end
 
-function Terminal.DataHandler(connection : Connection, data : string, method : string, header : { string : string }, extraData : string) : (number, string, string, { string : string }) 
+function Terminal.DataHandler(connection : Connection, data : string, method : string, header : { { string } }, extraData : string) : (number, string, string, { { string } }) 
 	return 200, "", "", {}
 end
 

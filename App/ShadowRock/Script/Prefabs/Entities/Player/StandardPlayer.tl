@@ -1,25 +1,28 @@
-local StandardPlayer = {}
 local TpsCameraController = require("Script/Prefabs/Entities/CameraController/TpsCameraController")
-local anyone : any = {}
-local entityPrototype : Entity = anyone
-StandardPlayer.cameraController = TpsCameraController
-StandardPlayer.player = entityPrototype
+
+local StandardPlayer = record
+	cameraController : TpsCameraController
+	player : Entity
+	__index : any
+end
+
 StandardPlayer.__index = StandardPlayer
 
-function StandardPlayer.New(eventListenerComponent : EventListenerComponent)
+function StandardPlayer.New(eventListenerComponent : EventListenerComponent) : StandardPlayer
 	print("\tStardard Player selected.")
 	local player = MythForest.NewEntity(-1)
 	local spaceComponent = SpaceComponentModule.New(-1, false)
-	player:AddEntityComponent(spaceComponent)
+	player:AddEntityComponent(spaceComponent as Component)
 
 	print("\tAttach camera to player ...")
 	local tpsCameraController = TpsCameraController.New(eventListenerComponent)
-	spaceComponent:InsertEntity(tpsCameraController.cameraController)
-	local meta = {}
+	spaceComponent:InsertEntity(tpsCameraController.entity)
+	
+	local meta = {} as StandardPlayer
 	meta.cameraController = tpsCameraController
 	meta.player = player
 
-	return setmetatable(meta, { __index = StandardPlayer, __chain = true })
+	return setmetatable(meta, StandardPlayer as METATABLE) as StandardPlayer
 end
 
 return StandardPlayer

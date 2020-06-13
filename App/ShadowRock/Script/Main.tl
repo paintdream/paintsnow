@@ -64,11 +64,11 @@ local function InitializeWorld(databasePath : string)
 	local scene = Scene.New(database, clock)
 
 	print("\tCreating Player ...")
-	--[[
 	local Player = require("Script/Prefabs/Entities/Player/StandardPlayer")
 	local playerEntity = Player.New(eventListenerComponent)
 	print("InitializeWorld: Mounting entities...")
 
+	--[[
 	local spaceComponent = scene.spaceComponent
 	spaceComponent:InsertEntity(playerEntity.player)
 	-- spaceComponent:InsertEntity(guiEntity) -- use scene renderer to render gui at this moment
@@ -244,10 +244,10 @@ function Main.Main()
 	
 	local s, msg = pcall(function ()
 		InitializeWorld(databasePath)
-	end)
+	end) as boolean, string
 
 	if not s then
-		print("Error: " .. msg)
+		print("Error: " .. msg as string)
 	end
 
 end

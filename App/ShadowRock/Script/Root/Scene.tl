@@ -48,7 +48,7 @@ function Scene.New(database : Database, clock : Clock) : Scene
 			else
 				components[componentID as number] = components[componentID as number] or ModelComponentModule.New(meshResource, batchComponent) as Component
 				shapeComponents[componentID as number] = shapeComponents[componentID as number] or ShapeComponentModule.New(meshResource) 
-				formComponents[componentID as number] = formComponents[componentID as number] or FormComponentModule.New(path)
+				formComponents[componentID as number] = formComponents[componentID as number] or FormComponentModule.New(path as string)
 			end
 		end
 
@@ -71,52 +71,52 @@ function Scene.New(database : Database, clock : Clock) : Scene
 
 		print("\tCreating transform components.")
 		for _, line in database:Lines("select ID, X, Y, Z, Scale, Yaw, Pitch, Roll from `TransformComponents`;", 32) do
-			local componentID, x, y, z, s, yaw, pitch, roll = table.unpack(line)
+			local componentID, x, y, z, s, yaw, pitch, roll = table.unpack(line as { number })
 			local transformComponent = TransformComponentModule.New()
 			transformComponent:SetTranslation({ x as number, y as number, z as number })
 			transformComponent:SetScale({ s as number, s as number, s as number })
 			transformComponent:SetRotation({ yaw as number, pitch as number, roll as number })
 			transformComponent:UpdateTransform()
 
-			components[componentID] = transformComponent as Component
+			components[componentID as number] = transformComponent as Component
 		end
 
 		print("\tCreating envcube components")
 		for _, line in database:Lines("select EnvCubeComponents.ID, Path from `EnvCubeComponents`, `Resources` where `ResourceID` == Resources.ID;", 32) do
-			local componentID, path = table.unpack(line)
-			components[componentID] = components[componentID] or EnvCubeComponentModule.New()
-			local textureResource = SnowyStream.NewResource(path, "TextureResource", false)
+			local componentID, path = table.unpack(line as { any })
+			components[componentID as number] = components[componentID as number] or EnvCubeComponentModule.New() as Component
+			local textureResource = SnowyStream.NewResource(path as string, "TextureResource", false)
 			if textureResource then
-				local component = components[componentID]
-				component:SetTexture(textureResource)
+				local component = components[componentID as number] as EnvCubeComponent
+				component:SetTexture(textureResource as TextureResource)
 				component:SetRenderPolicy(lightPolicy)
 				component:SetRange({1000, 1000, 1000})
 			else
-				print("\tUnable to load texture resource: " .. path)
+				print("\tUnable to load texture resource: " .. path as string)
 			end
 		end
 		
 		print("\tAttaching components.")
 		-- create model components
 		for _, line in database:Lines("select ID, ComponentID from `EntityComponents`;", 32) do
-			local entityID, componentID = table.unpack(line)
-			local entity = entities[entityID]
-			local component = components[componentID]
+			local entityID, componentID = table.unpack(line as { any })
+			local entity = entities[entityID as number]
+			local component = components[componentID as number]
 			if entity and component then
 				entity:AddEntityComponent(component)
-				local shapeComponent = shapeComponents[componentID]
+				local shapeComponent = shapeComponents[componentID as number]
 				if shapeComponent then
-					entity:AddEntityComponent(shapeComponent)
+					entity:AddEntityComponent(shapeComponent as Component)
 				end
 
-				local formComponent = formComponents[componentID]
+				local formComponent = formComponents[componentID as number]
 				if formComponent then
-					entity:AddEntityComponent(formComponent)
+					entity:AddEntityComponent(formComponent as Component)
 				end
 			end
 		end
 
-		for _, entity in pairs(entities) do
+		for _, entity in ipairs(entities) do
 			entity:UpdateEntity()
 			spaceComponent:InsertEntity(entity)
 		end
@@ -129,19 +129,19 @@ function Scene.New(database : Database, clock : Clock) : Scene
 		sunTransformComponent:SetRotation({0.25 * math.pi, 0.75 * math.pi, 0})
 		sunTransformComponent:SetTranslation({-3, 2, 4})
 		sunTransformComponent:UpdateTransform()
-		sun:AddEntityComponent(sunTransformComponent)
-		local lightComponent : LightComponent = LightComponentModule.New()
+		sun:AddEntityComponent(sunTransformComponent as Component)
+		local lightComponent = LightComponentModule.New()
 		lightComponent:SetLightColor({2, 2, 2})
 		lightComponent:SetLightRange({1000, 1000, 1000})
 		lightComponent:SetLightAttenuation(0.1)
 		lightComponent:SetLightDirectional(true)
 		lightComponent:SetRenderPolicy(lightPolicy)
-		local streamComponent : StreamComponent = StreamComponentModule.New({32, 32, 1}, 16)
+		local streamComponent = StreamComponentModule.New({32, 32, 1}, 16)
 		lightComponent:BindLightShadowStream(0, streamComponent, { 1024, 1024 }, 0.25, 1)
 		lightComponent:BindLightShadowStream(1, streamComponent, { 1024, 1024 }, 0.25, 4)
 		lightComponent:BindLightShadowStream(2, streamComponent, { 1024, 1024 }, 0.25, 16)
 
-		sun:AddEntityComponent(lightComponent)
+		sun:AddEntityComponent(lightComponent as Component)
 		spaceComponent:InsertEntity(sun)
 
 		--[[
@@ -179,8 +179,8 @@ function Scene.New(database : Database, clock : Clock) : Scene
 
 	local RuntimeVisibilityProbe = require("Script/Prefabs/Components/Visibility/RuntimeVisibilityProbe")
 	local visibilityComponent = RuntimeVisibilityProbe.New()
-	rootEntity:AddEntityComponent(visibilityComponent)
-	rootEntity:AddEntityComponent(batchComponent)
+	rootEntity:AddEntityComponent(visibilityComponent as Component)
+	rootEntity:AddEntityComponent(batchComponent as Component)
  
 	return setmetatable(meta, Scene as METATABLE) as Scene
 end
