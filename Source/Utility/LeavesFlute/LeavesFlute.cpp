@@ -572,6 +572,10 @@ struct InspectCustomStructure : public IReflect {
 		String name, count;
 		bool subfield = InspectCustomStructure::FilterType(typeName, name, count);
 
+		if (name.find("CameraComponent") != String::npos) {
+			int a = 0;
+		}
+
 		if (type.info->creator) {
 			IReflectObject* obj = type.info->Create();
 			if (obj != nullptr) {

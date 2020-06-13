@@ -3472,7 +3472,7 @@ local standard_library = {
             needs_compat53 = true,
             typeargs = { ARG_ALPHA },
             args = { ARRAY_OF_ALPHA, NUMBER, NUMBER },
-            rets = { VARARG_ALPHA },
+            rets = { VARARG_ANY },
          }),
          ["move"] = a_type({
             typename = "poly",

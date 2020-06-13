@@ -42,27 +42,27 @@ function Scene.New(database : Database, clock : Clock) : Scene
 		local formComponents : { FormComponent } = {}
 		for _, line in database:Lines("select ModelComponents.ID, Path, ViewDistance from `ModelComponents`, `Resources` where `ResourceID` == Resources.ID;", 32) do
 			local componentID, path, viewDistance = table.unpack(line as { any })
-			local meshResource = SnowyStream.NewResource(path, "MeshResource", false)
+			local meshResource = SnowyStream.NewResource(path as string, "MeshResource", false) as MeshResource
 			if not meshResource then
-				print("\tUnable to load mesh resource: " .. path)
+				print("\tUnable to load mesh resource: " .. path as string)
 			else
-				components[componentID] = components[componentID] or ModelComponentModule.New(meshResource, batchComponent) as Component
-				shapeComponents[componentID] = shapeComponents[componentID] or ShapeComponentModule.New(meshResource)
-				formComponents[componentID] = formComponents[componentID] or FormComponentModule.New(path)
+				components[componentID as number] = components[componentID as number] or ModelComponentModule.New(meshResource, batchComponent) as Component
+				shapeComponents[componentID as number] = shapeComponents[componentID as number] or ShapeComponentModule.New(meshResource) 
+				formComponents[componentID as number] = formComponents[componentID as number] or FormComponentModule.New(path)
 			end
 		end
 
 		local count = 0
 		for _, line in database:Lines("select ModelComponentMaterials.ID, MeshGroupID, Path from `ModelComponentMaterials`, `Resources` where `ResourceID` == Resources.ID;", 32) do
-			local componentID, meshGroupID, path = table.unpack(line)
-			local materialResource = SnowyStream.NewResource(path, "MaterialResource", false)
+			local componentID, meshGroupID, path = table.unpack(line as { any })
+			local materialResource = SnowyStream.NewResource(path as string, "MaterialResource", false) as MaterialResource
 			if not materialResource then
-				print("\tUnable to load material resource: " .. path)
+				print("\tUnable to load material resource: " .. path as string)
 			else
-				local modelComponent : ModelComponent = components[componentID]
+				local modelComponent = components[componentID as number] as ModelComponent
 				if modelComponent then
 					modelComponent:SetRenderPolicy(renderPolicy)
-					modelComponent:AddMaterial(meshGroupID, materialResource)
+					modelComponent:AddMaterial(meshGroupID as number, materialResource)
 				end
 			end
 
@@ -73,11 +73,12 @@ function Scene.New(database : Database, clock : Clock) : Scene
 		for _, line in database:Lines("select ID, X, Y, Z, Scale, Yaw, Pitch, Roll from `TransformComponents`;", 32) do
 			local componentID, x, y, z, s, yaw, pitch, roll = table.unpack(line)
 			local transformComponent = TransformComponentModule.New()
-			transformComponent:SetTranslation({ x, y, z })
-			transformComponent:SetScale({ s, s, s })
-			transformComponent:SetRotation({ yaw, pitch, roll })
+			transformComponent:SetTranslation({ x as number, y as number, z as number })
+			transformComponent:SetScale({ s as number, s as number, s as number })
+			transformComponent:SetRotation({ yaw as number, pitch as number, roll as number })
 			transformComponent:UpdateTransform()
-			components[componentID] = transformComponent
+
+			components[componentID] = transformComponent as Component
 		end
 
 		print("\tCreating envcube components")

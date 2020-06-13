@@ -118,7 +118,7 @@ TObject<IReflect>& MythForest::operator () (IReflect& reflect) {
 
 		unordered_map<String, Module*>& moduleMap = engine.GetModuleMap();
 		for (unordered_map<String, Module*>::iterator it = moduleMap.begin(); it != moduleMap.end(); ++it) {
-			*CreatePropertyWriter(reflect, this, (*it).second, (*it).first.c_str())[ScriptLibrary = (*it).first + "Module"];
+			*CreatePropertyWriter(reflect, this, *(*it).second, (*it).first.c_str())[ScriptLibrary = (*it).first + "Module"];
 		}
 	}
 

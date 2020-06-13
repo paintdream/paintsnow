@@ -20,15 +20,12 @@ TObject<IReflect>& FormComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void FormComponentModule::RequestNew(IScript::Request& request, const String& name) {
+TShared<FormComponent> FormComponentModule::RequestNew(IScript::Request& request, const String& name) {
 	CHECK_REFERENCES_NONE();
 
 	TShared<FormComponent> formComponent = TShared<FormComponent>::From(allocator->New(name));
 	formComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
-	engine.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << formComponent;
-	request.UnLock();
+	return formComponent;
 }
 
 void FormComponentModule::RequestResize(IScript::Request& request, IScript::Delegate<FormComponent> formComponent, int32_t index) {

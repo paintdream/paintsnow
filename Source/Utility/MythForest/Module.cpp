@@ -9,6 +9,15 @@ Module::Module(Engine& e) : engine(e) {}
 
 void Module::TickFrame() {}
 
+Unique Module::GetTinyUnique() const {
+	assert(false);
+	return UniqueType<SharedTiny>::Get();
+}
+
+Component* Module::GetEntityUniqueComponent(Entity* entity) const {
+	return nullptr;
+}
+
 TObject<IReflect>& Module::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 

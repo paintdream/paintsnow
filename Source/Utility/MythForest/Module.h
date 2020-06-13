@@ -17,8 +17,8 @@ namespace PaintsNow {
 		public:
 			Module(Engine& engine);
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-			virtual Unique GetTinyUnique() const = 0;
-			virtual Component* GetEntityUniqueComponent(Entity* entity) const = 0;
+			virtual Unique GetTinyUnique() const;
+			virtual Component* GetEntityUniqueComponent(Entity* entity) const;
 			virtual void TickFrame();
 
 		protected:

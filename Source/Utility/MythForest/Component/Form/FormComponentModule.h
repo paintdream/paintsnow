@@ -17,7 +17,7 @@ namespace PaintsNow {
 			FormComponentModule(Engine& engine);
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
-			void RequestNew(IScript::Request& request, const String& name);
+			TShared<FormComponent> RequestNew(IScript::Request& request, const String& name);
 			void RequestResize(IScript::Request& request, IScript::Delegate<FormComponent> formComponent, int32_t index);
 			void RequestSetData(IScript::Request& request, IScript::Delegate<FormComponent> formComponent, int32_t index, String& data);
 			void RequestGetData(IScript::Request& request, IScript::Delegate<FormComponent> formComponent, int32_t index);
