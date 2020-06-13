@@ -178,7 +178,7 @@ if EnableTL then
 			local tlddef = fileHeader .. TypedDescriptions[modname]
 			local tldPath = "Runtime/".. modname .. ".tl"
 			local content = SnowyStream.FetchFileData(tldPath)
-			if not content then
+			if not content or content ~= tlddef then
 				print("Update runtime defs: " .. tldPath .. ". [" .. string.len(tlddef) .. " Bytes]")
 				local file = SnowyStream.NewFile(tldPath, true)
 				if file then
