@@ -218,7 +218,6 @@ TShared<Component> MythForest::RequestGetUniqueEntityComponent(IScript::Request&
 	if (module != nullptr) {
 		Component* component = module->GetEntityUniqueComponent(entity.Get()); // Much more faster 
 		if (component != nullptr) {
-			engine.GetKernel().YieldCurrentWarp();
 			return component;
 		}
 	}

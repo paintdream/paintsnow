@@ -173,7 +173,7 @@ function QuickCompile.New()
 	-- add enviroment
 	local runtimeModules = { "Runtime/Interface.tl" }
 	CollectRuntimeModules("Runtime/", runtimeModules)
-	local env = tl.init_env()
+	local env = tl.init_env(nil, true)
 	for _, mod in ipairs(runtimeModules) do
 		local res, err = tl.process(mod, env, nil)
 		if err then

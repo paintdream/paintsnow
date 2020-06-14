@@ -269,9 +269,10 @@ function Main.Main()
 	local weaver = RepositoryDaemon:New("127.0.0.1:16384", "Database/Repository.sql", databasePath)
 	Debug.Weaver = weaver
 	
-	local s, msg = pcall(function ()
+	local s, msg = pcall(function () : string
 		InitializeWorld(databasePath)
-	end) as boolean, string
+		return "World Initialized"
+	end)
 
 	if not s then
 		print("Error: " .. msg as string)

@@ -29,7 +29,6 @@ Engine::~Engine() {
 void Engine::Clear() {
 	for (unordered_map<String, Module*>::iterator it = modules.begin(); it != modules.end(); ++it) {
 		(*it).second->Uninitialize();
-		(*it).second->ReleaseObject();
 	}
 
 	for (size_t i = 0; i < frameTasks.size(); i++) {
@@ -44,6 +43,10 @@ void Engine::Clear() {
 
 	while (entityCount.load(std::memory_order_acquire) != 0) {
 		threadApi.Wait(finalizeEvent, mutex, 50);
+	}
+
+	for (unordered_map<String, Module*>::iterator ip = modules.begin(); ip != modules.end(); ++ip) {
+		(*ip).second->ReleaseObject();
 	}
 
 	modules.clear();

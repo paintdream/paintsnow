@@ -86,7 +86,7 @@ TShared<RenderStage> RenderFlowComponentModule::RequestNewRenderStage(IScript::R
 
 	std::map<String, TFactoryBase<RenderStage> >::const_iterator it = stageTemplates.find(name);
 	if (it != stageTemplates.end()) {
-		TShared<RenderStage> renderStage = it->second(config);
+		TShared<RenderStage> renderStage = TShared<RenderStage>::From(it->second(config));
 		renderStage->ReflectNodePorts();
 		renderFlowComponent->AddNode(renderStage());
 		return renderStage;
