@@ -41,11 +41,11 @@ function TpsCameraController.New(eventListenerComponent : EventListenerComponent
 	meta.renderFlowComponent = renderFlowComponent
 	meta.phaseComponent = phaseComponent
 	meta.entity = entity
-	meta.speed = 1
-	meta.fov = math.pi / 4
-	meta.far = 2000
-	meta.near = 0.1
-	meta.aspect = 1
+	meta.speed = 0.02
+	meta.fov = math.pi / 2
+	meta.far = 1000
+	meta.near = 0.05
+	meta.aspect = 1.0
 
 	return setmetatable(meta, TpsCameraController as METATABLE) as TpsCameraController
 end
