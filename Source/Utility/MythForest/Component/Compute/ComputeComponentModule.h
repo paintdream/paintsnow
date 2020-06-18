@@ -21,8 +21,9 @@ namespace PaintsNow {
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
 			TShared<ComputeComponent> RequestNew(IScript::Request& request);
-			void RequestLoad(IScript::Request& request, IScript::Delegate<ComputeComponent> computeComponent, const String& code);
+			TShared<ComputeRoutine> RequestLoad(IScript::Request& request, IScript::Delegate<ComputeComponent> computeComponent, const String& code);
 			void RequestCall(IScript::Request& request, IScript::Delegate<ComputeComponent> computeComponent, IScript::Delegate<ComputeRoutine> computeRoutine, IScript::Request::PlaceHolder ph);
+			void RequestCallAsync(IScript::Request& request, IScript::Delegate<ComputeComponent> computeComponent, IScript::Request::Ref callback, IScript::Delegate<ComputeRoutine> computeRoutine, IScript::Request::PlaceHolder ph);
 			void RequestCleanup(IScript::Request& request, IScript::Delegate<ComputeComponent> computeComponent);
 		};
 	}

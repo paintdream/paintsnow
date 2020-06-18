@@ -28,10 +28,12 @@ namespace PaintsNow {
 
 			TShared<ComputeRoutine> Load(const String& code);
 			void Call(IScript::Request& fromRequest, TShared<ComputeRoutine> computeRoutine);
+			void CallAsync(IScript::Request& fromRequest, IScript::Request::Ref callback, TShared<ComputeRoutine> computeRoutine);
 			void Cleanup();
 
 		protected:
-			void RequestSysCall(IScript::Request& request, IScript::Delegate<ComputeRoutine> computeRoutine, IScript::Request::PlaceHolder ph);
+			void RequestSysCall(IScript::Request& request, IScript::Delegate<ComputeRoutine> computeRoutine);
+			void Complete(IScript::Request& request, TShared<ComputeRoutine> computeRoutine, IScript::Request::Ref callback);
 
 		protected:
 			Engine& engine;

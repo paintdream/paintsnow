@@ -14,6 +14,7 @@ TObject<IReflect>& ComputeComponentModule::operator () (IReflect& reflect) {
 		ReflectMethod(RequestNew)[ScriptMethod = "New"];
 		ReflectMethod(RequestLoad)[ScriptMethod = "Load"];
 		ReflectMethod(RequestCall)[ScriptMethod = "Call"];
+		ReflectMethod(RequestCallAsync)[ScriptMethod = "CallAsync"];
 		ReflectMethod(RequestCleanup)[ScriptMethod = "Cleanup"];
 	}
 
@@ -33,18 +34,12 @@ TShared<ComputeComponent> ComputeComponentModule::RequestNew(IScript::Request& r
 	}
 }
 
-void ComputeComponentModule::RequestLoad(IScript::Request& request, IScript::Delegate<ComputeComponent> computeComponent, const String& code) {
+TShared<ComputeRoutine> ComputeComponentModule::RequestLoad(IScript::Request& request, IScript::Delegate<ComputeComponent> computeComponent, const String& code) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(computeComponent);
 	CHECK_THREAD_IN_MODULE(computeComponent);
 
-	TShared<ComputeRoutine> routine = computeComponent->Load(code);
-	if (routine) {
-		engine.GetKernel().YieldCurrentWarp();
-		request.DoLock();
-		request << routine;
-		request.UnLock();
-	}
+	return computeComponent->Load(code);
 }
 
 void ComputeComponentModule::RequestCall(IScript::Request& request, IScript::Delegate<ComputeComponent> computeComponent, IScript::Delegate<ComputeRoutine> computeRoutine, IScript::Request::PlaceHolder ph) {
@@ -54,6 +49,15 @@ void ComputeComponentModule::RequestCall(IScript::Request& request, IScript::Del
 	CHECK_THREAD_IN_MODULE(computeComponent);
 
 	computeComponent->Call(request, computeRoutine.Get());
+}
+
+void ComputeComponentModule::RequestCallAsync(IScript::Request& request, IScript::Delegate<ComputeComponent> computeComponent, IScript::Request::Ref callback, IScript::Delegate<ComputeRoutine> computeRoutine, IScript::Request::PlaceHolder ph) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(computeComponent);
+	CHECK_DELEGATE(computeRoutine);
+	CHECK_THREAD_IN_MODULE(computeComponent);
+
+	computeComponent->CallAsync(request, callback, computeRoutine.Get());
 }
 
 void ComputeComponentModule::RequestCleanup(IScript::Request& request, IScript::Delegate<ComputeComponent> computeComponent) {

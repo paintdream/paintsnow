@@ -180,7 +180,7 @@ void TunnelCall(IScript::Request& toRequest, IScript::Request& fromRequest, TSha
 
 		toRequest.Push();
 		// read remaining parameters
-		CopyTable(toRequest, fromRequest);
+		CopyArray(toRequest, fromRequest);
 
 		if (lockOrder) {
 			fromRequest.UnLock();
@@ -195,7 +195,7 @@ void TunnelCall(IScript::Request& toRequest, IScript::Request& fromRequest, TSha
 
 		if (toRequest.GetCount() != 0) {
 			// read remaining parameters
-			CopyTable(fromRequest, toRequest);
+			CopyArray(fromRequest, toRequest);
 		}
 
 		toRequest.Pop();
@@ -210,15 +210,76 @@ void TunnelCall(IScript::Request& toRequest, IScript::Request& fromRequest, TSha
 	}
 }
 
+template <bool lockOrder>
+struct Complete {
+	Complete(IScript::Request& req, IScript::Request::Ref ref) : fromRequest(req), callback(ref) {}
+	~Complete() {
+		if (callback) {
+			fromRequest.DoLock();
+			fromRequest.Dereference(callback);
+			fromRequest.UnLock();
+		}
+	}
+
+	void operator () (IScript::Request& toRequest) {
+		
+	}
+
+	IScript::Request& fromRequest;
+	IScript::Request::Ref callback;
+};
+
+template <bool lockOrder>
+void TunnelCallAsync(IScript::Request& toRequest, IScript::Request& fromRequest, IScript::Request::Ref callback, TShared<ComputeRoutine> computeRoutine) {
+	
+}
+
 void ComputeComponent::Call(IScript::Request& fromRequest, TShared<ComputeRoutine> computeRoutine) {
 	TunnelCall<true>(*mainRequest, fromRequest, computeRoutine);
+}
+
+void ComputeComponent::Complete(IScript::Request& toRequest, TShared<ComputeRoutine> computeRoutine, IScript::Request::Ref callback) {
+	if (computeRoutine->ref) {
+		IScript::Request& fromRequest = engine.bridgeSunset.AllocateRequest();
+		toRequest.Call(sync, computeRoutine->ref);
+
+		fromRequest.DoLock();
+		fromRequest.Push();
+		if (toRequest.GetCount() != 0) {
+			// read remaining parameters
+			CopyArray(fromRequest, toRequest);
+		}
+		toRequest.Pop();
+
+		fromRequest.Call(sync, callback);
+		fromRequest.Dereference(callback);
+		fromRequest.Pop();
+
+		fromRequest.UnLock();
+		toRequest.UnLock();
+		engine.bridgeSunset.FreeRequest(fromRequest);
+	}
+}
+
+void ComputeComponent::CallAsync(IScript::Request& fromRequest, IScript::Request::Ref callback, TShared<ComputeRoutine> computeRoutine) {
+	IScript::Request& toRequest = *mainRequest;
+	if (computeRoutine->ref) {
+		toRequest.DoLock();
+		fromRequest.DoLock();
+		toRequest.Push();
+		// read remaining parameters
+		CopyArray(toRequest, fromRequest);
+		fromRequest.UnLock();
+
+		engine.bridgeSunset.GetKernel().threadPool.Push(CreateTaskContextFree(Wrap(this, &ComputeComponent::Complete), std::ref(fromRequest), computeRoutine, callback));
+	}
 }
 
 void ComputeComponent::Cleanup() {
 	assert(false); // not available now.
 }
 
-void ComputeComponent::RequestSysCall(IScript::Request& request, IScript::Delegate<ComputeRoutine> computeRoutine, IScript::Request::PlaceHolder ph) {
+void ComputeComponent::RequestSysCall(IScript::Request& request, IScript::Delegate<ComputeRoutine> computeRoutine) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(computeRoutine);
 
