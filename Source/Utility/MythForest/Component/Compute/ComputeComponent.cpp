@@ -4,7 +4,14 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
-ComputeRoutine::ComputeRoutine(IScript::RequestPool* p, IScript::Request::Ref r) : pool(p), ref(r) {}
+static void ErrorHandler(IScript::Request& request, const String& err) {
+	fprintf(stderr, "ComputeRoutine subscript error: %s\n", err.c_str());
+}
+
+ComputeRoutine::ComputeRoutine(IScript::RequestPool* p, IScript::Request::Ref r) : pool(p), ref(r) {
+	pool->GetScript().SetErrorHandler(Wrap(ErrorHandler));
+}
+
 ComputeRoutine::~ComputeRoutine() {}
 
 void ComputeRoutine::ScriptUninitialize(IScript::Request& request) {
@@ -44,6 +51,7 @@ ComputeComponent::ComputeComponent(Engine& e) : RequestPool(*e.interfaces.script
 }
 
 ComputeComponent::~ComputeComponent() {
+	RequestPool::Clear();
 	script.ReleaseDevice();	
 }
 
@@ -206,12 +214,12 @@ void ComputeComponent::Complete(IScript::RequestPool* returnPool, IScript::Reque
 	}
 
 	toRequest.Pop();
+	toRequest.UnLock();
 
 	returnRequest.Call(sync, callback);
 	returnRequest.Dereference(callback);
 	returnRequest.Pop();
 	returnRequest.UnLock();
-	toRequest.UnLock();
 
 	FreeRequest(&toRequest);
 	returnPool->FreeRequest(&returnRequest);
@@ -220,8 +228,8 @@ void ComputeComponent::Complete(IScript::RequestPool* returnPool, IScript::Reque
 void ComputeComponent::CallAsync(IScript::Request& fromRequest, IScript::Request::Ref callback, TShared<ComputeRoutine> computeRoutine, IScript::Request::Arguments& args) {
 	if (computeRoutine->pool == this && computeRoutine->ref) {
 		IScript::Request& toRequest = *AllocateRequest();
-		toRequest.DoLock();
 		fromRequest.DoLock();
+		toRequest.DoLock();
 
 		toRequest.Push();
 		// read remaining parameters
@@ -229,6 +237,7 @@ void ComputeComponent::CallAsync(IScript::Request& fromRequest, IScript::Request
 			CopyVariable(toRequest, fromRequest, fromRequest.GetCurrentType());
 		}
 		fromRequest.UnLock();
+		assert(&fromRequest.GetRequestPool()->GetScript() == fromRequest.GetScript());
 
 		engine.bridgeSunset.GetKernel().threadPool.Push(CreateTaskContextFree(Wrap(this, &ComputeComponent::Complete), fromRequest.GetRequestPool(), std::ref(toRequest), callback, computeRoutine));
 	} else {
