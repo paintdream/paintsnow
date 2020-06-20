@@ -924,6 +924,10 @@ local function is_record_type(t)
    return t.typename == "record" or t.typename == "arrayrecord"
 end
 
+local function is_type(t)
+   return t.typename == "typetype" or t.typename == "nestedtype"
+end
+
 local ParseState = {}
 
 
@@ -1554,7 +1558,13 @@ local function parse_argument(ps, i)
    end
    if ps.tokens[i].tk == ":" then
       i = i + 1
-      i, node.decltype = parse_type(ps, i)
+      local decltype
+
+      i, decltype = parse_type(ps, i)
+
+      if node then
+         i, node.decltype = i, decltype
+      end
    end
    return i, node, 0
 end
@@ -2011,7 +2021,7 @@ local function parse_statement(ps, i)
    return fail(ps, i)
 end
 
-parse_statements = function(ps, i, filename)
+parse_statements = function(ps, i, filename, toplevel)
    local node = new_node(ps.tokens, i, "statements")
    while true do
       while ps.tokens[i].kind == ";" do
@@ -2020,7 +2030,7 @@ parse_statements = function(ps, i, filename)
       if ps.tokens[i].kind == "$EOF$" then
          break
       end
-      if stop_statement_list[ps.tokens[i].tk] then
+      if (not toplevel) and stop_statement_list[ps.tokens[i].tk] then
          break
       end
       local item
@@ -2049,7 +2059,7 @@ function tl.parse_program(tokens, errs, filename)
    }
    local last = ps.tokens[#ps.tokens] or { y = 1, x = 1, tk = "" }
    table.insert(ps.tokens, { y = last.y, x = last.x + #last.tk, tk = "$EOF$", kind = "$EOF$" })
-   return parse_statements(ps, 1, filename)
+   return parse_statements(ps, 1, filename, true)
 end
 
 
@@ -2449,8 +2459,6 @@ function tl.pretty_print_ast(ast, fast)
       ["global_declaration"] = {
          after = function(node, children)
             local out = { y = node.y, h = 0 }
-            --table.insert(out, "local") -- no globals
-            add_child(out, children[1], " ")
             if children[2] then
                add_child(out, children[1])
                table.insert(out, " =")
@@ -3303,7 +3311,6 @@ local function require_module(module_name, lax, env, result)
    if modules[module_name] then
       return modules[module_name], true
    end
-
    modules[module_name] = UNKNOWN
 
    local found, fd, tried = tl.search_module(module_name, true)
@@ -3864,7 +3871,7 @@ function tl.type_check(ast, opts)
          if accept_typearg and typ.typename == "typearg" then
             return typ
          end
-         if typ.typename == "typetype" or typ.typename == "nestedtype" then
+         if is_type(typ) then
             return typ
          end
       end
@@ -4891,7 +4898,7 @@ function tl.type_check(ast, opts)
       local typetype = find_type(t.names)
       if not typetype then
          type_error(t, "unknown type %s", t)
-      elseif typetype.typename == "typetype" then
+      elseif is_type(typetype) then
          resolved = match_typevals(t, typetype.def)
       else
          type_error(t, table.concat(t.names, ".") .. " is not a type")
@@ -5278,10 +5285,12 @@ function tl.type_check(ast, opts)
          local out = {}
          for v, fs in pairs(join_facts({ f1 })) do
             local realtype = find_var(v)
-            local ok, u = sum_facts(fs)
-            if ok then
-               local not_typ = subtract_types(realtype, u, fs[1].typ)
-               table.insert(out, { fact = "is", var = v, typ = not_typ })
+            if realtype then
+               local ok, u = sum_facts(fs)
+               if ok then
+                  local not_typ = subtract_types(realtype, u, fs[1].typ)
+                  table.insert(out, { fact = "is", var = v, typ = not_typ })
+               end
             end
          end
          return out
@@ -5390,6 +5399,14 @@ function tl.type_check(ast, opts)
       return UNKNOWN
    end
 
+   local function put_newtype_name_in_scope(node)
+      if node.exps and node.exps[1] and node.exps[1].kind == "newtype" then
+         local t = node.exps[1].newtype.def
+         local var = node.vars[1]
+         add_var(var, var.tk, node.exps[1].newtype, var.is_const)
+      end
+   end
+
    local visit_node = {}
 
    visit_node.cbs = {
@@ -5409,6 +5426,9 @@ function tl.type_check(ast, opts)
          end,
       },
       ["local_declaration"] = {
+         before = function(node)
+            put_newtype_name_in_scope(node)
+         end,
          after = function(node, children)
             local vals = get_assignment_values(children[2], #node.vars)
             for i, var in ipairs(node.vars) do
@@ -5443,6 +5463,9 @@ function tl.type_check(ast, opts)
          end,
       },
       ["global_declaration"] = {
+         before = function(node)
+            put_newtype_name_in_scope(node)
+         end,
          after = function(node, children)
             local vals = get_assignment_values(children[2], #node.vars)
             for i, var in ipairs(node.vars) do
@@ -5681,15 +5704,12 @@ function tl.type_check(ast, opts)
             for i = 1, #children[1] do
                local expected = rets[i] or vatype
                if expected then
-
-                  local savex = children[1][i].x
-                  local savey = children[1][i].y
-                  children[1][i].y = nil
-                  children[1][i].x = nil
                   expected = resolve_unary(expected)
-                  assert_is_a(node.exps[i], children[1][i], expected, "return value")
-                  children[1][i].x = savex
-                  children[1][i].y = savey
+                  local where = (node.exps[i] and node.exps[i].x) and
+                  node.exps[i] or
+                  node.exps
+                  assert(where and where.x)
+                  assert_is_a(where, children[1][i], expected, "return value")
                end
             end
 
@@ -6163,6 +6183,7 @@ function tl.type_check(ast, opts)
 
 
                local n_table_types = 0
+               local n_function_types = 0
                local n_string_enum = 0
                for _, t in ipairs(typ.types) do
                   t = resolve_unary(t)
@@ -6170,6 +6191,12 @@ function tl.type_check(ast, opts)
                      n_table_types = n_table_types + 1
                      if n_table_types > 1 then
                         type_error(typ, "cannot discriminate a union between multiple table types: %s", typ)
+                        break
+                     end
+                  elseif t.typename == "function" then
+                     n_function_types = n_function_types + 1
+                     if n_function_types > 1 then
+                        type_error(typ, "cannot discriminate a union between multiple function types: %s", typ)
                         break
                      end
                   elseif t.typename == "string" or t.typename == "enum" then
