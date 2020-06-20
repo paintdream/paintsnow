@@ -275,6 +275,11 @@ bool ZScriptTCC::Request::Call(const AutoWrapperBase& wrapper, const Request::Re
 	return false;
 }
 
+IScript::Request& ZScriptTCC::Request::operator >> (Arguments& args) {
+	assert(false);
+	return *this;
+}
+
 IScript::Request& ZScriptTCC::Request::operator >> (const Skip& skip) {
 	assert(false);
 	return *this;

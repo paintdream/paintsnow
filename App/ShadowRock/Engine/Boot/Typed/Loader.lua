@@ -121,7 +121,7 @@ if EnableTL then
 		["vector"] = "{any}",
 		["BaseDelegate"] = "any",
 		["Ref"] = "any",
-		["PlaceHolder"] = "any",
+		["Arguments"] = "...:any",
 		["WarpTiny"] = "any",
 		["void"] = "any"
 	}

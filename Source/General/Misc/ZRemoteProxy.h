@@ -353,6 +353,7 @@ namespace PaintsNow {
 			virtual IScript::Request& Push();
 			virtual IScript::Request& Pop();
 			virtual IScript::Request& CleanupIndex();
+			virtual IScript::Request& operator >> (IScript::Request::Arguments&) override;
 			virtual IScript::Request& operator >> (Ref&);
 			virtual IScript::Request& operator << (const Ref&);
 			virtual IScript::Request& operator << (const Nil&);

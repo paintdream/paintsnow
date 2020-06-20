@@ -19,18 +19,18 @@ void ComputeRoutine::ScriptUninitialize(IScript::Request& request) {
 	SharedTiny::ScriptUninitialize(request);
 }
 
-static void SysCall(IScript::Request& request, IScript::Delegate<ComputeRoutine> routine) {
+static void SysCall(IScript::Request& request, IScript::Delegate<ComputeRoutine> routine, IScript::Request::Arguments& args) {
 	ComputeComponent* computeComponent = static_cast<ComputeComponent*>(routine->pool);
 	assert(computeComponent != nullptr);
 
-	computeComponent->Call(request, routine.Get());
+	computeComponent->Call(request, routine.Get(), args);
 }
 
-static void SysCallAsync(IScript::Request& request, IScript::Request::Ref callback, IScript::Delegate<ComputeRoutine> routine) {
+static void SysCallAsync(IScript::Request& request, IScript::Request::Ref callback, IScript::Delegate<ComputeRoutine> routine, IScript::Request::Arguments& args) {
 	ComputeComponent* computeComponent = static_cast<ComputeComponent*>(routine->pool);
 	assert(computeComponent != nullptr);
 
-	computeComponent->CallAsync(request, callback, routine.Get());
+	computeComponent->CallAsync(request, callback, routine.Get(), args);
 }
 
 ComputeComponent::ComputeComponent(Engine& e) : RequestPool(*e.interfaces.script.NewScript(), e.GetKernel().GetWarpCount()), engine(e) {
@@ -165,41 +165,39 @@ static void CopyTable(IScript::Request& request, IScript::Request& fromRequest) 
 	fromRequest >> endtable;
 }
 
-void ComputeComponent::Call(IScript::Request& fromRequest, TShared<ComputeRoutine> computeRoutine) {
-	if (computeRoutine->pool != this || computeRoutine->ref) {
+void ComputeComponent::Call(IScript::Request& fromRequest, TShared<ComputeRoutine> computeRoutine, IScript::Request::Arguments& args) {
+	if (computeRoutine->pool == this && computeRoutine->ref) {
 		IScript::Request& toRequest = *AllocateRequest();
 		toRequest.DoLock();
 		fromRequest.DoLock();
 
 		toRequest.Push();
 		// read remaining parameters
-		for (int i = 0; i < fromRequest.GetCount(); i++) {
+		for (int i = 0; i < args.count; i++) {
 			CopyVariable(toRequest, fromRequest, fromRequest.GetCurrentType());
 		}
 		fromRequest.UnLock();
 		toRequest.Call(sync, computeRoutine->ref);
 
-		IScript::Request& returnRequest = *computeRoutine->pool->AllocateRequest();
-		returnRequest.DoLock();
-
+		fromRequest.DoLock();
 		for (int k = 0; k < toRequest.GetCount(); k++) {
-			CopyVariable(returnRequest, toRequest, toRequest.GetCurrentType());
+			CopyVariable(fromRequest, toRequest, toRequest.GetCurrentType());
 		}
 
 		toRequest.Pop();
-
-		returnRequest.UnLock();
+		fromRequest.UnLock();
 		toRequest.UnLock();
 
 		FreeRequest(&toRequest);
-		computeRoutine->pool->FreeRequest(&returnRequest);
 	} else {
 		fromRequest.Error("Invalid ref.");
 	}
 }
 
-void ComputeComponent::Complete(IScript::Request& toRequest, IScript::Request::Ref callback, TShared<ComputeRoutine> computeRoutine) {
-	IScript::Request& returnRequest = *computeRoutine->pool->AllocateRequest();
+void ComputeComponent::Complete(IScript::RequestPool* returnPool, IScript::Request& toRequest, IScript::Request::Ref callback, TShared<ComputeRoutine> computeRoutine) {
+	toRequest.Call(sync, computeRoutine->ref);
+
+	IScript::Request& returnRequest = *returnPool->AllocateRequest();
 	returnRequest.DoLock();
 	returnRequest.Push();
 
@@ -216,23 +214,23 @@ void ComputeComponent::Complete(IScript::Request& toRequest, IScript::Request::R
 	toRequest.UnLock();
 
 	FreeRequest(&toRequest);
-	computeRoutine->pool->FreeRequest(&returnRequest);
+	returnPool->FreeRequest(&returnRequest);
 }
 
-void ComputeComponent::CallAsync(IScript::Request& fromRequest, IScript::Request::Ref callback, TShared<ComputeRoutine> computeRoutine) {
-	if (computeRoutine->pool != this || computeRoutine->ref) {
+void ComputeComponent::CallAsync(IScript::Request& fromRequest, IScript::Request::Ref callback, TShared<ComputeRoutine> computeRoutine, IScript::Request::Arguments& args) {
+	if (computeRoutine->pool == this && computeRoutine->ref) {
 		IScript::Request& toRequest = *AllocateRequest();
 		toRequest.DoLock();
 		fromRequest.DoLock();
 
 		toRequest.Push();
 		// read remaining parameters
-		for (int i = 0; i < fromRequest.GetCount(); i++) {
+		for (int i = 0; i < args.count; i++) {
 			CopyVariable(toRequest, fromRequest, fromRequest.GetCurrentType());
 		}
 		fromRequest.UnLock();
 
-		engine.bridgeSunset.GetKernel().threadPool.Push(CreateTaskContextFree(Wrap(this, &ComputeComponent::Complete), std::ref(toRequest), callback, computeRoutine));
+		engine.bridgeSunset.GetKernel().threadPool.Push(CreateTaskContextFree(Wrap(this, &ComputeComponent::Complete), fromRequest.GetRequestPool(), std::ref(toRequest), callback, computeRoutine));
 	} else {
 		fromRequest.Error("Invalid ref.");
 	}

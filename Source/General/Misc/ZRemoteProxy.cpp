@@ -584,7 +584,7 @@ IScript* ZRemoteProxy::Request::GetScript() {
 }
 
 int ZRemoteProxy::Request::GetCount() {
-	return (int)buffer.size();
+	return (int)buffer.size() - initCount;
 }
 
 IScript::Request::TYPE ZRemoteProxy::Request::GetCurrentType() {
@@ -998,6 +998,13 @@ IScript::Request& ZRemoteProxy::Request::operator >> (const TableEnd&) {
 
 bool ZRemoteProxy::Request::IsValid(const BaseDelegate& d) {
 	return d.GetRaw() != nullptr;
+}
+
+IScript::Request& ZRemoteProxy::Request::operator >> (Arguments& args) {
+	args.count = initCount - idx + 1;
+	assert(args.count > 0);
+
+	return *this;
 }
 
 IScript::Request& ZRemoteProxy::Request::operator >> (Ref& ref) {

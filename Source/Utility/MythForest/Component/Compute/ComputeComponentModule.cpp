@@ -37,22 +37,22 @@ TShared<ComputeRoutine> ComputeComponentModule::RequestLoad(IScript::Request& re
 	return computeComponent->Load(code);
 }
 
-void ComputeComponentModule::RequestCall(IScript::Request& request, IScript::Delegate<ComputeComponent> computeComponent, IScript::Delegate<ComputeRoutine> computeRoutine, IScript::Request::PlaceHolder ph) {
+void ComputeComponentModule::RequestCall(IScript::Request& request, IScript::Delegate<ComputeComponent> computeComponent, IScript::Delegate<ComputeRoutine> computeRoutine, IScript::Request::Arguments& args) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(computeComponent);
 	CHECK_DELEGATE(computeRoutine);
 	CHECK_THREAD_IN_MODULE(computeComponent);
 
-	computeComponent->Call(request, computeRoutine.Get());
+	computeComponent->Call(request, computeRoutine.Get(), args);
 }
 
-void ComputeComponentModule::RequestCallAsync(IScript::Request& request, IScript::Delegate<ComputeComponent> computeComponent, IScript::Request::Ref callback, IScript::Delegate<ComputeRoutine> computeRoutine, IScript::Request::PlaceHolder ph) {
+void ComputeComponentModule::RequestCallAsync(IScript::Request& request, IScript::Delegate<ComputeComponent> computeComponent, IScript::Request::Ref callback, IScript::Delegate<ComputeRoutine> computeRoutine, IScript::Request::Arguments& args) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(computeComponent);
 	CHECK_DELEGATE(computeRoutine);
 	CHECK_THREAD_IN_MODULE(computeComponent);
 
-	computeComponent->CallAsync(request, callback, computeRoutine.Get());
+	computeComponent->CallAsync(request, callback, computeRoutine.Get(), args);
 }
 
 void ComputeComponentModule::RequestCleanup(IScript::Request& request, IScript::Delegate<ComputeComponent> computeComponent) {

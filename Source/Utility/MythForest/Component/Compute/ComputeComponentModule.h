@@ -22,8 +22,8 @@ namespace PaintsNow {
 
 			TShared<ComputeComponent> RequestNew(IScript::Request& request);
 			TShared<ComputeRoutine> RequestLoad(IScript::Request& request, IScript::Delegate<ComputeComponent> computeComponent, const String& code);
-			void RequestCall(IScript::Request& request, IScript::Delegate<ComputeComponent> computeComponent, IScript::Delegate<ComputeRoutine> computeRoutine, IScript::Request::PlaceHolder ph);
-			void RequestCallAsync(IScript::Request& request, IScript::Delegate<ComputeComponent> computeComponent, IScript::Request::Ref callback, IScript::Delegate<ComputeRoutine> computeRoutine, IScript::Request::PlaceHolder ph);
+			void RequestCall(IScript::Request& request, IScript::Delegate<ComputeComponent> computeComponent, IScript::Delegate<ComputeRoutine> computeRoutine, IScript::Request::Arguments& args);
+			void RequestCallAsync(IScript::Request& request, IScript::Delegate<ComputeComponent> computeComponent, IScript::Request::Ref callback, IScript::Delegate<ComputeRoutine> computeRoutine, IScript::Request::Arguments& args);
 			void RequestCleanup(IScript::Request& request, IScript::Delegate<ComputeComponent> computeComponent);
 		};
 	}
