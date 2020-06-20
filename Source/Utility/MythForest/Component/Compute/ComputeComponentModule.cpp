@@ -24,14 +24,9 @@ TObject<IReflect>& ComputeComponentModule::operator () (IReflect& reflect) {
 TShared<ComputeComponent> ComputeComponentModule::RequestNew(IScript::Request& request) {
 	CHECK_REFERENCES_NONE();
 
-	IScript* script = engine.interfaces.script.NewScript();
-	if (script != nullptr) {
-		TShared<ComputeComponent> computeComponent = TShared<ComputeComponent>::From(allocator->New(std::ref(engine), script, *request.GetScript()));
-		computeComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
-		return computeComponent;
-	} else {
-		return nullptr;
-	}
+	TShared<ComputeComponent> computeComponent = TShared<ComputeComponent>::From(allocator->New(std::ref(engine)));
+	computeComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
+	return computeComponent;
 }
 
 TShared<ComputeRoutine> ComputeComponentModule::RequestLoad(IScript::Request& request, IScript::Delegate<ComputeComponent> computeComponent, const String& code) {
@@ -65,5 +60,5 @@ void ComputeComponentModule::RequestCleanup(IScript::Request& request, IScript::
 	CHECK_DELEGATE(computeComponent);
 	CHECK_THREAD_IN_MODULE(computeComponent);
 
-	computeComponent->Cleanup();
+	computeComponent->Clear();
 }

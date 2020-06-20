@@ -15,7 +15,7 @@
 
 namespace PaintsNow {
 	namespace NsBridgeSunset {
-		class BridgeSunset : public TReflected<BridgeSunset, IScript::Library>, public ISyncObject {
+		class BridgeSunset : public TReflected<BridgeSunset, IScript::Library>, public IScript::RequestPool, public ISyncObject {
 		public:
 			BridgeSunset(IThread& threadApi, IScript& script, uint32_t threadCount, uint32_t warpCount);
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
@@ -23,12 +23,7 @@ namespace PaintsNow {
 			virtual void ScriptInitialize(IScript::Request& request) override;
 			virtual void ScriptUninitialize(IScript::Request& request) override;
 			void Dispatch(ITask* task);
-			IScript::Request& AllocateRequest();
-			void FreeRequest(IScript::Request& request);
-
 			Kernel& GetKernel();
-			IScript& GetScript();
-
 			void ContinueScriptDispatcher(IScript::Request& request, IHost* host, size_t paramCount, const TWrapper<void, IScript::Request&>& continuer);
 
 		protected:
@@ -42,9 +37,6 @@ namespace PaintsNow {
 			ThreadPool threadPool;
 			Kernel kernel;
 			TWrapper<void, IScript::Request&, IHost*, size_t, const TWrapper<void, IScript::Request&>&> origDispatcher;
-			IScript& script;
-			std::stack<IScript::Request*> requests;
-			TAtomic<int32_t> requestCritical;
 		};
 
 #define CHECK_THREAD_IN_LIBRARY(warpTiny) \
@@ -62,7 +54,7 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = bridgeSunset.AllocateRequest();
+				IScript::Request& req = *bridgeSunset.AllocateRequest();
 				req.DoLock();
 				req.Push();
 				req.Call(sync, callback);
@@ -72,7 +64,7 @@ namespace PaintsNow {
 				}
 				req.UnLock();
 				
-				bridgeSunset.FreeRequest(req);
+				bridgeSunset.FreeRequest(&req);
 				delete this;
 			}
 
@@ -107,7 +99,7 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = bridgeSunset.AllocateRequest();
+				IScript::Request& req = *bridgeSunset.AllocateRequest();
 				req.DoLock();
 				req.Push();
 				req.Call(sync, callback, pa);
@@ -118,7 +110,7 @@ namespace PaintsNow {
 				req.UnLock();
 				
 
-				bridgeSunset.FreeRequest(req);
+				bridgeSunset.FreeRequest(&req);
 				delete this;
 			}
 			virtual void Abort(void* context) override {
@@ -155,7 +147,7 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = bridgeSunset.AllocateRequest();
+				IScript::Request& req = *bridgeSunset.AllocateRequest();
 				req.DoLock();
 				req.Push();
 				req.Call(sync, callback, pa, pb);
@@ -166,7 +158,7 @@ namespace PaintsNow {
 				req.UnLock();
 				
 
-				bridgeSunset.FreeRequest(req);
+				bridgeSunset.FreeRequest(&req);
 				delete this;
 			}
 			virtual void Abort(void* context) override {
@@ -204,7 +196,7 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = bridgeSunset.AllocateRequest();
+				IScript::Request& req = *bridgeSunset.AllocateRequest();
 				req.DoLock();
 				req.Push();
 				req.Call(sync, callback, pa, pb, pc);
@@ -214,7 +206,7 @@ namespace PaintsNow {
 				}
 				req.UnLock();
 				
-				bridgeSunset.FreeRequest(req);
+				bridgeSunset.FreeRequest(&req);
 				delete this;
 			}
 			virtual void Abort(void* context) override {
@@ -253,7 +245,7 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = bridgeSunset.AllocateRequest();
+				IScript::Request& req = *bridgeSunset.AllocateRequest();
 				req.DoLock();
 				req.Push();
 				req.Call(sync, callback, pa, pb, pc, pd);
@@ -263,7 +255,7 @@ namespace PaintsNow {
 				}
 				req.UnLock();
 				
-				bridgeSunset.FreeRequest(req);
+				bridgeSunset.FreeRequest(&req);
 				delete this;
 			}
 			virtual void Abort(void* context) override {
@@ -303,7 +295,7 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = bridgeSunset.AllocateRequest();
+				IScript::Request& req = *bridgeSunset.AllocateRequest();
 				req.DoLock();
 				req.Push();
 				req.Call(sync, callback, pa, pb, pc, pd, pe);
@@ -313,7 +305,7 @@ namespace PaintsNow {
 				}
 				req.UnLock();
 				
-				bridgeSunset.FreeRequest(req);
+				bridgeSunset.FreeRequest(&req);
 				delete this;
 			}
 			virtual void Abort(void* context) override {
@@ -354,7 +346,7 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = bridgeSunset.AllocateRequest();
+				IScript::Request& req = *bridgeSunset.AllocateRequest();
 				req.DoLock();
 				req.Push();
 				req.Call(sync, callback, pa, pb, pc, pd, pe, pf);
@@ -364,7 +356,7 @@ namespace PaintsNow {
 				}
 				req.UnLock();
 				
-				bridgeSunset.FreeRequest(req);
+				bridgeSunset.FreeRequest(&req);
 				delete this;
 			}
 			virtual void Abort(void* context) override {
@@ -408,7 +400,7 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = bridgeSunset.AllocateRequest();
+				IScript::Request& req = *bridgeSunset.AllocateRequest();
 				req.DoLock();
 				req.Push();
 				req.Call(sync, callback, pa, pb, pc, pd, pe, pf, pg);
@@ -418,7 +410,7 @@ namespace PaintsNow {
 				}
 				req.UnLock();
 				
-				bridgeSunset.FreeRequest(req);
+				bridgeSunset.FreeRequest(&req);
 				delete this;
 			}
 			virtual void Abort(void* context) override {
@@ -463,10 +455,10 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = bridgeSunset.AllocateRequest();
+				IScript::Request& req = *bridgeSunset.AllocateRequest();
 				callback(req);
 				
-				bridgeSunset.FreeRequest(req);
+				bridgeSunset.FreeRequest(&req);
 				delete this;
 			}
 
@@ -485,10 +477,10 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = bridgeSunset.AllocateRequest();
+				IScript::Request& req = *bridgeSunset.AllocateRequest();
 				callback(req, pa);
 				
-				bridgeSunset.FreeRequest(req);
+				bridgeSunset.FreeRequest(&req);
 				delete this;
 			}
 
@@ -508,10 +500,10 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = bridgeSunset.AllocateRequest();
+				IScript::Request& req = *bridgeSunset.AllocateRequest();
 				callback(req, pa, pb);
 				
-				bridgeSunset.FreeRequest(req);
+				bridgeSunset.FreeRequest(&req);
 				delete this;
 			}
 
@@ -532,10 +524,10 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = bridgeSunset.AllocateRequest();
+				IScript::Request& req = *bridgeSunset.AllocateRequest();
 				callback(req, pa, pb, pc);
 				
-				bridgeSunset.FreeRequest(req);
+				bridgeSunset.FreeRequest(&req);
 				delete this;
 			}
 
@@ -557,10 +549,10 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = bridgeSunset.AllocateRequest();
+				IScript::Request& req = *bridgeSunset.AllocateRequest();
 				callback(pa, pb, pc, pd);
 				
-				bridgeSunset.FreeRequest(req);
+				bridgeSunset.FreeRequest(&req);
 				delete this;
 			}
 
@@ -583,10 +575,10 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = bridgeSunset.AllocateRequest();
+				IScript::Request& req = *bridgeSunset.AllocateRequest();
 				callback(req, pa, pb, pc, pd, pe);
 				
-				bridgeSunset.FreeRequest(req);
+				bridgeSunset.FreeRequest(&req);
 				delete this;
 			}
 
@@ -610,10 +602,10 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = bridgeSunset.AllocateRequest();
+				IScript::Request& req = *bridgeSunset.AllocateRequest();
 				callback(req, pa, pb, pc, pd, pe, pf);
 				
-				bridgeSunset.FreeRequest(req);
+				bridgeSunset.FreeRequest(&req);
 				delete this;
 			}
 
@@ -640,10 +632,10 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = bridgeSunset.AllocateRequest();
+				IScript::Request& req = *bridgeSunset.AllocateRequest();
 				callback(req, pa, pb, pc, pd, pe, pf, pg);
 				
-				bridgeSunset.FreeRequest(req);
+				bridgeSunset.FreeRequest(&req);
 				delete this;
 			}
 
@@ -683,7 +675,7 @@ namespace PaintsNow {
 
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
-				IScript::Request& req = bridgeSunset.AllocateRequest();
+				IScript::Request& req = *bridgeSunset.AllocateRequest();
 				req.DoLock();
 				req.Push();
 				Writer<decltype(arguments), sizeof...(Args)>()(req, arguments);
@@ -693,7 +685,7 @@ namespace PaintsNow {
 				}
 				req.Pop();
 				req.UnLock();
-				bridgeSunset.FreeRequest(req);
+				bridgeSunset.FreeRequest(&req);
 
 				delete this;
 			}
@@ -736,9 +728,9 @@ namespace PaintsNow {
 
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
-				IScript::Request& req = bridgeSunset.AllocateRequest();
+				IScript::Request& req = *bridgeSunset.AllocateRequest();
 				Apply(req, gen_seq<sizeof...(Args)>());
-				bridgeSunset.FreeRequest(req);
+				bridgeSunset.FreeRequest(&req);
 
 				delete this;
 			}

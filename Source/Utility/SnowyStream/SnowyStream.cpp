@@ -486,9 +486,9 @@ private:
 		if (GetExtReferCount() == 0 && callback) {
 			assert(context != nullptr);
 			NsBridgeSunset::BridgeSunset& bridgeSunset = *reinterpret_cast<NsBridgeSunset::BridgeSunset*>(context);
-			IScript::Request& request = bridgeSunset.AllocateRequest();
+			IScript::Request& request = *bridgeSunset.AllocateRequest();
 			Finalize(request);
-			bridgeSunset.FreeRequest(request);
+			bridgeSunset.FreeRequest(&request);
 			ReleaseObject();
 		}
 	}
@@ -609,14 +609,14 @@ struct CompressTask : public TaskOnce {
 		bool success = resource->Compress(compressType);
 		if (callback) {
 			NsBridgeSunset::BridgeSunset& bridgeSunset = *reinterpret_cast<NsBridgeSunset::BridgeSunset*>(context);
-			IScript::Request& request = bridgeSunset.AllocateRequest();
+			IScript::Request& request = *bridgeSunset.AllocateRequest();
 			request.DoLock();
 			request.Push();
 			request.Call(sync, callback, success);
 			request.Pop();
 			request.Dereference(callback);
 			request.UnLock();
-			bridgeSunset.FreeRequest(request);
+			bridgeSunset.FreeRequest(&request);
 		} else {
 			Finalize(context);
 		}
@@ -633,11 +633,11 @@ struct CompressTask : public TaskOnce {
 	void Finalize(void* context) {
 		if (callback) {
 			NsBridgeSunset::BridgeSunset& bridgeSunset = *reinterpret_cast<NsBridgeSunset::BridgeSunset*>(context);
-			IScript::Request& request = bridgeSunset.AllocateRequest();
+			IScript::Request& request = *bridgeSunset.AllocateRequest();
 			request.DoLock();
 			request.Dereference(callback);
 			request.UnLock();
-			bridgeSunset.FreeRequest(request);
+			bridgeSunset.FreeRequest(&request);
 		}
 	}
 

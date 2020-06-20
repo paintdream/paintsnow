@@ -4,12 +4,12 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
-ComputeRoutine::ComputeRoutine(IScript& s, IScript::Request::Ref r) : script(s), ref(r) {}
+ComputeRoutine::ComputeRoutine(IScript::RequestPool* p, IScript::Request::Ref r) : pool(p), ref(r) {}
 ComputeRoutine::~ComputeRoutine() {}
 
 void ComputeRoutine::ScriptUninitialize(IScript::Request& request) {
 	if (ref) {
-		IScript::Request& req = script.GetDefaultRequest();
+		IScript::Request& req = pool->GetScript().GetDefaultRequest();
 
 		req.DoLock();
 		req.Dereference(ref);
@@ -19,50 +19,48 @@ void ComputeRoutine::ScriptUninitialize(IScript::Request& request) {
 	SharedTiny::ScriptUninitialize(request);
 }
 
-ComputeComponent::ComputeComponent(Engine& e, IScript* s, IScript& hostScript) : engine(e), script(s) {
-	s->DoLock();
-	mainRequest = s->NewRequest();
+static void SysCall(IScript::Request& request, IScript::Delegate<ComputeRoutine> routine) {
+	ComputeComponent* computeComponent = static_cast<ComputeComponent*>(routine->pool);
+	assert(computeComponent != nullptr);
 
-	IScript::Request& request = *mainRequest;
+	computeComponent->Call(request, routine.Get());
+}
+
+static void SysCallAsync(IScript::Request& request, IScript::Request::Ref callback, IScript::Delegate<ComputeRoutine> routine) {
+	ComputeComponent* computeComponent = static_cast<ComputeComponent*>(routine->pool);
+	assert(computeComponent != nullptr);
+
+	computeComponent->CallAsync(request, callback, routine.Get());
+}
+
+ComputeComponent::ComputeComponent(Engine& e) : RequestPool(*e.interfaces.script.NewScript(), e.GetKernel().GetWarpCount()), engine(e) {
+	script.DoLock();
+	IScript::Request& request = script.GetDefaultRequest();
 	request << global << key("io") << nil << endtable;
 	request << global << key("os") << nil << endtable;
-	request << global << key("SysCall") << request.Adapt(Wrap(this, &ComputeComponent::RequestSysCall)) << endtable;
-	s->UnLock();
-
-	hostScript.DoLock();
-	hostRequest = hostScript.NewRequest();
-	hostScript.UnLock();
+	request << global << key("SysCall") << request.Adapt(Wrap(SysCall));
+	request << global << key("SysCallAsync") << request.Adapt(Wrap(SysCallAsync));
+	script.UnLock();
 }
 
 ComputeComponent::~ComputeComponent() {
-	script->DoLock();
-	mainRequest->ReleaseObject();
-	script->UnLock();
-	script->ReleaseDevice();	
-
-	IScript* hostScript = hostRequest->GetScript();
-	hostScript->DoLock();
-	hostRequest->ReleaseObject();
-	hostScript->UnLock();
+	script.ReleaseDevice();	
 }
 
 TObject<IReflect>& ComputeComponent::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
-
-	if (reflect.IsReflectMethod()) {
-		ReflectMethod(RequestSysCall)[ScriptMethod = "SysCall"];
-	}
+	if (reflect.IsReflectMethod()) {}
 
 	return *this;
 }
 
 TShared<ComputeRoutine> ComputeComponent::Load(const String& code) {
-	IScript::Request& request = *mainRequest;
+	IScript::Request& request = script.GetDefaultRequest();
 	request.DoLock();
 	IScript::Request::Ref ref = request.Load(code, "ComputeComponent");
 	request.UnLock();
 
-	return TShared<ComputeRoutine>::From(new ComputeRoutine(*request.GetScript(), ref));
+	return TShared<ComputeRoutine>::From(new ComputeRoutine(this, ref));
 }
 
 static void CopyTable(IScript::Request& request, IScript::Request& fromRequest);
@@ -113,7 +111,7 @@ static void CopyVariable(IScript::Request& request, IScript::Request& fromReques
 			IScript::Request::Ref ref;
 			fromRequest >> ref;
 			// managed by compute routine
-			TShared<ComputeRoutine> computeRoutine = TShared<ComputeRoutine>::From(new ComputeRoutine(*fromRequest.GetScript(), ref));
+			TShared<ComputeRoutine> computeRoutine = TShared<ComputeRoutine>::From(new ComputeRoutine(fromRequest.GetRequestPool(), ref));
 			request << computeRoutine;
 			break;
 		}
@@ -167,121 +165,76 @@ static void CopyTable(IScript::Request& request, IScript::Request& fromRequest) 
 	fromRequest >> endtable;
 }
 
-template <bool lockOrder>
-void TunnelCall(IScript::Request& toRequest, IScript::Request& fromRequest, TShared<ComputeRoutine> computeRoutine) {
-	if (computeRoutine->ref) {
-		if (lockOrder) {
-			toRequest.DoLock();
-			fromRequest.DoLock();
-		} else {
-			fromRequest.DoLock();
-			toRequest.DoLock();
-		}
+void ComputeComponent::Call(IScript::Request& fromRequest, TShared<ComputeRoutine> computeRoutine) {
+	if (computeRoutine->pool != this || computeRoutine->ref) {
+		IScript::Request& toRequest = *AllocateRequest();
+		toRequest.DoLock();
+		fromRequest.DoLock();
 
 		toRequest.Push();
 		// read remaining parameters
-		CopyArray(toRequest, fromRequest);
-
-		if (lockOrder) {
-			fromRequest.UnLock();
+		for (int i = 0; i < fromRequest.GetCount(); i++) {
+			CopyVariable(toRequest, fromRequest, fromRequest.GetCurrentType());
 		}
-
-		assert(toRequest.GetScript() == &computeRoutine->script);
-		toRequest.Call(sync, computeRoutine->ref);
-
-		if (lockOrder) {
-			fromRequest.DoLock();
-		}
-
-		if (toRequest.GetCount() != 0) {
-			// read remaining parameters
-			CopyArray(fromRequest, toRequest);
-		}
-
-		toRequest.Pop();
-
-		if (lockOrder) {
-			fromRequest.UnLock();
-			toRequest.UnLock();
-		} else {
-			toRequest.UnLock();
-			fromRequest.UnLock();
-		}
-	}
-}
-
-template <bool lockOrder>
-struct Complete {
-	Complete(IScript::Request& req, IScript::Request::Ref ref) : fromRequest(req), callback(ref) {}
-	~Complete() {
-		if (callback) {
-			fromRequest.DoLock();
-			fromRequest.Dereference(callback);
-			fromRequest.UnLock();
-		}
-	}
-
-	void operator () (IScript::Request& toRequest) {
-		
-	}
-
-	IScript::Request& fromRequest;
-	IScript::Request::Ref callback;
-};
-
-template <bool lockOrder>
-void TunnelCallAsync(IScript::Request& toRequest, IScript::Request& fromRequest, IScript::Request::Ref callback, TShared<ComputeRoutine> computeRoutine) {
-	
-}
-
-void ComputeComponent::Call(IScript::Request& fromRequest, TShared<ComputeRoutine> computeRoutine) {
-	TunnelCall<true>(*mainRequest, fromRequest, computeRoutine);
-}
-
-void ComputeComponent::Complete(IScript::Request& toRequest, TShared<ComputeRoutine> computeRoutine, IScript::Request::Ref callback) {
-	if (computeRoutine->ref) {
-		IScript::Request& fromRequest = engine.bridgeSunset.AllocateRequest();
-		toRequest.Call(sync, computeRoutine->ref);
-
-		fromRequest.DoLock();
-		fromRequest.Push();
-		if (toRequest.GetCount() != 0) {
-			// read remaining parameters
-			CopyArray(fromRequest, toRequest);
-		}
-		toRequest.Pop();
-
-		fromRequest.Call(sync, callback);
-		fromRequest.Dereference(callback);
-		fromRequest.Pop();
-
 		fromRequest.UnLock();
+		toRequest.Call(sync, computeRoutine->ref);
+
+		IScript::Request& returnRequest = *computeRoutine->pool->AllocateRequest();
+		returnRequest.DoLock();
+
+		for (int k = 0; k < toRequest.GetCount(); k++) {
+			CopyVariable(returnRequest, toRequest, toRequest.GetCurrentType());
+		}
+
+		toRequest.Pop();
+
+		returnRequest.UnLock();
 		toRequest.UnLock();
-		engine.bridgeSunset.FreeRequest(fromRequest);
+
+		FreeRequest(&toRequest);
+		computeRoutine->pool->FreeRequest(&returnRequest);
+	} else {
+		fromRequest.Error("Invalid ref.");
 	}
+}
+
+void ComputeComponent::Complete(IScript::Request& toRequest, IScript::Request::Ref callback, TShared<ComputeRoutine> computeRoutine) {
+	IScript::Request& returnRequest = *computeRoutine->pool->AllocateRequest();
+	returnRequest.DoLock();
+	returnRequest.Push();
+
+	for (int i = 0; i < toRequest.GetCount(); i++) {
+		CopyVariable(returnRequest, toRequest, toRequest.GetCurrentType());
+	}
+
+	toRequest.Pop();
+
+	returnRequest.Call(sync, callback);
+	returnRequest.Dereference(callback);
+	returnRequest.Pop();
+	returnRequest.UnLock();
+	toRequest.UnLock();
+
+	FreeRequest(&toRequest);
+	computeRoutine->pool->FreeRequest(&returnRequest);
 }
 
 void ComputeComponent::CallAsync(IScript::Request& fromRequest, IScript::Request::Ref callback, TShared<ComputeRoutine> computeRoutine) {
-	IScript::Request& toRequest = *mainRequest;
-	if (computeRoutine->ref) {
+	if (computeRoutine->pool != this || computeRoutine->ref) {
+		IScript::Request& toRequest = *AllocateRequest();
 		toRequest.DoLock();
 		fromRequest.DoLock();
+
 		toRequest.Push();
 		// read remaining parameters
-		CopyArray(toRequest, fromRequest);
+		for (int i = 0; i < fromRequest.GetCount(); i++) {
+			CopyVariable(toRequest, fromRequest, fromRequest.GetCurrentType());
+		}
 		fromRequest.UnLock();
 
-		engine.bridgeSunset.GetKernel().threadPool.Push(CreateTaskContextFree(Wrap(this, &ComputeComponent::Complete), std::ref(fromRequest), computeRoutine, callback));
+		engine.bridgeSunset.GetKernel().threadPool.Push(CreateTaskContextFree(Wrap(this, &ComputeComponent::Complete), std::ref(toRequest), callback, computeRoutine));
+	} else {
+		fromRequest.Error("Invalid ref.");
 	}
 }
 
-void ComputeComponent::Cleanup() {
-	assert(false); // not available now.
-}
-
-void ComputeComponent::RequestSysCall(IScript::Request& request, IScript::Delegate<ComputeRoutine> computeRoutine) {
-	CHECK_REFERENCES_NONE();
-	CHECK_DELEGATE(computeRoutine);
-
-	TunnelCall<false>(*hostRequest, request, computeRoutine.Get());
-}

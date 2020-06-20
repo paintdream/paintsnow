@@ -3,47 +3,11 @@
 using namespace PaintsNow;
 using namespace PaintsNow::NsBridgeSunset;
 
-BridgeSunset::BridgeSunset(IThread& t, IScript& s, uint32_t threadCount, uint32_t warpCount) : ISyncObject(t), script(s), threadPool(t, threadCount), kernel(threadPool, warpCount) {
-	requestCritical.store(0, std::memory_order_relaxed);
+BridgeSunset::BridgeSunset(IThread& t, IScript& s, uint32_t threadCount, uint32_t warpCount) : ISyncObject(t), RequestPool(s, warpCount), threadPool(t, threadCount), kernel(threadPool, warpCount) {
 }
 
 BridgeSunset::~BridgeSunset() {
 	assert(requests.empty());
-}
-
-IScript::Request& BridgeSunset::AllocateRequest() {
-	IScript::Request* request = nullptr;
-
-	SpinLock(requestCritical);
-	if (!requests.empty()) {
-		request = requests.top();
-		requests.pop();
-	}
-	SpinUnLock(requestCritical);
-
-	if (request == nullptr) {
-		script.DoLock();
-		request = script.NewRequest();
-		script.UnLock();
-	}
-
-	return *request;
-}
-
-void BridgeSunset::FreeRequest(IScript::Request& request) {
-	IScript::Request* req = &request;
-	SpinLock(requestCritical);
-	if (requests.size() < kernel.GetWarpCount() * 2) {
-		requests.push(req);
-		req = nullptr;
-	}
-	SpinUnLock(requestCritical);
-
-	if (req != nullptr) {
-		script.DoLock();
-		req->ReleaseObject();
-		script.UnLock();
-	}
 }
 
 void BridgeSunset::ScriptInitialize(IScript::Request& request) {
@@ -77,19 +41,7 @@ void BridgeSunset::ScriptUninitialize(IScript::Request& request) {
 	}
 
 	request.UnLock();
-
-	SpinLock(requestCritical);
-	std::stack<IScript::Request*> s;
-	std::swap(s, requests);
-	SpinUnLock(requestCritical);
-
-	script.DoLock();
-	while (!s.empty()) {
-		IScript::Request* request = s.top();
-		request->ReleaseObject();
-		s.pop();
-	}
-	script.UnLock();
+	Clear(); // clear request pool
 
 	Library::ScriptUninitialize(request);
 }
@@ -106,10 +58,6 @@ TObject<IReflect>& BridgeSunset::operator () (IReflect& reflect) {
 	}
 
 	return *this;
-}
-
-IScript& BridgeSunset::GetScript() {
-	return script;
 }
 
 Kernel& BridgeSunset::GetKernel() {

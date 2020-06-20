@@ -13,34 +13,29 @@ namespace PaintsNow {
 	namespace NsMythForest {
 		class ComputeRoutine : public TReflected<ComputeRoutine, SharedTiny> {
 		public:
-			ComputeRoutine(IScript& script, IScript::Request::Ref ref);
+			ComputeRoutine(IScript::RequestPool* pool, IScript::Request::Ref ref);
 			virtual ~ComputeRoutine();
 			virtual void ScriptUninitialize(IScript::Request& request) override;
-			IScript& script;
+
+			IScript::RequestPool* pool;
 			IScript::Request::Ref ref;
 		};
 
-		class ComputeComponent : public TAllocatedTiny<ComputeComponent, Component> {
+		class ComputeComponent : public TAllocatedTiny<ComputeComponent, Component>, public IScript::RequestPool {
 		public:
-			ComputeComponent(Engine& engine, IScript* script, IScript& hostScript);
+			ComputeComponent(Engine& engine);
 			virtual ~ComputeComponent();
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
 			TShared<ComputeRoutine> Load(const String& code);
 			void Call(IScript::Request& fromRequest, TShared<ComputeRoutine> computeRoutine);
 			void CallAsync(IScript::Request& fromRequest, IScript::Request::Ref callback, TShared<ComputeRoutine> computeRoutine);
-			void Cleanup();
 
 		protected:
-			void RequestSysCall(IScript::Request& request, IScript::Delegate<ComputeRoutine> computeRoutine);
-			void Complete(IScript::Request& request, TShared<ComputeRoutine> computeRoutine, IScript::Request::Ref callback);
+			void Complete(IScript::Request& request, IScript::Request::Ref callback, TShared<ComputeRoutine> computeRoutine);
 
 		protected:
 			Engine& engine;
-			IScript* script;
-			IScript::Request* hostRequest;
-			IScript::Request* mainRequest;
-			std::map<String, IScript::Library*> library;
 		};
 	}
 }
