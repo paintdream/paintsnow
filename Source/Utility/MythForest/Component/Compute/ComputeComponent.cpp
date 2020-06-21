@@ -12,17 +12,22 @@ ComputeRoutine::ComputeRoutine(IScript::RequestPool* p, IScript::Request::Ref r)
 	pool->GetScript().SetErrorHandler(Wrap(ErrorHandler));
 }
 
-ComputeRoutine::~ComputeRoutine() {}
+ComputeRoutine::~ComputeRoutine() {
+	Clear();
+}
 
-void ComputeRoutine::ScriptUninitialize(IScript::Request& request) {
+void ComputeRoutine::Clear() {
 	if (ref) {
 		IScript::Request& req = pool->GetScript().GetDefaultRequest();
 
 		req.DoLock();
 		req.Dereference(ref);
+		ref.value = 0;
 		req.UnLock();
 	}
+}
 
+void ComputeRoutine::ScriptUninitialize(IScript::Request& request) {
 	SharedTiny::ScriptUninitialize(request);
 }
 
@@ -62,6 +67,20 @@ TObject<IReflect>& ComputeComponent::operator () (IReflect& reflect) {
 	return *this;
 }
 
+struct RoutineWrapper {
+	RoutineWrapper(TShared<ComputeRoutine>& r) : routine(r) {}
+	~RoutineWrapper() {}
+	void operator () (IScript::Request& request, IScript::Request::Arguments& args) {
+		// always use sync call
+		ComputeComponent* computeComponent = static_cast<ComputeComponent*>(routine->pool);
+		assert(computeComponent != nullptr);
+
+		computeComponent->Call(request, routine(), args);
+	}
+
+	TShared<ComputeRoutine> routine;
+};
+
 TShared<ComputeRoutine> ComputeComponent::Load(const String& code) {
 	IScript::Request& request = script.GetDefaultRequest();
 	request.DoLock();
@@ -71,9 +90,9 @@ TShared<ComputeRoutine> ComputeComponent::Load(const String& code) {
 	return TShared<ComputeRoutine>::From(new ComputeRoutine(this, ref));
 }
 
-static void CopyTable(IScript::Request& request, IScript::Request& fromRequest);
-static void CopyArray(IScript::Request& request, IScript::Request& fromRequest);
-static void CopyVariable(IScript::Request& request, IScript::Request& fromRequest, IScript::Request::TYPE type) {
+static void CopyTable(uint32_t flag, IScript::Request& request, IScript::Request& fromRequest);
+static void CopyArray(uint32_t flag, IScript::Request& request, IScript::Request& fromRequest);
+static void CopyVariable(uint32_t flag, IScript::Request& request, IScript::Request& fromRequest, IScript::Request::TYPE type) {
 	switch (type) {
 		case IScript::Request::NIL:
 			request << nil;
@@ -102,14 +121,14 @@ static void CopyVariable(IScript::Request& request, IScript::Request& fromReques
 		case IScript::Request::TABLE:
 		{
 			request << begintable;
-			CopyTable(request, fromRequest);
+			CopyTable(flag, request, fromRequest);
 			request << endtable;
 			break;
 		}
 		case IScript::Request::ARRAY:
 		{
 			request << beginarray;
-			CopyArray(request, fromRequest);
+			CopyArray(flag, request, fromRequest);
 			request << endarray;
 			break;
 		}
@@ -120,7 +139,14 @@ static void CopyVariable(IScript::Request& request, IScript::Request& fromReques
 			fromRequest >> ref;
 			// managed by compute routine
 			TShared<ComputeRoutine> computeRoutine = TShared<ComputeRoutine>::From(new ComputeRoutine(fromRequest.GetRequestPool(), ref));
-			request << computeRoutine;
+			if (flag & ComputeComponent::COMPUTECOMPONENT_TRANSPARENT) {
+				// create wrapper
+				RoutineWrapper routineWrapper(computeRoutine);
+				request << request.Adapt(WrapClosure(&routineWrapper, &RoutineWrapper::operator ()));
+			} else {
+				request << computeRoutine;
+			}
+
 			break;
 		}
 		case IScript::Request::OBJECT:
@@ -133,12 +159,12 @@ static void CopyVariable(IScript::Request& request, IScript::Request& fromReques
 	}
 }
 
-static void CopyArray(IScript::Request& request, IScript::Request& fromRequest) {
+static void CopyArray(uint32_t flag, IScript::Request& request, IScript::Request& fromRequest) {
 	IScript::Request::ArrayStart ts;
 	fromRequest >> ts;
 	request << beginarray;
 	for (size_t j = 0; j < ts.count; j++) {
-		CopyVariable(request, fromRequest, fromRequest.GetCurrentType());
+		CopyVariable(flag, request, fromRequest, fromRequest.GetCurrentType());
 	}
 
 	std::vector<IScript::Request::Key> keys = fromRequest.Enumerate();
@@ -146,19 +172,19 @@ static void CopyArray(IScript::Request& request, IScript::Request& fromRequest) 
 		const IScript::Request::Key& k = keys[i];
 		// NIL, NUMBER, INTEGER, STRING, TABLE, FUNCTION, OBJECT
 		request >> key(k.GetKey());
-		CopyVariable(request, fromRequest, k.GetType());
+		CopyVariable(flag, request, fromRequest, k.GetType());
 	}
 
 	request << endarray;
 	fromRequest >> endarray;
 }
 
-static void CopyTable(IScript::Request& request, IScript::Request& fromRequest) {
+static void CopyTable(uint32_t flag, IScript::Request& request, IScript::Request& fromRequest) {
 	IScript::Request::TableStart ts;
 	fromRequest >> ts;
 	request << begintable;
 	for (size_t j = 0; j < ts.count; j++) {
-		CopyVariable(request, fromRequest, fromRequest.GetCurrentType());
+		CopyVariable(flag, request, fromRequest, fromRequest.GetCurrentType());
 	}
 
 	std::vector<IScript::Request::Key> keys = fromRequest.Enumerate();
@@ -166,7 +192,7 @@ static void CopyTable(IScript::Request& request, IScript::Request& fromRequest) 
 		const IScript::Request::Key& k = keys[i];
 		// NIL, NUMBER, INTEGER, STRING, TABLE, FUNCTION, OBJECT
 		request >> key(k.GetKey());
-		CopyVariable(request, fromRequest, k.GetType());
+		CopyVariable(flag, request, fromRequest, k.GetType());
 	}
 
 	request << endtable;
@@ -180,16 +206,17 @@ void ComputeComponent::Call(IScript::Request& fromRequest, TShared<ComputeRoutin
 		fromRequest.DoLock();
 
 		toRequest.Push();
+		uint32_t flag = Flag().load(std::memory_order_relaxed);
 		// read remaining parameters
 		for (int i = 0; i < args.count; i++) {
-			CopyVariable(toRequest, fromRequest, fromRequest.GetCurrentType());
+			CopyVariable(flag, toRequest, fromRequest, fromRequest.GetCurrentType());
 		}
 		fromRequest.UnLock();
 		toRequest.Call(sync, computeRoutine->ref);
 
 		fromRequest.DoLock();
 		for (int k = 0; k < toRequest.GetCount(); k++) {
-			CopyVariable(fromRequest, toRequest, toRequest.GetCurrentType());
+			CopyVariable(flag, fromRequest, toRequest, toRequest.GetCurrentType());
 		}
 
 		toRequest.Pop();
@@ -209,8 +236,9 @@ void ComputeComponent::Complete(IScript::RequestPool* returnPool, IScript::Reque
 	returnRequest.DoLock();
 	returnRequest.Push();
 
+	uint32_t flag = Flag().load(std::memory_order_relaxed);
 	for (int i = 0; i < toRequest.GetCount(); i++) {
-		CopyVariable(returnRequest, toRequest, toRequest.GetCurrentType());
+		CopyVariable(flag, returnRequest, toRequest, toRequest.GetCurrentType());
 	}
 
 	toRequest.Pop();
@@ -233,8 +261,9 @@ void ComputeComponent::CallAsync(IScript::Request& fromRequest, IScript::Request
 
 		toRequest.Push();
 		// read remaining parameters
+		uint32_t flag = Flag().load(std::memory_order_relaxed);
 		for (int i = 0; i < args.count; i++) {
-			CopyVariable(toRequest, fromRequest, fromRequest.GetCurrentType());
+			CopyVariable(flag, toRequest, fromRequest, fromRequest.GetCurrentType());
 		}
 		fromRequest.UnLock();
 		assert(&fromRequest.GetRequestPool()->GetScript() == fromRequest.GetScript());

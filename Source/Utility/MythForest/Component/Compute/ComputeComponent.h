@@ -16,6 +16,7 @@ namespace PaintsNow {
 			ComputeRoutine(IScript::RequestPool* pool, IScript::Request::Ref ref);
 			virtual ~ComputeRoutine();
 			virtual void ScriptUninitialize(IScript::Request& request) override;
+			void Clear();
 
 			IScript::RequestPool* pool;
 			IScript::Request::Ref ref;
@@ -23,6 +24,11 @@ namespace PaintsNow {
 
 		class ComputeComponent : public TAllocatedTiny<ComputeComponent, Component>, public IScript::RequestPool {
 		public:
+			enum {
+				COMPUTECOMPONENT_TRANSPARENT = COMPONENT_CUSTOM_BEGIN,
+				COMPUTECOMPONENT_CUSTOM_BEGIN = COMPONENT_CUSTOM_BEGIN << 1
+			};
+
 			ComputeComponent(Engine& engine);
 			virtual ~ComputeComponent();
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;

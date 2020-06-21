@@ -21,10 +21,15 @@ TObject<IReflect>& ComputeComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-TShared<ComputeComponent> ComputeComponentModule::RequestNew(IScript::Request& request) {
+TShared<ComputeComponent> ComputeComponentModule::RequestNew(IScript::Request& request, bool transparentMode) {
 	CHECK_REFERENCES_NONE();
 
 	TShared<ComputeComponent> computeComponent = TShared<ComputeComponent>::From(allocator->New(std::ref(engine)));
+
+	if (transparentMode) {
+		computeComponent->Flag() |= ComputeComponent::COMPUTECOMPONENT_TRANSPARENT;
+	}
+
 	computeComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
 	return computeComponent;
 }
