@@ -37,7 +37,7 @@ function Test.Main()
 	
 	local CrossRoutine = require("Engine/CrossRoutine")
 
-	-- CrossRoutine are running on another LuaVM
+	-- CrossRoutine is running on another LuaVM
 	local upval = "~~~"
 	local rpc = CrossRoutine.New(function (value : string) : string
 		return "Hello " .. value .. upval
