@@ -68,7 +68,7 @@ TObject<IReflect>& ComputeComponent::operator () (IReflect& reflect) {
 }
 
 struct RoutineWrapper {
-	RoutineWrapper(TShared<ComputeRoutine>& r) : routine(r) {}
+	RoutineWrapper(TShared<ComputeRoutine> r) : routine(r) {}
 	~RoutineWrapper() {}
 	void operator () (IScript::Request& request, IScript::Request::Arguments& args) {
 		// always use sync call
@@ -87,7 +87,11 @@ TShared<ComputeRoutine> ComputeComponent::Load(const String& code) {
 	IScript::Request::Ref ref = request.Load(code, "ComputeComponent");
 	request.UnLock();
 
-	return TShared<ComputeRoutine>::From(new ComputeRoutine(this, ref));
+	if (ref.value != 0) {
+		return TShared<ComputeRoutine>::From(new ComputeRoutine(this, ref));
+	} else {
+		return nullptr;
+	}
 }
 
 static void CopyTable(uint32_t flag, IScript::Request& request, IScript::Request& fromRequest);
@@ -120,16 +124,12 @@ static void CopyVariable(uint32_t flag, IScript::Request& request, IScript::Requ
 		}
 		case IScript::Request::TABLE:
 		{
-			request << begintable;
 			CopyTable(flag, request, fromRequest);
-			request << endtable;
 			break;
 		}
 		case IScript::Request::ARRAY:
 		{
-			request << beginarray;
 			CopyArray(flag, request, fromRequest);
-			request << endarray;
 			break;
 		}
 		case IScript::Request::FUNCTION:
@@ -153,7 +153,22 @@ static void CopyVariable(uint32_t flag, IScript::Request& request, IScript::Requ
 		{
 			IScript::BaseDelegate d;
 			fromRequest >> d;
-			request << d.GetRaw();
+			IScript::Object* object = d.GetRaw();
+			if (flag & ComputeComponent::COMPUTECOMPONENT_TRANSPARENT) {
+				ComputeRoutine* routine = object->QueryInterface(UniqueType<ComputeRoutine>());
+				if (routine != nullptr) {
+					if (&routine->pool->GetScript() == request.GetScript()) {
+						request << routine->ref;
+					} else {
+						RoutineWrapper routineWrapper(routine);
+						request << request.Adapt(WrapClosure(&routineWrapper, &RoutineWrapper::operator ()));
+					}
+				} else {
+					request << object;
+				}
+			} else {
+				request << object;
+			}
 			break;
 		}
 	}
@@ -171,7 +186,8 @@ static void CopyArray(uint32_t flag, IScript::Request& request, IScript::Request
 	for (size_t i = 0; i < keys.size(); i++) {
 		const IScript::Request::Key& k = keys[i];
 		// NIL, NUMBER, INTEGER, STRING, TABLE, FUNCTION, OBJECT
-		request >> key(k.GetKey());
+		fromRequest >> k;
+		request << key(k.GetKey());
 		CopyVariable(flag, request, fromRequest, k.GetType());
 	}
 
@@ -191,7 +207,8 @@ static void CopyTable(uint32_t flag, IScript::Request& request, IScript::Request
 	for (size_t i = 0; i < keys.size(); i++) {
 		const IScript::Request::Key& k = keys[i];
 		// NIL, NUMBER, INTEGER, STRING, TABLE, FUNCTION, OBJECT
-		request >> key(k.GetKey());
+		fromRequest >> k;
+		request << key(k.GetKey());
 		CopyVariable(flag, request, fromRequest, k.GetType());
 	}
 

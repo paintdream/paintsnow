@@ -17,16 +17,16 @@ local tl = require("tl")
 
 local function report_errors(category, errors)
    if not errors then
-      return false
+	  return false
    end
    if #errors > 0 then
-      local n = #errors
-      print("========================================")
-      print(n .. " " .. category .. (n ~= 1 and "s" or "") .. ":")
-      for _, err in ipairs(errors) do
-         print(err.filename .. ":" .. err.y .. ":" .. err.x .. ": " .. (err.msg or ""))
-      end
-      return true
+	  local n = #errors
+	  print("========================================")
+	  print(n .. " " .. category .. (n ~= 1 and "s" or "") .. ":")
+	  for _, err in ipairs(errors) do
+		 print(err.filename .. ":" .. err.y .. ":" .. err.x .. ": " .. (err.msg or ""))
+	  end
+	  return true
    end
    return false
 end
