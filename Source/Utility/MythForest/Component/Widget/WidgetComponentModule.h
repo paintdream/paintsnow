@@ -22,6 +22,7 @@ namespace PaintsNow {
 			TShared<WidgetComponent> RequestNew(IScript::Request& request);
 			void RequestSetWidgetTexture(IScript::Request& request, IScript::Delegate<WidgetComponent> widgetComponent, IScript::Delegate<NsSnowyStream::TextureResource> texture);
 			void RequestSetWidgetCoord(IScript::Request& request, IScript::Delegate<WidgetComponent> widgetComponent, Float4& inCoord, Float4& outCoord);
+			void RequestSetWidgetMaterial(IScript::Request& request, IScript::Delegate<WidgetComponent> widgetComponent, IScript::Delegate<NsSnowyStream::MaterialResource> material);
 
 		protected:
 			TShared<NsSnowyStream::MeshResource> widgetMesh;

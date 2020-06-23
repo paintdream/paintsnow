@@ -21,6 +21,7 @@ namespace PaintsNow {
 			Float4 outTexCoordRect;
 			NsSnowyStream::MeshResource& quadMesh;
 			TShared<NsSnowyStream::TextureResource> mainTexture;
+			TShared<NsSnowyStream::MaterialResource> materialResource;
 		};
 	}
 }

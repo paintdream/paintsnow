@@ -38,6 +38,7 @@ IMGUI_IMPL_API void     ImGui_ImplGLUT_SpecialFunc(int key, int x, int y);      
 IMGUI_IMPL_API void     ImGui_ImplGLUT_SpecialUpFunc(int key, int x, int y);                // ~ KeyReleasedFunc
 */
 
+
 class ZFrameFreeglutForImGui : public ZFrameFreeglut {
 public:
 	ZFrameFreeglutForImGui(LeavesWine& wine, const Int2& size = Int2(800, 600), Callback* callback = nullptr) : ZFrameFreeglut(size, callback), leavesWine(wine) {}
@@ -49,41 +50,49 @@ public:
 
 	virtual void SpecialKeys(int key, int x, int y) {
 		ImGui_ImplGLUT_SpecialFunc(key, x, y);
+		if (ImGui::GetIO().WantCaptureKeyboard) return;
 		ZFrameFreeglut::SpecialKeys(key, x, y);
 	}
 
 	virtual void SpecialKeysUp(int key, int x, int y) {
 		ImGui_ImplGLUT_SpecialUpFunc(key, x, y);
+		if (ImGui::GetIO().WantCaptureKeyboard) return;
 		ZFrameFreeglut::SpecialKeysUp(key, x, y);
 	}
 
 	virtual void KeyboardFunc(unsigned char cAscii, int x, int y) {
 		ImGui_ImplGLUT_KeyboardFunc(cAscii, x, y);
+		if (ImGui::GetIO().WantCaptureKeyboard) return;
 		ZFrameFreeglut::KeyboardFunc(cAscii, x, y);
 	}
 
 	virtual void KeyboardFuncUp(unsigned char cAscii, int x, int y) {
 		ImGui_ImplGLUT_KeyboardUpFunc(cAscii, x, y);
+		if (ImGui::GetIO().WantCaptureKeyboard) return;
 		ZFrameFreeglut::KeyboardFuncUp(cAscii, x, y);
 	}
 
 	virtual void MouseClickMessage(int button, int state, int x, int y) {
 		ImGui_ImplGLUT_MouseFunc(button, state, x, y);
+		if (ImGui::GetIO().WantCaptureMouse) return;
 		ZFrameFreeglut::MouseClickMessage(button, state, x, y);
 	}
 
 	virtual void MouseMoveMessage(int x, int y) {
 		ImGui_ImplGLUT_MotionFunc(x, y);
+		if (ImGui::GetIO().WantCaptureMouse) return;
 		ZFrameFreeglut::MouseMoveMessage(x, y);
 	}
 
 	virtual void MouseWheelMessage(int wheel, int dir, int x, int y) {
 		ImGui_ImplGLUT_MouseWheelFunc(wheel, dir, x, y);
+		if (ImGui::GetIO().WantCaptureMouse) return;
 		ZFrameFreeglut::MouseWheelMessage(wheel, dir, x, y);
 	}
 
 	virtual void MousePassiveMoveMessage(int x, int y) {
 		ImGui_ImplGLUT_MotionFunc(x, y);
+		if (ImGui::GetIO().WantCaptureMouse) return;
 		ZFrameFreeglut::MousePassiveMoveMessage(x, y);
 	}
 

@@ -419,8 +419,7 @@ uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData>& outp
 		n = k;
 	}
 
-	outputDrawCalls.emplace_back(std::move(drawCall));
-	return 0;
+	return safe_cast<uint32_t>(textureRange.size());
 }
 
 void TextViewComponent::RenderCharacter(IRender::Resource* textureResource, std::stringstream& stream, const Short2Pair& rect, const Short2Pair& uv, const Float4& color, uint32_t fontSize) {

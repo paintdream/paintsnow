@@ -23,6 +23,7 @@ TObject<IReflect>& WidgetComponentModule::operator () (IReflect& reflect) {
 		ReflectMethod(RequestNew)[ScriptMethod = "New"];
 		ReflectMethod(RequestSetWidgetTexture)[ScriptMethod = "SetWidgetTexture"];
 		ReflectMethod(RequestSetWidgetCoord)[ScriptMethod = "SetWidgetCoord"];
+		ReflectMethod(RequestSetWidgetMaterial)[ScriptMethod = "SetWidgetMaterial"];
 	}
 
 	return *this;
@@ -52,4 +53,12 @@ void WidgetComponentModule::RequestSetWidgetCoord(IScript::Request& request, ISc
 
 	widgetComponent->inTexCoordRect = inCoord;
 	widgetComponent->outTexCoordRect = outCoord;
+}
+
+void WidgetComponentModule::RequestSetWidgetMaterial(IScript::Request& request, IScript::Delegate<WidgetComponent> widgetComponent, IScript::Delegate<NsSnowyStream::MaterialResource> material) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(widgetComponent);
+	CHECK_THREAD_IN_MODULE(widgetComponent);
+
+	widgetComponent->materialResource = material.Get();
 }
