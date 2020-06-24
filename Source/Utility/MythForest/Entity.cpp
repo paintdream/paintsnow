@@ -8,9 +8,11 @@ using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
 Entity::Entity(Engine& engine) {
-	Flag() |= Tiny::TINY_ACTIVATED;
+	Flag().fetch_or(Tiny::TINY_ACTIVATED, std::memory_order_acquire);
 	SetEngineInternal(engine);
 	engine.NotifyEntityConstruct();
+
+	assert(QueryInterface(UniqueType<WarpTiny>()) != nullptr);
 }
 
 Entity::~Entity() {
@@ -48,13 +50,13 @@ void Entity::ReleaseObject() {
 void Entity::SetEngineInternal(Engine& engine) {
 	// reuse parent node as engine pointer
 	assert(!(Flag() & ENTITY_STORE_ENGINE));
-	Flag() |= ENTITY_STORE_ENGINE;
+	Flag().fetch_or(ENTITY_STORE_ENGINE, std::memory_order_acquire);
 
 	reinterpret_cast<Engine*&>(*(void**)&_parentNode) = &engine;
 }
 
 void Entity::CleanupEngineInternal() {
-	Flag() &= ~ENTITY_STORE_ENGINE;
+	Flag().fetch_and(~ENTITY_STORE_ENGINE, std::memory_order_release);
 
 	reinterpret_cast<Engine*&>(*(void**)&_parentNode) = nullptr;
 }
@@ -71,7 +73,7 @@ void Entity::InitializeComponent(Engine& engine, Component* component) {
 	component->Initialize(engine, this);
 
 	// add component mask
-	Flag() |= (component->GetEntityFlagMask() | TINY_MODIFIED);
+	Flag().fetch_or((component->GetEntityFlagMask() | TINY_MODIFIED), std::memory_order_acquire);
 
 	if (Flag() & ENTITY_HAS_TACH_EVENTS) {
 		Event event(engine, Event::EVENT_ATTACH_COMPONENT, this, component);
@@ -141,7 +143,7 @@ void Entity::AddComponent(Engine& engine, Component* component) {
 				}
 			}
 
-			Flag() &= ~ENTITY_STORE_NULLSLOT;
+			Flag().fetch_and(~ENTITY_STORE_NULLSLOT, std::memory_order_release);
 		}
 
 		components.emplace_back(component);
@@ -160,7 +162,7 @@ void Entity::RemoveComponent(Engine& engine, Component* component) {
 				UninitializeComponent(engine, target);
 				target = nullptr;
 
-				Flag() |= ENTITY_STORE_NULLSLOT;
+				Flag().fetch_or(ENTITY_STORE_NULLSLOT, std::memory_order_acquire);
 			}
 		}
 	} else {
@@ -174,7 +176,7 @@ void Entity::RemoveComponent(Engine& engine, Component* component) {
 					components.erase(components.begin() + i, components.end());
 				} else {
 					target = nullptr;
-					Flag() |= ENTITY_STORE_NULLSLOT;
+					Flag().fetch_or(ENTITY_STORE_NULLSLOT, std::memory_order_acquire);
 				}
 
 				break;
@@ -247,7 +249,8 @@ void Entity::PostEvent(Event& event) {
 }
 
 TObject<IReflect>& Entity::operator () (IReflect& reflect) {
-	BaseClass::operator () (reflect);
+	// BaseClass::operator () (reflect);
+	ReflectClass(Entity)[ReflectInterface(Unit)];
 
 	if (reflect.IsReflectProperty()) {
 		ReflectProperty(components);
@@ -310,6 +313,6 @@ void Entity::UpdateBoundingBox(Engine& engine) {
 			}
 		}
 
-		Flag() &= ~TINY_MODIFIED;
+		Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release);
 	}
 }

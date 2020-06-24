@@ -11,7 +11,7 @@ uint32_t Component::GetQuickUniqueID() const {
 
 void Component::Initialize(Engine& engine, Entity* entity) {
 	SetWarpIndex(entity->GetWarpIndex());
-	Flag() |= Tiny::TINY_ACTIVATED;
+	Flag().fetch_or(Tiny::TINY_ACTIVATED, std::memory_order_acquire);
 }
 
 void Component::Uninitialize(Engine& engine, Entity* entity) {

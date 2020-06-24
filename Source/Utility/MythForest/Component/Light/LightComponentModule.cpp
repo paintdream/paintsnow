@@ -60,9 +60,9 @@ void LightComponentModule::RequestSetLightDirectional(IScript::Request& request,
 	CHECK_THREAD_IN_MODULE(lightComponent);
 
 	if (directional) {
-		lightComponent->Flag() |= LightComponent::LIGHTCOMPONENT_DIRECTIONAL;
+		lightComponent->Flag().fetch_or(LightComponent::LIGHTCOMPONENT_DIRECTIONAL, std::memory_order_acquire);
 	} else {
-		lightComponent->Flag() &= ~LightComponent::LIGHTCOMPONENT_DIRECTIONAL;
+		lightComponent->Flag().fetch_and(~LightComponent::LIGHTCOMPONENT_DIRECTIONAL, std::memory_order_release);
 	}
 }
 

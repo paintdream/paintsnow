@@ -17,7 +17,7 @@ LayoutComponent::LayoutComponent() : hostEntity(nullptr) {
 LayoutComponent::~LayoutComponent() {}
 
 void LayoutComponent::SetUpdateMark() {
-	Flag() |= Tiny::TINY_MODIFIED;
+	Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_acquire);
 }
 
 // Layouts
@@ -249,7 +249,7 @@ public:
 				// add padding ...
 				CheckRect(rect);
 
-				win->Flag() |= Tiny::TINY_MODIFIED;
+				win->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_acquire);
 			}
 
 			CheckRect(win->rect);
@@ -331,8 +331,8 @@ void LayoutComponent::RoutineLayoutForSpaceComponent(Engine& engine, TShared<Spa
 		entity->ReleaseObject();
 	}
 
-	if (--runningLayoutCount == 0) {
-		Flag() &= ~TINY_MODIFIED;
+	if (runningLayoutCount.fetch_sub(1, std::memory_order_relaxed) == 1) {
+		Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release);
 	}
 }
 
@@ -347,7 +347,7 @@ void LayoutComponent::DoLayout(Engine& engine, const MatrixFloat4x4& transform) 
 			if (component != nullptr && component->GetEntityFlagMask() & Entity::ENTITY_HAS_SPACE) {
 				SpaceComponent* spaceComponent = static_cast<SpaceComponent*>(component);
 				// dispatch collection ...
-				++runningLayoutCount;
+				runningLayoutCount.fetch_add(1, std::memory_order_acquire);
 				if (spaceComponent->GetWarpIndex() == engine.GetKernel().GetCurrentWarpIndex()) {
 					RoutineLayoutForSpaceComponent(engine, spaceComponent, transform);
 				} else {

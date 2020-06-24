@@ -140,7 +140,7 @@ void EventListenerComponentModule::RequestBindEventUserInput(IScript::Request& r
 	CHECK_DELEGATE(eventListenerComponent);
 
 	if (enable) {
-		eventListenerComponent->Flag() |= (EventListenerComponent::EVENTLISTENER_BASE << Event::EVENT_INPUT);
+		eventListenerComponent->Flag().fetch_or((EventListenerComponent::EVENTLISTENER_BASE << Event::EVENT_INPUT), std::memory_order_acquire);
 		SpinLock(critical);
 		std::vector<TShared<EventListenerComponent> >::iterator it = std::find(userInputs.begin(), userInputs.end(), eventListenerComponent.Get());
 		if (it == userInputs.end()) userInputs.emplace_back(eventListenerComponent.Get());
@@ -150,7 +150,7 @@ void EventListenerComponentModule::RequestBindEventUserInput(IScript::Request& r
 		std::vector<TShared<EventListenerComponent> >::iterator it = std::find(userInputs.begin(), userInputs.end(), eventListenerComponent.Get());
 		if (it != userInputs.end()) userInputs.erase(it);
 		SpinUnLock(critical);
-		eventListenerComponent->Flag() &= ~(EventListenerComponent::EVENTLISTENER_BASE << Event::EVENT_INPUT);
+		eventListenerComponent->Flag().fetch_and(~(EventListenerComponent::EVENTLISTENER_BASE << Event::EVENT_INPUT), std::memory_order_release);
 	}
 }
 

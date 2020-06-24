@@ -38,64 +38,64 @@ typedef IRender::Resource::BufferDescription Description;
 
 void MeshResource::Upload(IRender& render, void* deviceContext) {
 	// Update buffers ...
-	Flag() &= ~RESOURCE_UPLOADED;
-	IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(deviceContext);
-	assert(queue != nullptr);
+	if (!(Flag().fetch_or(RESOURCE_UPLOADED) & RESOURCE_UPLOADED)) {
+		SpinLock(critical);
 
-	deviceMemoryUsage = 0;
+		IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(deviceContext);
+		assert(queue != nullptr);
 
-	SpinLock(critical);
+		deviceMemoryUsage = 0;
 
-	assert(!meshCollection.vertices.empty());
-	assert(meshCollection.boneIndices.size() == meshCollection.boneWeights.size());
+		assert(!meshCollection.vertices.empty());
+		assert(meshCollection.boneIndices.size() == meshCollection.boneWeights.size());
 
-	uint32_t cnt = 0;
-	cnt += bufferCollection.hasNormalBuffer = !meshCollection.normals.empty();
-	cnt += bufferCollection.hasTangentBuffer = !meshCollection.tangents.empty();
-	cnt += bufferCollection.hasColorBuffer = !meshCollection.colors.empty();
-	bufferCollection.hasIndexWeightBuffer = !meshCollection.indices.empty();
+		uint32_t cnt = 0;
+		cnt += bufferCollection.hasNormalBuffer = !meshCollection.normals.empty();
+		cnt += bufferCollection.hasTangentBuffer = !meshCollection.tangents.empty();
+		cnt += bufferCollection.hasColorBuffer = !meshCollection.colors.empty();
+		bufferCollection.hasIndexWeightBuffer = !meshCollection.indices.empty();
 
-	std::vector<UChar4> normalTangentColorData(meshCollection.normals.size() * cnt);
-	if (cnt != 0) {
-		for (size_t i = 0; i < meshCollection.vertices.size(); i++) {
-			uint32_t offset = 0;
-			if (bufferCollection.hasNormalBuffer) {
-				normalTangentColorData[i * cnt + offset++] = meshCollection.normals[i];
-			}
+		std::vector<UChar4> normalTangentColorData(meshCollection.normals.size() * cnt);
+		if (cnt != 0) {
+			for (size_t i = 0; i < meshCollection.vertices.size(); i++) {
+				uint32_t offset = 0;
+				if (bufferCollection.hasNormalBuffer) {
+					normalTangentColorData[i * cnt + offset++] = meshCollection.normals[i];
+				}
 
-			if (bufferCollection.hasTangentBuffer) {
-				normalTangentColorData[i * cnt + offset++] = meshCollection.tangents[i];
-			}
+				if (bufferCollection.hasTangentBuffer) {
+					normalTangentColorData[i * cnt + offset++] = meshCollection.tangents[i];
+				}
 
-			if (bufferCollection.hasColorBuffer) {
-				normalTangentColorData[i * cnt + offset++] = meshCollection.colors[i];
+				if (bufferCollection.hasColorBuffer) {
+					normalTangentColorData[i * cnt + offset++] = meshCollection.colors[i];
+				}
 			}
 		}
+
+		std::vector<UChar4> boneData(meshCollection.boneIndices.size() * 2);
+		for (size_t i = 0; i < meshCollection.boneIndices.size(); i++) {
+			boneData[i * 2] = meshCollection.boneIndices[i];
+			boneData[i * 2 + 1] = meshCollection.boneWeights[i];
+		}
+
+		deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.indexBuffer, meshCollection.indices, Description::INDEX);
+		deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.positionBuffer, meshCollection.vertices, Description::VERTEX);
+		deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.normalTangentColorBuffer, normalTangentColorData, Description::VERTEX, cnt);
+		deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.boneIndexWeightBuffer, boneData, Description::VERTEX, 2);
+
+		bufferCollection.texCoordBuffers.resize(meshCollection.texCoords.size(), nullptr);
+		for (size_t j = 0; j < meshCollection.texCoords.size(); j++) {
+			IAsset::TexCoord& texCoord = meshCollection.texCoords[j];
+			deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.texCoordBuffers[j], texCoord.coords, Description::VERTEX);
+		}
+
+		if (mapCount.load(std::memory_order_relaxed) == 0) {
+			meshCollection = IAsset::MeshCollection();
+		}
+
+		SpinUnLock(critical);
 	}
-
-	std::vector<UChar4> boneData(meshCollection.boneIndices.size() * 2);
-	for (size_t i = 0; i < meshCollection.boneIndices.size(); i++) {
-		boneData[i * 2] = meshCollection.boneIndices[i];
-		boneData[i * 2 + 1] = meshCollection.boneWeights[i];
-	}
-
-	deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.indexBuffer, meshCollection.indices, Description::INDEX);
-	deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.positionBuffer, meshCollection.vertices, Description::VERTEX);
-	deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.normalTangentColorBuffer, normalTangentColorData, Description::VERTEX, cnt);
-	deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.boneIndexWeightBuffer, boneData, Description::VERTEX, 2);
-
-	bufferCollection.texCoordBuffers.resize(meshCollection.texCoords.size(), nullptr);
-	for (size_t j = 0; j < meshCollection.texCoords.size(); j++) {
-		IAsset::TexCoord& texCoord = meshCollection.texCoords[j];
-		deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.texCoordBuffers[j], texCoord.coords, Description::VERTEX);
-	}
-
-	if (mapCount.load(std::memory_order_relaxed) == 0) {
-		meshCollection = IAsset::MeshCollection();
-	}
-
-	SpinUnLock(critical);
-	Flag() |= RESOURCE_UPLOADED;
 }
 
 void MeshResource::Unmap() {
@@ -107,7 +107,7 @@ void MeshResource::Unmap() {
 }
 
 void MeshResource::Detach(IRender& render, void* deviceContext) {
-	Flag() &= ~RESOURCE_UPLOADED;
+	Flag().fetch_or(RESOURCE_UPLOADED, std::memory_order_acquire);
 
 	IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(deviceContext);
 	assert(queue != nullptr);

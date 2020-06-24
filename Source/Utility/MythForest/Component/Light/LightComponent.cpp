@@ -111,8 +111,8 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 
 	if (!(taskData->Flag() & TINY_MODIFIED)) {
 		// refresh shadow grid info
-		taskData->Flag() |= TINY_MODIFIED;
-		shadowGrid->Flag() |= TINY_MODIFIED;
+		taskData->Flag().fetch_or(TINY_MODIFIED, std::memory_order_acquire);
+		shadowGrid->Flag().fetch_or(TINY_MODIFIED, std::memory_order_acquire);
 
 		// get entity
 		ShadowContext* shadowContext = context->QueryInterface(UniqueType<ShadowContext>());
@@ -265,9 +265,9 @@ void ShadowLayerConfig::TaskData::RenderFrame(Engine& engine) {
 	}
 
 	engine.interfaces.render.PresentQueues(&renderQueues[0], safe_cast<uint32_t>(renderQueues.size()), IRender::PRESENT_EXECUTE_ALL);
-	shadowGrid->Flag() &= ~TINY_MODIFIED;
+	shadowGrid->Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release);
 
-	Flag() &= ~TINY_MODIFIED;
+	Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release);
 	Cleanup(engine.interfaces.render);
 	ReleaseObject();
 	// engine.mythForest.EndCaptureFrame();
@@ -393,7 +393,7 @@ void LightComponent::ShadowLayer::CollectComponents(Engine& engine, TaskData& ta
 
 				VisibilityComponent* visibilityComponent = entity->GetUniqueComponent(UniqueType<VisibilityComponent>());
 
-				++taskData.pendingCount;
+				taskData.pendingCount.fetch_add(1, std::memory_order_acquire);
 
 				CaptureData newCaptureData;
 				const MatrixFloat4x4& mat = captureData.viewTransform;

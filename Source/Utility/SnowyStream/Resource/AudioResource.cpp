@@ -4,7 +4,7 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsSnowyStream;
 
 AudioResource::AudioResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID) : BaseClass(manager, uniqueID) {
-	Flag() |= RESOURCE_STREAM;
+	Flag().fetch_or(RESOURCE_STREAM, std::memory_order_acquire);
 }
 
 void AudioResource::Download(IFilterBase& device, void* deviceContext) {

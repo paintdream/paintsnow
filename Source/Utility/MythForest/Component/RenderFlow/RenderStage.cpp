@@ -6,7 +6,7 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 
 RenderStage::RenderStage(uint32_t colorAttachmentCount) : renderState(nullptr), renderTarget(nullptr), clear(nullptr), drawCallResource(nullptr) {
-	Flag() |= RENDERSTAGE_ADAPT_MAIN_RESOLUTION;
+	Flag().fetch_or(RENDERSTAGE_ADAPT_MAIN_RESOLUTION, std::memory_order_acquire);
 
 	// Initialize state
 	IRender::Resource::RenderStateDescription& s = renderStateDescription;
@@ -104,11 +104,11 @@ void RenderStage::Initialize(Engine& engine, IRender::Queue* queue) {
 		render.UploadResource(queue, renderTarget, &copy);
 	}
 
-	Flag() |= TINY_ACTIVATED;
+	Flag().fetch_or(TINY_ACTIVATED, std::memory_order_acquire);
 }
 
 void RenderStage::Uninitialize(Engine& engine, IRender::Queue* queue) {
-	Flag() &= ~TINY_ACTIVATED;
+	Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_release);
 
 	IRender& render = engine.interfaces.render;
 	for (size_t k = 0; k < nodePorts.size(); k++) {
@@ -147,7 +147,7 @@ void RenderStage::Tick(Engine& engine, IRender::Queue* queue) {
 
 	if (flag & TINY_MODIFIED) {
 		UpdatePass(engine, queue);
-		Flag() &= ~TINY_MODIFIED;
+		Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release);
 	}
 }
 
@@ -184,5 +184,5 @@ void RenderStage::SetMainResolution(Engine& engine, IRender::Queue* resourceQueu
 	AutoAdaptRenderTarget adapt(render, resourceQueue, width, height);
 	(*this)(adapt);
 
-	Flag() |= TINY_MODIFIED;
+	Flag().fetch_or(TINY_MODIFIED, std::memory_order_acquire);
 }

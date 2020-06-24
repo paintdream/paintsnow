@@ -9,7 +9,7 @@ using namespace PaintsNow::NsSnowyStream;
 
 AnimationComponent::AnimationComponent(TShared<SkeletonResource> resource) : skeletonResource(resource), animationTime(0), speed(1), clipIndex(0), boneMatrixBuffer(nullptr) {
 	// can be shared between entities
-	Flag() |= Component::COMPONENT_SHARED;
+	Flag().fetch_or(Component::COMPONENT_SHARED, std::memory_order_acquire);
 	const IAsset::BoneAnimation& boneAnimation = resource->GetBoneAnimation();
 	boneMatrices.resize(boneAnimation.joints.size());
 	eventData.resize(boneAnimation.clips.size());

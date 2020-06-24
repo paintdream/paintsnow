@@ -37,9 +37,9 @@ void SpaceComponentModule::RequestSetForwardMask(IScript::Request& request, IScr
 	CHECK_THREAD_IN_MODULE(spaceComponent);
 
 	if (forwardMask != 0) {
-		spaceComponent->Flag() |= SpaceComponent::SPACECOMPONENT_FORWARD_EVENT_TICK;
+		spaceComponent->Flag().fetch_or(SpaceComponent::SPACECOMPONENT_FORWARD_EVENT_TICK, std::memory_order_acquire);
 	} else {
-		spaceComponent->Flag() &= ~SpaceComponent::SPACECOMPONENT_FORWARD_EVENT_TICK;
+		spaceComponent->Flag().fetch_and(~SpaceComponent::SPACECOMPONENT_FORWARD_EVENT_TICK, std::memory_order_release);
 	}
 }
 

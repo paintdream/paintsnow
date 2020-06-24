@@ -68,11 +68,11 @@ void Weaver::Start() {
 	}
 
 	remoteProxy.Run();
-	Flag() |= TINY_ACTIVATED;
+	Flag().fetch_or(TINY_ACTIVATED, std::memory_order_acquire);
 }
 
 void Weaver::Stop() {
-	Flag() &= ~TINY_ACTIVATED;
+	Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_release);
 	remoteProxy.Reset();
 }
 

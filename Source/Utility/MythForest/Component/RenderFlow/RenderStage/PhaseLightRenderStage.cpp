@@ -30,7 +30,7 @@ void PhaseLightRenderStage::PrepareResources(Engine& engine, IRender::Queue* que
 }
 
 void PhaseLightRenderStage::Tick(Engine& engine, IRender::Queue* queue) {
-	Flag() |= TINY_MODIFIED;
+	Flag().fetch_or(TINY_MODIFIED, std::memory_order_acquire);
 	RenderStage::Tick(engine, queue);
 }
 

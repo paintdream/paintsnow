@@ -9,7 +9,7 @@ using namespace PaintsNow::NsMythForest;
 
 RenderPortLoadTarget::RenderPortLoadTarget(IRender::Resource::RenderTargetDescription::Storage& storage, bool write) : bindingStorage(storage) {
 	if (write) {
-		Flag() |= Tiny::TINY_UNIQUE;
+		Flag().fetch_or(Tiny::TINY_UNIQUE, std::memory_order_acquire);
 	}
 }
 

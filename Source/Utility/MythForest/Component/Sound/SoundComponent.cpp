@@ -5,7 +5,7 @@ using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
 SoundComponent::SoundComponent(TShared<AudioResource> resource, IScript::Request::Ref r) : callback(r), audioSource(nullptr), audioBuffer(nullptr) {
-	Flag() |= SOUNDCOMPONENT_ONLINE;
+	Flag().fetch_or(SOUNDCOMPONENT_ONLINE, std::memory_order_acquire);
 
 	audioResource.Reset(static_cast<AudioResource*>(resource->Clone()));
 }
@@ -68,7 +68,7 @@ void SoundComponent::Step(IScript::Request& request) {
 	if (stepWrapper) {
 		size_t t = stepWrapper();
 		if (t == (size_t)-1) {
-			Flag() &= ~Tiny::TINY_ACTIVATED;
+			Flag().fetch_and(~Tiny::TINY_ACTIVATED, std::memory_order_release);
 		}
 
 		if (t != 0 && callback) {
@@ -86,17 +86,17 @@ SoundComponent::~SoundComponent() {
 }
 
 void SoundComponent::Play(Engine& engine) {
-	Flag() |= TINY_ACTIVATED;
+	Flag().fetch_or(TINY_ACTIVATED, std::memory_order_acquire);
 	engine.interfaces.audio.Play(audioSource);
 }
 
 void SoundComponent::Pause(Engine& engine) {
-	Flag() &= ~TINY_ACTIVATED;
+	Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_release);
 	engine.interfaces.audio.Pause(audioSource);
 }
 
 void SoundComponent::Stop(Engine& engine) {
-	Flag() &= ~TINY_ACTIVATED;
+	Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_release);
 	engine.interfaces.audio.Stop(audioSource);
 }
 

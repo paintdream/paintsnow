@@ -62,7 +62,7 @@ void ZFencedRenderQueue::InvokeRender(IRender& render) {
 
 void ZFencedRenderQueue::UpdateFrame(IRender& render) {
 	render.YieldQueue(queue);
-	++yieldCount;
+	yieldCount.fetch_add(1, std::memory_order_acquire);
 }
 
 IRender::Queue* ZFencedRenderQueue::GetQueue() const {

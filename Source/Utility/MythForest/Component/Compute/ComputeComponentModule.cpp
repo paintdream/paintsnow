@@ -27,7 +27,7 @@ TShared<ComputeComponent> ComputeComponentModule::RequestNew(IScript::Request& r
 	TShared<ComputeComponent> computeComponent = TShared<ComputeComponent>::From(allocator->New(std::ref(engine)));
 
 	if (transparentMode) {
-		computeComponent->Flag() |= ComputeComponent::COMPUTECOMPONENT_TRANSPARENT;
+		computeComponent->Flag().fetch_or(ComputeComponent::COMPUTECOMPONENT_TRANSPARENT, std::memory_order_acquire);
 	}
 
 	computeComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());

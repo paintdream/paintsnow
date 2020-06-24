@@ -838,7 +838,7 @@ void PhaseComponent::CollectComponents(Engine& engine, TaskData& task, const Wor
 				}
 			} else if (component->GetEntityFlagMask() & Entity::ENTITY_HAS_SPACE) {
 				TAtomic<uint32_t>& counter = reinterpret_cast<TAtomic<uint32_t>&>(task.pendingCount);
-				++counter;
+				counter.fetch_add(1, std::memory_order_acquire);;
 				SpaceComponent* spaceComponent = static_cast<SpaceComponent*>(component);
 				CollectComponentsFromSpace(engine, task, instanceData, captureData, spaceComponent);
 			}

@@ -58,20 +58,23 @@ namespace PaintsNow {
 }
 
 Connection::Connection(BridgeSunset& bs, INetwork& nt, WorkDispatcher* disp, IScript::Request::Ref cb, const String& ip, INetwork::Connection* con, bool h, INetwork::HttpRequest* httpReq, bool ownReq, bool mode) : bridgeSunset(bs), network(nt),  dispatcher(disp), connection(con), httpRequest(httpReq), callback(cb) {
+	uint32_t bitMask = 0;
 	if (ownReq) {
-		Flag() |= CONNECTION_OWN_REQUEST;
+		bitMask |= CONNECTION_OWN_REQUEST;
 	}
 
 	if (mode) {
-		Flag() |= CONNECTION_PACKET_MODE;
+		bitMask |= CONNECTION_PACKET_MODE;
 	}
 
 	if (connection == nullptr) {
 		connection = network.OpenConnection(dispatcher->GetDispatcher(), Wrap(this, &Connection::OnEvent), ip);
-		Flag() |= CONNECTION_OWN_CONNECTION;
+		bitMask |= CONNECTION_OWN_CONNECTION;
 	} else {
-		Flag() |= TINY_ACTIVATED;
+		bitMask |= TINY_ACTIVATED;
 	}
+
+	Flag().fetch_or(bitMask, std::memory_order_acquire);
 
 	if (connection != nullptr) {
 		dispatcher->ReferenceObject();
@@ -79,7 +82,7 @@ Connection::Connection(BridgeSunset& bs, INetwork& nt, WorkDispatcher* disp, ISc
 		if (Flag() & CONNECTION_HTTP) {
 			if (httpRequest == nullptr) {
 				httpRequest = network.OpenHttpRequest(connection, Wrap(this, &Connection::OnEventHttp));
-				Flag() |= CONNECTION_OWN_REQUEST;
+				Flag().fetch_or(CONNECTION_OWN_REQUEST, std::memory_order_acquire);
 			}
 		}
 	}
@@ -92,7 +95,7 @@ bool Connection::IsValid() const {
 void Connection::Deactivate() {
 	if (Flag() & TINY_ACTIVATED) {
 		network.DeactivateConnection(connection);
-		Flag() &= ~TINY_ACTIVATED;
+		Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_release);
 	}
 }
 
@@ -113,7 +116,7 @@ Connection::~Connection() {
 bool Connection::Activate() {
 	bool ret = false;
 	if (!(Flag() & TINY_ACTIVATED)) {
-		Flag() |= TINY_ACTIVATED;
+		Flag().fetch_or(TINY_ACTIVATED, std::memory_order_acquire);
 		ret = network.ActivateConnection(connection);
 	}
 

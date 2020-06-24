@@ -26,7 +26,7 @@ void RenderPort::Uninitialize(IRender& render, IRender::Queue* mainQueue) {}
 void RenderPort::UpdateRenderStage() {
 	Tiny* renderStage = GetNode();
 	if (renderStage != nullptr) {
-		renderStage->Flag() |= TINY_MODIFIED;
+		renderStage->Flag().fetch_or(TINY_MODIFIED, std::memory_order_acquire);
 	}
 }
 

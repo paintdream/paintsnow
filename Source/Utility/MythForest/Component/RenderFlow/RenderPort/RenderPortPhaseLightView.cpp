@@ -27,9 +27,9 @@ bool RenderPortPhaseLightView::BeginFrame(IRender& render) {
 }
 
 void RenderPortPhaseLightView::EndFrame(IRender& render) {
-	node->Flag() |= TINY_MODIFIED;
+	node->Flag().fetch_or(TINY_MODIFIED, std::memory_order_acquire);
 	for (size_t i = 0; i < links.size(); i++) {
 		RenderPort* renderPort = static_cast<RenderPort*>(links[i].port);
-		renderPort->GetNode()->Flag() |= TINY_MODIFIED;
+		renderPort->GetNode()->Flag().fetch_or(TINY_MODIFIED, std::memory_order_acquire);
 	}
 }

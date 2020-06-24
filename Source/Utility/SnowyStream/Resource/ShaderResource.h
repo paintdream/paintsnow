@@ -48,7 +48,7 @@ namespace PaintsNow {
 		public:
  			// gcc do not support referencing base type in template class. manunaly specified here.
 			typedef TReflected<ShaderResourceImpl<T>, ShaderResource> BaseClass;
-			ShaderResourceImpl(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID, Tiny::FLAG f = 0) : BaseClass(manager, uniqueID), updater(pass) { BaseClass::Flag() |= f; }
+			ShaderResourceImpl(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID, Tiny::FLAG f = 0) : BaseClass(manager, uniqueID), updater(pass) { BaseClass::Flag().fetch_or(f, std::memory_order_acquire); }
 		
 			virtual ZPassBase& GetPass() override {
 				return pass;
@@ -60,7 +60,7 @@ namespace PaintsNow {
 
 			virtual IReflectObject* Clone() const override {
 				ShaderResource* resource = new ShaderResourceImpl<T>(BaseClass::resourceManager, ""); // on the fly
-				resource->Flag() |= BaseClass::RESOURCE_ORPHAN;
+				resource->Flag().fetch_or(BaseClass::RESOURCE_ORPHAN, std::memory_order_acquire);
 				return resource;
 			}
 

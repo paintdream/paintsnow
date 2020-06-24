@@ -131,9 +131,9 @@ void CameraComponentModule::RequestSetProjectionJitter(IScript::Request& request
 	CHECK_THREAD_IN_MODULE(camera);
 
 	if (jitter) {
-		camera->Flag() |= CameraComponent::CAMERACOMPONENT_SUBPIXEL_JITTER;
+		camera->Flag().fetch_or(CameraComponent::CAMERACOMPONENT_SUBPIXEL_JITTER, std::memory_order_acquire);
 	} else {
-		camera->Flag() &= ~CameraComponent::CAMERACOMPONENT_SUBPIXEL_JITTER;
+		camera->Flag().fetch_and(~CameraComponent::CAMERACOMPONENT_SUBPIXEL_JITTER, std::memory_order_release);
 	}
 }
 
@@ -143,8 +143,8 @@ void CameraComponentModule::RequestSetSmoothTrack(IScript::Request& request, ISc
 	CHECK_THREAD_IN_MODULE(camera);
 
 	if (smoothTrack) {
-		camera->Flag() |= CameraComponent::CAMERACOMPONENT_SMOOTH_TRACK;
+		camera->Flag().fetch_or(CameraComponent::CAMERACOMPONENT_SMOOTH_TRACK, std::memory_order_acquire);
 	} else {
-		camera->Flag() &= ~CameraComponent::CAMERACOMPONENT_SMOOTH_TRACK;
+		camera->Flag().fetch_and(~CameraComponent::CAMERACOMPONENT_SMOOTH_TRACK, std::memory_order_release);
 	}
 }

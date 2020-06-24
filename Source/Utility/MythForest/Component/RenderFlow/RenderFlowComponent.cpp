@@ -10,7 +10,7 @@ using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
 RenderFlowComponent::RenderFlowComponent() {
-	Flag() |= RENDERFLOWCOMPONENT_SYNC_DEVICE_RESOLUTION;
+	Flag().fetch_or(RENDERFLOWCOMPONENT_SYNC_DEVICE_RESOLUTION, std::memory_order_acquire);
 }
 
 RenderFlowComponent::~RenderFlowComponent() {}
@@ -32,7 +32,7 @@ const Int2& RenderFlowComponent::GetMainResolution() const {
 
 void RenderFlowComponent::SetMainResolution(const Int2& res) {
 	mainResolution = res;
-	Flag() |= RENDERFLOWCOMPONENT_RESOLUTION_MODIFIED;
+	Flag().fetch_or(RENDERFLOWCOMPONENT_RESOLUTION_MODIFIED, std::memory_order_acquire);
 }
 
 void RenderFlowComponent::RemoveNode(RenderStage* stage) {
@@ -55,7 +55,7 @@ RenderStage::Port* RenderFlowComponent::BeginPort(const String& symbol) {
 	if (s != symbolMap.end()) {
 		RenderStage::Port* port = (*s->second.first)[s->second.second];
 		assert(!(port->Flag() & TINY_ACTIVATED)); // no shared
-		port->Flag() |= TINY_ACTIVATED;
+		port->Flag().fetch_or(TINY_ACTIVATED, std::memory_order_acquire);
 		return port;
 	} else {
 		return nullptr;
@@ -64,7 +64,7 @@ RenderStage::Port* RenderFlowComponent::BeginPort(const String& symbol) {
 
 void RenderFlowComponent::EndPort(RenderStage::Port* port) {
 	assert((port->Flag() & TINY_ACTIVATED));
-	port->Flag() &= ~TINY_ACTIVATED;
+	port->Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_release);
 }
 
 bool RenderFlowComponent::ExportSymbol(const String& symbol, RenderStage* renderStage, const String& port) {
@@ -276,7 +276,7 @@ void RenderFlowComponent::Uninitialize(Engine& engine, Entity* entity) {
 	instantQueue = nullptr;
 
 	// Deactivate this
-	Flag() &= ~TINY_ACTIVATED;
+	Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_release);
 	BaseClass::Uninitialize(engine, entity);
 }
 
@@ -305,7 +305,7 @@ void RenderFlowComponent::SetMainResolution(Engine& engine) {
 			}
 		}
 
-		Flag() &= ~RENDERFLOWCOMPONENT_RESOLUTION_MODIFIED;
+		Flag().fetch_and(~RENDERFLOWCOMPONENT_RESOLUTION_MODIFIED, std::memory_order_release);
 	}
 }
 
@@ -320,7 +320,7 @@ void RenderFlowComponent::RenderSyncTick(Engine& engine) {
 			RenderStage* stage = cachedRenderStages[k];
 			if (stage != nullptr) {
 				for (size_t j = 0; j < stage->GetPorts().size(); j++) {
-					stage->GetPorts()[j].port->Flag() &= ~TINY_MODIFIED;
+					stage->GetPorts()[j].port->Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release);
 				}
 			}
 		}
@@ -335,7 +335,7 @@ void RenderFlowComponent::RenderSyncTick(Engine& engine) {
 		resourceQueue.UpdateFrame(engine.interfaces.render);
 	}
 
-	Flag() &= ~RENDERFLOWCOMPONENT_RENDER_SYNC_TICKING;
+	Flag().fetch_and(~RENDERFLOWCOMPONENT_RENDER_SYNC_TICKING, std::memory_order_release);
 }
 
 void RenderFlowComponent::DispatchEvent(Event& event, Entity* entity) {
@@ -349,7 +349,7 @@ void RenderFlowComponent::DispatchEvent(Event& event, Entity* entity) {
 
 			Render(event.engine);
 
-			Flag() |= RENDERFLOWCOMPONENT_RENDER_SYNC_TICKING;
+			Flag().fetch_or(RENDERFLOWCOMPONENT_RENDER_SYNC_TICKING, std::memory_order_acquire);
 			engine.GetKernel().QueueRoutine(this, CreateTaskContextFree(Wrap(this, &RenderFlowComponent::RenderSyncTick), std::ref(engine)));
 		}
 	} else if (event.eventID == Event::EVENT_TICK) {

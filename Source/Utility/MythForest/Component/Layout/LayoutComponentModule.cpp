@@ -63,9 +63,9 @@ void LayoutComponentModule::RequestSetLayout(IScript::Request& request, IScript:
 	CHECK_DELEGATE(layoutComponent);
 
 	if (layout == "horizontal") {
-		layoutComponent->Flag() &= ~LayoutComponent::LAYOUT_VERTICAL;
+		layoutComponent->Flag().fetch_and(~LayoutComponent::LAYOUT_VERTICAL, std::memory_order_release);
 	} else {
-		layoutComponent->Flag() |= LayoutComponent::LAYOUT_VERTICAL;
+		layoutComponent->Flag().fetch_or(LayoutComponent::LAYOUT_VERTICAL, std::memory_order_acquire);
 	}
 
 }
@@ -75,7 +75,7 @@ void LayoutComponentModule::RequestSetFitContent(IScript::Request& request, IScr
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(layoutComponent);
 
-	layoutComponent->Flag() |= LayoutComponent::LAYOUT_ADAPTABLE;
+	layoutComponent->Flag().fetch_or(LayoutComponent::LAYOUT_ADAPTABLE, std::memory_order_acquire);
 	layoutComponent->SetUpdateMark();
 }
 

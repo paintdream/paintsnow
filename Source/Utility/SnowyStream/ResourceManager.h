@@ -119,14 +119,14 @@ namespace PaintsNow {
 
 				if (stream != nullptr) {
 					if (LoadData(object, protocol, *stream)) {
-						if (flag != 0) object->Flag() |= flag;
+						if (flag != 0) object->Flag().fetch_or(flag, std::memory_order_acquire);
 						object = static_cast<T*>(manager.Insert(id, object));
 					} else {
 						object->ReleaseObject();
 						object = nullptr;
 					}
 				} else {
-					if (flag != 0) object->Flag() |= flag;
+					if (flag != 0) object->Flag().fetch_or(flag, std::memory_order_acquire);
 					manager.Insert(id, object);
 				}
 

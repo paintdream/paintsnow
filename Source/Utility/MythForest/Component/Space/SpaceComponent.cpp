@@ -10,15 +10,15 @@ using namespace PaintsNow::NsBridgeSunset;
 
 SpaceComponent::SpaceComponent(int32_t warpIndex, bool sorted) : rootEntity(nullptr), entityCount(0) {
 	if (warpIndex >= 0) {
-		Flag() |= COMPONENT_LOCALIZED_WARP;
+		Flag().fetch_or(COMPONENT_LOCALIZED_WARP, std::memory_order_acquire);
 		SetWarpIndex(safe_cast<uint32_t>(warpIndex));
 	}
 
 	if (sorted) {
-		Flag() |= SPACECOMPONENT_ORDERED;
+		Flag().fetch_or(SPACECOMPONENT_ORDERED, std::memory_order_acquire);
 	}
 
-	Flag() |= COMPONENT_SHARED;
+	Flag().fetch_or(COMPONENT_SHARED, std::memory_order_acquire);
 }
 
 SpaceComponent::~SpaceComponent() {}
@@ -61,7 +61,7 @@ void SpaceComponent::Initialize(Engine& engine, Entity* entity) {
 		BaseClass::Initialize(engine, entity);
 	}
 
-	Flag() |= SPACECOMPONENT_ATTACHED;
+	Flag().fetch_or(SPACECOMPONENT_ATTACHED, std::memory_order_acquire);
 }
 
 static void InvokeRemoveAll(void* context, bool run, Engine& engine, SpaceComponent* spaceComponent) {
@@ -69,7 +69,7 @@ static void InvokeRemoveAll(void* context, bool run, Engine& engine, SpaceCompon
 }
 
 void SpaceComponent::Uninitialize(Engine& engine, Entity* entity) {
-	Flag() &= ~SPACECOMPONENT_ATTACHED;
+	Flag().fetch_and(~SPACECOMPONENT_ATTACHED, std::memory_order_release);
 
 	if (Flag() & COMPONENT_LOCALIZED_WARP) {
 		QueueRoutine(engine, CreateTask(Wrap(InvokeRemoveAll), std::ref(engine), this));
@@ -325,7 +325,7 @@ void SpaceComponent::RoutineUpdateBoundingBox() {
 	Float3Pair box(Float3(FLT_MAX, FLT_MAX, FLT_MAX), Float3(-FLT_MAX, -FLT_MAX, -FLT_MAX));
 	RoutineUpdateBoundingBoxRecursive(box, rootEntity);
 	boundingBox = box;
-	Flag() &= ~Tiny::TINY_UPDATING;
+	Flag().fetch_and(~Tiny::TINY_UPDATING, std::memory_order_release);
 }
 
 template <class D>
@@ -370,14 +370,14 @@ void SpaceComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box) {
 	if (flag & TINY_MODIFIED) {
 		if (flag & COMPONENT_LOCALIZED_WARP) {
 			if (!(flag & TINY_UPDATING)) {
-				Flag() |= TINY_UPDATING;
+				Flag().fetch_or(TINY_UPDATING, std::memory_order_acquire);
 				QueueRoutine(engine, CreateTaskContextFree(Wrap(this, &SpaceComponent::RoutineUpdateBoundingBox)));
 			}
 		} else {
 			RoutineUpdateBoundingBox();
 		}
 
-		Flag() &= ~TINY_MODIFIED;
+		Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release);
 	}
 
 	Union(box, boundingBox.first);

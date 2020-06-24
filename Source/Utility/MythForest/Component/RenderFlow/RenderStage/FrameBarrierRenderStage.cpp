@@ -5,8 +5,8 @@ using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
 FrameBarrierRenderStage::FrameBarrierRenderStage() : Next(renderTargetDescription.colorBufferStorages[0]) {
-	Flag() &= ~RENDERSTAGE_ADAPT_MAIN_RESOLUTION;
-	Front.Flag() |= RenderStage::RENDERSTAGE_WEAK_LINKAGE;
+	Flag().fetch_and(~RENDERSTAGE_ADAPT_MAIN_RESOLUTION, std::memory_order_release);
+	Front.Flag().fetch_or(RenderStage::RENDERSTAGE_WEAK_LINKAGE, std::memory_order_acquire);
 }
 
 TObject<IReflect>& FrameBarrierRenderStage::operator () (IReflect& reflect) {

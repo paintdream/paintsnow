@@ -21,7 +21,7 @@ void Repository::RefreshLocalFilesRecursive(IArchive& archive, const String& pat
 
 		if (directory) {
 			RefreshLocalFilesRecursive(archive, path + "/" + name, *subItem);
-			subItem->Flag() |= Item::ITEM_DIRECTORY;
+			subItem->Flag().fetch_or(Item::ITEM_DIRECTORY, std::memory_order_acquire);
 		}
 
 		item.children.emplace_back(std::move(subItem));
@@ -30,7 +30,7 @@ void Repository::RefreshLocalFilesRecursive(IArchive& archive, const String& pat
 
 void Repository::RefreshLocalFiles(IArchive& archive) {
 	TShared<Item> newRootItem = TShared<Item>::From(itemAllocator->New());
-	newRootItem->Flag() |= Item::ITEM_DIRECTORY;
+	newRootItem->Flag().fetch_or(Item::ITEM_DIRECTORY, std::memory_order_acquire);
 	RefreshLocalFilesRecursive(archive, "", *newRootItem);
 
 	SpinLock(critical);

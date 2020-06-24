@@ -7,7 +7,7 @@ using namespace PaintsNow::NsBridgeSunset;
 
 Clock::Clock(ITimer& base, BridgeSunset& b, int64_t interval, int64_t start, bool mergeTicks) : bridgeSunset(b), timerBase(base), now(start), offset(0) {
 	if (mergeTicks) {
-		Flag() |= CLOCK_MERGE_TICKS;
+		Flag().fetch_or(CLOCK_MERGE_TICKS, std::memory_order_acquire);
 	}
 
 	Play();
@@ -57,11 +57,11 @@ void Clock::Play() {
 
 void Clock::Resume() {
 	offset = GetFullClock() - now;
-	Flag() |= TINY_ACTIVATED;
+	Flag().fetch_or(TINY_ACTIVATED, std::memory_order_acquire);
 }
 
 void Clock::Pause() {
-	Flag() &= ~TINY_ACTIVATED;
+	Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_release);
 }
 
 bool Clock::IsRunning() const {
@@ -97,7 +97,7 @@ void Clock::Execute(void* context) {
 		readyList[i].first->Execute(readyList[i].second != nullptr ? readyList[i].second : context);
 	}
 
-	Flag() &= ~TINY_MODIFIED;
+	Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release);
 }
 
 void Clock::Abort(void* context) {}
@@ -108,7 +108,7 @@ void Clock::OnTimer(size_t interval) {
 			const FLAG flagMergeTick = CLOCK_MERGE_TICKS | TINY_MODIFIED;
 
 			if ((Flag() & flagMergeTick) != flagMergeTick) {
-				Flag() |= TINY_MODIFIED;
+				Flag().fetch_or(TINY_MODIFIED, std::memory_order_acquire);
 				bridgeSunset.GetKernel().QueueRoutine(this, this);
 			}
 		} else {

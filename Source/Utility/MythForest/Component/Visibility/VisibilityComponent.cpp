@@ -150,7 +150,7 @@ void VisibilityComponent::DispatchEvent(Event& event, Entity* entity) {
 
 void VisibilityComponent::Setup(Engine& engine, float distance, const Float3Pair& range, const UShort3& division, uint32_t frameTimeLimit, uint32_t tc, const UShort2& resolution) {
 	assert(!(Flag() & TINY_MODIFIED));
-	Flag() |= TINY_MODIFIED;
+	Flag().fetch_or(TINY_MODIFIED, std::memory_order_acquire);
 
 	taskCount = tc;
 	boundingBox = range;
@@ -445,7 +445,7 @@ void VisibilityComponent::CollectComponents(Engine& engine, TaskData& task, cons
 			}
 		} else if (component->GetEntityFlagMask() & Entity::ENTITY_HAS_SPACE) {
 			TAtomic<uint32_t>& counter = reinterpret_cast<TAtomic<uint32_t>&>(task.pendingCount);
-			++counter;
+			counter.fetch_add(1, std::memory_order_acquire);;
 			SpaceComponent* spaceComponent = static_cast<SpaceComponent*>(component);
 			CollectComponentsFromSpace(engine, task, instanceData, captureData, spaceComponent);
 		}

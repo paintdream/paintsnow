@@ -29,7 +29,7 @@ void BatchComponent::InstanceUninitialize(Engine& engine) {
 		IRender::Queue* queue = engine.mythForest.GetWarpResourceQueue();
 		render.DeleteResource(queue, buffer);
 		currentData.Clear();
-		Flag() &= ~Tiny::TINY_MODIFIED;
+		Flag().fetch_and(~Tiny::TINY_MODIFIED, std::memory_order_release);
 	}
 }
 
@@ -43,7 +43,7 @@ void BatchComponent::Update(IRender& render, IRender::Queue* queue) {
 		desc.data = currentData;
 		render.UploadResource(queue, buffer, &desc);
 
-		Flag() &= ~Tiny::TINY_MODIFIED;
+		Flag().fetch_and(~Tiny::TINY_MODIFIED, std::memory_order_release);
 	}
 }
 
@@ -56,7 +56,7 @@ IRender::Resource::DrawCallDescription::BufferRange BatchComponent::Allocate(con
 	bufferRange.buffer = buffer;
 	bufferRange.offset = curSize;
 	bufferRange.length = appendSize;
-	Flag() |= Tiny::TINY_MODIFIED;
+	Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_acquire);
 
 	return bufferRange;
 }

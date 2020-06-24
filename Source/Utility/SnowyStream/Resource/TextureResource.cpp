@@ -42,16 +42,20 @@ void TextureResource::Upload(IRender& render, void* deviceContext) {
 	// if (description.data.size() == 0) return;
 	//	assert(description.data.size() == (size_t)description.dimension.x() * description.dimension.y() * IImage::GetPixelSize((IRender::Resource::TextureDescription::Format)description.state.format, (IRender::Resource::TextureDescription::Layout)description.state.layout));
 	IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(deviceContext);
-	deviceMemoryUsage = description.data.GetSize();
 
-	SpinLock(critical);
-	if (mapCount.load(std::memory_order_relaxed) != 0) {
-		IRender::Resource::TextureDescription desc = description;
-		render.UploadResource(queue, instance, &desc);
-	} else {
-		render.UploadResource(queue, instance, &description);
+	if (!(Flag().fetch_or(RESOURCE_UPLOADED) & RESOURCE_UPLOADED)) {
+		SpinLock(critical);
+
+		deviceMemoryUsage = description.data.GetSize();
+		if (mapCount.load(std::memory_order_relaxed) != 0) {
+			IRender::Resource::TextureDescription desc = description;
+			render.UploadResource(queue, instance, &desc);
+		} else {
+			render.UploadResource(queue, instance, &description);
+		}
+
+		SpinUnLock(critical);
 	}
-	SpinUnLock(critical);
 }
 
 void TextureResource::Download(IRender& render, void* deviceContext) {

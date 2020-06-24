@@ -128,7 +128,7 @@ void TextViewComponent::TagParser::Clear() {
 }
 
 TextViewComponent::TextViewComponent(TShared<FontResource> font, TShared<MaterialResource> material) : materialResource(material), fontResource(font), unitCoordBuffer(nullptr), indexBuffer(nullptr), passwordChar(0), cursorChar(0), cursorPos(0), fontSize(12) {
-	Flag() |= (TEXTVIEWCOMPONENT_CURSOR_REV_COLOR | TEXTVIEWCOMPONENT_SELECT_REV_COLOR);
+	Flag().fetch_or((TEXTVIEWCOMPONENT_CURSOR_REV_COLOR | TEXTVIEWCOMPONENT_SELECT_REV_COLOR), std::memory_order_acquire);
 }
 
 void TextViewComponent::Initialize(Engine& engine, Entity* entity) {
@@ -537,5 +537,5 @@ bool TextViewComponent::IsEmpty() const {
 }
 
 void TextViewComponent::SetUpdateMark() {
-	Flag() |= Tiny::TINY_MODIFIED;
+	Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_acquire);
 }

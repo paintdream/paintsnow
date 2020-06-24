@@ -26,7 +26,7 @@ struct Initer {
 };
 
 EventListenerComponent::EventListenerComponent() : rootEntity(nullptr), tickTimeStamp(0), tickTimeDelta(0) {
-	Flag() |= Tiny::TINY_UNIQUE;
+	Flag().fetch_or(Tiny::TINY_UNIQUE, std::memory_order_acquire);
 	critical.store(0, std::memory_order_relaxed);
 
 	static Initer initer;
@@ -72,12 +72,12 @@ void EventListenerComponent::Execute(void* context) {
 }
 
 void EventListenerComponent::InstallFrame() {
-	Flag() |= EVENTLISTENER_INSTALLED_FRAME;
+	Flag().fetch_or(EVENTLISTENER_INSTALLED_FRAME, std::memory_order_acquire);
 
 }
 
 void EventListenerComponent::UninstallFrame() {
-	Flag() &= ~EVENTLISTENER_INSTALLED_FRAME;
+	Flag().fetch_and(~EVENTLISTENER_INSTALLED_FRAME, std::memory_order_release);
 	SpinLock(critical);
 	frameTickerCollection.clear();
 	SpinUnLock(critical);}
@@ -90,7 +90,7 @@ void EventListenerComponent::InstallTick(Engine& engine, TShared<Clock> c) {
 	}
 
 	if (!(Flag() & EVENTLISTENER_INSTALLED_TICK)) {
-		Flag() |= (EVENTLISTENER_INSTALLED_TICK | (EVENTLISTENER_BASE << Event::EVENT_TICK));
+		Flag().fetch_or((EVENTLISTENER_INSTALLED_TICK | (EVENTLISTENER_BASE << Event::EVENT_TICK)), std::memory_order_acquire);
 		clock = c;
 		tickTimeStamp = ITimer::GetSystemClock();
 
@@ -103,7 +103,7 @@ void EventListenerComponent::UninstallTick(Engine& engine) {
 	if (Flag() & EVENTLISTENER_INSTALLED_TICK) {
 		clock->RemoveTicker(this);
 		clock = nullptr;
-		Flag() &= ~(EVENTLISTENER_INSTALLED_TICK | (EVENTLISTENER_BASE << Event::EVENT_TICK));
+		Flag().fetch_and(~(EVENTLISTENER_INSTALLED_TICK | (EVENTLISTENER_BASE << Event::EVENT_TICK)), std::memory_order_release);
 		ReleaseObject();
 	}
 }

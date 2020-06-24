@@ -8,7 +8,7 @@ using namespace PaintsNow::NsSnowyStream;
 
 ModelComponent::ModelComponent(TShared<MeshResource>& res, TShared<BatchComponent>& batch) : batchComponent(batch), meshResource(res), hostCount(0) {
 	assert(batch->GetWarpIndex() == GetWarpIndex());
-	Flag() |= COMPONENT_SHARED; // can be shared among different entities
+	Flag().fetch_or(COMPONENT_SHARED, std::memory_order_acquire); // can be shared among different entities
 }
 
 void ModelComponent::AddMaterial(uint32_t meshGroupIndex, TShared<MaterialResource>& materialResource) {

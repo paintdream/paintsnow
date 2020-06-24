@@ -89,7 +89,7 @@ const FontResource::Char& FontResource::Get(IRender& render, IRender::Queue* que
 
 	if (lock.load(std::memory_order_acquire) == 2u) {
 		// need update
-		Flag() |= TINY_MODIFIED;
+		Flag().fetch_or(TINY_MODIFIED, std::memory_order_acquire);
 	}
 
 	return ret;
@@ -180,7 +180,7 @@ void FontResource::Update(IRender& render, IRender::Queue* queue) {
 			}
 		}
 
-		Flag() &= ~TINY_MODIFIED;
+		Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release);
 	}
 }
 

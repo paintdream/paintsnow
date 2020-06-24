@@ -28,7 +28,7 @@ void ResourceManager::RemoveAll() {
 	for (unordered_map<UniqueLocation, ResourceBase*>::const_iterator it = temp.begin(); it != temp.end(); ++it) {
 		ResourceBase* resource = (*it).second;
 		InvokeDetach(resource, GetContext());
-		resource->Flag() |= ResourceBase::RESOURCE_ORPHAN;
+		resource->Flag().fetch_or(ResourceBase::RESOURCE_ORPHAN, std::memory_order_acquire);
 
 		if (resource->Flag() & ResourceBase::RESOURCE_ETERNAL) {
 			resource->ReleaseObject();
@@ -101,7 +101,7 @@ void ResourceManager::Remove(ResourceBase* resource) {
 
 	// Parallel bug here.
 	InvokeDetach(resource, GetContext());
-	resource->Flag() |= ResourceBase::RESOURCE_ORPHAN;
+	resource->Flag().fetch_or(ResourceBase::RESOURCE_ORPHAN, std::memory_order_acquire);
 	UnLock();
 }
 
