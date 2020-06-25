@@ -49,6 +49,7 @@ void MaterialResource::Attach(IRender& render, void* deviceContext) {
 			location.append((const char*)shaderHash.GetData(), shaderHash.GetSize());
 
 			// cached?
+			resourceManager.DoLock();
 			TShared<ShaderResource> cached = static_cast<ShaderResource*>(resourceManager.LoadExist(location)());
 
 			if (cached) {
@@ -58,6 +59,8 @@ void MaterialResource::Attach(IRender& render, void* deviceContext) {
 				mutationShaderResource->SetLocation(location);
 				resourceManager.Insert(mutationShaderResource());
 			}
+
+			resourceManager.UnLock();
 		}
 
 		drawCallTemplate.shaderResource = originalShaderResource->GetShaderResource();
@@ -96,6 +99,7 @@ TShared<MaterialResource> MaterialResource::CloneWithOverrideShader(TShared<Shad
 	} else {
 		// create overrider
 		ResourceManager::UniqueLocation overrideLocation = uniqueLocation + "@(" + overrideShaderResource->GetLocation() + ")";
+		resourceManager.DoLock();
 		TShared<MaterialResource> clone = static_cast<MaterialResource*>(resourceManager.LoadExist(overrideLocation)());
 
 		if (!clone) {
@@ -107,6 +111,8 @@ TShared<MaterialResource> MaterialResource::CloneWithOverrideShader(TShared<Shad
 
 			resourceManager.Insert(clone);
 		}
+
+		resourceManager.UnLock();
 
 		return clone;
 	}

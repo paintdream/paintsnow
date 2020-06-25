@@ -75,7 +75,9 @@ void ResourceBase::ReleaseObject() {
 	if (GetExtReferCount() == 0) {
 		// no references exist, remove this from resource manager
 		if (!(Flag() & RESOURCE_ORPHAN)) {
+			resourceManager.DoLock();
 			resourceManager.Remove(this);
+			resourceManager.UnLock();
 		}
 	}
 

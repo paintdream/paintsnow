@@ -29,6 +29,7 @@ namespace PaintsNow {
 			void Report(const String& err);
 			void* GetContext() const;
 
+			TShared<ResourceBase> SafeLoadExist(const UniqueLocation& uniqueLocation);
 			TShared<ResourceBase> LoadExist(const UniqueLocation& uniqueLocation);
 			IUniformResourceManager& GetUniformResourceManager();
 

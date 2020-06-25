@@ -558,7 +558,7 @@ TShared<ResourceBase> SnowyStream::RequestCloneResource(IScript::Request& reques
 	CHECK_DELEGATE(resource);
 	
 	ResourceManager& resourceManager = resource->GetResourceManager();
-	TShared<ResourceBase> exist = resourceManager.LoadExist(path);
+	TShared<ResourceBase> exist = resourceManager.SafeLoadExist(path);
 	if (!exist) {
 		TShared<ResourceBase> p = TShared<ResourceBase>::From(static_cast<ResourceBase*>(resource->Clone()));
 		if (p) {
@@ -661,7 +661,9 @@ void SnowyStream::RequestCompressResourceAsync(IScript::Request& request, IScrip
 
 void SnowyStream::Uninitialize() {
 	for (std::map<Unique, TShared<ResourceManager> >::const_iterator p = resourceManagers.begin(); p != resourceManagers.end(); ++p) {
+		(*p).second->DoLock();
 		(*p).second->RemoveAll();
+		(*p).second->UnLock();
 	}
 
 	interfaces.render.DeleteQueue(resourceQueue);
@@ -682,6 +684,7 @@ void RegisterPass(ResourceManager& resourceManager, UniqueType<T> type, const St
 		name = name.substr(pos + 1);
 	}
 
+	resourceManager.DoLock();
 	shaderResource->SetLocation(ShaderResource::GetShaderPathPrefix() + name);
 	resourceManager.Insert(shaderResource);
 
@@ -690,7 +693,7 @@ void RegisterPass(ResourceManager& resourceManager, UniqueType<T> type, const St
 		materialResource->Flag().fetch_or(ResourceBase::RESOURCE_ETERNAL, std::memory_order_acquire);
 		resourceManager.Insert(materialResource);
 	}
-
+	resourceManager.UnLock();
 	shaderResource->ReleaseObject();
 }
 

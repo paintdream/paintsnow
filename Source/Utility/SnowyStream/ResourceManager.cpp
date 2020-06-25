@@ -20,7 +20,7 @@ void ResourceManager::Report(const String& err) {
 }
 
 void ResourceManager::RemoveAll() {
-	DoLock();
+	assert(GetLockCount() != 0);
 
 	// remove all eternal resources
 	unordered_map<UniqueLocation, ResourceBase*> temp;
@@ -34,11 +34,10 @@ void ResourceManager::RemoveAll() {
 			resource->ReleaseObject();
 		}
 	}
-
-	UnLock();
 }
 
 void ResourceManager::Insert(TShared<ResourceBase> resource) {
+	assert(GetLockCount() != 0);
 	assert(resource != nullptr);
 	assert(resource->Flag() & ResourceBase::RESOURCE_ORPHAN);
 
@@ -46,7 +45,6 @@ void ResourceManager::Insert(TShared<ResourceBase> resource) {
 	const UniqueLocation& id = resource->GetLocation();
 	if (id.empty()) return;
 
-	DoLock();
 	assert(!id.empty());
 	assert(&resource->GetResourceManager() == this);
 
@@ -59,7 +57,6 @@ void ResourceManager::Insert(TShared<ResourceBase> resource) {
 	}
 
 	InvokeAttach(resource(), GetContext());
-	UnLock();
 }
 
 IUniformResourceManager& ResourceManager::GetUniformResourceManager() {
@@ -67,7 +64,7 @@ IUniformResourceManager& ResourceManager::GetUniformResourceManager() {
 }
 
 TShared<ResourceBase> ResourceManager::LoadExist(const UniqueLocation& id) {
-	DoLock();
+	assert(GetLockCount() != 0);
 	unordered_map<UniqueLocation, ResourceBase*>::iterator p = resourceMap.find(id);
 	ResourceBase* pointer = nullptr;
 	if (p != resourceMap.end()) {
@@ -75,7 +72,15 @@ TShared<ResourceBase> ResourceManager::LoadExist(const UniqueLocation& id) {
 		assert(pointer != nullptr);
 	}
 
+	return pointer;
+}
+
+TShared<ResourceBase> ResourceManager::SafeLoadExist(const UniqueLocation& id) {
+	assert(GetLockCount() == 0);
+	DoLock();
+	TShared<ResourceBase> pointer = LoadExist(id);
 	UnLock();
+
 	return pointer;
 }
 
@@ -84,6 +89,7 @@ void* ResourceManager::GetContext() const {
 }
 
 void ResourceManager::Remove(TShared<ResourceBase> resource) {
+	assert(GetLockCount() != 0);
 	assert(resource != nullptr);
 	if (resource->Flag() & (ResourceBase::RESOURCE_ORPHAN | ResourceBase::RESOURCE_ETERNAL))
 		return;
@@ -91,7 +97,6 @@ void ResourceManager::Remove(TShared<ResourceBase> resource) {
 	const UniqueLocation& location = resource->GetLocation();
 	if (location.empty()) return;
 
-	DoLock();
 	// Double check
 	assert(resource->GetExtReferCount() == 0);
 	if (!location.empty()) {
@@ -101,7 +106,6 @@ void ResourceManager::Remove(TShared<ResourceBase> resource) {
 	// Parallel bug here.
 	InvokeDetach(resource(), GetContext());
 	resource->Flag().fetch_or(ResourceBase::RESOURCE_ORPHAN, std::memory_order_acquire);
-	UnLock();
 }
 
 inline ResourceManager::UniqueLocation PathToUniqueID(const String& path) {
@@ -112,9 +116,12 @@ TShared<ResourceBase> ResourceSerializerBase::DeserializeFromArchive(ResourceMan
 	assert(manager.GetDeviceUnique() == GetDeviceUnique());
 	if (manager.GetDeviceUnique() != GetDeviceUnique())
 		return nullptr;
-		
+	
+	manager.DoLock();
+
 	TShared<ResourceBase> resource = manager.LoadExist(PathToUniqueID(path));
 	if (resource) {
+		manager.UnLock();
 		return resource;
 	}
 
@@ -137,6 +144,7 @@ TShared<ResourceBase> ResourceSerializerBase::DeserializeFromArchive(ResourceMan
 		resource = Deserialize(manager, path, protocol, flag, nullptr);
 	}
 
+	manager.UnLock();
 	return resource;
 }
 
