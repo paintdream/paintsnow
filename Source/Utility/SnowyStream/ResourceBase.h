@@ -60,12 +60,12 @@ namespace PaintsNow {
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 			virtual bool Map();
 			virtual void Unmap();
-			TAtomic<uint32_t> critical;
+			std::atomic<uint32_t> critical;
 
 		protected:
 			ResourceManager::UniqueLocation uniqueLocation;
 			ResourceManager& resourceManager;
-			TAtomic<uint32_t> mapCount;
+			std::atomic<uint32_t> mapCount;
 		};
 
 		template <class T>

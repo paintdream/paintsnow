@@ -24,8 +24,8 @@ namespace PaintsNow {
 			
 				Kernel& kernel;
 				int& statWindowDuration;
-				TAtomic<uint32_t> taskPerFrame;
-				TAtomic<uint32_t> critical;
+				std::atomic<uint32_t> taskPerFrame;
+				std::atomic<uint32_t> critical;
 				int64_t lastClockStamp;
 				bool expanded;
 				bool reserved[3];

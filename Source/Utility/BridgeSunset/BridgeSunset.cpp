@@ -91,7 +91,7 @@ public:
 	}
 
 	TWrapper<void, IScript::Request&> continuer;
-	TAtomic<int32_t> token;
+	std::atomic<int32_t> token;
 	IScript::Request& request;
 };
 

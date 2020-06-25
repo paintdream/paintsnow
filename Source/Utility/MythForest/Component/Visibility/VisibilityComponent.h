@@ -140,7 +140,7 @@ namespace PaintsNow {
 			uint32_t taskCount;
 			uint32_t maxFrameExecutionTime; // in ms
 			float viewDistance;
-			TAtomic<uint32_t> maxVisIdentity;
+			std::atomic<uint32_t> maxVisIdentity;
 			std::map<UShort3, Cell> cells;
 			uint32_t activeCellCacheIndex;
 			Cache cellCache[8];
@@ -151,7 +151,7 @@ namespace PaintsNow {
 			IRender::Resource* depthStencilResource;
 			IRender::Resource* stateResource;
 			TShared<NsSnowyStream::ShaderResourceImpl<NsSnowyStream::ConstMapPass> > pipeline;
-			TAtomic<uint32_t> collectCritical;
+			std::atomic<uint32_t> collectCritical;
 
 			std::vector<TaskData> tasks;
 			std::stack<BakePoint> bakePoints;

@@ -295,7 +295,7 @@ void PhaseComponent::TickRender(Engine& engine) {
 	std::vector<IRender::Queue*> bakeQueues;
 	for (size_t i = 0; i < tasks.size(); i++) {
 		TaskData& task = tasks[i];
-		TAtomic<uint32_t>& finalStatus = reinterpret_cast<TAtomic<uint32_t>&>(task.status);
+		std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(task.status);
 		if (task.status == TaskData::STATUS_IDLE) {
 			finalStatus.store(TaskData::STATUS_START, std::memory_order_release);
 		} else if (task.status == TaskData::STATUS_ASSEMBLED) {
@@ -367,7 +367,7 @@ void PhaseComponent::ResolveTasks(Engine& engine) {
 	// resolve finished tasks
 	for (size_t k = 0; k < tasks.size(); k++) {
 		TaskData& task = tasks[k];
-		TAtomic<uint32_t>& finalStatus = reinterpret_cast<TAtomic<uint32_t>&>(task.status);
+		std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(task.status);
 		if (task.status == TaskData::STATUS_BAKED) {
 			// TODO: finish baked
 			finalStatus.store(TaskData::STATUS_IDLE);
@@ -514,7 +514,7 @@ void PhaseComponent::Collect(Engine& engine, TaskData& taskData, const MatrixFlo
 	assert(rootEntity->GetWarpIndex() == GetWarpIndex());
 	WorldInstanceData instanceData;
 	instanceData.worldMatrix = viewProjectionMatrix;
-	TAtomic<uint32_t>& finalStatus = reinterpret_cast<TAtomic<uint32_t>&>(taskData.status);
+	std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(taskData.status);
 	finalStatus.store(TaskData::STATUS_ASSEMBLING, std::memory_order_release);
 
 	CollectComponentsFromEntity(engine, taskData, instanceData, captureData, rootEntity);
@@ -554,7 +554,7 @@ void PhaseComponent::DispatchTasks(Engine& engine) {
 
 	for (size_t i = 0; i < tasks.size(); i++) {
 		TaskData& task = tasks[n];
-		TAtomic<uint32_t>& finalStatus = reinterpret_cast<TAtomic<uint32_t>&>(task.status);
+		std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(task.status);
 		if (task.status == TaskData::STATUS_START) {
 			finalStatus.store(TaskData::STATUS_DISPATCHED, std::memory_order_relaxed);
 
@@ -837,7 +837,7 @@ void PhaseComponent::CollectComponents(Engine& engine, TaskData& task, const Wor
 					CollectRenderableComponent(engine, task, renderableComponent, instanceData);
 				}
 			} else if (component->GetEntityFlagMask() & Entity::ENTITY_HAS_SPACE) {
-				TAtomic<uint32_t>& counter = reinterpret_cast<TAtomic<uint32_t>&>(task.pendingCount);
+				std::atomic<uint32_t>& counter = reinterpret_cast<std::atomic<uint32_t>&>(task.pendingCount);
 				counter.fetch_add(1, std::memory_order_acquire);;
 				SpaceComponent* spaceComponent = static_cast<SpaceComponent*>(component);
 				CollectComponentsFromSpace(engine, task, instanceData, captureData, spaceComponent);

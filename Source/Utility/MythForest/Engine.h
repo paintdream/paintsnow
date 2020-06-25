@@ -64,8 +64,8 @@ namespace PaintsNow {
 			Engine(const Engine& engine);
 			Engine& operator = (const Engine& engine);
 
-			TAtomic<uint32_t> frameIndex;
-			TAtomic<uint32_t> entityCount;
+			std::atomic<uint32_t> frameIndex;
+			std::atomic<uint32_t> entityCount;
 			IThread::Event* finalizeEvent;
 			unordered_map<String, Module*> modules;
 			std::vector<TQueue<ITask*> > frameTasks;

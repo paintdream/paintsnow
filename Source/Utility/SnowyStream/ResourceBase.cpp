@@ -37,7 +37,7 @@ struct LeakGuard {
 	}
 
 private:
-	TAtomic<int32_t> section;
+	std::atomic<int32_t> section;
 	std::set<SharedTiny*> collection;
 };
 

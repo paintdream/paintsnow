@@ -297,7 +297,7 @@ void VisibilityComponent::TickRender(Engine& engine) {
 	for (size_t i = 0; i < tasks.size(); i++) {
 		TaskData& task = tasks[i];
 		TextureResource* texture = task.texture();
-		TAtomic<uint32_t>& finalStatus = reinterpret_cast<TAtomic<uint32_t>&>(task.status);
+		std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(task.status);
 		if (task.status == TaskData::STATUS_IDLE) {
 			finalStatus.store(TaskData::STATUS_START, std::memory_order_release);
 		} else if (task.status == TaskData::STATUS_ASSEMBLED) {
@@ -444,7 +444,7 @@ void VisibilityComponent::CollectComponents(Engine& engine, TaskData& task, cons
 				CollectRenderableComponent(engine, task, renderableComponent, instanceData, transformComponent->GetObjectID());
 			}
 		} else if (component->GetEntityFlagMask() & Entity::ENTITY_HAS_SPACE) {
-			TAtomic<uint32_t>& counter = reinterpret_cast<TAtomic<uint32_t>&>(task.pendingCount);
+			std::atomic<uint32_t>& counter = reinterpret_cast<std::atomic<uint32_t>&>(task.pendingCount);
 			counter.fetch_add(1, std::memory_order_acquire);;
 			SpaceComponent* spaceComponent = static_cast<SpaceComponent*>(component);
 			CollectComponentsFromSpace(engine, task, instanceData, captureData, spaceComponent);
@@ -456,7 +456,7 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 	// resolve finished tasks
 	for (size_t k = 0; k < tasks.size(); k++) {
 		TaskData& task = tasks[k];
-		TAtomic<uint32_t>& finalStatus = reinterpret_cast<TAtomic<uint32_t>&>(task.status);
+		std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(task.status);
 		if (task.status == TaskData::STATUS_BAKED) {
 			UShort3 coord = task.coord;
 			Cell& cell = cells[coord];
@@ -626,7 +626,7 @@ void VisibilityComponent::CoTaskAssembleTask(Engine& engine, TaskData& task, con
 
 	CollectComponentsFromEntity(engine, task, instanceData, captureData, hostEntity);
 
-	TAtomic<uint32_t>& finalStatus = reinterpret_cast<TAtomic<uint32_t>&>(task.status);
+	std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(task.status);
 	finalStatus.store(TaskData::STATUS_ASSEMBLING, std::memory_order_release);
 }
 
@@ -643,7 +643,7 @@ void VisibilityComponent::DispatchTasks(Engine& engine) {
 			// find idle task
 			while (n < tasks.size()) {
 				TaskData& task = tasks[n];
-				TAtomic<uint32_t>& finalStatus = reinterpret_cast<TAtomic<uint32_t>&>(task.status);
+				std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(task.status);
 				if (task.status == TaskData::STATUS_START) {
 					finalStatus.store(TaskData::STATUS_DISPATCHED, std::memory_order_release);
 					threadPool.Push(CreateCoTaskContextFree(kernel, Wrap(this, &VisibilityComponent::CoTaskAssembleTask), std::ref(engine), std::ref(task), bakePoint));

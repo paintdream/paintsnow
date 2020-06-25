@@ -48,7 +48,7 @@ struct DispatcherImpl : public INetwork::Dispatcher {
 	event_base* base;
 	evdns_base* dns;
 #ifdef _DEBUG
-	TAtomic<int32_t> referCount;
+	std::atomic<int32_t> referCount;
 #endif
 };
 

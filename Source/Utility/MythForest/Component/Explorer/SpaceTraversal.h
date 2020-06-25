@@ -67,7 +67,7 @@ namespace PaintsNow {
 						}
 					}
 
-					TAtomic<uint32_t>& pendingCount = reinterpret_cast<TAtomic<uint32_t>&>(taskData.pendingCount);
+					std::atomic<uint32_t>& pendingCount = reinterpret_cast<std::atomic<uint32_t>&>(taskData.pendingCount);
 					if (pendingCount.fetch_sub(1, std::memory_order_release) == 1) {
 						(static_cast<T*>(this))->CompleteCollect(engine, taskData);
 					}
@@ -76,7 +76,7 @@ namespace PaintsNow {
 
 			void CollectComponentsFromEntity(Engine& engine, TaskData& taskData, const WorldInstanceData& instanceData, const CaptureData& captureData, Entity* entity) {
 				const std::vector<Component*>& components = entity->GetComponents();
-				TAtomic<uint32_t>& pendingCount = reinterpret_cast<TAtomic<uint32_t>&>(taskData.pendingCount);
+				std::atomic<uint32_t>& pendingCount = reinterpret_cast<std::atomic<uint32_t>&>(taskData.pendingCount);
 
 				pendingCount.fetch_add(1, std::memory_order_acquire);
 				for (size_t i = 0; i < components.size(); i++) {

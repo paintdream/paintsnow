@@ -130,7 +130,7 @@ namespace PaintsNow {
 
 				std::vector<WarpData> warpData;
 				WorldGlobalData worldGlobalData;
-				TAtomic<uint32_t> pendingCount;
+				std::atomic<uint32_t> pendingCount;
 			};
 		};
 

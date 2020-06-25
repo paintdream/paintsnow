@@ -81,7 +81,7 @@ namespace PaintsNow {
 				};
 
 				std::vector<WarpData> warpData;
-				TAtomic<uint32_t> pendingCount;
+				std::atomic<uint32_t> pendingCount;
 				TShared<Entity> rootEntity;
 				TShared<SharedTiny> shadowGrid;
 				IRender::Queue* renderQueue;

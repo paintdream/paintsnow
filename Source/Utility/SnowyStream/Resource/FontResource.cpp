@@ -85,7 +85,7 @@ const FontResource::Char& FontResource::Get(IRender& render, IRender::Queue* que
 	}
 
 	const FontResource::Char& ret = slice.Get(render, queue, fontBase, ch);
-	TAtomic<uint32_t>& lock = reinterpret_cast<TAtomic<uint32_t>&>(slice.critical);
+	std::atomic<uint32_t>& lock = reinterpret_cast<std::atomic<uint32_t>&>(slice.critical);
 
 	if (lock.load(std::memory_order_acquire) == 2u) {
 		// need update
@@ -139,7 +139,7 @@ Short2Pair FontResource::Slice::AllocRect(IRender& render, IRender::Queue* queue
 }
 
 void FontResource::Slice::UpdateFontTexture(IRender& render, IRender::Queue* queue) {
-	TAtomic<uint32_t>& lock = reinterpret_cast<TAtomic<uint32_t>&>(critical);
+	std::atomic<uint32_t>& lock = reinterpret_cast<std::atomic<uint32_t>&>(critical);
 
 	if (SpinLock(lock) == 2u) {
 		for (size_t i = 0; i < cacheTextures.size(); i++) {
@@ -174,7 +174,7 @@ uint16_t FontResource::GetFontTextureSize() const {
 void FontResource::Update(IRender& render, IRender::Queue* queue) {
 	if (Flag() & TINY_MODIFIED) {
 		for (std::map<uint32_t, Slice>::iterator it = sliceMap.begin(); it != sliceMap.end(); it++) {
-			TAtomic<uint32_t>& lock = reinterpret_cast<TAtomic<uint32_t>&>(it->second.critical);
+			std::atomic<uint32_t>& lock = reinterpret_cast<std::atomic<uint32_t>&>(it->second.critical);
 			if (lock.load(std::memory_order_acquire) == 2u) {
 				it->second.UpdateFontTexture(render, queue);
 			}
@@ -185,7 +185,7 @@ void FontResource::Update(IRender& render, IRender::Queue* queue) {
 }
 
 const FontResource::Char& FontResource::Slice::Get(IRender& render, IRender::Queue* queue, IFontBase& fontBase, IFontBase::FONTCHAR ch) {
-	TAtomic<uint32_t>& lock = reinterpret_cast<TAtomic<uint32_t>&>(critical);
+	std::atomic<uint32_t>& lock = reinterpret_cast<std::atomic<uint32_t>&>(critical);
 	SpinLock(lock);
 	hmap::iterator p = cache.find(ch);
 	if (p != cache.end()) {

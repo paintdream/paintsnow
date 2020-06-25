@@ -52,7 +52,7 @@ namespace PaintsNow {
 			Float4 clippedRect;
 			Float4 percentage;
 
-			TAtomic<int32_t> runningLayoutCount;
+			std::atomic<int32_t> runningLayoutCount;
 		};
 	}
 }

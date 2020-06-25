@@ -60,7 +60,7 @@ void SpaceComponentModule::RequestInsertEntity(IScript::Request& request, IScrip
 	if (spaceComponent->Flag() & SpaceComponent::SPACECOMPONENT_ATTACHED) {
 		spaceComponent->Insert(engine, entity.Get());
 	} else {
-		request.Error("Isolated SpaceComponent cannot hold entities.");
+		request.Error("Orphan SpaceComponent cannot hold entities.");
 	}
 }
 

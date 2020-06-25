@@ -41,7 +41,7 @@ namespace PaintsNow {
 		protected:
 			std::vector<TShared<EventListenerComponent> > frameTickers;
 			std::vector<TShared<EventListenerComponent> > userInputs;
-			TAtomic<uint32_t> critical;
+			std::atomic<uint32_t> critical;
 		};
 	}
 }

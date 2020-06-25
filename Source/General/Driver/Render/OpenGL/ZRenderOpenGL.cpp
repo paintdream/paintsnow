@@ -283,7 +283,7 @@ struct QueueImplOpenGL : public IRender::Queue {
 	}
 
 	DeviceImplOpenGL* device;
-	TAtomic<int32_t> critical;
+	std::atomic<int32_t> critical;
 	ResourceBaseImplOpenGL* swapResource;
 	TQueueList<ResourceCommandImplOpenGL> queuedCommands;
 };
@@ -366,7 +366,7 @@ protected:
 	T* downloadDescription;
 
 private:
-	TAtomic<uint32_t> critical;
+	std::atomic<uint32_t> critical;
 	T currentDescription;
 	T nextDescription;
 };

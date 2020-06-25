@@ -66,7 +66,7 @@ namespace PaintsNow {
 			std::vector<TShared<Component> > frameTickerCollection;
 			IScript::Request::Ref callback;
 			TShared<NsHeartVioliner::Clock> clock;
-			TAtomic<int32_t> critical;
+			std::atomic<int32_t> critical;
 			Entity* rootEntity;
 			uint64_t tickTimeStamp;
 			uint64_t tickTimeDelta;

@@ -25,7 +25,7 @@ namespace PaintsNow {
 
 	protected:
 		IRender::Queue* queue;
-		TAtomic<int32_t> yieldCount;
+		std::atomic<int32_t> yieldCount;
 	};
 }
 

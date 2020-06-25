@@ -40,7 +40,7 @@ namespace PaintsNow {
 			TShared<Item::Allocator> itemAllocator;
 			String viewResourcePath;
 			TShared<NsSnowyStream::ResourceBase> viewResource;
-			TAtomic<uint32_t> critical;
+			std::atomic<uint32_t> critical;
 		};
 	}
 }
