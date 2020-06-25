@@ -691,7 +691,7 @@ void RegisterPass(ResourceManager& resourceManager, UniqueType<T> type, const St
 	if (!matName.empty()) {
 		TShared<MaterialResource> materialResource = TShared<MaterialResource>::From(new MaterialResource(resourceManager, String("[Runtime]/MaterialResource/") + matName));
 		materialResource->Flag().fetch_or(ResourceBase::RESOURCE_ETERNAL, std::memory_order_acquire);
-		resourceManager.Insert(materialResource);
+		resourceManager.Insert(materialResource());
 	}
 	resourceManager.UnLock();
 	shaderResource->ReleaseObject();

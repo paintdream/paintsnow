@@ -121,16 +121,16 @@ namespace PaintsNow {
 				if (stream != nullptr) {
 					if (LoadData(object(), protocol, *stream)) {
 						if (flag != 0) object->Flag().fetch_or(flag, std::memory_order_acquire);
-						manager.Insert(object);
+						manager.Insert(object());
 					} else {
 						object = nullptr;
 					}
 				} else {
 					if (flag != 0) object->Flag().fetch_or(flag, std::memory_order_acquire);
-					manager.Insert(object);
+					manager.Insert(object());
 				}
 
-				return object;
+				return object();
 			}
 
 			virtual bool Serialize(ResourceBase* object, IFilterBase& protocol, IStreamBase& stream) {

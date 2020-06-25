@@ -109,7 +109,7 @@ TShared<MaterialResource> MaterialResource::CloneWithOverrideShader(TShared<Shad
 			clone->originalShaderResource = overrideShaderResource;
 			clone->SetLocation(overrideLocation);
 
-			resourceManager.Insert(clone);
+			resourceManager.Insert(clone());
 		}
 
 		resourceManager.UnLock();
