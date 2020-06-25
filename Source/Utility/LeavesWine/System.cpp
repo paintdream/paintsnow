@@ -7,7 +7,7 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsLeavesWine;
 using namespace PaintsNow::NsLeavesFlute;
 
-System::System() : statWindowDuration(1000) {}
+System::System() : statWindowDuration(500) {}
 
 System::WarpStat::WarpStat(Kernel& k, int& stat) : taskPerFrame(0), kernel(k), expanded(true), lastClockStamp(0), statWindowDuration(stat), historyOffset(0), maxHistory(1.0f) {
 	critical.store(0, std::memory_order_relaxed);

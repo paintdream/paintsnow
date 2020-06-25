@@ -20,8 +20,7 @@ namespace PaintsNow {
 			String t = s;
 			String::size_type pos;
 			while ((pos = t.find("PaintsNow::")) != String::npos) {
-				String m = t.substr(0, pos);
-				m += t.substr(pos + 11);
+				String m = t.substr(pos + 11);
 				std::swap(m, t);
 			}
 

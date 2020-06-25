@@ -18,107 +18,131 @@ function Scene.New(database : Database, clock : Clock) : Scene
 	meta.spaceComponent = spaceComponent
 	meta.rootEntity = rootEntity
 
+	local RuntimeVisibilityProbe = require("Script/Prefabs/Components/Visibility/RuntimeVisibilityProbe")
 	local eventListenerComponent = EventListenerComponentModule.New()
 	eventListenerComponent:BindEventTick(clock)
 	eventListenerComponent:BindEventFrame(true)
 	rootEntity:AddEntityComponent(eventListenerComponent as Component)
 
-	local batchComponent = BatchComponentModule.New()
 	local renderPolicy = RenderFlowComponentModule.NewRenderPolicy("Primitives", 0)
 	local lightPolicy = RenderFlowComponentModule.NewRenderPolicy("LightSource", 0)
 
 	-- add scene entities
 	if database then
+		local dupCount = 6
 		print("\tCreating entities.")
-		local entities : { Entity } = {}
-		for _, line in database:Lines("select ID from `Entities`;", 32) do
-			local entityID = table.unpack(line as { number }) as number
-			entities[entityID] = MythForest.NewEntity(-1)
-		end
 
-		print("\tCreating model components.")
-		local components : { Component } = {}
-		local shapeComponents : { ShapeComponent } = {}
-		local formComponents : { FormComponent } = {}
-		for _, line in database:Lines("select ModelComponents.ID, Path, ViewDistance from `ModelComponents`, `Resources` where `ResourceID` == Resources.ID;", 32) do
-			local componentID, path, viewDistance = table.unpack(line as { any })
-			local meshResource = SnowyStream.NewResource(path as string, "MeshResource", false) as MeshResource
-			if not meshResource then
-				print("\tUnable to load mesh resource: " .. path as string)
-			else
-				components[componentID as number] = components[componentID as number] or ModelComponentModule.New(meshResource, batchComponent) as Component
-				shapeComponents[componentID as number] = shapeComponents[componentID as number] or ShapeComponentModule.New(meshResource) 
-				formComponents[componentID as number] = formComponents[componentID as number] or FormComponentModule.New(path as string)
-			end
-		end
+		for i = 1, dupCount do
+			print("\tCreating at warp " .. i)
+			local offset = i * 7.5
+			local interSpaceComponent = SpaceComponentModule.New(i)
+			rootEntity:AddEntityComponent(interSpaceComponent as Component)
 
-		local count = 0
-		for _, line in database:Lines("select ModelComponentMaterials.ID, MeshGroupID, Path from `ModelComponentMaterials`, `Resources` where `ResourceID` == Resources.ID;", 32) do
-			local componentID, meshGroupID, path = table.unpack(line as { any })
-			local materialResource = SnowyStream.NewResource(path as string, "MaterialResource", false) as MaterialResource
-			if not materialResource then
-				print("\tUnable to load material resource: " .. path as string)
-			else
-				local modelComponent = components[componentID as number] as ModelComponent
-				if modelComponent then
-					modelComponent:SetRenderPolicy(renderPolicy)
-					modelComponent:AddMaterial(meshGroupID as number, materialResource)
-				end
-			end
+			BridgeSunset.QueueRoutine(interSpaceComponent, function ()
+				local subRootEntity = MythForest.NewEntity(-1)
+				local subSpaceComponent = SpaceComponentModule.New(-1, true)
+				subRootEntity:AddEntityComponent(subSpaceComponent as Component)
+				local batchComponent = BatchComponentModule.New()
 
-			count = count + 1
-		end
-
-		print("\tCreating transform components.")
-		for _, line in database:Lines("select ID, X, Y, Z, Scale, Yaw, Pitch, Roll from `TransformComponents`;", 32) do
-			local componentID, x, y, z, s, yaw, pitch, roll = table.unpack(line as { number })
-			local transformComponent = TransformComponentModule.New()
-			transformComponent:SetTranslation({ x as number, y as number, z as number })
-			transformComponent:SetScale({ s as number, s as number, s as number })
-			transformComponent:SetRotation({ yaw as number, pitch as number, roll as number })
-			transformComponent:UpdateTransform()
-
-			components[componentID as number] = transformComponent as Component
-		end
-
-		print("\tCreating envcube components")
-		for _, line in database:Lines("select EnvCubeComponents.ID, Path from `EnvCubeComponents`, `Resources` where `ResourceID` == Resources.ID;", 32) do
-			local componentID, path = table.unpack(line as { any })
-			components[componentID as number] = components[componentID as number] or EnvCubeComponentModule.New() as Component
-			local textureResource = SnowyStream.NewResource(path as string, "TextureResource", false)
-			if textureResource then
-				local component = components[componentID as number] as EnvCubeComponent
-				component:SetTexture(textureResource as TextureResource)
-				component:SetRenderPolicy(lightPolicy)
-				component:SetRange({1000, 1000, 1000})
-			else
-				print("\tUnable to load texture resource: " .. path as string)
-			end
-		end
-		
-		print("\tAttaching components.")
-		-- create model components
-		for _, line in database:Lines("select ID, ComponentID from `EntityComponents`;", 32) do
-			local entityID, componentID = table.unpack(line as { any })
-			local entity = entities[entityID as number]
-			local component = components[componentID as number]
-			if entity and component then
-				entity:AddEntityComponent(component)
-				local shapeComponent = shapeComponents[componentID as number]
-				if shapeComponent then
-					entity:AddEntityComponent(shapeComponent as Component)
+				local entities : { Entity } = {}
+				for _, line in database:Lines("select ID from `Entities`;", 32) do
+					local entityID = table.unpack(line as { number }) as number
+					entities[entityID] = MythForest.NewEntity(-1)
 				end
 
-				local formComponent = formComponents[componentID as number]
-				if formComponent then
-					entity:AddEntityComponent(formComponent as Component)
+				print("\tCreating model components.")
+				local components : { Component } = {}
+				local shapeComponents : { ShapeComponent } = {}
+				local formComponents : { FormComponent } = {}
+				for _, line in database:Lines("select ModelComponents.ID, Path, ViewDistance from `ModelComponents`, `Resources` where `ResourceID` == Resources.ID;", 32) do
+					local componentID, path, viewDistance = table.unpack(line as { any })
+					local meshResource = SnowyStream.NewResource(path as string, "MeshResource", false) as MeshResource
+					if not meshResource then
+						print("\tUnable to load mesh resource: " .. path as string)
+					else
+						components[componentID as number] = components[componentID as number] or ModelComponentModule.New(meshResource, batchComponent) as Component
+						shapeComponents[componentID as number] = shapeComponents[componentID as number] or ShapeComponentModule.New(meshResource) 
+						formComponents[componentID as number] = formComponents[componentID as number] or FormComponentModule.New(path as string)
+					end
 				end
-			end
-		end
 
-		for _, entity in ipairs(entities) do
-			entity:UpdateEntity()
-			spaceComponent:InsertEntity(entity)
+				local count = 0
+				for _, line in database:Lines("select ModelComponentMaterials.ID, MeshGroupID, Path from `ModelComponentMaterials`, `Resources` where `ResourceID` == Resources.ID;", 32) do
+					local componentID, meshGroupID, path = table.unpack(line as { any })
+					local materialResource = SnowyStream.NewResource(path as string, "MaterialResource", false) as MaterialResource
+					if not materialResource then
+						print("\tUnable to load material resource: " .. path as string)
+					else
+						local modelComponent = components[componentID as number] as ModelComponent
+						if modelComponent then
+							modelComponent:SetRenderPolicy(renderPolicy)
+							modelComponent:AddMaterial(meshGroupID as number, materialResource)
+						end
+					end
+
+					count = count + 1
+				end
+
+				print("\tCreating transform components.")
+				for _, line in database:Lines("select ID, X, Y, Z, Scale, Yaw, Pitch, Roll from `TransformComponents`;", 32) do
+					local componentID, x, y, z, s, yaw, pitch, roll = table.unpack(line as { number })
+					local transformComponent = TransformComponentModule.New()
+					transformComponent:SetTranslation({ x as number + offset, y as number, z as number })
+					transformComponent:SetScale({ s as number, s as number, s as number })
+					transformComponent:SetRotation({ yaw as number, pitch as number, roll as number })
+					transformComponent:UpdateTransform()
+
+					components[componentID as number] = transformComponent as Component
+				end
+
+				print("\tCreating envcube components")
+				for _, line in database:Lines("select EnvCubeComponents.ID, Path from `EnvCubeComponents`, `Resources` where `ResourceID` == Resources.ID;", 32) do
+					local componentID, path = table.unpack(line as { any })
+					components[componentID as number] = components[componentID as number] or EnvCubeComponentModule.New() as Component
+					local textureResource = SnowyStream.NewResource(path as string, "TextureResource", false)
+					if textureResource then
+						local component = components[componentID as number] as EnvCubeComponent
+						component:SetTexture(textureResource as TextureResource)
+						component:SetRenderPolicy(lightPolicy)
+						component:SetRange({1000, 1000, 1000})
+					else
+						print("\tUnable to load texture resource: " .. path as string)
+					end
+				end
+
+				print("\tAttaching components.")
+				-- create model components
+				for _, line in database:Lines("select ID, ComponentID from `EntityComponents`;", 32) do
+					local entityID, componentID = table.unpack(line as { any })
+					local entity = entities[entityID as number]
+					local component = components[componentID as number]
+					if entity and component then
+						entity:AddEntityComponent(component)
+						local shapeComponent = shapeComponents[componentID as number]
+						if shapeComponent then
+							entity:AddEntityComponent(shapeComponent as Component)
+						end
+
+						local formComponent = formComponents[componentID as number]
+						if formComponent then
+							entity:AddEntityComponent(formComponent as Component)
+						end
+					end
+				end
+
+				for _, entity in ipairs(entities) do
+					entity:UpdateEntity()
+					subSpaceComponent:InsertEntity(entity)
+				end
+
+				local subEventListenerComponent = EventListenerComponentModule.New()
+				subEventListenerComponent:BindEventFrame(true)
+				local visibilityComponent = RuntimeVisibilityProbe.New()
+				subRootEntity:AddEntityComponent(subEventListenerComponent as Component)
+				subRootEntity:AddEntityComponent(visibilityComponent as Component)
+				subRootEntity:AddEntityComponent(batchComponent as Component)
+				interSpaceComponent:InsertEntity(subRootEntity)
+			end)
 		end
 
 		print("\tAdding lights")
@@ -177,11 +201,6 @@ function Scene.New(database : Database, clock : Clock) : Scene
 		]]
 	end
 
-	local RuntimeVisibilityProbe = require("Script/Prefabs/Components/Visibility/RuntimeVisibilityProbe")
-	local visibilityComponent = RuntimeVisibilityProbe.New()
-	rootEntity:AddEntityComponent(visibilityComponent as Component)
-	rootEntity:AddEntityComponent(batchComponent as Component)
- 
 	return setmetatable(meta, Scene as METATABLE) as Scene
 end
 

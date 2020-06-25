@@ -141,7 +141,7 @@ void VisibilityComponent::DispatchEvent(Event& event, Entity* entity) {
 	if (event.eventID == Event::EVENT_FRAME) {
 		// DoBake
 		TickRender(event.engine);
-	} else if (event.eventID == Event::EVENT_TICK) {
+
 		// Prepare
 		Engine& engine = event.engine;
 		engine.GetKernel().QueueRoutine(this, CreateTaskContextFree(Wrap(this, &VisibilityComponent::RoutineTickTasks), std::ref(engine)));

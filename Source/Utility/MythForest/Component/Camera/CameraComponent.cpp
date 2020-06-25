@@ -292,12 +292,11 @@ void CameraComponent::CommitRenderRequests(Engine& engine, TaskData& taskData, I
 		TShared<NsSnowyStream::TextureResource> cubeMapTexture;
 		TShared<NsSnowyStream::TextureResource> skyMapTexture;
 		float minDist = FLT_MAX;
-		RenderPolicy* lastRenderPolicy = nullptr;
-		RenderPortCommandQueue* lastCommandQueue = nullptr;
-		IRender::Resource* lastRenderState = nullptr;
-
 		for (size_t j = 0; j < taskData.warpData.size(); j++) {
 			TaskData::WarpData& warpData = taskData.warpData[j];
+			RenderPolicy* lastRenderPolicy = nullptr;
+			RenderPortCommandQueue* lastCommandQueue = nullptr;
+			IRender::Resource* lastRenderState = nullptr;
 
 			// warpData.resourceQueue
 			TaskData::WarpData::InstanceGroupMap& instanceGroups = warpData.instanceGroups;
@@ -757,10 +756,9 @@ void CameraComponent::CollectComponents(Engine& engine, TaskData& taskData, cons
 				bool captureFree = !!(spaceComponent->GetEntityFlagMask() & Entity::ENTITY_HAS_RENDERCONTROL);
 				if (transformComponent != nullptr) {
 					UpdateCaptureData(newCaptureData, QuickInverse(localTransform) * mat);
-					CollectComponentsFromSpace(engine, taskData, subSpaceWorldInstancedData, newCaptureData, spaceComponent);
-				} else {
-					CollectComponentsFromSpace(engine, taskData, subSpaceWorldInstancedData, captureData, spaceComponent);
 				}
+
+				CollectComponentsFromSpace(engine, taskData, subSpaceWorldInstancedData, newCaptureData, spaceComponent);
 			}
 		}
 	}

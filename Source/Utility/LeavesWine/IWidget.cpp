@@ -154,7 +154,7 @@ void IWidget::Property(IReflectObject& s, Unique typeID, Unique refTypeID, const
 	if (s.IsBasicObject() && typeID == refTypeID) {
 		printer(typeID, ptr);
 	} else {
-		ImGui::Text(s.ToString().c_str());
+		ImGui::Text(RemoveNamespace(s.ToString()).c_str());
 	}
 
 	ImGui::NextColumn();

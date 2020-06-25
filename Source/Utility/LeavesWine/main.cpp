@@ -41,7 +41,7 @@ IMGUI_IMPL_API void     ImGui_ImplGLUT_SpecialUpFunc(int key, int x, int y);    
 
 class ZFrameFreeglutForImGui : public ZFrameFreeglut {
 public:
-	ZFrameFreeglutForImGui(LeavesWine& wine, const Int2& size = Int2(800, 600), Callback* callback = nullptr) : ZFrameFreeglut(size, callback), leavesWine(wine) {}
+	ZFrameFreeglutForImGui(LeavesWine& wine, const Int2& size = Int2(1450, 800), Callback* callback = nullptr) : ZFrameFreeglut(size, callback), leavesWine(wine) {}
 
 	virtual void ChangeSize(int w, int h) {
 		ImGui_ImplGLUT_ReshapeFunc(w, h);
