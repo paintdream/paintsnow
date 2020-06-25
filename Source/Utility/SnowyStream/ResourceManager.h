@@ -22,8 +22,8 @@ namespace PaintsNow {
 			ResourceManager(IThread& threadApi, IUniformResourceManager& hostManager, const TWrapper<void, const String&>& errorHandler, void* context);
 			virtual ~ResourceManager();
 			typedef String UniqueLocation;
-			virtual ResourceBase* Insert(const UniqueLocation& uniqueLocation, ResourceBase* resource);
-			void Remove(ResourceBase* resource);
+			void Insert(TShared<ResourceBase> resource);
+			void Remove(TShared<ResourceBase> resource);
 			void RemoveAll();
 			virtual Unique GetDeviceUnique() const = 0;
 			void Report(const String& err);
@@ -115,22 +115,21 @@ namespace PaintsNow {
 			}
 
 			virtual TShared<ResourceBase> Deserialize(ResourceManager& manager, const ResourceManager::UniqueLocation& id, IFilterBase& protocol, Tiny::FLAG flag, IStreamBase* stream) {
-				T* object = new T(manager, id);
+				TShared<T> object = TShared<T>::From(new T(manager, id));
 
 				if (stream != nullptr) {
-					if (LoadData(object, protocol, *stream)) {
+					if (LoadData(object(), protocol, *stream)) {
 						if (flag != 0) object->Flag().fetch_or(flag, std::memory_order_acquire);
-						object = static_cast<T*>(manager.Insert(id, object));
+						manager.Insert(object);
 					} else {
-						object->ReleaseObject();
 						object = nullptr;
 					}
 				} else {
 					if (flag != 0) object->Flag().fetch_or(flag, std::memory_order_acquire);
-					manager.Insert(id, object);
+					manager.Insert(object);
 				}
 
-				return TShared<ResourceBase>::From(object);
+				return object;
 			}
 
 			virtual bool Serialize(ResourceBase* object, IFilterBase& protocol, IStreamBase& stream) {

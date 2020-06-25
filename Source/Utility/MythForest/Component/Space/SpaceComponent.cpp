@@ -52,11 +52,7 @@ void SpaceComponent::UpdateEntityWarpIndex(Entity* entity) {
 }
 
 void SpaceComponent::Initialize(Engine& engine, Entity* entity) {
-	if (!(Flag() & COMPONENT_LOCALIZED_WARP)) {
-		BaseClass::Initialize(engine, entity);
-	}
-
-	Flag().fetch_or(SPACECOMPONENT_ATTACHED, std::memory_order_acquire);
+	BaseClass::Initialize(engine, entity);
 }
 
 static void InvokeRemoveAll(void* context, bool run, Engine& engine, SpaceComponent* spaceComponent) {
@@ -64,13 +60,13 @@ static void InvokeRemoveAll(void* context, bool run, Engine& engine, SpaceCompon
 }
 
 void SpaceComponent::Uninitialize(Engine& engine, Entity* entity) {
-	Flag().fetch_and(~SPACECOMPONENT_ATTACHED, std::memory_order_release);
-
 	if (Flag() & COMPONENT_LOCALIZED_WARP) {
 		QueueRoutine(engine, CreateTask(Wrap(InvokeRemoveAll), std::ref(engine), this));
 	} else {
 		RemoveAll(engine);
 	}
+
+	BaseClass::Uninitialize(engine, entity);
 }
 
 void SpaceComponent::QueueRoutine(Engine& engine, ITask* task) {
@@ -99,8 +95,8 @@ void SpaceComponent::RoutineUpdateEntityWarpIndex(Engine& engine, Entity* entity
 }
 
 bool SpaceComponent::Insert(Engine& engine, Entity* entity) {
-	assert(Flag() & SPACECOMPONENT_ATTACHED);
-	if (!(Flag() & SPACECOMPONENT_ATTACHED)) {
+	assert(Flag() & TINY_ACTIVATED);
+	if (!(Flag() & TINY_ACTIVATED)) {
 		return false;
 	}
 

@@ -174,6 +174,7 @@ void CameraComponent::Instancing(Engine& engine, TaskData& taskData) {
 
 					if (ZPassBase::ValidateDrawCall(group.drawCallDescription)) {
 						IRender::Resource* drawCall = render.CreateResource(queue, IRender::Resource::RESOURCE_DRAWCALL);
+						assert(group.drawCallDescription.shaderResource != nullptr);
 						render.UploadResource(queue, drawCall, &group.drawCallDescription);
 						group.drawCallResource = drawCall;
 						policyData.runtimeResources.emplace_back(drawCall);
@@ -709,6 +710,7 @@ void CameraComponent::CollectComponents(Engine& engine, TaskData& taskData, cons
 		for (size_t i = 0; i < components.size(); i++) {
 			Component* component = components[i];
 			if (component == nullptr) continue;
+			assert(component->Flag() & Tiny::TINY_ACTIVATED);
 			if (!(component->Flag() & Tiny::TINY_ACTIVATED)) continue;
 
 			Unique unique = component->GetUnique();

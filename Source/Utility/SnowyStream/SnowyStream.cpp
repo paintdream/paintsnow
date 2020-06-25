@@ -562,7 +562,8 @@ TShared<ResourceBase> SnowyStream::RequestCloneResource(IScript::Request& reques
 	if (!exist) {
 		TShared<ResourceBase> p = TShared<ResourceBase>::From(static_cast<ResourceBase*>(resource->Clone()));
 		if (p) {
-			resourceManager.Insert(path, p());
+			p->SetLocation(path);
+			resourceManager.Insert(p);
 			return p;
 		}
 	} else {
@@ -682,12 +683,12 @@ void RegisterPass(ResourceManager& resourceManager, UniqueType<T> type, const St
 	}
 
 	shaderResource->SetLocation(ShaderResource::GetShaderPathPrefix() + name);
-	resourceManager.Insert(shaderResource->GetLocation(), shaderResource);
+	resourceManager.Insert(shaderResource);
 
 	if (!matName.empty()) {
 		TShared<MaterialResource> materialResource = TShared<MaterialResource>::From(new MaterialResource(resourceManager, String("[Runtime]/MaterialResource/") + matName));
 		materialResource->Flag().fetch_or(ResourceBase::RESOURCE_ETERNAL, std::memory_order_acquire);
-		resourceManager.Insert(materialResource->GetLocation(), materialResource());
+		resourceManager.Insert(materialResource);
 	}
 
 	shaderResource->ReleaseObject();

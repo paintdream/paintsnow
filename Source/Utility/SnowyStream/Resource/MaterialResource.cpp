@@ -55,7 +55,8 @@ void MaterialResource::Attach(IRender& render, void* deviceContext) {
 				// use cache
 				mutationShaderResource = cached;
 			} else {
-				resourceManager.Insert(location, mutationShaderResource());
+				mutationShaderResource->SetLocation(location);
+				resourceManager.Insert(mutationShaderResource());
 			}
 		}
 
@@ -102,7 +103,9 @@ TShared<MaterialResource> MaterialResource::CloneWithOverrideShader(TShared<Shad
 			clone->materialParams = materialParams;
 			clone->textureResources = textureResources;
 			clone->originalShaderResource = overrideShaderResource;
-			resourceManager.Insert(overrideLocation, clone());
+			clone->SetLocation(overrideLocation);
+
+			resourceManager.Insert(clone);
 		}
 
 		return clone;

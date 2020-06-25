@@ -38,31 +38,28 @@ void ResourceManager::RemoveAll() {
 	UnLock();
 }
 
-ResourceBase* ResourceManager::Insert(const UniqueLocation& id, ResourceBase* resource) {
+void ResourceManager::Insert(TShared<ResourceBase> resource) {
 	assert(resource != nullptr);
+	assert(resource->Flag() & ResourceBase::RESOURCE_ORPHAN);
 
 	// allowing anounymous resource
-	if (id.empty()) return resource;
+	const UniqueLocation& id = resource->GetLocation();
+	if (id.empty()) return;
 
 	DoLock();
 	assert(!id.empty());
-	unordered_map<UniqueLocation, ResourceBase*>::iterator it = resourceMap.find(id);
-	if (it == resourceMap.end()) {
-		resourceMap[id] = resource;
-		if (resource->Flag() & ResourceBase::RESOURCE_ETERNAL) {
-			resource->ReferenceObject();
-		}
+	assert(&resource->GetResourceManager() == this);
 
-		InvokeAttach(resource, GetContext());
-	} else {
-		resource->SetLocation("");
-		resource->ReleaseObject();
-		resource = (*it).second;
+	unordered_map<UniqueLocation, ResourceBase*>::iterator it = resourceMap.find(id);
+	assert(it == resourceMap.end());
+
+	resourceMap[id] = resource();
+	if (resource->Flag() & ResourceBase::RESOURCE_ETERNAL) {
 		resource->ReferenceObject();
 	}
-	UnLock();
 
-	return resource;
+	InvokeAttach(resource(), GetContext());
+	UnLock();
 }
 
 IUniformResourceManager& ResourceManager::GetUniformResourceManager() {
@@ -86,7 +83,7 @@ void* ResourceManager::GetContext() const {
 	return context;
 }
 
-void ResourceManager::Remove(ResourceBase* resource) {
+void ResourceManager::Remove(TShared<ResourceBase> resource) {
 	assert(resource != nullptr);
 	if (resource->Flag() & (ResourceBase::RESOURCE_ORPHAN | ResourceBase::RESOURCE_ETERNAL))
 		return;
@@ -102,7 +99,7 @@ void ResourceManager::Remove(ResourceBase* resource) {
 	}
 
 	// Parallel bug here.
-	InvokeDetach(resource, GetContext());
+	InvokeDetach(resource(), GetContext());
 	resource->Flag().fetch_or(ResourceBase::RESOURCE_ORPHAN, std::memory_order_acquire);
 	UnLock();
 }

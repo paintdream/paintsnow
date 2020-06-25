@@ -44,7 +44,7 @@ private:
 static LeakGuard leakGuard;
 #endif
 
-ResourceBase::ResourceBase(ResourceManager& manager, const ResourceManager::UniqueLocation& id) : BaseClass(Tiny::TINY_UNIQUE | Tiny::TINY_READONLY | Tiny::TINY_ACTIVATED | Tiny::TINY_UPDATING), resourceManager(manager), uniqueLocation(id) {
+ResourceBase::ResourceBase(ResourceManager& manager, const ResourceManager::UniqueLocation& id) : BaseClass(Tiny::TINY_UNIQUE | Tiny::TINY_READONLY | Tiny::TINY_ACTIVATED | Tiny::TINY_UPDATING | RESOURCE_ORPHAN), resourceManager(manager), uniqueLocation(id) {
 #ifdef _DEBUG
 	leakGuard.Insert(this);
 #endif
