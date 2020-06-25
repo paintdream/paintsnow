@@ -28,9 +28,11 @@ TShared<ModelComponent> ModelComponentModule::RequestNew(IScript::Request& reque
 		batchComponent = batch.Get();
 	}
 
+	assert(batchComponent->GetWarpIndex() == engine.GetKernel().GetCurrentWarpIndex());
 	TShared<MeshResource> res = meshResource.Get();
 	TShared<ModelComponent> modelComponent = TShared<ModelComponent>::From(allocator->New(res, batchComponent));
 	modelComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
+
 	return modelComponent;
 }
 

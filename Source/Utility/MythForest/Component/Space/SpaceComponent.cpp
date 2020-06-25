@@ -8,12 +8,7 @@ using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 using namespace PaintsNow::NsBridgeSunset;
 
-SpaceComponent::SpaceComponent(int32_t warpIndex, bool sorted) : rootEntity(nullptr), entityCount(0) {
-	if (warpIndex >= 0) {
-		Flag().fetch_or(COMPONENT_LOCALIZED_WARP, std::memory_order_acquire);
-		SetWarpIndex(safe_cast<uint32_t>(warpIndex));
-	}
-
+SpaceComponent::SpaceComponent(bool sorted) : rootEntity(nullptr), entityCount(0) {
 	if (sorted) {
 		Flag().fetch_or(SPACECOMPONENT_ORDERED, std::memory_order_acquire);
 	}

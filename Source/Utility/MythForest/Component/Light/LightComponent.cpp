@@ -357,7 +357,7 @@ void LightComponent::ShadowLayer::CollectComponents(Engine& engine, TaskData& ta
 		subWorldInstancedData.worldMatrix = localTransform * instanceData.worldMatrix;
 	}
 
-	if (rootFlag & (Entity::ENTITY_HAS_RENDERABLE | Entity::ENTITY_HAS_RENDERCONTROL)) {
+	if (rootFlag & (Entity::ENTITY_HAS_RENDERABLE | Entity::ENTITY_HAS_RENDERCONTROL | Entity::ENTITY_HAS_SPACE)) {
 		// optional animation
 		subWorldInstancedData.animationComponent = entity->GetUniqueComponent(UniqueType<AnimationComponent>());
 
@@ -373,12 +373,12 @@ void LightComponent::ShadowLayer::CollectComponents(Engine& engine, TaskData& ta
 		for (size_t i = 0; i < components.size(); i++) {
 			Component* component = components[i];
 			if (component == nullptr) continue;
+			if (!(component->Flag() & Tiny::TINY_ACTIVATED)) continue;
 			Unique unique = component->GetUnique();
 
 			// Since EntityMask would be much more faster than Reflection
 			// We asserted that flaged components must be derived from specified implementations
 			Tiny::FLAG entityMask = component->GetEntityFlagMask();
-			assert(component->Flag() & Tiny::TINY_ACTIVATED);
 			// if (!(component->Flag() & Tiny::TINY_ACTIVATED)) continue;
 
 			if (entityMask & Entity::ENTITY_HAS_RENDERABLE) {

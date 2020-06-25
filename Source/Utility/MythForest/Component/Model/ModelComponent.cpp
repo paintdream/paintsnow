@@ -7,7 +7,6 @@ using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
 ModelComponent::ModelComponent(TShared<MeshResource>& res, TShared<BatchComponent>& batch) : batchComponent(batch), meshResource(res), hostCount(0) {
-	assert(batch->GetWarpIndex() == GetWarpIndex());
 	Flag().fetch_or(COMPONENT_SHARED, std::memory_order_acquire); // can be shared among different entities
 }
 

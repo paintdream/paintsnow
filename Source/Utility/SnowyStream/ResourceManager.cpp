@@ -55,8 +55,10 @@ ResourceBase* ResourceManager::Insert(const UniqueLocation& id, ResourceBase* re
 
 		InvokeAttach(resource, GetContext());
 	} else {
+		resource->SetLocation("");
 		resource->ReleaseObject();
 		resource = (*it).second;
+		resource->ReferenceObject();
 	}
 	UnLock();
 

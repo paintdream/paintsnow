@@ -52,7 +52,7 @@ namespace PaintsNow {
 
 			void CollectComponentsFromSpace(Engine& engine, TaskData& taskData, const WorldInstanceData& instanceData, const CaptureData& captureData, SpaceComponent* spaceComponent) {
 				if ((spaceComponent->Flag() & Component::COMPONENT_LOCALIZED_WARP) && spaceComponent->GetWarpIndex() != engine.GetKernel().GetCurrentWarpIndex()) {
-					spaceComponent->QueueRoutine(engine, CreateTaskContextFree(Wrap(this, &SpaceTraversal<T, Config>::CollectComponentsFromSpace), std::ref(engine), std::ref(taskData), std::ref(instanceData), captureData, spaceComponent));
+					spaceComponent->QueueRoutine(engine, CreateTaskContextFree(Wrap(this, &SpaceTraversal<T, Config>::CollectComponentsFromSpace), std::ref(engine), std::ref(taskData), instanceData, captureData, spaceComponent));
 				} else {
 					Entity* spaceRoot = spaceComponent->GetRootEntity();
 					if (spaceRoot != nullptr) {

@@ -13,7 +13,7 @@ namespace PaintsNow {
 	namespace NsMythForest {
 		class SpaceComponent : public TAllocatedTiny<SpaceComponent, Component> {
 		public:
-			SpaceComponent(int32_t warpIndex, bool sorted = true);
+			SpaceComponent(bool sorted = true);
 			virtual ~SpaceComponent();
 
 			enum {
