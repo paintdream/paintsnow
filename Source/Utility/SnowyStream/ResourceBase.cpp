@@ -56,6 +56,7 @@ ResourceBase::~ResourceBase() {
 #ifdef _DEBUG
 	leakGuard.Remove(this);
 #endif
+	assert(Flag() & ResourceBase::RESOURCE_ORPHAN);
 }
 
 std::pair<uint16_t, uint16_t> ResourceBase::GetProgress() const {
@@ -72,13 +73,13 @@ bool ResourceBase::IsPrepared() const {
 
 void ResourceBase::ReleaseObject() {
 	// last?
-	if (GetExtReferCount() == 0) {
+	if (GetExtReferCount() == 0 && !(Flag() & RESOURCE_ORPHAN)) {
 		// no references exist, remove this from resource manager
-		if (!(Flag() & RESOURCE_ORPHAN)) {
-			resourceManager.DoLock();
+		resourceManager.DoLock();
+		if (GetExtReferCount() == 0 && !(Flag() & RESOURCE_ORPHAN)) {
 			resourceManager.Remove(this);
-			resourceManager.UnLock();
 		}
+		resourceManager.UnLock();
 	}
 
 	SharedTiny::ReleaseObject();

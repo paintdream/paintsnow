@@ -25,14 +25,20 @@ void ResourceManager::RemoveAll() {
 	// remove all eternal resources
 	unordered_map<UniqueLocation, ResourceBase*> temp;
 	std::swap(temp, resourceMap);
+
+	std::vector<ResourceBase*> externals;
 	for (unordered_map<UniqueLocation, ResourceBase*>::const_iterator it = temp.begin(); it != temp.end(); ++it) {
 		ResourceBase* resource = (*it).second;
 		InvokeDetach(resource, GetContext());
 		resource->Flag().fetch_or(ResourceBase::RESOURCE_ORPHAN, std::memory_order_acquire);
 
 		if (resource->Flag() & ResourceBase::RESOURCE_ETERNAL) {
-			resource->ReleaseObject();
+			externals.emplace_back(resource);
 		}
+	}
+
+	for (size_t i = 0; i < externals.size(); i++) {
+		externals[i]->ReleaseObject();
 	}
 }
 
@@ -47,11 +53,11 @@ void ResourceManager::Insert(TShared<ResourceBase> resource) {
 
 	assert(!id.empty());
 	assert(&resource->GetResourceManager() == this);
-
-	unordered_map<UniqueLocation, ResourceBase*>::iterator it = resourceMap.find(id);
-	assert(it == resourceMap.end());
+	assert(resourceMap.find(id) == resourceMap.end());
+	resource->Flag().fetch_and(~ResourceBase::RESOURCE_ORPHAN, std::memory_order_acquire);
 
 	resourceMap[id] = resource();
+
 	if (resource->Flag() & ResourceBase::RESOURCE_ETERNAL) {
 		resource->ReferenceObject();
 	}
@@ -98,7 +104,6 @@ void ResourceManager::Remove(TShared<ResourceBase> resource) {
 	if (location.empty()) return;
 
 	// Double check
-	assert(resource->GetExtReferCount() == 0);
 	if (!location.empty()) {
 		resourceMap.erase(location);
 	}

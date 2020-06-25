@@ -22,8 +22,20 @@ Entity::~Entity() {
 }
 
 static void InvokeClearComponentsAndRelease(void* request, bool run, Engine& engine, Entity* entity) {
+	uint32_t warpIndex = entity->GetWarpIndex();
+	if (!run) {
+		bool result = engine.GetKernel().taskQueueGrid[warpIndex].PreemptExecution();
+		assert(result);
+	} else {
+		assert(engine.GetKernel().GetCurrentWarpIndex() == entity->GetWarpIndex());
+	}
+
 	entity->ClearComponents(engine);
 	entity->ReleaseObject();
+
+	if (!run) {
+		engine.GetKernel().taskQueueGrid[warpIndex].PreemptExecution();
+	}
 }
 
 void Entity::ReleaseObject() {
