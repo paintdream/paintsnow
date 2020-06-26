@@ -14,7 +14,7 @@ namespace PaintsNow {
 	namespace NsSnowyStream {
 		class TerrainResource : public TReflected<TerrainResource, GraphicResourceBase> {
 		public:
-			TerrainResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID);
+			TerrainResource(ResourceManager& manager, const String& uniqueID);
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 			virtual void Upload(IRender& render, void* deviceContext) override;
 			virtual void Download(IRender& render, void* deviceContext) override;

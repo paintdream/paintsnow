@@ -3,7 +3,7 @@
 using namespace PaintsNow;
 using namespace PaintsNow::NsSnowyStream;
 
-VolumeResource::VolumeResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID) : BaseClass(manager, uniqueID) {}
+VolumeResource::VolumeResource(ResourceManager& manager, const String& uniqueID) : BaseClass(manager, uniqueID) {}
 
 bool VolumeResource::operator << (IStreamBase& stream) {
 	return false;

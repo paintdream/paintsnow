@@ -1,4 +1,5 @@
 #include "TextureResource.h"
+#include "../ResourceManager.h"
 #include "../../../General/Interface/IImage.h"
 #include "../../../General/Driver/Filter/BPTC/ZFilterBPTC.h"
 #include "../../../General/Misc/ZMemoryStream.h"
@@ -6,7 +7,7 @@
 using namespace PaintsNow;
 using namespace PaintsNow::NsSnowyStream;
 
-TextureResource::TextureResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID) : BaseClass(manager, uniqueID), instance(nullptr), deviceMemoryUsage(0) {
+TextureResource::TextureResource(ResourceManager& manager, const String& uniqueID) : BaseClass(manager, uniqueID), instance(nullptr), deviceMemoryUsage(0) {
 	description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
 }
 

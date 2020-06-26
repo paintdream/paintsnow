@@ -1,10 +1,11 @@
 #include "ShaderResource.h"
+#include "../ResourceManager.h"
 #include "../../../General/Interface/IShader.h"
 
 using namespace PaintsNow;
 using namespace PaintsNow::NsSnowyStream;
 
-ShaderResource::ShaderResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID) : BaseClass(manager, uniqueID), shaderResource(nullptr) {}
+ShaderResource::ShaderResource(ResourceManager& manager, const String& uniqueID) : BaseClass(manager, uniqueID), shaderResource(nullptr) {}
 
 ShaderResource::~ShaderResource() {
 	assert(shaderResource == nullptr);

@@ -10,10 +10,10 @@
 #include "../../Core/Interface/IFilterBase.h"
 #include "../../Core/Template/TMap.h"
 #include "../../Core/System/Tiny.h"
+#include "ResourceBase.h"
 
 namespace PaintsNow {
 	namespace NsSnowyStream {
-		class ResourceBase;
 		class IUniformResourceManager;
 		template <class T>
 		class DeviceResourceBase;
@@ -21,7 +21,6 @@ namespace PaintsNow {
 		public:
 			ResourceManager(IThread& threadApi, IUniformResourceManager& hostManager, const TWrapper<void, const String&>& errorHandler, void* context);
 			virtual ~ResourceManager();
-			typedef String UniqueLocation;
 			void Insert(TShared<ResourceBase> resource);
 			void Remove(TShared<ResourceBase> resource);
 			void RemoveAll();
@@ -29,8 +28,8 @@ namespace PaintsNow {
 			void Report(const String& err);
 			void* GetContext() const;
 
-			TShared<ResourceBase> SafeLoadExist(const UniqueLocation& uniqueLocation);
-			TShared<ResourceBase> LoadExist(const UniqueLocation& uniqueLocation);
+			TShared<ResourceBase> SafeLoadExist(const String& uniqueLocation);
+			TShared<ResourceBase> LoadExist(const String& uniqueLocation);
 			IUniformResourceManager& GetUniformResourceManager();
 
 		public:
@@ -40,7 +39,7 @@ namespace PaintsNow {
 			virtual void InvokeDownload(ResourceBase* resource, void* deviceContext = nullptr) = 0;
 
 		private:
-			unordered_map<UniqueLocation, ResourceBase*> resourceMap;
+			unordered_map<String, ResourceBase*> resourceMap;
 			IUniformResourceManager& uniformResourceManager;
 			Interfaces* interfaces;
 			TWrapper<void, const String&> errorHandler;
@@ -97,7 +96,7 @@ namespace PaintsNow {
 			bool MapFromArchive(ResourceBase* resource, IArchive& archive, IFilterBase& protocol, const String& path);
 			bool SerializeToArchive(ResourceBase* resource, IArchive& archive, IFilterBase& protocol, const String& path);
 
-			virtual TShared<ResourceBase> Deserialize(ResourceManager& manager, const ResourceManager::UniqueLocation& id, IFilterBase& protocol, Tiny::FLAG flag, IStreamBase* stream) = 0;
+			virtual TShared<ResourceBase> Deserialize(ResourceManager& manager, const String& id, IFilterBase& protocol, Tiny::FLAG flag, IStreamBase* stream) = 0;
 			virtual bool Serialize(ResourceBase* res, IFilterBase& protocol, IStreamBase& stream) = 0;
 			virtual bool LoadData(ResourceBase* res, IFilterBase& protocol, IStreamBase& stream) = 0;
 			virtual Unique GetDeviceUnique() const = 0;
@@ -122,7 +121,7 @@ namespace PaintsNow {
 				return success;
 			}
 
-			virtual TShared<ResourceBase> Deserialize(ResourceManager& manager, const ResourceManager::UniqueLocation& id, IFilterBase& protocol, Tiny::FLAG flag, IStreamBase* stream) {
+			virtual TShared<ResourceBase> Deserialize(ResourceManager& manager, const String& id, IFilterBase& protocol, Tiny::FLAG flag, IStreamBase* stream) {
 				TShared<T> object = TShared<T>::From(new T(manager, id));
 
 				if (stream != nullptr) {

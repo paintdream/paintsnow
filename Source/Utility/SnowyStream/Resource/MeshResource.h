@@ -14,7 +14,7 @@ namespace PaintsNow {
 	namespace NsSnowyStream {
 		class MeshResource : public TReflected<MeshResource, GraphicResourceBase> {
 		public:
-			MeshResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID);
+			MeshResource(ResourceManager& manager, const String& uniqueID);
 			virtual ~MeshResource();
 			virtual void Upload(IRender& render, void* deviceContext) override;
 			virtual void Download(IRender& render, void* deviceContext) override;

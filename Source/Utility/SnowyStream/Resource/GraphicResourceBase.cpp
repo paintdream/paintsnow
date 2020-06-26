@@ -3,7 +3,7 @@
 using namespace PaintsNow;
 using namespace PaintsNow::NsSnowyStream;
 
-GraphicResourceBase::GraphicResourceBase(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID) : BaseClass(manager, uniqueID) {}
+GraphicResourceBase::GraphicResourceBase(ResourceManager& manager, const String& uniqueID) : BaseClass(manager, uniqueID) {}
 
 GraphicResourceBase::~GraphicResourceBase() {}
 

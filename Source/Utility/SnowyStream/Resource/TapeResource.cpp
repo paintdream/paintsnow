@@ -3,7 +3,7 @@
 using namespace PaintsNow;
 using namespace PaintsNow::NsSnowyStream;
 
-TapeResource::TapeResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID) : BaseClass(manager, uniqueID), packet(nullptr) {
+TapeResource::TapeResource(ResourceManager& manager, const String& uniqueID) : BaseClass(manager, uniqueID), packet(nullptr) {
 	Flag().fetch_or(RESOURCE_STREAM, std::memory_order_acquire);
 }
 TapeResource::~TapeResource() {

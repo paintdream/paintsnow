@@ -3,7 +3,7 @@
 using namespace PaintsNow;
 using namespace PaintsNow::NsSnowyStream;
 
-AudioResource::AudioResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID) : BaseClass(manager, uniqueID) {
+AudioResource::AudioResource(ResourceManager& manager, const String& uniqueID) : BaseClass(manager, uniqueID) {
 	Flag().fetch_or(RESOURCE_STREAM, std::memory_order_acquire);
 }
 

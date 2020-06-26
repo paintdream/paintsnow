@@ -1,10 +1,11 @@
 #include "MaterialResource.h"
+#include "../ResourceManager.h"
 #include <sstream>
 
 using namespace PaintsNow;
 using namespace PaintsNow::NsSnowyStream;
 
-MaterialResource::MaterialResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID) : BaseClass(manager, uniqueID) {}
+MaterialResource::MaterialResource(ResourceManager& manager, const String& uniqueID) : BaseClass(manager, uniqueID) {}
 
 void MaterialResource::Attach(IRender& render, void* deviceContext) {
 	// Collect empty draw calls
@@ -98,7 +99,7 @@ TShared<MaterialResource> MaterialResource::CloneWithOverrideShader(TShared<Shad
 		return this;
 	} else {
 		// create overrider
-		ResourceManager::UniqueLocation overrideLocation = uniqueLocation + "@(" + overrideShaderResource->GetLocation() + ")";
+		String overrideLocation = uniqueLocation + "@(" + overrideShaderResource->GetLocation() + ")";
 		resourceManager.DoLock();
 		TShared<MaterialResource> clone = static_cast<MaterialResource*>(resourceManager.LoadExist(overrideLocation)());
 

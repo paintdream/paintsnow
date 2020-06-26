@@ -14,7 +14,7 @@ namespace PaintsNow {
 	namespace NsSnowyStream {
 		class AudioResource : public TReflected<AudioResource, DeviceResourceBase<IFilterBase> > {
 		public:
-			AudioResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID);
+			AudioResource(ResourceManager& manager, const String& uniqueID);
 			virtual void Download(IFilterBase& device, void* deviceContext);
 			virtual void Upload(IFilterBase& device, void* deviceContext);
 			virtual void Attach(IFilterBase& device, void* deviceContext);

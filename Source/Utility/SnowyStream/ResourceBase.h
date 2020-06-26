@@ -7,19 +7,12 @@
 #define __RESOURCEBASE_H__
 
 #include "../../Core/System/Tiny.h"
-#include "ResourceManager.h"
+#include "../../Core/Interface/IStreamBase.h"
 
 namespace PaintsNow {
 	class Interfaces;
 	namespace NsSnowyStream {
-		class IUniformResourceManager {
-		public:
-			virtual TShared<ResourceBase> CreateResource(const String& location, const String& extension = "", bool openExisting = true, Tiny::FLAG flag = 0, IStreamBase* sourceStream = nullptr) = 0;
-			virtual bool PersistResource(TShared<ResourceBase> resource, const String& extension = "") = 0;
-			virtual bool MapResource(TShared<ResourceBase> resource, const String& extension = "") = 0;
-			virtual void UnmapResource(TShared<ResourceBase> resource) = 0;
-		};
-
+		class ResourceManager;
 		class ResourceBase : public TReflected<ResourceBase, SharedTiny> {
 		public:
 			enum {
@@ -33,13 +26,13 @@ namespace PaintsNow {
 				RESOURCE_CUSTOM_BEGIN = TINY_CUSTOM_BEGIN << 7
 			};
 
-			static ResourceManager::UniqueLocation GenerateLocation(const String& prefix, const void* ptr);
+			static String GenerateLocation(const String& prefix, const void* ptr);
 			typedef Void DriverType;
-			ResourceBase(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueLocation);
+			ResourceBase(ResourceManager& manager, const String& uniqueLocation);
 			virtual ~ResourceBase();
 			ResourceManager& GetResourceManager() const;
-			const ResourceManager::UniqueLocation& GetLocation() const;
-			void SetLocation(const ResourceManager::UniqueLocation& location);
+			const String& GetLocation() const;
+			void SetLocation(const String& location);
 
 			virtual Unique GetDeviceUnique() const;
 			virtual bool LoadExternalResource(Interfaces& interfaces, IStreamBase& streamBase, size_t length);
@@ -47,7 +40,7 @@ namespace PaintsNow {
 
 			struct Dependency {
 				String key;
-				ResourceManager::UniqueLocation value;
+				String value;
 			};
 
 			virtual Unique GetBaseUnique() const;
@@ -64,7 +57,7 @@ namespace PaintsNow {
 			std::atomic<uint32_t> critical;
 
 		protected:
-			ResourceManager::UniqueLocation uniqueLocation;
+			String uniqueLocation;
 			ResourceManager& resourceManager;
 			std::atomic<uint32_t> mapCount;
 		};
@@ -74,7 +67,7 @@ namespace PaintsNow {
 		public:
 			typedef TReflected<DeviceResourceBase<T>, ResourceBase> BaseClass;
 			typedef T DriverType;
-			DeviceResourceBase(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueLocation) : BaseClass(manager, uniqueLocation) {}
+			DeviceResourceBase(ResourceManager& manager, const String& uniqueLocation) : BaseClass(manager, uniqueLocation) {}
 
 			virtual void Download(T& device, void* deviceContext) = 0;
 			virtual void Upload(T& device, void* deviceContext) = 0;
@@ -111,6 +104,14 @@ namespace PaintsNow {
 		private:
 			ResourceManager& resourceManager;
 			String uniqueName;
+		};
+
+		class IUniformResourceManager {
+		public:
+			virtual TShared<ResourceBase> CreateResource(const String& location, const String& extension = "", bool openExisting = true, Tiny::FLAG flag = 0, IStreamBase* sourceStream = nullptr) = 0;
+			virtual bool PersistResource(TShared<ResourceBase> resource, const String& extension = "") = 0;
+			virtual bool MapResource(TShared<ResourceBase> resource, const String& extension = "") = 0;
+			virtual void UnmapResource(TShared<ResourceBase> resource) = 0;
 		};
 	}
 }

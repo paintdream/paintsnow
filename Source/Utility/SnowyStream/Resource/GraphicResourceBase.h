@@ -55,9 +55,14 @@ namespace PaintsNow {
 				if (!data.empty()) {
 					IRender::Resource::BufferDescription description;
 					description.data.Resize(safe_cast<uint32_t>(data.size() * sizeof(T)));
-					description.component = sizeof(T) / sizeof(typename T::type) * groupSize;
 					description.usage = usage;
+#if defined(_MSC_VER) && _MSC_VER <= 1200
+					description.component = sizeof(T) / sizeof(T::type) * groupSize;
+					description.format = MapFormat<T::type>::format;
+#else
+					description.component = sizeof(T) / sizeof(typename T::type) * groupSize;
 					description.format = MapFormat<typename T::type>::format;
+#endif
 					memcpy(description.data.GetData(), &data[0], data.size() * sizeof(T));
 
 					if (buffer == nullptr) {
@@ -70,7 +75,7 @@ namespace PaintsNow {
 				return size;
 			}
 
-			GraphicResourceBase(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID);
+			GraphicResourceBase(ResourceManager& manager, const String& uniqueID);
 			virtual ~GraphicResourceBase();
 			virtual void Attach(IRender& device, void* deviceContext) override;
 			virtual void Detach(IRender& device, void* deviceContext) override;

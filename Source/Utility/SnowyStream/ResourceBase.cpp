@@ -1,4 +1,5 @@
 #include "ResourceBase.h"
+#include "ResourceManager.h"
 #include <sstream>
 
 using namespace PaintsNow;
@@ -44,7 +45,7 @@ private:
 static LeakGuard leakGuard;
 #endif
 
-ResourceBase::ResourceBase(ResourceManager& manager, const ResourceManager::UniqueLocation& id) : BaseClass(Tiny::TINY_UNIQUE | Tiny::TINY_READONLY | Tiny::TINY_ACTIVATED | Tiny::TINY_UPDATING | RESOURCE_ORPHAN), resourceManager(manager), uniqueLocation(id) {
+ResourceBase::ResourceBase(ResourceManager& manager, const String& id) : BaseClass(Tiny::TINY_UNIQUE | Tiny::TINY_READONLY | Tiny::TINY_ACTIVATED | Tiny::TINY_UPDATING | RESOURCE_ORPHAN), resourceManager(manager), uniqueLocation(id) {
 #ifdef _DEBUG
 	leakGuard.Insert(this);
 #endif
@@ -85,7 +86,7 @@ void ResourceBase::ReleaseObject() {
 	SharedTiny::ReleaseObject();
 }
 
-ResourceManager::UniqueLocation ResourceBase::GenerateLocation(const String& prefix, const void* ptr) {
+String ResourceBase::GenerateLocation(const String& prefix, const void* ptr) {
 	std::stringstream ss;
 	ss << "[Temporary]/" << prefix << "/" << std::hex << (size_t)ptr;
 	return ss.str();
@@ -205,7 +206,7 @@ const String& ResourceBase::GetLocation() const {
 	return uniqueLocation;
 }
 
-void ResourceBase::SetLocation(const ResourceManager::UniqueLocation& location) {
+void ResourceBase::SetLocation(const String& location) {
 	uniqueLocation = location;
 }
 

@@ -23,11 +23,11 @@ void ResourceManager::RemoveAll() {
 	assert(GetLockCount() != 0);
 
 	// remove all eternal resources
-	unordered_map<UniqueLocation, ResourceBase*> temp;
+	unordered_map<String, ResourceBase*> temp;
 	std::swap(temp, resourceMap);
 
 	std::vector<ResourceBase*> externals;
-	for (unordered_map<UniqueLocation, ResourceBase*>::const_iterator it = temp.begin(); it != temp.end(); ++it) {
+	for (unordered_map<String, ResourceBase*>::const_iterator it = temp.begin(); it != temp.end(); ++it) {
 		ResourceBase* resource = (*it).second;
 		InvokeDetach(resource, GetContext());
 		resource->Flag().fetch_or(ResourceBase::RESOURCE_ORPHAN, std::memory_order_acquire);
@@ -48,7 +48,7 @@ void ResourceManager::Insert(TShared<ResourceBase> resource) {
 	assert(resource->Flag() & ResourceBase::RESOURCE_ORPHAN);
 
 	// allowing anounymous resource
-	const UniqueLocation& id = resource->GetLocation();
+	const String& id = resource->GetLocation();
 	if (id.empty()) return;
 
 	assert(!id.empty());
@@ -69,9 +69,9 @@ IUniformResourceManager& ResourceManager::GetUniformResourceManager() {
 	return uniformResourceManager;
 }
 
-TShared<ResourceBase> ResourceManager::LoadExist(const UniqueLocation& id) {
+TShared<ResourceBase> ResourceManager::LoadExist(const String& id) {
 	assert(GetLockCount() != 0);
-	unordered_map<UniqueLocation, ResourceBase*>::iterator p = resourceMap.find(id);
+	unordered_map<String, ResourceBase*>::iterator p = resourceMap.find(id);
 	ResourceBase* pointer = nullptr;
 	if (p != resourceMap.end()) {
 		pointer = (*p).second;
@@ -81,7 +81,7 @@ TShared<ResourceBase> ResourceManager::LoadExist(const UniqueLocation& id) {
 	return pointer;
 }
 
-TShared<ResourceBase> ResourceManager::SafeLoadExist(const UniqueLocation& id) {
+TShared<ResourceBase> ResourceManager::SafeLoadExist(const String& id) {
 	assert(GetLockCount() == 0);
 	DoLock();
 	TShared<ResourceBase> pointer = LoadExist(id);
@@ -100,7 +100,7 @@ void ResourceManager::Remove(TShared<ResourceBase> resource) {
 	if (resource->Flag() & (ResourceBase::RESOURCE_ORPHAN | ResourceBase::RESOURCE_ETERNAL))
 		return;
 
-	const UniqueLocation& location = resource->GetLocation();
+	const String& location = resource->GetLocation();
 	if (location.empty()) return;
 
 	// Double check
@@ -116,7 +116,7 @@ void ResourceManager::Remove(TShared<ResourceBase> resource) {
 	resource->Flag().fetch_or(ResourceBase::RESOURCE_ORPHAN, std::memory_order_acquire);
 }
 
-inline ResourceManager::UniqueLocation PathToUniqueID(const String& path) {
+inline String PathToUniqueID(const String& path) {
 	return path;
 }
 

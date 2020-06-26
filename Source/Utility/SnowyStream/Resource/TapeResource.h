@@ -15,7 +15,7 @@ namespace PaintsNow {
 	namespace NsSnowyStream {
 		class TapeResource : public TReflected<TapeResource, DeviceResourceBase<IArchive> > {
 		public:
-			TapeResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID);
+			TapeResource(ResourceManager& manager, const String& uniqueID);
 			virtual ~TapeResource();
 
 			virtual void Download(IArchive& device, void* deviceContext);

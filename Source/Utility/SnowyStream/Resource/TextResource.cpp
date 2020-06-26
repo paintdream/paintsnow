@@ -3,7 +3,7 @@
 using namespace PaintsNow;
 using namespace PaintsNow::NsSnowyStream;
 
-TextResource::TextResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID) : BaseClass(manager, uniqueID) {}
+TextResource::TextResource(ResourceManager& manager, const String& uniqueID) : BaseClass(manager, uniqueID) {}
 TextResource::~TextResource() {}
 
 void TextResource::Attach(IArchive& archive, void* deviceContext) {

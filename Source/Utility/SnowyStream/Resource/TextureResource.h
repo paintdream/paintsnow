@@ -12,7 +12,7 @@ namespace PaintsNow {
 	namespace NsSnowyStream {
 		class TextureResource : public TReflected<TextureResource, GraphicResourceBase> {
 		public:
-			TextureResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID);
+			TextureResource(ResourceManager& manager, const String& uniqueID);
 
 			virtual size_t ReportDeviceMemoryUsage() const;
 			virtual void Upload(IRender& render, void* deviceContext) override;

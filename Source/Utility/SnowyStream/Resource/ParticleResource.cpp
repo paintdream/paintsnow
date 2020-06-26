@@ -3,7 +3,7 @@
 using namespace PaintsNow;
 using namespace PaintsNow::NsSnowyStream;
 
-ParticleResource::ParticleResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID) : BaseClass(manager, uniqueID) {}
+ParticleResource::ParticleResource(ResourceManager& manager, const String& uniqueID) : BaseClass(manager, uniqueID) {}
 
 bool ParticleResource::operator << (IStreamBase& stream) {
 	return false;

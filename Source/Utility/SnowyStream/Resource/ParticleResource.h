@@ -13,7 +13,7 @@ namespace PaintsNow {
 	namespace NsSnowyStream {
 		class ParticleResource : public TReflected<ParticleResource, GraphicResourceBase> {
 		public:
-			ParticleResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID);
+			ParticleResource(ResourceManager& manager, const String& uniqueID);
 			virtual bool operator << (IStreamBase& stream) override;
 			virtual bool operator >> (IStreamBase& stream) const override;
 			virtual void Upload(IRender& render, void* deviceContext) override;

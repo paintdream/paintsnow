@@ -35,7 +35,7 @@ namespace PaintsNow {
 
 		class MaterialResource : public TReflected<MaterialResource, GraphicResourceBase>, public IDrawCallProvider {
 		public:
-			MaterialResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID);
+			MaterialResource(ResourceManager& manager, const String& uniqueID);
 
 			virtual size_t ReportDeviceMemoryUsage() const;
 			virtual void Upload(IRender& render, void* deviceContext) override;

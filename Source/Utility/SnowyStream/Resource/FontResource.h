@@ -8,14 +8,16 @@
 
 #include "GraphicResourceBase.h"
 #include "TextureResource.h"
+#include "../ResourceManager.h"
 #include "../../../General/Interface/IFontBase.h"
 #include "../../../Core/Template/TTagged.h"
+#include "../../../Core/Template/TMap.h"
 
 namespace PaintsNow {
 	namespace NsSnowyStream {
 		class FontResource : public TReflected<FontResource, DeviceResourceBase<IFontBase> >, public IDataUpdater {
 		public:
-			FontResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID);
+			FontResource(ResourceManager& manager, const String& uniqueID);
 			virtual ~FontResource();
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 			virtual bool LoadExternalResource(Interfaces& interfaces, IStreamBase& streamBase, size_t length) override;

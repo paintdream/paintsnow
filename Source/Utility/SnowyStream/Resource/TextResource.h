@@ -13,7 +13,7 @@ namespace PaintsNow {
 	namespace NsSnowyStream {
 		class TextResource : public TReflected<TextResource, DeviceResourceBase<IArchive> > {
 		public:
-			TextResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID);
+			TextResource(ResourceManager& manager, const String& uniqueID);
 			virtual ~TextResource();
 			virtual bool LoadExternalResource(IStreamBase& streamBase, size_t length);
 

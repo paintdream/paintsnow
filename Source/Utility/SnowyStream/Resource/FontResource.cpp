@@ -6,7 +6,7 @@
 using namespace PaintsNow;
 using namespace PaintsNow::NsSnowyStream;
 
-FontResource::FontResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID) : BaseClass(manager, uniqueID), font(nullptr), dim(512), weight(0) {}
+FontResource::FontResource(ResourceManager& manager, const String& uniqueID) : BaseClass(manager, uniqueID), font(nullptr), dim(512), weight(0) {}
 FontResource::~FontResource() {}
 
 bool FontResource::LoadExternalResource(Interfaces& interfaces, IStreamBase& streamBase, size_t length) {

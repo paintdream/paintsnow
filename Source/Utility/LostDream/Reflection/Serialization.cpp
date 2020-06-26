@@ -1,6 +1,7 @@
 #include "Serialization.h"
 #include "../../../General/Misc/ZMemoryStream.h"
 #include "../../SnowyStream/Resource/MeshResource.h"
+#include "../../SnowyStream/ResourceManager.h"
 
 using namespace PaintsNow;
 using namespace PaintsNow::NsLostDream;

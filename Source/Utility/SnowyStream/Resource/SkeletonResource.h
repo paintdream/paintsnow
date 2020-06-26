@@ -13,7 +13,7 @@ namespace PaintsNow {
 	namespace NsSnowyStream {
 		class SkeletonResource : public TReflected<SkeletonResource, GraphicResourceBase> {
 		public:
-			SkeletonResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID);
+			SkeletonResource(ResourceManager& manager, const String& uniqueID);
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 			virtual void Download(IRender& device, void* deviceContext) override;
 			virtual void Upload(IRender& device, void* deviceContext) override;

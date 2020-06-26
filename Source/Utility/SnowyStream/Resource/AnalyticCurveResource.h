@@ -13,7 +13,7 @@ namespace PaintsNow {
 	namespace NsSnowyStream {
 		class AnalyticCurveResource : public TReflected<AnalyticCurveResource, GraphicResourceBase> {
 		public:
-			AnalyticCurveResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID);
+			AnalyticCurveResource(ResourceManager& manager, const String& uniqueID);
 		};
 	}
 }

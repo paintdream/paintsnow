@@ -10,7 +10,7 @@ typedef Quaternion<float> Quater;
 using namespace PaintsNow;
 using namespace PaintsNow::NsSnowyStream;
 
-SkeletonResource::SkeletonResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID) : BaseClass(manager, uniqueID) {}
+SkeletonResource::SkeletonResource(ResourceManager& manager, const String& uniqueID) : BaseClass(manager, uniqueID) {}
 
 TObject<IReflect>& SkeletonResource::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);

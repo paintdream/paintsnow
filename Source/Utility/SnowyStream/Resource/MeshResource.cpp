@@ -4,7 +4,7 @@
 using namespace PaintsNow;
 using namespace PaintsNow::NsSnowyStream;
 
-MeshResource::MeshResource(ResourceManager& manager, const ResourceManager::UniqueLocation& uniqueID) : BaseClass(manager, uniqueID), deviceMemoryUsage(0) {}
+MeshResource::MeshResource(ResourceManager& manager, const String& uniqueID) : BaseClass(manager, uniqueID), deviceMemoryUsage(0) {}
 
 MeshResource::~MeshResource() {}
 
