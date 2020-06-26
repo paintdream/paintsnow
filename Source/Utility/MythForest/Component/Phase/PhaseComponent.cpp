@@ -742,6 +742,12 @@ PhaseComponent::LightCollector::LightCollector(PhaseComponent* component) : phas
 void PhaseComponent::LightCollector::CollectComponents(Engine& engine, TaskData& task, const WorldInstanceData& inst, const CaptureData& captureData, Entity* entity) {
 	const std::vector<Component*>& components = entity->GetComponents();
 	TransformComponent* transformComponent = entity->GetUniqueComponent(UniqueType<TransformComponent>());
+	if (transformComponent != nullptr) {
+		const Float3Pair& localBoundingBox = transformComponent->GetLocalBoundingBox();
+		if (!captureData(localBoundingBox))
+			return;
+	}
+
 	WorldInstanceData instanceData;
 	instanceData.worldMatrix = transformComponent != nullptr ? transformComponent->GetTransform() * inst.worldMatrix : inst.worldMatrix;
 

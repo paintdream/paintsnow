@@ -424,6 +424,12 @@ void VisibilityComponent::CompleteCollect(Engine& engine, TaskData& task) {}
 
 void VisibilityComponent::CollectComponents(Engine& engine, TaskData& task, const WorldInstanceData& inst, const CaptureData& captureData, Entity* entity) {
 	TransformComponent* transformComponent = entity->GetUniqueComponent(UniqueType<TransformComponent>());
+	if (transformComponent != nullptr) {
+		const Float3Pair& localBoundingBox = transformComponent->GetLocalBoundingBox();
+		if (!captureData(localBoundingBox))
+			return;
+	}
+
 	WorldInstanceData instanceData;
 	instanceData.worldMatrix = transformComponent != nullptr ? transformComponent->GetTransform() * inst.worldMatrix : inst.worldMatrix;
 

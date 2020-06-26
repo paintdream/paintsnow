@@ -351,7 +351,8 @@ void LightComponent::ShadowLayer::CollectComponents(Engine& engine, TaskData& ta
 		localTransform = transformComponent->GetTransform();
 
 		// IsVisible through visibility checking?
-		if (!(transformComponent->Flag() & TransformComponent::TRANSFORMCOMPONENT_DYNAMIC) && !VisibilityComponent::IsVisible(captureData.visData, transformComponent)) {
+		const Float3Pair& localBoundingBox = transformComponent->GetLocalBoundingBox();
+		if ((!(transformComponent->Flag() & TransformComponent::TRANSFORMCOMPONENT_DYNAMIC) && !VisibilityComponent::IsVisible(captureData.visData, transformComponent)) || !captureData(localBoundingBox)) {
 			visible = false;
 		}
 

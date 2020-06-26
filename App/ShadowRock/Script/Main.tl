@@ -10,7 +10,7 @@ local fpsBuffer : { number } = {}
 local tickBuffer : { number } = {}
 local bufferIndex = 1
 
-local function SetFrameMonitorOnTitle(deltaTime : number, cameraComponent : CameraComponent, transformComponent : TransformComponent, spaceComponent : SpaceComponent)
+local function SetFrameMonitorOnTitle(deltaTime : number, cameraComponent : CameraComponent, transformComponent : TransformComponent)
 	-- show fps
 	fpsBuffer[bufferIndex] = MythForest.GetFrameTickTime()
 	tickBuffer[bufferIndex] = deltaTime
@@ -32,7 +32,7 @@ local function SetFrameMonitorOnTitle(deltaTime : number, cameraComponent : Came
 		local fps = string.format("%3.2f", math.min(1000 * #fpsBuffer / sumFrame, 999.99))
 		local tps = string.format("%3.2f", math.min(1000 * #tickBuffer / sumTick, 999.99))
 		local eye = string.format("%3.2f, %3.2f, %3.2f", position[1], position[2], position[3])
-		local render = tostring(cameraComponent:GetCollectedVisibleEntityCount()) .. "/" .. tostring(cameraComponent:GetCollectedEntityCount()) .. "/" .. tostring(spaceComponent:GetEntityCount())
+		local render = tostring(cameraComponent:GetCollectedVisibleEntityCount()) .. "/" .. tostring(cameraComponent:GetCollectedEntityCount())
 		local triangle = tostring(cameraComponent:GetCollectedTriangleCount())
 
 		System.SetAppTitle("ShadowRock DEMO"
@@ -127,7 +127,7 @@ local function InitializeWorld(databasePath : string)
 	eventListenerComponent:SetEventHandler(function (eventType : string, eventData : EventData)
 		if eventType == "EVENT_TICK" then
 			local deltaTime = eventData as number
-			SetFrameMonitorOnTitle(deltaTime, cameraComponent, cameraTransform, spaceComponent)
+			SetFrameMonitorOnTitle(deltaTime, cameraComponent, cameraTransform)
 			if stepPhase then
 				phaseComponent:Step(stepBounceCount)
 			end

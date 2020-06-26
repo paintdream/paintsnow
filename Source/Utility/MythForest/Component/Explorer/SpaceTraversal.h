@@ -25,7 +25,8 @@ namespace PaintsNow {
 				const WorldInstanceData& subWorldInstancedData = getboolean<D>::value ? nextWorldInstancedData : instanceData;
 
 				for (Entity* entity = rootEntity; entity != nullptr; entity = entity->Right()) {
-					if (!getboolean<D>::value && !captureData(subWorldInstancedData.boundingBox)) break;
+					if (!getboolean<D>::value && !captureData(subWorldInstancedData.boundingBox))
+						break;
 
 					IMemory::PrefetchRead(entity->Left());
 					IMemory::PrefetchRead(entity->Right());

@@ -676,14 +676,15 @@ void CameraComponent::CollectComponents(Engine& engine, TaskData& taskData, cons
 		localTransform = transformComponent->GetTransform();
 
 		// IsVisible through visibility checking?
-		if (!(transformComponent->Flag() & TransformComponent::TRANSFORMCOMPONENT_DYNAMIC) && !VisibilityComponent::IsVisible(captureData.visData, transformComponent)) {
+		const Float3Pair& localBoundingBox = transformComponent->GetLocalBoundingBox();
+		if ((!(transformComponent->Flag() & TransformComponent::TRANSFORMCOMPONENT_DYNAMIC) && !VisibilityComponent::IsVisible(captureData.visData, transformComponent)) || !captureData(localBoundingBox)) {
 			visible = false;
 		}
 
 		subWorldInstancedData.worldMatrix = localTransform * instanceData.worldMatrix;
 		// Fetch screen ratio
 		float tanHalfFov = taskData.worldGlobalData.tanHalfFov;
-		const Float3Pair& localBoundingBox = transformComponent->GetLocalBoundingBox();
+
 		Float3 start = Transform3D(instanceData.worldMatrix, localBoundingBox.first);
 		Float3 end = Transform3D(instanceData.worldMatrix, localBoundingBox.second);
 		Float3 center = (start + end) * 0.5f;
@@ -748,7 +749,7 @@ void CameraComponent::CollectComponents(Engine& engine, TaskData& taskData, cons
 
 				taskData.pendingCount.fetch_add(1, std::memory_order_acquire);
 
-				CaptureData newCaptureData;
+				CaptureData newCaptureData = captureData;
 				const MatrixFloat4x4& mat = captureData.viewTransform;
 				const Bytes& visData = visibilityComponent != nullptr ? visibilityComponent->QuerySample(Float3(mat(3, 0), mat(3, 1), mat(3, 2))) : Bytes::Null();
 				newCaptureData.visData = visData;

@@ -115,6 +115,7 @@ bool SpaceComponent::Insert(Engine& engine, Entity* entity) {
 		entity->ReferenceObject();
 		// cleanup has_engine flag
 		entity->CleanupEngineInternal();
+		entity->SetIndex(entityCount % 6);
 
 		// already the same
 		// UpdateEntityWarpIndex(entity);

@@ -64,7 +64,7 @@ void ShapeComponent::MakeHeapInternal(std::vector<Patch>& output, Patch* begin, 
 }
 
 
-ShapeComponent::Patch* ShapeComponent::MakeBound(Patch& patch, const std::vector<Float3>& vertices, const std::vector<UInt3>& indices) {
+ShapeComponent::Patch* ShapeComponent::MakeBound(Patch& patch, const std::vector<Float3>& vertices, const std::vector<UInt3>& indices, int index) {
 	Float3Pair box;
 	for (uint32_t i = 0; i < MAX_PATCH_COUNT; i++) {
 		uint32_t index = patch.indices[i];
@@ -84,6 +84,7 @@ ShapeComponent::Patch* ShapeComponent::MakeBound(Patch& patch, const std::vector
 		Union(box, third);
 	}
 
+	patch.SetIndex(index);
 	patch.SetKey(box);
 	return &patch;
 }
@@ -171,9 +172,9 @@ void ShapeComponent::Update(Engine& engine, TShared<MeshResource> resource) {
 	MakeHeapInternal(newPatches, &linearPatches[0], &linearPatches[0] + linearPatches.size());
 
 	// Connect
-	Patch* root = MakeBound(newPatches[0], vertices, indices);
+	Patch* root = MakeBound(newPatches[0], vertices, indices, 0);
 	for (uint32_t s = 1; s < newPatches.size(); s++) {
-		root->Attach(MakeBound(newPatches[s], vertices, indices));
+		root->Attach(MakeBound(newPatches[s], vertices, indices, s % 6));
 	}
 
 	std::swap(newPatches, patches);
