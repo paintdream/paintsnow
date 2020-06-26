@@ -101,6 +101,7 @@ void VisibilityComponent::Initialize(Engine& engine, Entity* entity) {
 		texture->description.dimension = dim;
 		texture->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 		texture->description.state.layout = IRender::Resource::TextureDescription::RGBA;
+		texture->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
 		texture->GetResourceManager().InvokeUpload(texture(), renderQueue);
 
 		IRender::Resource::RenderTargetDescription desc;

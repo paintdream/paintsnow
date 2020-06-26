@@ -110,6 +110,7 @@ void ShaderResource::SetComplete() {
 	ICustomizeShader* customize = GetPass().QueryInterface(UniqueType<ICustomizeShader>());
 	if (customize != nullptr) {
 		customize->SetComplete();
+		Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
 		GetResourceManager().InvokeUpload(this);
 	}
 }

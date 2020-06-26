@@ -55,6 +55,8 @@ void TextureResource::Upload(IRender& render, void* deviceContext) {
 		}
 
 		SpinUnLock(critical);
+
+		Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release);
 	}
 }
 

@@ -57,24 +57,31 @@ namespace PaintsNow {
 
 			virtual void InvokeAttach(ResourceBase* resource, void* deviceContext) override {
 				assert(resource != nullptr);
+				assert(!(resource->Flag() & ResourceBase::RESOURCE_ATTACHED));
+				resource->Flag().fetch_or(ResourceBase::RESOURCE_ATTACHED, std::memory_order_acquire);
 				DeviceResourceBase<T>* typedResource = static_cast<DeviceResourceBase<T>*>(resource);
 				typedResource->Attach(device, deviceContext != nullptr ? deviceContext : GetContext());
 			}
 
 			virtual void InvokeDetach(ResourceBase* resource, void* deviceContext) override {
 				assert(resource != nullptr);
+				assert(resource->Flag() & ResourceBase::RESOURCE_ATTACHED);
 				DeviceResourceBase<T>* typedResource = static_cast<DeviceResourceBase<T>*>(resource);
 				typedResource->Detach(device, deviceContext != nullptr ? deviceContext : GetContext());
+				resource->Flag().fetch_and(~ResourceBase::RESOURCE_ATTACHED, std::memory_order_release);
 			}
 
 			virtual void InvokeUpload(ResourceBase* resource, void* deviceContext) override {
 				assert(resource != nullptr);
+				assert(resource->Flag() & ResourceBase::TINY_MODIFIED);
+				resource->Flag().fetch_and(~ResourceBase::RESOURCE_UPLOADED, std::memory_order_release);
 				DeviceResourceBase<T>* typedResource = static_cast<DeviceResourceBase<T>*>(resource);
 				typedResource->Upload(device, deviceContext != nullptr ? deviceContext : GetContext());
 			}
 
 			virtual void InvokeDownload(ResourceBase* resource, void* deviceContext) override {
 				assert(resource != nullptr);
+				resource->Flag().fetch_and(~ResourceBase::RESOURCE_DOWNLOADED, std::memory_order_release);
 				DeviceResourceBase<T>* typedResource = static_cast<DeviceResourceBase<T>*>(resource);
 				typedResource->Download(device, deviceContext != nullptr ? deviceContext : GetContext());
 			}

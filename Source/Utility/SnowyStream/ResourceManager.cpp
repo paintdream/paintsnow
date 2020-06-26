@@ -109,7 +109,10 @@ void ResourceManager::Remove(TShared<ResourceBase> resource) {
 	}
 
 	// Parallel bug here.
-	InvokeDetach(resource(), GetContext());
+	if (resource->Flag() & ResourceBase::RESOURCE_ATTACHED) {
+		InvokeDetach(resource(), GetContext());
+	}
+
 	resource->Flag().fetch_or(ResourceBase::RESOURCE_ORPHAN, std::memory_order_acquire);
 }
 

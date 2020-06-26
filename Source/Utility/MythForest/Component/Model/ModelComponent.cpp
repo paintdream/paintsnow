@@ -40,6 +40,7 @@ static void GenerateDrawCall(IDrawCallProvider::OutputRenderData& renderData, Sh
 			assert(outputs[k].offset == 0);
 
 			if (slot >= drawCall.bufferResources.size()) drawCall.bufferResources.resize(slot + 1);
+			assert(meshBuffers[k] != nullptr);
 			drawCall.bufferResources[slot].buffer = meshBuffers[k];
 			drawCall.bufferResources[slot].offset = offsets[k].first;
 			drawCall.bufferResources[slot].component = offsets[k].second;

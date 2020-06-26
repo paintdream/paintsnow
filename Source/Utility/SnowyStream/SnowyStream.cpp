@@ -438,7 +438,11 @@ TShared<ResourceBase> SnowyStream::RequestNewResource(IScript::Request& request,
 	bridgeSunset.GetKernel().YieldCurrentWarp();
 
 	if (resource) {
-		resource->GetResourceManager().InvokeUpload(resource());
+		if (!(resource->Flag() & ResourceBase::RESOURCE_UPLOADED) && !(resource->Flag().fetch_or(Tiny::TINY_MODIFIED) & Tiny::TINY_MODIFIED)) {
+			assert(resource->Flag() & Tiny::TINY_MODIFIED);
+			resource->GetResourceManager().InvokeUpload(resource());
+		}
+
 		return resource;
 	} else {
 		request.Error(String("Unable to create resource ") + path);
@@ -522,6 +526,7 @@ void SnowyStream::RequestLoadExternalResourceData(IScript::Request& request, ISc
 	bool result = resource->LoadExternalResource(interfaces, ms, len);
 
 	if (result) {
+		resource->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
 		resource->GetResourceManager().InvokeUpload(resource.Get(), resource->GetResourceManager().GetContext());
 	}
 
@@ -866,6 +871,7 @@ void SnowyStream::CreateBuiltinSolidTexture(const String& path, const UChar4& co
 		UChar4* buffer = reinterpret_cast<UChar4*>(errorTexture->description.data.GetData());
 		std::fill(buffer, buffer + width * height, color);
 
+		errorTexture->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
 		errorTexture->GetResourceManager().InvokeUpload(errorTexture());
 	} else {
 		errorHandler("Unable to create error texture ...");
@@ -897,6 +903,7 @@ void SnowyStream::CreateBuiltinResources() {
 		// No UVs
 		std::copy(vertices, vertices + sizeof(vertices) / sizeof(vertices[0]), std::back_inserter(meshResource->meshCollection.vertices));
 		std::copy(indices, indices + sizeof(indices) / sizeof(indices[0]), std::back_inserter(meshResource->meshCollection.indices));
+		meshResource->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
 		meshResource->GetResourceManager().InvokeUpload(meshResource());
 	} else {
 		errorHandler("Unable to create builtin mesh ...");
@@ -911,6 +918,7 @@ void SnowyStream::CreateBuiltinResources() {
 	TShared<MaterialResource> widgetMaterial = CreateReflectedResource(UniqueType<MaterialResource>(), "[Runtime]/MaterialResource/Widget", false, ResourceBase::RESOURCE_ETERNAL);
 	TShared<ShaderResource> shaderResource = CreateReflectedResource(UniqueType<ShaderResource>(), ShaderResource::GetShaderPathPrefix() + "WidgetPass");
 	widgetMaterial->originalShaderResource = shaderResource;
+	widgetMaterial->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
 	widgetMaterial->GetResourceManager().InvokeUpload(widgetMaterial());
 }
 
@@ -953,6 +961,7 @@ bool MetaResourceExternalPersist::Read(IStreamBase& streamBase, void* ptr) const
 	String path;
 	if (streamBase >> path) {
 		resource = snowyStream.CreateResource(path);
+		resource->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
 		resource->GetResourceManager().InvokeUpload(resource());
 	}
 

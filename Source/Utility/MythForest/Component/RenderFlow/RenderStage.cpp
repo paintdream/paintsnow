@@ -4,6 +4,7 @@
 
 using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
+using namespace PaintsNow::NsSnowyStream;
 
 RenderStage::RenderStage(uint32_t colorAttachmentCount) : renderState(nullptr), renderTarget(nullptr), clear(nullptr), drawCallResource(nullptr) {
 	Flag().fetch_or(RENDERSTAGE_ADAPT_MAIN_RESOLUTION, std::memory_order_acquire);
@@ -66,8 +67,8 @@ public:
 					rt.bindingStorage.resource = rt.renderTargetTextureResource->GetTexture();
 
 					// Update texture
-					IRender::Resource::TextureDescription desc = rt.renderTargetTextureResource->description;
-					render.UploadResource(queue, rt.renderTargetTextureResource->instance, &desc);
+					rt.renderTargetTextureResource->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
+					rt.renderTargetTextureResource->GetResourceManager().InvokeUpload(rt.renderTargetTextureResource(), queue);
 				}
 			}
 		}

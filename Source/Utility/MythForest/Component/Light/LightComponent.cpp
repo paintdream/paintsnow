@@ -104,6 +104,7 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 			texture->description.dimension = dim;
 			texture->description.state.format = IRender::Resource::TextureDescription::FLOAT;
 			texture->description.state.layout = IRender::Resource::TextureDescription::DEPTH;
+			texture->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
 			texture->GetResourceManager().InvokeUpload(texture(), taskData->renderQueue);
 			shadowGrid->texture = texture;
 		}
@@ -511,6 +512,7 @@ void LightComponent::ShadowLayer::Initialize(Engine& engine, TShared<StreamCompo
 	texture->description.dimension = UShort3(res.x(), res.y(), 1);
 	texture->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 	texture->description.state.layout = IRender::Resource::TextureDescription::R;
+	texture->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
 	texture->GetResourceManager().InvokeUpload(texture(), engine.mythForest.GetWarpResourceQueue());
 
 	dummyColorAttachment = texture;

@@ -74,6 +74,7 @@ void PhaseComponent::Initialize(Engine& engine, Entity* entity) {
 			emptyColorAttachment->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
 			emptyColorAttachment->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 			emptyColorAttachment->description.state.layout = IRender::Resource::TextureDescription::R;
+			emptyColorAttachment->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
 			emptyColorAttachment->GetResourceManager().InvokeUpload(emptyColorAttachment(), engine.snowyStream.GetResourceQueue());
 		}
 
@@ -221,25 +222,28 @@ void PhaseComponent::Setup(Engine& engine, uint32_t phaseCount, uint32_t taskCou
 		phase.depth->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
 		phase.depth->description.state.format = IRender::Resource::TextureDescription::FLOAT;
 		phase.depth->description.state.layout = IRender::Resource::TextureDescription::DEPTH;
+		phase.depth->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
 		phase.depth->GetResourceManager().InvokeUpload(phase.depth(), renderQueue);
 
 		phase.irradiance = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseIrradiance", &phase), false, 0, nullptr);
 		phase.irradiance->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
 		phase.irradiance->description.state.format = IRender::Resource::TextureDescription::HALF_FLOAT;
-
 		phase.irradiance->description.state.layout = IRender::Resource::TextureDescription::RGBA;
+		phase.irradiance->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
 		phase.irradiance->GetResourceManager().InvokeUpload(phase.irradiance(), renderQueue);
 
 		phase.baseColorOcclusion = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseBaseColorOcclusion", &phase), false, 0, nullptr);
 		phase.baseColorOcclusion->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
 		phase.baseColorOcclusion->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 		phase.baseColorOcclusion->description.state.layout = IRender::Resource::TextureDescription::RGBA;
+		phase.baseColorOcclusion->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
 		phase.baseColorOcclusion->GetResourceManager().InvokeUpload(phase.baseColorOcclusion(), renderQueue);
 
 		phase.normalRoughnessMetallic = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseNormalRoughness", &phase), false, 0, nullptr);
 		phase.normalRoughnessMetallic->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
 		phase.normalRoughnessMetallic->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 		phase.normalRoughnessMetallic->description.state.layout = IRender::Resource::TextureDescription::RGBA;
+		phase.normalRoughnessMetallic->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
 		phase.normalRoughnessMetallic->GetResourceManager().InvokeUpload(phase.normalRoughnessMetallic(), renderQueue);
 
 		// create noise texture
@@ -263,7 +267,7 @@ void PhaseComponent::Setup(Engine& engine, uint32_t phaseCount, uint32_t taskCou
 #else
 		static_assert(false, "Unrecognized RAND_MAX");
 #endif
-
+		phase.noiseTexture->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
 		phase.noiseTexture->GetResourceManager().InvokeUpload(phase.noiseTexture(), renderQueue);
 	}
 }
@@ -695,6 +699,7 @@ void PhaseComponent::CompleteUpdateLights(Engine& engine, std::vector<LightEleme
 			shadow.shadow->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
 			shadow.shadow->description.state.format = IRender::Resource::TextureDescription::FLOAT;
 			shadow.shadow->description.state.layout = IRender::Resource::TextureDescription::DEPTH;
+			shadow.shadow->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
 			shadow.shadow->GetResourceManager().InvokeUpload(shadow.shadow(), renderQueue);
 		}
 

@@ -95,6 +95,8 @@ void MeshResource::Upload(IRender& render, void* deviceContext) {
 		}
 
 		SpinUnLock(critical);
+
+		Flag().fetch_and(~Tiny::TINY_MODIFIED, std::memory_order_release);
 	}
 }
 
@@ -107,8 +109,6 @@ void MeshResource::Unmap() {
 }
 
 void MeshResource::Detach(IRender& render, void* deviceContext) {
-	Flag().fetch_or(RESOURCE_UPLOADED, std::memory_order_acquire);
-
 	IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(deviceContext);
 	assert(queue != nullptr);
 

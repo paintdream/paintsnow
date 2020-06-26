@@ -43,6 +43,10 @@ void FrameBarrierRenderStage::Tick(Engine& engine, IRender::Queue* queue) {
 	// Force update source 
 	RenderStage* renderStage = Front.linkedRenderStage;
 	if (renderStage != nullptr) {
+		IRender& render = engine.interfaces.render;
+		IRender::Resource* next = Next.renderTargetTextureResource->GetTexture();
+		IRender::Resource* front = Front.textureResource->GetTexture();
+
 		if (Front.textureResource->description.state != Next.renderTargetTextureResource->description.state
 			|| Front.textureResource->description.dimension.x() != Next.renderTargetTextureResource->description.dimension.x()
 			|| Front.textureResource->description.dimension.y() != Next.renderTargetTextureResource->description.dimension.y()) {
@@ -50,15 +54,13 @@ void FrameBarrierRenderStage::Tick(Engine& engine, IRender::Queue* queue) {
 			Next.renderTargetTextureResource->description.state = Front.textureResource->description.state;
 			Next.renderTargetTextureResource->description.dimension.x() = Front.textureResource->description.dimension.x();
 			Next.renderTargetTextureResource->description.dimension.y() = Front.textureResource->description.dimension.y();
+			Next.renderTargetTextureResource->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
 			Next.renderTargetTextureResource->GetResourceManager().InvokeUpload(Next.renderTargetTextureResource(), queue);
-			Front.textureResource->GetResourceManager().InvokeUpload(Front.textureResource(), queue);
+			// Front.textureResource->GetResourceManager().InvokeUpload(Front.textureResource(), queue);
 		}
 
-		IRender::Resource* next = Next.renderTargetTextureResource->GetTexture();
-		IRender::Resource* front = Front.textureResource->GetTexture();
-
-		IRender& render = engine.interfaces.render;
 		render.SwapResource(queue, next, front);
+
 		IRender::Resource::RenderTargetDescription copy = renderStage->renderTargetDescription;
 		render.UploadResource(queue, renderStage->renderTarget, &copy);
 	}
