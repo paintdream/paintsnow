@@ -223,7 +223,7 @@ struct ShapeComponent::PatchRaycaster {
 	float distance;
 };
 
-void ShapeComponent::Raycast(std::vector<RaycastResult>& results, Float3Pair& ray, uint32_t maxCount, IReflectObject* filter) const {
+float ShapeComponent::Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const {
 	if (!patches.empty()) {
 		Float3Pair box(ray.first, ray.first);
 		Union(box, ray.second);
@@ -234,9 +234,12 @@ void ShapeComponent::Raycast(std::vector<RaycastResult>& results, Float3Pair& ra
 		if (q.hitPatch != nullptr) {
 			RaycastResult result;
 			result.position = q.intersection;
-			result.distance = q.distance;
+			result.distance = q.distance * ratio;
 			result.unit = const_cast<ShapeComponent*>(this);
-			EmplaceRaycastResult(results, maxCount, std::move(result));
+			result.parent = parent;
+			task.EmplaceResult(std::move(result));
 		}
 	}
+
+	return ratio;
 }

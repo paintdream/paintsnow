@@ -286,21 +286,20 @@ void MythForest::RequestClearEntityComponents(IScript::Request& request, IScript
 	entity->ClearComponents(engine);
 }
 
-void MythForest::RequestRaycast(IScript::Request& request, IScript::Delegate<Entity> entity, const Float3& from, const Float3& dir, uint32_t count) {
-	CHECK_REFERENCES_NONE();
-	CHECK_DELEGATE(entity);
-	CHECK_THREAD_IN_MODULE(entity);
+class ScriptRaycastTask : public Component::RaycastTask {
+public:
+	ScriptRaycastTask(Engine& engine, uint32_t maxCount, IScript::Request::Ref ref) : RaycastTask(engine, maxCount), callback(ref) {}
 
-	std::vector<Unit::RaycastResult> results;
-	Float3Pair ray(from, dir);
-	entity->Raycast(results, ray, count, nullptr);
-	if (!results.empty()) {
+	virtual void Finish(rvalue<std::vector<Component::RaycastResult> > r) override {
+		std::vector<Component::RaycastResult>& results = r;
 		engine.GetKernel().YieldCurrentWarp();
+		IScript::Request& request = *engine.bridgeSunset.AllocateRequest();
 
 		request.DoLock();
+		request.Push();
 		request << beginarray;
 		for (uint32_t i = 0; i < results.size(); i++) {
-			const Unit::RaycastResult& result = results[i];
+			const Component::RaycastResult& result = results[i];
 			request << begintable
 				<< key("Intersection") << result.position
 				<< key("Normal") << result.normal
@@ -311,8 +310,28 @@ void MythForest::RequestRaycast(IScript::Request& request, IScript::Delegate<Ent
 				<< endtable;
 		}
 		request << endarray;
+		request.Call(sync, callback);
+		request.Pop();
+		request.Dereference(callback);
 		request.UnLock();
+
+		engine.bridgeSunset.FreeRequest(&request);
 	}
+
+protected:
+	IScript::Request::Ref callback;
+};
+
+void MythForest::RequestRaycast(IScript::Request& request, IScript::Delegate<Entity> entity, IScript::Request::Ref callback, const Float3& from, const Float3& dir, uint32_t count) {
+	CHECK_REFERENCES_WITH_TYPE(callback, IScript::Request::FUNCTION);
+	CHECK_DELEGATE(entity);
+	CHECK_THREAD_IN_MODULE(entity);
+
+	TShared<ScriptRaycastTask> task = TShared<ScriptRaycastTask>::From(new ScriptRaycastTask(engine, count, callback));
+	task->AddPendingTask();
+	Float3Pair ray(from, dir);
+	Component::RaycastForEntity(*task(), ray, entity.Get());
+	task->RemovePendingTask();
 }
 
 void MythForest::RequestCaptureFrame(IScript::Request& request, const String& path, const String& options) {

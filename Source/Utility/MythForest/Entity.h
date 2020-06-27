@@ -76,7 +76,6 @@ namespace PaintsNow {
 
 			virtual void ReleaseObject() override;
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-			virtual void Raycast(std::vector<RaycastResult>& results, Float3Pair& ray, uint32_t maxCount, IReflectObject* filter) const;
 
 			inline Entity* Left() const {
 				// assert(!(Flag() & ENTITY_STORE_ENGINE));

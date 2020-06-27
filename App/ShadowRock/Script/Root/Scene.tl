@@ -56,13 +56,15 @@ function Scene.New(database : Database, clock : Clock) : Scene
 				local formComponents : { FormComponent } = {}
 				for _, line in database:Lines("select ModelComponents.ID, Path, ViewDistance from `ModelComponents`, `Resources` where `ResourceID` == Resources.ID;", 32) do
 					local componentID, path, viewDistance = table.unpack(line as { any })
-					local meshResource = SnowyStream.NewResource(path as string, "MeshResource", false) as MeshResource
-					if not meshResource then
-						print("\tUnable to load mesh resource: " .. path as string)
-					else
-						components[componentID as number] = components[componentID as number] or ModelComponentModule.New(meshResource, batchComponent) as Component
-						shapeComponents[componentID as number] = shapeComponents[componentID as number] or ShapeComponentModule.New(meshResource) 
-						formComponents[componentID as number] = formComponents[componentID as number] or FormComponentModule.New(path as string)
+					if not path as string:find("Sky") then
+						local meshResource = SnowyStream.NewResource(path as string, "MeshResource", false) as MeshResource
+						if not meshResource then
+							print("\tUnable to load mesh resource: " .. path as string)
+						else
+							components[componentID as number] = components[componentID as number] or ModelComponentModule.New(meshResource, batchComponent) as Component
+							shapeComponents[componentID as number] = shapeComponents[componentID as number] or ShapeComponentModule.New(meshResource) 
+							formComponents[componentID as number] = formComponents[componentID as number] or FormComponentModule.New(path as string)
+						end
 					end
 				end
 

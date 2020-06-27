@@ -9,6 +9,7 @@
 #include "../../Core/PaintsNow.h"
 #include "../../Core/Interface/IFilterBase.h"
 #include "../../Core/Interface/IType.h"
+#include "../../Core/Interface/IReflect.h"
 #include "../../General/Interface/IRender.h"
 #include <list>
 #include <vector>

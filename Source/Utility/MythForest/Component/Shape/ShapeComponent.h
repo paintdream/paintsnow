@@ -18,7 +18,7 @@ namespace PaintsNow {
 			ShapeComponent();
 			virtual ~ShapeComponent();
 			void Update(Engine& engine, TShared<NsSnowyStream::MeshResource> resource);
-			virtual void Raycast(std::vector<RaycastResult>& results, Float3Pair& ray, uint32_t maxCount, IReflectObject* filter) const override;
+			virtual float Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio = 1) const;
 			enum {
 				MAX_PATCH_COUNT = (64 - sizeof(TKdTree<Float3Pair>)) / sizeof(uint32_t)
 			};

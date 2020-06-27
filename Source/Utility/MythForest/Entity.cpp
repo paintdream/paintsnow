@@ -271,32 +271,6 @@ TObject<IReflect>& Entity::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void Entity::Raycast(std::vector<RaycastResult>& results, Float3Pair& ray, uint32_t maxCount, IReflectObject* filter) const {
-	assert(!(Flag() & TINY_MODIFIED));
-	if (!IntersectBox(key, ray)) return;
-
-	Float3Pair newRay = ray;
-	std::vector<RaycastResult> newResults;
-	for (size_t i = 0; i < components.size(); i++) {
-		Component* component = components[i];
-
-		if (component != nullptr) {
-			component->Raycast(newResults, newRay, maxCount, filter);
-		}
-	}
-
-	float ratio = ray.second.SquareLength() / newRay.second.SquareLength();
-	for (size_t j = 0; j < newResults.size(); j++) {
-		RaycastResult& res = newResults[j];
-		if (!res.parent) {
-			res.parent = const_cast<Entity*>(this);
-		}
-
-		res.distance = res.distance * ratio;
-		EmplaceRaycastResult(results, maxCount, std::move(res));
-	}
-}
-
 bool Entity::IsOrphan() const {
 	return !!(Flag() & ENTITY_STORE_ENGINE);
 }

@@ -4,24 +4,6 @@
 using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 
-bool Unit::EmplaceRaycastResult(std::vector<RaycastResult>& results, uint32_t maxCount, const RaycastResult& item) {
-	if (results.size() < maxCount) {
-		results.emplace_back(item);
-		return true;
-	} else {
-		for (size_t i = 0; i < results.size(); i++) {
-			if (results[i].distance > item.distance) {
-				results[i] = item;
-				return true;
-			}
-		}
-
-		return false;
-	}
-}
-
-void Unit::Raycast(std::vector<RaycastResult>& results, Float3Pair& ray, uint32_t maxCount, IReflectObject* filter) const {}
-
 String Unit::GetDescription() const {
 	std::stringstream ss;
 	ss << GetUnique()->GetSubName() << "(" << std::hex << (size_t)this << ")";

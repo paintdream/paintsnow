@@ -20,12 +20,9 @@ namespace PaintsNow {
 			typedef typename Config::CaptureData CaptureData;
 
 			template <class D>
-			void CollectComponentsFromEntityTree(Engine& engine, TaskData& taskData, const WorldInstanceData& instanceData, const CaptureData& captureData, Entity* rootEntity, D ordered) {
-				WorldInstanceData nextWorldInstancedData = instanceData;
-				const WorldInstanceData& subWorldInstancedData = getboolean<D>::value ? nextWorldInstancedData : instanceData;
-
+			void CollectComponentsFromEntityTree(Engine& engine, TaskData& taskData, WorldInstanceData& instanceData, const CaptureData& captureData, Entity* rootEntity, D ordered) {
 				for (Entity* entity = rootEntity; entity != nullptr; entity = entity->Right()) {
-					if (!getboolean<D>::value && !captureData(subWorldInstancedData.boundingBox))
+					if (!getboolean<D>::value && !captureData(instanceData.boundingBox))
 						break;
 
 					IMemory::PrefetchRead(entity->Left());
@@ -40,13 +37,23 @@ namespace PaintsNow {
 					if (getboolean<D>::value) {
 						uint32_t index = entity->GetPivotIndex();
 						const float* source = &(const_cast<Float3Pair&>(entity->GetKey()).first.x());
-						float* target = &nextWorldInstancedData.boundingBox.first.x();
-						target[index] = source[index];
-					}
+						float* target = &instanceData.boundingBox.first.x();
+						if (index < 3) {
+							// cull right
+							if (entity->Left() != nullptr) {
+								CollectComponentsFromEntityTree(engine, taskData, instanceData, captureData, static_cast<Entity*>(entity->Left()), ordered);
+							}
 
-					// left part
-					if (entity->Left() != nullptr) {
-						CollectComponentsFromEntityTree(engine, taskData, subWorldInstancedData, captureData, static_cast<Entity*>(entity->Left()), ordered);
+							target[index] = source[index]; // pass through
+						} else if (entity->Left() != nullptr) {
+							// cull left
+							float value = target[index];
+							target[index] = source[index];
+							CollectComponentsFromEntityTree(engine, taskData, instanceData, captureData, static_cast<Entity*>(entity->Left()), ordered);
+							target[index] = value;
+						}
+					} else if (entity->Left() != nullptr) {
+						CollectComponentsFromEntityTree(engine, taskData, instanceData, captureData, static_cast<Entity*>(entity->Left()), ordered);
 					}
 				}
 			}

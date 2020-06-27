@@ -21,7 +21,7 @@ namespace PaintsNow {
 			};
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 			virtual void UpdateBoundingBox(Engine& engine, Float3Pair& box) override;
-			virtual void Raycast(std::vector<RaycastResult>& results, Float3Pair& ray, uint32_t maxCount, IReflectObject* filter) const override;
+			virtual float Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const override;
 
 			const Float3Pair& GetLocalBoundingBox() const;
 

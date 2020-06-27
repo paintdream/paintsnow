@@ -206,13 +206,14 @@ local function InitializeWorld(databasePath : string)
 						Parent : Entity
 					end
 
-					local results = scene.rootEntity:Raycast(position, target, 1) as { RaycastResult }
-					if results then
+					local results = scene.rootEntity:Raycast(function (results : { RaycastResult })
 						for i, result in ipairs(results) do
-							local formComponent = result.Parent:GetUniqueEntityComponent("FormComponent") as FormComponent
-							print("[" .. tostring(i) .. "] Mouse clicked at: " .. formComponent:GetName())
+							BridgeSunset.QueueRoutine(result.Parent, function ()
+								local formComponent = result.Parent:GetUniqueEntityComponent("FormComponent") as FormComponent
+								print("[" .. tostring(i) .. "] Mouse clicked at: " .. formComponent:GetName())
+							end)
 						end
-					end
+					end, position, target, 1)
 				end
 
 				lastMousePos = mouse.Position

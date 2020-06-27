@@ -321,39 +321,68 @@ void SpaceComponent::RoutineUpdateBoundingBox() {
 }
 
 template <class D>
-void RaycastInternal(Entity* root, std::vector<Unit::RaycastResult>& results, Float3Pair& ray, uint32_t maxCount, IReflectObject* filter, const Float3Pair& b, D d) {
+void RaycastInternal(Entity* root, Component::RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio, const Float3Pair& b, D d) {
 	Float3Pair bound = b;
 	for (Entity* entity = root; entity != nullptr; entity = entity->Right()) {
-		if (!getboolean<D>::value && !IntersectBox(bound, ray)) break;
+		if (!getboolean<D>::value && !IntersectBox(bound, ray))
+			break;
 
 		IMemory::PrefetchRead(entity->Left());
 		IMemory::PrefetchRead(entity->Right());
 
-		// Cull left & right 
+		Component::RaycastForEntity(task, ray, entity);
+
 		if (getboolean<D>::value) {
 			uint32_t index = entity->GetPivotIndex();
 			const float* source = &(const_cast<Float3Pair&>(entity->GetKey()).first.x());
 			float* target = &bound.first.x();
-			target[index] = source[index];
-		}
+			if (index < 3) {
+				// cull right
+				if (entity->Left() != nullptr) {
+					RaycastInternal(entity->Left(), task, ray, parent, ratio, bound, d);
+				}
 
-		entity->Raycast(results, ray, maxCount, filter);
-
-		// left part
-		if (entity->Left() != nullptr) {
-			RaycastInternal(entity->Left(), results, ray, maxCount, filter, bound, d);
+				target[index] = source[index]; // pass through
+			} else if (entity->Left() != nullptr) {
+				// cull left
+				float value = target[index];
+				target[index] = source[index];
+				RaycastInternal(entity->Left(), task, ray, parent, ratio, bound, d);
+				target[index] = value;
+			}
+		} else if (entity->Left() != nullptr) {
+			RaycastInternal(entity->Left(), task, ray, parent, ratio, bound, d);
 		}
 	}
 }
 
-void SpaceComponent::Raycast(std::vector<RaycastResult>& results, Float3Pair& ray, uint32_t maxCount, IReflectObject* filter) const {
-	if (!(Flag() & COMPONENT_LOCALIZED_WARP)) {
-		if (Flag() & SPACECOMPONENT_ORDERED) {
-			RaycastInternal(rootEntity, results, ray, maxCount, filter, boundingBox, std::true_type());
-		} else {
-			RaycastInternal(rootEntity, results, ray, maxCount, filter, boundingBox, std::false_type());
-		}
+float SpaceComponent::RoutineRaycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const {
+	ratio = Raycast(task, ray, parent, ratio);
+	if (parent != nullptr) {
+		parent->ReleaseObject();
 	}
+
+	task.RemovePendingTask();
+	return ratio;
+}
+
+float SpaceComponent::Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const {
+	if (!(Flag() & COMPONENT_LOCALIZED_WARP) || task.GetEngine().GetKernel().GetCurrentWarpIndex() == GetWarpIndex()) {
+		if (Flag() & SPACECOMPONENT_ORDERED) {
+			RaycastInternal(rootEntity, task, ray, parent, ratio, boundingBox, std::true_type());
+		} else {
+			RaycastInternal(rootEntity, task, ray, parent, ratio, boundingBox, std::false_type());
+		}
+	} else {
+		if (parent != nullptr) {
+			parent->ReferenceObject();
+		}
+
+		task.AddPendingTask();
+		task.GetEngine().GetKernel().QueueRoutine(const_cast<SpaceComponent*>(this), CreateTaskContextFree(Wrap(this, &SpaceComponent::RoutineRaycast), std::ref(task), ray, parent, ratio));
+	}
+
+	return ratio;
 }
 
 void SpaceComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box) {

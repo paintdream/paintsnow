@@ -35,7 +35,8 @@ namespace PaintsNow {
 			virtual void DispatchEvent(Event& event, Entity* entity) override;
 			virtual void UpdateBoundingBox(Engine& engine, Float3Pair& box) override;
 			const Float3Pair& GetBoundingBox() const;
-			virtual void Raycast(std::vector<RaycastResult>& results, Float3Pair& ray, uint32_t maxCount, IReflectObject* filter) const override;
+			virtual float Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const override;
+			float RoutineRaycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const;
 
 		protected:
 			virtual void Initialize(Engine& engine, Entity* entity) override;
