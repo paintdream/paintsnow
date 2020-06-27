@@ -41,10 +41,15 @@ function Scene.New(database : Database, clock : Clock) : Scene
 			BridgeSunset.QueueRoutine(interSpaceComponent, function ()
 				local subRootEntity = MythForest.NewEntity(-1)
 				local subSpaceComponent = SpaceComponentModule.New(-1, true)
+				local subSpaceComponentHuge = SpaceComponentModule.New(-1, false)
 				subRootEntity:AddEntityComponent(subSpaceComponent as Component)
+				subRootEntity:AddEntityComponent(subSpaceComponentHuge as Component)
 				local batchComponent = BatchComponentModule.New()
 
 				local entities : { Entity } = {}
+				local hugeEntity : { Entity : boolean } = {}
+				local hugeComponent : { Component : boolean } = {}
+
 				for _, line in database:Lines("select ID from `Entities`;", 32) do
 					local entityID = table.unpack(line as { number }) as number
 					entities[entityID] = MythForest.NewEntity(-1)
@@ -104,6 +109,7 @@ function Scene.New(database : Database, clock : Clock) : Scene
 					local textureResource = SnowyStream.NewResource(path as string, "TextureResource", false)
 					if textureResource then
 						local component = components[componentID as number] as EnvCubeComponent
+						hugeComponent[component as Component] = true
 						component:SetTexture(textureResource as TextureResource)
 						component:SetRenderPolicy(lightPolicy)
 						component:SetRange({1000, 1000, 1000})
@@ -119,6 +125,9 @@ function Scene.New(database : Database, clock : Clock) : Scene
 					local entity = entities[entityID as number]
 					local component = components[componentID as number]
 					if entity and component then
+						if hugeComponent[component] then
+							hugeEntity[entity] = true
+						end
 						entity:AddEntityComponent(component)
 						local shapeComponent = shapeComponents[componentID as number]
 						if shapeComponent then
@@ -134,7 +143,11 @@ function Scene.New(database : Database, clock : Clock) : Scene
 
 				for _, entity in ipairs(entities) do
 					entity:UpdateEntity()
-					subSpaceComponent:InsertEntity(entity)
+					if hugeEntity[entity] then
+						subSpaceComponentHuge:InsertEntity(entity)
+					else
+						subSpaceComponent:InsertEntity(entity)
+					end
 				end
 
 				local subEventListenerComponent = EventListenerComponentModule.New()

@@ -57,6 +57,9 @@ public:
 	virtual void DeleteQueue(Queue* queue) override {}
 	virtual void YieldQueue(Queue* queue) override {}
 	virtual void MergeQueue(Queue* target, Queue* src) override {}
+	virtual bool IsQueueEmpty(Queue* queue) override {
+		return true;
+	}
 
 	// Resource
 	virtual Resource* CreateResource(Queue* queue, Resource::Type resourceType) override {

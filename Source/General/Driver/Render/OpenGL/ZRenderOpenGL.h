@@ -32,6 +32,7 @@ namespace PaintsNow {
 		virtual void MergeQueue(Queue* target, Queue* source) override;
 		virtual void DeleteQueue(Queue* queue) override;
 		virtual void YieldQueue(Queue* queue) override;
+		virtual bool IsQueueEmpty(Queue* queue) override;
 
 		// Resource
 		virtual Resource* CreateResource(Queue* queue, Resource::Type resourceType) override;

@@ -1892,7 +1892,6 @@ IRender::Device* ZRenderOpenGL::GetQueueDevice(Queue* queue) {
 
 void ZRenderOpenGL::PresentQueues(Queue** queues, uint32_t count, PresentOption option) {
 	GL_GUARD();
-	ClearDeletedQueues();
 	void (QueueImplOpenGL::*op)() = &QueueImplOpenGL::ExecuteAll;
 	switch (option) {
 	case PresentOption::PRESENT_EXECUTE_ALL:
@@ -1916,10 +1915,18 @@ void ZRenderOpenGL::PresentQueues(Queue** queues, uint32_t count, PresentOption 
 		QueueImplOpenGL* q = static_cast<QueueImplOpenGL*>(queues[k]);
 		(q->*op)();
 	}
+
+	ClearDeletedQueues();
 }
 
 bool ZRenderOpenGL::SupportParallelPresent(Device* device) {
 	return false;
+}
+
+bool ZRenderOpenGL::IsQueueEmpty(Queue* queue) {
+	QueueImplOpenGL* q = static_cast<QueueImplOpenGL*>(queue);
+	assert(queue != nullptr);
+	return q->queuedCommands.Empty();
 }
 
 void ZRenderOpenGL::MergeQueue(Queue* target, Queue* source) {

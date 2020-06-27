@@ -170,9 +170,9 @@ void CameraComponent::Instancing(Engine& engine, TaskData& taskData) {
 					bufferRange.component = data.GetSize() / (group.instanceCount * sizeof(float));
 
 					group.drawCallDescription.instanceCounts.x() = group.instanceCount;
-					policyData.instanceData.Append(data);
 
 					if (ZPassBase::ValidateDrawCall(group.drawCallDescription)) {
+						policyData.instanceData.Append(data);
 						IRender::Resource* drawCall = render.CreateResource(queue, IRender::Resource::RESOURCE_DRAWCALL);
 						assert(group.drawCallDescription.shaderResource != nullptr);
 						render.UploadResource(queue, drawCall, &group.drawCallDescription);
@@ -185,14 +185,15 @@ void CameraComponent::Instancing(Engine& engine, TaskData& taskData) {
 
 		for (std::map<RenderPolicy*, TaskData::PolicyData>::iterator ip = warpData.renderPolicyMap.begin(); ip != warpData.renderPolicyMap.end(); ++ip) {
 			TaskData::PolicyData& policyData = ip->second;
-			IRender::Resource::BufferDescription desc;
-			desc.data = std::move(policyData.instanceData);
-			desc.format = IRender::Resource::BufferDescription::FLOAT;
-			desc.usage = IRender::Resource::BufferDescription::INSTANCED;
-			desc.component = 0; // will be overridden by drawcall.
-			render.UploadResource(policyData.portQueue, policyData.instanceBuffer, &desc);
-
-			policyData.instanceData.Clear();
+			if (!policyData.instanceData.Empty()) {
+				IRender::Resource::BufferDescription desc;
+				desc.data = std::move(policyData.instanceData);
+				desc.format = IRender::Resource::BufferDescription::FLOAT;
+				desc.usage = IRender::Resource::BufferDescription::INSTANCED;
+				desc.component = 0; // will be overridden by drawcall.
+				render.UploadResource(policyData.portQueue, policyData.instanceBuffer, &desc);
+				policyData.instanceData.Clear();
+			}
 		}
 	}
 
@@ -308,7 +309,14 @@ void CameraComponent::CommitRenderRequests(Engine& engine, TaskData& taskData, I
 					lastCommandQueue = lastRenderPolicy == nullptr ? nullptr : QueryPort(render, policyPortMap, renderFlowComponent(), lastRenderPolicy, UniqueType<RenderPortCommandQueue>());
 					if (lastCommandQueue != nullptr) {
 						TaskData::PolicyData& policyData = warpData.renderPolicyMap[lastRenderPolicy];
-						lastCommandQueue->MergeQueue(render, policyData.portQueue);
+						if (policyData.instanceBuffer != nullptr) {
+							if (render.IsQueueEmpty(queue)) {
+								render.DeleteResource(policyData.portQueue, policyData.instanceBuffer);
+								policyData.instanceBuffer = nullptr;
+							}
+
+							lastCommandQueue->MergeQueue(render, policyData.portQueue);
+						}
 					}
 				}
 
@@ -327,8 +335,9 @@ void CameraComponent::CommitRenderRequests(Engine& engine, TaskData& taskData, I
 			for (std::map<RenderPolicy*, TaskData::PolicyData>::iterator ip = warpData.renderPolicyMap.begin(); ip != warpData.renderPolicyMap.end();) {
 				TaskData::PolicyData& policyData = (*ip).second;
 				IRender::Queue* queue = policyData.portQueue;
-				if (policyData.runtimeResources.empty()) {
+				if (policyData.instanceBuffer == nullptr) {
 					// no longer used
+					assert(policyData.runtimeResources.empty() && policyData.instanceData.Empty());
 					render.DeleteQueue(queue);
 					warpData.renderPolicyMap.erase(ip++);
 				} else {
@@ -755,6 +764,7 @@ void CameraComponent::CollectComponents(Engine& engine, TaskData& taskData, cons
 				newCaptureData.visData = visData;
 				SpaceComponent* spaceComponent = static_cast<SpaceComponent*>(component);
 				bool captureFree = !!(spaceComponent->GetEntityFlagMask() & Entity::ENTITY_HAS_RENDERCONTROL);
+
 				if (transformComponent != nullptr) {
 					UpdateCaptureData(newCaptureData, QuickInverse(localTransform) * mat);
 				}
