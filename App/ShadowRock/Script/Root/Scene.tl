@@ -34,7 +34,7 @@ function Scene.New(database : Database, clock : Clock) : Scene
 
 		for i = 1, dupCount do
 			print("\tCreating at warp " .. i)
-			local offset = i * 7.5
+			local offset = (i - 1) * 7.5
 			local interSpaceComponent = SpaceComponentModule.New(i)
 			rootEntity:AddEntityComponent(interSpaceComponent as Component)
 
@@ -42,6 +42,10 @@ function Scene.New(database : Database, clock : Clock) : Scene
 				local subRootEntity = MythForest.NewEntity(-1)
 				local subSpaceComponent = SpaceComponentModule.New(-1, true)
 				local subSpaceComponentHuge = SpaceComponentModule.New(-1, false)
+				local subTransformComponent = TransformComponentModule.New()
+				subTransformComponent:SetTranslation({ offset, 0, 0 })
+				subTransformComponent:UpdateTransform()
+				subRootEntity:AddEntityComponent(subTransformComponent as Component)
 				subRootEntity:AddEntityComponent(subSpaceComponent as Component)
 				subRootEntity:AddEntityComponent(subSpaceComponentHuge as Component)
 				local batchComponent = BatchComponentModule.New()
@@ -94,7 +98,7 @@ function Scene.New(database : Database, clock : Clock) : Scene
 				for _, line in database:Lines("select ID, X, Y, Z, Scale, Yaw, Pitch, Roll from `TransformComponents`;", 32) do
 					local componentID, x, y, z, s, yaw, pitch, roll = table.unpack(line as { number })
 					local transformComponent = TransformComponentModule.New()
-					transformComponent:SetTranslation({ x as number + offset, y as number, z as number })
+					transformComponent:SetTranslation({ x as number, y as number, z as number })
 					transformComponent:SetScale({ s as number, s as number, s as number })
 					transformComponent:SetRotation({ yaw as number, pitch as number, roll as number })
 					transformComponent:UpdateTransform()

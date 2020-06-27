@@ -9,6 +9,7 @@
 #include "../../Entity.h"
 #include "../../Component.h"
 #include "../Explorer/SpaceTraversal.h"
+#include "../Explorer/CameraCuller.h"
 #include "../../../../Core/Template/TBuffer.h"
 #include "../../../../General/Misc/ZFencedRenderQueue.h"
 #include "../../../SnowyStream/Resource/ShaderResource.h"
@@ -42,16 +43,7 @@ namespace PaintsNow {
 				uint32_t instanceCount;
 			};
 
-			struct CaptureData {
-				CaptureData() {}
-				CaptureData(const Float3& v, bool(*c)(const Float3Pair&)) : viewPosition(v), culler(c) {}
-				inline bool operator () (const Float3Pair& box) const {
-					return culler(Float3Pair(box.first - viewPosition, box.second - viewPosition));
-				}
-
-				bool(*culler)(const Float3Pair&);
-				Float3 viewPosition;
-			};
+			struct CaptureData : public FrustrumCuller {};
 
 			struct TaskData {
 				enum {
@@ -74,6 +66,7 @@ namespace PaintsNow {
 				TShared<NsSnowyStream::TextureResource> texture;
 				std::vector<NsSnowyStream::IDataUpdater*> dataUpdaters;
 				Bytes data;
+				PerspectiveCamera camera;
 				std::vector<std::map<size_t, InstanceGroup> > instanceGroups;
 			};
 		};

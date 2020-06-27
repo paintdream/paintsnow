@@ -320,30 +320,6 @@ void VisibilityComponent::TickRender(Engine& engine) {
 	}
 }
 
-static inline bool CullForTop(const Float3Pair& box) {
-	return box.second.z() >= 0;
-}
-
-static inline bool CullForBottom(const Float3Pair& box) {
-	return box.first.z() <= 0;
-}
-
-static inline bool CullForNE(const Float3Pair& box) {
-	return box.second.x() >= 0 && box.second.y() >= 0;
-}
-
-static inline bool CullForNW(const Float3Pair& box) {
-	return box.first.x() <= 0 && box.second.y() >= 0;
-}
-
-static inline bool CullForSW(const Float3Pair& box) {
-	return box.first.x() <= 0 && box.first.y() <= 0;
-}
-
-static inline bool CullForSE(const Float3Pair& box) {
-	return box.second.x() >= 0 && box.first.y() <= 0;
-}
-
 TObject<IReflect>& VisibilityComponent::WorldInstanceData::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
@@ -452,9 +428,15 @@ void VisibilityComponent::CollectComponents(Engine& engine, TaskData& task, cons
 			}
 		} else if (component->GetEntityFlagMask() & Entity::ENTITY_HAS_SPACE) {
 			std::atomic<uint32_t>& counter = reinterpret_cast<std::atomic<uint32_t>&>(task.pendingCount);
-			counter.fetch_add(1, std::memory_order_acquire);;
+			counter.fetch_add(1, std::memory_order_acquire);
 			SpaceComponent* spaceComponent = static_cast<SpaceComponent*>(component);
-			CollectComponentsFromSpace(engine, task, instanceData, captureData, spaceComponent);
+			if (transformComponent != nullptr) {
+				CaptureData newCaptureData;
+				task.camera.UpdateCaptureData(newCaptureData, captureData.viewTransform * QuickInverse(transformComponent->GetTransform()));
+				CollectComponentsFromSpace(engine, task, instanceData, newCaptureData, spaceComponent);
+			} else {
+				CollectComponentsFromSpace(engine, task, instanceData, captureData, spaceComponent);
+			}
 		}
 	}
 }
@@ -573,8 +555,6 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 	}
 }
 
-inline static bool NoCuller(const Float3Pair& box) { return true; }
-
 void VisibilityComponent::CoTaskAssembleTask(Engine& engine, TaskData& task, const BakePoint& bakePoint) {
 	if (hostEntity == nullptr) return;
 	IRender& render = engine.interfaces.render;
@@ -592,7 +572,15 @@ void VisibilityComponent::CoTaskAssembleTask(Engine& engine, TaskData& task, con
 		0.0f, 0.0f, (f + t) / (f - t), -1,
 		0, 0, 2 * f * t / (f - t), 0
 	};
+	const double PI = 3.14159265358979323846;
+
 	const MatrixFloat4x4 projectionMatrix(projectMatValues);
+	PerspectiveCamera camera;
+	camera.aspect = 1.0f;
+	camera.farPlane = 5000.0f;
+	camera.nearPlane = 0.1f;
+	camera.fov = (float)PI / 2;
+	task.camera = camera;
 
 	const float r2 = (float)sqrt(2.0f) / 2.0f;
 	static const Float3 directions[6] = {
@@ -613,9 +601,6 @@ void VisibilityComponent::CoTaskAssembleTask(Engine& engine, TaskData& task, con
 		Float3(1, 0, 0),
 	};
 
-	static bool(*Cullers[6])(const Float3Pair&) = {
-		CullForNE, CullForNW, CullForSW, CullForSE, CullForTop, CullForBottom
-	};
 
 	uint16_t i = bakePoint.coord.x();
 	uint16_t j = bakePoint.coord.y();
@@ -625,9 +610,12 @@ void VisibilityComponent::CoTaskAssembleTask(Engine& engine, TaskData& task, con
 	uint16_t face = bakePoint.face;
 	Float3 viewPosition = boundingBox.first + (boundingBox.second - boundingBox.first) * Float3((float)(i + 0.5f) / subDivision.x(), (float)(j + 0.5f) / subDivision.y(), (float)(k + 0.5f) / subDivision.z());
 	task.instanceGroups.resize(engine.GetKernel().GetWarpCount());
-	CaptureData captureData(viewPosition, Cullers[face]);
+	CaptureData captureData;
+	MatrixFloat4x4 viewMatrix = LookAt(viewPosition, directions[face], ups[face]);
+	MatrixFloat4x4 viewProjectionMatrix = viewMatrix * projectionMatrix;
 
-	MatrixFloat4x4 viewProjectionMatrix = LookAt(viewPosition, directions[face], ups[face]) * projectionMatrix;
+	camera.UpdateCaptureData(captureData, QuickInverse(viewMatrix));
+
 	WorldInstanceData instanceData;
 	instanceData.worldMatrix = viewProjectionMatrix;
 

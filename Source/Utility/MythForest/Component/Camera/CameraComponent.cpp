@@ -759,15 +759,17 @@ void CameraComponent::CollectComponents(Engine& engine, TaskData& taskData, cons
 				taskData.pendingCount.fetch_add(1, std::memory_order_acquire);
 
 				CaptureData newCaptureData = captureData;
-				const MatrixFloat4x4& mat = captureData.viewTransform;
-				const Bytes& visData = visibilityComponent != nullptr ? visibilityComponent->QuerySample(Float3(mat(3, 0), mat(3, 1), mat(3, 2))) : Bytes::Null();
-				newCaptureData.visData = visData;
 				SpaceComponent* spaceComponent = static_cast<SpaceComponent*>(component);
 				bool captureFree = !!(spaceComponent->GetEntityFlagMask() & Entity::ENTITY_HAS_RENDERCONTROL);
+				const MatrixFloat4x4& mat = captureData.viewTransform;
 
 				if (transformComponent != nullptr) {
-					UpdateCaptureData(newCaptureData, QuickInverse(localTransform) * mat);
+					UpdateCaptureData(newCaptureData, mat * QuickInverse(localTransform));
 				}
+
+				const MatrixFloat4x4& newMat = newCaptureData.viewTransform;
+				const Bytes& visData = visibilityComponent != nullptr ? visibilityComponent->QuerySample(Float3(newMat(3, 0), newMat(3, 1), newMat(3, 2))) : Bytes::Null();
+				newCaptureData.visData = visData;
 
 				CollectComponentsFromSpace(engine, taskData, subSpaceWorldInstancedData, newCaptureData, spaceComponent);
 			}

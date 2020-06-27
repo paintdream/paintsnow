@@ -22,10 +22,14 @@ Entity::~Entity() {
 }
 
 static void InvokeClearComponentsAndRelease(void* request, bool run, Engine& engine, Entity* entity) {
+	uint32_t orgIndex = engine.GetKernel().GetCurrentWarpIndex();
 	uint32_t warpIndex = entity->GetWarpIndex();
+
 	if (!run) {
-		bool result = engine.GetKernel().taskQueueGrid[warpIndex].PreemptExecution();
-		assert(result);
+		if (orgIndex != warpIndex) {
+			bool result = engine.GetKernel().taskQueueGrid[warpIndex].PreemptExecution();
+			assert(result);
+		}
 	} else {
 		assert(engine.GetKernel().GetCurrentWarpIndex() == entity->GetWarpIndex());
 	}
@@ -34,7 +38,9 @@ static void InvokeClearComponentsAndRelease(void* request, bool run, Engine& eng
 	entity->ReleaseObject();
 
 	if (!run) {
-		engine.GetKernel().taskQueueGrid[warpIndex].PreemptExecution();
+		if (orgIndex != ~(uint32_t)0 && orgIndex != warpIndex) {
+			engine.GetKernel().taskQueueGrid[orgIndex].PreemptExecution();
+		}
 	}
 }
 

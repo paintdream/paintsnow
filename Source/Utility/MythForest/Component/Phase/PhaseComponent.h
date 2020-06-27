@@ -107,6 +107,7 @@ namespace PaintsNow {
 				IRender::Queue* renderQueue;
 				IRender::Resource* renderTarget;
 				NsSnowyStream::ShaderResource* pipeline;
+				PerspectiveCamera camera;
 				TShared<NsSnowyStream::TextureResource> texture;
 			};
 		};
@@ -141,6 +142,7 @@ namespace PaintsNow {
 				TShared<NsSnowyStream::ShaderResourceImpl<NsSnowyStream::MultiHashTracePass> > tracePipeline;
 				IRender::Resource::DrawCallDescription drawCallDescription;
 				IRender::Resource* drawCallResource;
+				PerspectiveCamera camera;
 				std::vector<IRender::Resource*> uniformBuffers;
 			};
 

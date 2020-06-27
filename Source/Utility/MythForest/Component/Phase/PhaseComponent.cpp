@@ -548,6 +548,7 @@ void PhaseComponent::CoTaskAssembleTaskSetup(Engine& engine, TaskData& task, con
 
 	task.texture = phase.baseColorOcclusion;
 	task.pipeline = setupPipeline();
+	task.camera = phase.camera;
 	Collect(engine, task, phase.viewProjectionMatrix);
 }
 
@@ -803,7 +804,13 @@ void PhaseComponent::Update(Engine& engine, const Float3& center) {
 	srand((int)time(nullptr));
 	bakePointSetups = std::stack<UpdatePointSetup>();
 
-	MatrixFloat4x4 projectionMatrix = Perspective(PI / 2, 1.0f, 0.01f, 1000.0f);
+	PerspectiveCamera camera;
+	camera.nearPlane = 0.01f;
+	camera.farPlane = 1000.0f;
+	camera.aspect = 1.0f;
+	camera.fov = PI / 2;
+
+	MatrixFloat4x4 projectionMatrix = Perspective(camera.fov, camera.aspect, camera.nearPlane, camera.farPlane);
 
 	// Adjust phases?
 	for (size_t i = 0; i < phases.size(); i++) {
@@ -814,6 +821,7 @@ void PhaseComponent::Update(Engine& engine, const Float3& center) {
 		Float3 dir = -view;
 		Float3 up(RandFloat(), RandFloat(), RandFloat());
 
+		phases[i].camera = camera;
 		phases[i].projectionMatrix = projectionMatrix;
 		phases[i].viewProjectionMatrix = LookAt(view + center, dir + center, up) * projectionMatrix;
 	}
@@ -851,7 +859,13 @@ void PhaseComponent::CollectComponents(Engine& engine, TaskData& task, const Wor
 				std::atomic<uint32_t>& counter = reinterpret_cast<std::atomic<uint32_t>&>(task.pendingCount);
 				counter.fetch_add(1, std::memory_order_acquire);;
 				SpaceComponent* spaceComponent = static_cast<SpaceComponent*>(component);
-				CollectComponentsFromSpace(engine, task, instanceData, captureData, spaceComponent);
+				if (transformComponent != nullptr) {
+					CaptureData newCaptureData;
+					task.camera.UpdateCaptureData(newCaptureData, captureData.viewTransform * QuickInverse(transformComponent->GetTransform()));
+					CollectComponentsFromSpace(engine, task, instanceData, newCaptureData, spaceComponent);
+				} else {
+					CollectComponentsFromSpace(engine, task, instanceData, captureData, spaceComponent);
+				}
 			}
 		}
 	}

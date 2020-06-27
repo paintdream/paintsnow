@@ -404,7 +404,7 @@ void LightComponent::ShadowLayer::CollectComponents(Engine& engine, TaskData& ta
 				SpaceComponent* spaceComponent = static_cast<SpaceComponent*>(component);
 				bool captureFree = !!(spaceComponent->GetEntityFlagMask() & Entity::ENTITY_HAS_RENDERCONTROL);
 				if (transformComponent != nullptr) {
-					OrthoCamera::UpdateCaptureData(newCaptureData, QuickInverse(localTransform) * mat);
+					OrthoCamera::UpdateCaptureData(newCaptureData, mat * QuickInverse(localTransform));
 					CollectComponentsFromSpace(engine, taskData, subSpaceWorldInstancedData, newCaptureData, spaceComponent);
 				} else {
 					CollectComponentsFromSpace(engine, taskData, subSpaceWorldInstancedData, captureData, spaceComponent);
