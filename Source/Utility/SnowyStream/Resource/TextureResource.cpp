@@ -1,8 +1,11 @@
 #include "TextureResource.h"
 #include "../ResourceManager.h"
 #include "../../../General/Interface/IImage.h"
-#include "../../../General/Driver/Filter/BPTC/ZFilterBPTC.h"
 #include "../../../General/Misc/ZMemoryStream.h"
+
+#if !defined(CMAKE_PAINTSNOW) || ADD_FILTER_BPTC_BUILTIN
+#include "../../../General/Driver/Filter/BPTC/ZFilterBPTC.h"
+#endif
 
 using namespace PaintsNow;
 using namespace PaintsNow::NsSnowyStream;
@@ -96,6 +99,7 @@ size_t TextureResource::ReportDeviceMemoryUsage() const {
 }
 
 bool TextureResource::Compress(const String& compressionType) {
+#if !defined(CMAKE_PAINTSNOW) || ADD_FILTER_BPTC_BUILTIN
 	if (compressionType == "BPTC") { // BC7
 		static ZFilterBPTC factory;
 		const UShort3& dimension = description.dimension;
@@ -182,6 +186,9 @@ bool TextureResource::Compress(const String& compressionType) {
 	} else {
 		return false;
 	}
+#else
+	return false;
+#endif
 }
 
 bool TextureResource::LoadExternalResource(Interfaces& interfaces, IStreamBase& streamBase, size_t length) {

@@ -3,9 +3,18 @@ OPTION (CMAKE_WARN_VS6 "Allow compilation under Visual C++ 6.0" OFF)
 OPTION (STATIC_VC_RUNTIME "Use dynamic VC runtime" ON)
 
 
+IF (CMAKE_GENERATOR_PLATFORM STREQUAL "ARM")
+	SET (IS_X86_64 0)
+ELSEIF (CMAKE_GENERATOR_PLATFORM STREQUAL "ARM64")
+	SET (IS_X86_64 0)
+ELSE (CMAKE_GENERATOR_PLATFORM STREQUAL "ARM")
+	SET (IS_X86_64 1)
+ENDIF (CMAKE_GENERATOR_PLATFORM STREQUAL "ARM")
+
+message( STATUS "Architecture: ${IS_X86_64}" )
+
 # ================================================================ #
 PROJECT (PaintsNow)
-
 
 macro(configure_msvc_runtime)
 	if(MSVC)
@@ -98,11 +107,14 @@ ENDIF (MSVC)
 add_definitions(-D_7ZIP_ST)
 add_definitions(-DCMAKE_PAINTSNOW)
 
+
 IF (CMAKE_COMPILER_IS_GNUCXX)
 		add_definitions(-std=c++11)
 		add_definitions(-lstdc++)
+		IF (IS_X86_64)
 		add_definitions(-msse4.1)
 		add_definitions(-msse3)
+		ENDIF (IS_X86_64)
 		add_definitions(-std=c++11)
 		add_definitions(-fno-exceptions)
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
@@ -286,18 +298,22 @@ ELSE (ADD_FILTER_LZW_BUILTIN)
 	SET (FLAG_ADD_FILTER_LZW_BUILTIN 0)
 ENDIF (ADD_FILTER_LZW_BUILTIN)
 
-OPTION (ADD_FILTER_BPTC_BUILTIN "Add Intel BPTC Texture Compression Driver (Developing)" ON)
-IF (ADD_FILTER_BPTC_BUILTIN)
-	SET (FLAG_ADD_FILTER_BPTC_BUILTIN 1)
-	FILE (GLOB_RECURSE BPTC_SRC
-		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Filter/BPTC/*.h"
-		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Filter/BPTC/*.cpp"
-	)
+IF (IS_X86_64)
+	OPTION (ADD_FILTER_BPTC_BUILTIN "Add Intel BPTC Texture Compression Driver (Developing)" ON)
+	IF (ADD_FILTER_BPTC_BUILTIN)
+		SET (FLAG_ADD_FILTER_BPTC_BUILTIN 1)
+		FILE (GLOB_RECURSE BPTC_SRC
+			"${PROJECT_SOURCE_DIR}/Source/General/Driver/Filter/BPTC/*.h"
+			"${PROJECT_SOURCE_DIR}/Source/General/Driver/Filter/BPTC/*.cpp"
+		)
 
-	SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${BPTC_SRC})
-ELSE (ADD_FILTER_BPTC_BUILTIN)
+		SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${BPTC_SRC})
+	ELSE (ADD_FILTER_BPTC_BUILTIN)
+		SET (FLAG_ADD_FILTER_BPTC_BUILTIN 0)
+	ENDIF (ADD_FILTER_BPTC_BUILTIN)
+ELSE (IS_X86_64)
 	SET (FLAG_ADD_FILTER_BPTC_BUILTIN 0)
-ENDIF (ADD_FILTER_BPTC_BUILTIN)
+ENDIF (IS_X86_64)
 
 OPTION (ADD_FILTER_POD_BUILTIN "Add POD Archive Driver" ON)
 IF (ADD_FILTER_POD_BUILTIN)
