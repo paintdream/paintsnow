@@ -77,7 +77,8 @@ namespace PaintsNow {
 			VisibilityComponent();
 			enum {
 				VISIBILITYCOMPONENT_PARALLEL = COMPONENT_CUSTOM_BEGIN,
-				VISIBILITYCOMPONENT_CUSTOM_BEGIN = COMPONENT_CUSTOM_BEGIN << 1
+				VISIBILITYCOMPONENT_NEXT_PROCESSING = COMPONENT_CUSTOM_BEGIN << 1,
+				VISIBILITYCOMPONENT_CUSTOM_BEGIN = COMPONENT_CUSTOM_BEGIN << 2
 			};
 
 			typedef VisibilityComponentConfig::InstanceGroup InstanceGroup;
@@ -128,6 +129,7 @@ namespace PaintsNow {
 			Entity* hostEntity;
 
 			Float3Pair boundingBox;
+			UShort3 nextCoord;
 			UShort3 subDivision;
 			UShort2 resolution;
 			uint32_t taskCount;

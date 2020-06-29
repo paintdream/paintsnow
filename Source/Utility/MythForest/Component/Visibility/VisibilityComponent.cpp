@@ -10,7 +10,7 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
-VisibilityComponent::VisibilityComponent() : subDivision(1, 1, 1), taskCount(32), resolution(256, 256), maxFrameExecutionTime(5), viewDistance(512.0f), activeCellCacheIndex(0), hostEntity(nullptr), renderQueue(nullptr), clearResource(nullptr), depthStencilResource(nullptr), stateResource(nullptr) {
+VisibilityComponent::VisibilityComponent() : nextCoord(~(uint16_t)0, ~(uint16_t)0, ~(uint16_t)0), subDivision(1, 1, 1), taskCount(32), resolution(256, 256), maxFrameExecutionTime(5), viewDistance(512.0f), activeCellCacheIndex(0), hostEntity(nullptr), renderQueue(nullptr), clearResource(nullptr), depthStencilResource(nullptr), stateResource(nullptr) {
 	maxVisIdentity.store(0, std::memory_order_relaxed);
 	collectCritical.store(0, std::memory_order_relaxed);
 }
@@ -219,36 +219,31 @@ const Bytes& VisibilityComponent::QuerySample(const Float3& position) {
 	UShort3 upperBound((uint16_t)Min(coord.x() + 1, (int)subDivision.x() - 1), (uint16_t)Min(coord.y() + 1, (int)subDivision.y() - 1), (uint16_t)Min(coord.z() + 1, (int)subDivision.z() - 1));
 
 	Cell& center = cells[coord];
-	bool hit = center.incompleteness == 0;
-	std::vector<Bytes*> toMerge;
-	toMerge.reserve(9);
-	uint32_t mergedSize = 0;
+	if (center.incompleteness != 0) {
+		if (nextCoord != coord) {
+			nextCoord = coord;
+			Flag().fetch_and(~VISIBILITYCOMPONENT_NEXT_PROCESSING, std::memory_order_release);
+		}
 
-	for (uint16_t z = lowerBound.z(); z <= upperBound.z(); z++) {
-		for (uint16_t y = lowerBound.y(); y <= upperBound.y(); y++) {
-			for (uint16_t x = lowerBound.x(); x <= upperBound.x(); x++) {
-				UShort3 coord(x, y, z);
-				Cell& cell = cells[coord];
-				if (!cell.payload.Empty()) {
-					if (hit) {
+		return Bytes::Null();
+	} else {
+		std::vector<Bytes*> toMerge;
+		toMerge.reserve(9);
+		uint32_t mergedSize = 0;
+
+		for (uint16_t z = lowerBound.z(); z <= upperBound.z(); z++) {
+			for (uint16_t y = lowerBound.y(); y <= upperBound.y(); y++) {
+				for (uint16_t x = lowerBound.x(); x <= upperBound.x(); x++) {
+					UShort3 coord(x, y, z);
+					Cell& cell = cells[coord];
+					if (!cell.payload.Empty()) {
 						mergedSize = Max(mergedSize, cell.payload.GetSize());
 						toMerge.emplace_back(&cell.payload);
-					}
-				} else {
-					// Add new tasks
-					BakePoint bakePoint;
-					bakePoint.coord = coord;
-					cell.payload.Resize(sizeof(uint32_t), 0);
-					for (uint16_t f = 0; f < 6; f++) {
-						bakePoint.face = f;
-						bakePoints.push(bakePoint);
 					}
 				}
 			}
 		}
-	}
 
-	if (hit) {
 		// Do Merge
 		Bytes mergedPayload;
 		mergedPayload.Resize(mergedSize, 0);
@@ -262,9 +257,8 @@ const Bytes& VisibilityComponent::QuerySample(const Float3& position) {
 		targetCache.mergedPayload = std::move(mergedPayload);
 		activeCellCacheIndex = (activeCellCacheIndex + 1) % (sizeof(cellCache) / sizeof(cellCache[0]));
 		return targetCache.mergedPayload;
-	}
+	} 
 
-	return Bytes::Null();
 }
 
 bool VisibilityComponent::IsVisible(const Bytes& s, TransformComponent* transformComponent) {
@@ -629,31 +623,73 @@ void VisibilityComponent::DispatchTasks(Engine& engine) {
 	size_t n = 0;
 	Kernel& kernel = engine.GetKernel();
 	ThreadPool& threadPool = kernel.threadPool;
-	while (!bakePoints.empty()) {
-		BakePoint bakePoint = bakePoints.top();
-		Cell& cell = cells[bakePoint.coord];
-		// already baked?
-		if (cell.incompleteness != 0) {
-			Entity* entity = hostEntity;
-			// find idle task
-			while (n < tasks.size()) {
-				TaskData& task = tasks[n];
-				std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(task.status);
-				if (task.status == TaskData::STATUS_START) {
-					finalStatus.store(TaskData::STATUS_DISPATCHED, std::memory_order_release);
-					threadPool.Push(CreateCoTaskContextFree(kernel, Wrap(this, &VisibilityComponent::CoTaskAssembleTask), std::ref(engine), std::ref(task), bakePoint));
-					break;
+
+	while (true) {
+		while (!bakePoints.empty()) {
+			BakePoint bakePoint = bakePoints.top();
+			Cell& cell = cells[bakePoint.coord];
+			// already baked?
+			if (cell.incompleteness != 0) {
+				Entity* entity = hostEntity;
+				// find idle task
+				while (n < tasks.size()) {
+					TaskData& task = tasks[n];
+					std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(task.status);
+					if (task.status == TaskData::STATUS_START) {
+						finalStatus.store(TaskData::STATUS_DISPATCHED, std::memory_order_release);
+						threadPool.Push(CreateCoTaskContextFree(kernel, Wrap(this, &VisibilityComponent::CoTaskAssembleTask), std::ref(engine), std::ref(task), bakePoint));
+						break;
+					}
+
+					n++;
 				}
 
-				n++;
+				// no more slots ... go next frame
+				if (n == tasks.size())
+					break;
 			}
 
-			// no more slots ... go next frame
-			if (n == tasks.size())
-				break;
+			bakePoints.pop();
 		}
 
-		bakePoints.pop();
+		if (!bakePoints.empty()) {
+			break;
+		} else {
+			if (Flag() & VISIBILITYCOMPONENT_NEXT_PROCESSING)
+				break;
+
+			UShort3 coord = nextCoord;
+			if (coord.x() == ~(uint16_t)0)
+				break;
+
+			Cell& center = cells[coord];
+			if (center.incompleteness == 0)
+				break;
+
+			UShort3 lowerBound((uint16_t)Max(coord.x() - 1, 0), (uint16_t)Max(coord.y() - 1, 0), (uint16_t)Max(coord.z() - 1, 0));
+			UShort3 upperBound((uint16_t)Min(coord.x() + 1, (int)subDivision.x() - 1), (uint16_t)Min(coord.y() + 1, (int)subDivision.y() - 1), (uint16_t)Min(coord.z() + 1, (int)subDivision.z() - 1));
+
+			for (uint16_t z = lowerBound.z(); z <= upperBound.z(); z++) {
+				for (uint16_t y = lowerBound.y(); y <= upperBound.y(); y++) {
+					for (uint16_t x = lowerBound.x(); x <= upperBound.x(); x++) {
+						UShort3 coord(x, y, z);
+						Cell& cell = cells[coord];
+						if (cell.payload.Empty()) {
+							// Add new tasks
+							BakePoint bakePoint;
+							bakePoint.coord = coord;
+							cell.payload.Resize(sizeof(uint32_t), 0);
+							for (uint16_t f = 0; f < 6; f++) {
+								bakePoint.face = f;
+								bakePoints.push(bakePoint);
+							}
+						}
+					}
+				}
+			}
+
+			Flag().fetch_or(VISIBILITYCOMPONENT_NEXT_PROCESSING, std::memory_order_release);
+		}
 	}
 }
 
