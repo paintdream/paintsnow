@@ -44,6 +44,7 @@ namespace PaintsNow {
 			Int2 RequestGetScreenSize(IScript::Request& request);
 			void RequestForward(IScript::Request& request, IScript::Request::Ref ref);
 			void RequestInspect(IScript::Request& request, IScript::BaseDelegate d);
+			void RequestSearchMemory(IScript::Request& request, const String& data, size_t start, size_t end, uint32_t alignment, uint32_t maxResult);
 
 			void EnterMainLoop();
 			void EnterStdinLoop();

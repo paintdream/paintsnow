@@ -790,6 +790,52 @@ void LeavesFlute::RequestInspect(IScript::Request& request, IScript::BaseDelegat
 	}
 }
 
+#ifdef _MSC_VER
+#include <Windows.h>
+#ifdef min
+#undef min
+#endif
+#ifdef max
+#undef max
+#endif
+#endif
+
+void LeavesFlute::RequestSearchMemory(IScript::Request& request, const String& memory, size_t start, size_t end, uint32_t alignment, uint32_t maxResult) {
+	bridgeSunset.GetKernel().YieldCurrentWarp();
+#ifdef _MSC_VER
+	SYSTEM_INFO systemInfo;
+	::GetSystemInfo(&systemInfo);
+	assert((start & (alignment - 1)) == 0);
+	size_t pageSize = systemInfo.dwPageSize;
+	uint32_t count = 0;
+	std::vector<size_t> addresses;
+
+	for (size_t addr = start; addr < end; addr += pageSize) {
+		MEMORY_BASIC_INFORMATION mbi;
+		if (::VirtualQuery((LPVOID)addr, &mbi, sizeof(mbi)) != 0) {
+			size_t regionEnd = std::min(end, (size_t)mbi.BaseAddress + (size_t)mbi.RegionSize);
+			if ((mbi.State & MEM_COMMIT) && !(mbi.Protect & (PAGE_WRITECOMBINE | PAGE_NOCACHE | PAGE_GUARD))) {
+				for (size_t p = addr; p < regionEnd - memory.size(); p += alignment) {
+					if (memcmp((const void*)p, memory.data(), memory.size()) == 0) {
+						addresses.emplace_back(p);
+
+						if (++count >= maxResult) {
+							request.DoLock();
+							request << addresses;
+							request.UnLock();
+
+							return;
+						}
+					}
+				}
+			}
+
+			addr = (regionEnd + pageSize - 1) & ~(pageSize - 1);
+		}
+	}
+#endif
+}
+
 TObject<IReflect>& LeavesFlute::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 	if (reflect.IsReflectProperty()) {
@@ -815,6 +861,7 @@ TObject<IReflect>& LeavesFlute::operator () (IReflect& reflect) {
 		ReflectMethod(RequestSetScreenSize)[ScriptMethod = "SetScreenSize"];
 		ReflectMethod(RequestGetScreenSize)[ScriptMethod = "GetScreenSize"];
 		ReflectMethod(RequestListenConsole)[ScriptMethod = "ListenConsole"];
+		ReflectMethod(RequestSearchMemory)[ScriptMethod = "SearchMemory"];
 	}
 
 	return *this;
