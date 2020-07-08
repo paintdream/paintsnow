@@ -95,3 +95,57 @@ uint32_t Engine::GetFrameIndex() const {
 Kernel& Engine::GetKernel() {
 	return bridgeSunset.GetKernel();
 }
+
+void Engine::NotifyEntityConstruct(Entity* entity) {
+	entityCount.fetch_add(1, std::memory_order_release);
+#ifdef _DEBUG
+	SpinLock(entityCritical);
+	assert(entityMap.find(entity) == entityMap.end());
+	entityMap[entity] = nullptr;
+	SpinUnLock(entityCritical);
+#endif
+}
+
+void Engine::NotifyEntityDestruct(Entity* entity) {
+	if (entityCount.fetch_sub(1, std::memory_order_release) == 1) {
+		interfaces.thread.Signal(finalizeEvent, false);
+	}
+
+#ifdef _DEBUG
+	SpinLock(entityCritical);
+	assert(entityMap.find(entity) != entityMap.end());
+	entityMap.erase(entity);
+	SpinUnLock(entityCritical);
+#endif
+}
+
+void Engine::NotifyEntityAttach(Entity* entity, Entity* parent) {
+#ifdef _DEBUG
+	SpinLock(entityCritical);
+	assert(parent != nullptr);
+	assert(entityMap.find(entity) != entityMap.end());
+	assert(entityMap[entity] == nullptr);
+	Entity* p = parent;
+	while (true) {
+		assert(p != entity); // cycle detected
+		std::unordered_map<Entity*, Entity*>::iterator it = entityMap.find(p);
+		if (it == entityMap.end())
+			break;
+
+		p = (*it).second;
+	}
+
+	entityMap[entity] = parent;
+	SpinUnLock(entityCritical);
+#endif
+}
+
+void Engine::NotifyEntityDetach(Entity* entity) {
+#ifdef _DEBUG
+	SpinLock(entityCritical);
+	assert(entityMap.find(entity) != entityMap.end());
+	assert(entityMap[entity] != nullptr);
+	entityMap[entity] = nullptr;
+	SpinUnLock(entityCritical);
+#endif
+}

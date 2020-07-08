@@ -56,6 +56,9 @@ namespace PaintsNow {
 			Float3Pair boundingBox;
 			Entity* rootEntity;
 			uint32_t entityCount;
+#ifdef _DEBUG
+			Entity* hostEntity;
+#endif
 		};
 	}
 }

@@ -14,6 +14,10 @@ SpaceComponent::SpaceComponent(bool sorted) : rootEntity(nullptr), entityCount(0
 	}
 
 	Flag().fetch_or(COMPONENT_SHARED, std::memory_order_acquire);
+
+#ifdef _DEBUG
+	hostEntity = nullptr;
+#endif
 }
 
 SpaceComponent::~SpaceComponent() {}
@@ -53,6 +57,11 @@ void SpaceComponent::UpdateEntityWarpIndex(Entity* entity) {
 
 void SpaceComponent::Initialize(Engine& engine, Entity* entity) {
 	BaseClass::Initialize(engine, entity);
+
+#ifdef _DEBUG
+	assert(hostEntity == nullptr);
+	hostEntity = entity;
+#endif
 }
 
 static void InvokeRemoveAll(void* context, bool run, Engine& engine, SpaceComponent* spaceComponent) {
@@ -67,6 +76,11 @@ void SpaceComponent::Uninitialize(Engine& engine, Entity* entity) {
 	}
 
 	BaseClass::Uninitialize(engine, entity);
+
+#ifdef _DEBUG
+	assert(hostEntity == entity);
+	hostEntity = nullptr;
+#endif
 }
 
 void SpaceComponent::QueueRoutine(Engine& engine, ITask* task) {
@@ -110,6 +124,10 @@ bool SpaceComponent::Insert(Engine& engine, Entity* entity) {
 		// Dispatch to entity's warp and update the warp first
 		engine.GetKernel().QueueRoutine(entity, CreateTaskContextFree(Wrap(this, &SpaceComponent::RoutineUpdateEntityWarpIndex), std::ref(engine), entity, true));
 	} else {
+#ifdef _DEBUG
+		assert(hostEntity != nullptr);
+		engine.NotifyEntityAttach(entity, hostEntity);
+#endif
 		// update bounding box
 		entity->UpdateBoundingBox(engine);
 		entity->ReferenceObject();
@@ -251,6 +269,10 @@ bool SpaceComponent::Remove(Engine& engine, Entity* entity) {
 		rootEntity = newRoot;
 	}
 
+#ifdef _DEBUG
+	engine.NotifyEntityDetach(entity);
+#endif
+
 	entity->SetEngineInternal(engine);
 	entity->ReleaseObject();
 	return true;
@@ -271,6 +293,7 @@ void SpaceComponent::FastRemoveNode(Engine& engine, Entity* entity) {
 	while (entity != nullptr) {
 		FastRemoveNode(engine, entity->Left());
 		Entity* right = entity->Right();
+		engine.NotifyEntityDetach(entity);
 		entity->SetEngineInternal(engine); // reset engine
 		entity->ReleaseObject();
 		entity = right;

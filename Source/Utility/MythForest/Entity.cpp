@@ -10,7 +10,7 @@ using namespace PaintsNow::NsSnowyStream;
 Entity::Entity(Engine& engine) {
 	Flag().fetch_or(Tiny::TINY_ACTIVATED, std::memory_order_acquire);
 	SetEngineInternal(engine);
-	engine.NotifyEntityConstruct();
+	engine.NotifyEntityConstruct(this);
 
 	assert(QueryInterface(UniqueType<WarpTiny>()) != nullptr);
 }
@@ -18,7 +18,7 @@ Entity::Entity(Engine& engine) {
 Entity::~Entity() {
 	assert(components.empty());
 	Engine& engine = GetEngineInternal();
-	engine.NotifyEntityDestruct();
+	engine.NotifyEntityDestruct(this);
 }
 
 static void InvokeClearComponentsAndRelease(void* request, bool run, Engine& engine, Entity* entity) {

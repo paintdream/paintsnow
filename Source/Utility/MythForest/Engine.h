@@ -48,17 +48,11 @@ namespace PaintsNow {
 			NsSnowyStream::SnowyStream& snowyStream;
 			NsMythForest::MythForest& mythForest;
 
-		protected:
-			friend class Entity;
-			inline void NotifyEntityConstruct() {
-				entityCount.fetch_add(1, std::memory_order_release);
-			}
+			void NotifyEntityConstruct(Entity* entity);
+			void NotifyEntityDestruct(Entity* entity);
+			void NotifyEntityAttach(Entity* child, Entity* parent);
+			void NotifyEntityDetach(Entity* child);
 
-			inline void NotifyEntityDestruct() {
-				if (entityCount.fetch_sub(1, std::memory_order_release) == 1) {
-					interfaces.thread.Signal(finalizeEvent, false);
-				}
-			}
 
 		protected:
 			Engine(const Engine& engine);
@@ -69,6 +63,11 @@ namespace PaintsNow {
 			IThread::Event* finalizeEvent;
 			unordered_map<String, Module*> modules;
 			std::vector<TQueue<ITask*> > frameTasks;
+
+#ifdef _DEBUG
+			unordered_map<Entity*, Entity*> entityMap;
+			std::atomic<uint32_t> entityCritical;
+#endif
 		};
 
 #define CHECK_THREAD_IN_MODULE(warpTiny) \
