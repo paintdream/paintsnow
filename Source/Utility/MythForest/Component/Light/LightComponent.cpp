@@ -514,7 +514,7 @@ void LightComponent::ShadowLayer::Initialize(Engine& engine, TShared<StreamCompo
 	texture->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 	texture->description.state.layout = IRender::Resource::TextureDescription::R;
 	texture->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
-	texture->GetResourceManager().InvokeUpload(texture(), engine.mythForest.GetWarpResourceQueue());
+	texture->GetResourceManager().InvokeUpload(texture(), engine.GetWarpResourceQueue());
 
 	dummyColorAttachment = texture;
 

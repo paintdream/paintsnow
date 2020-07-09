@@ -79,7 +79,7 @@ void AnimationComponent::Initialize(Engine& engine, Entity* entity) {
 }
 
 void AnimationComponent::Uninitialize(Engine& engine, Entity* entity) {
-	skeletonResource->ClearBoneMatrixBuffer(engine.interfaces.render, engine.mythForest.GetWarpResourceQueue(), boneMatrixBuffer);
+	skeletonResource->ClearBoneMatrixBuffer(engine.interfaces.render, engine.GetWarpResourceQueue(), boneMatrixBuffer);
 	BaseClass::Uninitialize(engine, entity);
 }
 

@@ -42,9 +42,8 @@ static ZDebuggerRenderDoc debugger;
 #endif
 
 MythForest::MythForest(Interfaces& interfaces, NsSnowyStream::SnowyStream& snowyStream, NsBridgeSunset::BridgeSunset& bridgeSunset)
-	: engine(interfaces, bridgeSunset, snowyStream, *this), lastFrameTick(0), currentFrameTime(1) {
+	: engine(interfaces, bridgeSunset, snowyStream), lastFrameTick(0), currentFrameTime(1) {
 	entityAllocator = TShared<Entity::Allocator>::From(new Entity::Allocator());
-	warpResourceQueues.resize(engine.GetKernel().GetWarpCount(), nullptr);
 
 	// add builtin modules
 	engine.InstallModule(new AnimationComponentModule(engine));
@@ -82,23 +81,10 @@ MythForest::~MythForest() {
 }
 
 void MythForest::Initialize() {
-	IRender::Device* device = engine.snowyStream.GetRenderDevice();
-	IRender& render = engine.interfaces.render;
-
-	for (size_t i = 0; i < warpResourceQueues.size(); i++) {
-		warpResourceQueues[i] = render.CreateQueue(device);
-	}
 }
 
 void MythForest::Uninitialize() {
 	engine.Clear();
-	IRender& render = engine.interfaces.render;
-
-	for (size_t i = 0; i < warpResourceQueues.size(); i++) {
-		render.DeleteQueue(warpResourceQueues[i]);
-	}
-
-	warpResourceQueues.clear();
 }
 
 Engine& MythForest::GetEngine() {
@@ -143,11 +129,6 @@ TObject<IReflect>& MythForest::operator () (IReflect& reflect) {
 
 void MythForest::TickDevice(IDevice& device) {
 	if (&device == &engine.interfaces.render) {
-		IRender& render = engine.interfaces.render;
-		for (size_t i = 0; i < warpResourceQueues.size(); i++) {
-			render.PresentQueues(&warpResourceQueues[i], 1, IRender::PRESENT_EXECUTE_ALL);
-		}
-
 		engine.TickFrame();
 
 		uint64_t t = ITimer::GetSystemClock();
@@ -336,10 +317,6 @@ void MythForest::RequestRaycast(IScript::Request& request, IScript::Delegate<Ent
 
 void MythForest::RequestCaptureFrame(IScript::Request& request, const String& path, const String& options) {
 	InvokeCaptureFrame(path, options);
-}
-
-IRender::Queue* MythForest::GetWarpResourceQueue() {
-	return warpResourceQueues[engine.GetKernel().GetCurrentWarpIndex()];
 }
 
 //

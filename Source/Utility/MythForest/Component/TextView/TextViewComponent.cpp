@@ -134,7 +134,7 @@ TextViewComponent::TextViewComponent(TShared<FontResource> font, TShared<Materia
 void TextViewComponent::Initialize(Engine& engine, Entity* entity) {
 	BaseClass::Initialize(engine, entity);
 	IRender& render = engine.interfaces.render;
-	IRender::Queue* queue = engine.mythForest.GetWarpResourceQueue();
+	IRender::Queue* queue = engine.GetWarpResourceQueue();
 
 	unitCoordBuffer = render.CreateResource(queue, IRender::Resource::RESOURCE_BUFFER);
 	indexBuffer = render.CreateResource(queue, IRender::Resource::RESOURCE_BUFFER);
@@ -142,7 +142,7 @@ void TextViewComponent::Initialize(Engine& engine, Entity* entity) {
 
 void TextViewComponent::Uninitialize(Engine& engine, Entity* entity) {
 	IRender& render = engine.interfaces.render;
-	IRender::Queue* queue = engine.mythForest.GetWarpResourceQueue();
+	IRender::Queue* queue = engine.GetWarpResourceQueue();
 	render.DeleteResource(queue, indexBuffer);
 	render.DeleteResource(queue, unitCoordBuffer);
 	unitCoordBuffer = nullptr;
@@ -210,7 +210,7 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 	std::vector<Float4> bufferData;
 	IFontBase& fontBase = engine.interfaces.fontBase;
 	IRender& render = engine.interfaces.render;
-	IRender::Queue* queue = engine.mythForest.GetWarpResourceQueue();
+	IRender::Queue* queue = engine.GetWarpResourceQueue();
 	textureRange.clear();
 
 	Short2 fullSize;

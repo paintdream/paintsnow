@@ -27,11 +27,10 @@ namespace PaintsNow {
 	namespace NsMythForest {
 		class Unit;
 		class Entity;
-		class MythForest;
 		class Module;
 		class Engine : public ISyncObject {
 		public:
-			Engine(Interfaces& interfaces, NsBridgeSunset::BridgeSunset& bridgeSunset, NsSnowyStream::SnowyStream& snowyStream, NsMythForest::MythForest& mythForest);
+			Engine(Interfaces& interfaces, NsBridgeSunset::BridgeSunset& bridgeSunset, NsSnowyStream::SnowyStream& snowyStream);
 
 			virtual ~Engine();
 			void Clear();
@@ -42,17 +41,16 @@ namespace PaintsNow {
 			uint32_t GetFrameIndex() const;
 			Kernel& GetKernel();
 			void QueueFrameRoutine(ITask* task);
+			IRender::Queue* GetWarpResourceQueue();
 
 			Interfaces& interfaces;
 			NsBridgeSunset::BridgeSunset& bridgeSunset;
 			NsSnowyStream::SnowyStream& snowyStream;
-			NsMythForest::MythForest& mythForest;
 
 			void NotifyEntityConstruct(Entity* entity);
 			void NotifyEntityDestruct(Entity* entity);
 			void NotifyEntityAttach(Entity* child, Entity* parent);
 			void NotifyEntityDetach(Entity* child);
-
 
 		protected:
 			Engine(const Engine& engine);
@@ -63,6 +61,7 @@ namespace PaintsNow {
 			IThread::Event* finalizeEvent;
 			unordered_map<String, Module*> modules;
 			std::vector<TQueue<ITask*> > frameTasks;
+			std::vector<IRender::Queue*> warpResourceQueues;
 
 #ifdef _DEBUG
 			unordered_map<Entity*, Entity*> entityMap;

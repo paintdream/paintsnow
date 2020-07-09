@@ -3,15 +3,24 @@
 #include "Entity.h"
 #include "../../General/Interface/IRender.h"
 #include "../BridgeSunset/BridgeSunset.h"
+#include "../SnowyStream/SnowyStream.h"
 
 using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsBridgeSunset;
 
-Engine::Engine(Interfaces& pinterfaces, NsBridgeSunset::BridgeSunset& pbridgeSunset, NsSnowyStream::SnowyStream& psnowyStream, NsMythForest::MythForest& pmythForest) : ISyncObject(pinterfaces.thread), interfaces(pinterfaces), bridgeSunset(pbridgeSunset), snowyStream(psnowyStream), mythForest(pmythForest) {
+Engine::Engine(Interfaces& pinterfaces, NsBridgeSunset::BridgeSunset& pbridgeSunset, NsSnowyStream::SnowyStream& psnowyStream) : ISyncObject(pinterfaces.thread), interfaces(pinterfaces), bridgeSunset(pbridgeSunset), snowyStream(psnowyStream) {
 	entityCount.store(0, std::memory_order_relaxed);
 	finalizeEvent = interfaces.thread.NewEvent();
 	frameTasks.resize(GetKernel().GetWarpCount());
+
+	IRender::Device* device = snowyStream.GetRenderDevice();
+	IRender& render = interfaces.render;
+	warpResourceQueues.resize(GetKernel().GetWarpCount(), nullptr);
+
+	for (size_t i = 0; i < warpResourceQueues.size(); i++) {
+		warpResourceQueues[i] = render.CreateQueue(device);
+	}
 }
 
 void Engine::QueueFrameRoutine(ITask* task) {
@@ -19,6 +28,10 @@ void Engine::QueueFrameRoutine(ITask* task) {
 	assert(warp != ~(uint32_t)0);
 
 	frameTasks[warp].Push(task);
+}
+
+IRender::Queue* Engine::GetWarpResourceQueue() {
+	return warpResourceQueues[GetKernel().GetCurrentWarpIndex()];
 }
 
 Engine::~Engine() {
@@ -50,6 +63,14 @@ void Engine::Clear() {
 	}
 
 	modules.clear();
+
+	IRender& render = interfaces.render;
+
+	for (size_t i = 0; i < warpResourceQueues.size(); i++) {
+		render.DeleteQueue(warpResourceQueues[i]);
+	}
+
+	warpResourceQueues.clear();
 }
 
 void Engine::InstallModule(Module* module) {
@@ -71,6 +92,11 @@ unordered_map<String, Module*>& Engine::GetModuleMap() {
 }
 
 void Engine::TickFrame() {
+	IRender& render = interfaces.render;
+	for (size_t i = 0; i < warpResourceQueues.size(); i++) {
+		render.PresentQueues(&warpResourceQueues[i], 1, IRender::PRESENT_EXECUTE_ALL);
+	}
+
 	for (size_t i = 0; i < frameTasks.size(); i++) {
 		TQueue<ITask*>& q = frameTasks[i];
 		while (!q.Empty()) {

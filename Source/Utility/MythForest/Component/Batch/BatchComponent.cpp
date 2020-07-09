@@ -15,7 +15,7 @@ BatchComponent::~BatchComponent() {
 void BatchComponent::InstanceInitialize(Engine& engine) {
 	if (referenceCount == 0) {
 		IRender& render = engine.interfaces.render;
-		IRender::Queue* queue = engine.mythForest.GetWarpResourceQueue();
+		IRender::Queue* queue = engine.GetWarpResourceQueue();
 		buffer = render.CreateResource(queue, IRender::Resource::RESOURCE_BUFFER);
 	}
 
@@ -26,7 +26,7 @@ void BatchComponent::InstanceUninitialize(Engine& engine) {
 	assert(referenceCount != 0);
 	if (--referenceCount == 0) {
 		IRender& render = engine.interfaces.render;
-		IRender::Queue* queue = engine.mythForest.GetWarpResourceQueue();
+		IRender::Queue* queue = engine.GetWarpResourceQueue();
 		render.DeleteResource(queue, buffer);
 		currentData.Clear();
 		Flag().fetch_and(~Tiny::TINY_MODIFIED, std::memory_order_release);
