@@ -119,7 +119,7 @@ IF (CMAKE_COMPILER_IS_GNUCXX)
 		ENDIF (IS_X86_64)
 		add_definitions(-std=c++11)
 		add_definitions(-fno-exceptions)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+		add_definitions(-O3)
 ENDIF (CMAKE_COMPILER_IS_GNUCXX)
 
 INCLUDE_DIRECTORIES ("${PROJECT_BINARY_DIR}")

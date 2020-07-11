@@ -27,14 +27,14 @@ end
 
 local function NewResourceHandler(type : string) : function (string, string, string) : (boolean)
 	return function (src : string, dst : string, ext : string) : boolean
-		local dstWithExt = dst .. ".pod"
+		local dstWithExt = dst .. "." .. type .. ".pod"
 		if not NeedUpdate(src, dstWithExt) then
 			return true
 		end
 		
 		print("Packing [" .. ext:lower() .. "] => " .. dst)
 
-		local res : ResourceBase = SnowyStream.NewResource(dstWithExt, type, true)
+		local res : ResourceBase = SnowyStream.NewResource(dst, type, true)
 		local success = false
 		if res then
 			local data = SnowyStream.FetchFileData(src) as string
