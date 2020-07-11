@@ -66,8 +66,8 @@ void Engine::Clear() {
 
 	IRender& render = interfaces.render;
 
-	for (size_t i = 0; i < warpResourceQueues.size(); i++) {
-		render.DeleteQueue(warpResourceQueues[i]);
+	for (size_t j = 0; j < warpResourceQueues.size(); j++) {
+		render.DeleteQueue(warpResourceQueues[j]);
 	}
 
 	warpResourceQueues.clear();
@@ -97,8 +97,8 @@ void Engine::TickFrame() {
 		render.PresentQueues(&warpResourceQueues[i], 1, IRender::PRESENT_EXECUTE_ALL);
 	}
 
-	for (size_t i = 0; i < frameTasks.size(); i++) {
-		TQueue<ITask*>& q = frameTasks[i];
+	for (size_t j = 0; j < frameTasks.size(); j++) {
+		TQueue<ITask*>& q = frameTasks[j];
 		while (!q.Empty()) {
 			ITask* task = q.Top();
 			q.Pop();

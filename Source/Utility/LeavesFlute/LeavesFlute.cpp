@@ -813,7 +813,7 @@ void LeavesFlute::RequestSearchMemory(IScript::Request& request, const String& m
 	for (size_t addr = start; addr < end; addr += pageSize) {
 		MEMORY_BASIC_INFORMATION mbi;
 		if (::VirtualQuery((LPVOID)addr, &mbi, sizeof(mbi)) != 0) {
-			size_t regionEnd = std::min(end, (size_t)mbi.BaseAddress + (size_t)mbi.RegionSize);
+			size_t regionEnd = Min(end, (size_t)mbi.BaseAddress + (size_t)mbi.RegionSize);
 			if ((mbi.State & MEM_COMMIT) && !(mbi.Protect & (PAGE_WRITECOMBINE | PAGE_NOCACHE | PAGE_GUARD))) {
 				for (size_t p = addr; p < regionEnd - memory.size(); p += alignment) {
 					if (memcmp((const void*)p, memory.data(), memory.size()) == 0) {
