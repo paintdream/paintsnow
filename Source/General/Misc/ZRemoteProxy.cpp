@@ -288,9 +288,9 @@ void ZRemoteProxy::Request::PostPacket(Packet& packet) {
 	localObjectRefDelta.clear();
 }
 
-void ZRemoteProxy::Request::ApplyDelta(std::map<IScript::Object*, ObjectInfo>& info, const std::vector<std::pair<uint64_t, uint32_t> >& delta, bool retrieve) {
-	for (std::vector<std::pair<uint64_t, uint32_t> >::const_iterator it = delta.begin(); it != delta.end(); ++it) {
-		const std::pair<uint64_t, uint32_t>& value = *it;
+void ZRemoteProxy::Request::ApplyDelta(std::map<IScript::Object*, ObjectInfo>& info, const std::vector<std::pair<uint64_t, uint64_t> >& delta, bool retrieve) {
+	for (std::vector<std::pair<uint64_t, uint64_t> >::const_iterator it = delta.begin(); it != delta.end(); ++it) {
+		const std::pair<uint64_t, uint64_t>& value = *it;
 		// merge edition
 		IScript::Object* object = reinterpret_cast<IScript::Object*>(value.first);
 		std::map<IScript::Object*, ObjectInfo>::iterator p = info.find(object);
