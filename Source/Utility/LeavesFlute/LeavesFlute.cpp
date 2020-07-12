@@ -819,12 +819,9 @@ void LeavesFlute::RequestSearchMemory(IScript::Request& request, const String& m
 					if (memcmp((const void*)p, memory.data(), memory.size()) == 0) {
 						addresses.emplace_back(p);
 
-						if (++count >= maxResult) {
-							request.DoLock();
-							request << addresses;
-							request.UnLock();
-
-							return;
+						if (maxResult != 0 && ++count >= maxResult) {
+							addr = end;
+							break;
 						}
 					}
 				}
@@ -833,6 +830,11 @@ void LeavesFlute::RequestSearchMemory(IScript::Request& request, const String& m
 			addr = (regionEnd + pageSize - 1) & ~(pageSize - 1);
 		}
 	}
+
+	request.DoLock();
+	request << addresses;
+	request.UnLock();
+
 #endif
 }
 

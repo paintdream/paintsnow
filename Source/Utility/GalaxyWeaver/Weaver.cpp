@@ -52,14 +52,13 @@ void Weaver::OnConnectionStatus(IScript::Request& request, bool isAuto, ZRemoteP
 			request.UnLock();
 		}
 	}
-	/*
+
 	if (status == ZRemoteProxy::CLOSED || status == ZRemoteProxy::ABORTED) {
 		// restart if not manually stopped
-		if (started) {
-			started = false;
-			Start();
+		if (Flag() & TINY_ACTIVATED) {
+			remoteProxy.Reset();
 		}
-	}*/
+	}
 }
 
 void Weaver::Start() {
@@ -73,7 +72,7 @@ void Weaver::Start() {
 
 void Weaver::Stop() {
 	Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_release);
-	remoteProxy.Reset();
+	remoteProxy.Stop();
 }
 
 TObject<IReflect>& Weaver::operator () (IReflect& reflect) {

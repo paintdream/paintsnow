@@ -438,8 +438,8 @@ namespace PaintsNow {
 			ObjectInfo globalRoutines;
 			std::set<IScript::Request::AutoWrapperBase*> localCallbacks;
 			std::set<IReflectObject*> tempObjects;
-			std::map<IScript::Object*, long> localObjectRefDelta;
-			std::map<IScript::Object*, long> remoteObjectRefDelta;
+			std::map<IScript::Object*, size_t> localObjectRefDelta;
+			std::map<IScript::Object*, size_t> remoteObjectRefDelta;
 			std::map<IScript::Object*, ObjectInfo> localActiveObjects;
 			std::map<IScript::Object*, ObjectInfo> remoteActiveObjects;
 			std::set<IScript::BaseDelegate*> localReferences;
@@ -464,7 +464,7 @@ namespace PaintsNow {
 		const TFactoryBase<IScript::Object>& GetObjectCreator() const;
 		bool Run();
 		virtual void Reset() override;
-		void Cleanup();
+		void Stop();
 
 	protected:
 		const ITunnel::Handler OnConnection(ITunnel::Connection* connection);
@@ -477,8 +477,7 @@ namespace PaintsNow {
 		TWrapper<void, IScript::Request&, bool, STATUS, const String&> statusHandler;
 		Request defaultRequest;
 		ITunnel::Dispatcher* dispatcher;
-		IThread::Thread* dispThread;
-		IThread::Event* finalizeEvent;
+		std::atomic<IThread::Thread*> dispThread;
 		ObjectInfo globalRoutines;
 		String entry;
 	};

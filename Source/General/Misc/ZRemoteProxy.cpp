@@ -117,41 +117,29 @@ public:
 	ZRemoteProxy::ObjectInfo& objectInfo;
 };
 
-ZRemoteProxy::ZRemoteProxy(IThread& threadApi, ITunnel& t, const TFactoryBase<IScript::Object>& creator, const String& entry, const TWrapper<void, IScript::Request&, bool, STATUS, const String&>& sh) : IScript(threadApi), tunnel(t), defaultRequest(*this, nullptr, statusHandler), objectCreator(creator), statusHandler(sh), dispatcher(nullptr), dispThread(nullptr), finalizeEvent(nullptr) {
+ZRemoteProxy::ZRemoteProxy(IThread& threadApi, ITunnel& t, const TFactoryBase<IScript::Object>& creator, const String& entry, const TWrapper<void, IScript::Request&, bool, STATUS, const String&>& sh) : IScript(threadApi), tunnel(t), defaultRequest(*this, nullptr, statusHandler), objectCreator(creator), statusHandler(sh), dispatcher(nullptr) {
 	SetEntry(entry);
+	dispThread.store(nullptr, std::memory_order_release);
 }
 
-void ZRemoteProxy::Cleanup() {
-	entry = "";
-
+void ZRemoteProxy::Stop() {
 	if (dispatcher != nullptr) {
-		if (dispThread != nullptr) {
-			finalizeEvent = threadApi.NewEvent();
-		}
-
 		tunnel.DeactivateDispatcher(dispatcher);
 
-		if (finalizeEvent != nullptr) {
-			while (dispThread != nullptr) {
-				DoLock();
-				threadApi.Wait(finalizeEvent, mutex, 50);
-				UnLock();
-			}
-
-			threadApi.DeleteEvent(finalizeEvent);
+		IThread::Thread* thread = (IThread::Thread*)dispThread.exchange(nullptr, std::memory_order_release);
+		if (thread != nullptr) {
+			threadApi.Wait(thread);
+			threadApi.DeleteThread(thread);
 		}
-
-		dispatcher = nullptr;
-	}
-
-	if (dispThread != nullptr) {
-		threadApi.DeleteThread(dispThread); 
-		dispThread = nullptr;
 	}
 }
 
 ZRemoteProxy::~ZRemoteProxy() {
-	Cleanup();
+	Stop();
+
+	if (dispatcher != nullptr) {
+		tunnel.CloseDispatcher(dispatcher);
+	}
 }
 
 const TFactoryBase<IScript::Object>& ZRemoteProxy::GetObjectCreator() const {
@@ -160,32 +148,23 @@ const TFactoryBase<IScript::Object>& ZRemoteProxy::GetObjectCreator() const {
 
 bool ZRemoteProxy::ThreadProc(IThread::Thread* thread, size_t context) {
 	ITunnel::Dispatcher* disp = dispatcher;
-	do {
-		ITunnel::Listener* listener = nullptr;
-		if (!entry.empty()) {
-			listener = tunnel.OpenListener(disp, Wrap(this, &ZRemoteProxy::HandleEvent), Wrap(this, &ZRemoteProxy::OnConnection), entry);
-			if (listener == nullptr) {
-				tunnel.CloseDispatcher(disp);
-				HandleEvent(ITunnel::ABORT);
-				return false;
-			}
+	assert(!entry.empty());
+	ITunnel::Listener* listener = tunnel.OpenListener(disp, Wrap(this, &ZRemoteProxy::HandleEvent), Wrap(this, &ZRemoteProxy::OnConnection), entry);
+	if (listener == nullptr) {
+		HandleEvent(ITunnel::ABORT);
+		return false;
+	}
 
-			tunnel.ActivateListener(listener);
-		}
+	tunnel.ActivateListener(listener);
+	tunnel.ActivateDispatcher(disp); // running ...
 
-		tunnel.ActivateDispatcher(disp);
+	tunnel.DeactivateListener(listener);
+	tunnel.CloseListener(listener);
 
-		if (listener != nullptr) {
-			tunnel.DeactivateListener(listener);
-			tunnel.CloseListener(listener);
-		}
-	} while (!entry.empty());
-
-	tunnel.CloseDispatcher(disp);
-
-	dispThread = nullptr;
-	if (finalizeEvent != nullptr) {
-		threadApi.Signal(finalizeEvent, true);
+	IThread::Thread* t = (IThread::Thread*)dispThread.exchange(nullptr, std::memory_order_release);
+	if (t != nullptr) {
+		assert(t == thread);
+		threadApi.DeleteThread(t);
 	}
 
 	return false;
@@ -198,15 +177,14 @@ void ZRemoteProxy::SetEntry(const String& e) {
 }
 
 void ZRemoteProxy::Reset() {
-	String orgEntry = entry;
-	Cleanup();
-	entry = orgEntry;
+	Stop();
 	Run();
 }
 
 bool ZRemoteProxy::Run() {
-	assert(dispatcher == nullptr);
-	dispatcher = tunnel.OpenDispatcher();
+	if (dispatcher == nullptr) {
+		dispatcher = tunnel.OpenDispatcher();
+	}
 
 	if (dispThread == nullptr) {
 		dispThread = threadApi.NewThread(Wrap(this, &ZRemoteProxy::ThreadProc), 0, false);
@@ -290,11 +268,11 @@ void ZRemoteProxy::Request::PostPacket(Packet& packet) {
 	}*/
 
 	// swap local <=> remote
-	for (std::map<IScript::Object*, long>::iterator it = remoteObjectRefDelta.begin(); it != remoteObjectRefDelta.end(); ++it) {
+	for (std::map<IScript::Object*, size_t>::iterator it = remoteObjectRefDelta.begin(); it != remoteObjectRefDelta.end(); ++it) {
 		packet.localDelta.emplace_back(std::make_pair((uint64_t)it->first, it->second));
 	}
 
-	for (std::map<IScript::Object*, long>::iterator is = localObjectRefDelta.begin(); is != localObjectRefDelta.end(); ++is) {
+	for (std::map<IScript::Object*, size_t>::iterator is = localObjectRefDelta.begin(); is != localObjectRefDelta.end(); ++is) {
 		packet.remoteDelta.emplace_back(std::make_pair((uint64_t)is->first, is->second));
 	}
 
@@ -1083,7 +1061,7 @@ IScript::Request& ZRemoteProxy::Request::operator >> (const Skip& skip) {
 IScript::Request::Ref ZRemoteProxy::Request::ReferenceEx(const IScript::BaseDelegate* base) {
 	IScript::Object* ptr = base->GetRaw();
 	if (ptr != nullptr) {
-		std::map<IScript::Object*, long>& delta = base->IsNative() ? localObjectRefDelta : remoteObjectRefDelta;
+		std::map<IScript::Object*, size_t>& delta = base->IsNative() ? localObjectRefDelta : remoteObjectRefDelta;
 		std::map<IScript::Object*, ObjectInfo>& info = base->IsNative() ? localActiveObjects : remoteActiveObjects;
 		info[ptr].refCount++;
 		delta[ptr]++;
@@ -1097,7 +1075,7 @@ IScript::Request::Ref ZRemoteProxy::Request::ReferenceEx(const IScript::BaseDele
 void ZRemoteProxy::Request::DereferenceEx(IScript::BaseDelegate* base) {
 	IScript::Object* ptr = base->GetRaw();
 	if (ptr != nullptr) {
-		std::map<IScript::Object*, long>& delta = base->IsNative() ? localObjectRefDelta : remoteObjectRefDelta;
+		std::map<IScript::Object*, size_t>& delta = base->IsNative() ? localObjectRefDelta : remoteObjectRefDelta;
 		std::map<IScript::Object*, ObjectInfo>& info = base->IsNative() ? localActiveObjects : remoteActiveObjects;
 		info[ptr].refCount--;
 		delta[ptr]--;
@@ -1175,8 +1153,6 @@ ReflectRoutines::ReflectRoutines(IScript::Request& request, const IScript::BaseD
 		}
 	}
 }
-
-
 
 void ReflectRoutines::Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) {
 	if (s.IsBasicObject()) {
