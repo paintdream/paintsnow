@@ -8,6 +8,8 @@ local Widget = record
 	name : string
 	entity : Entity
 	textViewComponent : TextViewComponent
+	spaceComponent : SpaceComponent
+	layoutComponent : LayoutComponent
 	style : string
 	theme : Theme
 	childs : { any : Widget }
@@ -58,6 +60,13 @@ function Widget:AddChild(child : Widget)
 		assert(not self.childs[child.name])
 		self.childs[child.name] = child
 	end
+
+	if not self.spaceComponent then
+		self.spaceComponent = SpaceComponentModule.New(-1, false)
+		self.layoutComponent = LayoutComponentModule.New()
+	end
+
+	self.spaceComponent:InsertEntity(child.entity)
 end
 
 function Widget:RemoveChild(child : Widget)
@@ -72,6 +81,9 @@ function Widget:RemoveChild(child : Widget)
 	if child.name ~= "" then
 		self.childs[child.name] = nil
 	end
+
+	assert(self.spaceComponent)
+	self.spaceComponent:RemoveEntity(child.entity)
 end
 
 function Widget:GetChild(...: any) : Widget
@@ -88,7 +100,7 @@ end
 function Widget.New() : Widget
 	local widget = {
 		entity = MythForest.NewEntity(-1)
-		style = "Plain",
+		style = "plain",
 		childs = {}
 	}
 

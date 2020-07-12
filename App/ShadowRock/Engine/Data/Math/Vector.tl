@@ -38,19 +38,17 @@ function Vector.__div(a : Vector, b : Vector | number) : Vector
 	end
 end
 
+function Vector.Dot(a : Vector, b : Vector) : number
+	return a[1] * b[1] + a[2] * b[2] + a[3] * b[3]
+end
+
 function Vector:SquareLength() : number
-	local sum = 0
-	for k, v in ipairs(self) do
-		sum = sum + v * v
-	end
-	
-	return sum
+	return Vector.Dot(self, self)
 end
 
 function Vector:Length() : number
 	return math.sqrt(self:SquareLength())
 end
-
 
 function Vector:Normalized() : Vector
 	return Vector.__div(self, self:Length())
