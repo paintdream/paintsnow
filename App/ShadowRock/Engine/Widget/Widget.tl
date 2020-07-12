@@ -63,7 +63,6 @@ function Widget:AddChild(child : Widget)
 
 	if not self.spaceComponent then
 		self.spaceComponent = SpaceComponentModule.New(-1, false)
-		self.layoutComponent = LayoutComponentModule.New()
 	end
 
 	self.spaceComponent:InsertEntity(child.entity)
@@ -101,7 +100,8 @@ function Widget.New() : Widget
 	local widget = {
 		entity = MythForest.NewEntity(-1)
 		style = "plain",
-		childs = {}
+		childs = {},
+		layoutComponent = LayoutComponentModule.New()
 	}
 
 	return setmetatable(widget, Widget as METATABLE) as Widget
