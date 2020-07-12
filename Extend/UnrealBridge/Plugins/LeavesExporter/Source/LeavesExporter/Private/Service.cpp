@@ -12,7 +12,7 @@ namespace PaintsNow {
 
 		class UnrealResourceManager : public NsSnowyStream::ResourceManager {
 		public:
-			UnrealResourceManager(IThread& threadApi, NsSnowyStream::IUniformResourceManager& hostManager) : ResourceManager(threadApi, hostManager, nullptr, TWrapper<void, const String&>(), nullptr) {}
+			UnrealResourceManager(IThread& threadApi, NsSnowyStream::IUniformResourceManager& hostManager) : ResourceManager(threadApi, hostManager, TWrapper<void, const String&>(), nullptr) {}
 			virtual Unique GetDeviceUnique() const {
 				return UniqueType<UObject>::Get();
 			}

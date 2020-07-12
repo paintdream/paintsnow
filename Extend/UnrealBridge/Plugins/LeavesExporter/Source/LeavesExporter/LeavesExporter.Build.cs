@@ -7,7 +7,7 @@ namespace UnrealBuildTool.Rules
 	{
 		private string ThirdPartyPath
 		{
-			get { return Path.GetFullPath(Path.Combine(ModuleDirectory, "../../../../../../Build/")); }
+			get { return Path.GetFullPath(Path.Combine(ModuleDirectory, "../../../../../../Build64Dynamic/")); }
 		}
 
 		public LeavesExporter(ReadOnlyTargetRules Target) : base(Target)
