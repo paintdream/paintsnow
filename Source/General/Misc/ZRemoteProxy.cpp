@@ -186,11 +186,10 @@ bool ZRemoteProxy::Run() {
 		dispatcher = tunnel.OpenDispatcher();
 	}
 
-	if (dispThread == nullptr) {
-		dispThread = threadApi.NewThread(Wrap(this, &ZRemoteProxy::ThreadProc), 0, false);
-	}
+	assert(dispThread.load(std::memory_order_relaxed) == nullptr);
+	dispThread.store(threadApi.NewThread(Wrap(this, &ZRemoteProxy::ThreadProc), 0, false), std::memory_order_relaxed);
 
-	return dispThread != nullptr;
+	return dispThread.load(std::memory_order_relaxed) != nullptr;
 }
 
 void ZRemoteProxy::Reconnect(IScript::Request& request) {
