@@ -168,24 +168,28 @@ void HoneyData::Attach(void* base) {
 				StringCreator, StringDeletor, StringAssigner
 			};
 
+			int intValue;
+			double doubleValue;
+			String strValue;
 			switch (request.GetCurrentType()) {
 				case IScript::Request::INTEGER:
 					field.type = UniqueType<int>::Get();
 					sets.emplace_back(&HoneyData::SetInteger);
+					request >> intValue;
 					break;
 				case IScript::Request::NUMBER:
 					field.type = UniqueType<double>::Get();
 					sets.emplace_back(&HoneyData::SetFloat);
+					request >> doubleValue;
 					break;
 				case IScript::Request::STRING:
 				default:
 					field.type = UniqueType<String>::Get();
 					field.controller = &mc;
 					sets.emplace_back(&HoneyData::SetString);
+					request >> strValue;
 					break;
 			}
-
-			request >> skip;
 		}
 		request >> endtable;
 

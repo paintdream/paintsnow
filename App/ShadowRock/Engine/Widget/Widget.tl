@@ -96,15 +96,21 @@ function Widget:GetChild(...: any) : Widget
 	return p
 end
 
-function Widget.New() : Widget
+function Widget:Update()
+	local style = self:GetStyle()
+end
+
+function Widget.New(style : string) : Widget
 	local widget = {
 		entity = MythForest.NewEntity(-1)
-		style = "plain",
+		style = style,
 		childs = {},
 		layoutComponent = LayoutComponentModule.New()
 	}
 
-	return setmetatable(widget, Widget as METATABLE) as Widget
+	local ret = setmetatable(widget, Widget as METATABLE) as Widget
+	ret:Update()
+	return ret
 end
 
 function Widget.NewFromDocument(document : { any : any }) : Widget

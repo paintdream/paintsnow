@@ -32,7 +32,7 @@ void Queue::ScriptUninitialize(IScript::Request& request) {
 	Clear(request);
 	request.DoLock();
 	
-	for (std::list<IScript::Request::Ref>::reverse_iterator it = listeners.rbegin(); it != listeners.rend(); ++it) {
+	for (std::list<IScript::Request::Ref>::reverse_iterator it = listeners.rbegin(); !(it == listeners.rend()); ++it) {
 		request.Dereference(*it);
 	}
 
@@ -78,7 +78,7 @@ void Queue::ExecuteWithTimeStamp(IScript::Request& request, int64_t timeStamp) {
 
 void Queue::Post(IScript::Request& request, IScript::Request::Ref ref, int64_t timeStamp) {
 	// make a function call directly
-	for (std::list<IScript::Request::Ref>::reverse_iterator it = listeners.rbegin(); it != listeners.rend(); ++it) {
+	for (std::list<IScript::Request::Ref>::reverse_iterator it = listeners.rbegin(); !(it == listeners.rend()); ++it) {
 		request.Push();
 		request.Call(sync, *it, timeStamp, ref);
 		request.Pop();

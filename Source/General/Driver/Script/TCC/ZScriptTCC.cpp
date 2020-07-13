@@ -126,12 +126,6 @@ IScript::Request& ZScriptTCC::Request::operator << (const Global&) {
 	return *this;
 }
 
-IScript::Request& ZScriptTCC::Request::operator << (const Local&) {
-	assert(GetScript()->GetLockCount() != 0);
-	assert(false);
-	return *this;
-}
-
 IScript::Request& ZScriptTCC::Request::operator << (const Key& k) {
 	assert(GetScript()->GetLockCount() != 0);
 	key = k.GetKey();
@@ -276,11 +270,6 @@ bool ZScriptTCC::Request::Call(const AutoWrapperBase& wrapper, const Request::Re
 }
 
 IScript::Request& ZScriptTCC::Request::operator >> (Arguments& args) {
-	assert(false);
-	return *this;
-}
-
-IScript::Request& ZScriptTCC::Request::operator >> (const Skip& skip) {
 	assert(false);
 	return *this;
 }

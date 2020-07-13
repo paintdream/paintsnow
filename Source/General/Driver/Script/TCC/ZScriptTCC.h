@@ -34,7 +34,6 @@ namespace PaintsNow {
 			virtual IScript::Request& operator << (const IScript::BaseDelegate&) override;
 			virtual IScript::Request& operator >> (IScript::BaseDelegate&) override;
 			virtual IScript::Request& operator << (const IScript::Request::Global&) override;
-			virtual IScript::Request& operator << (const IScript::Request::Local&) override;
 			virtual IScript::Request& operator << (const IScript::Request::TableStart&) override;
 			virtual IScript::Request& operator >> (IScript::Request::TableStart&) override;
 			virtual IScript::Request& operator << (const IScript::Request::TableEnd&) override;
@@ -56,7 +55,6 @@ namespace PaintsNow {
 			virtual IScript::Request& operator << (bool b) override;
 			virtual IScript::Request& operator >> (bool& b) override;
 			virtual IScript::Request& operator << (const AutoWrapperBase& wrapper) override;
-			virtual IScript::Request& operator >> (const Skip& skip) override;
 			virtual IScript::Request& MoveVariables(IScript::Request& target, size_t count) override;
 			bool IsValid(const BaseDelegate& d);
 			virtual void Dereference(IScript::Request::Ref& ref) override;

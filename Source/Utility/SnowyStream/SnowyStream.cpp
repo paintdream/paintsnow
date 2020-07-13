@@ -234,10 +234,7 @@ void SnowyStream::RequestFileExists(IScript::Request& request, const String& pat
 	bool ret = stream != nullptr;
 	if (ret) {
 		stream->ReleaseObject();
-	} else {
-		size_t length;
-		ret = request.GetScript()->QueryUniformResource(path, length) != nullptr;
-	}
+	} 
 
 	request.DoLock();
 	request << ret;
@@ -258,13 +255,6 @@ void SnowyStream::RequestFetchFileData(IScript::Request& request, const String& 
 			stream->ReleaseObject();
 			request.DoLock();
 			request << buf;
-			request.UnLock();
-		}
-	} else {
-		const char* builtin = request.GetScript()->QueryUniformResource(path, length);
-		if (builtin != nullptr) {
-			request.DoLock();
-			request << String(builtin, length);
 			request.UnLock();
 		}
 	}

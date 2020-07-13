@@ -361,7 +361,6 @@ namespace PaintsNow {
 			virtual IScript::Request& operator >> (BaseDelegate&);
 			virtual IScript::Request& operator << (const Global&);
 
-			virtual IScript::Request& operator << (const Local&);
 			virtual IScript::Request& operator << (const TableStart&);
 			virtual IScript::Request& operator >> (TableStart&);
 			virtual IScript::Request& operator << (const TableEnd&);
@@ -384,7 +383,6 @@ namespace PaintsNow {
 			virtual IScript::Request& operator << (const AutoWrapperBase& wrapper);
 			virtual IScript::Request& operator << (int64_t u);
 			virtual IScript::Request& operator >> (int64_t& u);
-			virtual IScript::Request& operator >> (const Skip& skip);
 
 			virtual bool IsValid(const BaseDelegate& d);
 			virtual Ref Reference(const Ref& d);

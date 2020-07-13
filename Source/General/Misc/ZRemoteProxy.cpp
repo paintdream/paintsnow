@@ -232,16 +232,13 @@ IScript::Request& ZRemoteProxy::Request::CleanupIndex() {
 	return *this;
 }
 
-static size_t count = 0;
 ZRemoteProxy::ObjectInfo::ObjectInfo() : refCount(0), needQuery(true) {
-	count++;
 }
 
 ZRemoteProxy::ObjectInfo::~ObjectInfo() {
 	for (size_t i = 0; i < collection.size(); i++) {
 		delete collection[i].wrapper;
 	}
-	count--;
 }
 
 void ZRemoteProxy::Request::Attach(ITunnel::Connection* c) {
@@ -824,11 +821,6 @@ IScript::Request& ZRemoteProxy::Request::operator << (const Global&) {
 	return *this;
 }
 
-IScript::Request& ZRemoteProxy::Request::operator << (const IScript::Request::Local &) {
-	assert(false); // not implemented
-	return *this;
-}
-
 IScript::Request& ZRemoteProxy::Request::operator << (const Key& k) {
 	assert(lockCount != 0);
 	assert(key.empty());
@@ -1042,19 +1034,6 @@ bool ZRemoteProxy::Request::Call(const AutoWrapperBase& wrapper, const Request::
 	}
 
 	return true;
-}
-
-IScript::Request& ZRemoteProxy::Request::operator >> (const Skip& skip) {
-	assert(lockCount != 0);
-	if (tableLevel != 0) {
-		if (key.empty()) {
-			IncreaseTableIndex(buffer, skip.count);
-		}
-	} else {
-		idx += skip.count;
-	}
-
-	return *this;
 }
 
 IScript::Request::Ref ZRemoteProxy::Request::ReferenceEx(const IScript::BaseDelegate* base) {

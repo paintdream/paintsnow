@@ -275,7 +275,7 @@ typedef GetK<0> GetX;
 typedef GetK<1> GetY;
 
 static inline void GetAllLayoutComponents(std::vector<Entity*>& entities, std::vector<LayoutComponent*>& components, Entity* root) {
-	if (root != nullptr) {
+	while (root != nullptr) {
 		LayoutComponent* component = root->GetUniqueComponent(UniqueType<LayoutComponent>());
 		if (component != nullptr) {
 			components.emplace_back(component);
@@ -283,8 +283,9 @@ static inline void GetAllLayoutComponents(std::vector<Entity*>& entities, std::v
 
 		entities.emplace_back(root);
 		root->ReferenceObject();
-		GetAllLayoutComponents(entities, components, static_cast<Entity*>(root->Left()));
+
 		GetAllLayoutComponents(entities, components, static_cast<Entity*>(root->Right()));
+		root = root->Left();
 	}
 }
 

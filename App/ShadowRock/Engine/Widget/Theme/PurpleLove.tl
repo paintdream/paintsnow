@@ -10,29 +10,40 @@ return {
 		{
 			font = globalFont,
 			fontSize = 24,
+			size = { 0, 28, 0, 28 },
+			margin = { 5, 5, 5, 5 },
+			padding = { 5, 5, 5, 5 },
+			fitContent = false,
 			alignment = "center"
 		},
 		plain =
 		{
 			font = globalFont,
 			fontSize = 18,
+			size = { 0, 20, 0, 20 },
+			margin = { 5, 5, 5, 5 },
+			padding = { 5, 5, 5, 5 },
+			fitContent = false,
 			alignment = "center"
-		},
-		border =
-		{
-			lineWidth = 2,
-			margin = 3
 		},
 		button =
 		{
 			font = globalFont,
 			fontSize = 18,
+			size = { 0, 20, 0, 20 },
+			margin = { 5, 5, 5, 5 },
+			padding = { 5, 5, 5, 5 },
+			fitContent = true,
 			alignment = "center"
 		},
 		tag =
 		{
 			font = globalFont,
 			fontSize = 18,
+			size = { 0, 20, 0, 20 },
+			margin = { 5, 5, 5, 5 },
+			padding = { 5, 5, 5, 5 },
+			fitContent = true,
 			alignment = "center"
 		}
 	},
