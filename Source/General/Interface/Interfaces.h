@@ -32,7 +32,7 @@ namespace PaintsNow {
 	public:
 		Interfaces(IArchive& parchive, IAudio& paudio, IDatabase& pdatabase, 
 			IFilterBase& passetFilterBase, IFilterBase& paudioFilterBase, IFontBase& pfontBase, IFrame& pframe, IImage& image, INetwork& pnetwork, IRandom& prandom, IRender& prender,
-			IScript& pscript, IScript& pnativeScript, IThread& pthread, ITimer& ptimer, ITunnel& ptunnel);
+			IScript& pscript, IThread& pthread, ITimer& ptimer, ITunnel& ptunnel);
 
 		IArchive& archive;
 		IAudio& audio;
@@ -46,7 +46,6 @@ namespace PaintsNow {
 		IRandom& random;
 		IRender& render;
 		IScript& script;
-		IScript& nativeScript;
 		IThread& thread;
 		ITimer& timer;
 		ITunnel& tunnel;

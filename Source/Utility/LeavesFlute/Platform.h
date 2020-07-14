@@ -8,7 +8,7 @@
 
 #include "../../Core/PaintsNow.h"
 #define PAINTSNOW_VERSION_MAJOR "0"
-#define PAINTSNOW_VERSION_MINOR "0.20.1.1 [Dev]"
+#define PAINTSNOW_VERSION_MINOR "0.20.7.16"
 
 #ifdef _MSC_VER
 #if !defined(CMAKE_PAINTSNOW) || ADD_AUDIO_LAME

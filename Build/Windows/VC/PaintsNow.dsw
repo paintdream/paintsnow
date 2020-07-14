@@ -27,18 +27,6 @@ Package=<4>
 
 ###############################################################################
 
-Project: "FlameWork"=.\FlameWork\FlameWork.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
 Project: "GalaxyWeaver"=.\GalaxyWeaver\GalaxyWeaver.dsp - Package Owner=<4>
 
 Package=<5>
@@ -76,9 +64,6 @@ Package=<4>
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name EchoLegend
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name FlameWork
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name HeartVioliner

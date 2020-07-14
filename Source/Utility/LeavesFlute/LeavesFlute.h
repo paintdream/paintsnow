@@ -12,7 +12,6 @@
 #include "../../Core/Template/TFactory.h"
 #include "../../Core/Interface/IType.h"
 #include "../../Utility/BridgeSunset/BridgeSunset.h"
-#include "../../Utility/FlameWork/FlameWork.h"
 #include "../../Utility/HeartVioliner/HeartVioliner.h"
 #include "../../Utility/SnowyStream/SnowyStream.h"
 #include "../../Utility/MythForest/MythForest.h"
@@ -70,7 +69,6 @@ namespace PaintsNow {
 
 		public:
 			NsBridgeSunset::BridgeSunset bridgeSunset;
-			NsFlameWork::FlameWork flameWork;
 			NsEchoLegend::EchoLegend echoLegend;
 			NsSnowyStream::SnowyStream snowyStream;
 			NsMythForest::MythForest mythForest;

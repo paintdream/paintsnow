@@ -231,12 +231,6 @@ void Loader::Load(const CmdLine& cmdLine) {
 	// Must have script factory.
 	assert(scriptFactory != nullptr);
 
-#if !defined(CMAKE_PAINTSNOW) || ADD_SCRIPT_TCC_BUILTIN
-	const FactoryInitWithThread<ZScriptTCC, IScript> sscriptTccFactory(this);
-	nativeScriptFactory = &sscriptTccFactory;
-	config.RegisterFactory("INativeScript", "ZScriptTCC", sscriptTccFactory);
-#endif
-
 #if !defined(CMAKE_PAINTSNOW) || ADD_NETWORK_LIBEVENT
 	const FactoryInitWithThread<ZNetworkLibEvent, ITunnel> snetworkFactory(this);
 
@@ -360,7 +354,6 @@ void Loader::Load(const CmdLine& cmdLine) {
 	SetFactory(reinterpret_cast<const void*&>(audioFactory), paramAudio, "IAudio", factoryMap);
 	SetFactory(reinterpret_cast<const void*&>(archiveFactory), paramArchive, "IArchive", factoryMap);
 	SetFactory(reinterpret_cast<const void*&>(scriptFactory), paramScript, "IScript", factoryMap);
-	SetFactory(reinterpret_cast<const void*&>(nativeScriptFactory), paramNativeScript, "INativeScript", factoryMap);
 	SetFactory(reinterpret_cast<const void*&>(networkFactory), paramNetwork, "INetwork", factoryMap);
 	SetFactory(reinterpret_cast<const void*&>(randomFactory), paramRandom, "IRandom", factoryMap);
 	SetFactory(reinterpret_cast<const void*&>(timerFactory), paramTimer, "ITimer", factoryMap);
@@ -374,9 +367,9 @@ void Loader::Load(const CmdLine& cmdLine) {
 	thread = (*threadFactory)(paramThread);
 	mainThread = thread->OpenCurrentThread();
 	{
-		IScript* script = (*scriptFactory)(paramScript);
-		IScript* nativeScript = (*nativeScriptFactory)(paramNativeScript);
 		frame = (*frameFactory)(paramFrame);
+
+		IScript* script = (*scriptFactory)(paramScript);
 		IRender* render = (*renderFactory)(paramRender);
 		ITimer* timer = (*timerFactory)(paramTimer);
 		IImage* image = (*imageFactory)(paramImage);
@@ -391,7 +384,7 @@ void Loader::Load(const CmdLine& cmdLine) {
 		IFontBase* font = (*fontFactory)(paramFont);
 
 		{
-			Interfaces interfaces(*archive, *audio, *database, *assetFilter, *audioFilter, *font, *frame, *image, *network, *random, *render, *script, *nativeScript, *thread, *timer, *tunnel);
+			Interfaces interfaces(*archive, *audio, *database, *assetFilter, *audioFilter, *font, *frame, *image, *network, *random, *render, *script, *thread, *timer, *tunnel);
 			LeavesFlute leavesFlute(nogui, interfaces, subArchiveCreator, threadCount, warpCount);
 			config.PostRuntimeState(&leavesFlute, LeavesApi::RUNTIME_INITIALIZE);
 			this->leavesFlute = &leavesFlute;
@@ -419,13 +412,13 @@ void Loader::Load(const CmdLine& cmdLine) {
 		tunnel->ReleaseDevice();
 		image->ReleaseDevice();
 		network->ReleaseDevice();
-		nativeScript->ReleaseDevice();
 		script->ReleaseDevice();
 		timer->ReleaseDevice();
 		render->ReleaseDevice();
-		frame->ReleaseDevice();
 		audio->ReleaseDevice();
 		archive->ReleaseDevice();
+
+		frame->ReleaseDevice();
 	}
 
 	thread->DeleteThread(mainThread);

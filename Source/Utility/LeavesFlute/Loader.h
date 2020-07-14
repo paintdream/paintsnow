@@ -85,10 +85,6 @@
 #include "../../General/Driver/Random/Libnoise/ZRandomLibnoisePerlin.h"
 #endif
 
-#if !defined(CMAKE_PAINTSNOW) || ADD_SCRIPT_TCC_BUILTIN
-#include "../../General/Driver/Script/TCC/ZScriptTCC.h"
-#endif
-
 #if !defined(CMAKE_PAINTSNOW) || ADD_FILTER_POD_BUILTIN
 #include "../../Core/Driver/Filter/Pod/ZFilterPod.h"
 #endif
@@ -117,8 +113,6 @@ namespace PaintsNow {
 			String paramArchive;
 			const TFactoryBase<IScript>* scriptFactory;
 			String paramScript;
-			const TFactoryBase<IScript>* nativeScriptFactory;
-			String paramNativeScript;
 			const TFactoryBase<ITunnel>* networkFactory;
 			String paramNetwork;
 			const TFactoryBase<ITunnel>* tunnelFactory;

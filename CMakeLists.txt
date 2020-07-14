@@ -532,21 +532,6 @@ ELSE (ADD_SCRIPT_LUA53_BUILTIN)
 	SET (FLAG_ADD_SCRIPT_LUA53_BUILTIN 0)
 ENDIF (ADD_SCRIPT_LUA53_BUILTIN)
 
-OPTION (ADD_SCRIPT_TCC_BUILTIN "Add TCC 0.9.6 Script Driver" ON)
-IF (ADD_SCRIPT_TCC_BUILTIN)
-	SET (FLAG_ADD_SCRIPT_TCC_BUILTIN 1)
-	FILE (GLOB_RECURSE TCC_SRC
-		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Script/TCC/*.h"
-		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Script/TCC/*.cpp"
-		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Script/TCC/*.c"
-	)
-
-	SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${TCC_SRC})
-ELSE (ADD_SCRIPT_TCC_BUILTIN)
-
-	SET (ADD_SCRIPT_TCC_BUILTIN 0)
-ENDIF (ADD_SCRIPT_TCC_BUILTIN)
-
 OPTION (ADD_THREAD_PTHREAD "Add Pthread Thread Driver" ON)
 IF (ADD_THREAD_PTHREAD)
 	SET (FLAG_ADD_THREAD_PTHREAD 1)
@@ -652,25 +637,6 @@ FOREACH (FILE ${ECHOLEGEND_SRC})
 ENDFOREACH (FILE ${ECHOLEGEND_SRC})
 
 ADD_LIBRARY (EchoLegend ${ECHOLEGEND_SRC})
-
-# ---------------------------------------------------------------- #
-
-FILE (GLOB_RECURSE FLAMEWORK_SRC
-		"${PROJECT_SOURCE_DIR}/Source/Utility/FlameWork/*.h"
-		"${PROJECT_SOURCE_DIR}/Source/Utility/FlameWork/*.cpp"
-)
-
-FOREACH (FILE ${FLAMEWORK_SRC}) 
-	GET_FILENAME_COMPONENT(PARENT_DIR "${FILE}" PATH)
-
-	# skip src or include and changes /'s to \\'s
-	STRING(REGEX REPLACE "(\\./)?(src|include)/?" "" GROUP "${PARENT_DIR}")
-	STRING(REPLACE "/" "\\" GROUP "${GROUP}")
-	STRING(REPLACE "${LOCAL_SOURCE_DIR}" "" GROUP "${GROUP}")
-	SOURCE_GROUP("${GROUP}" FILES "${FILE}")
-ENDFOREACH (FILE ${FLAMEWORK_SRC})
-
-ADD_LIBRARY (FlameWork ${FLAMEWORK_SRC})
 
 # ---------------------------------------------------------------- #
 
@@ -812,7 +778,7 @@ ENDFOREACH (FILE ${LEAVESWING_SRC})
 ADD_EXECUTABLE (LeavesWing ${LEAVESWING_SRC})
 
 SET (PAINTSNOW_LIBRARIES
-	LeavesFlute Remembery MythForest SnowyStream BridgeSunset HeartVioliner EchoLegend FlameWork GalaxyWeaver PaintsNow
+	LeavesFlute Remembery MythForest SnowyStream BridgeSunset HeartVioliner EchoLegend GalaxyWeaver PaintsNow
 )
 
 IF (CMAKE_COMPILER_IS_GNUCXX)
