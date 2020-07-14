@@ -824,13 +824,13 @@ IScript::Request& ZRemoteProxy::Request::operator << (const Global&) {
 IScript::Request& ZRemoteProxy::Request::operator << (const Key& k) {
 	assert(lockCount != 0);
 	assert(key.empty());
-	key = k.GetKey();
+	key = k.name;
 	return *this;
 }
 
 IScript::Request& ZRemoteProxy::Request::operator >> (const Key& k) {
 	assert(lockCount != 0);
-	key = k.GetKey();
+	key = k.name;
 	return *this;
 }
 

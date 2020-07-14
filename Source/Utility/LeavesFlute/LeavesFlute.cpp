@@ -605,7 +605,7 @@ struct InspectCustomStructure : public IReflect {
 			}
 
 			request << endarray;
-			request << key("Type") << (name + count);
+			request << key("Type") << String(name + count);
 			request << endtable;
 		}
 	}

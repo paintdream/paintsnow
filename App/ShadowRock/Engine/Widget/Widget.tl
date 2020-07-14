@@ -21,13 +21,20 @@ Widget.__index = Widget
 local fontCache : { string : FontResource } = {}
 local loader = require
 
+local function LoadFont(fontPath : string) : FontResource
+	local exist = fontCache[fontPath]
+	if exist then return exist end
+
+	exist = SnowyStream.NewResource(fontPath, "") as FontResource
+	fontCache[fontPath] = exist
+	return exist
+end
+
 local function LoadTheme(themePath : string) : Theme
 	local theme = loader(themePath) as Theme
 	-- load all fonts into cache
 	for _, v in pairs(theme.styles) do
-		if not fontCache[v.font] then
-			fontCache[v.font] = SnowyStream.NewResource(v.font, "") as FontResource
-		end
+		LoadFont(v.font)
 	end
 
 	return theme
@@ -43,9 +50,7 @@ function Widget:SetText(text : string)
 	if not self.textViewComponent then
 		-- get font from theme
 		local style = self:GetStyle()
-		local fontResource = fontCache[style.font]
-
-		local textViewComponent = TextViewComponentModule.New(fontResource)
+		local textViewComponent = TextViewComponentModule.New(LoadFont(style.font))
 		self.entity:AddEntityComponent(textViewComponent as Component)
 		self.textViewComponent = textViewComponent
 	end
@@ -98,6 +103,11 @@ end
 
 function Widget:Update()
 	local style = self:GetStyle()
+	local layoutComponent = self.layoutComponent
+
+	layoutComponent:SetPadding(style.padding)
+	layoutComponent:SetMargin(style.margin)
+	layoutComponent:SetSize(style.size)
 end
 
 function Widget.New(style : string) : Widget

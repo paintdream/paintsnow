@@ -16,6 +16,6 @@ function MakeConsole(filter, ...)
 			end
 		end
 		
-		print("Invalid command: " .. command .. "\n" .. message)
+		print("Invalid command: " .. command .. "\n" .. tostring(message))
 	end)
 end

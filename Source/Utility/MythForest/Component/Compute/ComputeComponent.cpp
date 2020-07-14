@@ -8,9 +8,7 @@ static void ErrorHandler(IScript::Request& request, const String& err) {
 	fprintf(stderr, "ComputeRoutine subscript error: %s\n", err.c_str());
 }
 
-ComputeRoutine::ComputeRoutine(IScript::RequestPool* p, IScript::Request::Ref r) : pool(p), ref(r) {
-	pool->GetScript().SetErrorHandler(Wrap(ErrorHandler));
-}
+ComputeRoutine::ComputeRoutine(IScript::RequestPool* p, IScript::Request::Ref r) : pool(p), ref(r) {}
 
 ComputeRoutine::~ComputeRoutine() {
 	Clear();
@@ -52,6 +50,7 @@ ComputeComponent::ComputeComponent(Engine& e) : RequestPool(*e.interfaces.script
 	request << global << key("os") << nil << endtable;
 	request << global << key("SysCall") << request.Adapt(Wrap(SysCall));
 	request << global << key("SysCallAsync") << request.Adapt(Wrap(SysCallAsync));
+	script.SetErrorHandler(Wrap(ErrorHandler));
 	script.UnLock();
 }
 
@@ -187,8 +186,8 @@ static void CopyArray(uint32_t flag, IScript::Request& request, IScript::Request
 		const IScript::Request::Key& k = keys[i];
 		// NIL, NUMBER, INTEGER, STRING, TABLE, FUNCTION, OBJECT
 		fromRequest >> k;
-		request << key(k.GetKey());
-		CopyVariable(flag, request, fromRequest, k.GetType());
+		request << k;
+		CopyVariable(flag, request, fromRequest, k.type);
 	}
 
 	request << endarray;
@@ -208,8 +207,8 @@ static void CopyTable(uint32_t flag, IScript::Request& request, IScript::Request
 		const IScript::Request::Key& k = keys[i];
 		// NIL, NUMBER, INTEGER, STRING, TABLE, FUNCTION, OBJECT
 		fromRequest >> k;
-		request << key(k.GetKey());
-		CopyVariable(flag, request, fromRequest, k.GetType());
+		request << k;
+		CopyVariable(flag, request, fromRequest, k.type);
 	}
 
 	request << endtable;

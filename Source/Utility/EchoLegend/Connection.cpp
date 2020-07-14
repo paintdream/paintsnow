@@ -11,15 +11,15 @@ namespace PaintsNow {
 		for (size_t i = 0; i < keys.size(); i++) {
 			String value;
 			request >> keys[i];
-			if (keys[i].GetType() == IScript::Request::STRING) {
+			if (keys[i].type == IScript::Request::STRING) {
 				request >> value;
-				mylist.emplace_back(std::make_pair(keys[i].GetKey(), value));
-			} else if (keys[i].GetType() == IScript::Request::TABLE) {
+				mylist.emplace_back(std::make_pair(keys[i].name, value));
+			} else if (keys[i].type == IScript::Request::TABLE) {
 				IScript::Request::ArrayStart ts;
 				request >> ts;
 				for (size_t i = 0; i < ts.count; i++) {
 					request >> value;
-					mylist.emplace_back(std::make_pair(keys[i].GetKey(), value));
+					mylist.emplace_back(std::make_pair(keys[i].name, value));
 				}
 				request >> endarray;
 			}

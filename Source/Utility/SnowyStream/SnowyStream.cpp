@@ -138,7 +138,7 @@ static void WriteValue(IScript::Request& request, const Json::Value& value) {
 		request << value.asDouble();
 		break;
 	case stringValue:
-		request << value.asString();
+		request << String(value.asString());
 		break;
 	case booleanValue:
 		request << value.asBool();
