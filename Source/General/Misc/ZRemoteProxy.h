@@ -316,19 +316,19 @@ namespace PaintsNow {
 			~ObjectInfo();
 
 			struct Entry {
-				std::pair<IScript::Request::Ref, size_t> CallFilter(IScript::Request& request, bool pre) {
+				std::pair<IScript::Request::Ref, int64_t> CallFilter(IScript::Request& request, bool pre) {
 					return std::make_pair(IScript::Request::Ref(reinterpret_cast<size_t>((void*)&obj)), index);
 				}
 				String name;
 				IReflect::Param retValue;
 				std::vector<IReflect::Param> params;
 				IScript::Request::AutoWrapperBase* wrapper;
-				TWrapper<std::pair<IScript::Request::Ref, size_t>, IScript::Request&, bool> method;
+				TWrapper<std::pair<IScript::Request::Ref, int64_t>, IScript::Request&, bool> method;
 				IScript::BaseDelegate obj;
-				size_t index;
+				int64_t index;
 			};
 
-			size_t refCount;
+			int64_t refCount;
 			std::vector<Entry> collection;
 			bool needQuery;
 		};
@@ -394,14 +394,14 @@ namespace PaintsNow {
 			public:
 				Packet();
 				virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-				uint64_t object; // 0 for global routines
-				uint64_t procedure;
-				uint64_t callback;
+				int64_t object; // 0 for global routines
+				int64_t procedure;
+				int64_t callback;
 				bool response;
 				bool deferred;
 				std::vector<Variant> vars;
-				std::vector<std::pair<uint64_t, uint64_t> > localDelta;
-				std::vector<std::pair<uint64_t, uint64_t> > remoteDelta;
+				std::vector<std::pair<int64_t, int64_t> > localDelta;
+				std::vector<std::pair<int64_t, int64_t> > remoteDelta;
 			};
 
 			void OnConnection(ITunnel::EVENT event);
@@ -411,7 +411,7 @@ namespace PaintsNow {
 			void Run();
 			IScript::Request::Ref ReferenceEx(const IScript::BaseDelegate* base);
 			void DereferenceEx(IScript::BaseDelegate* base);
-			void ApplyDelta(std::map<IScript::Object*, ObjectInfo>& info, const std::vector<std::pair<uint64_t, uint64_t> >& delta, bool retrieve);
+			void ApplyDelta(std::map<IScript::Object*, ObjectInfo>& info, const std::vector<std::pair<int64_t, int64_t> >& delta, bool retrieve);
 			void QueryObjectInterface(ObjectInfo& objectInfo, const IScript::BaseDelegate& d, const TWrapper<void, IScript::Request&, IReflectObject&, const Ref&>& callback, IReflectObject& target);
 
 		public:

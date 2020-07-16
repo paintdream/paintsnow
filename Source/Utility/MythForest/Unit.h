@@ -15,7 +15,6 @@ namespace PaintsNow {
 	namespace NsMythForest {
 		class Unit : public TReflected<Unit, WarpTiny> {
 		public:
-			
 			virtual String GetDescription() const;
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 

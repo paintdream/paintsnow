@@ -38,7 +38,7 @@ TableImpl::~TableImpl() {
 void Value<TableImpl>::Reflect(IReflect& reflect) {
 	if (reflect.IsReflectProperty()) {
 		ReflectProperty(value.arrayPart);
-		uint64_t count = value.mapPart->size();
+		int64_t count = value.mapPart->size();
 		ReflectProperty(count);
 		if (value.mapPart->size() == 0) { // Read
 			for (size_t i = 0; i < count; i++) {
@@ -265,11 +265,11 @@ void ZRemoteProxy::Request::PostPacket(Packet& packet) {
 
 	// swap local <=> remote
 	for (std::map<IScript::Object*, size_t>::iterator it = remoteObjectRefDelta.begin(); it != remoteObjectRefDelta.end(); ++it) {
-		packet.localDelta.emplace_back(std::make_pair((uint64_t)it->first, it->second));
+		packet.localDelta.emplace_back(std::make_pair((int64_t)it->first, it->second));
 	}
 
 	for (std::map<IScript::Object*, size_t>::iterator is = localObjectRefDelta.begin(); is != localObjectRefDelta.end(); ++is) {
-		packet.remoteDelta.emplace_back(std::make_pair((uint64_t)is->first, is->second));
+		packet.remoteDelta.emplace_back(std::make_pair((int64_t)is->first, is->second));
 	}
 
 	// use filter 
@@ -284,9 +284,9 @@ void ZRemoteProxy::Request::PostPacket(Packet& packet) {
 	localObjectRefDelta.clear();
 }
 
-void ZRemoteProxy::Request::ApplyDelta(std::map<IScript::Object*, ObjectInfo>& info, const std::vector<std::pair<uint64_t, uint64_t> >& delta, bool retrieve) {
-	for (std::vector<std::pair<uint64_t, uint64_t> >::const_iterator it = delta.begin(); it != delta.end(); ++it) {
-		const std::pair<uint64_t, uint64_t>& value = *it;
+void ZRemoteProxy::Request::ApplyDelta(std::map<IScript::Object*, ObjectInfo>& info, const std::vector<std::pair<int64_t, int64_t> >& delta, bool retrieve) {
+	for (std::vector<std::pair<int64_t, int64_t> >::const_iterator it = delta.begin(); it != delta.end(); ++it) {
+		const std::pair<int64_t, int64_t>& value = *it;
 		// merge edition
 		IScript::Object* object = reinterpret_cast<IScript::Object*>(value.first);
 		std::map<IScript::Object*, ObjectInfo>::iterator p = info.find(object);
@@ -345,7 +345,7 @@ void ZRemoteProxy::Request::ProcessPacket(Packet& packet) {
 			}
 		}
 	} else {
-		uint64_t proc = packet.procedure;
+		int64_t proc = packet.procedure;
 		if (packet.object == UNIQUE_GLOBAL) {
 			if (proc < globalRoutines.collection.size()) {
 				wrapper = globalRoutines.collection[(size_t)proc].wrapper;
@@ -1014,9 +1014,9 @@ bool ZRemoteProxy::Request::Call(const AutoWrapperBase& wrapper, const Request::
 	Packet packet;
 	packet.deferred = !wrapper.IsSync();
 	packet.object = d == nullptr ? 0 : (size_t)d->GetRaw();
-	packet.procedure = (uint64_t)(static_cast<Value<int64_t>*>(callProcIdx.Get()))->value;
+	packet.procedure = (int64_t)(static_cast<Value<int64_t>*>(callProcIdx.Get()))->value;
 	IScript::Request::AutoWrapperBase* cb = wrapper.Clone();
-	packet.callback = (uint64_t)cb;
+	packet.callback = (int64_t)cb;
 	std::vector<Variant>::iterator from = buffer.begin() + initCount + 1;
 #if defined(_MSC_VER) && _MSC_VER <= 1200
 	std::copy(from, buffer.end(), std::back_inserter(packet.vars));
@@ -1089,7 +1089,7 @@ public:
 	virtual void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta);
 
 private:
-	std::map<String, TWrapper<std::pair<IScript::Request::Ref, size_t>, IScript::Request&, bool>*> mapNameToWrapper;
+	std::map<String, TWrapper<std::pair<IScript::Request::Ref, int64_t>, IScript::Request&, bool>*> mapNameToWrapper;
 	ZRemoteProxy::ObjectInfo& objectInfo;
 };
 
@@ -1142,7 +1142,7 @@ void ReflectRoutines::Property(IReflectObject& s, Unique typeID, Unique refTypeI
 					const IScript::MetaRemoteEntryBase* wrapper = static_cast<const IScript::MetaRemoteEntryBase*>(node);
 					TWrapper<void>& routineBase = *reinterpret_cast<TWrapper<void>*>(ptr);
 					routineBase = wrapper->wrapper;
-					TWrapper<std::pair<IScript::Request::Ref, size_t>, IScript::Request&, bool>* host = mapNameToWrapper[wrapper->name.empty() ? name : wrapper->name];
+					TWrapper<std::pair<IScript::Request::Ref, int64_t>, IScript::Request&, bool>* host = mapNameToWrapper[wrapper->name.empty() ? name : wrapper->name];
 					routineBase.proxy.host = reinterpret_cast<IHost*>(host);
 				}
 			}
@@ -1155,8 +1155,8 @@ void ReflectRoutines::Method(Unique typeID, const char* name, const TProxy<>* p,
 class QueryInterfaceCallback : public IReflectObject {
 public:
 	QueryInterfaceCallback(const TWrapper<void, IScript::Request&, IReflectObject&, const IScript::Request::Ref&>& c, const IScript::BaseDelegate& d, IReflectObject& o, ZRemoteProxy::ObjectInfo& objInfo) : object(o), bd(d), callback(c), objectInfo(objInfo) {}
+
 	void Invoke(IScript::Request& request) {
-		
 		ZRemoteProxy::Request& r = static_cast<ZRemoteProxy::Request&>(request);
 		r.DoLock();
 		r.QueryObjectInterface(objectInfo, bd, callback, object);

@@ -67,9 +67,7 @@ void LayoutComponentModule::RequestSetLayout(IScript::Request& request, IScript:
 	} else {
 		layoutComponent->Flag().fetch_or(LayoutComponent::LAYOUT_VERTICAL, std::memory_order_acquire);
 	}
-
 }
-
 
 void LayoutComponentModule::RequestSetFitContent(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent, bool fitContent) {
 	CHECK_REFERENCES_NONE();

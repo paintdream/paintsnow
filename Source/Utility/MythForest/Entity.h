@@ -15,7 +15,6 @@
 
 namespace PaintsNow {
 	namespace NsMythForest {
-		enum { ENTITY_VISIT_CONST = 256 };
 		class Engine;
 
 		// The entity object is exactly 64 bytes on 32-bit platforms (MSVC Release).
