@@ -4,8 +4,8 @@ function CrossRoutine.New(func : function (... : any) : any...) : function (...:
 	-- compile function 
 	local nupvals = debug.getinfo(func, "u").nups as number
 	local binaryCode = string.dump(func)
-	local computeComponent = ComputeComponentModule.New(true) -- use transparent mode
-	local remoteFunc = computeComponent:Load(binaryCode)
+	local remoteComponent = RemoteComponentModule.New(true) -- use transparent mode
+	local remoteFunc = remoteComponent:Load(binaryCode)
 	assert(remoteFunc)
 	-- set upvalues
 	local upvalues : { any } = {}
@@ -17,7 +17,7 @@ function CrossRoutine.New(func : function (... : any) : any...) : function (...:
 		end
 	end
 
-	local setupEnvironment = computeComponent:Load([[
+	local setupEnvironment = remoteComponent:Load([[
 		local func, upvalues = ...
 		for i = 1, #upvalues / 2 do
 			local index = upvalues[i * 2 - 1]
@@ -26,12 +26,12 @@ function CrossRoutine.New(func : function (... : any) : any...) : function (...:
 		end
 	]])
 
-	computeComponent:Call(setupEnvironment, remoteFunc, upvalues)
+	remoteComponent:Call(setupEnvironment, remoteFunc, upvalues)
 
 	return function (... : any) : any...
 		local running = coroutine.running()
 
-		computeComponent:CallAsync(function (... : any)
+		remoteComponent:CallAsync(function (... : any)
 			coroutine.resume(running, ...)
 		end, remoteFunc, ...)
 		

@@ -7,4 +7,4 @@ using namespace PaintsNow::NsMythForest;
 Event::Event() : eventID(EVENT_PRETICK) {}
 #endif
 
-Event::Event(Engine& e, EVENT_ID id, TShared<SharedTiny> sender, TShared<SharedTiny> d, const String& meta) : engine(e), eventID(id), eventMeta(meta), eventSender(sender), eventDetail(d) {}
+Event::Event(Engine& e, EVENT_ID id, TShared<SharedTiny> sender, TShared<SharedTiny> d) : engine(e), eventID(id), sender(sender), detail(d) {}

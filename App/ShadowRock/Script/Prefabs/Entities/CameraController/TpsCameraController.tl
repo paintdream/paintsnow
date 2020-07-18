@@ -19,7 +19,7 @@ local StandardRenderFlow = require("Script/Prefabs/Components/RenderFlow/Standar
 local Phase = require("Script/Prefabs/Components/Phase/StandardPhase")
 local Vector = require("Engine/Data/Math/Vector")
 
-function TpsCameraController.New(eventListenerComponent : EventListenerComponent) : TpsCameraController
+function TpsCameraController.New(eventComponent : EventComponent) : TpsCameraController
 	local entity = MythForest.NewEntity(-1)
 	local renderFlowComponent = StandardRenderFlow.New(3)
 	local cameraComponent = StandardCamera.New(renderFlowComponent)
@@ -30,7 +30,7 @@ function TpsCameraController.New(eventListenerComponent : EventListenerComponent
 	entity:AddEntityComponent(renderFlowComponent as Component)
 	entity:AddEntityComponent(cameraComponent as Component)
 	entity:AddEntityComponent(phaseComponent as Component)
-	entity:AddEntityComponent(eventListenerComponent as Component)
+	entity:AddEntityComponent(eventComponent as Component)
 
 	-- setup phase
 	phaseComponent:Setup(16, 8, { 10, 10, 10 }, { 256, 256 })

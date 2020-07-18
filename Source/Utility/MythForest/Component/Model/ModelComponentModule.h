@@ -16,7 +16,7 @@ namespace PaintsNow {
 		class ModelComponent;
 		class ModelComponentModule : public TReflected<ModelComponentModule, TRenderableComponentModule<ModelComponent> > {
 		public:
-			ModelComponentModule(Engine& engine, BatchComponentModule& batchComponentModule);
+			ModelComponentModule(Engine& engine);
 
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
@@ -24,7 +24,7 @@ namespace PaintsNow {
 			void RequestAddMaterial(IScript::Request& request, IScript::Delegate<ModelComponent> modelComponent, uint32_t meshGroupIndex, IScript::Delegate<NsSnowyStream::MaterialResource> materialResource);
 
 		protected:
-			BatchComponentModule& batchComponentModule;
+			BatchComponentModule* batchComponentModule;
 		};
 	}
 }

@@ -296,7 +296,7 @@ static void ChangeSize(int w, int h) {
 }
 
 void ZFrameFreeglut::ChangeSize(int w, int h) {
-	OnWindowSize(Int2(w, h)); // Dispatch
+	OnWindowSize(EventSize(Int2(w, h))); // Dispatch
 }
 
 static void RenderScene() {
@@ -369,9 +369,9 @@ void ZFrameFreeglut::OnRender() {
 	}
 }
 
-void ZFrameFreeglut::OnWindowSize(const Int2& newSize) {
+void ZFrameFreeglut::OnWindowSize(const EventSize& newSize) {
 	if (callback != nullptr) {
-		windowSize = newSize;
+		windowSize = newSize.size;
 		callback->OnWindowSize(newSize);
 		glutPostRedisplay();
 	}

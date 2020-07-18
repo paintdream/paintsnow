@@ -125,6 +125,7 @@ namespace PaintsNow {
 			virtual void Initialize(Engine& engine, Entity* entity) override;
 			virtual void Uninitialize(Engine& engine, Entity* entity) override;
 			virtual void DispatchEvent(Event& event, Entity* entity) override;
+			virtual Tiny::FLAG GetEntityFlagMask() const override;
 
 			void BindRootEntity(Engine& engine, Entity* entity);
 			void Update(Engine& engine, const Float3& position);

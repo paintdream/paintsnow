@@ -1,7 +1,7 @@
 local Test = record end
 
 function Test.Main()
-	local component = ComputeComponentModule.New(false)
+	local component = RemoteComponentModule.New(false)
 	local func = component:Load("print(...) return 2345")
 	component:Call(func, "1234")
 	local running = coroutine.running()
@@ -24,7 +24,7 @@ function Test.Main()
 	   print("GET MSG: " .. msg)
 	end)
 
-	local transparent = ComputeComponentModule.New(true)
+	local transparent = RemoteComponentModule.New(true)
 	local foo = transparent:Load([[
 		local function test(callback)
 		   callback("It' me~~~!")

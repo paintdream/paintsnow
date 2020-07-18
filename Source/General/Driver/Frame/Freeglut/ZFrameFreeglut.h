@@ -23,7 +23,7 @@ namespace PaintsNow {
 		virtual void OnMouse(const EventMouse& mouse);
 		virtual void OnKeyboard(const EventKeyboard& keyboard);
 		virtual void OnRender();
-		virtual void OnWindowSize(const Int2& newSize);
+		virtual void OnWindowSize(const EventSize& newSize);
 		virtual void EnterMainLoop();
 		virtual void ExitMainLoop();
 		virtual void ShowCursor(CURSOR cursor);

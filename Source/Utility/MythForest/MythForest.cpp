@@ -3,9 +3,8 @@
 #include "Component/Batch/BatchComponentModule.h"
 #include "Component/Cache/CacheComponentModule.h"
 #include "Component/Camera/CameraComponentModule.h"
-#include "Component/Compute/ComputeComponentModule.h"
 #include "Component/EnvCube/EnvCubeComponentModule.h"
-#include "Component/Event/EventListenerComponentModule.h"
+#include "Component/Event/EventComponentModule.h"
 #include "Component/Explorer/ExplorerComponentModule.h"
 #include "Component/Field/FieldComponentModule.h"
 #include "Component/Form/FormComponentModule.h"
@@ -18,6 +17,7 @@
 #include "Component/Profile/ProfileComponentModule.h"
 #include "Component/Remote/RemoteComponentModule.h"
 #include "Component/RenderFlow/RenderFlowComponentModule.h"
+#include "Component/Script/ScriptComponentModule.h"
 #include "Component/Shape/ShapeComponentModule.h"
 #include "Component/Sound/SoundComponentModule.h"
 #include "Component/Space/SpaceComponentModule.h"
@@ -50,21 +50,21 @@ MythForest::MythForest(Interfaces& interfaces, NsSnowyStream::SnowyStream& snowy
 	engine.InstallModule(new BatchComponentModule(engine));
 	engine.InstallModule(new CacheComponentModule(engine));
 	engine.InstallModule(new CameraComponentModule(engine));
-	engine.InstallModule(new ComputeComponentModule(engine));
 	engine.InstallModule(new EnvCubeComponentModule(engine));
-	engine.InstallModule(new EventListenerComponentModule(engine));
+	engine.InstallModule(new EventComponentModule(engine));
 	engine.InstallModule(new ExplorerComponentModule(engine));
 	engine.InstallModule(new FieldComponentModule(engine));
 	engine.InstallModule(new FormComponentModule(engine));
 	engine.InstallModule(new LayoutComponentModule(engine));
 	engine.InstallModule(new LightComponentModule(engine));
-	engine.InstallModule(new ModelComponentModule(engine, *engine.GetComponentModuleFromName("BatchComponent")->QueryInterface(UniqueType<BatchComponentModule>())));
+	engine.InstallModule(new ModelComponentModule(engine));
 	engine.InstallModule(new NavigateComponentModule(engine));
 	engine.InstallModule(new ParticleComponentModule(engine));
 	engine.InstallModule(new PhaseComponentModule(engine));
 	engine.InstallModule(new ProfileComponentModule(engine));
 	engine.InstallModule(new RemoteComponentModule(engine));
 	engine.InstallModule(new RenderFlowComponentModule(engine));
+	engine.InstallModule(new ScriptComponentModule(engine));
 	engine.InstallModule(new ShapeComponentModule(engine));
 	engine.InstallModule(new SoundComponentModule(engine));
 	engine.InstallModule(new SpaceComponentModule(engine));
@@ -321,18 +321,18 @@ void MythForest::RequestCaptureFrame(IScript::Request& request, const String& pa
 
 //
 void MythForest::OnSize(const Int2& size) {
-	EventListenerComponentModule& eventListenerComponentModule = *engine.GetComponentModuleFromName("EventListenerComponent")->QueryInterface(UniqueType<EventListenerComponentModule>());
-	eventListenerComponentModule.OnSize(size);
+	EventComponentModule& eventComponentModule = *engine.GetComponentModuleFromName("EventComponent")->QueryInterface(UniqueType<EventComponentModule>());
+	eventComponentModule.OnSize(size);
 }
 
 void MythForest::OnMouse(const IFrame::EventMouse& mouse) {
-	EventListenerComponentModule& eventListenerComponentModule = *engine.GetComponentModuleFromName("EventListenerComponent")->QueryInterface(UniqueType<EventListenerComponentModule>());
-	eventListenerComponentModule.OnMouse(mouse);
+	EventComponentModule& eventComponentModule = *engine.GetComponentModuleFromName("EventComponent")->QueryInterface(UniqueType<EventComponentModule>());
+	eventComponentModule.OnMouse(mouse);
 }
 
 void MythForest::OnKeyboard(const IFrame::EventKeyboard& keyboard) {
-	EventListenerComponentModule& eventListenerComponentModule = *engine.GetComponentModuleFromName("EventListenerComponent")->QueryInterface(UniqueType<EventListenerComponentModule>());
-	eventListenerComponentModule.OnKeyboard(keyboard);
+	EventComponentModule& eventComponentModule = *engine.GetComponentModuleFromName("EventComponent")->QueryInterface(UniqueType<EventComponentModule>());
+	eventComponentModule.OnKeyboard(keyboard);
 }
 
 void MythForest::StartCaptureFrame(const String& path, const String& options) {

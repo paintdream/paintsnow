@@ -133,14 +133,6 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Compute\ComputeComponent.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Compute\ComputeComponentModule.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\DeferredLightingRenderStage.cpp
 # End Source File
 # Begin Source File
@@ -181,11 +173,11 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Event.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Event\EventListenerComponent.cpp
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Event\EventComponent.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Event\EventListenerComponentModule.cpp
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Event\EventComponentModule.cpp
 # End Source File
 # Begin Source File
 
@@ -381,6 +373,14 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\Sc
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Script\ScriptComponent.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Script\ScriptComponentModule.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\ShadowMaskRenderStage.cpp
 # End Source File
 # Begin Source File
@@ -529,14 +529,6 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Compute\ComputeComponent.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Compute\ComputeComponentModule.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\DeferredLightingRenderStage.h
 # End Source File
 # Begin Source File
@@ -577,11 +569,11 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Event.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Event\EventListenerComponent.h
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Event\EventComponent.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Event\EventListenerComponentModule.h
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Event\EventComponentModule.h
 # End Source File
 # Begin Source File
 
@@ -778,6 +770,14 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderNode\Scr
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\ScreenSpaceTraceRenderStage.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Script\ScriptComponent.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Script\ScriptComponentModule.h
 # End Source File
 # Begin Source File
 

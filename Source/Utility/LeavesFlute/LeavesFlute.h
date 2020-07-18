@@ -52,14 +52,14 @@ namespace PaintsNow {
 			bool ConsoleProc(IThread::Thread* thread, size_t index);
 			bool ProcessCommand(const String& command);
 
-			virtual void OnWindowSize(const PaintsNow::Int2&);
 			virtual void Execute(const String& file, const std::vector<String>& params);
 
 		public:
 			virtual void OnInitialize(void* param);
 			virtual void OnRender();
-			virtual void OnMouse(const IFrame::EventMouse& mouse);
-			virtual void OnKeyboard(const IFrame::EventKeyboard& keyboard);
+			virtual void OnWindowSize(const IFrame::EventSize&) override;
+			virtual void OnMouse(const IFrame::EventMouse& mouse) override;
+			virtual void OnKeyboard(const IFrame::EventKeyboard& keyboard) override;
 			virtual void OnConsoleOutput(const String& text);
 			virtual void Print(const String& text);
 

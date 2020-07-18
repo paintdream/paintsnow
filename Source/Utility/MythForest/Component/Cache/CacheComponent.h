@@ -15,7 +15,7 @@ namespace PaintsNow {
 		class CacheComponent : public TAllocatedTiny<CacheComponent, Component> {
 		public:
 			CacheComponent();
-			void PushObjects(std::vector<TShared<SharedTiny> >& objects);
+			void PushObjects(rvalue<std::vector<TShared<SharedTiny> > > objects);
 			void ClearObjects();
 
 		protected:

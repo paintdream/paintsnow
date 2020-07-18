@@ -36,7 +36,7 @@ void CacheComponentModule::RequestPushObjects(IScript::Request& request, IScript
 		converted[i] = objects[i].Get();
 	}
 
-	cacheComponent->PushObjects(converted);
+	cacheComponent->PushObjects(std::move(converted));
 }
 
 void CacheComponentModule::RequestClearObjects(IScript::Request& request, IScript::Delegate<CacheComponent> cacheComponent) {

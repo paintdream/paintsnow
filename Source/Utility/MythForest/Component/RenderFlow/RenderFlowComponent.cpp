@@ -21,6 +21,10 @@ TObject<IReflect>& RenderFlowComponent::operator () (IReflect& reflect) {
 	return *this;
 }
 
+Tiny::FLAG RenderFlowComponent::GetEntityFlagMask() const {
+	return Entity::ENTITY_HAS_SPECIAL_EVENTS;
+}
+
 void RenderFlowComponent::AddNode(RenderStage* stage) {
 	assert(!(Flag() & TINY_ACTIVATED));
 	Graph<RenderStage>::AddNode(stage);

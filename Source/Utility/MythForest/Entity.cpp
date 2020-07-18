@@ -287,7 +287,7 @@ uint32_t Entity::GetPivotIndex() const {
 
 void Entity::UpdateBoundingBox(Engine& engine) {
 	if (Flag() & TINY_MODIFIED) {
-		assert(IsOrphan());
+		// assert(IsOrphan());
 
 		if (IsOrphan()) {
 			Float3Pair box(Float3(FLT_MAX, FLT_MAX, FLT_MAX), Float3(-FLT_MAX, -FLT_MAX, -FLT_MAX));

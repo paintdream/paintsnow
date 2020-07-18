@@ -19,10 +19,10 @@ function Scene.New(database : Database, clock : Clock) : Scene
 	meta.rootEntity = rootEntity
 
 	local RuntimeVisibilityProbe = require("Script/Prefabs/Components/Visibility/RuntimeVisibilityProbe")
-	local eventListenerComponent = EventListenerComponentModule.New()
-	eventListenerComponent:BindEventTick(clock)
-	eventListenerComponent:BindEventFrame(true)
-	rootEntity:AddEntityComponent(eventListenerComponent as Component)
+	local eventComponent = EventComponentModule.New()
+	eventComponent:BindEventTick(clock)
+	eventComponent:BindEventFrame(true)
+	rootEntity:AddEntityComponent(eventComponent as Component)
 
 	local renderPolicy = RenderFlowComponentModule.NewRenderPolicy("Primitives", 0)
 	local lightPolicy = RenderFlowComponentModule.NewRenderPolicy("LightSource", 0)
@@ -154,10 +154,10 @@ function Scene.New(database : Database, clock : Clock) : Scene
 					end
 				end
 
-				local subEventListenerComponent = EventListenerComponentModule.New()
-				subEventListenerComponent:BindEventFrame(true)
+				local subEventComponent = EventComponentModule.New()
+				subEventComponent:BindEventFrame(true)
 				local visibilityComponent = RuntimeVisibilityProbe.New()
-				subRootEntity:AddEntityComponent(subEventListenerComponent as Component)
+				subRootEntity:AddEntityComponent(subEventComponent as Component)
 				subRootEntity:AddEntityComponent(visibilityComponent as Component)
 				subRootEntity:AddEntityComponent(batchComponent as Component)
 				interSpaceComponent:InsertEntity(subRootEntity)

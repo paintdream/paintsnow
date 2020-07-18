@@ -389,9 +389,9 @@ void LeavesFlute::Print(const String& str) {
 #endif
 }
 
-void LeavesFlute::OnWindowSize(const PaintsNow::Int2& size) {
-	interfaces.render.SetDeviceResolution(snowyStream.GetRenderDevice(), size);
-	mythForest.OnSize(size);
+void LeavesFlute::OnWindowSize(const IFrame::EventSize& size) {
+	interfaces.render.SetDeviceResolution(snowyStream.GetRenderDevice(), size.size);
+	mythForest.OnSize(size.size);
 }
 
 void LeavesFlute::OnMouse(const IFrame::EventMouse& mouse) {

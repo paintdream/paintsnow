@@ -12,7 +12,7 @@
 namespace PaintsNow {
 	namespace NsMythForest {
 		class RenderFlowComponent;
-		class EventListenerComponentModule;
+		class EventComponentModule;
 		class CameraComponentModule  : public TReflected<CameraComponentModule, ModuleImpl<CameraComponent> > {
 		public:
 			CameraComponentModule(Engine& engine);

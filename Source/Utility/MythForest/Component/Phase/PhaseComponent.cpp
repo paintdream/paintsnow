@@ -129,6 +129,10 @@ void PhaseComponent::Initialize(Engine& engine, Entity* entity) {
 	}
 }
 
+Tiny::FLAG PhaseComponent::GetEntityFlagMask() const {
+	return Entity::ENTITY_HAS_TICK_EVENT | Entity::ENTITY_HAS_SPECIAL_EVENTS;
+}
+
 void PhaseComponent::Uninitialize(Engine& engine, Entity* entity) {
 	if (rootEntity == entity) {
 		rootEntity = nullptr;

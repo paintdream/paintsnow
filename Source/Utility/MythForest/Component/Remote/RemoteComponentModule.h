@@ -13,14 +13,18 @@ namespace PaintsNow {
 	namespace NsMythForest {
 		class Entity;
 		class RemoteComponent;
-		class RemoteComponentModule  : public TReflected<RemoteComponentModule, ModuleImpl<RemoteComponent> > {
+		class RemoteRoutine;
+		class RemoteComponentModule : public TReflected<RemoteComponentModule, ModuleImpl<RemoteComponent> > {
 		public:
 			RemoteComponentModule(Engine& engine);
 			virtual ~RemoteComponentModule();
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
-			TShared<RemoteComponent> RequestNew(IScript::Request& request);
-			void RequestRebuild(IScript::Request& request, IScript::Delegate<RemoteComponent> fieldComponent);
+			TShared<RemoteComponent> RequestNew(IScript::Request& request, bool transparentMode);
+			TShared<RemoteRoutine> RequestLoad(IScript::Request& request, IScript::Delegate<RemoteComponent> computeComponent, const String& code);
+			void RequestCall(IScript::Request& request, IScript::Delegate<RemoteComponent> computeComponent, IScript::Delegate<RemoteRoutine> remoteRoutine, IScript::Request::Arguments& args);
+			void RequestCallAsync(IScript::Request& request, IScript::Delegate<RemoteComponent> computeComponent, IScript::Request::Ref callback, IScript::Delegate<RemoteRoutine> remoteRoutine, IScript::Request::Arguments& args);
+			void RequestCleanup(IScript::Request& request, IScript::Delegate<RemoteComponent> computeComponent);
 		};
 	}
 }

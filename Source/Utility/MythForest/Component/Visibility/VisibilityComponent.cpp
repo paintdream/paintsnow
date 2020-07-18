@@ -16,7 +16,7 @@ VisibilityComponent::VisibilityComponent() : nextCoord(~(uint16_t)0, ~(uint16_t)
 }
 
 Tiny::FLAG VisibilityComponent::GetEntityFlagMask() const {
-	return 0;
+	return Entity::ENTITY_HAS_TICK_EVENT | Entity::ENTITY_HAS_SPECIAL_EVENTS;
 }
 
 TObject<IReflect>& VisibilityComponent::operator () (IReflect& reflect) {

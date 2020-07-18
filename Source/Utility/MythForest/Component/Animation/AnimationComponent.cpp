@@ -1,6 +1,6 @@
 #include "AnimationComponent.h"
 #include "../Transform/TransformComponent.h"
-#include "../Event/EventListenerComponent.h"
+#include "../Event/EventComponent.h"
 #include "../../MythForest.h"
 
 using namespace PaintsNow;
@@ -93,22 +93,22 @@ IRender::Resource* AnimationComponent::AcquireBoneMatrixBuffer(IRender& render, 
 
 void AnimationComponent::DispatchEvent(Event& event, Entity* entity) {
 	if (event.eventID == Event::EVENT_TICK) {
-		EventListenerComponent* eventListenerComponent = static_cast<EventListenerComponent*>(event.eventDetail());
-		assert(eventListenerComponent != nullptr);
+		EventComponent* eventComponent = static_cast<EventComponent*>(event.sender());
+		assert(eventComponent != nullptr);
 	
 		bool repeat = !!(Flag() & ANIMATIONCOMPONENT_REPEAT);
 
 		// update bone matrices
 		float before = animationTime;
-		animationTime += (float)eventListenerComponent->GetTickDeltaTime();
+		animationTime += (float)eventComponent->GetTickDeltaTime();
 		const std::vector<EventData>& events = eventData[clipIndex];
-		Event triggerEvent(event.engine, Event::EVENT_CUSTOM, entity, this);
+		Event triggerEvent(event.engine, Event::EVENT_CUSTOM, this);
 
 		for (size_t k = 0; k < events.size(); k++) {
 			const EventData& data = events[k];
 			if (data.timeStamp >= before && data.timeStamp < animationTime) {
 				// trigger event
-				triggerEvent.eventMeta = data.identifier;
+				triggerEvent.detail.Reset(new Event::Wrapper<String>(data.identifier));
 				entity->PostEvent(triggerEvent);
 			}
 		}

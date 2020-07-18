@@ -67,14 +67,19 @@ namespace PaintsNow {
 			unsigned long keyCode;
 		};
 
+		struct EventSize {
+			EventSize(const Int2& s) : size(s) {}
+			Int2 size;
+		};
+
 		class Callback {
 		public:
 			virtual ~Callback();
 			virtual void OnMouse(const EventMouse& mouse) = 0;
 			virtual void OnKeyboard(const EventKeyboard& keyboard) = 0;
+			virtual void OnWindowSize(const EventSize& newSize) = 0;
 			virtual void OnRender() = 0;
 			virtual void OnInitialize(void* param) = 0;
-			virtual void OnWindowSize(const Int2& newSize) = 0;
 			virtual bool IsRendering() const = 0;
 		};
 

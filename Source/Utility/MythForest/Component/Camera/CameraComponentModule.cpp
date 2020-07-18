@@ -2,7 +2,7 @@
 #include "CameraComponent.h"
 #include "../../Entity.h"
 #include "../RenderFlow/RenderFlowComponent.h"
-#include "../Event/EventListenerComponentModule.h"
+#include "../Event/EventComponentModule.h"
 #include "../../Engine.h"
 
 using namespace PaintsNow;

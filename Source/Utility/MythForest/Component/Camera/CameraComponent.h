@@ -13,7 +13,7 @@
 #include "../RenderFlow/RenderFlowComponent.h"
 #include "../RenderFlow/RenderPort/RenderPortCommandQueue.h"
 #include "../RenderFlow/RenderPort/RenderPortLightSource.h"
-#include "../Event/EventListenerComponent.h"
+#include "../Event/EventComponent.h"
 #include "../Explorer/CameraCuller.h"
 #include "../Explorer/SpaceTraversal.h"
 #include <sstream>

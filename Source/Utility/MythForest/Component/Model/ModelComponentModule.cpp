@@ -4,7 +4,10 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
-ModelComponentModule::ModelComponentModule(Engine& engine, BatchComponentModule& batchModule) : BaseClass(engine), batchComponentModule(batchModule) {}
+ModelComponentModule::ModelComponentModule(Engine& engine) : BaseClass(engine) {
+	batchComponentModule = (engine.GetComponentModuleFromName("BatchComponent")->QueryInterface(UniqueType<BatchComponentModule>()));
+	assert(batchComponentModule != nullptr);
+}
 
 TObject<IReflect>& ModelComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
@@ -23,7 +26,7 @@ TShared<ModelComponent> ModelComponentModule::RequestNew(IScript::Request& reque
 
 	TShared<BatchComponent> batchComponent;
 	if (batch.Get() == nullptr) {
-		batchComponent = batchComponentModule.Create();
+		batchComponent = batchComponentModule->Create();
 	} else {
 		batchComponent = batch.Get();
 	}
