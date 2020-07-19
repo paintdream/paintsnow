@@ -23,7 +23,8 @@ namespace PaintsNow {
 			enum {
 				COMPONENT_LOCALIZED_WARP = UNIT_CUSTOM_BEGIN,
 				COMPONENT_SHARED = UNIT_CUSTOM_BEGIN << 1,
-				COMPONENT_CUSTOM_BEGIN = UNIT_CUSTOM_BEGIN << 2,
+				COMPONENT_ALIASED_TYPE = UNIT_CUSTOM_BEGIN << 2,
+				COMPONENT_CUSTOM_BEGIN = UNIT_CUSTOM_BEGIN << 3,
 			};
 
 			struct RaycastResult {
@@ -59,6 +60,8 @@ namespace PaintsNow {
 			virtual void Initialize(Engine& engine, Entity* entity);
 			virtual void Uninitialize(Engine& engine, Entity* entity);
 			virtual void DispatchEvent(Event& event, Entity* entity);
+			virtual Entity* GetHostEntity() const;
+			virtual const String& GetAliasedTypeName() const;
 			virtual void UpdateBoundingBox(Engine& engine, Float3Pair& boundingBox);
 			virtual float Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio = 1) const;
 			static void RaycastForEntity(RaycastTask& task, Float3Pair& ray, Entity* entity);

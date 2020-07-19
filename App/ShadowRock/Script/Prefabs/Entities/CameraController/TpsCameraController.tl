@@ -47,6 +47,7 @@ function TpsCameraController.New(eventComponent : EventComponent) : TpsCameraCon
 	meta.near = 0.05
 	meta.aspect = 1.0
 
+	debug.setuservalue(entity, meta)
 	return setmetatable(meta, TpsCameraController as METATABLE) as TpsCameraController
 end
 

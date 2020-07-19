@@ -116,7 +116,6 @@ TObject<IReflect>& MythForest::operator () (IReflect& reflect) {
 		ReflectMethod(RequestRemoveEntityComponent)[ScriptMethod = "RemoveEntityComponent"];
 		ReflectMethod(RequestGetUniqueEntityComponent)[ScriptMethod = "GetUniqueEntityComponent"];
 		ReflectMethod(RequestGetEntityComponents)[ScriptMethod = "GetEntityComponents"];
-		ReflectMethod(RequestGetEntityComponentDetails)[ScriptMethod = "GetEntityComponentDetails"];
 		ReflectMethod(RequestGetComponentType)[ScriptMethod = "GetComponentType"];
 		ReflectMethod(RequestClearEntityComponents)[ScriptMethod = "ClearEntityComponents"];
 		ReflectMethod(RequestGetFrameTickTime)[ScriptMethod = "GetFrameTickTime"];
@@ -201,33 +200,19 @@ TShared<Component> MythForest::RequestGetUniqueEntityComponent(IScript::Request&
 		if (component != nullptr) {
 			return component;
 		}
-	}
-
-	return nullptr;
-}
-
-void MythForest::RequestGetEntityComponentDetails(IScript::Request& request, IScript::Delegate<Entity> entity) {
-	CHECK_REFERENCES_NONE();
-	CHECK_DELEGATE(entity);
-	CHECK_THREAD_IN_MODULE(entity);
-
-	std::vector<Component*> components = entity->GetComponents();
-
-	request.DoLock();
-	request << beginarray;
-
-	for (size_t i = 0; i < components.size(); i++) {
-		Component* component = components[i];
-		if (component != nullptr) {
-			request << begintable <<
-				key("Component") << component << 
-				key("Type") << component->GetUnique()->GetSubName() <<
-				key("Mask") << (uint32_t)component->Flag().load(std::memory_order_relaxed) << endtable;
+	} else {
+		const std::vector<Component*>& components = entity->GetComponents();
+		for (size_t i = 0; i < components.size(); i++) {
+			Component* component = components[i];
+			if (component != nullptr && (component->Flag() & Component::COMPONENT_ALIASED_TYPE)) {
+				if (component->GetAliasedTypeName() == componentName) {
+					return component;
+				}
+			}
 		}
 	}
 
-	request << endarray;
-	request.UnLock();
+	return nullptr;
 }
 
 void MythForest::RequestGetEntityComponents(IScript::Request& request, IScript::Delegate<Entity> entity) {
@@ -256,7 +241,11 @@ String MythForest::RequestGetComponentType(IScript::Request& request, IScript::D
 	CHECK_DELEGATE(component);
 	CHECK_THREAD_IN_MODULE(component);
 
-	return component->GetUnique()->GetSubName();
+	if (component->Flag() & Component::COMPONENT_ALIASED_TYPE) {
+		return component->GetAliasedTypeName();
+	} else {
+		return component->GetUnique()->GetSubName();
+	}
 }
 
 void MythForest::RequestClearEntityComponents(IScript::Request& request, IScript::Delegate<Entity> entity) {

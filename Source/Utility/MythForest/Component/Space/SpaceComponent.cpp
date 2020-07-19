@@ -165,7 +165,7 @@ inline void DispatchEventRecursive(Event& event, Entity* entity) {
 	while (entity != nullptr) {
 		IMemory::PrefetchRead(entity->Left());
 		IMemory::PrefetchRead(entity->Right());
-		entity->PostEvent(event);
+		entity->PostEvent(event, ~(Tiny::FLAG)0);
 		DispatchEventRecursive(event, entity->Left());
 		entity = entity->Right();
 	}

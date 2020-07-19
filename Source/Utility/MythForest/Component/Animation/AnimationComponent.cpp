@@ -109,7 +109,7 @@ void AnimationComponent::DispatchEvent(Event& event, Entity* entity) {
 			if (data.timeStamp >= before && data.timeStamp < animationTime) {
 				// trigger event
 				triggerEvent.detail.Reset(new Event::Wrapper<String>(data.identifier));
-				entity->PostEvent(triggerEvent);
+				entity->PostEvent(triggerEvent, Entity::ENTITY_HAS_SPECIAL_EVENT);
 			}
 		}
 

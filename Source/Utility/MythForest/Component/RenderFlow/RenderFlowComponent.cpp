@@ -22,7 +22,7 @@ TObject<IReflect>& RenderFlowComponent::operator () (IReflect& reflect) {
 }
 
 Tiny::FLAG RenderFlowComponent::GetEntityFlagMask() const {
-	return Entity::ENTITY_HAS_SPECIAL_EVENTS;
+	return Entity::ENTITY_HAS_SPECIAL_EVENT;
 }
 
 void RenderFlowComponent::AddNode(RenderStage* stage) {

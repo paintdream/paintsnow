@@ -35,9 +35,9 @@ TObject<IReflect>& ScriptComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-TShared<ScriptComponent> ScriptComponentModule::RequestNew(IScript::Request& request) {
+TShared<ScriptComponent> ScriptComponentModule::RequestNew(IScript::Request& request, const String& name) {
 	CHECK_REFERENCES_NONE();
-	TShared<ScriptComponent> scriptComponent = TShared<ScriptComponent>::From(allocator->New());
+	TShared<ScriptComponent> scriptComponent = TShared<ScriptComponent>::From(allocator->New(std::ref(name)));
 
 	return scriptComponent;
 }

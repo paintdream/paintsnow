@@ -44,7 +44,6 @@ namespace PaintsNow {
 			void RequestRemoveEntityComponent(IScript::Request& request, IScript::Delegate<Entity> entity, IScript::Delegate<Component> component);
 			void RequestUpdateEntity(IScript::Request& request, IScript::Delegate<Entity> entity);
 			void RequestGetEntityComponents(IScript::Request& request, IScript::Delegate<Entity> entity);
-			void RequestGetEntityComponentDetails(IScript::Request& request, IScript::Delegate<Entity> entity);
 			String RequestGetComponentType(IScript::Request& request, IScript::Delegate<Component> component);
 			TShared<Component> RequestGetUniqueEntityComponent(IScript::Request& request, IScript::Delegate<Entity> entity, const String& componentName);
 			void RequestClearEntityComponents(IScript::Request& request, IScript::Delegate<Entity> entity);

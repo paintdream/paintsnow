@@ -16,7 +16,7 @@ VisibilityComponent::VisibilityComponent() : nextCoord(~(uint16_t)0, ~(uint16_t)
 }
 
 Tiny::FLAG VisibilityComponent::GetEntityFlagMask() const {
-	return Entity::ENTITY_HAS_TICK_EVENT | Entity::ENTITY_HAS_SPECIAL_EVENTS;
+	return Entity::ENTITY_HAS_TICK_EVENT | Entity::ENTITY_HAS_SPECIAL_EVENT;
 }
 
 TObject<IReflect>& VisibilityComponent::operator () (IReflect& reflect) {
@@ -136,6 +136,10 @@ void VisibilityComponent::Uninitialize(Engine& engine, Entity* entity) {
 	clearResource = stateResource = depthStencilResource = nullptr;
 	renderQueue = nullptr;
 	BaseComponent::Uninitialize(engine, entity);
+}
+
+Entity* VisibilityComponent::GetHostEntity() const {
+	return hostEntity;
 }
 
 void VisibilityComponent::DispatchEvent(Event& event, Entity* entity) {

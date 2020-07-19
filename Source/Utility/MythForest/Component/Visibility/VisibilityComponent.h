@@ -88,6 +88,7 @@ namespace PaintsNow {
 			virtual void Uninitialize(Engine& engine, Entity* entity) override final;
 			virtual FLAG GetEntityFlagMask() const override final;
 			virtual void DispatchEvent(Event& event, Entity* entity) override final;
+			virtual Entity* GetHostEntity() const override final;
 
 			const Bytes& QuerySample(const Float3& position);
 			static bool IsVisible(const Bytes& sample, TransformComponent* transformComponent);

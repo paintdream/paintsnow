@@ -2,16 +2,17 @@
 #include "../../Entity.h"
 #include "../../Engine.h"
 #include "../../../BridgeSunset/BridgeSunset.h"
+#include "../Event/EventComponent.h"
 
 using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
-ScriptComponent::ScriptComponent() {
+ScriptComponent::ScriptComponent(const String& n) : name(n), entityFlagMask(0) {
 	memset(handlers, 0, sizeof(handlers));
 }
 
-ScriptComponent::~ScriptComponent() {} 
+ScriptComponent::~ScriptComponent() {}
 
 void ScriptComponent::Uninitialize(Engine& engine, Entity* entity) {
 	IScript::Request& request = engine.interfaces.script.GetDefaultRequest();
@@ -27,6 +28,10 @@ void ScriptComponent::Uninitialize(Engine& engine, Entity* entity) {
 	BaseClass::Uninitialize(engine, entity);
 }
 
+const String& ScriptComponent::GetAliasedTypeName() const {
+	return name;
+}
+
 void ScriptComponent::SetHandler(IScript::Request& request, Event::EVENT_ID event, IScript::Request::Ref handler) {
 	std::swap(handlers[event], handler);
 
@@ -35,6 +40,8 @@ void ScriptComponent::SetHandler(IScript::Request& request, Event::EVENT_ID even
 		request.Dereference(handler);
 		request.UnLock();
 	}
+
+	UpdateEntityFlagMask();
 }
 
 namespace PaintsNow {
@@ -64,11 +71,16 @@ namespace PaintsNow {
 
 Tiny::FLAG ScriptComponent::GetEntityFlagMask() const {
 	// return Entity::ENTITY_HAS_TICK_EVENT | Entity::ENTITY_HAS_PREPOST_TICK_EVENT;
-	return (handlers[Event::EVENT_ATTACH_COMPONENT] || handlers[Event::EVENT_DETACH_COMPONENT]
-			|| handlers[Event::EVENT_ENTITY_ACTIVATE] || handlers[Event::EVENT_ENTITY_DEACTIVATE] ?  Entity::ENTITY_HAS_TACH_EVENTS : 0)
+	return entityFlagMask;
+}
+
+void ScriptComponent::UpdateEntityFlagMask() {
+	entityFlagMask = (handlers[Event::EVENT_ATTACH_COMPONENT] || handlers[Event::EVENT_DETACH_COMPONENT]
+		? Entity::ENTITY_HAS_TACH_EVENT : 0)
+		| (handlers[Event::EVENT_ENTITY_ACTIVATE] || handlers[Event::EVENT_ENTITY_DEACTIVATE] ? Entity::ENTITY_HAS_ACTIVE_EVENT : 0)
 		| (handlers[Event::EVENT_PRETICK] || handlers[Event::EVENT_POSTTICK] ? Entity::ENTITY_HAS_PREPOST_TICK_EVENT : 0)
 		| (handlers[Event::EVENT_TICK] ? Entity::ENTITY_HAS_TICK_EVENT : 0)
-		| (handlers[Event::EVENT_CUSTOM] || handlers[Event::EVENT_INPUT] || handlers[Event::EVENT_OUTPUT] || handlers[Event::EVENT_FRAME] || handlers[Event::EVENT_FRAME_SYNC_TICK] ? Entity::ENTITY_HAS_SPECIAL_EVENTS : 0);
+		| (handlers[Event::EVENT_CUSTOM] || handlers[Event::EVENT_INPUT] || handlers[Event::EVENT_OUTPUT] || handlers[Event::EVENT_FRAME] || handlers[Event::EVENT_FRAME_SYNC_TICK] ? Entity::ENTITY_HAS_SPECIAL_EVENT : 0);
 }
 
 void ScriptComponent::DispatchEvent(Event& event, Entity* entity) {
@@ -81,20 +93,40 @@ void ScriptComponent::DispatchEvent(Event& event, Entity* entity) {
 		request.Push();
 
 		// Translate message
-		if (event.eventID == Event::EVENT_INPUT) {
-			TShared<Event::Wrapper<IFrame::EventKeyboard> > keyboard = event.detail->QueryInterface(UniqueType<Event::Wrapper<IFrame::EventKeyboard> >());
-			if (keyboard) {
-				request << keyboard->data;
-			} else {
-				TShared<Event::Wrapper<IFrame::EventMouse> > mouse = event.detail->QueryInterface(UniqueType<Event::Wrapper<IFrame::EventMouse> >());
-				if (mouse) {
-					request << mouse->data;
+		switch (event.eventID) {
+			case Event::EVENT_PRETICK:
+			case Event::EVENT_TICK:
+			case Event::EVENT_POSTTICK:
+			{
+				EventComponent* eventComponent = event.sender->QueryInterface(UniqueType<EventComponent>());
+				request << eventComponent->GetTickDeltaTime();
+				break;
+			}
+			case Event::EVENT_ATTACH_COMPONENT:
+			case Event::EVENT_DETACH_COMPONENT:
+			case Event::EVENT_ENTITY_ACTIVATE:
+			case Event::EVENT_ENTITY_DEACTIVATE:
+			{
+				request << event.sender << event.detail;
+				break;
+			}
+			case Event::EVENT_INPUT:
+			{
+				TShared<Event::Wrapper<IFrame::EventKeyboard> > keyboard = event.detail->QueryInterface(UniqueType<Event::Wrapper<IFrame::EventKeyboard> >());
+				if (keyboard) {
+					request << keyboard->data;
 				} else {
-					TShared<Event::Wrapper<IFrame::EventSize> > size = event.detail->QueryInterface(UniqueType<Event::Wrapper<IFrame::EventSize> >());
-					if (size) {
-						request << size->data;
+					TShared<Event::Wrapper<IFrame::EventMouse> > mouse = event.detail->QueryInterface(UniqueType<Event::Wrapper<IFrame::EventMouse> >());
+					if (mouse) {
+						request << mouse->data;
+					} else {
+						TShared<Event::Wrapper<IFrame::EventSize> > size = event.detail->QueryInterface(UniqueType<Event::Wrapper<IFrame::EventSize> >());
+						if (size) {
+							request << size->data;
+						}
 					}
 				}
+				break;
 			}
 		}
 

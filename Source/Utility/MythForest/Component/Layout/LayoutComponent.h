@@ -29,6 +29,7 @@ namespace PaintsNow {
 			virtual ~LayoutComponent();
 			virtual void Initialize(Engine& engine, Entity* entity) override;
 			virtual void Uninitialize(Engine& engine, Entity* entity) override;
+			virtual Entity* GetHostEntity() const override;
 			void DoLayout(Engine& engine, const MatrixFloat4x4& transform);
 			void SetUpdateMark();
 

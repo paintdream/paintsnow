@@ -9,6 +9,15 @@ uint32_t Component::GetQuickUniqueID() const {
 	return ~(uint32_t)0;
 }
 
+Entity* Component::GetHostEntity() const {
+	return nullptr;
+}
+
+const String& Component::GetAliasedTypeName() const {
+	static String emptyName;
+	return emptyName;
+}
+
 void Component::Initialize(Engine& engine, Entity* entity) {
 	assert((Flag() & COMPONENT_LOCALIZED_WARP) || entity->GetWarpIndex() == GetWarpIndex());
 	Flag().fetch_or(Tiny::TINY_ACTIVATED, std::memory_order_acquire);

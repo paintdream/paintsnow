@@ -24,6 +24,7 @@ namespace PaintsNow {
 			};
 
 			void SetField(TShared<FieldBase> field);
+
 		protected:
 			uint32_t subType;
 			TShared<FieldBase> fieldImpl;

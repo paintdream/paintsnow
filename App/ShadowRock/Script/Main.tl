@@ -124,7 +124,7 @@ local function InitializeWorld(databasePath : string)
 		Mouse : EventMouse
 	end
 
-	local scriptComponent = ScriptComponentModule.New()
+	local scriptComponent = ScriptComponentModule.New("UserInputComponent")
 
 	scriptComponent:SetHandler("EVENT_TICK", function (eventData : EventData)
 		local deltaTime = eventData as number

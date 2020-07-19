@@ -42,6 +42,7 @@ namespace PaintsNow {
 				EVENTCOMPONENT_CUSTOM_BEGIN = EVENTCOMPONENT_BASE << Event::EVENT_END
 			};
 
+			virtual Entity* GetHostEntity() const override;
 			virtual FLAG GetEntityFlagMask() const override;
 			virtual void Initialize(Engine& engine, Entity* entity) override;
 			virtual void Uninitialize(Engine& engine, Entity* entity) override;

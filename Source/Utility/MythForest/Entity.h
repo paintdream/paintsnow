@@ -27,12 +27,13 @@ namespace PaintsNow {
 				ENTITY_HAS_BEGIN = UNIT_CUSTOM_BEGIN,
 				ENTITY_HAS_TICK_EVENT = ENTITY_HAS_BEGIN,
 				ENTITY_HAS_PREPOST_TICK_EVENT = ENTITY_HAS_BEGIN << 1,
-				ENTITY_HAS_TACH_EVENTS = ENTITY_HAS_BEGIN << 2,
-				ENTITY_HAS_SPECIAL_EVENTS = ENTITY_HAS_BEGIN << 3,
-				ENTITY_HAS_RENDERABLE = ENTITY_HAS_BEGIN << 4,
-				ENTITY_HAS_RENDERCONTROL = ENTITY_HAS_BEGIN << 5,
-				ENTITY_HAS_SPACE = ENTITY_HAS_BEGIN << 6,
-				ENTITY_HAS_END = ENTITY_HAS_BEGIN << 7,
+				ENTITY_HAS_TACH_EVENT = ENTITY_HAS_BEGIN << 2,
+				ENTITY_HAS_ACTIVE_EVENT = ENTITY_HAS_BEGIN << 3,
+				ENTITY_HAS_SPECIAL_EVENT = ENTITY_HAS_BEGIN << 4,
+				ENTITY_HAS_RENDERABLE = ENTITY_HAS_BEGIN << 5,
+				ENTITY_HAS_RENDERCONTROL = ENTITY_HAS_BEGIN << 6,
+				ENTITY_HAS_SPACE = ENTITY_HAS_BEGIN << 7,
+				ENTITY_HAS_END = ENTITY_HAS_BEGIN << 8,
 				ENTITY_STORE_ENGINE = ENTITY_HAS_END,
 				ENTITY_STORE_NULLSLOT = ENTITY_HAS_END << 1,
 				ENTITY_HAS_ALL = ENTITY_HAS_END - ENTITY_HAS_BEGIN,
@@ -42,10 +43,12 @@ namespace PaintsNow {
 			void RemoveComponent(Engine& engine, Component* component);
 			void ClearComponents(Engine& engine);
 			void UpdateBoundingBox(Engine& engine);
+			void Activate(Engine& engine);
+			void Deactivate(Engine& engine);
 
 			void UpdateEntityFlags();
 			Component* GetUniqueComponent(Unique unique) const;
-			void PostEvent(Event& event);
+			void PostEvent(Event& event, FLAG mask);
 			bool IsOrphan() const;
 			void SetEngineInternal(Engine& engine);
 			void CleanupEngineInternal();

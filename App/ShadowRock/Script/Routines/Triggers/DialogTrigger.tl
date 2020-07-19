@@ -1,3 +1,0 @@
-local DialogTrigger = {}
-
-return DialogTrigger

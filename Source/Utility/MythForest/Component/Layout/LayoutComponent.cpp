@@ -20,6 +20,10 @@ void LayoutComponent::SetUpdateMark() {
 	Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_acquire);
 }
 
+Entity* LayoutComponent::GetHostEntity() const {
+	return hostEntity;
+}
+
 // Layouts
 static inline void CheckRect(const Float2Pair& rect) {
 	assert(rect.first.x() >= 0);

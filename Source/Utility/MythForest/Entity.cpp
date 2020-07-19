@@ -50,6 +50,7 @@ void Entity::ReleaseObject() {
 			if (!components.empty()) {
 				Engine& engine = GetEngineInternal();
 				Kernel& kernel = engine.GetKernel();
+
 				if (kernel.GetCurrentWarpIndex() == GetWarpIndex()) {
 					ClearComponents(engine);
 				} else {
@@ -93,16 +94,26 @@ void Entity::InitializeComponent(Engine& engine, Component* component) {
 	// add component mask
 	Flag().fetch_or((component->GetEntityFlagMask() | TINY_MODIFIED), std::memory_order_acquire);
 
-	if (Flag() & ENTITY_HAS_TACH_EVENTS) {
+	if (Flag() & ENTITY_HAS_TACH_EVENT) {
 		Event event(engine, Event::EVENT_ATTACH_COMPONENT, this, component);
-		PostEvent(event);
+		PostEvent(event, ENTITY_HAS_TACH_EVENT);
+	}
+
+	if ((Flag() & (TINY_ACTIVATED | ENTITY_HAS_ACTIVE_EVENT)) == (TINY_ACTIVATED | ENTITY_HAS_ACTIVE_EVENT)) {
+		Event eventActivate(engine, Event::EVENT_ENTITY_ACTIVATE, this, nullptr);
+		component->DispatchEvent(eventActivate, this);
 	}
 }
 
 void Entity::UninitializeComponent(Engine& engine, Component* component) {
-	if (Flag() & ENTITY_HAS_TACH_EVENTS) {
+	if (Flag() & ENTITY_HAS_TACH_EVENT) {
 		Event event(engine, Event::EVENT_DETACH_COMPONENT, this, component);
-		PostEvent(event);
+		PostEvent(event, ENTITY_HAS_TACH_EVENT);
+	}
+
+	if ((Flag().load(std::memory_order_relaxed) | component->GetEntityFlagMask()) & ENTITY_HAS_ACTIVE_EVENT) {
+		Event eventDeactivate(engine, Event::EVENT_ENTITY_DEACTIVATE, this, nullptr);
+		component->DispatchEvent(eventDeactivate, this);
 	}
 
 	component->Uninitialize(engine, this);
@@ -236,12 +247,14 @@ Component* Entity::GetUniqueComponent(Unique unique) const {
 }
 
 void Entity::ClearComponents(Engine& engine) {
-	if (Flag() & ENTITY_HAS_TACH_EVENTS) {
+	Deactivate(engine);
+
+	if (Flag() & ENTITY_HAS_TACH_EVENT) {
 		for (size_t i = 0; i < components.size(); i++) {
 			Component* component = components[i];
 			if (component != nullptr) {
 				Event event(engine, Event::EVENT_DETACH_COMPONENT, this, component);
-				PostEvent(event);
+				PostEvent(event, ENTITY_HAS_TACH_EVENT);
 			}
 		}
 	}
@@ -257,10 +270,10 @@ void Entity::ClearComponents(Engine& engine) {
 	}
 }
 
-void Entity::PostEvent(Event& event) {
+void Entity::PostEvent(Event& event, FLAG mask) {
 	for (size_t i = 0; i < components.size(); i++) {
 		Component* component = components[i];
-		if (component != nullptr) {
+		if (component != nullptr && (component->GetEntityFlagMask() & mask)) {
 			component->DispatchEvent(event, this);
 		}
 	}
@@ -308,3 +321,22 @@ void Entity::UpdateBoundingBox(Engine& engine) {
 		Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release);
 	}
 }
+
+void Entity::Activate(Engine& engine) {
+	if (!(Flag().fetch_or(TINY_ACTIVATED) & TINY_ACTIVATED)) {
+		if (Flag() & ENTITY_HAS_ACTIVE_EVENT) {
+			Event event(engine, Event::EVENT_ENTITY_ACTIVATE, this, nullptr);
+			PostEvent(event, ENTITY_HAS_ACTIVE_EVENT);
+		}
+	}
+}
+
+void Entity::Deactivate(Engine& engine) {
+	if (Flag().fetch_and(~TINY_ACTIVATED) & TINY_ACTIVATED) {
+		if (Flag() & ENTITY_HAS_ACTIVE_EVENT) {
+			Event event(engine, Event::EVENT_ENTITY_DEACTIVATE, this, nullptr);
+			PostEvent(event, ENTITY_HAS_ACTIVE_EVENT);
+		}
+	}
+}
+

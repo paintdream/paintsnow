@@ -22,6 +22,7 @@ function StandardPlayer.New(eventComponent : EventComponent) : StandardPlayer
 	meta.cameraController = tpsCameraController
 	meta.entity = player
 
+	debug.setuservalue(player, meta)
 	return setmetatable(meta, StandardPlayer as METATABLE) as StandardPlayer
 end
 

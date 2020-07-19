@@ -17,16 +17,20 @@ namespace PaintsNow {
 				SCRIPTCOMPONENT_CUSTOM_BEGIN = COMPONENT_CUSTOM_BEGIN << 1
 			};
 
-			ScriptComponent();
+			ScriptComponent(const String& name);
 			virtual ~ScriptComponent();
 			void SetHandler(IScript::Request& request, Event::EVENT_ID event, IScript::Request::Ref handler);
 			virtual Tiny::FLAG GetEntityFlagMask() const override;
 			virtual void Uninitialize(Engine& engine, Entity* entity) override;
+			virtual const String& GetAliasedTypeName() const override;
 
 		protected:
 			virtual void DispatchEvent(Event& event, Entity* entity) override;
+			void UpdateEntityFlagMask();
 
-		private:
+		protected:
+			String name;
+			Tiny::FLAG entityFlagMask;
 			IScript::Request::Ref handlers[Event::EVENT_END];
 		};
 	}

@@ -3637,6 +3637,8 @@ local standard_library = {
          ["traceback"] = a_type({ typename = "function", args = { STRING, NUMBER }, rets = { STRING } }),
          ["getupvalue"] = a_type({ typename = "function", args = { FUNCTION, NUMBER }, rets = { STRING, ANY } }),
          ["setupvalue"] = a_type({ typename = "function", args = { FUNCTION, NUMBER, ANY }, rets = { ANY } }),
+         ["setuservalue"] = a_type({ typename = "function", args = { ANY, ANY, NUMBER }, rets = { } }),
+         ["getuservalue"] = a_type({ typename = "function", args = { ANY, NUMBER }, rets = { ANY } }),
          ["getinfo"] = a_type({
             typename = "poly",
             types = {
