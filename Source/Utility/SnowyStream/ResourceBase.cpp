@@ -211,7 +211,7 @@ void ResourceBase::SetLocation(const String& location) {
 }
 
 MetaResourceInternalPersist::MetaResourceInternalPersist(ResourceManager& r) : resourceManager(r) {
-	uniqueName = GetUnique()->GetSubName() + "(" + r.GetUnique()->GetSubName() + ")";
+	uniqueName = GetUnique()->GetBriefName() + "(" + r.GetUnique()->GetBriefName() + ")";
 }
 
 const String& MetaResourceInternalPersist::GetUniqueName() const {
@@ -238,7 +238,7 @@ bool MetaResourceInternalPersist::Read(IStreamBase& streamBase, void* ptr) const
 
 bool MetaResourceInternalPersist::Write(IStreamBase& streamBase, const void* ptr) const {
 	const TShared<ResourceBase>& res = *reinterpret_cast<const TShared<ResourceBase>*>(ptr);
-	return streamBase << (res ? res->GetLocation() + "." + res->GetBaseUnique()->GetSubName() : String(""));
+	return streamBase << (res ? res->GetLocation() + "." + res->GetBaseUnique()->GetBriefName() : String(""));
 }
 
 IReflectObject* MetaResourceInternalPersist::Clone() const {

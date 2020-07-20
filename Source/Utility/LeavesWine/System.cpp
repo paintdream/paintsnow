@@ -142,7 +142,7 @@ void System::TickRender(LeavesFlute& leavesFlute) {
 				if (t.first != stat()) {
 					ImGui::Text("%d", (int)i);
 					ImGui::NextColumn();
-					ImGui::Text("%p : %s", t.first, RemoveNamespace(t.second.unique->typeName).c_str());
+					ImGui::Text("%p : %s", t.first, RemoveNamespace(t.second.unique->GetName()).c_str());
 					ImGui::NextColumn();
 					ImGui::Text("%d", t.second.count);
 					ImGui::NextColumn();

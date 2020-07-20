@@ -29,7 +29,7 @@ bool LostDream::RunQualifiers(bool stopOnError, int initRandomSeed, int length) 
 		int count = p->second;
 		Qualifier* q = p->first;
 		srand(initRandomSeed++);
-		printf("Start qualifier %s\n", q->GetUnique().info->typeName.c_str());
+		printf("Start qualifier %s\n", q->GetUnique()->GetName().c_str());
 		
 		for (int i = 0; i < count; i++) {
 			printf("Pass %d\n", i);

@@ -74,7 +74,7 @@ void Engine::Clear() {
 }
 
 void Engine::InstallModule(Module* module) {
-	modules[module->GetTinyUnique()->GetSubName()] = module;
+	modules[module->GetTinyUnique()->GetBriefName()] = module;
 	module->Initialize();
 }
 

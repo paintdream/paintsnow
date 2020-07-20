@@ -783,7 +783,7 @@ void ZRemoteProxy::Request::RequestQueryObject(IScript::Request& request, IScrip
 		request << IScript::Request::Key("Name") << entry.name;
 		request << IScript::Request::Key("Arguments") << beginarray;
 		for (size_t j = 1; j < entry.params.size(); j++) {
-			request << entry.params[j].type->typeName;
+			request << entry.params[j].type->GetName();
 		}
 		request << endarray;
 		request << endtable;
@@ -1135,7 +1135,7 @@ ReflectRoutines::ReflectRoutines(IScript::Request& request, const IScript::BaseD
 void ReflectRoutines::Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) {
 	if (s.IsBasicObject()) {
 		static Unique wrapperType = UniqueType<IScript::MetaRemoteEntryBase>::Get();
-		if (typeID.info->size == sizeof(TWrapper<void>)) {
+		if (typeID->GetSize() == sizeof(TWrapper<void>)) {
 			for (const MetaChainBase* p = meta; p != nullptr; p = p->GetNext()) {
 				const MetaNodeBase* node = p->GetNode();
 				if (!node->IsBasicObject() && node->GetUnique() == wrapperType) {

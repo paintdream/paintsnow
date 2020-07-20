@@ -56,7 +56,7 @@ void VisibilityComponent::Initialize(Engine& engine, Entity* entity) {
 	IRender::Device* device = engine.snowyStream.GetRenderDevice();
 	renderQueue = render.CreateQueue(device);
 
-	String path = NsSnowyStream::ShaderResource::GetShaderPathPrefix() + UniqueType<ConstMapPass>::Get()->GetSubName();
+	String path = NsSnowyStream::ShaderResource::GetShaderPathPrefix() + UniqueType<ConstMapPass>::Get()->GetBriefName();
 	pipeline = engine.snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), path, true, 0, nullptr)->QueryInterface(UniqueType<ShaderResourceImpl<ConstMapPass> >());
 
 	IRender::Resource::ClearDescription cls;

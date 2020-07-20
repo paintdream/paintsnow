@@ -110,7 +110,7 @@ void RenderFlowComponentModule::RequestEnumerateRenderStagePorts(IScript::Reques
 		RenderStage::Port* port = s->GetPorts()[i].port;
 		request << begintable <<
 			key("Name") << s->GetPorts()[i].name <<
-			key("Type") << port->GetUnique().info->typeName <<
+			key("Type") << port->GetUnique()->GetName() <<
 			key("Targets") << beginarray;
 
 		for (size_t j = 0; j < port->GetLinks().size(); j++) {

@@ -193,8 +193,8 @@ void HoneyData::Attach(void* base) {
 		}
 		request >> endtable;
 
-		Unique unique = uniqueAllocator.AllocFromDescriptor("HoneyDataInstance", fields);
-		dynamicObject = static_cast<ZDynamicObject*>(unique->Create());
+		ZDynamicInfo* info = uniqueAllocator.AllocFromDescriptor("HoneyDataInstance", fields);
+		dynamicObject = static_cast<ZDynamicObject*>(info->Create());
 	}
 
 	request >> endtable;

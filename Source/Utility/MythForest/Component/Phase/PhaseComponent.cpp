@@ -82,9 +82,9 @@ void PhaseComponent::Initialize(Engine& engine, Entity* entity) {
 		const String path = "[Runtime]/MeshResource/StandardSquare";
 		quadMeshResource = snowyStream.CreateReflectedResource(UniqueType<NsSnowyStream::MeshResource>(), path, true, 0, nullptr);
 
-		tracePipeline = snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), ShaderResource::GetShaderPathPrefix() + UniqueType<MultiHashTracePass>::Get()->GetSubName())->QueryInterface(UniqueType<ShaderResourceImpl<MultiHashTracePass> >());
-		setupPipeline = snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), ShaderResource::GetShaderPathPrefix() + UniqueType<MultiHashSetupPass>::Get()->GetSubName())->QueryInterface(UniqueType<ShaderResourceImpl<MultiHashSetupPass> >());
-		shadowPipeline = snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), ShaderResource::GetShaderPathPrefix() + UniqueType<ConstMapPass>::Get()->GetSubName())->QueryInterface(UniqueType<ShaderResourceImpl<ConstMapPass> >());
+		tracePipeline = snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), ShaderResource::GetShaderPathPrefix() + UniqueType<MultiHashTracePass>::Get()->GetBriefName())->QueryInterface(UniqueType<ShaderResourceImpl<MultiHashTracePass> >());
+		setupPipeline = snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), ShaderResource::GetShaderPathPrefix() + UniqueType<MultiHashSetupPass>::Get()->GetBriefName())->QueryInterface(UniqueType<ShaderResourceImpl<MultiHashSetupPass> >());
+		shadowPipeline = snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), ShaderResource::GetShaderPathPrefix() + UniqueType<ConstMapPass>::Get()->GetBriefName())->QueryInterface(UniqueType<ShaderResourceImpl<ConstMapPass> >());
 
 		IRender& render = engine.interfaces.render;
 		IRender::Device* device = engine.snowyStream.GetRenderDevice();

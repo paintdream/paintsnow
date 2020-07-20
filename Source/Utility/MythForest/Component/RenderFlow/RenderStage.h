@@ -61,7 +61,7 @@ namespace PaintsNow {
 			GeneralRenderStage(uint32_t colorAttachmentCount = 1) : BaseClass(colorAttachmentCount) {}
 			virtual void PrepareResources(Engine& engine, IRender::Queue* queue) override {
 				// create specified shader resource (if not exists)
-				String path = NsSnowyStream::ShaderResource::GetShaderPathPrefix() + UniqueType<T>::Get()->GetSubName();
+				String path = NsSnowyStream::ShaderResource::GetShaderPathPrefix() + UniqueType<T>::Get()->GetBriefName();
 				sharedShader = engine.snowyStream.CreateReflectedResource(UniqueType<NsSnowyStream::ShaderResource>(), path, true, 0, nullptr);
 				shaderInstance.Reset(static_cast<NsSnowyStream::ShaderResourceImpl<T>*>(sharedShader->Clone()));
 				BaseClass::PrepareResources(engine, queue);

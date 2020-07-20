@@ -184,7 +184,7 @@ static ZDynamicInfo::MemController mcString = {
 	StringCreator, StringDeletor, StringAssigner
 };
 
-static Unique ParseUniqueObject(ZDynamicObjectWrapper& wrapper, const Value& value);
+static ZDynamicInfo* ParseUniqueObject(ZDynamicObjectWrapper& wrapper, const Value& value);
 static std::pair<Unique, ZDynamicInfo::MemController*> ParseUniqueValue(ZDynamicObjectWrapper& wrapper, const Value& value) {
 	std::pair<Unique, ZDynamicInfo::MemController*> res;
 	res.second = nullptr;
@@ -207,7 +207,7 @@ static std::pair<Unique, ZDynamicInfo::MemController*> ParseUniqueValue(ZDynamic
 	return res;
 }
 
-static Unique ParseUniqueObject(ZDynamicObjectWrapper& wrapper, const Value& value) {
+static ZDynamicInfo* ParseUniqueObject(ZDynamicObjectWrapper& wrapper, const Value& value) {
 	// enumerate attributes ...
 	assert(value.isObject());
 	std::vector<ZDynamicInfo::Field> fields;
@@ -257,7 +257,6 @@ void ParseDynamicValue(ZDynamicObjectWrapper& wrapper, const Value& v, T* object
 
 static void ParseDynamicObject(ZDynamicObjectWrapper& wrapper, const Value& value, ZDynamicObject* object) {
 	Unique unique = object->GetDynamicInfo();
-	assert(unique->GetAllocator() == &wrapper.uniqueAllocator);
 	const std::vector<ZDynamicInfo::Field>& fields = object->GetDynamicInfo()->fields;
 
 	size_t i = 0;

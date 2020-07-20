@@ -124,9 +124,8 @@ void* ZDynamicVector::Iterator::GetHost() const {
 	return base;
 }
 
-
 TObject<IReflect>& ZDynamicObject::operator () (IReflect& reflect) {
-	reflect.Class(*this, dynamicInfo, dynamicInfo->typeName.c_str(), "PaintsNow", nullptr);
+	reflect.Class(*this, dynamicInfo, dynamicInfo->GetName().c_str(), "PaintsNow", nullptr);
 
 	if (reflect.IsReflectProperty()) {
 		char* base = (char*)this + sizeof(*this);
@@ -147,17 +146,17 @@ TObject<IReflect>& ZDynamicObject::operator () (IReflect& reflect) {
 	return *this;
 }
 
-IUniqueInfo* ZDynamicUniqueAllocator::Alloc(const String& name, size_t size) {
+ZDynamicInfo* ZDynamicUniqueAllocator::Create(const String& name, size_t size) {
 	assert(false);
 	return nullptr;
 }
 
-IUniqueInfo* ZDynamicUniqueAllocator::Get(const String& name) {
+ZDynamicInfo* ZDynamicUniqueAllocator::Get(const String& name) {
 	std::map<String, ZDynamicInfo>::iterator it = mapType.find(name);
 	return it == mapType.end() ? nullptr : &it->second;
 }
 
-IUniqueInfo* ZDynamicUniqueAllocator::AllocFromDescriptor(const String& name, const std::vector<ZDynamicInfo::Field>& descriptors) {
+ZDynamicInfo* ZDynamicUniqueAllocator::AllocFromDescriptor(const String& name, const std::vector<ZDynamicInfo::Field>& descriptors) {
 	// Compose new name
 	String desc;
 	String allNames;
@@ -169,19 +168,19 @@ IUniqueInfo* ZDynamicUniqueAllocator::AllocFromDescriptor(const String& name, co
 	for (size_t k = 0; k < fields.size(); k++) {
 		if (k != 0) desc += ", ";
 		ZDynamicInfo::Field& p = fields[k];
-		IUniqueInfo* info = p.type.info;
-		maxSize = Min(maxSize, info->size);
+		Unique info = p.type;
+		maxSize = Min(maxSize, info->GetSize());
 
-		desc += p.name + ": " + info->typeName;
-		allNames += info->typeName;
-		size_t s = Alignment(info->size);
+		desc += p.name + ": " + info->GetName();
+		allNames += info->GetName();
+		size_t s = Alignment(info->GetSize());
 		maxAlignment = Max(maxAlignment, s);
 		while (lastOffset != 0 && Alignment(lastOffset) < s) {
 			lastOffset += Alignment(lastOffset);
 		}
 
 		p.offset = lastOffset;
-		lastOffset += info->size;
+		lastOffset += info->GetSize();
 	}
 
 	std::stringstream ss;
@@ -194,8 +193,8 @@ IUniqueInfo* ZDynamicUniqueAllocator::AllocFromDescriptor(const String& name, co
 		return &it->second;
 	} else {
 		ZDynamicInfo& info = mapType[newName];
-		info.allocator = this;
-		info.typeName = newName;
+		info.SetAllocator(this);
+		info.SetName(newName);
 		std::sort(fields.begin(), fields.end());
 		for (size_t i = 0; i < fields.size(); i++) {
 			info.mapNameToField[fields[i].name] = safe_cast<uint32_t>(i);
@@ -205,7 +204,7 @@ IUniqueInfo* ZDynamicUniqueAllocator::AllocFromDescriptor(const String& name, co
 			lastOffset += Alignment(lastOffset);
 		}
 
-		info.size = fields.empty() ? sizeof(size_t) : lastOffset;
+		info.SetSize(fields.empty() ? sizeof(size_t) : lastOffset);
 		std::swap(info.fields, fields);
 
 		return &info;

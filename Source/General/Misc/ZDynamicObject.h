@@ -10,7 +10,7 @@
 
 namespace PaintsNow {
 	class ZDynamicObject;
-	class ZDynamicInfo : public IUniqueInfo {
+	class ZDynamicInfo : public UniqueInfo {
 	public:
 		struct MemController {
 			void (*Creator)(void*);
@@ -36,20 +36,23 @@ namespace PaintsNow {
 
 		const Field* operator [] (const String& key) const;
 
-		virtual IReflectObject* Create() const;
+		IReflectObject* Create() const;
+		void SetAllocator(UniqueAllocator* alloc) { allocator = alloc; }
+		void SetName(const String& name) { typeName = name; }
+		void SetSize(size_t s) { size = s; }
 
 		std::vector<Field> fields;
 		std::map<String, uint32_t> mapNameToField;
 	};
 
-	class ZDynamicUniqueAllocator : public IUniqueAllocator {
+	class ZDynamicUniqueAllocator : protected UniqueAllocator {
 	public:
 		ZDynamicUniqueAllocator();
 
-		virtual IUniqueInfo* Alloc(const String& name, size_t size);
-		virtual IUniqueInfo* Get(const String& name);
+		ZDynamicInfo* Create(const String& name, size_t size);
+		ZDynamicInfo* Get(const String& name);
 
-		IUniqueInfo* AllocFromDescriptor(const String& name, const std::vector<ZDynamicInfo::Field>& descriptors);
+		ZDynamicInfo* AllocFromDescriptor(const String& name, const std::vector<ZDynamicInfo::Field>& descriptors);
 		std::map<String, ZDynamicInfo> mapType;
 	};
 

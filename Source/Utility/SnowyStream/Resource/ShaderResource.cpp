@@ -12,7 +12,7 @@ ShaderResource::~ShaderResource() {
 }
 
 const String& ShaderResource::GetShaderName() const {
-	return GetUnique()->typeName;
+	return GetUnique()->GetName();
 }
 
 bool ShaderResource::operator << (IStreamBase& stream) {

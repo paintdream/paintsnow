@@ -673,7 +673,7 @@ void RegisterPass(ResourceManager& resourceManager, UniqueType<T> type, const St
 	ZPassBase& pass = shaderResource->GetPass();
 	Unique unique = pass.GetUnique();
 	assert(unique != UniqueType<ZPassBase>().Get());
-	String name = pass.GetUnique()->typeName;
+	String name = pass.GetUnique()->GetName();
 	auto pos = name.find_last_of(':');
 	if (pos != std::string::npos) {
 		name = name.substr(pos + 1);
@@ -800,7 +800,7 @@ TShared<ResourceBase> SnowyStream::CreateResource(const String& path, const Stri
 }
 
 String SnowyStream::GetReflectedExtension(Unique unique) {
-	return unique->GetSubName();
+	return unique->GetBriefName();
 }
 
 void SnowyStream::UnmapResource(TShared<ResourceBase> resource) {
@@ -966,7 +966,7 @@ bool MetaResourceExternalPersist::Write(IStreamBase& streamBase, const void* ptr
 	const TShared<ResourceBase>& resource = *reinterpret_cast<const TShared<ResourceBase>*>(ptr);
 	String path;
 	if (resource) {
-		path = resource->GetLocation() + "." + resource->GetUnique()->GetSubName();
+		path = resource->GetLocation() + "." + resource->GetUnique()->GetBriefName();
 	}
 
 	return streamBase << path;

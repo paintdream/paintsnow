@@ -505,7 +505,7 @@ void LightComponent::ShadowLayer::Initialize(Engine& engine, TShared<StreamCompo
 	}
 
 	if (!pipeline) {
-		String path = NsSnowyStream::ShaderResource::GetShaderPathPrefix() + UniqueType<ConstMapPass>::Get()->GetSubName();
+		String path = NsSnowyStream::ShaderResource::GetShaderPathPrefix() + UniqueType<ConstMapPass>::Get()->GetBriefName();
 		pipeline = engine.snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), path, true, 0, nullptr)->QueryInterface(UniqueType<ShaderResourceImpl<ConstMapPass> >());
 	}
 

@@ -497,7 +497,7 @@ struct InspectCustomStructure : public IReflect {
 	InspectCustomStructure(IScript::Request& r, IReflectObject& obj) : request(r), IReflect(true, false) {
 		request << begintable;
 		String name, count;
-		InspectCustomStructure::FilterType(obj.GetUnique().info->typeName, name, count);
+		InspectCustomStructure::FilterType(obj.GetUnique()->GetName(), name, count);
 
 		request << key("Type") << name;
 		request << key("Optional") << false;
@@ -525,7 +525,7 @@ struct InspectCustomStructure : public IReflect {
 
 	static bool FilterType(const String& name, String& ret, String& count) {
 		// parse name
-		if (name == UniqueType<String>::Get()->typeName || name == UniqueType<Bytes>::Get()->typeName || name.find("std::basic_string") == 0) {
+		if (name == UniqueType<String>::Get()->GetName() || name == UniqueType<Bytes>::Get()->GetName() || name.find("std::basic_string") == 0) {
 			ret = "String";
 			return true;
 		} else if (name.find("std::") == 0) {
@@ -565,7 +565,7 @@ struct InspectCustomStructure : public IReflect {
 
 	static void ProcessMember(IScript::Request& request, Unique type, bool isIterator, bool optional) {
 		// filter TType
-		String typeName = type.info->typeName;
+		String typeName = type->GetName();
 
 		bool isDelegate = typeName.find("PaintsNow::BaseDelegate") != 0 || typeName.find("PaintsNow::Delegate<") != 0;
 		String name, count;
@@ -575,8 +575,8 @@ struct InspectCustomStructure : public IReflect {
 			int a = 0;
 		}
 
-		if (type.info->creator) {
-			IReflectObject* obj = type.info->Create();
+		if (type->IsCreatable()) {
+			IReflectObject* obj = type->Create();
 			if (obj != nullptr) {
 				InspectCustomStructure(request, *obj);
 				obj->ReleaseObject();

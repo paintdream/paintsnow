@@ -6,7 +6,7 @@ using namespace PaintsNow::NsMythForest;
 
 String Unit::GetDescription() const {
 	std::stringstream ss;
-	ss << GetUnique()->GetSubName() << "(" << std::hex << (size_t)this << ")";
+	ss << GetUnique()->GetBriefName() << "(" << std::hex << (size_t)this << ")";
 	return ss.str();
 }
 

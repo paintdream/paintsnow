@@ -37,16 +37,16 @@ static void VectorString(const void* ptr) {
 
 template <class T>
 void Printer::RegisterVectorType() {
-	types[UniqueType<T>::Get().info] = &VectorString<T>;
+	types[UniqueType<T>::Get()] = &VectorString<T>;
 }
 
 template <class T>
 void Printer::RegisterPrimitiveType() {
-	types[UniqueType<T>::Get().info] = &PrimitiveString<T>;
+	types[UniqueType<T>::Get()] = &PrimitiveString<T>;
 }
 
 Printer::Printer() {
-	types[UniqueType<String>::Get().info] = &FromString;
+	types[UniqueType<String>::Get()] = &FromString;
 	RegisterPrimitiveType<bool>();
 	RegisterPrimitiveType<void*>();
 
@@ -95,7 +95,7 @@ Printer::Printer() {
 }
 
 void Printer::AddEnum(Unique unique, size_t value, const char* name) {
-	std::vector<String>& s = enums[unique.info];
+	std::vector<String>& s = enums[unique];
 	if (value >= s.size()) {
 		assert(value == s.size());
 		s.emplace_back(name);
@@ -103,11 +103,11 @@ void Printer::AddEnum(Unique unique, size_t value, const char* name) {
 }
 
 void Printer::operator () (Unique unique, const void* ptr) const {
-	std::unordered_map<IUniqueInfo*, void(*)(const void* ptr)>::const_iterator it = types.find(unique.info);
+	std::unordered_map<UniqueInfo*, void(*)(const void* ptr)>::const_iterator it = types.find(unique);
 	if (it != types.end()) {
 		it->second(ptr);
 	} else {
-		std::unordered_map<IUniqueInfo*, std::vector<String> >::const_iterator ie = enums.find(unique.info);
+		std::unordered_map<UniqueInfo*, std::vector<String> >::const_iterator ie = enums.find(unique);
 		if (ie != enums.end()) {
 			assert(unique->GetSize() <= sizeof(uint32_t));
 			uint32_t v = *reinterpret_cast<const uint32_t*>(ptr);
@@ -120,7 +120,7 @@ void Printer::operator () (Unique unique, const void* ptr) const {
 }
 
 static inline String GetTypeName(Unique unique) {
-	return unique == UniqueType<String>::Get() ? "String" : unique == UniqueType<Void>::Get() ? "void" : RemoveNamespace(unique->typeName);
+	return unique == UniqueType<String>::Get() ? "String" : unique == UniqueType<Void>::Get() ? "void" : RemoveNamespace(unique->GetName());
 }
 
 IWidget::IWidget() : layerCount(0), IReflect(true, true, true, true), show(true), inited(false) {}

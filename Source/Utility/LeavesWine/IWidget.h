@@ -36,8 +36,8 @@ namespace PaintsNow {
 			template <class T>
 			void RegisterPrimitiveType();
 
-			std::unordered_map<IUniqueInfo*, void(*)(const void* ptr)> types;
-			std::unordered_map<IUniqueInfo*, std::vector<String> > enums;
+			std::unordered_map<UniqueInfo*, void(*)(const void* ptr)> types;
+			std::unordered_map<UniqueInfo*, std::vector<String> > enums;
 		};
 
 		class IWidget : public IReflect {

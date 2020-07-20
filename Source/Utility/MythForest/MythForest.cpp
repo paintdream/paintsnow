@@ -244,7 +244,7 @@ String MythForest::RequestGetComponentType(IScript::Request& request, IScript::D
 	if (component->Flag() & Component::COMPONENT_ALIASED_TYPE) {
 		return component->GetAliasedTypeName();
 	} else {
-		return component->GetUnique()->GetSubName();
+		return component->GetUnique()->GetBriefName();
 	}
 }
 

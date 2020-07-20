@@ -118,11 +118,11 @@ void CustomMaterialParameterFS::SetCode(const String& text) {
 void CustomMaterialParameterFS::SetInput(const String& type, const String& name, const std::vector<std::pair<String, String> >& config) {
 	IAsset::Material::Variable var;
 	var.key.Assign((const uint8_t*)name.c_str(), safe_cast<uint32_t>(name.size()));
-	static String typeTexture = UniqueType<IAsset::TextureIndex>::Get()->GetSubName();
-	static String typeFloat = UniqueType<float>::Get()->GetSubName();
-	static String typeFloat2 = UniqueType<Float2>::Get()->GetSubName();
-	static String typeFloat3 = UniqueType<Float3>::Get()->GetSubName();
-	static String typeFloat4 = UniqueType<Float4>::Get()->GetSubName();
+	static String typeTexture = UniqueType<IAsset::TextureIndex>::Get()->GetBriefName();
+	static String typeFloat = UniqueType<float>::Get()->GetBriefName();
+	static String typeFloat2 = UniqueType<Float2>::Get()->GetBriefName();
+	static String typeFloat3 = UniqueType<Float3>::Get()->GetBriefName();
+	static String typeFloat4 = UniqueType<Float4>::Get()->GetBriefName();
 
 	if (type == typeTexture) {
 		var = IAsset::TextureIndex(description->textureCount++);

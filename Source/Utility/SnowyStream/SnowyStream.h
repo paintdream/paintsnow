@@ -138,7 +138,7 @@ namespace PaintsNow {
 
 			template <class T, class D>
 			inline const MetaResourceExternalPersist& FilterField(T* t, D* d) const {
-				const_cast<String&>(uniqueName) = UniqueType<D>::Get()->GetSubName();
+				const_cast<String&>(uniqueName) = UniqueType<D>::Get()->GetBriefName();
 				return *this; // do nothing
 			}
 

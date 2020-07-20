@@ -116,8 +116,8 @@ public:
 				}
 			}
 
-			Unique unique = uniqueAllocator.AllocFromDescriptor("QueryMetaDataInstance", fields);
-			dynamicObject = static_cast<ZDynamicObject*>(unique->Create());
+			ZDynamicInfo* info = uniqueAllocator.AllocFromDescriptor("QueryMetaDataInstance", fields);
+			dynamicObject = static_cast<ZDynamicObject*>(info->Create());
 		} else {
 			fprintf(stderr, "\nerror %s\n", sqlite3_errmsg(handle));
 		}
