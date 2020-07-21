@@ -347,7 +347,7 @@ template <class D>
 void RaycastInternal(Entity* root, Component::RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio, const Float3Pair& b, D d) {
 	Float3Pair bound = b;
 	for (Entity* entity = root; entity != nullptr; entity = entity->Right()) {
-		if (!getboolean<D>::value && !IntersectBox(bound, ray))
+		if (!getboolean<D>::value && !Math::IntersectBox(bound, ray))
 			break;
 
 		IMemory::PrefetchRead(entity->Left());

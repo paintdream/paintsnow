@@ -68,7 +68,7 @@ struct GradVertex {
 	GradVertex() {}
 	GradVertex(const Float3& v, const Float2& g) : vertex(v), grad(g) {}
 	static GradVertex Mix(const GradVertex& lhs, const GradVertex& rhs, float v) {
-		return GradVertex(Interpolate(lhs.vertex, rhs.vertex, v), Interpolate(lhs.grad, rhs.grad, v));
+		return GradVertex(Math::Interpolate(lhs.vertex, rhs.vertex, v), Math::Interpolate(lhs.grad, rhs.grad, v));
 	}
 
 	Float3 vertex;
@@ -246,7 +246,7 @@ void GenerateDetails(Region& root, std::vector<Region>& regions, std::vector<Gra
 		}
 	}
 
-	float diff = Max(a, b);
+	float diff = Math::Max(a, b);
 	if (diff > deltaHeight) {
 		// continue to divide
 		indexCenter = indexCenter == -1 ? GenVertex(buffer, v) : indexCenter;

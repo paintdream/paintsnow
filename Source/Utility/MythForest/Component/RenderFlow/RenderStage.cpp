@@ -179,8 +179,8 @@ void RenderStage::SetMainResolution(Engine& engine, IRender::Queue* resourceQueu
 	// by now we have no color-free render buffers
 	IRender& render = engine.interfaces.render;
 	assert(width != 0 && height != 0);
-	width = resolutionShift.x() > 0 ? Max(width >> resolutionShift.x(), 2u) : width << resolutionShift.x();
-	height = resolutionShift.y() > 0 ? Max(height >> resolutionShift.y(), 2u) : height << resolutionShift.y();
+	width = resolutionShift.x() > 0 ? Math::Max(width >> resolutionShift.x(), 2u) : width << resolutionShift.x();
+	height = resolutionShift.y() > 0 ? Math::Max(height >> resolutionShift.y(), 2u) : height << resolutionShift.y();
 
 	AutoAdaptRenderTarget adapt(render, resourceQueue, width, height);
 	(*this)(adapt);

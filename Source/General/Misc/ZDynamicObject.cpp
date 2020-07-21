@@ -10,7 +10,8 @@ ZDynamicInfo::Field::Field() : controller(nullptr) {
 }
 
 IReflectObject* ZDynamicInfo::Create() const {
-	assert(Alignment(sizeof(ZDynamicObject)) >= sizeof(size_t));
+	assert(Math::Alignment(sizeof(ZDynamicObject)) >= sizeof(size_t));
+
 	size_t s = sizeof(ZDynamicObject) + size;
 	char* buffer = new char[s];
 	memset(buffer, 0, s);
@@ -169,14 +170,14 @@ ZDynamicInfo* ZDynamicUniqueAllocator::AllocFromDescriptor(const String& name, c
 		if (k != 0) desc += ", ";
 		ZDynamicInfo::Field& p = fields[k];
 		Unique info = p.type;
-		maxSize = Min(maxSize, info->GetSize());
+		maxSize = Math::Min(maxSize, info->GetSize());
 
 		desc += p.name + ": " + info->GetName();
 		allNames += info->GetName();
-		size_t s = Alignment(info->GetSize());
-		maxAlignment = Max(maxAlignment, s);
-		while (lastOffset != 0 && Alignment(lastOffset) < s) {
-			lastOffset += Alignment(lastOffset);
+		size_t s = Math::Alignment(info->GetSize());
+		maxAlignment = Math::Max(maxAlignment, s);
+		while (lastOffset != 0 && Math::Alignment(lastOffset) < s) {
+			lastOffset += Math::Alignment(lastOffset);
 		}
 
 		p.offset = lastOffset;
@@ -200,8 +201,8 @@ ZDynamicInfo* ZDynamicUniqueAllocator::AllocFromDescriptor(const String& name, c
 			info.mapNameToField[fields[i].name] = safe_cast<uint32_t>(i);
 		}
 
-		while (lastOffset != 0 && Alignment(lastOffset) < maxAlignment) {
-			lastOffset += Alignment(lastOffset);
+		while (lastOffset != 0 && Math::Alignment(lastOffset) < maxAlignment) {
+			lastOffset += Math::Alignment(lastOffset);
 		}
 
 		info.SetSize(fields.empty() ? sizeof(size_t) : lastOffset);

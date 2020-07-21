@@ -205,7 +205,7 @@ const Bytes& VisibilityComponent::QuerySample(const Float3& position) {
 
 	UShort3 coord;
 	for (uint32_t k = 0; k < 3; k++) {
-		coord[k] = (uint16_t)Min((int)floor((subDivision[k] - 1) * offset[k] + 0.5), subDivision[k] - 1);
+		coord[k] = (uint16_t)Math::Min((int)floor((subDivision[k] - 1) * offset[k] + 0.5), subDivision[k] - 1);
 	}
 
 	// load cache
@@ -219,8 +219,8 @@ const Bytes& VisibilityComponent::QuerySample(const Float3& position) {
 	}
 
 	// cache miss
-	UShort3 lowerBound((uint16_t)Max(coord.x() - 1, 0), (uint16_t)Max(coord.y() - 1, 0), (uint16_t)Max(coord.z() - 1, 0));
-	UShort3 upperBound((uint16_t)Min(coord.x() + 1, (int)subDivision.x() - 1), (uint16_t)Min(coord.y() + 1, (int)subDivision.y() - 1), (uint16_t)Min(coord.z() + 1, (int)subDivision.z() - 1));
+	UShort3 lowerBound((uint16_t)Math::Max(coord.x() - 1, 0), (uint16_t)Math::Max(coord.y() - 1, 0), (uint16_t)Math::Max(coord.z() - 1, 0));
+	UShort3 upperBound((uint16_t)Math::Min(coord.x() + 1, (int)subDivision.x() - 1), (uint16_t)Math::Min(coord.y() + 1, (int)subDivision.y() - 1), (uint16_t)Math::Min(coord.z() + 1, (int)subDivision.z() - 1));
 
 	Cell& center = cells[coord];
 	if (center.incompleteness != 0) {
@@ -241,7 +241,7 @@ const Bytes& VisibilityComponent::QuerySample(const Float3& position) {
 					UShort3 coord(x, y, z);
 					Cell& cell = cells[coord];
 					if (!cell.payload.Empty()) {
-						mergedSize = Max(mergedSize, cell.payload.GetSize());
+						mergedSize = Math::Max(mergedSize, cell.payload.GetSize());
 						toMerge.emplace_back(&cell.payload);
 					}
 				}
@@ -430,7 +430,7 @@ void VisibilityComponent::CollectComponents(Engine& engine, TaskData& task, cons
 			SpaceComponent* spaceComponent = static_cast<SpaceComponent*>(component);
 			if (transformComponent != nullptr) {
 				CaptureData newCaptureData;
-				task.camera.UpdateCaptureData(newCaptureData, captureData.viewTransform * QuickInverse(transformComponent->GetTransform()));
+				task.camera.UpdateCaptureData(newCaptureData, captureData.viewTransform * Math::QuickInverse(transformComponent->GetTransform()));
 				CollectComponentsFromSpace(engine, task, instanceData, newCaptureData, spaceComponent);
 			} else {
 				CollectComponentsFromSpace(engine, task, instanceData, captureData, spaceComponent);
@@ -466,8 +466,8 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 			}
 
 			// scan neighbors
-			UShort3 lowerBound((uint16_t)Max(coord.x() - 1, 0), (uint16_t)Max(coord.y() - 1, 0), (uint16_t)Max(coord.z() - 1, 0));
-			UShort3 upperBound((uint16_t)Min(coord.x() + 1, (int)subDivision.x() - 1), (uint16_t)Min(coord.y() + 1, (int)subDivision.y() - 1), (uint16_t)Min(coord.z() + 1, (int)subDivision.z() - 1));
+			UShort3 lowerBound((uint16_t)Math::Max(coord.x() - 1, 0), (uint16_t)Math::Max(coord.y() - 1, 0), (uint16_t)Math::Max(coord.z() - 1, 0));
+			UShort3 upperBound((uint16_t)Math::Min(coord.x() + 1, (int)subDivision.x() - 1), (uint16_t)Math::Min(coord.y() + 1, (int)subDivision.y() - 1), (uint16_t)Math::Min(coord.z() + 1, (int)subDivision.z() - 1));
 
 			for (uint16_t z = lowerBound.z(); z <= upperBound.z(); z++) {
 				for (uint16_t y = lowerBound.y(); y <= upperBound.y(); y++) {
@@ -609,10 +609,10 @@ void VisibilityComponent::CoTaskAssembleTask(Engine& engine, TaskData& task, con
 	Float3 viewPosition = boundingBox.first + (boundingBox.second - boundingBox.first) * Float3((float)(i + 0.5f) / subDivision.x(), (float)(j + 0.5f) / subDivision.y(), (float)(k + 0.5f) / subDivision.z());
 	task.instanceGroups.resize(engine.GetKernel().GetWarpCount());
 	CaptureData captureData;
-	MatrixFloat4x4 viewMatrix = LookAt(viewPosition, directions[face], ups[face]);
+	MatrixFloat4x4 viewMatrix = Math::LookAt(viewPosition, directions[face], ups[face]);
 	MatrixFloat4x4 viewProjectionMatrix = viewMatrix * projectionMatrix;
 
-	camera.UpdateCaptureData(captureData, QuickInverse(viewMatrix));
+	camera.UpdateCaptureData(captureData, Math::QuickInverse(viewMatrix));
 
 	WorldInstanceData instanceData;
 	instanceData.worldMatrix = viewProjectionMatrix;
@@ -670,8 +670,8 @@ void VisibilityComponent::DispatchTasks(Engine& engine) {
 			if (center.incompleteness == 0)
 				break;
 
-			UShort3 lowerBound((uint16_t)Max(coord.x() - 1, 0), (uint16_t)Max(coord.y() - 1, 0), (uint16_t)Max(coord.z() - 1, 0));
-			UShort3 upperBound((uint16_t)Min(coord.x() + 1, (int)subDivision.x() - 1), (uint16_t)Min(coord.y() + 1, (int)subDivision.y() - 1), (uint16_t)Min(coord.z() + 1, (int)subDivision.z() - 1));
+			UShort3 lowerBound((uint16_t)Math::Max(coord.x() - 1, 0), (uint16_t)Math::Max(coord.y() - 1, 0), (uint16_t)Math::Max(coord.z() - 1, 0));
+			UShort3 upperBound((uint16_t)Math::Min(coord.x() + 1, (int)subDivision.x() - 1), (uint16_t)Math::Min(coord.y() + 1, (int)subDivision.y() - 1), (uint16_t)Math::Min(coord.z() + 1, (int)subDivision.z() - 1));
 
 			for (uint16_t z = lowerBound.z(); z <= upperBound.z(); z++) {
 				for (uint16_t y = lowerBound.y(); y <= upperBound.y(); y++) {

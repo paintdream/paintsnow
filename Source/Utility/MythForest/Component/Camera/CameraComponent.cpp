@@ -48,7 +48,7 @@ void CameraComponent::UpdateJitterMatrices(CameraComponentConfig::WorldGlobalDat
 		Int2 resolution = renderFlowComponent->GetMainResolution();
 		static float jitterX[9] = { 1.0f / 2.0f, 1.0f / 4.0f, 3.0f / 4.0f, 1.0f / 8.0f, 5.0f / 8.0f, 3.0f / 8.0f, 7.0f / 8.0f, 1.0f / 16.0f, 9.0f / 16.0f };
 		static float jitterY[9] = { 1.0f / 3.0f, 2.0f / 3.0f, 1.0f / 9.0f, 4.0f / 9.0f, 7.0f / 9.0f, 2.0f / 9.0f, 5.0f / 9.0f, 8.0f / 9.0f, 1.0f / 27.0f };
-		Float2 jitterOffset((jitterX[jitterIndex] - 0.5f) / Max(resolution.x(), 1), (jitterY[jitterIndex] - 0.5f) / Max(resolution.y(), 1));
+		Float2 jitterOffset((jitterX[jitterIndex] - 0.5f) / Math::Max(resolution.x(), 1), (jitterY[jitterIndex] - 0.5f) / Math::Max(resolution.y(), 1));
 		// jitterOffset *= 0.25f;
 		jitterMatrix(3, 0) += jitterOffset.x();
 		jitterMatrix(3, 1) += jitterOffset.y();
@@ -60,11 +60,11 @@ void CameraComponent::UpdateJitterMatrices(CameraComponentConfig::WorldGlobalDat
 }
 
 void CameraComponent::UpdateRootMatrices(const MatrixFloat4x4& cameraWorldMatrix) {
-	MatrixFloat4x4 projectionMatrix = (Flag() & CAMERACOMPONENT_PERSPECTIVE) ? Perspective(fov, aspect, nearPlane, farPlane) : Ortho(Float3(1, 1, 1));
+	MatrixFloat4x4 projectionMatrix = (Flag() & CAMERACOMPONENT_PERSPECTIVE) ? Math::Perspective(fov, aspect, nearPlane, farPlane) : Math::Ortho(Float3(1, 1, 1));
 
 	Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release);
 
-	MatrixFloat4x4 viewMatrix = QuickInverse(cameraWorldMatrix);
+	MatrixFloat4x4 viewMatrix = Math::QuickInverse(cameraWorldMatrix);
 	nextTaskData->worldGlobalData.cameraMatrix = cameraWorldMatrix;
 	nextTaskData->worldGlobalData.projectionMatrix = projectionMatrix;
 	nextTaskData->worldGlobalData.viewMatrix = viewMatrix;
@@ -415,11 +415,11 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 	if (Flag() & CAMERACOMPONENT_SMOOTH_TRACK) {
 		const float ratio = 0.75f;
 		Quaternion<float>::Interpolate(currentState.rotation, currentState.rotation, targetState.rotation, ratio);
-		currentState.translation = Interpolate(currentState.translation, targetState.translation, ratio);
-		currentState.scale = Interpolate(currentState.scale, targetState.scale, ratio);
+		currentState.translation = Math::Interpolate(currentState.translation, targetState.translation, ratio);
+		currentState.scale = Math::Interpolate(currentState.scale, targetState.scale, ratio);
 
 		// recompute global matrices
-		worldGlobalData.viewMatrix = QuickInverse(ComputeSmoothTrackTransform());
+		worldGlobalData.viewMatrix = Math::QuickInverse(ComputeSmoothTrackTransform());
 	}
 	
 	worldGlobalData.viewProjectionMatrix = worldGlobalData.viewMatrix * worldGlobalData.projectionMatrix;
@@ -464,9 +464,9 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 				UpdateJitterMatrices(worldGlobalData);
 
 				portCameraView->viewMatrix = worldGlobalData.viewMatrix;
-				portCameraView->inverseViewMatrix = QuickInverse(portCameraView->viewMatrix);
+				portCameraView->inverseViewMatrix = Math::QuickInverse(portCameraView->viewMatrix);
 				portCameraView->projectionMatrix = worldGlobalData.projectionMatrix * worldGlobalData.jitterMatrix;
-				portCameraView->inverseProjectionMatrix = InverseProjectionMatrix(portCameraView->projectionMatrix);
+				portCameraView->inverseProjectionMatrix = Math::InverseProjectionMatrix(portCameraView->projectionMatrix);
 				portCameraView->reprojectionMatrix = portCameraView->inverseProjectionMatrix * portCameraView->inverseViewMatrix * worldGlobalData.lastViewProjectionMatrix;
 				portCameraView->jitterOffset = worldGlobalData.jitterOffset;
 			}
@@ -694,13 +694,13 @@ void CameraComponent::CollectComponents(Engine& engine, TaskData& taskData, cons
 		// Fetch screen ratio
 		float tanHalfFov = taskData.worldGlobalData.tanHalfFov;
 
-		Float3 start = Transform3D(instanceData.worldMatrix, localBoundingBox.first);
-		Float3 end = Transform3D(instanceData.worldMatrix, localBoundingBox.second);
+		Float3 start = Math::Transform3D(instanceData.worldMatrix, localBoundingBox.first);
+		Float3 end = Math::Transform3D(instanceData.worldMatrix, localBoundingBox.second);
 		Float3 center = (start + end) * 0.5f;
 		float length = (end - start).SquareLength();
 
 		// Project
-		subWorldInstancedData.viewReference = Max(0.0f, 1.0f - length / (0.001f + tanHalfFov * (center - captureData.GetPosition()).SquareLength()));
+		subWorldInstancedData.viewReference = Math::Max(0.0f, 1.0f - length / (0.001f + tanHalfFov * (center - captureData.GetPosition()).SquareLength()));
 	}
 
 	if (rootFlag & (Entity::ENTITY_HAS_RENDERABLE | Entity::ENTITY_HAS_RENDERCONTROL | Entity::ENTITY_HAS_SPACE)) {
@@ -764,7 +764,7 @@ void CameraComponent::CollectComponents(Engine& engine, TaskData& taskData, cons
 				const MatrixFloat4x4& mat = captureData.viewTransform;
 
 				if (transformComponent != nullptr) {
-					UpdateCaptureData(newCaptureData, mat * QuickInverse(localTransform));
+					UpdateCaptureData(newCaptureData, mat * Math::QuickInverse(localTransform));
 				}
 
 				const MatrixFloat4x4& newMat = newCaptureData.viewTransform;

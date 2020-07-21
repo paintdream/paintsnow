@@ -127,7 +127,7 @@ void Loader::Load(const CmdLine& cmdLine) {
 			entry = (*p).second.name;
 		} else if ((*p).first == "Warp") {
 			// According to NsMythForest::Unit::WARP_INDEX
-			warpCount = Min(maxWarpCount, (uint32_t)safe_cast<uint32_t>(atoi((*p).second.name.c_str())));
+			warpCount = Math::Min(maxWarpCount, (uint32_t)safe_cast<uint32_t>(atoi((*p).second.name.c_str())));
 		} else if ((*p).first == "Thread") {
 			int32_t expectedThreadCount = (int32_t)safe_cast<int32_t>(atoi((*p).second.name.c_str()));
 #ifdef _WIN32
@@ -135,18 +135,18 @@ void Loader::Load(const CmdLine& cmdLine) {
 			if (expectedThreadCount <= 0) {
 				SYSTEM_INFO systemInfo;
 				::GetSystemInfo(&systemInfo);
-				expectedThreadCount = Max((int32_t)threadCount, (int32_t)systemInfo.dwNumberOfProcessors - expectedThreadCount);
+				expectedThreadCount = Math::Max((int32_t)threadCount, (int32_t)systemInfo.dwNumberOfProcessors - expectedThreadCount);
 			}
 #else
 			if (expectedThreadCount == 0) {
 				expectedThreadCount = threadCount;
 			}
 #endif
-			threadCount = Min(maxThreadCount, (uint32_t)expectedThreadCount);
+			threadCount = Math::Min(maxThreadCount, (uint32_t)expectedThreadCount);
 		}
 	}
 
-	// warpCount = Max(warpCount, threadCount);
+	// warpCount = Math::Max(warpCount, threadCount);
 
 	const std::map<String, CmdLine::Option>& factoryMap = cmdLine.GetFactoryMap();
 

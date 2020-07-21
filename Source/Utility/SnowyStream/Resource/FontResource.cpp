@@ -124,7 +124,7 @@ Short2Pair FontResource::Slice::AllocRect(IRender& render, IRender::Queue* queue
 		lastRect.first.y() = lastRect.second.y();
 	}
 
-	uint16_t height = Max((int16_t)(lastRect.second.y() - lastRect.first.y()), size.y());
+	uint16_t height = Math::Max((int16_t)(lastRect.second.y() - lastRect.first.y()), size.y());
 	Short2Pair w;
 	w.first.x() = lastRect.second.x();
 	w.second.x() = w.first.x() + size.x();

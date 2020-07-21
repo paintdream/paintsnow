@@ -19,7 +19,7 @@ ZPacket::~ZPacket() {
 
 inline int ZPacket::FullLength(int64_t location, int64_t& length) {
 	for (int c = 0, d; c < 32; c++) {
-		if (c >= (d = (int)SiteCount(location >> PACKAGE_MIN_ALIGN_LEVEL, (int64_t)((location + length + c * sizeof(PacketHeader) + PACKAGE_MIN_ALIGN - 1) >> PACKAGE_MIN_ALIGN_LEVEL)))) {
+		if (c >= (d = (int)Math::SiteCount(location >> PACKAGE_MIN_ALIGN_LEVEL, (int64_t)((location + length + c * sizeof(PacketHeader) + PACKAGE_MIN_ALIGN - 1) >> PACKAGE_MIN_ALIGN_LEVEL)))) {
 			length += c * sizeof(PacketHeader);
 			// printf("Site Count %d\n", d);
 			return c - d;
@@ -43,11 +43,11 @@ bool ZPacket::WritePacket(int64_t seq, IStreamBase& source, uint32_t length) {
 //	int64_t savedLocation = location;
 
 	int64_t alignedEnd = location + ((fullLength + PACKAGE_MIN_ALIGN - 1) & ~(PACKAGE_MIN_ALIGN - 1));
-	int64_t mid = AlignmentRange(location, alignedEnd);
+	int64_t mid = Math::AlignmentRange(location, alignedEnd);
 	int64_t remaining = alignedEnd;
 
  	while (length > 0) {
-		uint32_t alignment = safe_cast<uint32_t>(location < mid ? Alignment(location | mid) : AlignmentTop(remaining - mid));
+		uint32_t alignment = safe_cast<uint32_t>(location < mid ? Math::Alignment(location | mid) : Math::AlignmentTop(remaining - mid));
 		if (location >= mid) remaining -= alignment;
 
 		//printf("Header at %p offset = %d, alignment = %p\n", (uint32_t)location, lastOffset, alignment);
@@ -55,7 +55,7 @@ bool ZPacket::WritePacket(int64_t seq, IStreamBase& source, uint32_t length) {
 		// write atmost alignment - sizeof(header?) bytes
 		uint32_t extra = header.firstMark ? sizeof(length) : 0;
 		uint32_t full = alignment - sizeof(PacketHeader) - extra;
-		uint32_t size = Min(length, full);
+		uint32_t size = Math::Min(length, full);
 
 		header.offset = lastOffset;
 
@@ -81,7 +81,7 @@ bool ZPacket::WritePacket(int64_t seq, IStreamBase& source, uint32_t length) {
 		header.firstMark = 0;
 		length -= size;
 		location += alignment;
-		lastOffset = Log2(alignment);
+		lastOffset = Math::Log2(alignment);
 
 		if (length == 0) {
 			wl = (size_t)(alignedEnd - location + full - size);
@@ -94,7 +94,7 @@ bool ZPacket::WritePacket(int64_t seq, IStreamBase& source, uint32_t length) {
 	}
 
 	/*
-	long diff = (long)Alignment(location);
+	long diff = (long)Math::Alignment(location);
 	if (!stream.Seek(IStreamBase::CUR, -diff)) {
 		return false;
 	}
@@ -143,16 +143,16 @@ bool ZPacket::ReadPacket(int64_t& seq, IStreamBase& target, uint32_t& totalLengt
 				// totalLength = length;
 				alignedEnd = location + ((length + PACKAGE_MIN_ALIGN - 1) & ~(PACKAGE_MIN_ALIGN - 1));
 				length -= safe_cast<uint32_t>(header.padding * sizeof(PacketHeader));
-				mid = AlignmentRange(location, alignedEnd);
+				mid = Math::AlignmentRange(location, alignedEnd);
 				remaining = alignedEnd;
 			}
 		}
 
-		uint32_t alignment = safe_cast<uint32_t>(location < mid ? Alignment(location | mid) : AlignmentTop(remaining - mid));
+		uint32_t alignment = safe_cast<uint32_t>(location < mid ? Math::Alignment(location | mid) : Math::AlignmentTop(remaining - mid));
 		if (location >= mid) remaining -= alignment;
 		uint32_t extra = header.firstMark ? sizeof(length) : 0;
 		assert(length > sizeof(PacketHeader) + extra);
-		uint32_t size = Min(length, alignment) - (sizeof(PacketHeader) + extra);
+		uint32_t size = Math::Min(length, alignment) - (sizeof(PacketHeader) + extra);
 
 		assert((int64_t)size > 0);
 		// read content
@@ -184,7 +184,7 @@ bool ZPacket::Seek(int64_t seq) {
 
 	if (location == maxLocation) {
 		// select step type
-		long diff = (long)Alignment(location);
+		long diff = (long)Math::Alignment(location);
 		location -= diff;
 		if (!stream.Seek(IStreamBase::CUR, -diff)) {
 			return false;
@@ -200,7 +200,7 @@ bool ZPacket::Seek(int64_t seq) {
 		}
 
 		// evaluate
-		long diff = (long)Alignment(location);
+		long diff = (long)Math::Alignment(location);
 
 		if (header.seq < seq && !rewind) {
 			// to right
@@ -296,7 +296,7 @@ bool ZPacket::Seek(int64_t seq) {
 	// drop one util meets
 	while (true) {
 		// select step type
-		long diff = (long)Alignment(location);
+		long diff = (long)Math::Alignment(location);
 		location -= diff;
 		if (!stream.Seek(IStreamBase::CUR, -diff)) {
 			return false;

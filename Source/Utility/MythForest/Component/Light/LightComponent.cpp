@@ -130,7 +130,7 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 		MatrixFloat4x4 reverseDepth;
 
 		WorldInstanceData instanceData;
-		instanceData.worldMatrix = shadowGrid->shadowMatrix = QuickInverse(Scale(viewMatrix, Float4(1, -1, -1, 1)));
+		instanceData.worldMatrix = shadowGrid->shadowMatrix = Math::QuickInverse(Math::Scale(viewMatrix, Float4(1, -1, -1, 1)));
 		taskData->rootEntity = shadowContext->rootEntity; // in case of gc
 		taskData->shadowGrid = shadowGrid();
 		taskData->ReferenceObject();
@@ -404,7 +404,7 @@ void LightComponent::ShadowLayer::CollectComponents(Engine& engine, TaskData& ta
 				SpaceComponent* spaceComponent = static_cast<SpaceComponent*>(component);
 				bool captureFree = !!(spaceComponent->GetEntityFlagMask() & Entity::ENTITY_HAS_RENDERCONTROL);
 				if (transformComponent != nullptr) {
-					OrthoCamera::UpdateCaptureData(newCaptureData, mat * QuickInverse(localTransform));
+					OrthoCamera::UpdateCaptureData(newCaptureData, mat * Math::QuickInverse(localTransform));
 					CollectComponentsFromSpace(engine, taskData, subSpaceWorldInstancedData, newCaptureData, spaceComponent);
 				} else {
 					CollectComponentsFromSpace(engine, taskData, subSpaceWorldInstancedData, captureData, spaceComponent);
@@ -540,7 +540,7 @@ TShared<LightComponent::ShadowGrid> LightComponent::ShadowLayer::UpdateShadow(En
 	Float3 position(cameraTransform(3, 0), cameraTransform(3, 1), cameraTransform(3, 2));
 
 	// project to ortho plane
-	Float3 lightCoord = Transform3D(QuickInverse(lightTransform), position);
+	Float3 lightCoord = Math::Transform3D(Math::QuickInverse(lightTransform), position);
 	const UShort3& dimension = streamComponent->GetDimension();
 
 	UShort3 coord(
@@ -551,7 +551,7 @@ TShared<LightComponent::ShadowGrid> LightComponent::ShadowLayer::UpdateShadow(En
 	TShared<ShadowContext> shadowContext = TShared<ShadowContext>::From(new ShadowContext());
 	shadowContext->rootEntity = rootEntity;
 	shadowContext->cameraWorldMatrix = cameraTransform;
-	shadowContext->lightTransformMatrix = Scale(lightTransform, Float4(scale, scale, scale, 1));
+	shadowContext->lightTransformMatrix = Math::Scale(lightTransform, Float4(scale, scale, scale, 1));
 	TShared<ShadowGrid> grid = streamComponent->Load(engine, coord, shadowContext())->QueryInterface(UniqueType<ShadowGrid>());
 	assert(grid);
 	// printf("COORD: %d, %d, %d\n", coord.x(), coord.y(), coord.z());

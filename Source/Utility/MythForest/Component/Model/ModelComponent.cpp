@@ -96,7 +96,7 @@ void ModelComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTe
 
 					GenerateDrawCall(renderData, materialResource->mutationShaderResource(), meshBuffers, slice, meshResource->bufferCollection);
 					std::vector<IRender::Resource::DrawCallDescription::BufferRange>& targetBufferRanges = renderData.drawCallDescription.bufferResources;
-					for (size_t m = 0; m < Min(bufferRanges.size(), targetBufferRanges.size()); m++) {
+					for (size_t m = 0; m < Math::Min(bufferRanges.size(), targetBufferRanges.size()); m++) {
 						const IRender::Resource::DrawCallDescription::BufferRange& targetBufferRange = targetBufferRanges[m];
 						if (bufferRanges[m].buffer != nullptr) {
 							assert(targetBufferRanges[m].buffer == nullptr);

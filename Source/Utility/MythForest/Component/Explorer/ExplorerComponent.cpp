@@ -62,7 +62,7 @@ void ExplorerComponent::SelectComponents(Engine& engine, Entity* entity, float r
 		Proxy& proxy = proxies[i];
 		assert(proxy.config.activateThreshold <= proxy.config.deactivateThreshold);
 		if (refValue < proxy.config.activateThreshold) {
-			maxLayer = Max(maxLayer, proxy.config.layer);
+			maxLayer = Math::Max(maxLayer, proxy.config.layer);
 		}
 		
 		if (refValue < proxy.config.deactivateThreshold) {

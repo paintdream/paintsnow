@@ -588,7 +588,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> : public Resour
 					} else {
 						if (d.state.immutable && glTexStorage2D != nullptr) {
 							if (newTexture) {
-								glTexStorage2D(textureType, d.state.mip == IRender::Resource::TextureDescription::NOMIP ? 1 : Log2((uint32_t)Min(d.dimension.x(), d.dimension.y())) + 1, format, d.dimension.x(), d.dimension.y());
+								glTexStorage2D(textureType, d.state.mip == IRender::Resource::TextureDescription::NOMIP ? 1 : Math::Log2((uint32_t)Math::Min(d.dimension.x(), d.dimension.y())) + 1, format, d.dimension.x(), d.dimension.y());
 							}
 
 							if (data != nullptr) {
@@ -615,7 +615,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> : public Resour
 
 					if (d.state.immutable && glTexStorage2D != nullptr) {
 						if (newTexture) {
-							glTexStorage2D(GL_TEXTURE_CUBE_MAP, d.state.mip == IRender::Resource::TextureDescription::NOMIP ? 1 : Log2((uint32_t)Min(d.dimension.x(), d.dimension.y())) + 1, format, d.dimension.x(), d.dimension.y());
+							glTexStorage2D(GL_TEXTURE_CUBE_MAP, d.state.mip == IRender::Resource::TextureDescription::NOMIP ? 1 : Math::Log2((uint32_t)Math::Min(d.dimension.x(), d.dimension.y())) + 1, format, d.dimension.x(), d.dimension.y());
 						}
 					}
 
@@ -649,7 +649,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> : public Resour
 					} else {
 						if (d.state.immutable && glTexStorage3D != nullptr) {
 							if (newTexture) {
-								glTexStorage3D(textureType, d.state.mip == IRender::Resource::TextureDescription::NOMIP ? 1 : Log2((uint32_t)Min(Min(d.dimension.x(), d.dimension.y()), d.dimension.z())) + 1, format, d.dimension.x(), d.dimension.y(), d.dimension.z());
+								glTexStorage3D(textureType, d.state.mip == IRender::Resource::TextureDescription::NOMIP ? 1 : Math::Log2((uint32_t)Math::Min(Math::Min(d.dimension.x(), d.dimension.y()), d.dimension.z())) + 1, format, d.dimension.x(), d.dimension.y(), d.dimension.z());
 							}
 
 							if (data != nullptr) {
@@ -673,7 +673,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> : public Resour
 					} else {
 						if (d.state.immutable && glTexStorage2D != nullptr) {
 							if (newTexture) {
-								glTexStorage2D(textureType, d.state.mip == IRender::Resource::TextureDescription::NOMIP ? 1 : Log2((uint32_t)d.dimension.x()) + 1, format, d.dimension.x(), d.dimension.y());
+								glTexStorage2D(textureType, d.state.mip == IRender::Resource::TextureDescription::NOMIP ? 1 : Math::Log2((uint32_t)d.dimension.x()) + 1, format, d.dimension.x(), d.dimension.y());
 							}
 
 							if (data != nullptr) {
@@ -696,7 +696,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> : public Resour
 					} else {
 						if (d.state.immutable && glTexStorage3D != nullptr) {
 							if (newTexture) {
-								glTexStorage3D(textureType, d.state.mip == IRender::Resource::TextureDescription::NOMIP ? 1 : Log2((uint32_t)Min(d.dimension.x(), d.dimension.y())) + 1, format, d.dimension.x(), d.dimension.y(), d.dimension.z());
+								glTexStorage3D(textureType, d.state.mip == IRender::Resource::TextureDescription::NOMIP ? 1 : Math::Log2((uint32_t)Math::Min(d.dimension.x(), d.dimension.y())) + 1, format, d.dimension.x(), d.dimension.y(), d.dimension.z());
 							}
 
 							if (data != nullptr) {
@@ -722,7 +722,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> : public Resour
 
 					if (d.state.immutable && glTexStorage3D != nullptr) {
 						if (newTexture) {
-							glTexStorage3D(GL_TEXTURE_CUBE_MAP, d.state.mip == IRender::Resource::TextureDescription::NOMIP ? 1 : Log2((uint32_t)Min(d.dimension.x(), d.dimension.y())) + 1, format, d.dimension.x(), d.dimension.y(), d.dimension.z());
+							glTexStorage3D(GL_TEXTURE_CUBE_MAP, d.state.mip == IRender::Resource::TextureDescription::NOMIP ? 1 : Math::Log2((uint32_t)Math::Min(d.dimension.x(), d.dimension.y())) + 1, format, d.dimension.x(), d.dimension.y(), d.dimension.z());
 						}
 					}
 
@@ -1680,7 +1680,7 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> : public R
 			if (d.colorBufferStorages.empty()) {
 				glDrawBuffer(GL_NONE);
 			} else {
-				glDrawBuffers((GLsizei)Min(MAX_ID, d.colorBufferStorages.size()), idlist);
+				glDrawBuffers((GLsizei)Math::Min(MAX_ID, d.colorBufferStorages.size()), idlist);
 			}
 		}
 	}
@@ -1773,7 +1773,7 @@ struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> : public Resou
 					glBindBuffer(GL_ARRAY_BUFFER, buffer->bufferID);
 					for (k = 0; k < bufferComponent; k += 4) {
 						glEnableVertexAttribArray(vertexBufferBindingCount);
-						glVertexAttribPointer(vertexBufferBindingCount, Min(4u, bufferComponent - k), bufferElementType, GL_FALSE, bufferComponent * sizeof(float), reinterpret_cast<void*>((size_t)bufferRange.offset + sizeof(float) * k));
+						glVertexAttribPointer(vertexBufferBindingCount, Math::Min(4u, bufferComponent - k), bufferElementType, GL_FALSE, bufferComponent * sizeof(float), reinterpret_cast<void*>((size_t)bufferRange.offset + sizeof(float) * k));
 						glVertexAttribDivisor(vertexBufferBindingCount, 1);
 						vertexBufferBindingCount++;
 					}

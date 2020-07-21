@@ -500,8 +500,8 @@ int32_t TextViewComponent::Locate(Short2& rowCol, const Short2& pt, bool isPtRow
 
 	if (isPtRowCol) {
 		const Descriptor& desc = lines[rowCol.y()];
-		rowCol.x() = Max((int16_t)0, Min((int16_t)(lines.size() - 1), pt.x()));
-		rowCol.y() = Max((int16_t)0, Min((int16_t)(desc.allOffsets.size()), pt.y()));
+		rowCol.x() = Math::Max((int16_t)0, Math::Min((int16_t)(lines.size() - 1), pt.x()));
+		rowCol.y() = Math::Max((int16_t)0, Math::Min((int16_t)(desc.allOffsets.size()), pt.y()));
 
 		if (rowCol.y() == desc.allOffsets.size()) {
 			return safe_cast<uint32_t>(text.size());

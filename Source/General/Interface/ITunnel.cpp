@@ -32,7 +32,7 @@ bool ITunnel::ReadConnectionPacket(Connection* c, void* data, PacketSizeType& bu
 	ReadConnection(c, nullptr, availableBytes);
 
 	// read as most as possible
-	availableBytes = Min((PacketSizeType)availableBytes, Min(remaining, bufferLength));
+	availableBytes = Math::Min((PacketSizeType)availableBytes, Math::Min(remaining, bufferLength));
 	if (availableBytes != 0 && ReadConnection(c, data, availableBytes)) {
 		// Complete! 
 		packet.cursor += (PacketSizeType)availableBytes;

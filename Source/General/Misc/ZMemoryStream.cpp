@@ -77,7 +77,7 @@ bool ZMemoryStream::Transfer(IStreamBase& stream, size_t& len) {
 	stream.Write(buffer + offset, len);
 	offset += len;
 
-	totalSize = Max(totalSize, offset);
+	totalSize = Math::Max(totalSize, offset);
 	return true;
 }
 
@@ -90,7 +90,7 @@ bool ZMemoryStream::Extend(size_t len) {
 		return false;
 	}
 
-	totalSize = Max(totalSize, (size_t)offset + len);
+	totalSize = Math::Max(totalSize, (size_t)offset + len);
 	return true;
 }
 
@@ -100,7 +100,7 @@ bool ZMemoryStream::WriteDummy(size_t& len) {
 	}
 
 	offset += len;
-	totalSize = Max(totalSize, (size_t)offset);
+	totalSize = Math::Max(totalSize, (size_t)offset);
 	return true;
 }
 
@@ -112,7 +112,7 @@ bool ZMemoryStream::Write(const void* p, size_t& len) {
 
 	memcpy(buffer + offset, p, len);
 	offset += len;
-	totalSize = Max(totalSize, (size_t)offset);
+	totalSize = Math::Max(totalSize, (size_t)offset);
 
 	return true;
 }

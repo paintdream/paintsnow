@@ -8,7 +8,7 @@ using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
 LightBufferRenderStage::LightBufferRenderStage(const String& config) : LightTexture(renderTargetDescription.colorBufferStorages[0]) {
-	uint8_t shift = Min((uint8_t)atoi(config.c_str()), (uint8_t)16);
+	uint8_t shift = Math::Min((uint8_t)atoi(config.c_str()), (uint8_t)16);
 	resolutionShift = Char2((char)shift, (char)shift);
 }
 
@@ -62,7 +62,7 @@ void LightBufferRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 	Float4* lightInfos = &encoder.lightInfos[0];
 	encoder.invScreenSize = Float2(dim.x() == 0 ? 0 : 1.0f / dim.x(), dim.y() == 0 ? 0 : 1.0f / dim.y());
 	int32_t gridWidth = (dim.x() + 7) >> 3, gridHeight = (dim.y() + 7) >> 3;
-	uint32_t count = Min((uint32_t)lights.size(), (uint32_t)LightEncoderFS::MAX_LIGHT_COUNT);
+	uint32_t count = Math::Min((uint32_t)lights.size(), (uint32_t)LightEncoderFS::MAX_LIGHT_COUNT);
 	encoder.lightCount = (float)count;
 
 	for (uint32_t i = 0; i < count; i++) {
@@ -75,7 +75,7 @@ void LightBufferRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 			const Float4& color = light.colorAttenuation;
 			float intensity = color.x() * 0.2126f + color.y() * 0.7152f + color.z() * 0.0722f;
 			float radius = (float)sqrt(100 * intensity / (0.0001 + color.w()));
-			lightPosition.w() = Max(0.05f, radius * radius);
+			lightPosition.w() = Math::Max(0.05f, radius * radius);
 		}
 	}
 

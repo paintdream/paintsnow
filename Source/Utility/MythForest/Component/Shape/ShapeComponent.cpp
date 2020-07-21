@@ -13,7 +13,7 @@ static inline UShort3 ToLocalInt(const Float3Pair& bound, const Float3& pt, uint
 	Float3 local = ToLocal(bound, pt);
 	UShort3 ret;
 	for (uint32_t i = 0; i < 3; i++) {
-		ret[i] = safe_cast<uint16_t>(Clamp((uint32_t)(local[i] * divCount), 0u, divCount - 1));
+		ret[i] = safe_cast<uint16_t>(Math::Clamp((uint32_t)(local[i] * divCount), 0u, divCount - 1));
 	}
 
 	return ret;
@@ -123,7 +123,7 @@ void ShapeComponent::Update(Engine& engine, TShared<MeshResource> resource) {
 	}
 
 	// convert to local position
-	uint32_t level = Min(Log2(indices.size() / 8), (uint32_t)(sizeof(uint32_t) * 8 / 3));
+	uint32_t level = Math::Min(Math::Log2(indices.size() / 8), (uint32_t)(sizeof(uint32_t) * 8 / 3));
 	uint32_t divCount = 1 << level;
 
 	std::vector<CodeIndex> codeIndices;
@@ -185,7 +185,7 @@ struct ShapeComponent::PatchRaycaster {
 
 	bool operator () (const Float3Pair& box, const TKdTree<Float3Pair>& node) {
 		const Patch& patch = static_cast<const Patch&>(node);
-		if (IntersectBox(box, ray)) {
+		if (Math::IntersectBox(box, ray)) {
 			for (uint32_t i = 0; i < MAX_PATCH_COUNT; i++) {
 				uint32_t idx = patch.indices[i];
 				if (idx == ~(uint32_t)0) break;
@@ -197,7 +197,7 @@ struct ShapeComponent::PatchRaycaster {
 
 				Float3 res;
 				Float2 uv;
-				if (Intersect3D(res, uv, points, ray)) {
+				if (Math::Intersect3D(res, uv, points, ray)) {
 					float s = (res - ray.first).SquareLength();
 					if (s < distance) {
 						distance = s;

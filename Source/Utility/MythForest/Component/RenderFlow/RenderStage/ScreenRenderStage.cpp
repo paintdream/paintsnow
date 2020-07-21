@@ -8,7 +8,7 @@ using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
 ScreenRenderStage::ScreenRenderStage(const String& config) : OutputColor(renderTargetDescription.colorBufferStorages[0]) {
-	size_t count = Max(1, atoi(config.c_str()));
+	size_t count = Math::Max(1, atoi(config.c_str()));
 	BloomLayers.resize(count);
 	for (size_t i = 0; i < count; i++) {
 		BloomLayers[i] = TShared<RenderPortTextureInput>::From(new RenderPortTextureInput());

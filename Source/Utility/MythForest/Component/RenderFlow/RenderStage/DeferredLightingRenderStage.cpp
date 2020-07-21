@@ -68,7 +68,7 @@ void DeferredLightingRenderStage::UpdatePass(Engine& engine, IRender::Queue* que
 
 	if (LightSource->cubeMapTexture) {
 		standardLighting.specTexture.resource = LightSource->cubeMapTexture->GetTexture();
-		standardLighting.cubeLevelInv = 1.0f / Log2((uint32_t)LightSource->cubeMapTexture->description.dimension.x());
+		standardLighting.cubeLevelInv = 1.0f / Math::Log2((uint32_t)LightSource->cubeMapTexture->description.dimension.x());
 	} else {
 		standardLighting.specTexture.resource = BaseColorOcclusion.textureResource->GetTexture();
 	}
@@ -93,13 +93,13 @@ void DeferredLightingRenderStage::UpdatePass(Engine& engine, IRender::Queue* que
 	}
 
 	const std::vector<RenderPortLightSource::LightElement>& lights = LightSource->lightElements;
-	uint32_t count = Min((uint32_t)lights.size(), (uint32_t)StandardLightingFS::MAX_LIGHT_COUNT);
+	uint32_t count = Math::Min((uint32_t)lights.size(), (uint32_t)StandardLightingFS::MAX_LIGHT_COUNT);
 	for (uint32_t i = 0; i < count; i++) {
 		const RenderPortLightSource::LightElement& light = lights[i];
 
 		Float3 p(light.position.x(), light.position.y(), light.position.z());
 		if (light.position.w() != 0) {
-			p = Transform3D(CameraView->viewMatrix, p);
+			p = Math::Transform3D(CameraView->viewMatrix, p);
 		} else {
 			p = p * normalMatrix;
 			p.Normalize();

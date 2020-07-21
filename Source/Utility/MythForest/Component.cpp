@@ -117,7 +117,7 @@ float Component::Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float
 
 void Component::RaycastForEntity(RaycastTask& task, Float3Pair& ray, Entity* entity) {
 	assert(!(entity->Flag() & TINY_MODIFIED));
-	if (!IntersectBox(entity->GetKey(), ray))
+	if (!Math::IntersectBox(entity->GetKey(), ray))
 		return;
 
 	Float3Pair newRay = ray;

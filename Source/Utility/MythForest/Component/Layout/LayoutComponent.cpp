@@ -50,7 +50,7 @@ inline Float2 CalcDimension(LayoutComponent* win, float& lastMargin, float& sum,
 	}
 
 	if (maxvalue - value >= 0) {
-		m = (lastMargin == -1 ? 0.0f : Max(m, lastMargin)) + get(padding.first);
+		m = (lastMargin == -1 ? 0.0f : Math::Max(m, lastMargin)) + get(padding.first);
 		assert(m >= 0);
 		assert(value >= 0);
 		sum += maxvalue - value;
@@ -62,7 +62,7 @@ inline Float2 CalcDimension(LayoutComponent* win, float& lastMargin, float& sum,
 		assert(lastMargin >= 0);
 	} else {
 		// hide element?
-		lastMargin = Max(lastMargin, get(margin.second));
+		lastMargin = Math::Max(lastMargin, get(margin.second));
 		assert(lastMargin >= 0);
 	}
 
@@ -164,10 +164,10 @@ public:
 						other(rect.first) = other(saveRange.first) + other(win->padding.first);
 						other(rect.second) = other(saveRange.second) - other(win->padding.second);
 						if (other(win->size.second) - other(win->size.first) >= 0 && other(win->size.second) > 0) {
-							other(rect.second) = Min(Max(other(rect.second), other(rect.first) + other(win->size.first)), other(rect.first) + other(win->size.second));
+							other(rect.second) = Math::Min(Math::Max(other(rect.second), other(rect.first) + other(win->size.first)), other(rect.first) + other(win->size.second));
 
 							// Update scroll size, important!
-							other(scrollSize) = Max(other(scrollSize), other(rect.second) - other(range.first));
+							other(scrollSize) = Math::Max(other(scrollSize), other(rect.second) - other(range.first));
 						}
 
 						CheckRect(rect);
@@ -215,8 +215,8 @@ public:
 			}
 		}
 
-		get(scrollSize) = Max(0.0f, get(scrollSize) - size);
-		other(scrollSize) = Max(0.0f, other(scrollSize) - (other(range.second) - other(range.first)));
+		get(scrollSize) = Math::Max(0.0f, get(scrollSize) - size);
+		other(scrollSize) = Math::Max(0.0f, other(scrollSize) - (other(range.second) - other(range.first)));
 		// int totalHeight = range.first.y() + range.second.y();// +scrollSize.y();
 
 		// allocate remaining
@@ -228,7 +228,7 @@ public:
 			LayoutComponent* top = sorted.top();
 			float diff = size * top->weight / weight;
 			if (get(top->size.second) - get(top->size.first) >= 0 && get(top->size.second) > 0) {
-				diff = Min(diff, get(top->size.second) - get(top->rect.second) + get(top->rect.first));
+				diff = Math::Min(diff, get(top->size.second) - get(top->rect.second) + get(top->rect.first));
 			}
 			assert(diff >= 0);
 			get(top->rect.second) += diff;

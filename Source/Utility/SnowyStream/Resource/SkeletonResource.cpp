@@ -53,7 +53,7 @@ void SkeletonResource::PrepareOffsetTransform(size_t k) {
 		offsetMatrices[k] = offsetMatrices[k] * offsetMatrices[parent];
 	}
 
-	offsetMatricesInv[k] = QuickInverse(offsetMatrices[k]);
+	offsetMatricesInv[k] = Math::QuickInverse(offsetMatrices[k]);
 }
 
 template <class T>
@@ -61,7 +61,7 @@ uint32_t LocateFrame(const std::vector<T>& frames, float time) {
 	T t;
 	t.time = time;
 	size_t frame = std::lower_bound(frames.begin(), frames.end(), t) - frames.begin();
-	return safe_cast<uint32_t>(Min(frame, frames.size() - 1));
+	return safe_cast<uint32_t>(Math::Min(frame, frames.size() - 1));
 }
 
 const IAsset::BoneAnimation& SkeletonResource::GetBoneAnimation() const {

@@ -62,12 +62,12 @@ void System::WarpStat::Execute(void* context) {
 		historyOffset = (historyOffset + 1) % HISTORY_LENGTH;
 		float oldValue = history[historyOffset];
 		history[historyOffset] = (float)total;
-		maxHistory = Max(maxHistory, (float)total);
+		maxHistory = Math::Max(maxHistory, (float)total);
 
 		if (oldValue >= maxHistory) {
 			float newMax = 0;
 			for (size_t n = 0; n < HISTORY_LENGTH; n++) {
-				newMax = Max(history[n], newMax);
+				newMax = Math::Max(history[n], newMax);
 			}
 			maxHistory = newMax;
 		}
@@ -98,7 +98,7 @@ void System::TickRender(LeavesFlute& leavesFlute) {
 		float maxHistory = 0;
 		for (size_t m = 0; m < warpCount; m++) {
 			TShared<WarpStat>& stat = warpStats[m];
-			maxHistory = Max(maxHistory, stat->maxHistory);
+			maxHistory = Math::Max(maxHistory, stat->maxHistory);
 		}
 
 		ImGui::Text("Warp Usage: (Max %d)", (int)maxHistory);

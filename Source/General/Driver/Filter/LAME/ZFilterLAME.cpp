@@ -111,7 +111,7 @@ bool LAMEDecoder::Read(void* p, size_t& len) {
 
 	// read extra data
 	size_t length = len;
-	size_t limit = Min((size_t)extraCount, length / (2 * sizeof(short)));
+	size_t limit = Math::Min((size_t)extraCount, length / (2 * sizeof(short)));
 	for (size_t k = 0; k < limit; k++) {
 		for (size_t j = 0; j < 2; j++) {
 			*data++ = extra[j][k + extraStart];
@@ -140,7 +140,7 @@ bool LAMEDecoder::Read(void* p, size_t& len) {
 			// format = IAudio::Decoder::FORMAT::STEREO16;
 			// data persent
 			// write data
-			size_t act = Min((size_t)ret, (len - read) / (2 * sizeof(short)));
+			size_t act = Math::Min((size_t)ret, (len - read) / (2 * sizeof(short)));
 			for (size_t i = 0; i < act; i++) {
 				for (size_t j = 0; j < 2; j++) {
 					*data++ = extra[j][i];
