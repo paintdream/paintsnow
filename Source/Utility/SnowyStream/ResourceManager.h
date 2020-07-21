@@ -39,7 +39,7 @@ namespace PaintsNow {
 			virtual void InvokeDownload(ResourceBase* resource, void* deviceContext = nullptr) = 0;
 
 		private:
-			unordered_map<String, ResourceBase*> resourceMap;
+			std::unordered_map<String, ResourceBase*> resourceMap;
 			IUniformResourceManager& uniformResourceManager;
 			Interfaces* interfaces;
 			TWrapper<void, const String&> errorHandler;

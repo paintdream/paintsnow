@@ -49,7 +49,7 @@ namespace PaintsNow {
 				friend class FontResource;
 
 			protected:
-				typedef unordered_map<IFontBase::FONTCHAR, Char> hmap;
+				typedef std::unordered_map<IFontBase::FONTCHAR, Char> hmap;
 				uint32_t critical;
 				hmap cache;
 				Short2Pair lastRect;

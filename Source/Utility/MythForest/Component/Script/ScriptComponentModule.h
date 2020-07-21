@@ -24,7 +24,7 @@ namespace PaintsNow {
 			void RequestSetHandler(IScript::Request& request, IScript::Delegate<ScriptComponent> scriptComponent, const String& event, IScript::Request::Ref handler);
 
 		protected:
-			unordered_map<String, size_t> mapEventNameToID;
+			std::unordered_map<String, size_t> mapEventNameToID;
 		};
 	}
 }

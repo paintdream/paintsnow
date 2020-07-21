@@ -74,7 +74,7 @@ namespace PaintsNow {
 			};
 
 			struct WarpData {
-				typedef unordered_map<InstanceKey, InstanceGroup, HashInstanceKey> InstanceGroupMap;
+				typedef std::unordered_map<InstanceKey, InstanceGroup, HashInstanceKey> InstanceGroupMap;
 				struct GlobalBufferItem {
 					ZPassBase::PartialUpdater globalUpdater;
 					ZPassBase::PartialUpdater instanceUpdater;

@@ -6,6 +6,8 @@
 #ifndef __TSHADERMACRO_H__
 #define __TSHADERMACRO_H__
 
+#include "../../Core/Interface/IType.h"
+#include "../Interface/IRender.h"
 
 #ifdef _MSC_VER
 #pragma warning(disable:4305) // 1.0 to double
@@ -98,8 +100,13 @@ namespace PaintsNow {
 	FILTER_FUNCTION_TWO(atan);
 	FILTER_FUNCTION_TWO(pow);
 	FILTER_FUNCTION_TWO(mod);
-	FILTER_FUNCTION_TWO(min);
-	FILTER_FUNCTION_TWO(max);
+
+	FILTER_FUNCTION_TWO(_min);
+	FILTER_FUNCTION_TWO(_max);
+
+#define min _min
+#define max _max
+
 	FILTER_FUNCTION_TWO(step);
 	FILTER_FUNCTION_TWO(distance);
 	FILTER_FUNCTION_TWO(reflect);

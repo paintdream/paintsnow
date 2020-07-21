@@ -119,7 +119,7 @@ namespace PaintsNow {
 			Interfaces& interfaces;
 			NsBridgeSunset::BridgeSunset& bridgeSunset;
 			const TWrapper<void, const String&> errorHandler;
-			unordered_map<String, std::pair<Unique, TShared<ResourceSerializerBase> > > resourceSerializers;
+			std::unordered_map<String, std::pair<Unique, TShared<ResourceSerializerBase> > > resourceSerializers;
 			std::map<Unique, TShared<ResourceManager> > resourceManagers;
 			static String reflectedExtension;
 			const TWrapper<IArchive*, IStreamBase&, size_t> subArchiveCreator;

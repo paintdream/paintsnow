@@ -36,7 +36,7 @@ namespace PaintsNow {
 			void Clear();
 			void InstallModule(Module* module);
 			Module* GetComponentModuleFromName(const String& name) const;
-			unordered_map<String, Module*>& GetModuleMap();
+			std::unordered_map<String, Module*>& GetModuleMap();
 			void TickFrame();
 			uint32_t GetFrameIndex() const;
 			Kernel& GetKernel();
@@ -59,12 +59,12 @@ namespace PaintsNow {
 			std::atomic<uint32_t> frameIndex;
 			std::atomic<uint32_t> entityCount;
 			IThread::Event* finalizeEvent;
-			unordered_map<String, Module*> modules;
+			std::unordered_map<String, Module*> modules;
 			std::vector<TQueue<ITask*> > frameTasks;
 			std::vector<IRender::Queue*> warpResourceQueues;
 
 #ifdef _DEBUG
-			unordered_map<Entity*, Entity*> entityMap;
+			std::unordered_map<Entity*, Entity*> entityMap;
 			std::atomic<uint32_t> entityCritical;
 #endif
 		};

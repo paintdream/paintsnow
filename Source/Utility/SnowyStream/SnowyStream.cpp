@@ -777,7 +777,7 @@ TShared<ResourceBase> SnowyStream::CreateResource(const String& path, const Stri
 	}
 
 	// Find resource serializer
-	unordered_map<String, std::pair<Unique, TShared<ResourceSerializerBase> > >::iterator p = resourceSerializers.find(extension);
+	std::unordered_map<String, std::pair<Unique, TShared<ResourceSerializerBase> > >::iterator p = resourceSerializers.find(extension);
 	IArchive& archive = interfaces.archive;
 	IFilterBase& protocol = interfaces.assetFilterBase;
 
@@ -816,7 +816,7 @@ bool SnowyStream::MapResource(TShared<ResourceBase> resource, const String& exte
 	IArchive& archive = interfaces.archive;
 	IFilterBase& protocol = interfaces.assetFilterBase;
 
-	unordered_map<String, std::pair<Unique, TShared<ResourceSerializerBase> > >::iterator p = resourceSerializers.find(typeExtension);
+	std::unordered_map<String, std::pair<Unique, TShared<ResourceSerializerBase> > >::iterator p = resourceSerializers.find(typeExtension);
 	if (p != resourceSerializers.end()) {
 		// query manager
 		std::map<Unique, TShared<ResourceManager> >::iterator t = resourceManagers.find((*p).second.first);
@@ -834,7 +834,7 @@ bool SnowyStream::PersistResource(TShared<ResourceBase> resource, const String& 
 	IArchive& archive = interfaces.archive;
 	IFilterBase& protocol = interfaces.assetFilterBase;
 
-	unordered_map<String, std::pair<Unique, TShared<ResourceSerializerBase> > >::iterator p = resourceSerializers.find(typeExtension);
+	std::unordered_map<String, std::pair<Unique, TShared<ResourceSerializerBase> > >::iterator p = resourceSerializers.find(typeExtension);
 	if (p != resourceSerializers.end()) {
 		// query manager
 		std::map<Unique, TShared<ResourceManager> >::iterator t = resourceManagers.find((*p).second.first);

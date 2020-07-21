@@ -23,11 +23,11 @@ void ResourceManager::RemoveAll() {
 	assert(GetLockCount() != 0);
 
 	// remove all eternal resources
-	unordered_map<String, ResourceBase*> temp;
+	std::unordered_map<String, ResourceBase*> temp;
 	std::swap(temp, resourceMap);
 
 	std::vector<ResourceBase*> externals;
-	for (unordered_map<String, ResourceBase*>::const_iterator it = temp.begin(); it != temp.end(); ++it) {
+	for (std::unordered_map<String, ResourceBase*>::const_iterator it = temp.begin(); it != temp.end(); ++it) {
 		ResourceBase* resource = (*it).second;
 		InvokeDetach(resource, GetContext());
 		resource->Flag().fetch_or(ResourceBase::RESOURCE_ORPHAN, std::memory_order_acquire);
@@ -71,7 +71,7 @@ IUniformResourceManager& ResourceManager::GetUniformResourceManager() {
 
 TShared<ResourceBase> ResourceManager::LoadExist(const String& id) {
 	assert(GetLockCount() != 0);
-	unordered_map<String, ResourceBase*>::iterator p = resourceMap.find(id);
+	std::unordered_map<String, ResourceBase*>::iterator p = resourceMap.find(id);
 	ResourceBase* pointer = nullptr;
 	if (p != resourceMap.end()) {
 		pointer = (*p).second;

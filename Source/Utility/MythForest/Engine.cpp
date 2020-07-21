@@ -40,7 +40,7 @@ Engine::~Engine() {
 }
 
 void Engine::Clear() {
-	for (unordered_map<String, Module*>::iterator it = modules.begin(); it != modules.end(); ++it) {
+	for (std::unordered_map<String, Module*>::iterator it = modules.begin(); it != modules.end(); ++it) {
 		(*it).second->Uninitialize();
 	}
 
@@ -58,7 +58,7 @@ void Engine::Clear() {
 		threadApi.Wait(finalizeEvent, mutex, 50);
 	}
 
-	for (unordered_map<String, Module*>::iterator ip = modules.begin(); ip != modules.end(); ++ip) {
+	for (std::unordered_map<String, Module*>::iterator ip = modules.begin(); ip != modules.end(); ++ip) {
 		(*ip).second->ReleaseObject();
 	}
 
@@ -79,7 +79,7 @@ void Engine::InstallModule(Module* module) {
 }
 
 Module* Engine::GetComponentModuleFromName(const String& name) const {
-	unordered_map<String, Module*>::const_iterator it = modules.find(name);
+	std::unordered_map<String, Module*>::const_iterator it = modules.find(name);
 	if (it != modules.end()) {
 		return (*it).second;
 	} else {
@@ -87,7 +87,7 @@ Module* Engine::GetComponentModuleFromName(const String& name) const {
 	}
 }
 
-unordered_map<String, Module*>& Engine::GetModuleMap() {
+std::unordered_map<String, Module*>& Engine::GetModuleMap() {
 	return modules;
 }
 
@@ -107,7 +107,7 @@ void Engine::TickFrame() {
 		}
 	}
 
-	for (unordered_map<String, Module*>::iterator it = modules.begin(); it != modules.end(); ++it) {
+	for (std::unordered_map<String, Module*>::iterator it = modules.begin(); it != modules.end(); ++it) {
 		(*it).second->TickFrame();
 	}
 

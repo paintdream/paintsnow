@@ -102,8 +102,8 @@ TObject<IReflect>& MythForest::operator () (IReflect& reflect) {
 	if (reflect.IsReflectProperty()) {
 		ReflectProperty(engine)[Runtime];
 
-		unordered_map<String, Module*>& moduleMap = engine.GetModuleMap();
-		for (unordered_map<String, Module*>::iterator it = moduleMap.begin(); it != moduleMap.end(); ++it) {
+		std::unordered_map<String, Module*>& moduleMap = engine.GetModuleMap();
+		for (std::unordered_map<String, Module*>::iterator it = moduleMap.begin(); it != moduleMap.end(); ++it) {
 			*CreatePropertyWriter(reflect, this, *(*it).second, (*it).first.c_str())[ScriptLibrary = (*it).first + "Module"];
 		}
 	}
@@ -149,8 +149,8 @@ void MythForest::RequestEnumerateComponentModules(IScript::Request& request) {
 
 	request.DoLock();
 	request << begintable;
-	const unordered_map<String, Module*>& subModules = engine.GetModuleMap();
-	for (unordered_map<String, Module*>::const_iterator it = subModules.begin(); it != subModules.end(); ++it) {
+	const std::unordered_map<String, Module*>& subModules = engine.GetModuleMap();
+	for (std::unordered_map<String, Module*>::const_iterator it = subModules.begin(); it != subModules.end(); ++it) {
 		request << key((*it).first) << *((*it).second);
 	}
 

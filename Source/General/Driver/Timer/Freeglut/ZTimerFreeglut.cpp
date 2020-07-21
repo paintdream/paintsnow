@@ -3,14 +3,14 @@
 #define FREEGLUT_STATIC
 #include <GL/freeglut.h>
 #include <cassert>
-// #include <unordered_map>
+// #include <std::unordered_map>
 #include <map>
 
 using namespace PaintsNow;
 
 /*
 #if !(defined(_MSC_VER) && _MSC_VER <= 1200)
-typedef unordered_map<int, ZTimerFreeglut*> hmap;
+typedef std::unordered_map<int, ZTimerFreeglut*> hmap;
 #else
 struct HashFunc {
 	size_t operator () (int ch) const {
@@ -18,7 +18,7 @@ struct HashFunc {
 	}
 };
 
-typedef unordered_map<int, ZTimerFreeglut*, HashFunc> hmap;
+typedef std::unordered_map<int, ZTimerFreeglut*, HashFunc> hmap;
 #endif*/
 
 struct TimerFreeglutImpl : public ITimer::Timer {

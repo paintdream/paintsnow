@@ -22,7 +22,7 @@ TShared<ExplorerComponent> ExplorerComponentModule::RequestNew(IScript::Request&
 	CHECK_REFERENCES_NONE();
 
 	// Convert componentType from string
-	unordered_map<String, Module*>::const_iterator it = engine.GetModuleMap().find(componentType);
+	std::unordered_map<String, Module*>::const_iterator it = engine.GetModuleMap().find(componentType);
 	if (it != engine.GetModuleMap().end()) {
 		request.Error(String("Unable to load component type: ") + componentType);
 		return nullptr;

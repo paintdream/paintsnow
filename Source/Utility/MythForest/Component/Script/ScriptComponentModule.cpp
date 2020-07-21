@@ -7,14 +7,14 @@ using namespace PaintsNow::NsSnowyStream;
 
 class Reflector : public IReflect {
 public:
-	Reflector(unordered_map<String, size_t>& m) : mapEventNameToID(m), IReflect(false, false, false, true) {}
+	Reflector(std::unordered_map<String, size_t>& m) : mapEventNameToID(m), IReflect(false, false, false, true) {}
 
 	virtual void Enum(size_t value, Unique id, const char* name, const MetaChainBase* meta) override {
 		mapEventNameToID[name] = value;
 	}
 
 private:
-	unordered_map<String, size_t>& mapEventNameToID;
+	std::unordered_map<String, size_t>& mapEventNameToID;
 };
 
 ScriptComponentModule::ScriptComponentModule(Engine& engine) : BaseClass(engine) {
@@ -47,7 +47,7 @@ void ScriptComponentModule::RequestSetHandler(IScript::Request& request, IScript
 		CHECK_REFERENCES_WITH_TYPE(handler, IScript::Request::FUNCTION);
 	}
 
-	unordered_map<String, size_t>::iterator it = mapEventNameToID.find(event);
+	std::unordered_map<String, size_t>::iterator it = mapEventNameToID.find(event);
 	if (it == mapEventNameToID.end()) {
 		if (handler) {
 			request.DoLock();

@@ -66,7 +66,7 @@ namespace PaintsNow {
 				virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
 				struct WarpData {
-					typedef unordered_map<InstanceKey, InstanceGroup, HashInstanceKey> InstanceGroupMap;
+					typedef std::unordered_map<InstanceKey, InstanceGroup, HashInstanceKey> InstanceGroupMap;
 					WarpData();
 					InstanceGroupMap instanceGroups;
 					IRender::Queue* renderQueue;

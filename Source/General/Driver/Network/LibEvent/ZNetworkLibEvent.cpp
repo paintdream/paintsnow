@@ -13,8 +13,6 @@
 #include <windows.h>
 #endif
 
-#include "ZNetworkLibEvent.h"
-#include "../../../../Core/Template/TAtomic.h"
 #include <event2/bufferevent.h>
 #include <event2/buffer.h>
 #include <event2/thread.h>
@@ -26,6 +24,8 @@
 #include <event2/keyvalq_struct.h>
 #include <event2/http_struct.h>
 #include <event2/http_compat.h>
+#include "ZNetworkLibEvent.h"
+#include "../../../../Core/Template/TAtomic.h"
 #include <algorithm>
 #include <sstream>
 
