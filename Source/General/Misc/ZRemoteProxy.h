@@ -103,12 +103,8 @@ namespace PaintsNow {
 	class Variant;
 	class TableImpl {
 	public:
-		TableImpl();
-		~TableImpl();
-		TableImpl(const TableImpl& rhs);
-		TableImpl& operator = (const TableImpl& rhs);
 		std::vector<Variant> arrayPart;
-		std::map<String, Variant>* mapPart;
+		std::map<String, Variant> mapPart;
 	};
 
 	// save raw value
@@ -316,16 +312,16 @@ namespace PaintsNow {
 			~ObjectInfo();
 
 			struct Entry {
-				std::pair<IScript::Request::Ref, int64_t> CallFilter(IScript::Request& request, bool pre) {
+				std::pair<IScript::Request::Ref, size_t> CallFilter(IScript::Request& request, bool pre) {
 					return std::make_pair(IScript::Request::Ref(reinterpret_cast<size_t>((void*)&obj)), index);
 				}
 				String name;
 				IReflect::Param retValue;
 				std::vector<IReflect::Param> params;
 				IScript::Request::AutoWrapperBase* wrapper;
-				TWrapper<std::pair<IScript::Request::Ref, int64_t>, IScript::Request&, bool> method;
+				TWrapper<std::pair<IScript::Request::Ref, size_t>, IScript::Request&, bool> method;
 				IScript::BaseDelegate obj;
-				int64_t index;
+				size_t index;
 			};
 
 			int64_t refCount;

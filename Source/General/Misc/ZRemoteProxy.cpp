@@ -8,48 +8,22 @@ using namespace PaintsNow;
 enum { UNIQUE_GLOBAL = 0 };
 enum { GLOBAL_INTERFACE_CREATE = 0, GLOBAL_INTERFACE_QUERY };
 
-TableImpl::TableImpl() {
-	mapPart = new std::map<String, Variant>();
-}
-
-TableImpl::TableImpl(const TableImpl& rhs) {
-	if (&rhs != this) {
-		mapPart = nullptr;
-		*this = rhs;
-	}
-}
-
-TableImpl& TableImpl::operator = (const TableImpl& rhs) {
-	if (&rhs != this) {
-		if (mapPart == nullptr) {
-			mapPart = new std::map<String, Variant>();
-		}
-
-		*mapPart = *rhs.mapPart;
-	}
-
-	return *this;
-}
-
-TableImpl::~TableImpl() {
-	delete mapPart;
-}
 
 void Value<TableImpl>::Reflect(IReflect& reflect) {
 	if (reflect.IsReflectProperty()) {
 		ReflectProperty(value.arrayPart);
-		int64_t count = value.mapPart->size();
+		int64_t count = value.mapPart.size();
 		ReflectProperty(count);
-		if (value.mapPart->size() == 0) { // Read
+		if (value.mapPart.size() == 0) { // Read
 			for (size_t i = 0; i < count; i++) {
 				Variant v;
 				String key;
 				reflect.OnProperty(key, "Key", this, nullptr);
 				reflect.OnProperty(v, "Value", this, nullptr);
-				(*value.mapPart)[key] = v;
+				value.mapPart[key] = v;
 			}
 		} else {
-			for (std::map<String, Variant>::const_iterator it = value.mapPart->begin(); it != value.mapPart->end(); ++it) {
+			for (std::map<String, Variant>::const_iterator it = value.mapPart.begin(); it != value.mapPart.end(); ++it) {
 				reflect.OnProperty(it->first, "Key", this, nullptr);
 				reflect.OnProperty(it->second, "Value", this, nullptr);
 			}
@@ -289,6 +263,7 @@ void ZRemoteProxy::Request::ApplyDelta(std::map<IScript::Object*, ObjectInfo>& i
 		const std::pair<int64_t, int64_t>& value = *it;
 		// merge edition
 		IScript::Object* object = reinterpret_cast<IScript::Object*>(value.first);
+		assert(object != nullptr);
 		std::map<IScript::Object*, ObjectInfo>::iterator p = info.find(object);
 		if (p != info.end()) {
 			if ((p->second.refCount += value.second) <= 0) {
@@ -603,7 +578,7 @@ inline void Write(ZRemoteProxy::Request& request, C& value) {
 			int index = IncreaseTableIndex(buffer);
 			table.arrayPart.emplace_back(Variant(value));
 		} else {
-			(*table.mapPart)[key] = Variant(value);
+			table.mapPart[key] = Variant(value);
 		}
 
 		key = "";
@@ -631,7 +606,7 @@ IScript::Request& ZRemoteProxy::Request::operator << (const TableStart&) {
 			int index = IncreaseTableIndex(buffer);
 			table.arrayPart.emplace_back(var);
 		} else {
-			(*table.mapPart)[key] = var;
+			table.mapPart[key] = var;
 		}
 
 		key = "";
@@ -665,8 +640,8 @@ inline void Read(ZRemoteProxy::Request& request, C& value) {
 			Variant* var = &table.arrayPart[index];
 			value = static_cast<Value<C>*>(var->Get())->value;
 		} else {
-			std::map<String, Variant>::iterator it = table.mapPart->find(key);
-			if (it != table.mapPart->end()) {
+			std::map<String, Variant>::iterator it = table.mapPart.find(key);
+			if (it != table.mapPart.end()) {
 				value = static_cast<Value<C>*>(it->second.Get())->value;
 			}
 		}
@@ -713,8 +688,8 @@ IScript::Request& ZRemoteProxy::Request::operator >> (TableStart& ts) {
 			int index = IncreaseTableIndex(buffer);
 			buffer.emplace_back(table.arrayPart[index]);
 		} else {
-			std::map<String, Variant>::iterator it = table.mapPart->find(key);
-			if (it != table.mapPart->end()) {
+			std::map<String, Variant>::iterator it = table.mapPart.find(key);
+			if (it != table.mapPart.end()) {
 				buffer.emplace_back(it->second);
 			} else {
 				TableImpl impl;
@@ -1089,7 +1064,7 @@ public:
 	virtual void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta);
 
 private:
-	std::map<String, TWrapper<std::pair<IScript::Request::Ref, int64_t>, IScript::Request&, bool>*> mapNameToWrapper;
+	std::map<String, TWrapper<std::pair<IScript::Request::Ref, size_t>, IScript::Request&, bool>*> mapNameToWrapper;
 	ZRemoteProxy::ObjectInfo& objectInfo;
 };
 
@@ -1142,7 +1117,7 @@ void ReflectRoutines::Property(IReflectObject& s, Unique typeID, Unique refTypeI
 					const IScript::MetaRemoteEntryBase* wrapper = static_cast<const IScript::MetaRemoteEntryBase*>(node);
 					TWrapper<void>& routineBase = *reinterpret_cast<TWrapper<void>*>(ptr);
 					routineBase = wrapper->wrapper;
-					TWrapper<std::pair<IScript::Request::Ref, int64_t>, IScript::Request&, bool>* host = mapNameToWrapper[wrapper->name.empty() ? name : wrapper->name];
+					TWrapper<std::pair<IScript::Request::Ref, size_t>, IScript::Request&, bool>* host = mapNameToWrapper[wrapper->name.empty() ? name : wrapper->name];
 					routineBase.proxy.host = reinterpret_cast<IHost*>(host);
 				}
 			}
