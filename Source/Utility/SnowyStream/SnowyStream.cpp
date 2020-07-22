@@ -88,10 +88,7 @@ TObject<IReflect>& SnowyStream::operator () (IReflect& reflect) {
 		ReflectMethod(RequestUnmapResource)[ScriptMethod = "UnmapResource"];
 		ReflectMethod(RequestInspectResource)[ScriptMethod = "InspectResource"];
 		ReflectMethod(RequestCompressResourceAsync)[ScriptMethod = "CompressResourceAsync"];
-		// TODO: Generate correct inspection ...
 		ReflectMethod(RequestNewResourcesAsync)[ScriptMethod = "NewResourcesAsync"];
-		ReflectMethod(RequestImportResourceConfig)[ScriptMethod = "ImportResourceConfig"];
-		ReflectMethod(RequestExportResourceConfig)[ScriptMethod = "ExportResourceConfig"];
 
 		ReflectMethod(RequestParseJson)[ScriptMethod = "ParseJson"];
 		ReflectMethod(RequestNewFile)[ScriptMethod = "NewFile"];
@@ -171,20 +168,6 @@ void SnowyStream::RequestParseJson(IScript::Request& request, const String& str)
 		WriteValue(request, document);
 		request.UnLock();
 	}
-}
-
-void SnowyStream::RequestImportResourceConfig(IScript::Request& request, std::vector<std::pair<String, String> >& config) {
-	interfaces.assetFilterBase.ImportConfig(config);
-}
-
-void SnowyStream::RequestExportResourceConfig(IScript::Request& request) {
-	std::vector<std::pair<String, String> > config;
-	interfaces.assetFilterBase.ExportConfig(config);
-
-	bridgeSunset.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << config;
-	request.UnLock();
 }
 
 TShared<Zipper> SnowyStream::RequestNewZipper(IScript::Request& request, const String& path) {
@@ -651,7 +634,8 @@ void SnowyStream::RequestCompressResourceAsync(IScript::Request& request, IScrip
 	task->resource = resource.Get();
 	task->compressType = std::move(compressType);
 	task->callback = callback;
-	bridgeSunset.GetKernel().threadPool.Push(task->UpdateFlag(ITask::TASK_PRIORITY_BACKGROUND));
+
+	bridgeSunset.GetKernel().threadPool.Push(task);
 }
 
 void SnowyStream::Uninitialize() {

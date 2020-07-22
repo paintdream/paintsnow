@@ -116,7 +116,7 @@ void BridgeSunset::ContinueScriptDispatcher(IScript::Request& request, IHost* ho
 
 		// wait for it finishes
 		while (scriptContinuer.token.load(std::memory_order_acquire) != 0) {
-			threadPool.PollRoutine(safe_cast<uint32_t>(threadIndex), false);
+			threadPool.PollRoutine(safe_cast<uint32_t>(threadIndex));
 		}
 
 		request.DoLock();

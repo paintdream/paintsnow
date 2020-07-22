@@ -8,11 +8,10 @@ using namespace PaintsNow;
 enum { UNIQUE_GLOBAL = 0 };
 enum { GLOBAL_INTERFACE_CREATE = 0, GLOBAL_INTERFACE_QUERY };
 
-
 void Value<TableImpl>::Reflect(IReflect& reflect) {
 	if (reflect.IsReflectProperty()) {
 		ReflectProperty(value.arrayPart);
-		int64_t count = value.mapPart.size();
+		size_t count = value.mapPart.size();
 		ReflectProperty(count);
 		if (value.mapPart.size() == 0) { // Read
 			for (size_t i = 0; i < count; i++) {
@@ -29,6 +28,54 @@ void Value<TableImpl>::Reflect(IReflect& reflect) {
 			}
 		}
 	}
+}
+
+TObject<IReflect>& Variant::operator () (IReflect& reflect) {
+	BaseClass::operator () (reflect);
+	if (reflect.IsReflectProperty()) {
+		char type = value == nullptr ? TYPE_INT64 : value->GetType();
+		ReflectProperty(type);
+		assert(type != TYPE_ERROR);
+		if (value == nullptr) {
+			switch (type) {
+				case TYPE_INT8:
+					value = Construct((int8_t)(0));
+					break;
+				case TYPE_BOOL:
+					value = Construct((bool)false);
+					break;
+				case TYPE_INT16:
+					value = Construct((int16_t)(0));
+					break;
+				case TYPE_INT32:
+					value = Construct((int32_t)(0));
+					break;
+				case TYPE_INT64:
+					value = Construct((int64_t)(0));
+					break;
+				case TYPE_FLOAT:
+					value = Construct((float)(0.0f));
+					break;
+				case TYPE_DOUBLE:
+					value = Construct((double)(0.0f));
+					break;
+				case TYPE_STRING:
+					value = Construct((String)(""));
+					break;
+				case TYPE_OBJECT:
+					value = Construct(IScript::BaseDelegate(nullptr));
+					break;
+				case TYPE_TABLE:
+					value = Construct(TableImpl());
+					break;
+			}
+		}
+
+		if (value != nullptr)
+			value->Reflect(reflect);
+	}
+
+	return *this;
 }
 
 ZRemoteProxy::Request::Packet::Packet() : object(0), procedure(0), callback(0), response(false) {}
@@ -57,8 +104,7 @@ TObject<IReflect>& ZRemoteProxy::operator() (IReflect& reflect) {
 
 class MethodInspector : public IReflect {
 public:
-	MethodInspector(IScript::Object* o, ZRemoteProxy::ObjectInfo& info) : IReflect(false, true), object(o), objectInfo(info) {
-	}
+	MethodInspector(IScript::Object* o, ZRemoteProxy::ObjectInfo& info) : IReflect(false, true), object(o), objectInfo(info) {}
 
 	~MethodInspector() {
 		for (size_t i = 0; i < objectInfo.collection.size(); i++) {
@@ -206,8 +252,7 @@ IScript::Request& ZRemoteProxy::Request::CleanupIndex() {
 	return *this;
 }
 
-ZRemoteProxy::ObjectInfo::ObjectInfo() : refCount(0), needQuery(true) {
-}
+ZRemoteProxy::ObjectInfo::ObjectInfo() : refCount(0), needQuery(true) {}
 
 ZRemoteProxy::ObjectInfo::~ObjectInfo() {
 	for (size_t i = 0; i < collection.size(); i++) {
@@ -322,7 +367,7 @@ void ZRemoteProxy::Request::ProcessPacket(Packet& packet) {
 	} else {
 		int64_t proc = packet.procedure;
 		if (packet.object == UNIQUE_GLOBAL) {
-			if (proc < globalRoutines.collection.size()) {
+			if (proc < (int64_t)globalRoutines.collection.size()) {
 				wrapper = globalRoutines.collection[(size_t)proc].wrapper;
 			}
 		} else {
@@ -330,7 +375,7 @@ void ZRemoteProxy::Request::ProcessPacket(Packet& packet) {
 			IScript::Object* object = reinterpret_cast<IScript::Object*>(packet.object);
 			std::map<IScript::Object*, ObjectInfo>::iterator it = localActiveObjects.find(object);
 			if (it != localActiveObjects.end()) {
-				if (proc < it->second.collection.size()) {
+				if (proc < (int64_t)it->second.collection.size()) {
 					wrapper = it->second.collection[(size_t)proc].wrapper;
 				}
 			}
@@ -408,45 +453,43 @@ void ZRemoteProxy::Request::Process() {
 void ZRemoteProxy::Request::OnConnection(ITunnel::EVENT event) {
 	// { CONNECTED, TIMEOUT, READ, WRITE, CLOSE, ERROR }
 	switch (event) {
-	case ITunnel::CONNECTED:
-		if (statusHandler)
-			statusHandler(*this, !manually, ZRemoteProxy::CONNECTED, "Connection established");
-		break;
-	case ITunnel::TIMEOUT:
-		if (statusHandler)
-			statusHandler(*this, !manually, ZRemoteProxy::TIMEOUT, "Connection timeout");
-		break;
-	case ITunnel::READ:
-		// Handle for new call
-		Process();
-		break;
-	case ITunnel::WRITE:
-		break;
-	case ITunnel::CLOSE:
-	case ITunnel::ABORT:
-		if (statusHandler) {
-			if (event == ITunnel::CLOSE) {
-				statusHandler(*this, !manually, ZRemoteProxy::CLOSED, "Connection closed");
-			} else {
-				statusHandler(*this, !manually, ZRemoteProxy::ABORTED, "Connection aborted");
+		case ITunnel::CONNECTED:
+			if (statusHandler)
+				statusHandler(*this, !manually, ZRemoteProxy::CONNECTED, "Connection established");
+			break;
+		case ITunnel::TIMEOUT:
+			if (statusHandler)
+				statusHandler(*this, !manually, ZRemoteProxy::TIMEOUT, "Connection timeout");
+			break;
+		case ITunnel::READ:
+			// Handle for new call
+			Process();
+			break;
+		case ITunnel::WRITE:
+			break;
+		case ITunnel::CLOSE:
+		case ITunnel::ABORT:
+			if (statusHandler) {
+				if (event == ITunnel::CLOSE) {
+					statusHandler(*this, !manually, ZRemoteProxy::CLOSED, "Connection closed");
+				} else {
+					statusHandler(*this, !manually, ZRemoteProxy::ABORTED, "Connection aborted");
+				}
 			}
-		}
 
-		host.tunnel.CloseConnection(connection);
-		connection = nullptr;
-		if (!manually) {
-			delete this;
-		}
-		break;
+			host.tunnel.CloseConnection(connection);
+			connection = nullptr;
+			if (!manually) {
+				delete this;
+			}
+			break;
 	}
 }
 
 
-ValueBase::ValueBase() {
-}
+ValueBase::ValueBase() {}
 
-ValueBase::~ValueBase() {
-}
+ValueBase::~ValueBase() {}
 
 TObject<IReflect>& ZRemoteProxy::Request::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
@@ -509,15 +552,15 @@ ZRemoteProxy::Request::~Request() {
 	}
 
 	for (std::set<IScript::Request::AutoWrapperBase*>::iterator p = localCallbacks.begin(); p != localCallbacks.end(); ++p) {
-		delete *p;
+		delete* p;
 	}
 
 	for (std::set<IScript::BaseDelegate*>::iterator q = localReferences.begin(); q != localReferences.end(); ++q) {
-		delete *q;
+		delete* q;
 	}
 
 	for (std::set<IReflectObject*>::iterator t = tempObjects.begin(); t != tempObjects.end(); ++t) {
-		delete *t;
+		delete* t;
 	}
 
 	if (!manually) {

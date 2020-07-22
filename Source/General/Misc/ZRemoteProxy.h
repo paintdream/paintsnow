@@ -100,13 +100,6 @@ namespace PaintsNow {
 	};
 
 
-	class Variant;
-	class TableImpl {
-	public:
-		std::vector<Variant> arrayPart;
-		std::map<String, Variant> mapPart;
-	};
-
 	// save raw value
 	template <class T>
 	class Value : public ValueBase {
@@ -159,33 +152,6 @@ namespace PaintsNow {
 		String value;
 	};
 
-	template <>
-	class Value<TableImpl> : public ValueBase {
-	public:
-		enum { Type = TypeTraits<TableImpl>::Type };
-
-		virtual char GetType() const {
-			return Type;
-		}
-
-		Value() {}
-		Value(const TableImpl& t) : value(t) {}
-
-		virtual Unique QueryValueUnique() const {
-			static Unique u = UniqueType<TableImpl>::Get();
-			return u;
-		}
-
-		virtual ValueBase* Clone() const {
-			return new Value<TableImpl>(value);
-		}
-
-		virtual void Reflect(IReflect& reflect);
-
-		TableImpl value;
-	};
-
-
 	class Variant : public TReflected<Variant, IReflectObjectComplex> {
 	public:
 		Variant() : value(nullptr) {}
@@ -203,13 +169,13 @@ namespace PaintsNow {
 			value = Construct(object);
 		}
 
-
 		inline void AddRef() {
 			if (value != nullptr) {
 				size_t* ref = (size_t*)((char*)value - sizeof(size_t));
 				(*ref)++;
 			}
 		}
+
 		inline void ReleaseObject() {
 			if (value != nullptr) {
 				size_t* ref = (size_t*)((char*)value - sizeof(size_t));
@@ -234,56 +200,41 @@ namespace PaintsNow {
 			return value;
 		}
 
-		TObject<IReflect>& operator () (IReflect& reflect) {
-			BaseClass::operator () (reflect);
-			if (reflect.IsReflectProperty()) {
-				char type = value == nullptr ? TYPE_INT64 : value->GetType();
-				ReflectProperty(type);
-				assert(type != TYPE_ERROR);
-				if (value == nullptr) {
-					switch (type) {
-					case TYPE_INT8:
-						value = Construct((int8_t)(0));
-						break;
-					case TYPE_BOOL:
-						value = Construct((bool)false);
-						break;
-					case TYPE_INT16:
-						value = Construct((int16_t)(0));
-						break;
-					case TYPE_INT32:
-						value = Construct((int32_t)(0));
-						break;
-					case TYPE_INT64:
-						value = Construct((int64_t)(0));
-						break;
-					case TYPE_FLOAT:
-						value = Construct((float)(0.0f));
-						break;
-					case TYPE_DOUBLE:
-						value = Construct((double)(0.0f));
-						break;
-					case TYPE_STRING:
-						value = Construct((String)(""));
-						break;
-					case TYPE_OBJECT:
-						value = Construct(IScript::BaseDelegate(nullptr));
-						break;
-					case TYPE_TABLE:
-						value = Construct(TableImpl());
-						break;
-					}
-				}
-				
-				if (value != nullptr)
-					value->Reflect(reflect);
-			}
-
-			return *this;
-		}
-
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 	private:
 		ValueBase* value;
+	};
+
+	class TableImpl {
+	public:
+		std::vector<Variant> arrayPart;
+		std::map<String, Variant> mapPart;
+	};
+	
+	template <>
+	class Value<TableImpl> : public ValueBase {
+	public:
+		enum { Type = TypeTraits<TableImpl>::Type };
+
+		virtual char GetType() const {
+			return Type;
+		}
+
+		Value() {}
+		Value(const TableImpl& t) : value(t) {}
+
+		virtual Unique QueryValueUnique() const {
+			static Unique u = UniqueType<TableImpl>::Get();
+			return u;
+		}
+
+		virtual ValueBase* Clone() const {
+			return new Value<TableImpl>(value);
+		}
+
+		virtual void Reflect(IReflect& reflect);
+
+		TableImpl value;
 	};
 
 	class ZRemoteFactory : public TReflected<ZRemoteFactory, IReflectObjectComplex> {

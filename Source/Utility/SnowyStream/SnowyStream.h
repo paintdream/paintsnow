@@ -48,8 +48,6 @@ namespace PaintsNow {
 			TShared<ResourceBase> RequestCloneResource(IScript::Request& request, IScript::Delegate<ResourceBase>, const String& path);
 			void RequestUnmapResource(IScript::Request& request, IScript::Delegate<ResourceBase> resource);
 			void RequestCompressResourceAsync(IScript::Request& request, IScript::Delegate<ResourceBase> resource, String& compressType, IScript::Request::Ref callback);
-			void RequestImportResourceConfig(IScript::Request& request, std::vector<std::pair<String, String> >& version);
-			void RequestExportResourceConfig(IScript::Request& request);
 
 			TShared<Zipper> RequestNewZipper(IScript::Request& request, const String& path);
 			void RequestPostZipperData(IScript::Request& request, IScript::Delegate<Zipper> zipper, const String& path, const String& data);

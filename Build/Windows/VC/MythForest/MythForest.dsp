@@ -429,11 +429,11 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Surface\SurfaceComponentM
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Terrain\TapeComponent.cpp
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Tape\TapeComponent.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Terrain\TapeComponentModule.cpp
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Tape\TapeComponentModule.cpp
 # End Source File
 # Begin Source File
 
@@ -849,11 +849,11 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SurfaceVS.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Terrain\TapeComponent.h
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Tape\TapeComponent.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Terrain\TapeComponentModule.h
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Tape\TapeComponentModule.h
 # End Source File
 # Begin Source File
 
