@@ -5,13 +5,13 @@
 #ifndef __MULTIHASHLIGHT_PASS_H__
 #define __MULTIHASHLIGHT_PASS_H__
 
-#include "../../../../General/Misc/ZPassBase.h"
+#include "../../../../General/Misc/PassBase.h"
 #include "../Shaders/ScreenTransformVS.h"
 #include "../Shaders/MultiHashLightFS.h"
 
 namespace PaintsNow {
 	namespace NsSnowyStream {
-		class MultiHashLightPass : public TReflected<MultiHashLightPass, ZPassBase> {
+		class MultiHashLightPass : public TReflected<MultiHashLightPass, PassBase> {
 		public:
 			MultiHashLightPass();
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;

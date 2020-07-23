@@ -6,7 +6,7 @@
 #ifndef __FORWARDLIGHTING_PASS_H__
 #define __FORWARDLIGHTING_PASS_H__
 
-#include "../../../../General/Misc/ZPassBase.h"
+#include "../../../../General/Misc/PassBase.h"
 #include "../Shaders/StandardTransformVS.h"
 #include "../Shaders/StandardParameterFS.h"
 #include "../Shaders/StandardLightingFS.h"
@@ -14,7 +14,7 @@
 namespace PaintsNow {
 	namespace NsSnowyStream {
 		// standard pbr deferred shading Pass using ggx prdf
-		class ForwardLightingPass : public TReflected<ForwardLightingPass, ZPassBase> {
+		class ForwardLightingPass : public TReflected<ForwardLightingPass, PassBase> {
 		public:
 			ForwardLightingPass();
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;

@@ -8,7 +8,7 @@
 
 #include "../../General/Interface/IDatabase.h"
 #include "../../Core/Interface/IScript.h"
-#include "../../General/Misc/ZDynamicObject.h"
+#include "../../General/Misc/DynamicObject.h"
 #include "../../Core/System/Kernel.h"
 
 namespace PaintsNow {
@@ -68,8 +68,8 @@ namespace PaintsNow {
 			void SetInteger(size_t i);
 
 		private:
-			ZDynamicUniqueAllocator uniqueAllocator;
-			ZDynamicObject* dynamicObject;
+			DynamicUniqueAllocator uniqueAllocator;
+			DynamicObject* dynamicObject;
 			IScript::Request* request;
 			IScript::Request::Ref tableRef;
 			size_t index;

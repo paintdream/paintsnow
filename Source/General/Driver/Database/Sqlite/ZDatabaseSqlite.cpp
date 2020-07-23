@@ -1,5 +1,5 @@
 #include "ZDatabaseSqlite.h"
-#include "../../../../General/Misc/ZDynamicObject.h"
+#include "../../../../General/Misc/DynamicObject.h"
 
 using namespace PaintsNow;
 
@@ -8,7 +8,7 @@ using namespace PaintsNow;
 class DatabaseSqliteImpl : public IDatabase::Database {
 public:
 	sqlite3* handle;
-	ZDynamicUniqueAllocator uniqueAllocator;
+	DynamicUniqueAllocator uniqueAllocator;
 };
 
 ZDatabaseSqlite::ZDatabaseSqlite() {
@@ -72,11 +72,11 @@ static void StringAssigner(void* dst, const void* src) {
 
 class QueryMetaData : public TReflected<QueryMetaData, IDatabase::MetaData> {
 public:
-	QueryMetaData(ZDynamicUniqueAllocator& allocator, sqlite3* h, sqlite3_stmt* s) : uniqueAllocator(allocator), handle(h), dynamicObject(nullptr), stmt(s), count(0), inited(true), finished(false) {
+	QueryMetaData(DynamicUniqueAllocator& allocator, sqlite3* h, sqlite3_stmt* s) : uniqueAllocator(allocator), handle(h), dynamicObject(nullptr), stmt(s), count(0), inited(true), finished(false) {
 		int status = sqlite3_step(stmt);
 		if (status == SQLITE_ROW || status == SQLITE_DONE) {
 			count = sqlite3_column_count(stmt);
-			std::vector<ZDynamicInfo::Field> fields(count);
+			std::vector<DynamicInfo::Field> fields(count);
 
 			for (int i = 0; i < count; i++) {
 				const char* name = sqlite3_column_name(stmt, i);
@@ -84,10 +84,10 @@ public:
 				int t = sqlite3_value_type(sqlite3_column_value(stmt, i));
 				// int t = sqlite3_column_type(stmt, i);
 
-				ZDynamicInfo::Field& field = fields[i];
+				DynamicInfo::Field& field = fields[i];
 				field.name = name;
 
-				static ZDynamicInfo::MemController mc = {
+				static DynamicInfo::MemController mc = {
 					StringCreator, StringDeletor, StringAssigner
 				};
 
@@ -116,8 +116,8 @@ public:
 				}
 			}
 
-			ZDynamicInfo* info = uniqueAllocator.AllocFromDescriptor("QueryMetaDataInstance", fields);
-			dynamicObject = static_cast<ZDynamicObject*>(info->Create());
+			DynamicInfo* info = uniqueAllocator.AllocFromDescriptor("QueryMetaDataInstance", fields);
+			dynamicObject = static_cast<DynamicObject*>(info->Create());
 		} else {
 			fprintf(stderr, "\nerror %s\n", sqlite3_errmsg(handle));
 		}
@@ -225,12 +225,12 @@ public:
 	}
 
 private:
-	ZDynamicUniqueAllocator& uniqueAllocator;
+	DynamicUniqueAllocator& uniqueAllocator;
 	sqlite3* handle;
 	sqlite3_stmt* stmt;
 	typedef void (QueryMetaData::*Set)(int i);
 	std::vector<Set> sets;
-	ZDynamicObject* dynamicObject;
+	DynamicObject* dynamicObject;
 
 	int count;
 	bool inited;

@@ -34,7 +34,7 @@ namespace PaintsNow {
 			bool IsConnected() const;
 
 		protected:
-			void StatusHandler(IScript::Request& request, bool isServer, ZRemoteProxy::STATUS status, const String& message);
+			void StatusHandler(IScript::Request& request, bool isServer, RemoteProxy::STATUS status, const String& message);
 
 		protected:
 			void OnInitializeQuery(IScript::Request& request, IReflectObject& inter, const IScript::Request::Ref& ref);
@@ -43,7 +43,7 @@ namespace PaintsNow {
 			void OnCheckVersion(IScript::Request& request, String& mainVersion, String& subVersion, String& buildVersion);
 
 		protected:
-			std::unique_ptr<ZRemoteProxy> remoteProxy;
+			std::unique_ptr<RemoteProxy> remoteProxy;
 			std::unique_ptr<Controller> controller;
 			std::unique_ptr<IScript::Request> mainRequest;
 			std::unique_ptr<NsSnowyStream::ResourceManager> resourceManager;

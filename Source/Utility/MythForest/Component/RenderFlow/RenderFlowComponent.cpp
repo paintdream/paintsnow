@@ -131,13 +131,13 @@ void RenderFlowComponent::Render(Engine& engine) {
 
 		for (size_t n = 0, m = 0; n < cachedRenderStages.size(); n++) {
 			if (cachedRenderStages[n] == nullptr) {
-				std::vector<ZFencedRenderQueue*> renderQueues;
+				std::vector<FencedRenderQueue*> renderQueues;
 				for (size_t i = m; i < n; i++) {
 					cachedRenderStages[i]->Commit(engine, renderQueues, instantQueue);
 				}
 
 				render.PresentQueues(&instantQueue, 1, IRender::PRESENT_EXECUTE_ALL);
-				ZFencedRenderQueue::InvokeRenderQueuesParallel(render, renderQueues);
+				FencedRenderQueue::InvokeRenderQueuesParallel(render, renderQueues);
 				m = n + 1;
 			}
 		}

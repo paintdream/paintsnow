@@ -6,11 +6,11 @@
 #ifndef __TERRAIN_PASS_H__
 #define __TERRAIN_PASS_H__
 
-#include "../../../../General/Misc/ZPassBase.h"
+#include "../../../../General/Misc/PassBase.h"
 
 namespace PaintsNow {
 	namespace NsSnowyStream {
-		class TerrainPass : public TReflected<TerrainPass, ZPassBase> {
+		class TerrainPass : public TReflected<TerrainPass, PassBase> {
 		public:
 			TerrainPass();
 		};

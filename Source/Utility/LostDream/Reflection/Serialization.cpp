@@ -1,5 +1,5 @@
 #include "Serialization.h"
-#include "../../../General/Misc/ZMemoryStream.h"
+#include "../../../Core/System/MemoryStream.h"
 #include "../../SnowyStream/Resource/MeshResource.h"
 #include "../../SnowyStream/ResourceManager.h"
 
@@ -294,7 +294,7 @@ bool Serialization::Run(int randomSeed, int length) {
 	derived.ch = 'a';
 	derived.extra = "Extra";
 
-	ZMemoryStream stream(0x1000, true);
+	MemoryStream stream(0x1000, true);
 	ZFilterPod pod;
 	DeviceResourceManager<MeshResource>* manager = nullptr;
 	MeshResource resource(*manager, "Test");

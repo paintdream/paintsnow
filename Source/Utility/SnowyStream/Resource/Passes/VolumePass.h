@@ -6,11 +6,11 @@
 #ifndef __VOLUME_PASS_H__
 #define __VOLUME_PASS_H__
 
-#include "../../../../General/Misc/ZPassBase.h"
+#include "../../../../General/Misc/PassBase.h"
 
 namespace PaintsNow {
 	namespace NsSnowyStream {
-		class VolumePass : public TReflected<VolumePass, ZPassBase> {
+		class VolumePass : public TReflected<VolumePass, PassBase> {
 		public:
 			VolumePass();
 		};

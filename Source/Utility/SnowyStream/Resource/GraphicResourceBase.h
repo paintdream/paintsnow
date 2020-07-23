@@ -8,7 +8,7 @@
 
 #include "../ResourceBase.h"
 #include "../../../General/Interface/IRender.h"
-#include "../../../General/Misc/ZPassBase.h"
+#include "../../../General/Misc/PassBase.h"
 
 namespace PaintsNow {
 	namespace NsSnowyStream {

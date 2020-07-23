@@ -11,7 +11,7 @@
 #include "../Explorer/SpaceTraversal.h"
 #include "../Explorer/CameraCuller.h"
 #include "../../../../Core/Template/TBuffer.h"
-#include "../../../../General/Misc/ZFencedRenderQueue.h"
+#include "../../../../General/Misc/FencedRenderQueue.h"
 #include "../../../SnowyStream/Resource/ShaderResource.h"
 #include "../../../SnowyStream/Resource/TextureResource.h"
 #include "../../../SnowyStream/Resource/MeshResource.h"
@@ -24,7 +24,7 @@ namespace PaintsNow {
 		class RenderableComponent;
 
 		struct VisibilityComponentConfig {
-			struct WorldInstanceData : public TReflected<WorldInstanceData, ZPassBase::PartialData> {
+			struct WorldInstanceData : public TReflected<WorldInstanceData, PassBase::PartialData> {
 			public:
 				virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
@@ -37,7 +37,7 @@ namespace PaintsNow {
 			public:
 				InstanceGroup() : instanceCount(0) {}
 				void Reset();
-				ZPassBase::PartialUpdater instanceUpdater;
+				PassBase::PartialUpdater instanceUpdater;
 				std::vector<Bytes> instancedData;
 				IRender::Resource::DrawCallDescription drawCallDescription;
 				uint32_t instanceCount;

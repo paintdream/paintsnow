@@ -417,6 +417,30 @@ SOURCE=..\..\..\..\Source\Core\System\Kernel.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Core\System\MemoryStream.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Core\System\MemoryStream.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Core\System\ShadowStream.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Core\System\ShadowStream.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Core\System\Tape.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Core\System\Tape.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Core\System\TaskGraph.cpp
 # End Source File
 # Begin Source File
@@ -453,67 +477,43 @@ SOURCE=..\..\..\..\Source\Core\System\Tiny.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\General\Misc\ZDynamicObject.cpp
+SOURCE=..\..\..\..\Source\General\Misc\DynamicObject.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\General\Misc\ZDynamicObject.h
+SOURCE=..\..\..\..\Source\General\Misc\DynamicObject.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\General\Misc\ZFencedRenderQueue.cpp
+SOURCE=..\..\..\..\Source\General\Misc\FencedRenderQueue.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\General\Misc\ZFencedRenderQueue.h
+SOURCE=..\..\..\..\Source\General\Misc\FencedRenderQueue.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\General\Misc\ZLocalStream.cpp
+SOURCE=..\..\..\..\Source\General\Misc\PassBase.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\General\Misc\ZLocalStream.h
+SOURCE=..\..\..\..\Source\General\Misc\PassBase.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\General\Misc\ZMemoryStream.cpp
+SOURCE=..\..\..\..\Source\General\Misc\RemoteProxy.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\General\Misc\ZMemoryStream.h
+SOURCE=..\..\..\..\Source\General\Misc\RemoteProxy.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\General\Misc\ZPacket.cpp
+SOURCE=..\..\..\..\Source\General\Misc\ScriptReflect.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\General\Misc\ZPacket.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\General\Misc\ZPassBase.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\General\Misc\ZPassBase.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\General\Misc\ZRemoteProxy.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\General\Misc\ZRemoteProxy.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\General\Misc\ZScriptReflect.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\General\Misc\ZScriptReflect.h
+SOURCE=..\..\..\..\Source\General\Misc\ScriptReflect.h
 # End Source File
 # End Group
 # Begin Source File

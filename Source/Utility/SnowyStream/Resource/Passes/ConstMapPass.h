@@ -5,14 +5,14 @@
 #ifndef __CONSTMAP_PASS_H__
 #define __CONSTMAP_PASS_H__
 
-#include "../../../../General/Misc/ZPassBase.h"
+#include "../../../../General/Misc/PassBase.h"
 #include "../Shaders/StandardTransformVS.h"
 #include "../Shaders/ConstMapFS.h"
 
 namespace PaintsNow {
 	namespace NsSnowyStream {
 		// standard pbr deferred shading Pass using ggx prdf
-		class ConstMapPass : public TReflected<ConstMapPass, ZPassBase> {
+		class ConstMapPass : public TReflected<ConstMapPass, PassBase> {
 		public:
 			ConstMapPass();
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;

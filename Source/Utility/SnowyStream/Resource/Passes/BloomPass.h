@@ -6,7 +6,7 @@
 #ifndef __BLOOM_PASS_H__
 #define __BLOOM_PASS_H__
 
-#include "../../../../General/Misc/ZPassBase.h"
+#include "../../../../General/Misc/PassBase.h"
 #include "../Shaders/ScreenTransformVS.h"
 #include "../Shaders/BloomFS.h"
 #include "../Shaders/DeferredCompactFS.h"
@@ -14,7 +14,7 @@
 namespace PaintsNow {
 	namespace NsSnowyStream {
 		// standard pbr deferred shading Pass using ggx prdf
-		class BloomPass : public TReflected<BloomPass, ZPassBase> {
+		class BloomPass : public TReflected<BloomPass, PassBase> {
 		public:
 			BloomPass();
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;

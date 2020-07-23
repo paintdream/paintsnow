@@ -6,11 +6,11 @@
 #ifndef __PARTICLE_PASS_H__
 #define __PARTICLE_PASS_H__
 
-#include "../../../../General/Misc/ZPassBase.h"
+#include "../../../../General/Misc/PassBase.h"
 
 namespace PaintsNow {
 	namespace NsSnowyStream {
-		class ParticlePass : public TReflected<ParticlePass, ZPassBase> {
+		class ParticlePass : public TReflected<ParticlePass, PassBase> {
 		public:
 			ParticlePass();
 		};

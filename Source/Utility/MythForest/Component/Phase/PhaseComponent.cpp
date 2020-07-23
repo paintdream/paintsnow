@@ -407,7 +407,7 @@ void PhaseComponent::ResolveTasks(Engine& engine) {
 							Bytes& data = group.instancedData[k];
 							assert(!data.Empty());
 							if (!data.Empty()) {
-								const ZPassBase::Parameter& output = group.instanceUpdater->parameters[k];
+								const PassBase::Parameter& output = group.instanceUpdater->parameters[k];
 								// instanceable.
 								assert(output.slot < group.drawCallDescription.bufferResources.size());
 								IRender::Resource* buffer = render.CreateResource(queue, IRender::Resource::RESOURCE_BUFFER);
@@ -427,7 +427,7 @@ void PhaseComponent::ResolveTasks(Engine& engine) {
 
 						group.drawCallDescription.instanceCounts.x() = group.instanceCount;
 
-						if (ZPassBase::ValidateDrawCall(group.drawCallDescription)) {
+						if (PassBase::ValidateDrawCall(group.drawCallDescription)) {
 							IRender::Resource* drawCall = render.CreateResource(queue, IRender::Resource::RESOURCE_DRAWCALL);
 							IRender::Resource::DrawCallDescription dc = group.drawCallDescription; // make copy
 							render.UploadResource(queue, drawCall, &dc);
@@ -481,7 +481,7 @@ void PhaseComponent::TaskAssembleTaskBounce(Engine& engine, TaskData& task, cons
 
 	// encode draw call
 	std::vector<IRender::Resource*> placeholders;
-	ZPassBase::Updater& updater = toPhase.tracePipeline->GetPassUpdater();
+	PassBase::Updater& updater = toPhase.tracePipeline->GetPassUpdater();
 	std::vector<Bytes> bufferData;
 	updater.Capture(toPhase.drawCallDescription, bufferData, 1 << IRender::Resource::BufferDescription::UNIFORM);
 	updater.Update(render, task.renderQueue, toPhase.drawCallDescription, placeholders, bufferData, 1 << IRender::Resource::BufferDescription::UNIFORM);
@@ -635,7 +635,7 @@ void PhaseComponent::CollectRenderableComponent(Engine& engine, TaskData& taskDa
 				group.drawCallDescription = std::move(drawCall.drawCallDescription);
 
 				std::map<ShaderResource*, WarpData::GlobalBufferItem>::iterator ip = warpData.worldGlobalBufferMap.find(drawCall.shaderResource());
-				ZPassBase::Updater& updater = drawCall.shaderResource->GetPassUpdater();
+				PassBase::Updater& updater = drawCall.shaderResource->GetPassUpdater();
 
 				if (ip == warpData.worldGlobalBufferMap.end()) {
 					ip = warpData.worldGlobalBufferMap.insert(std::make_pair(drawCall.shaderResource(), WarpData::GlobalBufferItem())).first;

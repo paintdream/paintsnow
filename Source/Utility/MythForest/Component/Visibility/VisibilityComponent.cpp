@@ -508,7 +508,7 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 							Bytes& data = group.instancedData[k];
 							assert(!data.Empty());
 							if (!data.Empty()) {
-								ZPassBase::Parameter& output = group.instanceUpdater.parameters[k];
+								PassBase::Parameter& output = group.instanceUpdater.parameters[k];
 								// instanceable.
 								assert(output.slot < group.drawCallDescription.bufferResources.size());
 
@@ -522,7 +522,7 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 						}
 
 						group.drawCallDescription.instanceCounts.x() = group.instanceCount;
-						ZPassBase::ValidateDrawCall(group.drawCallDescription);
+						PassBase::ValidateDrawCall(group.drawCallDescription);
 
 						IRender::Resource* drawCall = render.CreateResource(queue, IRender::Resource::RESOURCE_DRAWCALL);
 						IRender::Resource::DrawCallDescription dc = group.drawCallDescription; // make copy

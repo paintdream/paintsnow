@@ -2,7 +2,7 @@
 #include "../../../General/Driver/Network/LibEvent/ZNetworkLibEvent.h"
 #include "../../../Core/Driver/Thread/Pthread/ZThreadPthread.h"
 #include "../../../General/Driver/Network/LibEvent/ZNetworkLibEvent.h"
-#include "../../../General/Misc/ZRemoteProxy.h"
+#include "../../../General/Misc/RemoteProxy.h"
 
 using namespace PaintsNow;
 using namespace PaintsNow::NsLostDream;
@@ -131,7 +131,7 @@ void OnQueryPrefab(IScript::Request& request, IReflectObject& inter, const IScri
 }
 
 void OnQuery(IScript::Request& request, IReflectObject& inter, const IScript::Request::Ref& ref) {
-	ZRemoteFactory& testInterface = static_cast<ZRemoteFactory&>(inter);
+	RemoteFactory& testInterface = static_cast<RemoteFactory&>(inter);
 	IScript::Request::Ref prefab;
 	request.Push();
 
@@ -150,7 +150,7 @@ void OnQuery(IScript::Request& request, IReflectObject& inter, const IScript::Re
 	}*/
 }
 
-void OnConnect(IScript::Request& request, bool isServer, ZRemoteProxy::STATUS status, const String& info) {
+void OnConnect(IScript::Request& request, bool isServer, RemoteProxy::STATUS status, const String& info) {
 	// sync call
 	printf("Connecting ... %d, %d\n", isServer, status);
 }
@@ -173,11 +173,11 @@ bool RPC::Run(int randomSeed, int length) {
 
 	const PrefabFactory factory(uniqueThreadApi);
 
-	ZRemoteProxy serverProxy(uniqueThreadApi, tunnel, factory, "127.0.0.1:16384", Wrap(OnConnect));
+	RemoteProxy serverProxy(uniqueThreadApi, tunnel, factory, "127.0.0.1:16384", Wrap(OnConnect));
 	serverProxy.Run();
 
 	for (int i = 0; i < length; i++) {
-		ZRemoteProxy clientProxy(uniqueThreadApi, tunnel, factory, "127.0.0.1:16385");
+		RemoteProxy clientProxy(uniqueThreadApi, tunnel, factory, "127.0.0.1:16385");
 		clientProxy.Run();
 		// async create request
 		IScript::Request* r = clientProxy.NewRequest("127.0.0.1:16384");
@@ -193,7 +193,7 @@ bool RPC::Run(int randomSeed, int length) {
 		request.DoLock();
 		request.Push();
 		IScript::Request::Ref global = request.Load("Global", "Initialize");
-		ZRemoteFactory testInterface;
+		RemoteFactory testInterface;
 		request.QueryInterface(Wrap(OnQuery), testInterface, global);
 		// parse result
 		request.Pop();

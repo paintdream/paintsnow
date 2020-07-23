@@ -6,13 +6,13 @@
 #ifndef __DEPTHRESOLVE_PASS_H__
 #define __DEPTHRESOLVE_PASS_H__
 
-#include "../../../../General/Misc/ZPassBase.h"
+#include "../../../../General/Misc/PassBase.h"
 #include "../Shaders/ScreenTransformVS.h"
 #include "../Shaders/DepthResolveFS.h"
 
 namespace PaintsNow {
 	namespace NsSnowyStream {
-		class DepthResolvePass : public TReflected<DepthResolvePass, ZPassBase> {
+		class DepthResolvePass : public TReflected<DepthResolvePass, PassBase> {
 		public:
 			DepthResolvePass();
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;

@@ -33,7 +33,7 @@ namespace PaintsNow {
 				Bytes visData;
 			};
 
-			struct WorldGlobalData : public TReflected<WorldGlobalData, ZPassBase::PartialData> {
+			struct WorldGlobalData : public TReflected<WorldGlobalData, PassBase::PartialData> {
 				virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 				MatrixFloat4x4 viewProjectionMatrix;
 				MatrixFloat4x4 projectionMatrix;
@@ -47,7 +47,7 @@ namespace PaintsNow {
 				float tanHalfFov;
 			};
 
-			struct WorldInstanceData : public TReflected<WorldInstanceData, ZPassBase::PartialData> {
+			struct WorldInstanceData : public TReflected<WorldInstanceData, PassBase::PartialData> {
 				WorldInstanceData() : viewReference(0), fadeRatio(0) {}
 				virtual TObject<IReflect>& operator () (IReflect& reflect);
 
@@ -76,7 +76,7 @@ namespace PaintsNow {
 
 			struct InstanceGroup {
 				InstanceGroup() : drawCallResource(nullptr), instanceCount(0) {}
-				ZPassBase::PartialUpdater* instanceUpdater;
+				PassBase::PartialUpdater* instanceUpdater;
 				std::vector<Bytes> instancedData;
 				IRender::Resource::DrawCallDescription drawCallDescription;
 				IRender::Resource* renderStateResource;
@@ -112,8 +112,8 @@ namespace PaintsNow {
 
 					struct GlobalBufferItem {
 						IRender::Queue* renderQueue;
-						ZPassBase::PartialUpdater globalUpdater;
-						ZPassBase::PartialUpdater instanceUpdater;
+						PassBase::PartialUpdater globalUpdater;
+						PassBase::PartialUpdater instanceUpdater;
 						std::vector<IRender::Resource*> buffers;
 					};
 

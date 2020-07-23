@@ -156,15 +156,15 @@ void HoneyData::Attach(void* base) {
 	if (ts.count != 0) {
 		IScript::Request::TableStart ds;
 		request >> ds;
-		std::vector<ZDynamicInfo::Field> fields(ds.count);
+		std::vector<DynamicInfo::Field> fields(ds.count);
 
 		for (size_t i = 0; i < ds.count; i++) {
 			std::stringstream ss;
 			ss << "_" << i;
 			String key = ss.str();
-			ZDynamicInfo::Field& field = fields[i];
+			DynamicInfo::Field& field = fields[i];
 			field.name = key;
-			static ZDynamicInfo::MemController mc = {
+			static DynamicInfo::MemController mc = {
 				StringCreator, StringDeletor, StringAssigner
 			};
 
@@ -193,8 +193,8 @@ void HoneyData::Attach(void* base) {
 		}
 		request >> endtable;
 
-		ZDynamicInfo* info = uniqueAllocator.AllocFromDescriptor("HoneyDataInstance", fields);
-		dynamicObject = static_cast<ZDynamicObject*>(info->Create());
+		DynamicInfo* info = uniqueAllocator.AllocFromDescriptor("HoneyDataInstance", fields);
+		dynamicObject = static_cast<DynamicObject*>(info->Create());
 	}
 
 	request >> endtable;

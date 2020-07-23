@@ -1,5 +1,5 @@
 #include "ZArchive7Z.h"
-#include "../../../Misc/ZMemoryStream.h"
+#include "../../../../Core/System/MemoryStream.h"
 
 using namespace PaintsNow;
 
@@ -270,7 +270,7 @@ IStreamBase* ZArchive7Z::Open(const String& uri, bool write, size_t& length, uin
 		lastModifiedTime = 0; // Not supported.
 	}
 
-	ZMemoryStream* ms = new ZMemoryStream(outBufferSize);
+	MemoryStream* ms = new MemoryStream(outBufferSize);
 	ms->Write(outBuffer, outBufferSize);
 	ms->Seek(IStreamBase::BEGIN, 0);
 	length = outBufferSize;

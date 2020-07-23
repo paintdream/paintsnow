@@ -8,7 +8,7 @@
 
 #include "GraphicResourceBase.h"
 #include "../../../General/Interface/IAsset.h"
-#include "../../../General/Misc/ZPassBase.h"
+#include "../../../General/Misc/PassBase.h"
 
 namespace PaintsNow {
 	namespace NsSnowyStream {
@@ -33,7 +33,7 @@ namespace PaintsNow {
 			struct BufferCollection : public TReflected<BufferCollection, IReflectObjectComplex> {
 				BufferCollection();
 				virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-				void GetDescription(std::vector<ZPassBase::Parameter>& desc, std::vector<std::pair<uint32_t, uint32_t> >& offsets, ZPassBase::Updater& updater) const;
+				void GetDescription(std::vector<PassBase::Parameter>& desc, std::vector<std::pair<uint32_t, uint32_t> >& offsets, PassBase::Updater& updater) const;
 				void UpdateData(std::vector<IRender::Resource*>& data) const;
 
 				IRender::Resource* indexBuffer;

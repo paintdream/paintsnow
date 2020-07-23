@@ -8,7 +8,7 @@
 
 #include "../ResourceBase.h"
 #include "../../../General/Interface/IAudio.h"
-#include "../../../General/Misc/ZLocalStream.h"
+#include "../../../Core/System/ShadowStream.h"
 
 namespace PaintsNow {
 	namespace NsSnowyStream {
@@ -31,7 +31,7 @@ namespace PaintsNow {
 
 		protected:
 			IAudio::Decoder* audioStream;
-			ZLocalStream rawStream;
+			ShadowStream rawStream;
 		};
 	}
 }

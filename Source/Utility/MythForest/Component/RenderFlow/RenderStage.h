@@ -8,7 +8,7 @@
 
 #include "RenderPort.h"
 #include "../../Engine.h"
-#include "../../../../General/Misc/ZFencedRenderQueue.h"
+#include "../../../../General/Misc/FencedRenderQueue.h"
 #include "../../../SnowyStream/SnowyStream.h"
 #include "../../../SnowyStream/Resource/MeshResource.h"
 
@@ -33,7 +33,7 @@ namespace PaintsNow {
 			virtual void SetMainResolution(Engine& engine, IRender::Queue* resourceQueue, uint32_t width, uint32_t height);
 			virtual void UpdatePass(Engine& engine, IRender::Queue* resourceQueue);
 			virtual void Tick(Engine& engine, IRender::Queue* resourceQueue);
-			virtual void Commit(Engine& engine, std::vector<ZFencedRenderQueue*>& queues, IRender::Queue* instantQueue);
+			virtual void Commit(Engine& engine, std::vector<FencedRenderQueue*>& queues, IRender::Queue* instantQueue);
 
 			IRender::Resource* GetRenderTargetResource() const;
 			const IRender::Resource::RenderTargetDescription& GetRenderTargetDescription() const;
@@ -76,7 +76,7 @@ namespace PaintsNow {
 				return static_cast<T&>(shaderInstance->GetPass());
 			}
 
-			ZPassBase::Updater& GetPassUpdater() {
+			PassBase::Updater& GetPassUpdater() {
 				return shaderInstance->GetPassUpdater();
 			}
 
@@ -104,7 +104,7 @@ namespace PaintsNow {
 				BaseClass::UpdatePass(engine, queue);
 
 				IRender& render = engine.interfaces.render;
-				ZPassBase::Updater& updater = BaseClass::GetPassUpdater();
+				PassBase::Updater& updater = BaseClass::GetPassUpdater();
 				std::vector<Bytes> bufferData;
 				updater.Capture(drawCallDescription, bufferData, 1 << IRender::Resource::BufferDescription::UNIFORM);
 				// first time?
@@ -126,7 +126,7 @@ namespace PaintsNow {
 				render.UploadResource(queue, BaseClass::drawCallResource, &copy);
 			}
 
-			virtual void Commit(Engine& engine, std::vector<ZFencedRenderQueue*>& queues, IRender::Queue* instantQueue) override {
+			virtual void Commit(Engine& engine, std::vector<FencedRenderQueue*>& queues, IRender::Queue* instantQueue) override {
 				BaseClass::Commit(engine, queues, instantQueue);
 				IRender& render = engine.interfaces.render;
 				render.ExecuteResource(instantQueue, BaseClass::drawCallResource);

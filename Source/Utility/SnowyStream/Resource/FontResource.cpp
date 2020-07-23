@@ -1,6 +1,6 @@
 #include "FontResource.h"
 #include "../../../Core/Interface/IArchive.h"
-#include "../../../General/Misc/ZMemoryStream.h"
+#include "../../../Core/System/MemoryStream.h"
 #include "../../SnowyStream/SnowyStream.h"
 
 using namespace PaintsNow;
@@ -37,7 +37,7 @@ void FontResource::Detach(IFontBase& fontBase, void* deviceContext) {
 void FontResource::Upload(IFontBase& fontBase, void* deviceContext) {
 	if (font == nullptr && !rawFontData.empty()) {
 		// load font resource from memory
-		ZMemoryStream ms(rawFontData.size(), false);
+		MemoryStream ms(rawFontData.size(), false);
 		size_t len = rawFontData.size();
 		if (ms.WriteBlock(rawFontData.data(), len)) {
 			ms.Seek(IStreamBase::BEGIN, 0);

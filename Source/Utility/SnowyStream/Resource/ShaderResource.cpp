@@ -29,7 +29,7 @@ const Bytes& ShaderResource::GetHashValue() const {
 
 void ShaderResource::Attach(IRender& render, void* deviceContext) {
 	IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(deviceContext);
-	ZPassBase& pass = GetPass();
+	PassBase& pass = GetPass();
 	std::vector<IRender::Resource*> newResources;
 	assert(newResources.empty());
 	// compile default shader
@@ -73,15 +73,15 @@ const String& ShaderResource::GetShaderPathPrefix() {
 	return shaderPrefix;
 }
 
-ZPassBase& ShaderResource::GetPass() {
-	static ZPassBase dummy;
+PassBase& ShaderResource::GetPass() {
+	static PassBase dummy;
 	assert(false);
 	return dummy;
 }
 
-ZPassBase::Updater& ShaderResource::GetPassUpdater() {
-	static ZPassBase dummy;
-	static ZPassBase::Updater updater(dummy);
+PassBase::Updater& ShaderResource::GetPassUpdater() {
+	static PassBase dummy;
+	static PassBase::Updater updater(dummy);
 	assert(false);
 
 	return updater;

@@ -71,6 +71,7 @@ MythForest::MythForest(Interfaces& interfaces, NsSnowyStream::SnowyStream& snowy
 	engine.InstallModule(new SpaceComponentModule(engine));
 	engine.InstallModule(new StreamComponentModule(engine));
 	engine.InstallModule(new SurfaceComponentModule(engine));
+	engine.InstallModule(new TapeComponentModule(engine));
 	engine.InstallModule(new TerrainComponentModule(engine));
 	engine.InstallModule(new TextViewComponentModule(engine));
 	engine.InstallModule(new TransformComponentModule(engine));

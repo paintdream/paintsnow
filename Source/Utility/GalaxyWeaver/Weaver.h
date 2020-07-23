@@ -22,7 +22,7 @@ namespace PaintsNow {
 			void SetConnectionCallback(IScript::Request& request, const IScript::Request::Ref& ref);
 
 		public:
-			void OnConnectionStatus(IScript::Request& request, bool state, ZRemoteProxy::STATUS status, const String& message);
+			void OnConnectionStatus(IScript::Request& request, bool state, RemoteProxy::STATUS status, const String& message);
 			// Local controls
 			void Start();
 			void Stop();

@@ -180,7 +180,7 @@ static void PostResource(Service& service, PaintsNow::NsSnowyStream::ResourceBas
 	// PostResource
 	using namespace PaintsNow;
 	using namespace PaintsNow::NsSnowyStream;
-	ZMemoryStream stream(409600, true);
+	MemoryStream stream(409600, true);
 	static ZFilterPod filter;
 	IStreamBase* f = filter.CreateFilter(stream);
 	*f << resource;

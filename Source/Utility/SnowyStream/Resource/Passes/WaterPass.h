@@ -6,11 +6,11 @@
 #ifndef __WATER_PASS_H__
 #define __WATER_PASS_H__
 
-#include "../../../../General/Misc/ZPassBase.h"
+#include "../../../../General/Misc/PassBase.h"
 
 namespace PaintsNow {
 	namespace NsSnowyStream {
-		class WaterPass : public TReflected<WaterPass, ZPassBase> {
+		class WaterPass : public TReflected<WaterPass, PassBase> {
 		public:
 			WaterPass();
 		};

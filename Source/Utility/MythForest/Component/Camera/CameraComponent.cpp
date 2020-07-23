@@ -155,7 +155,7 @@ void CameraComponent::Instancing(Engine& engine, TaskData& taskData) {
 			for (size_t k = 0; k < group.instancedData.size(); k++) {
 				Bytes& data = group.instancedData[k];
 				if (!data.Empty()) {
-					ZPassBase::Parameter& output = group.instanceUpdater->parameters[k];
+					PassBase::Parameter& output = group.instanceUpdater->parameters[k];
 					// instanceable.
 					assert(output.slot < group.drawCallDescription.bufferResources.size());
 					TaskData::PolicyData& policyData = warpData.renderPolicyMap[group.renderPolicy()];
@@ -171,7 +171,7 @@ void CameraComponent::Instancing(Engine& engine, TaskData& taskData) {
 
 					group.drawCallDescription.instanceCounts.x() = group.instanceCount;
 
-					if (ZPassBase::ValidateDrawCall(group.drawCallDescription)) {
+					if (PassBase::ValidateDrawCall(group.drawCallDescription)) {
 						policyData.instanceData.Append(data);
 						IRender::Resource* drawCall = render.CreateResource(queue, IRender::Resource::RESOURCE_DRAWCALL);
 						assert(group.drawCallDescription.shaderResource != nullptr);
@@ -496,7 +496,7 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 	TaskData::WarpData::InstanceGroupMap& instanceGroups = warpData.instanceGroups;
 
 	for (size_t k = 0; k < drawCalls.size(); k++) {
-		// ZPassBase& Pass = provider->GetPass(k);
+		// PassBase& Pass = provider->GetPass(k);
 		NsSnowyStream::IDrawCallProvider::OutputRenderData& drawCall = drawCalls[k];
 		warpData.triangleCount += drawCall.drawCallDescription.indexBufferResource.length / sizeof(Int3);
 
@@ -549,7 +549,7 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 #endif // _DEBUG
 
 			std::map<ShaderResource*, TaskData::WarpData::GlobalBufferItem>::iterator ip = warpData.worldGlobalBufferMap.find(drawCall.shaderResource());
-			ZPassBase::Updater& updater = drawCall.shaderResource->GetPassUpdater();
+			PassBase::Updater& updater = drawCall.shaderResource->GetPassUpdater();
 
 			if (ip == warpData.worldGlobalBufferMap.end()) {
 				ip = warpData.worldGlobalBufferMap.insert(std::make_pair(drawCall.shaderResource(), TaskData::WarpData::GlobalBufferItem())).first;
@@ -595,7 +595,7 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 			// skinning
 			if (animationComponent) {
 				assert(animationComponent->GetWarpIndex() == renderableComponent->GetWarpIndex());
-				ZPassBase::Parameter& parameter = updater[IShader::BindInput::BONE_TRANSFORMS];
+				PassBase::Parameter& parameter = updater[IShader::BindInput::BONE_TRANSFORMS];
 				if (parameter) {
 					group.animationComponent = animationComponent; // hold reference
 					group.drawCallDescription.bufferResources[parameter.slot].buffer = animationComponent->AcquireBoneMatrixBuffer(render, queue);

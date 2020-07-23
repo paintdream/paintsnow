@@ -11,7 +11,7 @@
 #include "../../../../Core/System/Graph.h"
 
 namespace PaintsNow {
-	class ZFencedRenderQueue;
+	class FencedRenderQueue;
 	namespace NsMythForest {
 		class Engine;
 		class RenderPort : public TReflected<RenderPort, GraphPort<SharedTiny> > {
@@ -20,7 +20,7 @@ namespace PaintsNow {
 			virtual void Initialize(IRender& render, IRender::Queue* queue);
 			virtual void Uninitialize(IRender& render, IRender::Queue* queue);
 			virtual bool UpdateDataStream(RenderPort& source);
-			virtual void Commit(std::vector<ZFencedRenderQueue*>& queues);
+			virtual void Commit(std::vector<FencedRenderQueue*>& queues);
 			virtual bool BeginFrame(IRender& render);
 			virtual void EndFrame(IRender& render);
 			virtual void Tick(Engine& engine, IRender::Queue* queue);
@@ -64,7 +64,7 @@ namespace PaintsNow {
 
 		class RenderPortParameterAdapter : public TReflected<RenderPortParameterAdapter, RenderPort> {
 		public:
-			virtual ZPassBase::Updater& GetUpdater() = 0;
+			virtual PassBase::Updater& GetUpdater() = 0;
 		};
 
 		template <class T>
@@ -74,7 +74,7 @@ namespace PaintsNow {
 			virtual void Initialize(IRender& render, IRender::Queue* mainQueue) override {}
 			virtual void Uninitialize(IRender& render, IRender::Queue* mainQueue) override {}
 			virtual bool UpdateDataStream(RenderPort& source) override { return true; }
-			virtual ZPassBase::Updater& GetUpdater() override { return shaderResource->GetPassUpdater(); }
+			virtual PassBase::Updater& GetUpdater() override { return shaderResource->GetPassUpdater(); }
 
 			inline T& GetPass() {
 				return static_cast<T&>(shaderResource->GetPass());

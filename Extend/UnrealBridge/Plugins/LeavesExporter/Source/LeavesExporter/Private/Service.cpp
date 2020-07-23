@@ -6,7 +6,7 @@
 namespace PaintsNow {
 	namespace NsGalaxyWeaver {
 		static ZThreadPthread uniqueThreadApi;
-		static ZRemoteFactory remoteFactory;
+		static RemoteFactory remoteFactory;
 		static ZNetworkLibEvent libEvent(uniqueThreadApi);
 		static ProviderFactory localFactory(uniqueThreadApi, libEvent);
 
@@ -40,8 +40,8 @@ namespace PaintsNow {
 			}
 		};
 
-		void Service::StatusHandler(IScript::Request& request, bool isServer, ZRemoteProxy::STATUS status, const String& message) {
-			if (status == ZRemoteProxy::CONNECTED) {
+		void Service::StatusHandler(IScript::Request& request, bool isServer, RemoteProxy::STATUS status, const String& message) {
+			if (status == RemoteProxy::CONNECTED) {
 				// Check Version
 				IScript::Request::Ref global = request.Load("Global", "Initialize");
 				request.QueryInterface(Wrap(this, &Service::OnInitializeQuery), remoteFactory, global);
@@ -52,7 +52,7 @@ namespace PaintsNow {
 			sceneExp = se;
 			static DummyUniformResourceManager uniformResourceManager;
 			resourceManager = std::make_unique<UnrealResourceManager>(uniqueThreadApi, uniformResourceManager);
-			remoteProxy = std::make_unique<ZRemoteProxy>(uniqueThreadApi, libEvent, localFactory, "", Wrap(this, &Service::StatusHandler));
+			remoteProxy = std::make_unique<RemoteProxy>(uniqueThreadApi, libEvent, localFactory, "", Wrap(this, &Service::StatusHandler));
 			// connecting ...
 			remoteProxy->Run();
 			// Reconnect("LeavesWingScenePoster");

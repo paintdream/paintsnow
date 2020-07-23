@@ -293,11 +293,11 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\StandardTransform
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SurfaceVS.cpp
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\StreamResource.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\TapeResource.cpp
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SurfaceVS.cpp
 # End Source File
 # Begin Source File
 
@@ -310,10 +310,6 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\TerrainResource.cpp
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\TextPass.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\TextResource.cpp
 # End Source File
 # Begin Source File
 
@@ -573,11 +569,11 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\StandardTransform
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SurfaceVS.h
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\StreamResource.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\TapeResource.h
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SurfaceVS.h
 # End Source File
 # Begin Source File
 
@@ -590,10 +586,6 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\TerrainResource.h
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\TextPass.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\TextResource.h
 # End Source File
 # Begin Source File
 

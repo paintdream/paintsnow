@@ -10,19 +10,19 @@
 #include "../../Core/Interface/IThread.h"
 #include "../../General/Interface/ITunnel.h"
 #include "../../Core/System/Kernel.h"
-#include "../../General/Misc/ZRemoteProxy.h"
+#include "../../General/Misc/RemoteProxy.h"
 
 namespace PaintsNow {
 	namespace NsGalaxyWeaver {
 		class ProxyStub : public TReflected<ProxyStub, WarpTiny> {
 		public:
-			ProxyStub(IThread& thread, ITunnel& tunnel, const String& entry, const TWrapper<void, IScript::Request&, bool, ZRemoteProxy::STATUS, const String&>& statusHandler = TWrapper<void, IScript::Request&, bool, ZRemoteProxy::STATUS, const String&>());
+			ProxyStub(IThread& thread, ITunnel& tunnel, const String& entry, const TWrapper<void, IScript::Request&, bool, RemoteProxy::STATUS, const String&>& statusHandler = TWrapper<void, IScript::Request&, bool, RemoteProxy::STATUS, const String&>());
 			virtual void ScriptInitialize(IScript::Request& request) override;
 			virtual void ScriptUninitialize(IScript::Request& request) override;
 
 		protected:
 			IScript::Object* StaticCreate(const String& entry);
-			ZRemoteProxy remoteProxy;
+			RemoteProxy remoteProxy;
 		};
 	}
 }

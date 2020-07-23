@@ -41,9 +41,9 @@ void Weaver::SetConnectionCallback(IScript::Request& request, const IScript::Req
 	ReplaceCallback(request, connectionCallback, ref);
 }
 
-void Weaver::OnConnectionStatus(IScript::Request& request, bool isAuto, ZRemoteProxy::STATUS status, const String & message) {
-	if (status == ZRemoteProxy::CONNECTED || status == ZRemoteProxy::CLOSED || status == ZRemoteProxy::ABORTED) {
-		String code = status == ZRemoteProxy::CONNECTED ? "Connected" : status == ZRemoteProxy::CLOSED ? "Closed" : "Aborted";
+void Weaver::OnConnectionStatus(IScript::Request& request, bool isAuto, RemoteProxy::STATUS status, const String & message) {
+	if (status == RemoteProxy::CONNECTED || status == RemoteProxy::CLOSED || status == RemoteProxy::ABORTED) {
+		String code = status == RemoteProxy::CONNECTED ? "Connected" : status == RemoteProxy::CLOSED ? "Closed" : "Aborted";
 		if (connectionCallback) {
 			request.DoLock();
 			request.Push();
@@ -53,7 +53,7 @@ void Weaver::OnConnectionStatus(IScript::Request& request, bool isAuto, ZRemoteP
 		}
 	}
 
-	if (status == ZRemoteProxy::CLOSED || status == ZRemoteProxy::ABORTED) {
+	if (status == RemoteProxy::CLOSED || status == RemoteProxy::ABORTED) {
 		// restart if not manually stopped
 		if (Flag() & TINY_ACTIVATED) {
 			remoteProxy.Reset();
@@ -112,7 +112,7 @@ void Weaver::RpcPostResource(IScript::Request& request, const String& path, cons
 	bool success = true;
 	// Make memory stream for deserialization
 	size_t length = resourceData.length();
-	ZMemoryStream memoryStream(length);
+	MemoryStream memoryStream(length);
 	memoryStream.Write(resourceData.c_str(), length);
 	// resource use internal persist and needn't set environment here
 	// memoryStream.SetEnvironment(snowyStream);

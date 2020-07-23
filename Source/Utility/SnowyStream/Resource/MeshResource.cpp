@@ -158,7 +158,7 @@ TObject<IReflect>& MeshResource::BufferCollection::operator () (IReflect& reflec
 	return *this;
 }
 
-void MeshResource::BufferCollection::GetDescription(std::vector<ZPassBase::Parameter>& desc, std::vector<std::pair<uint32_t, uint32_t> >& offsets, ZPassBase::Updater& updater) const {
+void MeshResource::BufferCollection::GetDescription(std::vector<PassBase::Parameter>& desc, std::vector<std::pair<uint32_t, uint32_t> >& offsets, PassBase::Updater& updater) const {
 	// Do not pass index buffer
 	if (positionBuffer != nullptr) {
 		desc.emplace_back(updater[IShader::BindInput::POSITION]);

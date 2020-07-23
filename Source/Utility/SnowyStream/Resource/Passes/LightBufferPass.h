@@ -6,13 +6,13 @@
 #ifndef __LIGHTPASS_PASS_H__
 #define __LIGHTPASS_PASS_H__
 
-#include "../../../../General/Misc/ZPassBase.h"
+#include "../../../../General/Misc/PassBase.h"
 #include "../Shaders/ScreenTransformVS.h"
 #include "../Shaders/LightEncoderFS.h"
 
 namespace PaintsNow {
 	namespace NsSnowyStream {
-		class LightBufferPass : public TReflected<LightBufferPass, ZPassBase> {
+		class LightBufferPass : public TReflected<LightBufferPass, PassBase> {
 		public:
 			LightBufferPass();
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;

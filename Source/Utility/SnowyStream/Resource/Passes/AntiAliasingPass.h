@@ -6,13 +6,13 @@
 #ifndef __ANTIALIASING_PASS_H__
 #define __ANTIALIASING_PASS_H__
 
-#include "../../../../General/Misc/ZPassBase.h"
+#include "../../../../General/Misc/PassBase.h"
 #include "../Shaders/ScreenTransformVS.h"
 #include "../Shaders/AntiAliasingFS.h"
 
 namespace PaintsNow {
 	namespace NsSnowyStream {
-		class AntiAliasingPass : public TReflected<AntiAliasingPass, ZPassBase> {
+		class AntiAliasingPass : public TReflected<AntiAliasingPass, PassBase> {
 		public:
 			AntiAliasingPass();
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;

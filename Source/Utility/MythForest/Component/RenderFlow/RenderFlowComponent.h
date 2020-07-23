@@ -51,7 +51,7 @@ namespace PaintsNow {
 			Int2 mainResolution;
 			std::map<String, std::pair<RenderStage*, String> > symbolMap;
 			std::vector<RenderStage*> cachedRenderStages;
-			ZFencedRenderQueue resourceQueue;
+			FencedRenderQueue resourceQueue;
 			IRender::Queue* instantQueue;
 		};
 	}

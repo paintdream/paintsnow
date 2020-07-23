@@ -6,13 +6,13 @@
 #ifndef __WIDGET_PASS_H__
 #define __WIDGET_PASS_H__
 
-#include "../../../../General/Misc/ZPassBase.h"
+#include "../../../../General/Misc/PassBase.h"
 #include "../Shaders/WidgetTransformVS.h"
 #include "../Shaders/WidgetShadingFS.h"
 
 namespace PaintsNow {
 	namespace NsSnowyStream {
-		class WidgetPass : public TReflected<WidgetPass, ZPassBase> {
+		class WidgetPass : public TReflected<WidgetPass, PassBase> {
 		public:
 			WidgetPass();
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;

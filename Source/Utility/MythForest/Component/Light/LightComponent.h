@@ -22,7 +22,7 @@ namespace PaintsNow {
 				Bytes visData;
 			};
 
-			struct WorldInstanceData : public TReflected<WorldInstanceData, ZPassBase::PartialData> {
+			struct WorldInstanceData : public TReflected<WorldInstanceData, PassBase::PartialData> {
 				WorldInstanceData() {}
 				virtual TObject<IReflect>& operator () (IReflect& reflect);
 
@@ -50,7 +50,7 @@ namespace PaintsNow {
 			struct InstanceGroup {
 				InstanceGroup() : instanceCount(0), instanceUpdater(nullptr) {}
 				void Reset();
-				ZPassBase::PartialUpdater* instanceUpdater;
+				PassBase::PartialUpdater* instanceUpdater;
 				std::vector<Bytes> instancedData;
 				IRender::Resource::DrawCallDescription drawCallDescription;
 				TShared<AnimationComponent> animationComponent;
@@ -72,7 +72,7 @@ namespace PaintsNow {
 					IRender::Queue* renderQueue;
 
 					struct GlobalBufferItem {
-						ZPassBase::PartialUpdater instanceUpdater;
+						PassBase::PartialUpdater instanceUpdater;
 						std::vector<IRender::Resource*> buffers;
 					};
 

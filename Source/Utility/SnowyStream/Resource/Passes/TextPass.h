@@ -6,13 +6,13 @@
 #ifndef __TEXT_PASS_H__
 #define __TEXT_PASS_H__
 
-#include "../../../../General/Misc/ZPassBase.h"
+#include "../../../../General/Misc/PassBase.h"
 #include "../Shaders/TextTransformVS.h"
 #include "../Shaders/TextShadingFS.h"
 
 namespace PaintsNow {
 	namespace NsSnowyStream {
-		class TextPass : public TReflected<TextPass, ZPassBase> {
+		class TextPass : public TReflected<TextPass, PassBase> {
 		public:
 			TextPass();
 

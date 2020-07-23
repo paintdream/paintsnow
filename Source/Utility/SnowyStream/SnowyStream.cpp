@@ -5,8 +5,7 @@
 #include "Resource/MaterialResource.h"
 #include "Resource/MeshResource.h"
 #include "Resource/SkeletonResource.h"
-#include "Resource/TapeResource.h"
-#include "Resource/TextResource.h"
+#include "Resource/StreamResource.h"
 #include "Resource/TextureResource.h"
 #include "Resource/Passes/AntiAliasingPass.h"
 #include "Resource/Passes/BloomPass.h"
@@ -29,7 +28,7 @@
 #include "Resource/Passes/VolumePass.h"
 #include "Resource/Passes/WaterPass.h"
 #include "Resource/Passes/WidgetPass.h"
-#include "../../General/Misc/ZMemoryStream.h"
+#include "../../Core/System/MemoryStream.h"
 #include "../../General/Driver/Filter/Json/Core/json.h"
 #include <iterator>
 
@@ -262,7 +261,7 @@ TShared<File> SnowyStream::RequestNewFile(IScript::Request& request, const Strin
 	IArchive& archive = interfaces.archive;
 	size_t length = 0;
 	uint64_t modifiedTime = 0;
-	IStreamBase* stream = path == ":memory:" ? new ZMemoryStream(0x1000, true) : archive.Open(path, write, length, &modifiedTime);
+	IStreamBase* stream = path == ":memory:" ? new MemoryStream(0x1000, true) : archive.Open(path, write, length, &modifiedTime);
 	if (stream != nullptr) {
 		return TShared<File>::From(new File(stream, length, modifiedTime));
 	} else {
@@ -492,7 +491,7 @@ void SnowyStream::RequestLoadExternalResourceData(IScript::Request& request, ISc
 	CHECK_DELEGATE(resource);
 	bridgeSunset.GetKernel().YieldCurrentWarp();
 
-	ZMemoryStream ms(externalData.size());
+	MemoryStream ms(externalData.size());
 	size_t len = externalData.size();
 	ms.Write(externalData.c_str(), len);
 	ms.Seek(IStreamBase::BEGIN, 0);
@@ -654,9 +653,9 @@ void SnowyStream::Uninitialize() {
 template <class T>
 void RegisterPass(ResourceManager& resourceManager, UniqueType<T> type, const String& matName = "") {
 	ShaderResourceImpl<T>* shaderResource = new ShaderResourceImpl<T>(resourceManager, "", ResourceBase::RESOURCE_ETERNAL);
-	ZPassBase& pass = shaderResource->GetPass();
+	PassBase& pass = shaderResource->GetPass();
 	Unique unique = pass.GetUnique();
-	assert(unique != UniqueType<ZPassBase>().Get());
+	assert(unique != UniqueType<PassBase>().Get());
 	String name = pass.GetUnique()->GetName();
 	auto pos = name.find_last_of(':');
 	if (pos != std::string::npos) {
@@ -722,8 +721,7 @@ void SnowyStream::RegisterReflectedSerializers() {
 	RegisterReflectedSerializer(UniqueType<MeshResource>(), interfaces.render, resourceQueue);
 	RegisterReflectedSerializer(UniqueType<SkeletonResource>(), interfaces.render, resourceQueue);
 	RegisterReflectedSerializer(UniqueType<TextureResource>(), interfaces.render, resourceQueue);
-	RegisterReflectedSerializer(UniqueType<TapeResource>(), interfaces.archive, nullptr);
-	RegisterReflectedSerializer(UniqueType<TextResource>(), interfaces.archive, nullptr);
+	RegisterReflectedSerializer(UniqueType<StreamResource>(), interfaces.archive, nullptr);
 }
 
 bool SnowyStream::RegisterResourceManager(Unique unique, ResourceManager* resourceManager) {

@@ -13,8 +13,8 @@ void MaterialResource::Attach(IRender& render, void* deviceContext) {
 		IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(deviceContext);
 		// duplicate shader resource, do not share them
 		mutationShaderResource.Reset(static_cast<ShaderResource*>(originalShaderResource->Clone()));
-		ZPassBase& pass = mutationShaderResource->GetPass();
-		ZPassBase::Updater& updater = mutationShaderResource->GetPassUpdater();
+		PassBase& pass = mutationShaderResource->GetPass();
+		PassBase::Updater& updater = mutationShaderResource->GetPassUpdater();
 		// Apply material
 		for (size_t i = 0; i < materialParams.variables.size(); i++) {
 			const IAsset::Material::Variable& var = materialParams.variables[i];

@@ -1,7 +1,7 @@
 #include "ZFilterJson.h"
 #define JSON_HAS_INT64
 #include "Core/json.h"
-#include "../../../../General/Misc/ZDynamicObject.h"
+#include "../../../../General/Misc/DynamicObject.h"
 
 using namespace PaintsNow;
 using namespace Json;
@@ -180,13 +180,13 @@ static void StringAssigner(void* dst, const void* src) {
 	*reinterpret_cast<String*>(dst) = *reinterpret_cast<const String*>(src);
 }
 
-static ZDynamicInfo::MemController mcString = {
+static DynamicInfo::MemController mcString = {
 	StringCreator, StringDeletor, StringAssigner
 };
 
-static ZDynamicInfo* ParseUniqueObject(ZDynamicObjectWrapper& wrapper, const Value& value);
-static std::pair<Unique, ZDynamicInfo::MemController*> ParseUniqueValue(ZDynamicObjectWrapper& wrapper, const Value& value) {
-	std::pair<Unique, ZDynamicInfo::MemController*> res;
+static DynamicInfo* ParseUniqueObject(DynamicObjectWrapper& wrapper, const Value& value);
+static std::pair<Unique, DynamicInfo::MemController*> ParseUniqueValue(DynamicObjectWrapper& wrapper, const Value& value) {
+	std::pair<Unique, DynamicInfo::MemController*> res;
 	res.second = nullptr;
 
 	if (value.isBool()) {
@@ -199,7 +199,7 @@ static std::pair<Unique, ZDynamicInfo::MemController*> ParseUniqueValue(ZDynamic
 		res.first = UniqueType<String>::Get();
 		res.second = &mcString;
 	} else if (value.isArray()) {
-		res.first = UniqueType<ZDynamicVector>::Get();
+		res.first = UniqueType<DynamicVector>::Get();
 	} else if (value.isObject()) {
 		res.first = ParseUniqueObject(wrapper, value);
 	}
@@ -207,16 +207,16 @@ static std::pair<Unique, ZDynamicInfo::MemController*> ParseUniqueValue(ZDynamic
 	return res;
 }
 
-static ZDynamicInfo* ParseUniqueObject(ZDynamicObjectWrapper& wrapper, const Value& value) {
+static DynamicInfo* ParseUniqueObject(DynamicObjectWrapper& wrapper, const Value& value) {
 	// enumerate attributes ...
 	assert(value.isObject());
-	std::vector<ZDynamicInfo::Field> fields;
+	std::vector<DynamicInfo::Field> fields;
 	size_t count = 0;
 	for (Value::const_iterator it = value.begin(); it != value.end(); ++it) {
-		ZDynamicInfo::Field& field = fields[count++];
+		DynamicInfo::Field& field = fields[count++];
 
 		field.name = it.name();
-		std::pair<Unique, ZDynamicInfo::MemController*> info = ParseUniqueValue(wrapper, *it);
+		std::pair<Unique, DynamicInfo::MemController*> info = ParseUniqueValue(wrapper, *it);
 		field.type = info.first;
 		field.controller = info.second;
 		field.reflectable = !!(it->isObject() || it->isArray());
@@ -225,10 +225,10 @@ static ZDynamicInfo* ParseUniqueObject(ZDynamicObjectWrapper& wrapper, const Val
 	return wrapper.uniqueAllocator.AllocFromDescriptor("JSON", fields);
 }
 
-static void ParseDynamicObject(ZDynamicObjectWrapper& wrapper, const Value& value, ZDynamicObject* object);
+static void ParseDynamicObject(DynamicObjectWrapper& wrapper, const Value& value, DynamicObject* object);
 
 template <class T, class F>
-void ParseDynamicValue(ZDynamicObjectWrapper& wrapper, const Value& v, T* object, const F& field) {
+void ParseDynamicValue(DynamicObjectWrapper& wrapper, const Value& v, T* object, const F& field) {
 	if (v.isBool()) {
 		bool data = v.asBool();
 		object->Set(field, &data);
@@ -242,22 +242,22 @@ void ParseDynamicValue(ZDynamicObjectWrapper& wrapper, const Value& v, T* object
 		String data = v.asCString();
 		object->Set(field, &data);
 	} else if (v.isArray()) {
-		ZDynamicVector* vec = reinterpret_cast<ZDynamicVector*>(object->Get(field));
+		DynamicVector* vec = reinterpret_cast<DynamicVector*>(object->Get(field));
 		size_t size = v.size();
 		// set by first element type
 		if (size != 0) {
 			const Value& f = v[0];
-			std::pair<Unique, ZDynamicInfo::MemController*> res = ParseUniqueValue(wrapper, f);
+			std::pair<Unique, DynamicInfo::MemController*> res = ParseUniqueValue(wrapper, f);
 			vec->Reinit(res.first, res.second, size, f.isArray() || f.isObject());
 		}
 	} else if (v.isObject()) {
-		ParseDynamicObject(wrapper, v, reinterpret_cast<ZDynamicObject*>(object->Get(field)));
+		ParseDynamicObject(wrapper, v, reinterpret_cast<DynamicObject*>(object->Get(field)));
 	}
 }
 
-static void ParseDynamicObject(ZDynamicObjectWrapper& wrapper, const Value& value, ZDynamicObject* object) {
+static void ParseDynamicObject(DynamicObjectWrapper& wrapper, const Value& value, DynamicObject* object) {
 	Unique unique = object->GetDynamicInfo();
-	const std::vector<ZDynamicInfo::Field>& fields = object->GetDynamicInfo()->fields;
+	const std::vector<DynamicInfo::Field>& fields = object->GetDynamicInfo()->fields;
 
 	size_t i = 0;
 	for (Value::const_iterator it = value.begin(); it != value.end(); ++it) {
@@ -279,11 +279,11 @@ bool FilterJsonImpl::Read(IReflectObject& s, void* ptr, size_t length) {
 #endif
 
 		if (document.isObject()) {
-			if (s.GetUnique() == UniqueType<ZDynamicObjectWrapper>::Get()) {
-				ZDynamicObjectWrapper& wrapper = static_cast<ZDynamicObjectWrapper&>(s);
+			if (s.GetUnique() == UniqueType<DynamicObjectWrapper>::Get()) {
+				DynamicObjectWrapper& wrapper = static_cast<DynamicObjectWrapper&>(s);
 				assert(wrapper.dynamicObject == nullptr);
 				Unique unique = ParseUniqueObject(wrapper, document);
-				ZDynamicObject* object = static_cast<ZDynamicObject*>(unique->Create());
+				DynamicObject* object = static_cast<DynamicObject*>(unique->Create());
 				ParseDynamicObject(wrapper, document, object);
 				wrapper.dynamicObject = object;
 			} else {

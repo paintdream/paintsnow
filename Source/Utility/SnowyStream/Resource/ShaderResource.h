@@ -8,7 +8,7 @@
 
 #include "GraphicResourceBase.h"
 #include "../../../General/Interface/IAsset.h"
-#include "../../../General/Misc/ZPassBase.h"
+#include "../../../General/Misc/PassBase.h"
 #include "Passes/CustomizeShader.h"
 
 namespace PaintsNow {
@@ -28,8 +28,8 @@ namespace PaintsNow {
 			virtual void Attach(IRender& render, void* deviceContext) override;
 			virtual void Detach(IRender& render, void* deviceContext) override;
 			virtual IReflectObject* Clone() const override;
-			virtual ZPassBase& GetPass();
-			virtual ZPassBase::Updater& GetPassUpdater();
+			virtual PassBase& GetPass();
+			virtual PassBase::Updater& GetPassUpdater();
 
 			IRender::Resource* GetShaderResource() const;
 			const Bytes& GetHashValue() const;
@@ -50,11 +50,11 @@ namespace PaintsNow {
 			typedef TReflected<ShaderResourceImpl<T>, ShaderResource> BaseClass;
 			ShaderResourceImpl(ResourceManager& manager, const String& uniqueID, Tiny::FLAG f = 0) : BaseClass(manager, uniqueID), updater(pass) { BaseClass::Flag().fetch_or(f, std::memory_order_acquire); }
 		
-			virtual ZPassBase& GetPass() override {
+			virtual PassBase& GetPass() override {
 				return pass;
 			}
 
-			virtual ZPassBase::Updater& GetPassUpdater() override {
+			virtual PassBase::Updater& GetPassUpdater() override {
 				return updater;
 			}
 
@@ -70,7 +70,7 @@ namespace PaintsNow {
 
 		protected:
 			T pass;
-			ZPassBase::Updater updater;
+			PassBase::Updater updater;
 		};
 
 	}

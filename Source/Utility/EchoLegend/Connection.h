@@ -7,7 +7,7 @@
 #define __CONNECTION_H__
 
 #include "WorkDispatcher.h"
-#include "../../General/Misc/ZMemoryStream.h"
+#include "../../Core/System/MemoryStream.h"
 
 namespace PaintsNow {
 	namespace NsEchoLegend {

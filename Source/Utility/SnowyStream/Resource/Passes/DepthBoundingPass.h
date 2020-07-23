@@ -6,13 +6,13 @@
 #ifndef __DEPTHBOUNDING_PASS_H__
 #define __DEPTHBOUNDING_PASS_H__
 
-#include "../../../../General/Misc/ZPassBase.h"
+#include "../../../../General/Misc/PassBase.h"
 #include "../Shaders/ScreenTransformVS.h"
 #include "../Shaders/DepthMinMaxFS.h"
 
 namespace PaintsNow {
 	namespace NsSnowyStream {
-		class DepthBoundingPass : public TReflected<DepthBoundingPass, ZPassBase> {
+		class DepthBoundingPass : public TReflected<DepthBoundingPass, PassBase> {
 		public:
 			DepthBoundingPass();
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;

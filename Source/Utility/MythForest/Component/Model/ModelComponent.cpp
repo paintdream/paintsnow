@@ -26,10 +26,10 @@ uint32_t ModelComponent::CreateOverrider(TShared<ShaderResource> shaderResourceT
 
 static void GenerateDrawCall(IDrawCallProvider::OutputRenderData& renderData, ShaderResource* shaderResource, std::vector<IRender::Resource*>& meshBuffers, const IAsset::MeshGroup& slice, const MeshResource::BufferCollection& bufferCollection) {
 	IRender::Resource::DrawCallDescription& drawCall = renderData.drawCallDescription;
-	ZPassBase::Updater& updater = shaderResource->GetPassUpdater();
+	PassBase::Updater& updater = shaderResource->GetPassUpdater();
 	drawCall.shaderResource = shaderResource->GetShaderResource();
 
-	std::vector<ZPassBase::Parameter> outputs;
+	std::vector<PassBase::Parameter> outputs;
 	std::vector<std::pair<uint32_t, uint32_t> > offsets;
 	bufferCollection.GetDescription(outputs, offsets, updater);
 
@@ -159,7 +159,7 @@ void ModelComponent::Initialize(Engine& engine, Entity* entity) {
 		Expand(engine);
 
 		// inspect vertex format
-		std::vector<ZPassBase::Name> inputs;
+		std::vector<PassBase::Name> inputs;
 		assert(drawCallTemplates.empty());
 		drawCallTemplates.reserve(materialResources.size());
 		GenerateDrawCalls(drawCallTemplates, materialResources);

@@ -160,7 +160,7 @@ const IRender::Resource::RenderTargetDescription& RenderStage::GetRenderTargetDe
 	return renderTargetDescription;
 }
 
-void RenderStage::Commit(Engine& engine, std::vector<ZFencedRenderQueue*>& queues, IRender::Queue* instantQueue) {
+void RenderStage::Commit(Engine& engine, std::vector<FencedRenderQueue*>& queues, IRender::Queue* instantQueue) {
 	assert(Flag() & TINY_ACTIVATED);
 	for (size_t i = 0; i < nodePorts.size(); i++) {
 		nodePorts[i].port->Commit(queues);

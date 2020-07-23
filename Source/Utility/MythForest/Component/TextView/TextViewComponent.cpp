@@ -396,7 +396,7 @@ uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData>& outp
 	renderState.stencilValue = 0;
 
 	drawCall.dataUpdater = fontResource();
-	ZPassBase::Updater& updater = materialResource->mutationShaderResource->GetPassUpdater();
+	PassBase::Updater& updater = materialResource->mutationShaderResource->GetPassUpdater();
 	size_t slot = updater[IShader::BindInput::UNITCOORD].slot;
 	drawCall.drawCallDescription.bufferResources.resize(slot + 1);
 	IRender::Resource::DrawCallDescription::BufferRange& rangePosition = drawCall.drawCallDescription.bufferResources[slot];

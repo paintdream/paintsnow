@@ -191,7 +191,7 @@ void LightComponent::ShadowLayer::CollectRenderableComponent(Engine& engine, Tas
 	TaskData::WarpData::InstanceGroupMap& instanceGroups = warpData.instanceGroups;
 
 	for (size_t k = 0; k < drawCalls.size(); k++) {
-		// ZPassBase& Pass = provider->GetPass(k);
+		// PassBase& Pass = provider->GetPass(k);
 		NsSnowyStream::IDrawCallProvider::OutputRenderData& drawCall = drawCalls[k];
 		const IRender::Resource::DrawCallDescription& drawCallTemplate = drawCall.drawCallDescription;
 		AnimationComponent* animationComponent = instanceData.animationComponent();
@@ -213,7 +213,7 @@ void LightComponent::ShadowLayer::CollectRenderableComponent(Engine& engine, Tas
 			group.drawCallDescription = drawCallTemplate;
 
 			std::map<ShaderResource*, TaskData::WarpData::GlobalBufferItem>::iterator ip = warpData.worldGlobalBufferMap.find(drawCall.shaderResource());
-			ZPassBase::Updater& updater = drawCall.shaderResource->GetPassUpdater();
+			PassBase::Updater& updater = drawCall.shaderResource->GetPassUpdater();
 
 			if (ip == warpData.worldGlobalBufferMap.end()) {
 				ip = warpData.worldGlobalBufferMap.insert(std::make_pair(drawCall.shaderResource(), TaskData::WarpData::GlobalBufferItem())).first;
@@ -227,7 +227,7 @@ void LightComponent::ShadowLayer::CollectRenderableComponent(Engine& engine, Tas
 			// skinning
 			if (animationComponent) {
 				assert(animationComponent->GetWarpIndex() == renderableComponent->GetWarpIndex());
-				ZPassBase::Parameter& parameter = updater[IShader::BindInput::BONE_TRANSFORMS];
+				PassBase::Parameter& parameter = updater[IShader::BindInput::BONE_TRANSFORMS];
 				if (parameter) {
 					group.animationComponent = animationComponent; // hold reference
 					group.drawCallDescription.bufferResources[parameter.slot].buffer = animationComponent->AcquireBoneMatrixBuffer(render, warpData.renderQueue);
@@ -293,7 +293,7 @@ void LightComponent::ShadowLayer::CompleteCollect(Engine& engine, TaskData& task
 				Bytes& data = group.instancedData[k];
 				assert(!data.Empty());
 				if (!data.Empty()) {
-					ZPassBase::Parameter& output = group.instanceUpdater->parameters[k];
+					PassBase::Parameter& output = group.instanceUpdater->parameters[k];
 					// instanceable.
 					assert(output.slot < group.drawCallDescription.bufferResources.size());
 
@@ -307,7 +307,7 @@ void LightComponent::ShadowLayer::CompleteCollect(Engine& engine, TaskData& task
 			}
 
 			group.drawCallDescription.instanceCounts.x() = group.instanceCount;
-			assert(ZPassBase::ValidateDrawCall(group.drawCallDescription));
+			assert(PassBase::ValidateDrawCall(group.drawCallDescription));
 
 			IRender::Resource* drawCall = render.CreateResource(queue, IRender::Resource::RESOURCE_DRAWCALL);
 			IRender::Resource::DrawCallDescription dc = group.drawCallDescription; // make copy

@@ -5,7 +5,7 @@
 #ifndef __MULTIHASHSETUP_PASS_H__
 #define __MULTIHASHSETUP_PASS_H__
 
-#include "../../../../General/Misc/ZPassBase.h"
+#include "../../../../General/Misc/PassBase.h"
 #include "../Shaders/StandardTransformVS.h"
 #include "../Shaders/StandardParameterFS.h"
 #include "../Shaders/DeferredCompactFS.h"
@@ -13,7 +13,7 @@
 
 namespace PaintsNow {
 	namespace NsSnowyStream {
-		class MultiHashSetupPass : public TReflected<MultiHashSetupPass, ZPassBase> {
+		class MultiHashSetupPass : public TReflected<MultiHashSetupPass, PassBase> {
 		public:
 			MultiHashSetupPass();
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
