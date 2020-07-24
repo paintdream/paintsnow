@@ -433,6 +433,14 @@ SOURCE=..\..\..\..\Source\Core\System\ShadowStream.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Core\System\StringStream.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Core\System\StringStream.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Core\System\Tape.cpp
 # End Source File
 # Begin Source File

@@ -107,7 +107,7 @@ bool TextureResource::Compress(const String& compressionType) {
 		if (w < 4 || w != h || description.data.Empty() || description.state.compress) return false;
 		if (description.state.format != IRender::Resource::TextureDescription::UNSIGNED_BYTE) return false;
 
-		MemoryStream src(sizeof(UChar4) * w * h, false, 512);
+		MemoryStream src(sizeof(UChar4) * w * h, 512);
 		if (description.state.layout == IRender::Resource::TextureDescription::RGBA) {
 			memcpy(src.GetBuffer(), description.data.GetData(), description.data.GetSize());
 		} else {
@@ -138,7 +138,7 @@ bool TextureResource::Compress(const String& compressionType) {
 			h >>= 1;
 		}
 
-		MemoryStream target(length, false, 512);
+		MemoryStream target(length, 512);
 		IStreamBase* filter = factory.CreateFilter(target);
 
 		w = dimension.x();

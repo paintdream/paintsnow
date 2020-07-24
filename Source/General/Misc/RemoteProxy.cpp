@@ -293,7 +293,7 @@ void RemoteProxy::Request::PostPacket(Packet& packet) {
 
 	// use filter 
 	// *connection << packet;
-	MemoryStream stream(0x1000, true);
+	MemoryStream stream(0x1000);
 	stream << packet;
 	ITunnel::Packet state;
 	state.header.length = (ITunnel::PacketSizeType)stream.GetTotalLength();

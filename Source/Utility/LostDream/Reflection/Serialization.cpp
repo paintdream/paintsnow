@@ -294,7 +294,7 @@ bool Serialization::Run(int randomSeed, int length) {
 	derived.ch = 'a';
 	derived.extra = "Extra";
 
-	MemoryStream stream(0x1000, true);
+	MemoryStream stream(0x1000);
 	ZFilterPod pod;
 	DeviceResourceManager<MeshResource>* manager = nullptr;
 	MeshResource resource(*manager, "Test");

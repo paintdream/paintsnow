@@ -8,12 +8,23 @@
 
 #include "../../Entity.h"
 #include "../../Component.h"
+#include "../../../../Core/System/Tape.h"
+#include "../../../../Core/System/MemoryStream.h"
 
 namespace PaintsNow {
 	namespace NsMythForest {
 		class TapeComponent : public TAllocatedTiny<TapeComponent, Component> {
 		public:
-			TapeComponent();
+			TapeComponent(IStreamBase& streamBase, TShared<SharedTiny> streamHolder);
+
+			std::pair<int64_t, String> Read();
+			bool Write(int64_t seq, const String& data);
+			bool Seek(int64_t seq);
+
+		protected:
+			Tape tape;
+			MemoryStream bufferStream;
+			TShared<SharedTiny> streamHolder;
 		};
 	}
 }
