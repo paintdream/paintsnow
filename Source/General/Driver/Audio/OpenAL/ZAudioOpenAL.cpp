@@ -169,7 +169,7 @@ void ZAudioOpenAL::SwitchBufferType(IAudio::Buffer* buf, bool online) {
 
 
 /*
-void ZAudioOpenAL::Seek(SourceImpl* sourceHandle, IStreamBase::SEEK_OPTION option, long offset) {
+void ZAudioOpenAL::Seek(SourceImpl* sourceHandle, IStreamBase::SEEK_OPTION option, int64_t offset) {
 	assert(sourceHandle->buffer->isQueuedBuffer);
 	sourceHandle->buffer->stream->Seek(option, offset);
 }*/

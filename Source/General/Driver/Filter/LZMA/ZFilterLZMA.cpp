@@ -20,7 +20,7 @@ public:
 	virtual bool Write(const void* p, size_t& len);
 	virtual bool Transfer(IStreamBase& stream, size_t& len);
 	virtual bool WriteDummy(size_t& len);
-	virtual bool Seek(SEEK_OPTION option, long offset);
+	virtual bool Seek(SEEK_OPTION option, int64_t offset);
 
 	// object writing/reading routine
 	virtual bool Write(IReflectObject& s, void* ptr, size_t length);
@@ -133,7 +133,7 @@ bool FilterLZMAImpl::Transfer(IStreamBase& s, size_t& len) {
 	return stream.Transfer(s, len);
 }
 
-bool FilterLZMAImpl::Seek(SEEK_OPTION option, long offset) {
+bool FilterLZMAImpl::Seek(SEEK_OPTION option, int64_t offset) {
 	assert(false); // Seek is not allowed
 	return stream.Seek(option, offset);
 }

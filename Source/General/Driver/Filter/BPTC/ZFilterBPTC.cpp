@@ -35,7 +35,7 @@ public:
 		assert(false);
 		return false;
 	}
-	virtual bool Seek(SEEK_OPTION option, long offset) {
+	virtual bool Seek(SEEK_OPTION option, int64_t offset) {
 		assert(false);
 		return false;
 	}

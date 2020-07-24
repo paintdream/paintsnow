@@ -13,7 +13,7 @@ public:
 	virtual bool Write(const void* p, size_t& len);
 	virtual bool Transfer(IStreamBase& stream, size_t& len);
 	virtual bool WriteDummy(size_t& len);
-	virtual bool Seek(IStreamBase::SEEK_OPTION option, long offset);
+	virtual bool Seek(IStreamBase::SEEK_OPTION option, int64_t offset);
 
 	// derived from IFilterBase
 	virtual void Attach(IStreamBase& inputStream);
@@ -64,7 +64,7 @@ long LAMEDecoder::GetRemaining() const {
 	return 0;
 }
 
-bool LAMEDecoder::Seek(IStreamBase::SEEK_OPTION option, long offset) {
+bool LAMEDecoder::Seek(IStreamBase::SEEK_OPTION option, int64_t offset) {
 	bool ret = false;
 	if (offset == 0) {
 		// accurate

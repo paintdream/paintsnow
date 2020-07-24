@@ -48,7 +48,7 @@ namespace PaintsNow {
 		virtual void Pause(Source* sourceHandle) = 0;
 		virtual void Rewind(Source* sourceHandle) = 0;
 		virtual void Stop(Source* sourceHandle) = 0;
-		// virtual void Seek(Source* sourceHandle, IStreamBase::SEEK_OPTION option, long offset) = 0;
+		// virtual void Seek(Source* sourceHandle, IStreamBase::SEEK_OPTION option, int64_t offset) = 0;
 	};
 }
 

@@ -28,7 +28,7 @@ namespace PaintsNow
 		virtual void Rewind(Source* sourceHandle);
 		virtual void Stop(Source* sourceHandle);
 		void ResetBuffer(Buffer* buffer);
-		// virtual void Seek(Source* sourceHandle, IStreamBase::SEEK_OPTION option, long offset);
+		// virtual void Seek(Source* sourceHandle, IStreamBase::SEEK_OPTION option, int64_t offset);
 
 	private:
 		void SwitchBufferType(IAudio::Buffer* buffer, bool online);
