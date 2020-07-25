@@ -23,10 +23,11 @@ TShared<ShapeComponent> ShapeComponentModule::RequestNew(IScript::Request& reque
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(mesh);
 
+	engine.GetKernel().YieldCurrentWarp();
+
 	TShared<ShapeComponent> shapeComponent = TShared<ShapeComponent>::From(allocator->New());
 	shapeComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
 	shapeComponent->Update(engine, mesh.Get());
-
 	return shapeComponent;
 }
 

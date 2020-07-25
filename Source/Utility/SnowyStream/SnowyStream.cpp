@@ -424,7 +424,7 @@ TShared<ResourceBase> SnowyStream::RequestNewResource(IScript::Request& request,
 
 class TaskResourceCreator final : public TReflected<TaskResourceCreator, SharedTiny> {
 public:
-	TaskResourceCreator(BridgeSunset& bs, SnowyStream& ss, rvalue<std::vector<String> > pl, rvalue<String> type, IScript::Request::Ref cb) : bridgeSunset(bs), snowyStream(ss), callback(cb), resType(std::move(type)) {
+	TaskResourceCreator(BridgeSunset& bs, SnowyStream& ss, rvalue<std::vector<String> > pl, rvalue<String> type, IScript::Request::Ref step, IScript::Request::Ref complete) : bridgeSunset(bs), snowyStream(ss), callbackStep(step), callbackComplete(complete), resType(std::move(type)) {
 		std::swap(pathList, (std::vector<String>&)pl);
 		resourceList.resize(pathList.size());
 	}
@@ -433,24 +433,21 @@ public:
 		ThreadPool& threadPool = bridgeSunset.GetKernel().threadPool;
 		for (uint32_t i = 0; i < safe_cast<uint32_t>(pathList.size()); i++) {
 			// Create async task and use low-level thread pool dispatching it
-			threadPool.Push(CreateTask(Wrap(this, &TaskResourceCreator::RoutineCreateResource), i));
 			ReferenceObject();
+			threadPool.Push(CreateTask(Wrap(this, &TaskResourceCreator::RoutineCreateResource), i));
 		}
-
-		Finalize(request);
 	}
 
 private:
 	inline void Finalize(IScript::Request& request) {
 		request.DoLock();
-		request.Push();
-		request << beginarray;
-		for (size_t i = 0; i < resourceList.size(); i++) {
-			request << resourceList[i];
+		if (callbackComplete) {
+			request.Push();
+			request.Call(sync, callbackComplete, resourceList);
+			request.Pop();
+			request.Dereference(callbackComplete);
 		}
-		request << endarray;
-		request.Call(sync, callback);
-		request.Pop();
+		request.Dereference(callbackStep);
 		request.UnLock();
 	}
 
@@ -459,14 +456,27 @@ private:
 			resourceList[index] = snowyStream.CreateResource(pathList[index], resType, true);
 		}
 
-		if (GetExtReferCount() == 0 && callback) {
+		if (callbackStep) {
+			NsBridgeSunset::BridgeSunset& bridgeSunset = *reinterpret_cast<NsBridgeSunset::BridgeSunset*>(context);
+			IScript::Request& request = *bridgeSunset.AllocateRequest();
+			request.DoLock();
+			request.Push();
+			request.Call(sync, callbackStep, pathList[index], resourceList[index]);
+			request.Pop();
+			request.UnLock();
+			bridgeSunset.FreeRequest(&request);
+		}
+
+		// is abount to finish
+		if (GetExtReferCount() == 0) {
 			assert(context != nullptr);
 			NsBridgeSunset::BridgeSunset& bridgeSunset = *reinterpret_cast<NsBridgeSunset::BridgeSunset*>(context);
 			IScript::Request& request = *bridgeSunset.AllocateRequest();
 			Finalize(request);
 			bridgeSunset.FreeRequest(&request);
-			ReleaseObject();
 		}
+
+		ReleaseObject();
 	}
 
 	std::vector<String> pathList;
@@ -474,15 +484,15 @@ private:
 	String resType;
 	BridgeSunset& bridgeSunset;
 	SnowyStream& snowyStream;
-	IScript::Request::Ref callback;
+	IScript::Request::Ref callbackStep;
+	IScript::Request::Ref callbackComplete;
 };
 
-void SnowyStream::RequestNewResourcesAsync(IScript::Request& request, std::vector<String>& pathList, String& expectedResType, IScript::Request::Ref callback) {
-	CHECK_REFERENCES(callback);
+void SnowyStream::RequestNewResourcesAsync(IScript::Request& request, std::vector<String>& pathList, String& expectedResType, IScript::Request::Ref callbackStep, IScript::Request::Ref callbackComplete) {
 	Kernel& kernel = bridgeSunset.GetKernel();
 	kernel.YieldCurrentWarp();
 
-	TShared<TaskResourceCreator> taskResourceCreator = TShared<TaskResourceCreator>::From(new TaskResourceCreator(bridgeSunset, *this, std::move(pathList), std::move(expectedResType), callback));
+	TShared<TaskResourceCreator> taskResourceCreator = TShared<TaskResourceCreator>::From(new TaskResourceCreator(bridgeSunset, *this, std::move(pathList), std::move(expectedResType), callbackStep, callbackComplete));
 	taskResourceCreator->Start(request);
 }
 

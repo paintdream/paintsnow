@@ -525,10 +525,10 @@ struct InspectCustomStructure : public IReflect {
 
 	static bool FilterType(const String& name, String& ret, String& count) {
 		// parse name
-		if (name == UniqueType<String>::Get()->GetName() || name == UniqueType<Bytes>::Get()->GetName() || name.find("std::basic_string") == 0) {
-			ret = "String";
+		if (name == UniqueType<String>::Get()->GetName() || name == UniqueType<Bytes>::Get()->GetName()) {
+			ret = "string";
 			return true;
-		} else if (name.find("std::") == 0) {
+		} else if (name.find("std::vector") == 0 || name.find("std::pair") == 0 || name.find("std::list") == 0) {
 			ret = "vector";
 			return false;
 		} else {
@@ -570,10 +570,6 @@ struct InspectCustomStructure : public IReflect {
 		bool isDelegate = typeName.find("PaintsNow::BaseDelegate") != 0 || typeName.find("PaintsNow::Delegate<") != 0;
 		String name, count;
 		bool subfield = InspectCustomStructure::FilterType(typeName, name, count);
-
-		if (name.find("CameraComponent") != String::npos) {
-			int a = 0;
-		}
 
 		if (type->IsCreatable()) {
 			IReflectObject* obj = type->Create();
@@ -757,13 +753,13 @@ struct InspectProcs : public IReflect {
 				const IScript::MetaMethod::TypedBase* entry = static_cast<const IScript::MetaMethod::TypedBase*>(node);
 				request << key(entry->name.empty() ? name : entry->name) << begintable << key("Params") << beginarray;
 				for (size_t i = 1; i < params.size(); i++) {
-					InspectCustomStructure::ProcessMember(request, params[i].type, false, true);
+					InspectCustomStructure::ProcessMember(request, params[i].decayType, false, true);
 				}
 
 				request << endarray;
 				request << key("Returns");
 				request << begintable;
-				InspectCustomStructure::ProcessMember(request, retValue.type, false, true);
+				InspectCustomStructure::ProcessMember(request, retValue.decayType, false, true);
 				request << endtable;
 				request << endtable;
 				break;

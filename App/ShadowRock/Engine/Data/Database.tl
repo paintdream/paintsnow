@@ -10,9 +10,7 @@ function Database:Execute(sql : string, data : HoneyData) : Honey
 end
 
 function Database:Lines(sql : string, cacheCount : number, data) : function (any, number) : (any, any)
-	if cacheCount == nil then
-		cacheCount = -1
-	end
+	cacheCount = cacheCount or 0
 
 	local honey = self:Execute(sql, data as HoneyData)
 	if not honey then return function (t : any, i : number) : (any, any) return nil, nil end end

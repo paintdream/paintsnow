@@ -242,7 +242,7 @@ static void httpdcb(evhttp_request* request, void* userdata) {
 	c->listener = p->listener;
 
 #ifdef _DEBUG
-	c->dispatcher->referCount++;
+	c->dispatcher->referCount.fetch_add(1, std::memory_order_relaxed);
 #endif
 
 	// bufferevent_setcb(c->bev, conn_readcb, conn_writecb, conn_eventcb, c);
@@ -302,7 +302,7 @@ static void listener_cb(struct evconnlistener *listener, evutil_socket_t fd, str
 	c->listener = p;
 
 #ifdef _DEBUG
-	c->dispatcher->referCount++;
+	c->dispatcher->referCount.fetch_add(1, std::memory_order_relaxed);
 #endif
 
 	bufferevent_setcb(bev, conn_readcb, conn_writecb, conn_eventcb, c);
@@ -355,7 +355,7 @@ INetwork::Listener* ZNetworkLibEvent::OpenListener(Dispatcher* dispatcher, const
 	FromHost(host, ip, port);
 	p->dispatcher = disp;
 #ifdef _DEBUG
-	p->dispatcher->referCount++;
+	p->dispatcher->referCount.fetch_add(1, std::memory_order_relaxed);
 #endif
 	p->ip = ip;
 	p->port = port;
@@ -433,7 +433,7 @@ void ZNetworkLibEvent::DeactivateListener(Listener* l) {
 
 		if (listener->http != nullptr) {
 			evhttp_free(listener->http->http);
-		} else {
+		} else if (listener->listener != nullptr) {
 			evconnlistener_free(listener->listener);
 			listener->listener = nullptr;
 		}
@@ -452,7 +452,7 @@ void ZNetworkLibEvent::CloseListener(Listener* l) {
 	ListenerImpl* listener = static_cast<ListenerImpl*>(l);
 	DeactivateListener(listener);
 #ifdef _DEBUG
-	listener->dispatcher->referCount--;
+	listener->dispatcher->referCount.fetch_sub(1, std::memory_order_relaxed);
 #endif
 	delete listener;
 }
@@ -467,7 +467,7 @@ INetwork::Connection* ZNetworkLibEvent::OpenConnection(Dispatcher* dispatcher, c
 	p->dispatcher = disp;
 	p->listener = nullptr;
 #ifdef _DEBUG
-	p->dispatcher->referCount++;
+	p->dispatcher->referCount.fetch_add(1, std::memory_order_relaxed);
 #endif
 	p->callback = callback;
 	p->ip = ip;
@@ -541,7 +541,7 @@ void ZNetworkLibEvent::CloseConnection(Connection* c) {
 		connection->listener->autoConnections.erase(connection);
 
 #ifdef _DEBUG
-	connection->dispatcher->referCount--;
+	connection->dispatcher->referCount.fetch_sub(1, std::memory_order_relaxed);
 #endif
 	delete connection;
 }
@@ -604,7 +604,7 @@ INetwork::HttpRequest* ZNetworkLibEvent::OpenHttpRequest(Connection* connection,
 	p->connection = evhttp_connection_base_new(con->dispatcher->base, con->dispatcher->dns, con->ip.c_str(), con->port);
 
 #ifdef _DEBUG
-	con->dispatcher->referCount++;
+	con->dispatcher->referCount.fetch_add(1, std::memory_order_relaxed);
 #endif
 
 	p->callback = callback;
@@ -616,7 +616,7 @@ INetwork::HttpRequest* ZNetworkLibEvent::OpenHttpRequest(Connection* connection,
 void ZNetworkLibEvent::CloseHttpRequest(INetwork::HttpRequest* request) {
 	HttpRequestImpl* p = static_cast<HttpRequestImpl*>(request);
 #ifdef _DEBUG
-	p->conimpl->dispatcher->referCount--;
+	p->conimpl->dispatcher->referCount.fetch_sub(1, std::memory_order_relaxed);
 #endif
 	if (p->ownConnection) {
 		delete p->conimpl;

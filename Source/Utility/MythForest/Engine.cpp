@@ -124,7 +124,7 @@ Kernel& Engine::GetKernel() {
 
 void Engine::NotifyEntityConstruct(Entity* entity) {
 	entityCount.fetch_add(1, std::memory_order_release);
-#ifdef _DEBUG
+#if defined(_DEBUG) && (!defined(_MSC_VER) || _MSC_VER > 1200)
 	SpinLock(entityCritical);
 	assert(entityMap.find(entity) == entityMap.end());
 	entityMap[entity] = nullptr;
@@ -137,7 +137,7 @@ void Engine::NotifyEntityDestruct(Entity* entity) {
 		interfaces.thread.Signal(finalizeEvent, false);
 	}
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && (!defined(_MSC_VER) || _MSC_VER > 1200)
 	SpinLock(entityCritical);
 	assert(entityMap.find(entity) != entityMap.end());
 	entityMap.erase(entity);
@@ -146,7 +146,7 @@ void Engine::NotifyEntityDestruct(Entity* entity) {
 }
 
 void Engine::NotifyEntityAttach(Entity* entity, Entity* parent) {
-#ifdef _DEBUG
+#if defined(_DEBUG) && (!defined(_MSC_VER) || _MSC_VER > 1200)
 	SpinLock(entityCritical);
 	assert(parent != nullptr);
 	assert(entityMap.find(entity) != entityMap.end());
@@ -154,7 +154,7 @@ void Engine::NotifyEntityAttach(Entity* entity, Entity* parent) {
 	Entity* p = parent;
 	while (true) {
 		assert(p != entity); // cycle detected
-		std::unordered_map<Entity*, Entity*>::iterator it = entityMap.find(p);
+		std::unordered_map<Entity*, Entity*>::const_iterator it = entityMap.find(p);
 		if (it == entityMap.end())
 			break;
 
@@ -167,7 +167,7 @@ void Engine::NotifyEntityAttach(Entity* entity, Entity* parent) {
 }
 
 void Engine::NotifyEntityDetach(Entity* entity) {
-#ifdef _DEBUG
+#if defined(_DEBUG) && (!defined(_MSC_VER) || _MSC_VER > 1200)
 	SpinLock(entityCritical);
 	assert(entityMap.find(entity) != entityMap.end());
 	assert(entityMap[entity] != nullptr);

@@ -29,8 +29,26 @@ function Scene.New(database : Database, clock : Clock) : Scene
 
 	-- add scene entities
 	if database then
+		print("\tWarming up resources ...")
+		local warmingUpResources : { string : { string }} = {}
+		for _, line in database:Lines("select Path, Names.Name from `Resources`, `Names` where `TypeID` == Names.ID") do
+			local path, name = table.unpack(line as { string })
+			warmingUpResources[name as string] = warmingUpResources[name as string] or {}
+			table.insert(warmingUpResources[name as string], path as string)
+		end
+
+		local running = coroutine.running()
+		for name, list in pairs(warmingUpResources) do
+			print("\tWarming up " .. name)
+			SnowyStream.NewResourcesAsync(list, name, function (path : string, res : ResourceBase)
+				print("\t\tLoaded: " .. path)
+			end, function () coroutine.resume(running) end)
+		end
+
+		coroutine.yield()
+
 		local dupCount = 6
-		print("\tCreating entities.")
+		print("\tCreating entities ...")
 
 		for i = 1, dupCount do
 			print("\tCreating at warp " .. i)

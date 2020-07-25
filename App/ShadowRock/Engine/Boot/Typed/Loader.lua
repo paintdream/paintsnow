@@ -104,11 +104,9 @@ if EnableTL then
 
 	-- register API prototypes
 	local mapTypes = {
-		--["int"] = "number",
-		["int"] = "number",
-		--["short"] = "number",
-		["short"] = "number",
 		--["char"] = "number",
+		["int"] = "number",
+		["short"] = "number",
 		["float"] = "number",
 		["double"] = "number",
 		--["__int64"] = "number",
@@ -123,7 +121,7 @@ if EnableTL then
 		["Ref"] = "any",
 		["Arguments"] = "...:any",
 		["WarpTiny"] = "any",
-		["void"] = "any"
+		["void"] = "any",
 	}
 
 	function Bootstrap.GetTypeName(t, regTypes)

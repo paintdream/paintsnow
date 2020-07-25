@@ -50,8 +50,9 @@ void Remembery::RequestStep(IScript::Request& request, IScript::Delegate<Honey> 
 
 	request.DoLock();
 	request << beginarray;
-	for (uint32_t i = 0; i < count; i++) {
+	for (uint32_t i = 0; i < count || count == 0; i++) {
 		if (!honey->Step()) break;
+
 		honey->WriteLine(request);
 	}
 	request << endarray;

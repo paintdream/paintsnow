@@ -40,7 +40,7 @@ namespace PaintsNow {
 		public:
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 			TShared<ResourceBase> RequestNewResource(IScript::Request& request, const String& path, const String& expectedResType, bool createAlways);
-			void RequestNewResourcesAsync(IScript::Request& request, std::vector<String>& pathList, String& expectedResType, IScript::Request::Ref callback);
+			void RequestNewResourcesAsync(IScript::Request& request, std::vector<String>& pathList, String& expectedResType, IScript::Request::Ref callbackStep, IScript::Request::Ref callbackComplete);
 			void RequestLoadExternalResourceData(IScript::Request& request, IScript::Delegate<ResourceBase> resource, const String& externalPath);
 			void RequestInspectResource(IScript::Request& request, IScript::Delegate<ResourceBase> resource);
 			void RequestPersistResource(IScript::Request& request, IScript::Delegate<ResourceBase> resource, const String& extension);

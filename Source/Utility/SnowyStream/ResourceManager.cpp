@@ -44,7 +44,7 @@ void ResourceManager::RemoveAll() {
 
 void ResourceManager::Insert(TShared<ResourceBase> resource) {
 	assert(GetLockCount() != 0);
-	assert(resource != nullptr);
+	assert(resource);
 	assert(resource->Flag() & ResourceBase::RESOURCE_ORPHAN);
 
 	// allowing anounymous resource
@@ -96,7 +96,7 @@ void* ResourceManager::GetContext() const {
 
 void ResourceManager::Remove(TShared<ResourceBase> resource) {
 	assert(GetLockCount() != 0);
-	assert(resource != nullptr);
+	assert(resource);
 	if (resource->Flag() & (ResourceBase::RESOURCE_ORPHAN | ResourceBase::RESOURCE_ETERNAL))
 		return;
 

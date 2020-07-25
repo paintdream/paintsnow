@@ -163,6 +163,8 @@ void EventComponent::OnSize(Engine& engine, const IFrame::EventSize& size) {
 }
 
 void EventComponent::RoutineTickFrame(Engine& engine) {
+	if (!(Flag() & TINY_ACTIVATED)) return;
+
 	Event event(engine, Event::EVENT_FRAME, rootEntity);
 	// Do not post them directly because we are in render thread
 	// rootEntity->PostEvent(event);
