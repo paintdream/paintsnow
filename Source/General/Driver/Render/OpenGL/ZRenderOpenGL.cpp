@@ -14,11 +14,14 @@
 
 #if USE_STATIC_THIRDPARTY_LIBRARIES
 #define GLEW_STATIC
+#define GLAPI
+#define GLFW_INCLUDE_VULKAN
 #endif
 
 // #define LOG_OPENGL
 
 #include <GL/glew.h>
+
 using namespace PaintsNow;
 
 class GLErrorGuard {
@@ -368,6 +371,9 @@ protected:
 private:
 	std::atomic<uint32_t> critical;
 	T currentDescription;
+#ifdef _DEBUG
+public:
+#endif
 	T nextDescription;
 };
 
@@ -1700,6 +1706,15 @@ template <>
 struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> : public ResourceBaseImplOpenGLDesc<IRender::Resource::DrawCallDescription> {
 	virtual IRender::Resource::Type GetType() const override { return RESOURCE_DRAWCALL; }
 	virtual void Upload(QueueImplOpenGL& queue) override {
+#ifdef _DEBUG
+		for (size_t i = 0; i < nextDescription.textureResources.size(); i++) {
+			assert(nextDescription.textureResources[i] != nullptr);
+		}
+
+		for (size_t k = 0; k < nextDescription.bufferResources.size(); k++) {
+			assert(nextDescription.bufferResources[k].buffer != nullptr);
+		}
+#endif
 		UpdateDescription();
 	}
 

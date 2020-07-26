@@ -163,29 +163,20 @@ void Loader::Load(const CmdLine& cmdLine) {
 	frameFactory = &sdummyframe;
 	config.RegisterFactory("IFrame", "ZFrameDummy", sdummyframe);
 
-#if !defined(CMAKE_PAINTSNOW) || ADD_FRAME_FREEGLUT
-	const TFactory<ZFrameFreeglut, IFrame> sframeFactory;
+#if !defined(CMAKE_PAINTSNOW) || ADD_FRAME_GLFW
+	const TFactory<ZFrameGLFW, IFrame> sframeFactory;
 	if (!nogui) {
 		frameFactory = &sframeFactory;
 	}
 
-	config.RegisterFactory("IFrame", "ZFrameFreeglut", sframeFactory);
+	config.RegisterFactory("IFrame", "ZFrameGLFW", sframeFactory);
 
-	const TFactory<ZTimerFreeglut, ITimer> stimerFactoryDef;
-	config.RegisterFactory("ITimer", "ZTimerFreeglut", stimerFactoryDef);
-	config.RegisterFactory("ITimerForFrame", "ZTimerFreeglut", stimerFactoryDef);
+	const TFactory<ZWinTimerQueue, ITimer> stimerFactoryDef;
+	config.RegisterFactory("ITimer", "ZWinTimerQueue", stimerFactoryDef);
+	config.RegisterFactory("ITimerForFrame", "ZWinTimerQueue", stimerFactoryDef);
 	timerFactoryForFrame = &stimerFactoryDef;
 #endif
 
-#if !defined(CMAKE_PAINTSNOW) || ADD_FRAME_DXUT
-#ifdef CMAKE_PAINTSNOW
-	const TFactory<ZFrameDXUT, IFrame> sframeFactoryDXUT;
-	const TFactory<ZTimerDXUT, ITimer> stimerFactoryDXUT;
-	config.RegisterFactory("IFrame", "ZFrameDXUT", sframeFactoryDXUT);
-	config.RegisterFactory("ITimerForFrame", "ZTimerDXUT", stimerFactoryDXUT);
-	config.RegisterFactory("ITimer", "ZTimerDXUT", stimerFactoryDXUT);
-#endif
-#endif
 	const TFactory<ZRenderDummy, IRender> srenderFactoryDummy;
 	renderFactory = &srenderFactoryDummy;
 	config.RegisterFactory("IRender", "ZRenderDummy", srenderFactoryDummy);

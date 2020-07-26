@@ -21,14 +21,6 @@
 #include "../../General/Driver/Image/FreeImage/ZImageFreeImage.h"
 #endif
 
-#if !defined(CMAKE_PAINTSNOW) || ADD_FRAME_FREEGLUT
-#include "../../General/Driver/Timer/Freeglut/ZTimerFreeglut.h"
-#endif
-
-#if !defined(CMAKE_PAINTSNOW) || ADD_FRAME_DXUT
-#include "../../General/Driver/Timer/DXUT/ZTimerDXUT.h"
-#endif
-
 #if defined(_WIN32) || defined(WIN32)
 #include <Windows.h>
 #if !defined(CMAKE_PAINTSNOW) || ADD_TIMER_TIMERQUEUE_BUILTIN
@@ -40,14 +32,9 @@
 #endif
 #endif
 
-#if !defined(CMAKE_PAINTSNOW) || ADD_FRAME_FREEGLUT
-#include "../../General/Driver/Frame/Freeglut/ZFrameFreeglut.h"
+#if !defined(CMAKE_PAINTSNOW) || ADD_FRAME_GLFW
+#include "../../General/Driver/Frame/GLFW/ZFrameGLFW.h"
 #endif
-
-#if !defined(CMAKE_PAINTSNOW) || ADD_FRAME_DXUT
-#include "../../General/Driver/Frame/DXUT/ZFrameDXUT.h"
-#endif
-
 
 #if !defined(CMAKE_PAINTSNOW) || ADD_ARCHIVE_DIRENT_BUILTIN
 #include "../../Core/Driver/Archive/Dirent/ZArchiveDirent.h"

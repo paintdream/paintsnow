@@ -1115,16 +1115,16 @@ SOURCE=..\..\..\..\Source\General\Driver\Font\Freetype\ZFontFreetype.h
 # Begin Group "Frame"
 
 # PROP Default_Filter ""
-# Begin Group "Freeglut"
+# Begin Group "GLFW"
 
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\General\Driver\Frame\Freeglut\ZFrameFreeglut.cpp
+SOURCE=..\..\..\..\Source\General\Driver\Frame\GLFW\ZFrameGLFW.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\General\Driver\Frame\Freeglut\ZFrameFreeglut.h
+SOURCE=..\..\..\..\Source\General\Driver\Frame\GLFW\ZFrameGLFW.h
 # End Source File
 # End Group
 # End Group
@@ -1451,18 +1451,6 @@ SOURCE=..\..\..\..\Source\Core\Driver\Thread\Pthread\ZThreadPthread.h
 # Begin Group "Timer"
 
 # PROP Default_Filter ""
-# Begin Group "FreeglutTimer"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\General\Driver\Timer\Freeglut\ZTimerFreeglut.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\General\Driver\Timer\Freeglut\ZTimerFreeglut.h
-# End Source File
-# End Group
 # Begin Group "WinTimerQueue"
 
 # PROP Default_Filter ""

@@ -2,6 +2,7 @@
 #define BUILDING_DLL
 #include "../LeavesFlute/Platform.h"
 #include "../LeavesFlute/Loader.h"
+#pragma comment(lib, "Opengl32.lib")
 
 using namespace PaintsNow;
 using namespace PaintsNow::NsLeavesFlute;

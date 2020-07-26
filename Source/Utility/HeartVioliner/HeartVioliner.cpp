@@ -127,12 +127,12 @@ void HeartVioliner::RequestDetach(IScript::Request& request, IScript::Delegate<Q
 /*
 #include "../../General/Driver/Thread/Pthread/ZThreadPthread.h"
 #include "../../General/Driver/Script/Lua/ZScriptLua.h"
-#include "../../General/Driver/Timer/Freeglut/ZTimerFreeglut.h"
+#include "../../General/Driver/Timer/GLFW/ZTimerGLFW.h"
 
 int HeartVioliner::main(int argc, char* argv[]) {
 	ZThreadPthread thread;
 	ZScriptLua script(thread);
-	TFactory<ZTimerFreeglut, ITimer> fact;
+	TFactory<ZTimerGLFW, ITimer> fact;
 	BridgeSunset bridgeSunset(thread, 3, 3);
 	HeartVioliner hv(thread, fact, bridgeSunset);
 	IScript::Request& request = script.GetDefaultRequest();
