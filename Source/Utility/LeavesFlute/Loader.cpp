@@ -170,11 +170,6 @@ void Loader::Load(const CmdLine& cmdLine) {
 	}
 
 	config.RegisterFactory("IFrame", "ZFrameGLFW", sframeFactory);
-
-	const TFactory<ZWinTimerQueue, ITimer> stimerFactoryDef;
-	config.RegisterFactory("ITimer", "ZWinTimerQueue", stimerFactoryDef);
-	config.RegisterFactory("ITimerForFrame", "ZWinTimerQueue", stimerFactoryDef);
-	timerFactoryForFrame = &stimerFactoryDef;
 #endif
 
 	const TFactory<ZRenderDummy, IRender> srenderFactoryDummy;
@@ -276,7 +271,7 @@ void Loader::Load(const CmdLine& cmdLine) {
 
 	assert(databaseFactory != nullptr);
 
-#if (defined(_WIN32) || defined(WIN32)) && (!defined(CMAKE_PAINTSNOW) || ADD_TIMER_TIMERQUEUE_BUILTIN)
+#if (defined(_WIN32) || defined(WIN32)) && ((!defined(CMAKE_PAINTSNOW) || ADD_TIMER_TIMERQUEUE_BUILTIN))
 	static const TFactory<ZWinTimerQueue, ITimer> stimerFactory;
 	config.RegisterFactory("ITimer", "ZWinTimerQueue", stimerFactory);
 	// if (timerFactory == nullptr)
@@ -290,6 +285,7 @@ void Loader::Load(const CmdLine& cmdLine) {
 #if !(defined(_WIN32) || defined(WIN32)) && (!defined(CMAKE_PAINTSNOW) || ADD_TIMER_POSIX_BUILTIN)
 	static const TFactory<ZPosixTimer, ITimer> pstimerFactory;
 	config.RegisterFactory("ITimer", "ZPosixTimer", pstimerFactory);
+	config.RegisterFactory("ITimerForFrame", "ZPosixTimer", pstimerFactory);
 	if (timerFactory == nullptr) {
 		timerFactory = &pstimerFactory;
 	}
