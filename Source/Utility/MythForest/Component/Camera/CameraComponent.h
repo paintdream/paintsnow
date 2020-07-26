@@ -76,6 +76,8 @@ namespace PaintsNow {
 
 			struct InstanceGroup {
 				InstanceGroup() : drawCallResource(nullptr), instanceCount(0) {}
+				void Cleanup();
+
 				PassBase::PartialUpdater* instanceUpdater;
 				std::vector<Bytes> instancedData;
 				IRender::Resource::DrawCallDescription drawCallDescription;

@@ -142,23 +142,29 @@ void EventComponent::RoutineOnSize(Engine& engine, const Int2& size) {
 }
 
 void EventComponent::OnKeyboard(Engine& engine, const IFrame::EventKeyboard& keyboard) {
-	if (rootEntity->Flag() & Entity::ENTITY_HAS_SPECIAL_EVENT) {
-		Event event(engine, Event::EVENT_INPUT, this, TShared<SharedTiny>::From(new Event::Wrapper<IFrame::EventKeyboard>(keyboard)));
-		rootEntity->PostEvent(event, Entity::ENTITY_HAS_SPECIAL_EVENT);
+	if (Flag() & TINY_ACTIVATED) {
+		if (rootEntity->Flag() & Entity::ENTITY_HAS_SPECIAL_EVENT) {
+			Event event(engine, Event::EVENT_INPUT, this, TShared<SharedTiny>::From(new Event::Wrapper<IFrame::EventKeyboard>(keyboard)));
+			rootEntity->PostEvent(event, Entity::ENTITY_HAS_SPECIAL_EVENT);
+		}
 	}
 }
 
 void EventComponent::OnMouse(Engine& engine, const IFrame::EventMouse& mouse) {
-	if (rootEntity->Flag() & Entity::ENTITY_HAS_SPECIAL_EVENT) {
-		Event event(engine, Event::EVENT_INPUT, this, TShared<SharedTiny>::From(new Event::Wrapper<IFrame::EventMouse>(mouse)));
-		rootEntity->PostEvent(event, Entity::ENTITY_HAS_SPECIAL_EVENT);
+	if (Flag() & TINY_ACTIVATED) {
+		if (rootEntity->Flag() & Entity::ENTITY_HAS_SPECIAL_EVENT) {
+			Event event(engine, Event::EVENT_INPUT, this, TShared<SharedTiny>::From(new Event::Wrapper<IFrame::EventMouse>(mouse)));
+			rootEntity->PostEvent(event, Entity::ENTITY_HAS_SPECIAL_EVENT);
+		}
 	}
 }
 
 void EventComponent::OnSize(Engine& engine, const IFrame::EventSize& size) {
-	if (rootEntity->Flag() & Entity::ENTITY_HAS_SPECIAL_EVENT) {
-		Event event(engine, Event::EVENT_INPUT, this, TShared<SharedTiny>::From(new Event::Wrapper<IFrame::EventSize>(size)));
-		rootEntity->PostEvent(event, Entity::ENTITY_HAS_SPECIAL_EVENT);
+	if (Flag() & TINY_ACTIVATED) {
+		if (rootEntity->Flag() & Entity::ENTITY_HAS_SPECIAL_EVENT) {
+			Event event(engine, Event::EVENT_INPUT, this, TShared<SharedTiny>::From(new Event::Wrapper<IFrame::EventSize>(size)));
+			rootEntity->PostEvent(event, Entity::ENTITY_HAS_SPECIAL_EVENT);
+		}
 	}
 }
 

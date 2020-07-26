@@ -173,11 +173,14 @@ void CameraComponent::Instancing(Engine& engine, TaskData& taskData) {
 
 					if (PassBase::ValidateDrawCall(group.drawCallDescription)) {
 						policyData.instanceData.Append(data);
-						IRender::Resource* drawCall = render.CreateResource(queue, IRender::Resource::RESOURCE_DRAWCALL);
+						IRender::Resource*& drawCall = group.drawCallResource;
+						if (drawCall == nullptr) {
+							drawCall = render.CreateResource(queue, IRender::Resource::RESOURCE_DRAWCALL);
+							policyData.runtimeResources.emplace_back(drawCall);
+						}
+
 						assert(group.drawCallDescription.shaderResource != nullptr);
 						render.UploadResource(queue, drawCall, &group.drawCallDescription);
-						group.drawCallResource = drawCall;
-						policyData.runtimeResources.emplace_back(drawCall);
 					}
 				}
 			}
@@ -303,6 +306,8 @@ void CameraComponent::CommitRenderRequests(Engine& engine, TaskData& taskData, I
 			TaskData::WarpData::InstanceGroupMap& instanceGroups = warpData.instanceGroups;
 			for (TaskData::WarpData::InstanceGroupMap::iterator it = instanceGroups.begin(); it != instanceGroups.end(); ++it) {
 				InstanceGroup& group = (*it).second;
+				if (group.instanceCount == 0) continue;
+
 				if (group.renderPolicy != lastRenderPolicy) {
 					lastRenderPolicy = group.renderPolicy();
 					lastRenderState = nullptr;
@@ -823,12 +828,34 @@ void CameraComponent::TaskData::Cleanup(IRender& render) {
 		data.worldGlobalBufferMap.clear();
 		data.dataUpdaters.clear();
 		data.envCubeElements.clear();
-		data.instanceGroups.clear();
 		data.lightElements.clear();
 		data.entityCount = 0;
 		data.visibleEntityCount = 0;
 		data.triangleCount = 0;
+
+		// to avoid frequently memory alloc/dealloc
+		// data.instanceGroups.clear();
+		for (WarpData::InstanceGroupMap::iterator ip = data.instanceGroups.begin(); ip != data.instanceGroups.end();) {
+			InstanceGroup& group = (*ip).second;
+			if (group.instanceCount == 0) {
+				// to be deleted.
+				data.instanceGroups.erase(ip++);
+			} else {
+				group.Cleanup();
+				++ip;
+			}
+		}
 	}
+}
+
+void CameraComponent::InstanceGroup::Cleanup() {
+	for (size_t i = 0; i < instancedData.size(); i++) {
+		instancedData[i].Clear();
+	}
+
+	drawCallDescription = IRender::Resource::DrawCallDescription();
+	drawCallResource = nullptr;
+	instanceCount = 0;
 }
 
 CameraComponent::TaskData::~TaskData() {
