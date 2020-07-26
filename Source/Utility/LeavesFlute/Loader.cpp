@@ -74,10 +74,6 @@ public:
 	virtual void DeleteResource(Queue* queue, Resource* resource) override {}
 };
 
-Loader::Loader() : frameFactory(nullptr), renderFactory(nullptr), threadFactory(nullptr), audioFactory(nullptr), archiveFactory(nullptr), scriptFactory(nullptr), networkFactory(nullptr), timerFactory(nullptr), imageFactory(nullptr), assetFilterFactory(nullptr), fontFactory(nullptr), audioFilterFactory(nullptr), databaseFactory(nullptr), leavesFlute(nullptr) {}
-
-Loader::~Loader() {}
-
 
 void Loader::SetFactory(const void*& ptr, String& param, const String& key, const std::map<String, CmdLine::Option>& factoryMap) {
 	const std::map<String, CmdLine::Option>::const_iterator p = factoryMap.find(key);
@@ -424,3 +420,21 @@ void Loader::Load(const CmdLine& cmdLine) {
 	thread->DeleteThread(mainThread);
 	delete thread;
 }
+
+#ifdef _WIN32
+#include <Windows.h>
+#endif
+
+Loader::Loader() : frameFactory(nullptr), renderFactory(nullptr), threadFactory(nullptr), audioFactory(nullptr), archiveFactory(nullptr), scriptFactory(nullptr), networkFactory(nullptr), timerFactory(nullptr), imageFactory(nullptr), assetFilterFactory(nullptr), fontFactory(nullptr), audioFilterFactory(nullptr), databaseFactory(nullptr), leavesFlute(nullptr) {
+#ifdef _WIN32
+	::CoInitialize(nullptr);
+#endif
+}
+
+Loader::~Loader() {
+#ifdef _WIN32
+	::CoUninitialize();
+#endif
+}
+
+

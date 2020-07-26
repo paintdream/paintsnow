@@ -524,6 +524,38 @@ SOURCE=..\..\..\..\Source\General\Misc\ScriptReflect.cpp
 SOURCE=..\..\..\..\Source\General\Misc\ScriptReflect.h
 # End Source File
 # End Group
+# Begin Group "Platform"
+
+# PROP Default_Filter ""
+# Begin Group "Windows"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\General\Platform\Windows\ComBridge.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\General\Platform\Windows\ComBridge.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\General\Platform\Windows\ComDef.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\General\Platform\Windows\ComDef.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\General\Platform\Windows\ComDispatch.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\General\Platform\Windows\ComDispatch.h
+# End Source File
+# End Group
+# End Group
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\General\PaintsNow.h

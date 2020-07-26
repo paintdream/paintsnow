@@ -137,6 +137,17 @@ FILE (GLOB_RECURSE PAINTSNOW_SRC
 		"${PROJECT_SOURCE_DIR}/Source/General/Template/*.cpp"
 )
 
+# Platform specific
+
+IF (MSVC)
+	FILE (GLOB_RECURSE PLATFORM_WINDOWS_SRC
+		"${PROJECT_SOURCE_DIR}/Source/General/Platform/Windows/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/General/Platform/Windows/*.cpp"
+	)
+
+	SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${PLATFORM_WINDOWS_SRC})
+ENDIF (MSVC)
+
 # ADD DRIVER OPTIONS
 
 OPTION (ADD_ARCHIVE_DIRENT_BUILTIN "Add Dirent Archive Driver" ON)

@@ -97,7 +97,7 @@ namespace PaintsNow {
 		class Loader {
 		public:
 			Loader();
-			virtual ~Loader();
+			~Loader();
 			void Load(const CmdLine& cmdLine);
 			void SetFactory(const void*& ptr, String& param, const String& key, const std::map<String, CmdLine::Option>& factoryMap);
 

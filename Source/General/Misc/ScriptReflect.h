@@ -8,6 +8,8 @@
 
 #include "../../Core/Interface/IScript.h"
 #include "../../Core/Interface/IReflect.h"
+#include "../../Core/Interface/IArchive.h"
+#include "../../Core/System/Kernel.h"
 
 namespace PaintsNow {
 	class ScriptReflect : public IReflect {
@@ -44,13 +46,13 @@ namespace PaintsNow {
 			const ValueParserBase* parser;
 		};
 
-		ScriptReflect(IScript::Request& request, bool read, const std::map<Unique, Type>& reflectParserMap = ScriptReflect::GetGlobalMap());
+		ScriptReflect(IScript::Request& request, bool read, const std::unordered_map<Unique, Type>& reflectParserMap = ScriptReflect::GetGlobalMap());
 
 		virtual void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta);
 		virtual void Method(Unique typeID, const char* name, const TProxy<>* p, const IReflect::Param& retValue, const std::vector<IReflect::Param>& params, const MetaChainBase* meta);
 
 		const Type& GetType(Unique id) const;
-		static const std::map<Unique, Type>& GetGlobalMap();
+		static const std::unordered_map<Unique, Type>& GetGlobalMap();
 		template <class T>
 		ScriptReflect& operator >> (T& object) {
 			static Unique u = UniqueType<T>::Get();
@@ -68,11 +70,61 @@ namespace PaintsNow {
 
 	protected:
 		void Perform(const IReflectObject& s, void* base, Unique id);
-		static std::map<Unique, Type> globalReflectParserMap;
+		static std::unordered_map<Unique, Type> globalReflectParserMap;
 		void Atom(Unique typeID, void* base);
-		const std::map<Unique, Type>& reflectParserMap;
+		const std::unordered_map<Unique, Type>& reflectParserMap;
 		IScript::Request& request;
 		bool read;
+	};
+
+	class Tunnel;
+	class Proxy {
+	public:
+		Proxy(Tunnel* hostTunnel = nullptr, const TProxy<>* routine = nullptr);
+		void OnCall(IScript::Request& request);
+
+	private:
+		Tunnel* hostTunnel;
+		const TProxy<>* routine;
+	};
+
+	
+	class Bridge : public TReflected<Bridge, IReflectObjectComplex>, public ISyncObject {
+	public:
+		Bridge(IThread& thread);
+		virtual ~Bridge();
+
+		virtual IReflectObject* Create(IScript::Request& request, IArchive& archive, const String& path, const String& data) = 0;
+		virtual void Call(IReflectObject* object, const TProxy<>* p, IScript::Request& request) = 0;
+		virtual std::unordered_map<Unique, ScriptReflect::Type>& GetReflectMap() = 0;
+		// virtual void Dump(IScript::Request& request, Tunnel& tunnel, IReflectObject* object) = 0;
+	};
+
+	class Tunnel : public TReflected<Tunnel, WarpTiny> {
+	public:
+		Tunnel(Bridge* bridge, IReflectObject* host);
+		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		virtual ~Tunnel();
+		void ForwardCall(const TProxy<>* p, IScript::Request& request);
+		Proxy& NewProxy(const TProxy<>* p);
+		IReflectObject* GetHost() const;
+		void Dump(IScript::Request& request);
+
+	private:
+		Bridge* bridge;
+		IReflectObject* host;
+		std::list<Proxy> proxy;
+	};
+
+	class ObjectDumper : public ScriptReflect {
+	public:
+		ObjectDumper(IScript::Request& request, Tunnel& tunnel, const std::unordered_map<Unique, Type>& m);
+		virtual void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta);
+		virtual void Method(Unique typeID, const char* name, const TProxy<>* p, const IReflect::Param& retValue, const std::vector<IReflect::Param>& params, const MetaChainBase* meta);
+
+	private:
+		IScript::Request& request;
+		Tunnel& tunnel;
 	};
 }
 
