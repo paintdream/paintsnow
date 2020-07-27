@@ -13,11 +13,13 @@ local predefined = {
 }
 
 local setuservalue = debug.setuservalue
+
 return function (name : string, prototype : { string : any }) : Component
 	local scriptComponent = ScriptComponentModule.New(name)
 	for k, v in pairs(getmetatable(prototype) as { string : any }) do
 		local slot = predefined[k]
 		if slot then
+			v = rawget(prototype, k) or v -- allow overriding
 			scriptComponent:SetHandler(slot, function (... : any)
 				v as function (... : any)(prototype, ...)	
 			end)
