@@ -32,22 +32,21 @@ namespace PaintsNow {
 		void WarpCursor(const Int2& position);
 
 	public:
-		virtual void mouse_button_callback(int button, int action, int mods);
-		virtual void cursor_position_callback(double x, double y);
-		virtual void scroll_callback(double x, double y);
-		virtual void framebuffer_size_callback(int width, int height);
-		virtual void key_callback(int key, int scancode, int action, int mods);
-		virtual void render();
-		virtual void init();
+		virtual void OnMouseButtonCallback(int button, int action, int mods);
+		virtual void OnMouseMoveCallback(double x, double y);
+		virtual void OnScrollCallback(double x, double y);
+		virtual void OnFrameBufferSizeCallback(int width, int height);
+		virtual void OnKeyboardCallback(int key, int scancode, int action, int mods);
+		virtual void OnCustomRender();
 
 	protected:
 		GLFWwindow* window;
 		Callback* callback;
 		Int2 windowSize;
 		bool isRendering;
-		bool mainLoopStarted;
 		bool lastbutton;
 		bool lastdown;
+		bool reserved;
 	};
 }
 

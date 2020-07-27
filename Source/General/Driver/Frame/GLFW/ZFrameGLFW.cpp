@@ -13,11 +13,11 @@
 #include <cassert>
 using namespace PaintsNow;
 
-static void error_callback(int error, const char* description) {
+static void OnErrorCallback(int error, const char* description) {
 	fprintf(stderr, "Error: %s\n", description);
 }
 
-void ZFrameGLFW::mouse_button_callback(int button, int action, int mods) {
+void ZFrameGLFW::OnMouseButtonCallback(int button, int action, int mods) {
 	double cursorX, cursorY;
 	glfwGetCursorPos(window, &cursorX, &cursorY);
 	IFrame::EventMouse event(lastdown = (action == GLFW_PRESS), false, lastbutton = (button == GLFW_MOUSE_BUTTON_LEFT), false, Short2((short)cursorX, (short)cursorY));
@@ -25,23 +25,23 @@ void ZFrameGLFW::mouse_button_callback(int button, int action, int mods) {
 	OnMouse(event);
 }
 
-void ZFrameGLFW::cursor_position_callback(double x, double y) {
+void ZFrameGLFW::OnMouseMoveCallback(double x, double y) {
 	IFrame::EventMouse event(lastdown, true, lastbutton, false, Short2((short)x, (short)y));
 
 	OnMouse(event);
 }
 
-void ZFrameGLFW::scroll_callback(double x, double y) {
+void ZFrameGLFW::OnScrollCallback(double x, double y) {
 	IFrame::EventMouse event(y > 0, false, false, true, Short2(0, 0));
 
 	OnMouse(event);
 }
 
-void ZFrameGLFW::framebuffer_size_callback(int width, int height) {
+void ZFrameGLFW::OnFrameBufferSizeCallback(int width, int height) {
 	OnWindowSize(IFrame::EventSize(Int2(width, height)));
 }
 
-void ZFrameGLFW::key_callback(int key, int scancode, int action, int mods) {
+void ZFrameGLFW::OnKeyboardCallback(int key, int scancode, int action, int mods) {
 	
 	IFrame::EventKeyboard event(key > 0xff ? 0 : key);
 
@@ -68,52 +68,59 @@ void ZFrameGLFW::key_callback(int key, int scancode, int action, int mods) {
 	OnKeyboard(event);
 }
 
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+void OnMouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 	ZFrameGLFW* frame = static_cast<ZFrameGLFW*>(glfwGetWindowUserPointer(window));
-	frame->mouse_button_callback(button, action, mods);
+	frame->OnMouseButtonCallback(button, action, mods);
 }
 
-void cursor_position_callback(GLFWwindow* window, double x, double y) {
+void OnMouseMoveCallback(GLFWwindow* window, double x, double y) {
 	ZFrameGLFW* frame = static_cast<ZFrameGLFW*>(glfwGetWindowUserPointer(window));
-	frame->cursor_position_callback(x, y);
+	frame->OnMouseMoveCallback(x, y);
 }
 
-void scroll_callback(GLFWwindow* window, double x, double y) {
+void OnScrollCallback(GLFWwindow* window, double x, double y) {
 	ZFrameGLFW* frame = static_cast<ZFrameGLFW*>(glfwGetWindowUserPointer(window));
-	frame->scroll_callback(x, y);
+	frame->OnScrollCallback(x, y);
 }
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+void OnFrameBufferSizeCallback(GLFWwindow* window, int width, int height) {
 	ZFrameGLFW* frame = static_cast<ZFrameGLFW*>(glfwGetWindowUserPointer(window));
-	frame->framebuffer_size_callback(width, height);
+	frame->OnFrameBufferSizeCallback(width, height);
 }
 
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+void OnKeyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	ZFrameGLFW* frame = static_cast<ZFrameGLFW*>(glfwGetWindowUserPointer(window));
-	frame->key_callback(key, scancode, action, mods);
+	frame->OnKeyboardCallback(key, scancode, action, mods);
 }
 
-ZFrameGLFW::ZFrameGLFW(const Int2& size, IFrame::Callback* cb) : windowSize(size), mainLoopStarted(false), isRendering(false), lastdown(false), lastbutton(false) {
+ZFrameGLFW::ZFrameGLFW(const Int2& size, IFrame::Callback* cb) : windowSize(size), isRendering(false), lastdown(false), lastbutton(false) {
 	SetCallback(cb);
-	glfwSetErrorCallback(error_callback);
+	glfwSetErrorCallback(OnErrorCallback);
 
 	glfwInit();
+	// We are not allowed to use BPTC in Win32 OpenGL ES context.
+	/*
+	glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+	assert(glfwGetError(nullptr) == 0);
+	glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_NATIVE_CONTEXT_API);
+	assert(glfwGetError(nullptr) == 0);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	assert(glfwGetError(nullptr) == 0);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+	assert(glfwGetError(nullptr) == 0);*/
 	window = glfwCreateWindow(size.x(), size.y(), "PaintsNow.Net", NULL, NULL);
 
 	glfwSetWindowUserPointer(window, this);
 
 	OnWindowSize(size);
-	init();
 
-	glfwSetKeyCallback(window, ::key_callback);
-	glfwSetFramebufferSizeCallback(window, ::framebuffer_size_callback);
-	glfwSetMouseButtonCallback(window, ::mouse_button_callback);
-	glfwSetCursorPosCallback(window, ::cursor_position_callback);
-	glfwSetScrollCallback(window, ::scroll_callback);
+	glfwSetKeyCallback(window, ::OnKeyboardCallback);
+	glfwSetFramebufferSizeCallback(window, ::OnFrameBufferSizeCallback);
+	glfwSetMouseButtonCallback(window, ::OnMouseButtonCallback);
+	glfwSetCursorPosCallback(window, ::OnMouseMoveCallback);
+	glfwSetScrollCallback(window, ::OnScrollCallback);
 	glfwMakeContextCurrent(window);
 }
-
-void ZFrameGLFW::init() {}
 
 ZFrameGLFW::~ZFrameGLFW() {
 	glfwTerminate();
@@ -164,30 +171,27 @@ const Int2& ZFrameGLFW::GetWindowSize() const {
 	return windowSize;
 }
 
-void ZFrameGLFW::render() {}
+void ZFrameGLFW::OnCustomRender() {}
 
 void ZFrameGLFW::EnterMainLoop() {
-	mainLoopStarted = true;
-	while (!glfwWindowShouldClose(window) && mainLoopStarted) 		{
+	while (!glfwWindowShouldClose(window)) 		{
 		if (callback != nullptr) {
 			// glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 			// glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 			isRendering = true;
 			callback->OnRender();
 
-			render();
+			OnCustomRender();
 			glfwSwapBuffers(window);
 			isRendering = false;
 		}
 
 		glfwPollEvents();
 	}
-
-	mainLoopStarted = false;
 }
 
 void ZFrameGLFW::ExitMainLoop() {
-	mainLoopStarted = false;
+	glfwSetWindowShouldClose(window, 1);
 }
 
 void ZFrameGLFW::ShowCursor(CURSOR cursor) {

@@ -46,28 +46,49 @@ IMGUI_IMPL_API void     ImGui_ImplGlfw_CharCallback(GLFWwindow* window, unsigned
 
 class ZFrameGLFWForImGui : public ZFrameGLFW {
 public:
-	ZFrameGLFWForImGui(LeavesWine& wine, const Int2& size = Int2(1450, 800), Callback* callback = nullptr) : ZFrameGLFW(size, callback), leavesWine(wine) {}
+	ZFrameGLFWForImGui(LeavesWine& wine, const Int2& size = Int2(1450, 800), Callback* callback = nullptr) : ZFrameGLFW(size, callback), leavesWine(wine), init(false) {}
 
-	virtual void mouse_button_callback(int button, int action, int mods) {
+	virtual void OnMouseButtonCallback(int button, int action, int mods) override {
 		ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
-		ZFrameGLFW::mouse_button_callback(button, action, mods);
+		if (ImGui::GetIO().WantCaptureMouse) return;
+		ZFrameGLFW::OnMouseButtonCallback(button, action, mods);
 	}
 
-	virtual void scroll_callback(double x, double y) {
+	virtual void OnScrollCallback(double x, double y) override {
 		ImGui_ImplGlfw_ScrollCallback(window, x, y);
-		ZFrameGLFW::scroll_callback(x, y);
+		if (ImGui::GetIO().WantCaptureMouse) return;
+		ZFrameGLFW::OnScrollCallback(x, y);
 	}
 
-	virtual void key_callback(int key, int scancode, int action, int mods) {
+	virtual void OnKeyboardCallback(int key, int scancode, int action, int mods) override {
 		ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
-		ZFrameGLFW::key_callback(key, scancode, action, mods);
+		if (ImGui::GetIO().WantCaptureKeyboard) return;
+		ZFrameGLFW::OnKeyboardCallback(key, scancode, action, mods);
 	}
 
-	virtual void OnRender() {
+	virtual void OnCustomRender() override {
+		if (!init) {
+			IMGUI_CHECKVERSION();
+
+			ImGui::CreateContext();
+			ImGui_ImplGlfw_InitForOpenGL(window, false);
+			ImGui_ImplOpenGL3_Init();
+
+			ImGui::StyleColorsClassic();
+
+			ImGuiIO& io = ImGui::GetIO();
+			io.IniFilename = NULL;
+			io.Fonts->AddFontDefault();
+			io.FontAllowUserScaling = true;
+
+			init = true;
+		}
+
 		glUseProgram(0);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
 
 		static bool showAll = true;
 		ImGuiIO& io = ImGui::GetIO();
@@ -84,22 +105,8 @@ public:
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	}
 
-	virtual void init() {
-		IMGUI_CHECKVERSION();
-
-		ImGui::CreateContext();
-		ImGui_ImplGlfw_InitForOpenGL(window, true);
-		ImGui_ImplOpenGL3_Init();
-
-		ImGui::StyleColorsClassic();
-
-		ImGuiIO& io = ImGui::GetIO();
-		io.IniFilename = NULL;
-		io.Fonts->AddFontDefault();
-		io.FontAllowUserScaling = true;
-	}
-
 	LeavesWine& leavesWine;
+	bool init;
 };
 
 class FrameImGuiFactory : public TFactoryBase<IFrame> {
