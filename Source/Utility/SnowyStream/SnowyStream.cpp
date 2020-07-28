@@ -1,6 +1,5 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include "SnowyStream.h"
-#include "Resource/AudioResource.h"
 #include "Resource/FontResource.h"
 #include "Resource/MaterialResource.h"
 #include "Resource/MeshResource.h"
@@ -724,7 +723,6 @@ void SnowyStream::RegisterReflectedSerializers() {
 	// Commented resources may have dependencies, so we do not serialize/deserialize them at once.
 	// PaintsNow recommends database-managed resource dependencies ...
 
-	RegisterReflectedSerializer(UniqueType<AudioResource>(), interfaces.audioFilterBase, nullptr);
 	RegisterReflectedSerializer(UniqueType<FontResource>(), interfaces.fontBase, this);
 	RegisterReflectedSerializer(UniqueType<MaterialResource>(), interfaces.render, resourceQueue);
 	RegisterReflectedSerializer(UniqueType<ShaderResource>(), interfaces.render, resourceQueue);

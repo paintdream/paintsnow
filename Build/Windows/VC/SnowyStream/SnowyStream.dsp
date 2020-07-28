@@ -97,10 +97,6 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\AntiAliasingPass.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\AudioResource.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\BloomFS.cpp
 # End Source File
 # Begin Source File
@@ -370,10 +366,6 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\AntiAliasingFS.h
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\AntiAliasingPass.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\AudioResource.h
 # End Source File
 # Begin Source File
 

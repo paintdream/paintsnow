@@ -27,7 +27,7 @@ namespace PaintsNow {
 			virtual IReflectObject* Clone() const override;
 
 		protected:
-			ShadowStream stream;
+			ShadowStream shadowStream;
 		};
 	}
 }

@@ -8,7 +8,7 @@
 
 #include "../../Component.h"
 #include "../../../SnowyStream/SnowyStream.h"
-#include "../../../SnowyStream/Resource/AudioResource.h"
+#include "../../../SnowyStream/Resource/StreamResource.h"
 
 namespace PaintsNow {
 	namespace NsMythForest {
@@ -19,7 +19,7 @@ namespace PaintsNow {
 				SOUNDCOMPONENT_CUSTOM_BEGIN = COMPONENT_CUSTOM_BEGIN << 1
 			};
 
-			SoundComponent(TShared<NsSnowyStream::AudioResource> audioResource, IScript::Request::Ref callback);
+			SoundComponent(TShared<NsSnowyStream::StreamResource> audioResource, IScript::Request::Ref callback);
 			virtual ~SoundComponent();
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
@@ -38,9 +38,10 @@ namespace PaintsNow {
 			bool IsPlaying() const;
 
 		protected:
+			IAudio::Decoder* audioStream;
 			IAudio::Source* audioSource;
 			IAudio::Buffer* audioBuffer;
-			TShared<NsSnowyStream::AudioResource> audioResource;
+			TShared<NsSnowyStream::StreamResource> audioResource;
 			TWrapper<size_t> stepWrapper;
 			IScript::Request::Ref callback;
 		};

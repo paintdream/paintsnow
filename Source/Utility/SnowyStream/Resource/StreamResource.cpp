@@ -13,7 +13,7 @@ void StreamResource::Attach(IArchive& archive, void* deviceContext) {}
 void StreamResource::Detach(IArchive& archive, void* deviceContext) {}
 
 IStreamBase& StreamResource::GetStream() {
-	return stream;
+	return shadowStream;
 }
 
 bool StreamResource::operator << (IStreamBase& base) {
@@ -21,7 +21,7 @@ bool StreamResource::operator << (IStreamBase& base) {
 		return false;
 	}
 
-	stream << base.GetBaseStream();
+	shadowStream << base.GetBaseStream();
 	return true;
 }
 
@@ -30,12 +30,12 @@ bool StreamResource::operator >> (IStreamBase& base) const {
 		return false;
 	}
 
-	return stream >> base.GetBaseStream();
+	return shadowStream >> base.GetBaseStream();
 }
 
 
 IReflectObject* StreamResource::Clone() const {
 	StreamResource* clone = new StreamResource(resourceManager, "");
-	clone->stream = stream;
+	clone->shadowStream = shadowStream;
 	return clone;
 }

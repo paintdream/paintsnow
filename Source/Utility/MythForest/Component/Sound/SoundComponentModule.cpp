@@ -28,7 +28,7 @@ TObject<IReflect>& SoundComponentModule::operator () (IReflect& reflect) {
 TShared<SoundComponent> SoundComponentModule::RequestNew(IScript::Request& request, String path, IScript::Request::Ref callback) {
 	CHECK_REFERENCES_WITH_TYPE(callback, IScript::Request::FUNCTION);
 
-	TShared<AudioResource> audioResource = engine.snowyStream.CreateReflectedResource(UniqueType<AudioResource>(), path);
+	TShared<StreamResource> audioResource = engine.snowyStream.CreateReflectedResource(UniqueType<StreamResource>(), path);
 	if (audioResource) {
 		TShared<SoundComponent> soundComponent = TShared<SoundComponent>::From(allocator->New(audioResource, callback));
 		soundComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
