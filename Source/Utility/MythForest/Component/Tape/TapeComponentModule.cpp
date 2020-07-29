@@ -14,12 +14,15 @@ TObject<IReflect>& TapeComponentModule::operator () (IReflect& reflect) {
 
 	if (reflect.IsReflectMethod()) {
 		ReflectMethod(RequestNew)[ScriptMethod = "New"];
+		ReflectMethod(RequestRead)[ScriptMethod = "Read"];
+		ReflectMethod(RequestWrite)[ScriptMethod = "Write"];
+		ReflectMethod(RequestFlush)[ScriptMethod = "Flush"];
 	}
 
 	return *this;
 }
 
-TShared<TapeComponent> TapeComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<SharedTiny> streamHolder) {
+TShared<TapeComponent> TapeComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<SharedTiny> streamHolder, size_t cacheBytes) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(streamHolder);
 	TShared<TapeComponent> tapeComponent;
@@ -27,11 +30,11 @@ TShared<TapeComponent> TapeComponentModule::RequestNew(IScript::Request& request
 	File* file = streamHolder->QueryInterface(UniqueType<File>());
 	if (file != nullptr) {
 		assert(file->GetStream() != nullptr);
-		tapeComponent = TShared<TapeComponent>::From(allocator->New(std::ref(*file->GetStream()), file));
+		tapeComponent = TShared<TapeComponent>::From(allocator->New(std::ref(*file->GetStream()), file, cacheBytes));
 	} else {
 		StreamResource* res = streamHolder->QueryInterface(UniqueType<StreamResource>());
 		if (res != nullptr) {
-			tapeComponent = TShared<TapeComponent>::From(allocator->New(std::ref(res->GetStream()), res));
+			tapeComponent = TShared<TapeComponent>::From(allocator->New(std::ref(res->GetStream()), res, cacheBytes));
 		}
 	}
 
@@ -45,7 +48,6 @@ TShared<TapeComponent> TapeComponentModule::RequestNew(IScript::Request& request
 std::pair<int64_t, String> TapeComponentModule::RequestRead(IScript::Request& request, IScript::Delegate<TapeComponent> tapeComponent) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(tapeComponent);
-	engine.GetKernel().YieldCurrentWarp();
 
 	return tapeComponent->Read();
 }
@@ -53,7 +55,6 @@ std::pair<int64_t, String> TapeComponentModule::RequestRead(IScript::Request& re
 bool TapeComponentModule::RequestWrite(IScript::Request& request, IScript::Delegate<TapeComponent> tapeComponent, int64_t seq, const String& data) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(tapeComponent);
-	engine.GetKernel().YieldCurrentWarp();
 
 	return tapeComponent->Write(seq, data);
 }
@@ -61,7 +62,14 @@ bool TapeComponentModule::RequestWrite(IScript::Request& request, IScript::Deleg
 bool TapeComponentModule::RequestSeek(IScript::Request& request, IScript::Delegate<TapeComponent> tapeComponent, int64_t seq) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(tapeComponent);
-	engine.GetKernel().YieldCurrentWarp();
 
 	return tapeComponent->Seek(seq);
+}
+
+bool TapeComponentModule::RequestFlush(IScript::Request& request, IScript::Delegate<TapeComponent> tapeComponent, IScript::Request::Ref asyncCallback) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(tapeComponent);
+	engine.GetKernel().YieldCurrentWarp();
+
+	return tapeComponent->Flush(engine, asyncCallback);
 }
