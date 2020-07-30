@@ -37,7 +37,7 @@ void FontResource::Detach(IFontBase& fontBase, void* deviceContext) {
 void FontResource::Upload(IFontBase& fontBase, void* deviceContext) {
 	if (font == nullptr && !rawFontData.empty()) {
 		// load font resource from memory
-		MemoryStream ms(rawFontData.size(), false);
+		MemoryStream ms(rawFontData.size());
 		size_t len = rawFontData.size();
 		if (ms.WriteBlock(rawFontData.data(), len)) {
 			ms.Seek(IStreamBase::BEGIN, 0);
