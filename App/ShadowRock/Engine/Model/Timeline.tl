@@ -7,6 +7,15 @@ local Timeline = record
 	popHead : { string : any }
 end
 
+function Timeline:SetReplay(enable : boolean)
+	assert(not enable or self.component ~= nil)
+	self.isReplay = enable
+end
+
+function Timeline:Flush()
+	self.component:Flush()
+end
+
 function Timeline:Push(seq : number, event : { string : any })
 	-- blocks all pushes on replaying
 	if self.isReplay then
@@ -14,7 +23,9 @@ function Timeline:Push(seq : number, event : { string : any })
 	end
 
 	-- record event
-	self.component:Write(seq, Core.Encode(event))
+	if self.component then
+		self.component:Write(seq, Core.Encode(event))
+	end
 
 	-- chain to timeline
 	event.__next = self.pushHead
@@ -42,16 +53,25 @@ function Timeline:Pop() : (number, { string : any })
 	end
 end
 
-function Timeline:Seek(index : number)
-
+function Timeline:Seek(seq : number)
+	assert(self.component)
+	self.component:Seek(seq)
 end
 
-function Timeline.New() : Timeline
+function Timeline.New(tapePath : string, isReplay : boolean) : Timeline
+	local component : TapeComponent
+	if tapePath then
+		local res = SnowyStream.NewResource(tapePath, "StreamResource", true)
+		assert(res, "Unable to new resource: " .. tapePath)
+		component = TapeComponentModule.New(res as SharedTiny)
+	end
+
 	local object = {
-		component = TapeComponentModule.New(),
+		component = component
 		isReplay = false,
 		pushHead = nil,
 		popHead = nil,
+		isReplay = isReplay
 	}
 
 	return setmetatable(object, TapeComponent as METATABLE) as Timeline

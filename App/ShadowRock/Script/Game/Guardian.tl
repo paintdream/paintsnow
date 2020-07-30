@@ -1,4 +1,4 @@
-local Activity = require("Engine/Activity")
+local Activity = require("Engine/Controller/Activity")
 local Guardian = record
 	component : Component
 end

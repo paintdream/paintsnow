@@ -3,7 +3,7 @@ local RepositoryDaemon = record
 end
 
 RepositoryDaemon.__index = RepositoryDaemon
-local Database = require("Engine/Data/Database")
+local Database = require("Engine/Model/Database")
 
 local function MakeDatabase(databasePath : string, sqlTemplatePath : string) : Database
 	-- Always create a new database

@@ -152,6 +152,7 @@ if EnableTL then
 	RegisterModulesRecursive("System", System)
 	-- print("TypedLua: Defs loaded.")
 	local interfaces = {}
+	table.insert(interfaces, "global SharedTiny = record end\n")
 	for name, val in SortedPairs(regTypes) do
 		table.insert(interfaces, val)
 	end

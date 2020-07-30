@@ -8,7 +8,7 @@ end
 
 Scene.__index = Scene
 
-local Database = require("Engine/Data/Database")
+local Database = require("Engine/Model/Database")
 
 function Scene.New(database : Database, clock : Clock) : Scene
 	local meta = {} as Scene

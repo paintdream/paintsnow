@@ -16,6 +16,7 @@ TObject<IReflect>& TapeComponentModule::operator () (IReflect& reflect) {
 		ReflectMethod(RequestNew)[ScriptMethod = "New"];
 		ReflectMethod(RequestRead)[ScriptMethod = "Read"];
 		ReflectMethod(RequestWrite)[ScriptMethod = "Write"];
+		ReflectMethod(RequestSeek)[ScriptMethod = "Seek"];
 		ReflectMethod(RequestFlush)[ScriptMethod = "Flush"];
 	}
 

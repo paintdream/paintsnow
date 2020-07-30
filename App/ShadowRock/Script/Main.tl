@@ -3,8 +3,8 @@
 local Main = record end
 local Debug = require("Script/Util/Debug")
 local Core = require("Engine/Core")
-local Database = require("Engine/Data/Database")
-local Vector = require("Engine/Data/Math/Vector")
+local Database = require("Engine/Model/Database")
+local Vector = require("Engine/Model/Math/Vector")
 
 local fpsBuffer : { number } = {}
 local tickBuffer : { number } = {}

@@ -4,7 +4,7 @@ end
 
 RepositoryCompressor.__index = RepositoryCompressor
 
-local Database = require("Engine/Data/Database")
+local Database = require("Engine/Model/Database")
 
 function RepositoryCompressor.Compress(database : Database)
 	if database then

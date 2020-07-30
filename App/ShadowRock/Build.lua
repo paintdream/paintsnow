@@ -13,7 +13,7 @@ local function Main()
 	compiler:CompileRecursive("Script/", forceRecompile)
 
 	-- Then pack resources
-	local Packer = require("Engine/Packer.lua")
+	local Packer = require("Engine/Model/Packer.lua")
 	Packer:Import("Assets/", "Packed/")
 	print("Build finished.")
 end

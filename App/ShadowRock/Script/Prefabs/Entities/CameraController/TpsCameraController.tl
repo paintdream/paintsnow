@@ -17,7 +17,7 @@ TpsCameraController.__index = TpsCameraController
 local StandardCamera = require("Script/Prefabs/Components/Camera/StandardCamera")
 local StandardRenderFlow = require("Script/Prefabs/Components/RenderFlow/StandardRenderFlow")
 local Phase = require("Script/Prefabs/Components/Phase/StandardPhase")
-local Vector = require("Engine/Data/Math/Vector")
+local Vector = require("Engine/Model/Math/Vector")
 
 function TpsCameraController.New(eventComponent : EventComponent) : TpsCameraController
 	local entity = MythForest.NewEntity(-1)

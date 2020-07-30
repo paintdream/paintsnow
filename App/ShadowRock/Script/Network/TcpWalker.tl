@@ -20,7 +20,7 @@ end
 
 TcpWalker.__index = TcpWalker
 
-local Json = require("Engine/Network/Json")
+local Json = require("Engine/Model/Network/Json")
 local Core = require("Engine/Core")
 
 local initUsers : { User } = {}

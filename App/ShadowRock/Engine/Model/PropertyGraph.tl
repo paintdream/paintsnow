@@ -1,4 +1,4 @@
-local Property = require("Engine/Data/Property")
+local Property = require("Engine/Model/Property")
 
 local PropertyGraph = record
 	_root : Property

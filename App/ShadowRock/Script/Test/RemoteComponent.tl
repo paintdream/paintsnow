@@ -35,7 +35,7 @@ function Test.Main()
 	   print("GET MSG: " .. msg)
 	end)
 	
-	local CrossRoutine = require("Engine/CrossRoutine")
+	local CrossRoutine = require("Engine/Controller/CrossRoutine")
 
 	-- CrossRoutine is running on another LuaVM
 	local upval = "~~~"
