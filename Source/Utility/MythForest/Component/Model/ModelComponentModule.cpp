@@ -26,7 +26,7 @@ TShared<ModelComponent> ModelComponentModule::RequestNew(IScript::Request& reque
 
 	TShared<BatchComponent> batchComponent;
 	if (batch.Get() == nullptr) {
-		batchComponent = batchComponentModule->Create();
+		batchComponent = batchComponentModule->Create(IRender::Resource::BufferDescription::UNIFORM);
 	} else {
 		batchComponent = batch.Get();
 	}

@@ -16,7 +16,7 @@ namespace PaintsNow {
 		class RenderableComponent;
 		class BatchComponent : public TAllocatedTiny<BatchComponent, Component>, public NsSnowyStream::IDataUpdater {
 		public:
-			BatchComponent();
+			BatchComponent(IRender::Resource::BufferDescription::Usage usage);
 			virtual ~BatchComponent();
 
 			IRender::Resource::DrawCallDescription::BufferRange Allocate(const Bytes& data);
@@ -24,10 +24,13 @@ namespace PaintsNow {
 			void InstanceInitialize(Engine& engine);
 			void InstanceUninitialize(Engine& engine);
 
+			IRender::Resource::BufferDescription::Usage GetBufferUsage() const;
+
 		private:
 			Bytes currentData;
 			IRender::Resource* buffer;
 			uint32_t referenceCount;
+			IRender::Resource::BufferDescription::Usage bufferUsage;
 		};
 	}
 }

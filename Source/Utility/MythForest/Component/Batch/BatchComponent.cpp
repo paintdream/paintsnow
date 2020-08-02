@@ -6,7 +6,7 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
-BatchComponent::BatchComponent() : referenceCount(0), buffer(nullptr) {}
+BatchComponent::BatchComponent(IRender::Resource::BufferDescription::Usage usage) : referenceCount(0), buffer(nullptr), bufferUsage(usage) {}
 
 BatchComponent::~BatchComponent() {
 	assert(referenceCount == 0);
@@ -31,6 +31,10 @@ void BatchComponent::InstanceUninitialize(Engine& engine) {
 		currentData.Clear();
 		Flag().fetch_and(~Tiny::TINY_MODIFIED, std::memory_order_release);
 	}
+}
+
+IRender::Resource::BufferDescription::Usage BatchComponent::GetBufferUsage() const {
+	return bufferUsage;
 }
 
 void BatchComponent::Update(IRender& render, IRender::Queue* queue) {

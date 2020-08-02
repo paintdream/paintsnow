@@ -70,6 +70,7 @@ void ModelComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTe
 	std::vector<IRender::Resource*> meshBuffers;
 	bufferCollection.UpdateData(meshBuffers);
 	InputRenderData inputRenderData;
+	assert(batchComponent->GetBufferUsage() == IRender::Resource::BufferDescription::UNIFORM);
 
 	for (size_t i = 0; i < materialResources.size(); i++) {
 		std::pair<uint32_t, TShared<MaterialResource> >& mat = materialResources[i];

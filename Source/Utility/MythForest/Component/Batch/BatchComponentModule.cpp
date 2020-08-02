@@ -17,16 +17,16 @@ TObject<IReflect>& BatchComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-TShared<BatchComponent> BatchComponentModule::Create() {
-	TShared<BatchComponent> batchComponent = TShared<BatchComponent>::From(allocator->New());
+TShared<BatchComponent> BatchComponentModule::Create(IRender::Resource::BufferDescription::Usage usage) {
+	TShared<BatchComponent> batchComponent = TShared<BatchComponent>::From(allocator->New(usage));
 	batchComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
 
 	return batchComponent;
 }
 
-TShared<BatchComponent> BatchComponentModule::RequestNew(IScript::Request& request) {
+TShared<BatchComponent> BatchComponentModule::RequestNew(IScript::Request& request, const String& usage) {
 	CHECK_REFERENCES_NONE();
-	return Create();
+	return Create(usage == "INSTANCED" ? IRender::Resource::BufferDescription::INSTANCED : IRender::Resource::BufferDescription::UNIFORM);
 }
 
 void BatchComponentModule::RequestGetCaptureStatistics(IScript::Request& request, IScript::Delegate<BatchComponent> component) {

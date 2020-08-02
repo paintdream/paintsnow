@@ -6,6 +6,7 @@
 #ifndef __WIDGETCOMPONENTMODULE_H__
 #define __WIDGETCOMPONENTMODULE_H__
 
+#include "../Batch/BatchComponentModule.h"
 #include "WidgetComponent.h"
 #include "../../Module.h"
 
@@ -19,7 +20,7 @@ namespace PaintsNow {
 			virtual void Uninitialize();
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
-			TShared<WidgetComponent> RequestNew(IScript::Request& request);
+			TShared<WidgetComponent> RequestNew(IScript::Request& request, IScript::Delegate<BatchComponent> batchComponent);
 			void RequestSetWidgetTexture(IScript::Request& request, IScript::Delegate<WidgetComponent> widgetComponent, IScript::Delegate<NsSnowyStream::TextureResource> texture);
 			void RequestSetWidgetCoord(IScript::Request& request, IScript::Delegate<WidgetComponent> widgetComponent, Float4& inCoord, Float4& outCoord);
 			void RequestSetWidgetMaterial(IScript::Request& request, IScript::Delegate<WidgetComponent> widgetComponent, IScript::Delegate<NsSnowyStream::MaterialResource> material);
@@ -28,6 +29,7 @@ namespace PaintsNow {
 		protected:
 			TShared<NsSnowyStream::MeshResource> widgetMesh;
 			TShared<NsSnowyStream::MaterialResource> widgetMaterial;
+			BatchComponentModule* batchComponentModule;
 		};
 	}
 }

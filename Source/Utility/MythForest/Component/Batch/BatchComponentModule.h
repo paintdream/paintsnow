@@ -16,11 +16,11 @@ namespace PaintsNow {
 			BatchComponentModule(Engine& engine);
 
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-			TShared<BatchComponent> Create();
+			TShared<BatchComponent> Create(IRender::Resource::BufferDescription::Usage usage);
 
 		public:
 			// APIs
-			TShared<BatchComponent> RequestNew(IScript::Request& request);
+			TShared<BatchComponent> RequestNew(IScript::Request& request, const String& usage);
 			void RequestGetCaptureStatistics(IScript::Request& request, IScript::Delegate<BatchComponent> component);
 		};
 	}

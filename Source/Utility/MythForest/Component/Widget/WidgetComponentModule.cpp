@@ -6,6 +6,8 @@ using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
 WidgetComponentModule::WidgetComponentModule(Engine& engine) : BaseClass(engine) {
+	batchComponentModule = (engine.GetComponentModuleFromName("BatchComponent")->QueryInterface(UniqueType<BatchComponentModule>()));
+	assert(batchComponentModule != nullptr);
 }
 
 void WidgetComponentModule::Initialize() {
@@ -32,10 +34,17 @@ TObject<IReflect>& WidgetComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-TShared<WidgetComponent> WidgetComponentModule::RequestNew(IScript::Request& request) {
+TShared<WidgetComponent> WidgetComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<BatchComponent> batch) {
 	CHECK_REFERENCES_NONE();
 
-	TShared<WidgetComponent> widgetComponent = TShared<WidgetComponent>::From(allocator->New(std::ref(*widgetMesh()), widgetMaterial()));
+	TShared<BatchComponent> batchComponent;
+	if (batch.Get() == nullptr) {
+		batchComponent = batchComponentModule->Create(IRender::Resource::BufferDescription::INSTANCED);
+	} else {
+		batchComponent = batch.Get();
+	}
+
+	TShared<WidgetComponent> widgetComponent = TShared<WidgetComponent>::From(allocator->New(std::ref(*widgetMesh()), widgetMaterial(), batchComponent));
 	widgetComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
 	return widgetComponent;
 }
