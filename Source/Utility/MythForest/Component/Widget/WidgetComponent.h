@@ -22,6 +22,8 @@ namespace PaintsNow {
 
 			WidgetComponent(NsSnowyStream::MeshResource& quadMesh, TShared<NsSnowyStream::MaterialResource> material, TShared<BatchComponent> batchComponent);
 			virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) override;
+			virtual void Initialize(Engine& engine, Entity* entity) override;
+			virtual void Uninitialize(Engine& engine, Entity* entity) override;
 
 			void GenerateDrawCall();
 
@@ -30,6 +32,9 @@ namespace PaintsNow {
 			NsSnowyStream::MeshResource& quadMesh;
 			TShared<NsSnowyStream::TextureResource> mainTexture;
 			TShared<NsSnowyStream::MaterialResource> materialResource;
+
+		protected:
+			Bytes EncodeTexCoordParams();
 
 		protected:
 			TShared<BatchComponent> batchComponent;
