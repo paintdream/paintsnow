@@ -12,8 +12,7 @@ WidgetShadingFS::WidgetShadingFS() {
 
 String WidgetShadingFS::GetShaderText() {
 	return UnifyShaderCode(
-		float4 zeros = float4(0.0, 0.0, 0.0, 0.0);
-		float4 offset = max(texCoord.xyxy - texCoordMark.xyzw, zeros.xyzw);
+		float4 offset = max(texCoord.xyxy - texCoordMark.xyzw, float4(0.0, 0.0, 0.0, 0.0));
 		float2 minCoord = min(texCoord.xy, texCoordMark.xy);
 		float2 newCoord = minCoord * texCoordScale.xy;
 		newCoord.xy += texCoordScale.zw * (offset.xy - offset.zw);

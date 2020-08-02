@@ -1,7 +1,16 @@
-local globalFont = "Packed/Font/Cantarell-Regular.FontResource.pod"
+local globalFont = "Packed/Font/Cantarell-Regular"
+local globalImage = {
+	path = "Packed/Texture/DarkUI",
+	width = 512,
+	height = 512
+}
+
+local globalScalePattern = {
+	repeatable = true,
+	edge = { left = 8, top = 8, right = 8, bottom = 8 }
+}
 
 return {
-	image = "Packed/Texture/DarkUI.TextureResource.pod",
 	width = 512,
 	height = 512,
 	styles =
@@ -47,10 +56,12 @@ return {
 			alignment = "center"
 		}
 	},
-	patches =
+	slices =
 	{
 		add_hover =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 452, y = 145, w = 30, h = 30 },
 			rotated = false,
 			trimmed = false,
@@ -59,6 +70,8 @@ return {
 		},
 		add_normal =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 452, y = 177, w = 30, h = 30 },
 			rotated = false,
 			trimmed = false,
@@ -67,6 +80,8 @@ return {
 		},
 		add_pressed =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 452, y = 209, w = 30, h = 30 },
 			rotated = false,
 			trimmed = false,
@@ -75,6 +90,8 @@ return {
 		},
 		arrow_left_hover =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 452, y = 241, w = 30, h = 30 },
 			rotated = false,
 			trimmed = false,
@@ -83,6 +100,8 @@ return {
 		},
 		arrow_left_normal =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 452, y = 273, w = 30, h = 30 },
 			rotated = false,
 			trimmed = false,
@@ -91,6 +110,8 @@ return {
 		},
 		arrow_left_pressed =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 452, y = 305, w = 30, h = 30 },
 			rotated = false,
 			trimmed = false,
@@ -99,6 +120,8 @@ return {
 		},
 		arrow_right_hover =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 440, y = 337, w = 30, h = 30 },
 			rotated = false,
 			trimmed = false,
@@ -107,6 +130,8 @@ return {
 		},
 		arrow_right_normal =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 472, y = 337, w = 30, h = 30 },
 			rotated = false,
 			trimmed = false,
@@ -115,6 +140,8 @@ return {
 		},
 		arrow_right_pressed =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 440, y = 369, w = 30, h = 30 },
 			rotated = false,
 			trimmed = false,
@@ -123,6 +150,8 @@ return {
 		},
 		button_hover =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 168, y = 479, w = 105, h = 30 },
 			rotated = false,
 			trimmed = false,
@@ -131,6 +160,8 @@ return {
 		},
 		button_normal =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 218, y = 76, w = 105, h = 30 },
 			rotated = false,
 			trimmed = false,
@@ -139,6 +170,8 @@ return {
 		},
 		button_pressed =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 325, y = 86, w = 105, h = 30 },
 			rotated = false,
 			trimmed = false,
@@ -147,6 +180,8 @@ return {
 		},
 		checkbox_checked =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 484, y = 154, w = 24, h = 24 },
 			rotated = false,
 			trimmed = false,
@@ -155,6 +190,8 @@ return {
 		},
 		checkbox_unchecked =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 484, y = 180, w = 24, h = 24 },
 			rotated = false,
 			trimmed = false,
@@ -163,6 +200,8 @@ return {
 		},
 		field =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 2, y = 134, w = 211, h = 36 },
 			rotated = false,
 			trimmed = false,
@@ -171,6 +210,8 @@ return {
 		},
 		field_hover =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 215, y = 139, w = 211, h = 36 },
 			rotated = false,
 			trimmed = false,
@@ -179,6 +220,8 @@ return {
 		},
 		field_round =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 2, y = 172, w = 211, h = 36 },
 			rotated = false,
 			trimmed = false,
@@ -187,6 +230,8 @@ return {
 		},
 		field_round_hover =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 215, y = 177, w = 211, h = 36 },
 			rotated = false,
 			trimmed = false,
@@ -195,6 +240,8 @@ return {
 		},
 		icon_confirm =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 452, y = 79, w = 36, h = 31 },
 			rotated = false,
 			trimmed = false,
@@ -203,6 +250,8 @@ return {
 		},
 		icon_question =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 452, y = 41, w = 36, h = 36 },
 			rotated = false,
 			trimmed = false,
@@ -211,6 +260,8 @@ return {
 		},
 		icon_warning =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 452, y = 2, w = 36, h = 37 },
 			rotated = false,
 			trimmed = false,
@@ -219,6 +270,8 @@ return {
 		},
 		loading_fill =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 356, y = 2, w = 82, h = 82 },
 			rotated = false,
 			trimmed = false,
@@ -227,6 +280,8 @@ return {
 		},
 		loading_frame =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 356, y = 335, w = 82, h = 82 },
 			rotated = false,
 			trimmed = false,
@@ -235,6 +290,8 @@ return {
 		},
 		message_background =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 2, y = 2, w = 352, h = 72 },
 			rotated = false,
 			trimmed = false,
@@ -243,6 +300,8 @@ return {
 		},
 		message_frame =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 2, y = 335, w = 352, h = 72 },
 			rotated = false,
 			trimmed = false,
@@ -251,6 +310,8 @@ return {
 		},
 		minus_hover =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 472, y = 369, w = 30, h = 30 },
 			rotated = false,
 			trimmed = false,
@@ -259,6 +320,8 @@ return {
 		},
 		minus_normal =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 440, y = 401, w = 30, h = 30 },
 			rotated = false,
 			trimmed = false,
@@ -267,6 +330,8 @@ return {
 		},
 		minus_pressed =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 472, y = 401, w = 30, h = 30 },
 			rotated = false,
 			trimmed = false,
@@ -275,6 +340,8 @@ return {
 		},
 		mult_hover =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 435, y = 473, w = 30, h = 30 },
 			rotated = false,
 			trimmed = false,
@@ -283,6 +350,8 @@ return {
 		},
 		mult_normal =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 467, y = 473, w = 30, h = 30 },
 			rotated = false,
 			trimmed = false,
@@ -291,6 +360,8 @@ return {
 		},
 		mult_pressed =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 275, y = 479, w = 30, h = 30 },
 			rotated = false,
 			trimmed = false,
@@ -299,6 +370,8 @@ return {
 		},
 		playcontrol =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 2, y = 76, w = 214, h = 56 },
 			rotated = false,
 			trimmed = false,
@@ -307,6 +380,8 @@ return {
 		},
 		progress_control =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 490, y = 32, w = 20, h = 20 },
 			rotated = false,
 			trimmed = false,
@@ -315,6 +390,8 @@ return {
 		},
 		progress_fill =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 2, y = 253, w = 267, h = 44 },
 			rotated = false,
 			trimmed = false,
@@ -323,6 +400,8 @@ return {
 		},
 		progress_frame =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			edge = { x = 15, y = 5 },
 			frame = { x = 2, y = 433, w = 356, h = 44 },
 			rotated = false,
@@ -332,6 +411,8 @@ return {
 		},
 		progress_hint =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 360, y = 419, w = 73, h = 40 },
 			rotated = false,
 			trimmed = false,
@@ -340,6 +421,8 @@ return {
 		},
 		progress_slot =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 2, y = 419, w = 331, h = 10 },
 			rotated = false,
 			trimmed = false,
@@ -348,6 +431,8 @@ return {
 		},
 		radio_checked =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 484, y = 206, w = 24, h = 24 },
 			rotated = false,
 			trimmed = false,
@@ -356,6 +441,8 @@ return {
 		},
 		radio_unchecked =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 484, y = 232, w = 24, h = 24 },
 			rotated = false,
 			trimmed = false,
@@ -364,6 +451,8 @@ return {
 		},
 		search =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 2, y = 210, w = 211, h = 36 },
 			edge = { x = 40 },
 			rotated = false,
@@ -373,6 +462,8 @@ return {
 		},
 		search_hover =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 215, y = 215, w = 211, h = 36 },
 			edge = { x = 60 },
 			rotated = false,
@@ -382,6 +473,8 @@ return {
 		},
 		selector =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 490, y = 2, w = 20, h = 28 },
 			rotated = false,
 			trimmed = false,
@@ -390,6 +483,8 @@ return {
 		},
 		slider_control =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 307, y = 479, w = 40, h = 22 },
 			rotated = false,
 			trimmed = false,
@@ -398,6 +493,8 @@ return {
 		},
 		slider_control_vertical =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 486, y = 112, w = 22, h = 40 },
 			rotated = false,
 			trimmed = false,
@@ -406,6 +503,8 @@ return {
 		},
 		slider_line =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 2, y = 419, w = 331, h = 10 },
 			rotated = false,
 			trimmed = false,
@@ -414,6 +513,8 @@ return {
 		},
 		slider_line_vertical =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 440, y = 2, w = 10, h = 331 },
 			rotated = false,
 			trimmed = false,
@@ -422,6 +523,8 @@ return {
 		},
 		star_empty =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 452, y = 112, w = 32, h = 31 },
 			rotated = false,
 			trimmed = false,
@@ -430,6 +533,8 @@ return {
 		},
 		star_full =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 218, y = 108, w = 30, h = 29 },
 			rotated = false,
 			trimmed = false,
@@ -438,6 +543,8 @@ return {
 		},
 		switch_off =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 435, y = 433, w = 73, h = 38 },
 			rotated = false,
 			trimmed = false,
@@ -446,6 +553,8 @@ return {
 		},
 		switch_on =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 360, y = 461, w = 73, h = 38 },
 			rotated = false,
 			trimmed = false,
@@ -454,6 +563,8 @@ return {
 		},
 		tag =
 		{
+			image = globalImage,
+			pattern = globalScalePattern,
 			frame = { x = 2, y = 479, w = 164, h = 30 },
 			rotated = false,
 			trimmed = false,

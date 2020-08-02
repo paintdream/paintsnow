@@ -3,14 +3,19 @@
 --
 local Theme = require("Engine/View/Widget/Theme")
 local Style = require("Engine/View/Widget/Style")
+local Slice = require("Engine/View/Widget/Slice")
+local ResourceCache = require("Engine/View/ResourceCache")
 
 local Widget = record
 	name : string
+	weight : number
 	entity : Entity
 	textViewComponent : TextViewComponent
 	spaceComponent : SpaceComponent
 	layoutComponent : LayoutComponent
+	widgetComponent : WidgetComponent
 	style : string
+	slice : string
 	theme : Theme
 	childs : { any : Widget }
 	__index : any
@@ -18,44 +23,46 @@ end
 
 Widget.__index = Widget
 
-local fontCache : { string : FontResource } = {}
 local loader = require
-
-local function LoadFont(fontPath : string) : FontResource
-	local exist = fontCache[fontPath]
-	if exist then return exist end
-
-	exist = SnowyStream.NewResource(fontPath, "") as FontResource
-	fontCache[fontPath] = exist
-	return exist
-end
-
 local function LoadTheme(themePath : string) : Theme
-	local theme = loader(themePath) as Theme
-	-- load all fonts into cache
-	for _, v in pairs(theme.styles) do
-		LoadFont(v.font)
-	end
-
-	return theme
+	return loader(themePath) as Theme
 end
 
 Widget.theme = LoadTheme("Engine/Widget/Theme/PurpleLove")
+
+local fontCache = ResourceCache.New("FontResource")
+local textureCache = ResourceCache.New("TextureResource")
 
 function Widget:GetStyle() : Style
 	return self.theme.styles[self.style]
 end
 
+function Widget:GetSlice() : Slice
+	if not self.slice then return nil end
+
+	return self.theme.slices[self.slice]
+end
+
+function Widget:SetWeight(weight : number)
+	self.weight = weight
+	self.layoutComponent:SetWeight(self.weight)
+end
+
+function Widget:GetWeight() : number
+	return self.weight
+end
+
 function Widget:SetText(text : string)
-	if not self.textViewComponent then
+	local textViewComponent = self.textViewComponent
+	if not textViewComponent then
 		-- get font from theme
 		local style = self:GetStyle()
-		local textViewComponent = TextViewComponentModule.New(LoadFont(style.font))
+		textViewComponent = TextViewComponentModule.New(fontCache:Load(style.font) as FontResource)
 		self.entity:AddEntityComponent(textViewComponent as Component)
 		self.textViewComponent = textViewComponent
 	end
 
-	self.textViewComponent:SetText()
+	textViewComponent:SetText(text)
 end
 
 function Widget:AddChild(child : Widget)
@@ -108,18 +115,48 @@ function Widget:Update()
 	layoutComponent:SetPadding(style.padding)
 	layoutComponent:SetMargin(style.margin)
 	layoutComponent:SetSize(style.size)
+	layoutComponent:SetWeight(self.weight)
+
+	local slice = self:GetSlice()
+	if slice then
+		local widgetComponent = self.widgetComponent
+		if not widgetComponent then
+			widgetComponent = WidgetComponentModule.New()
+			self.widgetComponent = widgetComponent
+		end
+
+		local image = slice.image
+		local frame = slice.frame
+		local pattern = slice.pattern
+		local edge = pattern.edge
+		local texture = textureCache:Load(image.path) as TextureResource
+		local w = image.width
+		local h = image.height
+		local outTexCoord = { frame.x / w, frame.y / h, (frame.x + frame.w) / w, (frame.y + frame.h) / h }
+		local inTexCoord = { (frame.x + edge.left) / w, (frame.y - edge.bottom) / h, (frame.x + frame.w - edge.right) / w, (frame.y + frame.h - edge.top) / h }
+
+		widgetComponent:SetWidgetTexture(texture)
+		widgetComponent:SetWidgetCoord(inTexCoord, outTexCoord)
+		widgetComponent:SetWidgetRepeatMode(pattern.repeatable)
+	end
 end
 
-function Widget.New(style : string) : Widget
+function Widget.New(style : string, slice : string, text : string) : Widget
 	local widget = {
 		entity = MythForest.NewEntity(-1)
 		style = style,
+		slice = slice,
 		childs = {},
 		layoutComponent = LayoutComponentModule.New()
 	}
 
 	local ret = setmetatable(widget, Widget as METATABLE) as Widget
 	ret:Update()
+
+	if text then
+		ret:SetText(text)
+	end
+
 	return ret
 end
 

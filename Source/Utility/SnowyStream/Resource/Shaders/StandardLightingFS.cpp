@@ -16,10 +16,9 @@ StandardLightingFS::StandardLightingFS() : lightCount(0), cubeLevelInv(0) {
 
 String StandardLightingFS::GetShaderText() {
 	return UnifyShaderCode(
-	const float3 MINSPEC = float3(0.04, 0.04, 0.04);
 	baseColor = pow(baseColor, float3(GAMMA, GAMMA, GAMMA));
 	float3 diff = (baseColor - baseColor * metallic) / PI;
-	float3 spec = lerp(MINSPEC, baseColor, metallic);
+	float3 spec = lerp(float3(0.04, 0.04, 0.04), baseColor, metallic);
 	float3 V = -normalize(viewPosition);
 	float3 N = viewNormal;
 	float NoV = saturate(dot(V, N));

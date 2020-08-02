@@ -23,9 +23,11 @@ namespace PaintsNow {
 			void RequestSetWidgetTexture(IScript::Request& request, IScript::Delegate<WidgetComponent> widgetComponent, IScript::Delegate<NsSnowyStream::TextureResource> texture);
 			void RequestSetWidgetCoord(IScript::Request& request, IScript::Delegate<WidgetComponent> widgetComponent, Float4& inCoord, Float4& outCoord);
 			void RequestSetWidgetMaterial(IScript::Request& request, IScript::Delegate<WidgetComponent> widgetComponent, IScript::Delegate<NsSnowyStream::MaterialResource> material);
+			void RequestSetWidgetRepeatMode(IScript::Request& request, IScript::Delegate<WidgetComponent> widgetComponent, bool repeatable);
 
 		protected:
 			TShared<NsSnowyStream::MeshResource> widgetMesh;
+			TShared<NsSnowyStream::MaterialResource> widgetMaterial;
 		};
 	}
 }

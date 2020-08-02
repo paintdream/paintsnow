@@ -87,7 +87,9 @@ public:
 	}
 
 	virtual void Abort(void* context) override {
-		Complete();
+		// do not block script processing
+		Execute(context);
+		// Complete();
 	}
 
 	TWrapper<void, IScript::Request&> continuer;

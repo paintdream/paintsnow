@@ -9,7 +9,9 @@ WidgetComponentModule::WidgetComponentModule(Engine& engine) : BaseClass(engine)
 }
 
 void WidgetComponentModule::Initialize() {
-	widgetMesh = engine.snowyStream.CreateReflectedResource(UniqueType<MeshResource>(), "[Runtime]/MeshResource/StandardSquare");
+	SnowyStream& snowyStream = engine.snowyStream;
+	widgetMesh = snowyStream.CreateReflectedResource(UniqueType<MeshResource>(), "[Runtime]/MeshResource/StandardSquare");
+	widgetMaterial = snowyStream.CreateReflectedResource(UniqueType<MaterialResource>(), "[Runtime]/MaterialResource/Widget");
 }
 
 void WidgetComponentModule::Uninitialize() {
@@ -24,6 +26,7 @@ TObject<IReflect>& WidgetComponentModule::operator () (IReflect& reflect) {
 		ReflectMethod(RequestSetWidgetTexture)[ScriptMethod = "SetWidgetTexture"];
 		ReflectMethod(RequestSetWidgetCoord)[ScriptMethod = "SetWidgetCoord"];
 		ReflectMethod(RequestSetWidgetMaterial)[ScriptMethod = "SetWidgetMaterial"];
+		ReflectMethod(RequestSetWidgetRepeatMode)[ScriptMethod = "SetWidgetRepeatMode"];
 	}
 
 	return *this;
@@ -32,7 +35,7 @@ TObject<IReflect>& WidgetComponentModule::operator () (IReflect& reflect) {
 TShared<WidgetComponent> WidgetComponentModule::RequestNew(IScript::Request& request) {
 	CHECK_REFERENCES_NONE();
 
-	TShared<WidgetComponent> widgetComponent = TShared<WidgetComponent>::From(allocator->New(*widgetMesh()));
+	TShared<WidgetComponent> widgetComponent = TShared<WidgetComponent>::From(allocator->New(std::ref(*widgetMesh()), widgetMaterial()));
 	widgetComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
 	return widgetComponent;
 }
@@ -61,4 +64,16 @@ void WidgetComponentModule::RequestSetWidgetMaterial(IScript::Request& request, 
 	CHECK_THREAD_IN_MODULE(widgetComponent);
 
 	widgetComponent->materialResource = material.Get();
+}
+
+void WidgetComponentModule::RequestSetWidgetRepeatMode(IScript::Request& request, IScript::Delegate<WidgetComponent> widgetComponent, bool repeatable) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(widgetComponent);
+	CHECK_THREAD_IN_MODULE(widgetComponent);
+
+	if (repeatable) {
+		widgetComponent->Flag().fetch_or(repeatable ? WidgetComponent::WIDGETCOMPONENT_TEXTURE_REPEATABLE : 0);
+	} else {
+		widgetComponent->Flag().fetch_and(~(repeatable ? WidgetComponent::WIDGETCOMPONENT_TEXTURE_REPEATABLE : 0));
+	}
 }

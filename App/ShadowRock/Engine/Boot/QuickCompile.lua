@@ -57,7 +57,8 @@ function QuickCompile:CompileOne(filename, outputfile)
 		local code = tl.pretty_print_ast(result.ast)
 		local t = SnowyStream.NewFile(outputfile, true)
 		if t then
-			-- removes all continuous returns ...
+			-- removes all continuous returns if needed ...
+			--[[
 			local length = string.len(code)
 			local shrinkLength = length
 			repeat
@@ -65,6 +66,7 @@ function QuickCompile:CompileOne(filename, outputfile)
 				code = string.gsub(code, "\n\n\n", "\n")
 				shrinkLength = string.len(code)
 			until length == shrinkLength
+			]]
 
 			-- make header
 			local header = "-- " .. outputfile .. "\n"
