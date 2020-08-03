@@ -5,63 +5,39 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
-WidgetComponent::WidgetComponent(MeshResource& model, TShared<MaterialResource> material, TShared<BatchComponent> batch) : quadMesh(model), materialResource(material), batchComponent(batch) {}
+WidgetComponent::WidgetComponent(TShared<NsSnowyStream::MeshResource> mesh, TShared<BatchComponent> batch, TShared<BatchComponent> batchInstanced) {
+	Flag().fetch_or(RENDERABLECOMPONENT_IN_CAMERA_SPACE);
 
-void WidgetComponent::Initialize(Engine& engine, Entity* entity) {
-	batchComponent->InstanceInitialize(engine);
+	batchComponent = batch;
+	batchInstancedDataComponent = batchInstanced;
+	meshResource = mesh;
 }
 
-void WidgetComponent::Uninitialize(Engine& engine, Entity* entity) {
-	batchComponent->InstanceUninitialize(engine);
-}
+void WidgetComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTemplates, std::vector<std::pair<uint32_t, TShared<NsSnowyStream::MaterialResource> > >& materialResources) {
+	size_t origCount = drawCallTemplates.size();
+	GenerateDrawCalls(drawCallTemplates, materialResources);
 
-Bytes WidgetComponent::EncodeTexCoordParams() {
-	Bytes data;
-	data.Resize(3 * sizeof(Float4));
-
-	Float4* p = reinterpret_cast<Float4*>(data.GetData());
-	p[0] = outTexCoordRect;
-
-	// TODO: finish the remaining params.
-	return data;
-}
-
-void WidgetComponent::GenerateDrawCall() {
-	if (!(renderData.shaderResource)) {
-		std::vector<IDrawCallProvider::OutputRenderData> drawCalls;
-		static IDrawCallProvider::InputRenderData inputRenderData(0.0f, nullptr);
-		uint32_t count = materialResource->CollectDrawCalls(drawCalls, inputRenderData);
-		assert(count == 1);
-		renderData = std::move(drawCalls[0]);
-
-		// fill instance data
+	// Add customized parameters!
+	for (size_t i = origCount; i < drawCallTemplates.size(); i++) {
+		IDrawCallProvider::OutputRenderData& renderData = drawCallTemplates[i];
+		IRender::Resource::DrawCallDescription& drawCall = renderData.drawCallDescription;
 		PassBase::Updater& updater = renderData.shaderResource->GetPassUpdater();
-		PassBase::Parameter& texCoordRectParam = updater[PassBase::Updater::MakeKeyFromString("texCoordRect")];
-		PassBase::Parameter& texCoordMaskParam = updater[PassBase::Updater::MakeKeyFromString("texCoordMask")];
-		PassBase::Parameter& texCoordScaleParam = updater[PassBase::Updater::MakeKeyFromString("texCoordScale")];
 
-		assert(texCoordRectParam.slot == texCoordMaskParam.slot && texCoordRectParam.slot == texCoordScaleParam.slot);
+		// texture
+		PassBase::Parameter& mainTextureParam = updater[IShader::BindInput::MAINTEXTURE];
+		if (mainTextureParam) {
+			drawCall.textureResources[mainTextureParam.slot] = mainTexture()->GetTexture();
+		}
 
-		// Allocate buffer
-		Bytes data = EncodeTexCoordParams();
-		IRender::Resource::DrawCallDescription::BufferRange bufferRange = batchComponent->Allocate(data);
-		renderData.drawCallDescription.bufferResources[texCoordRectParam.slot] = bufferRange;
+		// instanced data
+		PassBase::Parameter& inTexCoordRectParam = updater[PassBase::Updater::MakeKeyFromString("inTexCoord")];
+		if (inTexCoordRectParam) {
+			drawCall.bufferResources[inTexCoordRectParam.slot] = batchInstancedDataComponent->Allocate(inTexCoordRect);
+		}
+
+		PassBase::Parameter& outTexCoordRectParam = updater[PassBase::Updater::MakeKeyFromString("outTexCoord")];
+		if (outTexCoordRectParam) {
+			drawCall.bufferResources[outTexCoordRectParam.slot] = batchInstancedDataComponent->Allocate(outTexCoordRect);
+		}
 	}
-	
-	PassBase::Updater& updater = renderData.shaderResource->GetPassUpdater();
-	PassBase::Parameter& mainTextureParam = updater[IShader::BindInput::MAINTEXTURE];
-	assert(mainTextureParam);
-	IRender::Resource::DrawCallDescription& drawCall = renderData.drawCallDescription;
-	drawCall.textureResources[mainTextureParam.slot] = mainTexture()->GetTexture();
-}
-
-uint32_t WidgetComponent::CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) {
-	if (mainTexture() == nullptr) return 0;
-	
-	if (!(renderData.shaderResource)) {
-		GenerateDrawCall();
-	}
-
-	outputDrawCalls.emplace_back(renderData);
-	return 1;
 }

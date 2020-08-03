@@ -37,6 +37,10 @@ IRender::Resource::BufferDescription::Usage BatchComponent::GetBufferUsage() con
 	return bufferUsage;
 }
 
+Bytes& BatchComponent::GetCurrentData() {
+	return currentData;
+}
+
 void BatchComponent::Update(IRender& render, IRender::Queue* queue) {
 	if (Flag() & Tiny::TINY_MODIFIED) {
 		IRender::Resource::BufferDescription desc;
@@ -51,10 +55,9 @@ void BatchComponent::Update(IRender& render, IRender::Queue* queue) {
 	}
 }
 
-IRender::Resource::DrawCallDescription::BufferRange BatchComponent::Allocate(const Bytes& data) {
-	uint32_t appendSize = data.GetSize();
+IRender::Resource::DrawCallDescription::BufferRange BatchComponent::Allocate(const void* data, uint32_t appendSize) {
 	uint32_t curSize = currentData.GetSize();
-	currentData.Append(data);
+	currentData.Append(reinterpret_cast<const uint8_t*>(data), appendSize);
 
 	IRender::Resource::DrawCallDescription::BufferRange bufferRange;
 	bufferRange.buffer = buffer;

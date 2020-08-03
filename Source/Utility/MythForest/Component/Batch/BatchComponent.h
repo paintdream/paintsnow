@@ -19,10 +19,17 @@ namespace PaintsNow {
 			BatchComponent(IRender::Resource::BufferDescription::Usage usage);
 			virtual ~BatchComponent();
 
-			IRender::Resource::DrawCallDescription::BufferRange Allocate(const Bytes& data);
+			template <class T>
+			IRender::Resource::DrawCallDescription::BufferRange Allocate(const T& data) {
+				return Allocate(&data, sizeof(data));
+			}
+
+			IRender::Resource::DrawCallDescription::BufferRange Allocate(const void* data, uint32_t size);
 			void Update(IRender& render, IRender::Queue* queue);
 			void InstanceInitialize(Engine& engine);
 			void InstanceUninitialize(Engine& engine);
+
+			Bytes& GetCurrentData();
 
 			IRender::Resource::BufferDescription::Usage GetBufferUsage() const;
 

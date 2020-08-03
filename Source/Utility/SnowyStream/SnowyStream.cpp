@@ -883,6 +883,12 @@ void SnowyStream::CreateBuiltinResources() {
 		// No UVs
 		std::copy(vertices, vertices + sizeof(vertices) / sizeof(vertices[0]), std::back_inserter(meshResource->meshCollection.vertices));
 		std::copy(indices, indices + sizeof(indices) / sizeof(indices[0]), std::back_inserter(meshResource->meshCollection.indices));
+
+		// add mesh group
+		IAsset::MeshGroup group;
+		group.primitiveOffset = 0;
+		group.primitiveCount = 2;
+		meshResource->meshCollection.groups.emplace_back(group);
 		meshResource->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
 		meshResource->GetResourceManager().InvokeUpload(meshResource());
 	} else {

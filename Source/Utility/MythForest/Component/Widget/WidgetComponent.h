@@ -7,38 +7,25 @@
 #define __WIDGETCOMPONENT_H__
 
 #include "../../Entity.h"
-#include "../Renderable/RenderableComponent.h"
-#include "../Batch/BatchComponent.h"
-#include "../../../SnowyStream/Resource/MeshResource.h"
+#include "../Model/ModelComponent.h"
 
 namespace PaintsNow {
 	namespace NsMythForest {
-		class WidgetComponent : public TAllocatedTiny<WidgetComponent, UniqueComponent<RenderableComponent, SLOT_WIDGET_COMPONENT> > {
+		class WidgetComponent : public TAllocatedTiny<WidgetComponent, UniqueComponent<ModelComponent, SLOT_WIDGET_COMPONENT> > {
 		public:
 			enum {
-				WIDGETCOMPONENT_TEXTURE_REPEATABLE = RENDERABLECOMPONENT_CUSTOM_BEGIN,
-				WIDGETCOMPONENT_CUSTOM_BEGIN = RENDERABLECOMPONENT_CUSTOM_BEGIN << 1
+				WIDGETCOMPONENT_TEXTURE_REPEATABLE = MODELCOMPONENT_CUSTOM_BEGIN,
+				WIDGETCOMPONENT_CUSTOM_BEGIN = MODELCOMPONENT_CUSTOM_BEGIN << 1
 			};
 
-			WidgetComponent(NsSnowyStream::MeshResource& quadMesh, TShared<NsSnowyStream::MaterialResource> material, TShared<BatchComponent> batchComponent);
-			virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) override;
-			virtual void Initialize(Engine& engine, Entity* entity) override;
-			virtual void Uninitialize(Engine& engine, Entity* entity) override;
+			WidgetComponent(TShared<NsSnowyStream::MeshResource> meshResource, TShared<BatchComponent> batchUniforms, TShared<BatchComponent> batchInstancedData);
+			virtual void GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTemplates, std::vector<std::pair<uint32_t, TShared<NsSnowyStream::MaterialResource> > >& materialResources) override;
 
-			void GenerateDrawCall();
-
+			// Custom data
 			Float4 inTexCoordRect;
 			Float4 outTexCoordRect;
-			NsSnowyStream::MeshResource& quadMesh;
 			TShared<NsSnowyStream::TextureResource> mainTexture;
-			TShared<NsSnowyStream::MaterialResource> materialResource;
-
-		protected:
-			Bytes EncodeTexCoordParams();
-
-		protected:
-			TShared<BatchComponent> batchComponent;
-			IDrawCallProvider::OutputRenderData renderData;
+			TShared<BatchComponent> batchInstancedDataComponent;
 		};
 	}
 }

@@ -27,24 +27,20 @@ TObject<IReflect>& WidgetComponentModule::operator () (IReflect& reflect) {
 		ReflectMethod(RequestNew)[ScriptMethod = "New"];
 		ReflectMethod(RequestSetWidgetTexture)[ScriptMethod = "SetWidgetTexture"];
 		ReflectMethod(RequestSetWidgetCoord)[ScriptMethod = "SetWidgetCoord"];
-		ReflectMethod(RequestSetWidgetMaterial)[ScriptMethod = "SetWidgetMaterial"];
 		ReflectMethod(RequestSetWidgetRepeatMode)[ScriptMethod = "SetWidgetRepeatMode"];
 	}
 
 	return *this;
 }
 
-TShared<WidgetComponent> WidgetComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<BatchComponent> batch) {
+TShared<WidgetComponent> WidgetComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<BatchComponent> batchComponent, IScript::Delegate<BatchComponent> batchInstancedDataComponent) {
 	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(batchComponent);
+	CHECK_DELEGATE(batchInstancedDataComponent);
 
-	TShared<BatchComponent> batchComponent;
-	if (batch.Get() == nullptr) {
-		batchComponent = batchComponentModule->Create(IRender::Resource::BufferDescription::INSTANCED);
-	} else {
-		batchComponent = batch.Get();
-	}
-
-	TShared<WidgetComponent> widgetComponent = TShared<WidgetComponent>::From(allocator->New(std::ref(*widgetMesh()), widgetMaterial(), batchComponent));
+	// must batch!
+	TShared<WidgetComponent> widgetComponent = TShared<WidgetComponent>::From(allocator->New(widgetMesh, batchComponent.Get(), batchInstancedDataComponent.Get()));
+	widgetComponent->AddMaterial(0, widgetMaterial);
 	widgetComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
 	return widgetComponent;
 }
@@ -65,14 +61,6 @@ void WidgetComponentModule::RequestSetWidgetCoord(IScript::Request& request, ISc
 
 	widgetComponent->inTexCoordRect = inCoord;
 	widgetComponent->outTexCoordRect = outCoord;
-}
-
-void WidgetComponentModule::RequestSetWidgetMaterial(IScript::Request& request, IScript::Delegate<WidgetComponent> widgetComponent, IScript::Delegate<NsSnowyStream::MaterialResource> material) {
-	CHECK_REFERENCES_NONE();
-	CHECK_DELEGATE(widgetComponent);
-	CHECK_THREAD_IN_MODULE(widgetComponent);
-
-	widgetComponent->materialResource = material.Get();
 }
 
 void WidgetComponentModule::RequestSetWidgetRepeatMode(IScript::Request& request, IScript::Delegate<WidgetComponent> widgetComponent, bool repeatable) {

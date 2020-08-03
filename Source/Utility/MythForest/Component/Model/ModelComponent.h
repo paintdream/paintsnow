@@ -15,6 +15,9 @@
 namespace PaintsNow {
 	namespace NsMythForest {
 		class ModelComponent : public TAllocatedTiny<ModelComponent, RenderableComponent> {
+		protected:
+			ModelComponent(); // only for derived classes
+
 		public:
 			enum {
 				MODELCOMPONENT_HAS_ANIMATION = RENDERABLECOMPONENT_CUSTOM_BEGIN,
@@ -22,7 +25,7 @@ namespace PaintsNow {
 			};
 
 			// delayed loader
-			ModelComponent(TShared<NsSnowyStream::MeshResource>& modelResource, TShared<BatchComponent>& batch);
+			ModelComponent(TShared<NsSnowyStream::MeshResource> meshResource, TShared<BatchComponent> batch);
 
 			virtual String GetDescription() const override;
 			virtual void UpdateBoundingBox(Engine& engine, Float3Pair& box) override;
@@ -36,7 +39,7 @@ namespace PaintsNow {
 
 		protected:
 			virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) override;
-			void GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTemplates, std::vector<std::pair<uint32_t, TShared<NsSnowyStream::MaterialResource> > >& materialResources);
+			virtual void GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTemplates, std::vector<std::pair<uint32_t, TShared<NsSnowyStream::MaterialResource> > >& materialResources);
 
 			void Collapse(Engine& engine);
 			void Expand(Engine& engine);

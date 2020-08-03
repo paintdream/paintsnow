@@ -6,7 +6,11 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
-ModelComponent::ModelComponent(TShared<MeshResource>& res, TShared<BatchComponent>& batch) : batchComponent(batch), meshResource(res), hostCount(0) {
+ModelComponent::ModelComponent() {
+	Flag().fetch_or(COMPONENT_SHARED, std::memory_order_acquire); // can be shared among different entities
+}
+
+ModelComponent::ModelComponent(TShared<MeshResource> res, TShared<BatchComponent> batch) : batchComponent(batch), meshResource(res), hostCount(0) {
 	Flag().fetch_or(COMPONENT_SHARED, std::memory_order_acquire); // can be shared among different entities
 }
 
@@ -87,7 +91,7 @@ void ModelComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTe
 				for (size_t n = 0; n < uniformBufferData.size(); n++) {
 					const Bytes& data = uniformBufferData[n];
 					if (!data.Empty()) {
-						bufferRanges[n] = batchComponent->Allocate(data);
+						bufferRanges[n] = batchComponent->Allocate(data.GetData(), data.GetSize());
 					}
 				}
 
