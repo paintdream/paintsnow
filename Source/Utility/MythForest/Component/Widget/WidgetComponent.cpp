@@ -6,8 +6,6 @@ using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
 WidgetComponent::WidgetComponent(TShared<NsSnowyStream::MeshResource> mesh, TShared<BatchComponent> batch, TShared<BatchComponent> batchInstanced) {
-	Flag().fetch_or(RENDERABLECOMPONENT_IN_CAMERA_SPACE);
-
 	batchComponent = batch;
 	batchInstancedDataComponent = batchInstanced;
 	meshResource = mesh;

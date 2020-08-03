@@ -39,7 +39,9 @@ TShared<WidgetComponent> WidgetComponentModule::RequestNew(IScript::Request& req
 	CHECK_DELEGATE(batchInstancedDataComponent);
 
 	// must batch!
-	TShared<WidgetComponent> widgetComponent = TShared<WidgetComponent>::From(allocator->New(widgetMesh, batchComponent.Get(), batchInstancedDataComponent.Get()));
+	TShared<BatchComponent> batchUniform = batchComponent.Get();
+	TShared<BatchComponent> batchInstanced = batchInstancedDataComponent.Get();
+	TShared<WidgetComponent> widgetComponent = TShared<WidgetComponent>::From(allocator->New(widgetMesh, batchUniform, batchInstanced));
 	widgetComponent->AddMaterial(0, widgetMaterial);
 	widgetComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
 	return widgetComponent;

@@ -19,8 +19,7 @@ namespace PaintsNow {
 		class RenderableComponent : public TAllocatedTiny<RenderableComponent, Component>, public NsSnowyStream::IDrawCallProvider {
 		public:
 			enum {
-				RENDERABLECOMPONENT_IN_CAMERA_SPACE	= COMPONENT_CUSTOM_BEGIN,
-				RENDERABLECOMPONENT_CUSTOM_BEGIN = COMPONENT_CUSTOM_BEGIN << 1
+				RENDERABLECOMPONENT_CUSTOM_BEGIN = COMPONENT_CUSTOM_BEGIN
 			};
 			
 			RenderableComponent();
