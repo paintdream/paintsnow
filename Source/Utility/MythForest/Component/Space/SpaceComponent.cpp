@@ -87,27 +87,6 @@ void SpaceComponent::QueueRoutine(Engine& engine, ITask* task) {
 	engine.GetKernel().QueueRoutine(this, task);
 }
 
-void SpaceComponent::RoutineInsertEntity(Engine& engine, Entity* entity) {
-	Insert(engine, entity);
-}
-
-void SpaceComponent::RoutineUpdateEntityWarpIndex(Engine& engine, Entity* entity, bool insert) {
-	uint32_t warpIndex = GetWarpIndex();
-	engine.GetKernel().SuspendWarp(warpIndex);
-	UpdateEntityWarpIndex(entity);
-	engine.GetKernel().ResumeWarp(warpIndex);
-
-	// insert entity to this spaceComponent?
-	if (insert) {
-		// perform insertion
-		if (engine.GetKernel().GetCurrentWarpIndex() != GetWarpIndex()) {
-			engine.GetKernel().QueueRoutine(this, CreateTaskContextFree(Wrap(this, &SpaceComponent::RoutineInsertEntity), std::ref(engine), entity));
-		} else {
-			RoutineInsertEntity(engine, entity);
-		}
-	}
-}
-
 bool SpaceComponent::Insert(Engine& engine, Entity* entity) {
 	assert(Flag() & TINY_ACTIVATED);
 	if (!(Flag() & TINY_ACTIVATED)) {
@@ -119,41 +98,44 @@ bool SpaceComponent::Insert(Engine& engine, Entity* entity) {
 		return false;
 	}
 
-	// need to change warp?
-	if (GetWarpIndex() != entity->GetWarpIndex()) {
-		// Dispatch to entity's warp and update the warp first
-		engine.GetKernel().QueueRoutine(entity, CreateTaskContextFree(Wrap(this, &SpaceComponent::RoutineUpdateEntityWarpIndex), std::ref(engine), entity, true));
-	} else {
+	assert(GetWarpIndex() == entity->GetWarpIndex());
+
 #ifdef _DEBUG
-		assert(hostEntity != nullptr);
-		engine.NotifyEntityAttach(entity, hostEntity);
+	assert(hostEntity != nullptr);
+	engine.NotifyEntityAttach(entity, hostEntity);
 #endif
-		// update bounding box
-		entity->UpdateBoundingBox(engine);
-		entity->ReferenceObject();
-		// cleanup has_engine flag
-		entity->CleanupEngineInternal();
-		entity->SetIndex(entityCount % 6);
 
-		// already the same
-		// UpdateEntityWarpIndex(entity);
-		
-		if (rootEntity) {
-			if (Flag() & SPACECOMPONENT_ORDERED) {
-				rootEntity->Attach(entity);
-			} else {
-				AttachUnsorted(rootEntity, entity, entityCount);
-			}
+	// update bounding box
+	entity->UpdateBoundingBox(engine);
+	entity->ReferenceObject();
+	// cleanup has_engine flag
+	entity->CleanupEngineInternal();
+	entity->SetIndex(entityCount % 6);
 
-			Union(boundingBox, entity->GetKey().first);
-			Union(boundingBox, entity->GetKey().second);
-		} else {
-			rootEntity = entity;
-			boundingBox = entity->GetKey();
+	// already the same
+	// UpdateEntityWarpIndex(entity);
+
+	if (rootEntity)
+	{
+		if (Flag() & SPACECOMPONENT_ORDERED)
+		{
+			rootEntity->Attach(entity);
 		}
-		
-		++entityCount;
+		else
+		{
+			AttachUnsorted(rootEntity, entity, entityCount);
+		}
+
+		Union(boundingBox, entity->GetKey().first);
+		Union(boundingBox, entity->GetKey().second);
 	}
+	else
+	{
+		rootEntity = entity;
+		boundingBox = entity->GetKey();
+	}
+
+	++entityCount;
 
 	return true;
 }

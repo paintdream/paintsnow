@@ -36,7 +36,6 @@ namespace PaintsNow {
 			virtual void UpdateBoundingBox(Engine& engine, Float3Pair& box) override;
 			const Float3Pair& GetBoundingBox() const;
 			virtual float Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const override;
-			float RoutineRaycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const;
 
 		protected:
 			virtual void Initialize(Engine& engine, Entity* entity) override;
@@ -44,8 +43,7 @@ namespace PaintsNow {
 			void AttachUnsorted(Entity* parent, Entity* child, uint32_t seed);
 			Entity* DetachUnsorted(Entity* child);
 			void UpdateEntityWarpIndex(Entity* entity);
-			void RoutineUpdateEntityWarpIndex(Engine& engine, Entity* entity, bool insert);
-			void RoutineInsertEntity(Engine& engine, Entity* entity);
+			float RoutineRaycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const;
 			void RoutineUpdateBoundingBox();
 			void RoutineUpdateBoundingBoxRecursive(Float3Pair& box, Entity* entity);
 			void RoutineDispatchEvent(const Event& event);
