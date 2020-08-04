@@ -13,15 +13,21 @@ WidgetTransformVS::WidgetTransformVS() {
 
 String WidgetTransformVS::GetShaderText() {
 	return UnifyShaderCode(
-		position.xy = lerp(inputPositionRect.xy, inputPositionRect.zw, unitPositionTexCoord.xy);
-		position.z = unitPositionTexCoord.z;
+		position.xyz = unitPositionTexCoord;
 		position.w = 1;
+		position = mult_vec(worldMatrix, position);
 
 		// copy outputs
 		texCoord = unitPositionTexCoord.xyxy;
-		texCoordRect = inputTexCoordRect;
-		texCoordMark = inputTexCoordMark;
-		texCoordScale = inputTexCoordScale;
+
+		float4 scale = mult_vec(worldMatrix, float4(1, 1, 0, 0));
+		scale.zw = subTexMark.xy + float2(1.0, 1.0) - subTexMark.zw; // in ratio
+		scale.xy = (float2(1.0, 1.0) - scale.zw) / scale.xy;
+		texCoordRect = mainCoordRect;
+		texCoordScale.xy = (float2(1.0, 1.0) - scale.xy) / scale.zw;
+		texCoordScale.zw = scale.xy;
+		texCoordMark.xy = subTexMark.xy * scale.xy;
+		texCoordMark.zw = float2(1.0, 1.0) - (float2(1.0, 1.0) - subTexMark.zw) * scale.xy;
 	);
 }
 
@@ -33,10 +39,9 @@ TObject<IReflect>& WidgetTransformVS::operator () (IReflect& reflect) {
 		ReflectProperty(instanceBuffer);
 
 		ReflectProperty(unitPositionTexCoord)[vertexBuffer][BindInput(BindInput::POSITION)];
-		ReflectProperty(inputPositionRect)[instanceBuffer][BindInput(BindInput::TEXCOORD)];
-		ReflectProperty(inputTexCoordRect)[instanceBuffer][BindInput(BindInput::TEXCOORD + 1)];
-		ReflectProperty(inputTexCoordMark)[instanceBuffer][BindInput(BindInput::TEXCOORD + 2)];
-		ReflectProperty(inputTexCoordScale)[instanceBuffer][BindInput(BindInput::TEXCOORD + 3)];
+		ReflectProperty(worldMatrix)[instanceBuffer][BindInput(BindInput::TRANSFORM_WORLD)];
+		ReflectProperty(subTexMark)[instanceBuffer][BindInput(BindInput::TEXCOORD)];
+		ReflectProperty(mainCoordRect)[instanceBuffer][BindInput(BindInput::TEXCOORD + 1)];
 
 		ReflectProperty(position)[BindOutput(BindOutput::HPOSITION)];
 		ReflectProperty(texCoord)[BindOutput(BindOutput::TEXCOORD)];

@@ -25,10 +25,9 @@ namespace PaintsNow {
 			Float3 unitPositionTexCoord;
 
 			// instanced
-			Float4 inputPositionRect;
-			Float4 inputTexCoordRect;
-			Float4 inputTexCoordMark;
-			Float4 inputTexCoordScale;
+			MatrixFloat4x4 worldMatrix;
+			Float4 subTexMark;
+			Float4 mainCoordRect;
 
 		protected:
 			// Output vars
