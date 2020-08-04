@@ -4,7 +4,7 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
-TransformComponent::TransformComponent() : uniqueObjectID(0) {}
+TransformComponent::TransformComponent() : uniqueObjectID(0), transform(MatrixFloat4x4::Identity()) {}
 
 TObject<IReflect>& TransformComponent::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);

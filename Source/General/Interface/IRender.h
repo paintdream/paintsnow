@@ -77,6 +77,8 @@ namespace PaintsNow {
 				enum Mip {
 					NOMIP, AUTOMIP, SPECMIP
 				};
+
+				TextureDescription() : dimension(0, 0, 0) {}
 				
 				struct State {
 					State() : type(TEXTURE_2D), format(UNSIGNED_BYTE), 
@@ -157,7 +159,7 @@ namespace PaintsNow {
 			};
 
 			struct RenderTargetDescription : public Description {
-				RenderTargetDescription() {}
+				RenderTargetDescription() : range(UShort2(0, 0), UShort2(0, 0)){}
 
 				// attachments
 				UShort2Pair range;
@@ -179,7 +181,7 @@ namespace PaintsNow {
 					DISCARD_STORE = 1 << 2
 				};
 
-				ClearDescription() {
+				ClearDescription() : clearColor(0, 0, 0, 0) {
 					clearColorBit = clearDepthBit = clearStencilBit = 0;
 				}
 

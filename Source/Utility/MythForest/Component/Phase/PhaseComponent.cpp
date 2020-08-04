@@ -799,6 +799,7 @@ void PhaseComponent::LightCollector::InvokeCollect(Engine& engine, Entity* entit
 	LightConfig::TaskData* taskData = new LightConfig::TaskData(engine.GetKernel().GetWarpCount());
 	phaseComponent->ReferenceObject();
 	LightConfig::WorldInstanceData worldInstance;
+	worldInstance.worldMatrix = MatrixFloat4x4::Identity();
 	LightConfig::CaptureData captureData;
 	CollectComponentsFromEntity(engine, *taskData, worldInstance, captureData, entity);
 }

@@ -127,7 +127,6 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 		viewMatrix(3, 2) = shadowContext->cameraWorldMatrix(3, 2);
 
 		OrthoCamera::UpdateCaptureData(captureData, viewMatrix);
-		MatrixFloat4x4 reverseDepth;
 
 		WorldInstanceData instanceData;
 		instanceData.worldMatrix = shadowGrid->shadowMatrix = Math::QuickInverse(Math::Scale(viewMatrix, Float4(1, -1, -1, 1)));
@@ -342,7 +341,7 @@ void LightComponent::ShadowLayer::CollectComponents(Engine& engine, TaskData& ta
 	TaskData::WarpData& warpData = taskData.warpData[warpIndex];
 
 	WorldInstanceData subWorldInstancedData = instanceData;
-	MatrixFloat4x4 localTransform;
+	MatrixFloat4x4 localTransform = MatrixFloat4x4::Identity();
 
 	// has TransformComponent?
 	TransformComponent* transformComponent = entity->GetUniqueComponent(UniqueType<TransformComponent>());

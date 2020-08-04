@@ -8,7 +8,7 @@ using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 using namespace PaintsNow::NsBridgeSunset;
 
-SpaceComponent::SpaceComponent(bool sorted) : rootEntity(nullptr), entityCount(0) {
+SpaceComponent::SpaceComponent(bool sorted) : rootEntity(nullptr), entityCount(0), boundingBox(Float3(FLT_MAX, FLT_MAX, FLT_MAX), Float3(-FLT_MAX, -FLT_MAX, -FLT_MAX)) {
 	if (sorted) {
 		Flag().fetch_or(SPACECOMPONENT_ORDERED, std::memory_order_acquire);
 	}
@@ -144,6 +144,7 @@ bool SpaceComponent::Insert(Engine& engine, Entity* entity) {
 			} else {
 				AttachUnsorted(rootEntity, entity, entityCount);
 			}
+
 			Union(boundingBox, entity->GetKey().first);
 			Union(boundingBox, entity->GetKey().second);
 		} else {
@@ -255,8 +256,6 @@ bool SpaceComponent::Remove(Engine& engine, Entity* entity) {
 		return false;
 	}
 
-	--entityCount;
-
 	Entity* newRoot = nullptr;
 	if (Flag() & SPACECOMPONENT_ORDERED) {
 		SelectRemove selectRemove;
@@ -269,12 +268,17 @@ bool SpaceComponent::Remove(Engine& engine, Entity* entity) {
 		rootEntity = newRoot;
 	}
 
+	if (--entityCount == 0) {
+		boundingBox = Float3Pair(Float3(FLT_MAX, FLT_MAX, FLT_MAX), Float3(-FLT_MAX, -FLT_MAX, -FLT_MAX));
+	}
+
 #ifdef _DEBUG
 	engine.NotifyEntityDetach(entity);
 #endif
 
 	entity->SetEngineInternal(engine);
 	entity->ReleaseObject();
+
 	return true;
 }
 
@@ -286,6 +290,7 @@ void SpaceComponent::RemoveAll(Engine& engine) {
 	// Remove all references ...
 	entityCount = 0;
 	FastRemoveNode(engine, rootEntity);
+	boundingBox = Float3Pair(Float3(FLT_MAX, FLT_MAX, FLT_MAX), Float3(-FLT_MAX, -FLT_MAX, -FLT_MAX));
 	rootEntity = nullptr;
 }
 

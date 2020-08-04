@@ -44,7 +44,7 @@ void CameraComponent::UpdateJitterMatrices(CameraComponentConfig::WorldGlobalDat
 	if (Flag() & CAMERACOMPONENT_SUBPIXEL_JITTER) {
 		jitterIndex = (jitterIndex + 1) % 9;
 
-		MatrixFloat4x4 jitterMatrix;
+		MatrixFloat4x4 jitterMatrix = MatrixFloat4x4::Identity();
 		Int2 resolution = renderFlowComponent->GetMainResolution();
 		static float jitterX[9] = { 1.0f / 2.0f, 1.0f / 4.0f, 3.0f / 4.0f, 1.0f / 8.0f, 5.0f / 8.0f, 3.0f / 8.0f, 7.0f / 8.0f, 1.0f / 16.0f, 9.0f / 16.0f };
 		static float jitterY[9] = { 1.0f / 3.0f, 2.0f / 3.0f, 1.0f / 9.0f, 4.0f / 9.0f, 7.0f / 9.0f, 2.0f / 9.0f, 5.0f / 9.0f, 8.0f / 9.0f, 1.0f / 27.0f };
@@ -231,9 +231,11 @@ void CameraComponent::UpdateTaskData(Engine& engine, Entity* hostEntity) {
 	nextTaskData->Cleanup(engine.interfaces.render);
 
 	WorldInstanceData worldInstanceData;
+	worldInstanceData.worldMatrix = MatrixFloat4x4::Identity();
+
 	CaptureData captureData;
 	TransformComponent* transformComponent = hostEntity->GetUniqueComponent(UniqueType<TransformComponent>());
-	MatrixFloat4x4 localTransform;
+	MatrixFloat4x4 localTransform = MatrixFloat4x4::Identity();
 	if (transformComponent != nullptr) {
 		// set smooth track
 		if (Flag() & CAMERACOMPONENT_SMOOTH_TRACK) {
@@ -681,7 +683,7 @@ void CameraComponent::CollectComponents(Engine& engine, TaskData& taskData, cons
 	TaskData::WarpData& warpData = taskData.warpData[warpIndex];
 
 	WorldInstanceData subWorldInstancedData = instanceData;
-	MatrixFloat4x4 localTransform;
+	MatrixFloat4x4 localTransform = MatrixFloat4x4::Identity();
 
 	// has TransformComponent?
 	TransformComponent* transformComponent = entity->GetUniqueComponent(UniqueType<TransformComponent>());

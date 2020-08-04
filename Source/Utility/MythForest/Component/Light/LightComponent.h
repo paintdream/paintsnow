@@ -23,7 +23,6 @@ namespace PaintsNow {
 			};
 
 			struct WorldInstanceData : public TReflected<WorldInstanceData, PassBase::PartialData> {
-				WorldInstanceData() {}
 				virtual TObject<IReflect>& operator () (IReflect& reflect);
 
 				MatrixFloat4x4 worldMatrix;

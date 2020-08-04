@@ -16,7 +16,7 @@ inline Float3Pair BuildBoundingFromVertex(const Float3& first, const Float3& sec
 
 struct_aligned(8) Tree : public TKdTree<Float3Pair> {
 	typedef TKdTree<Float3Pair> Base;
-	Tree() {}
+	Tree() : TKdTree<Float3Pair>(Float3Pair(Float3(0, 0, 0), Float3(0, 0, 0)), 0) {}
 	Tree(const Float3Pair& b, uint8_t k) : TKdTree<Float3Pair>(b, k) {}
 };
 

@@ -349,6 +349,12 @@ struct ResourceBaseImplOpenGLDesc : public ResourceBaseImplOpenGL {
 		return currentDescription;
 	}
 
+#ifdef _DEBUG
+	T& GetNextDescription() {
+		return nextDescription;
+	}
+#endif
+
 	virtual void SetDownloadDescription(IRender::Resource::Description* d) override {
 		downloadDescription = static_cast<T*>(d);
 	}
@@ -1556,6 +1562,17 @@ template <>
 struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> : public ResourceBaseImplOpenGLDesc<IRender::Resource::RenderTargetDescription> {
 	ResourceImplOpenGL() : vertexArrayID(0), frameBufferID(0) {}
 	virtual IRender::Resource::Type GetType() const override { return RESOURCE_RENDERTARGET; }
+
+#ifdef _DEBUG
+	virtual void SetUploadDescription(IRender::Resource::Description* d) override {
+		IRender::Resource::RenderTargetDescription* t = static_cast<IRender::Resource::RenderTargetDescription*>(d);
+		for (size_t i = 0; i < t->colorBufferStorages.size(); i++) {
+			ResourceImplOpenGL<IRender::Resource::TextureDescription>* x = static_cast<ResourceImplOpenGL<IRender::Resource::TextureDescription>*>(t->colorBufferStorages[i].resource);
+			assert(x->GetNextDescription().dimension.x() != 0 && x->GetNextDescription().dimension.y() != 0);
+		}
+		ResourceBaseImplOpenGLDesc<IRender::Resource::RenderTargetDescription>::SetUploadDescription(d);
+	}
+#endif //
 
 	void Cleanup() {
 		GL_GUARD();
