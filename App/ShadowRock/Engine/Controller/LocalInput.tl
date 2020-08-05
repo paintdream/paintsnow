@@ -2,6 +2,7 @@ local Timeline = require("Engine/Model/Timeline")
 local Event = require("Engine/Model/Event")
 local Activity = require("Engine/Controller/Activity")
 local LocalInput = record
+	_timeline : Timeline
 	_component : Component
 	__index : any
 end
@@ -36,13 +37,12 @@ local EventData = record
 end
 
 function LocalInput:Input(event : EventData)
-	if event.Keyboard then
-
-	end
+	-- interpret
 end
 
-function LocalInput.New() : LocalInput
+function LocalInput.New(timeline : Timeline) : LocalInput
 	local object = setmetatable({}, LocalInput as METATABLE) as LocalInput
+	object._timeline = timeline
 	object._component = Activity("LocalInput", object)
 	return object
 end
