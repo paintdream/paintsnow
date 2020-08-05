@@ -13,6 +13,10 @@
 #include "../../General/Driver/Render/OpenGL/ZRenderOpenGL.h"
 #endif
 
+#if (!defined(CMAKE_PAINTSNOW) || ADD_RENDER_VULKAN) && (!defined(_MSC_VER) || _MSC_VER > 1200)
+#include "../../General/Driver/Render/Vulkan/ZRenderVulkan.h"
+#endif
+
 #if !defined(CMAKE_PAINTSNOW) || ADD_NETWORK_LIBEVENT
 #include "../../General/Driver/Network/LibEvent/ZNetworkLibEvent.h"
 #endif
@@ -56,7 +60,7 @@
 #include "../../General/Driver/Font/Freetype/ZFontFreetype.h"
 #endif
 
-#if !defined(CMAKE_PAINTSNOW) || ADD_SCRIPT_LUA53_BUILTIN
+#if !defined(CMAKE_PAINTSNOW) || ADD_SCRIPT_LUA_BUILTIN
 #include "../../Core/Driver/Script/Lua/ZScriptLua.h"
 #endif
 

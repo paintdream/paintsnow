@@ -163,6 +163,31 @@ void Loader::Load(const CmdLine& cmdLine) {
 	frameFactory = &sdummyframe;
 	config.RegisterFactory("IFrame", "ZFrameDummy", sdummyframe);
 
+
+	const TFactory<ZRenderDummy, IRender> srenderFactoryDummy;
+	renderFactory = &srenderFactoryDummy;
+	config.RegisterFactory("IRender", "ZRenderDummy", srenderFactoryDummy);
+
+#if !defined(CMAKE_PAINTSNOW) || ADD_RENDER_OPENGL
+	if (!nogui) {
+		const TFactory<ZRenderOpenGL, IRender> srenderFactory;
+		renderFactory = &srenderFactory;
+		config.RegisterFactory("IRender", "ZRenderOpenGL", srenderFactory);
+	}
+#endif
+
+#if (!defined(CMAKE_PAINTSNOW) || ADD_RENDER_OPENGL) && (!defined(_MSC_VER) || _MSC_VER > 1200)
+	if (!nogui) {
+		const TFactory<ZRenderVulkan, IRender> srenderFactory;
+		renderFactory = &srenderFactory;
+		config.RegisterFactory("IRender", "ZRenderVulkan", srenderFactory);
+	}
+#endif
+
+	if (renderFactory == &srenderFactoryDummy) {
+		nogui = true;
+	}
+
 #if !defined(CMAKE_PAINTSNOW) || ADD_FRAME_GLFW
 	const TFactory<ZFrameGLFW, IFrame> sframeFactory;
 	if (!nogui) {
@@ -170,27 +195,6 @@ void Loader::Load(const CmdLine& cmdLine) {
 	}
 
 	config.RegisterFactory("IFrame", "ZFrameGLFW", sframeFactory);
-#endif
-
-	const TFactory<ZRenderDummy, IRender> srenderFactoryDummy;
-	renderFactory = &srenderFactoryDummy;
-	config.RegisterFactory("IRender", "ZRenderDummy", srenderFactoryDummy);
-
-#if !defined(CMAKE_PAINTSNOW) || ADD_RENDER_OPENGL
-	const TFactory<ZRenderOpenGL, IRender> srenderFactory;
-	if (!nogui) {
-		renderFactory = &srenderFactory;
-		config.RegisterFactory("IRender", "ZRenderOpenGL", srenderFactory);
-	}
-#endif
-
-#if !defined(CMAKE_PAINTSNOW) || ADD_RENDER_DIRECTX
-#ifdef CMAKE_PAINTSNOW
-	if (!nogui) {
-		const FactoryOpenGL<ZRenderDirectX9> srenderFactoryDX9(this);
-		config.RegisterFactory("IRender", "ZRenderDirectX9", srenderFactoryDX9);
-	}
-#endif
 #endif
 
 	TWrapper<IArchive*, IStreamBase&, size_t> subArchiveCreator;
@@ -204,7 +208,7 @@ void Loader::Load(const CmdLine& cmdLine) {
 		assert(renderFactory != nullptr);
 	}
 
-#if !defined(CMAKE_PAINTSNOW) || ADD_SCRIPT_LUA53_BUILTIN
+#if !defined(CMAKE_PAINTSNOW) || ADD_SCRIPT_LUA_BUILTIN
 	const FactoryInitWithThread<ZScriptLua, IScript> sscriptFactory(this);
 	scriptFactory = &sscriptFactory;
 	config.RegisterFactory("IScript", "ZScriptLua", sscriptFactory);
