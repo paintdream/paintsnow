@@ -658,7 +658,8 @@ namespace PaintsNow {
 		template <bool deref, typename... Args>
 		class ScriptTaskTemplate : public TaskOnce {
 		public:
-			ScriptTaskTemplate(IScript::Request::Ref c, Args&&... args) : callback(c), arguments(std::forward<Args>(args)...) {}
+			template <typename... Params>
+			ScriptTaskTemplate(IScript::Request::Ref c, Params&&... params) : callback(c), arguments(std::forward<Params>(params)...) {}
 
 			template <typename T, size_t index>
 			struct Writer {
@@ -719,11 +720,12 @@ namespace PaintsNow {
 		template <typename T, typename... Args>
 		class ScriptHandlerTemplate : public TaskOnce {
 		public:
-			ScriptHandlerTemplate(T t, Args&&... args) : callback(t), arguments(std::forward<Args>(args)...) {}
+			template <typename... Params>
+			ScriptHandlerTemplate(T t, Params&&... params) : callback(t), arguments(std::forward<Params>(params)...) {}
 
 			template <size_t... S>
 			void Apply(IScript::Request& context, seq<S...>) {
-				callback(context, std::move(std::get<S>(std::move(arguments)))...);
+				callback(context, std::move(std::get<S>(arguments))...);
 			}
 
 			virtual void Execute(void* context) override {

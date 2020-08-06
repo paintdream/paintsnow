@@ -517,6 +517,7 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 		// Generate key
 		InstanceKey key;
 		key.renderStateDescription = drawCall.renderStateDescription;
+		assert((((size_t)renderableComponent << 1) & k) == 0);
 		key.renderKey = ((size_t)renderableComponent << 1) | k;
 		key.animationKey = (size_t)animationComponent;
 
