@@ -327,13 +327,6 @@ SOURCE=..\..\..\..\Source\Core\Template\TEvent.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Core\Template\TFactory.h
-# PROP Exclude_From_Scan -1
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\..\..\Source\Core\Template\TMap.h
 # PROP Exclude_From_Scan -1
 # PROP BASE Exclude_From_Build 1
