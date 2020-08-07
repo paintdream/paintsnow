@@ -30,7 +30,7 @@ namespace PaintsNow {
 			virtual void Destroy(IScript::Request& request);
 		};
 
-		class ProviderFactory : public TFactoryBase<IScript::Object> {
+		class ProviderFactory : public TWrapper<IScript::Object*, const String&> {
 		public:
 			ProviderFactory(IThread& threadApi, ITunnel& t);
 			IScript::Object* CreateObject(const String& entry) const;

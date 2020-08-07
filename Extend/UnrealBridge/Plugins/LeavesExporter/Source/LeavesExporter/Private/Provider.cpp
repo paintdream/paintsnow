@@ -22,7 +22,7 @@ namespace PaintsNow {
 
 		void Provider::Destroy(IScript::Request& request) {}
 
-		ProviderFactory::ProviderFactory(IThread& threadApi, ITunnel& t) : TFactoryBase<IScript::Object>(Wrap(this, &ProviderFactory::CreateObject)), thread(threadApi), tunnel(t) {}
+		ProviderFactory::ProviderFactory(IThread& threadApi, ITunnel& t) : TWrapper<IScript::Object*, const String&>(Wrap(this, &ProviderFactory::CreateObject)), thread(threadApi), tunnel(t) {}
 
 		IScript::Object* ProviderFactory::CreateObject(const String& entry) const {
 			return new Provider(thread, tunnel, entry);
