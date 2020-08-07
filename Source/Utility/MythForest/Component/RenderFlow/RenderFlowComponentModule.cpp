@@ -21,8 +21,15 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
+template <class T>
+struct Create {
+	static RenderStage* NewRenderStage(const String& option) {
+		return new T(option);
+	}
+};
+
 #define REGISTER_TEMPLATE(type) \
-	stageTemplates[#type] = Wrap(&New<type, const String&>::Invoke);
+	stageTemplates[#type] = Wrap(&Create<type>::NewRenderStage);
 
 RenderFlowComponentModule::RenderFlowComponentModule(Engine& engine) : BaseClass(engine) {
 	// Register built-ins

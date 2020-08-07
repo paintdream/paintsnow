@@ -95,6 +95,16 @@ void Loader::SetFactory(TWrapper<IDevice*>& ptr, const String& key, const std::m
 	}
 }
 
+template <class T>
+struct DelayedReference {
+	DelayedReference(T*& p) : ptr(p) {}
+
+	operator T& () {
+		return *ptr;
+	}
+
+	T*& ptr;
+};
 
 void Loader::Load(const CmdLine& cmdLine) {
 	// Load necessary modules
@@ -162,9 +172,6 @@ void Loader::Load(const CmdLine& cmdLine) {
 	config.RegisterFactory("IThread", "ZThreadPthread", threadFactory);
 #endif
 
-	thread = threadFactory(); // precreate thread
-
-
 	TWrapper<IFrame*> frameFactory = WrapFactory(UniqueType<ZFrameDummy>());
 	config.RegisterFactory("IFrame", "ZFrameDummy", frameFactory);
 
@@ -198,16 +205,15 @@ void Loader::Load(const CmdLine& cmdLine) {
 	subArchiveCreator = Create7ZArchive;
 #endif
 
-	IThread& threadApi = *thread;
 	TWrapper<IScript*> scriptFactory;
 #if !defined(CMAKE_PAINTSNOW) || ADD_SCRIPT_LUA_BUILTIN
-	scriptFactory = WrapFactory(UniqueType<ZScriptLua>(), std::ref(threadApi));
+	scriptFactory = WrapFactory(UniqueType<ZScriptLua>(), DelayedReference<IThread>(thread));
 	config.RegisterFactory("IScript", "ZScriptLua", scriptFactory);
 #endif
 
 	TWrapper<INetwork*> networkFactory;
 #if !defined(CMAKE_PAINTSNOW) || ADD_NETWORK_LIBEVENT
-	networkFactory = WrapFactory(UniqueType<ZNetworkLibEvent>(), std::ref(threadApi));
+	networkFactory = WrapFactory(UniqueType<ZNetworkLibEvent>(), DelayedReference<IThread>(thread));
 	config.RegisterFactory("INetwork", "ZNetworkLibEvent", networkFactory);
 #endif
 
@@ -279,27 +285,27 @@ void Loader::Load(const CmdLine& cmdLine) {
 	config.RegisterFactory("IFilterBase::Asset", "NoFilter", assetFilterFactory);
 #endif
 
-	SetFactory(renderFactory, "IRender", factoryMap);
-	SetFactory(frameFactory, "IFrame", factoryMap);
-	// thread is not allowed to be overridden
-	// SetFactory(threadFactory, "IThread", factoryMap);
-	SetFactory(audioFactory, "IAudio", factoryMap);
-	SetFactory(archiveFactory, "IArchive", factoryMap);
-	SetFactory(scriptFactory, "IScript", factoryMap);
-	SetFactory(networkFactory, "INetwork", factoryMap);
-	SetFactory(randomFactory, "IRandom", factoryMap);
-	SetFactory(timerFactory, "ITimer", factoryMap);
-	SetFactory(imageFactory, "IImage", factoryMap);
-	SetFactory(assetFilterFactory, "IFilterBase::Asset", factoryMap);
-	SetFactory(fontFactory, "IFontBase", factoryMap);
-	SetFactory(audioFilterFactory, "IFilterBase::Audio", factoryMap);
-	SetFactory(databaseFactory, "IDatabase", factoryMap);
+	SetFactory((TWrapper<IDevice*>&)renderFactory, "IRender", factoryMap);
+	SetFactory((TWrapper<IDevice*>&)frameFactory, "IFrame", factoryMap);
+	SetFactory((TWrapper<IDevice*>&)threadFactory, "IThread", factoryMap);
+	SetFactory((TWrapper<IDevice*>&)audioFactory, "IAudio", factoryMap);
+	SetFactory((TWrapper<IDevice*>&)archiveFactory, "IArchive", factoryMap);
+	SetFactory((TWrapper<IDevice*>&)scriptFactory, "IScript", factoryMap);
+	SetFactory((TWrapper<IDevice*>&)networkFactory, "INetwork", factoryMap);
+	SetFactory((TWrapper<IDevice*>&)randomFactory, "IRandom", factoryMap);
+	SetFactory((TWrapper<IDevice*>&)timerFactory, "ITimer", factoryMap);
+	SetFactory((TWrapper<IDevice*>&)imageFactory, "IImage", factoryMap);
+	SetFactory((TWrapper<IDevice*>&)assetFilterFactory, "IFilterBase::Asset", factoryMap);
+	SetFactory((TWrapper<IDevice*>&)fontFactory, "IFontBase", factoryMap);
+	SetFactory((TWrapper<IDevice*>&)audioFilterFactory, "IFilterBase::Audio", factoryMap);
+	SetFactory((TWrapper<IDevice*>&)databaseFactory, "IDatabase", factoryMap);
 
 	if (!nogui) {
 		// Must have render factory in GUI mode.
 		assert(renderFactory);
 	}
 
+	thread = threadFactory(); // precreate thread
 	mainThread = thread->OpenCurrentThread();
 	{
 		frame = frameFactory();
@@ -366,7 +372,7 @@ void Loader::Load(const CmdLine& cmdLine) {
 #include <Windows.h>
 #endif
 
-Loader::Loader() : frameFactory(nullptr), renderFactory(nullptr), threadFactory(nullptr), audioFactory(nullptr), archiveFactory(nullptr), scriptFactory(nullptr), networkFactory(nullptr), timerFactory(nullptr), imageFactory(nullptr), assetFilterFactory(nullptr), fontFactory(nullptr), audioFilterFactory(nullptr), databaseFactory(nullptr), leavesFlute(nullptr) {
+Loader::Loader() : leavesFlute(nullptr) {
 #ifdef _WIN32
 	::CoInitialize(nullptr);
 #endif
