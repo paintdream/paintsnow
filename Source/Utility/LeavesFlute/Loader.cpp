@@ -75,7 +75,7 @@ public:
 };
 
 
-void Loader::SetFactory(const void*& ptr, String& param, const String& key, const std::map<String, CmdLine::Option>& factoryMap) {
+void Loader::SetFactory(TWrapper<IDevice*>& ptr, const String& key, const std::map<String, CmdLine::Option>& factoryMap) {
 	const std::map<String, CmdLine::Option>::const_iterator p = factoryMap.find(key);
 	if (p != factoryMap.end()) {
 		const String& impl = p->second.name;
@@ -84,14 +84,12 @@ void Loader::SetFactory(const void*& ptr, String& param, const String& key, cons
 			// printf("Scanning [%s] = %s (%s)\n", key.c_str(), (*q).name.c_str(), param.c_str());
 			if ((ptr == (*q).factoryBase && impl.empty()) || (*q).name == impl) {
 				ptr = (*q).factoryBase;
-				param = p->second.param;
-				// printf("Factory[%s] = %s (%s)\n", key.c_str(), impl.c_str(), param.c_str());
 				break;
 			}
 		}
 	}
 
-	if (ptr == nullptr) {
+	if (!ptr) {
 		fprintf(stderr, "Couldn't find factory for %s\n", key.c_str());
 		exit(-1);
 	}
@@ -158,43 +156,40 @@ void Loader::Load(const CmdLine& cmdLine) {
 	// assert(factoryMap.find(String("IRender")) != factoryMap.end());
 
 	// Load default settings
+	TWrapper<IThread*> threadFactory;
+#if !defined(CMAKE_PAINTSNOW) || ADD_THREAD_PTHREAD
+	threadFactory = WrapFactory(UniqueType<ZThreadPthread>());
+	config.RegisterFactory("IThread", "ZThreadPthread", threadFactory);
+#endif
 
-	const TFactory<ZFrameDummy, IFrame> sdummyframe;
-	frameFactory = &sdummyframe;
-	config.RegisterFactory("IFrame", "ZFrameDummy", sdummyframe);
+	thread = threadFactory(); // precreate thread
 
 
-	const TFactory<ZRenderDummy, IRender> srenderFactoryDummy;
-	renderFactory = &srenderFactoryDummy;
-	config.RegisterFactory("IRender", "ZRenderDummy", srenderFactoryDummy);
+	TWrapper<IFrame*> frameFactory = WrapFactory(UniqueType<ZFrameDummy>());
+	config.RegisterFactory("IFrame", "ZFrameDummy", frameFactory);
+
+	TWrapper<IRender*> renderFactory = WrapFactory(UniqueType<ZRenderDummy>());
+	config.RegisterFactory("IRender", "ZRenderDummy", renderFactory);
 
 #if !defined(CMAKE_PAINTSNOW) || ADD_RENDER_OPENGL
 	if (!nogui) {
-		const TFactory<ZRenderOpenGL, IRender> srenderFactory;
-		renderFactory = &srenderFactory;
-		config.RegisterFactory("IRender", "ZRenderOpenGL", srenderFactory);
+		renderFactory = WrapFactory(UniqueType<ZRenderOpenGL>());
+		config.RegisterFactory("IRender", "ZRenderOpenGL", renderFactory);
 	}
 #endif
 
 #if (!defined(CMAKE_PAINTSNOW) || ADD_RENDER_OPENGL) && (!defined(_MSC_VER) || _MSC_VER > 1200)
 	if (!nogui) {
-		const TFactory<ZRenderVulkan, IRender> srenderFactory;
-		renderFactory = &srenderFactory;
-		config.RegisterFactory("IRender", "ZRenderVulkan", srenderFactory);
+		renderFactory = WrapFactory(UniqueType<ZRenderVulkan>());
+		config.RegisterFactory("IRender", "ZRenderVulkan", renderFactory);
 	}
 #endif
 
-	if (renderFactory == &srenderFactoryDummy) {
-		nogui = true;
-	}
-
 #if !defined(CMAKE_PAINTSNOW) || ADD_FRAME_GLFW
-	const TFactory<ZFrameGLFW, IFrame> sframeFactory;
 	if (!nogui) {
-		frameFactory = &sframeFactory;
+		frameFactory = WrapFactory(UniqueType<ZFrameGLFW>());
+		config.RegisterFactory("IFrame", "ZFrameGLFW", frameFactory);
 	}
-
-	config.RegisterFactory("IFrame", "ZFrameGLFW", sframeFactory);
 #endif
 
 	TWrapper<IArchive*, IStreamBase&, size_t> subArchiveCreator;
@@ -203,179 +198,137 @@ void Loader::Load(const CmdLine& cmdLine) {
 	subArchiveCreator = Create7ZArchive;
 #endif
 
-	if (!nogui) {
-		// Must have render factory in GUI mode.
-		assert(renderFactory != nullptr);
-	}
-
+	IThread& threadApi = *thread;
+	TWrapper<IScript*> scriptFactory;
 #if !defined(CMAKE_PAINTSNOW) || ADD_SCRIPT_LUA_BUILTIN
-	const FactoryInitWithThread<ZScriptLua, IScript> sscriptFactory(this);
-	scriptFactory = &sscriptFactory;
-	config.RegisterFactory("IScript", "ZScriptLua", sscriptFactory);
+	scriptFactory = WrapFactory(UniqueType<ZScriptLua>(), std::ref(threadApi));
+	config.RegisterFactory("IScript", "ZScriptLua", scriptFactory);
 #endif
 
-	// Must have script factory.
-	assert(scriptFactory != nullptr);
-
+	TWrapper<INetwork*> networkFactory;
 #if !defined(CMAKE_PAINTSNOW) || ADD_NETWORK_LIBEVENT
-	const FactoryInitWithThread<ZNetworkLibEvent, ITunnel> snetworkFactory(this);
-
-	networkFactory = &snetworkFactory;
-	config.RegisterFactory("INetwork", "ZNetworkLibEvent", *networkFactory);
+	networkFactory = WrapFactory(UniqueType<ZNetworkLibEvent>(), std::ref(threadApi));
+	config.RegisterFactory("INetwork", "ZNetworkLibEvent", networkFactory);
 #endif
 
 	tunnelFactory = networkFactory;
 
-	// Must have network factory.
-	assert(networkFactory != nullptr);
-	assert(tunnelFactory != nullptr);
+	TWrapper<IImage*> imageFactory;
 
 #if !defined(CMAKE_PAINTSNOW) || ADD_IMAGE_FREEIMAGE
-	static const TFactory<ZImageFreeImage, IImage> simageFactory;
-	imageFactory = &simageFactory;
-	config.RegisterFactory("IImage", "ZImageFreeImage", simageFactory);
+	imageFactory = WrapFactory(UniqueType<ZImageFreeImage>());
+	config.RegisterFactory("IImage", "ZImageFreeImage", imageFactory);
 #endif
 
-	// Must have image factory.
-	assert(imageFactory != nullptr);
+	TWrapper<IRandom*> randomFactory;
 
 #if !defined(CMAKE_PAINTSNOW) || ADD_RANDOM_LIBNOISE_BUILTIN
-	static const TFactory<ZRandomLibnoisePerlin, IRandom> srandomFactory;
-	randomFactory = &srandomFactory;
-	config.RegisterFactory("IRandom", "ZRandomLibnoisePerlin", srandomFactory);
+	randomFactory = WrapFactory(UniqueType<ZRandomLibnoisePerlin>());
+	config.RegisterFactory("IRandom", "ZRandomLibnoisePerlin", randomFactory);
 #endif
 
-	// Must have random factory.
-	assert(randomFactory != nullptr);
-
+	TWrapper<IFontBase*> fontFactory;
 #if !defined(CMAKE_PAINTSNOW) || ADD_FONT_FREETYPE
-	static const TFactory<ZFontFreetype, IFontBase> sfontFactory;
-	fontFactory = &sfontFactory;
-	config.RegisterFactory("IFontBase", "ZFontFreetype", sfontFactory);
+	fontFactory = WrapFactory(UniqueType<ZFontFreetype>());
+	config.RegisterFactory("IFontBase", "ZFontFreetype", fontFactory);
 #endif
 
-	if (!nogui) {
-		assert(fontFactory != nullptr);
-	}
-
-
+	TWrapper<IFilterBase*> audioFilterFactory;
 #if !defined(CMAKE_PAINTSNOW) || ADD_AUDIO_LAME
-	static const TFactory<ZFilterLAME, IFilterBase> sdecoderFactory;
-	audioFilterFactory = &sdecoderFactory;
-	config.RegisterFactory("IFIlterBase::Audio", "ZDecoderLAME", sdecoderFactory);
+	audioFilterFactory = WrapFactory(UniqueType<ZFilterLAME>());
+	config.RegisterFactory("IFIlterBase::Audio", "ZDecoderLAME", audioFilterFactory);
 #endif
 
-	assert(audioFilterFactory != nullptr);
-
+	TWrapper<IDatabase*> databaseFactory;
 #if !defined(CMAKE_PAINTSNOW) || ADD_DATABASE_SQLITE3_BUILTIN
-	static const TFactory<ZDatabaseSqlite, IDatabase> sdatabaseFactory;
-	databaseFactory = &sdatabaseFactory;
-	config.RegisterFactory("IDatabase", "ZDatabaseSqlite", sdatabaseFactory);
+	databaseFactory = WrapFactory(UniqueType<ZDatabaseSqlite>());
+	config.RegisterFactory("IDatabase", "ZDatabaseSqlite", databaseFactory);
 #endif
 
-	assert(databaseFactory != nullptr);
-
+	TWrapper<ITimer*> timerFactory;
 #if (defined(_WIN32) || defined(WIN32)) && ((!defined(CMAKE_PAINTSNOW) || ADD_TIMER_TIMERQUEUE_BUILTIN))
-	static const TFactory<ZWinTimerQueue, ITimer> stimerFactory;
-	config.RegisterFactory("ITimer", "ZWinTimerQueue", stimerFactory);
-	// if (timerFactory == nullptr)
-	timerFactory = &stimerFactory;
-
-	if (timerFactoryForFrame == nullptr) {
-		timerFactoryForFrame = timerFactory;
-	}
+	timerFactory = WrapFactory(UniqueType<ZWinTimerQueue>());
+	config.RegisterFactory("ITimer", "ZWinTimerQueue", timerFactory);
 #endif
 
 #if !(defined(_WIN32) || defined(WIN32)) && (!defined(CMAKE_PAINTSNOW) || ADD_TIMER_POSIX_BUILTIN)
-	static const TFactory<ZPosixTimer, ITimer> pstimerFactory;
-	config.RegisterFactory("ITimer", "ZPosixTimer", pstimerFactory);
-	config.RegisterFactory("ITimerForFrame", "ZPosixTimer", pstimerFactory);
-	if (timerFactory == nullptr) {
-		timerFactory = &pstimerFactory;
-	}
-
-	if (timerFactoryForFrame == nullptr) {
-		timerFactoryForFrame = &pstimerFactory;
-	}
+	timerFactory = WrapFactory(UniqueType<ZPosixTimer>());
+	config.RegisterFactory("ITimer", "ZPosixTimer", timerFactory);
 #endif
 
-	assert(timerFactory != nullptr);
-
-#if !defined(CMAKE_PAINTSNOW) || ADD_THREAD_PTHREAD
-	static const TFactory<ZThreadPthread, IThread> sthreadFactory;
-	threadFactory = &sthreadFactory;
-	config.RegisterFactory("IThread", "ZThreadPthread", sthreadFactory);
-#endif
-
-	assert(threadFactory != nullptr);
-
+	TWrapper<IAudio*> audioFactory;
 #if !defined(CMAKE_PAINTSNOW) || ADD_AUDIO_OPENAL
-	static const TFactory<ZAudioOpenAL, IAudio> saudioFactory;
-	audioFactory = &saudioFactory;
-	config.RegisterFactory("IAudio", "ZAudioOpenAL", saudioFactory);
+	audioFactory = WrapFactory(UniqueType<ZAudioOpenAL>());
+	config.RegisterFactory("IAudio", "ZAudioOpenAL", audioFactory);
 #endif
 
-	assert(audioFactory != nullptr);
+	TWrapper<IArchive*> archiveFactory;
 
 #if !defined(CMAKE_PAINTSNOW) || ADD_ARCHIVE_DIRENT_BUILTIN
-	static const TFactoryConstruct<ZArchiveDirent, IArchive> sarchiveFactory;
-
-	archiveFactory = &sarchiveFactory;
-	config.RegisterFactory("IArchive", "ZArchiveDirent", sarchiveFactory);
+	archiveFactory = WrapFactory(UniqueType<ZArchiveDirent>());
+	config.RegisterFactory("IArchive", "ZArchiveDirent", archiveFactory);
 #endif
+
+	TWrapper<IFilterBase*> assetFilterFactory;
 
 #if !defined(CMAKE_PAINTSNOW) || ADD_FILTER_POD_BUILTIN
-	static const TFactory<ZFilterPod, IFilterBase> sassetFilterFactory;
-	assetFilterFactory = &sassetFilterFactory;
-	config.RegisterFactory("IFilterBase::Asset", "ZFilterPod", sassetFilterFactory);
+	assetFilterFactory = WrapFactory(UniqueType<ZFilterPod>());
+	config.RegisterFactory("IFilterBase::Asset", "ZFilterPod", assetFilterFactory);
 #else
-	static const TFactory<NoFilter, IFilterBase> sfilterFactory;
-	filterFactory = &sfilterFactory;
+	assetFilterFactory = WrapFactory(UniqueType<NoFilter>());
+	config.RegisterFactory("IFilterBase::Asset", "NoFilter", assetFilterFactory);
 #endif
 
-	assert(archiveFactory != nullptr);
+	SetFactory(renderFactory, "IRender", factoryMap);
+	SetFactory(frameFactory, "IFrame", factoryMap);
+	// thread is not allowed to be overridden
+	// SetFactory(threadFactory, "IThread", factoryMap);
+	SetFactory(audioFactory, "IAudio", factoryMap);
+	SetFactory(archiveFactory, "IArchive", factoryMap);
+	SetFactory(scriptFactory, "IScript", factoryMap);
+	SetFactory(networkFactory, "INetwork", factoryMap);
+	SetFactory(randomFactory, "IRandom", factoryMap);
+	SetFactory(timerFactory, "ITimer", factoryMap);
+	SetFactory(imageFactory, "IImage", factoryMap);
+	SetFactory(assetFilterFactory, "IFilterBase::Asset", factoryMap);
+	SetFactory(fontFactory, "IFontBase", factoryMap);
+	SetFactory(audioFilterFactory, "IFilterBase::Audio", factoryMap);
+	SetFactory(databaseFactory, "IDatabase", factoryMap);
 
-	SetFactory(reinterpret_cast<const void*&>(renderFactory), paramRender, "IRender", factoryMap);
-	SetFactory(reinterpret_cast<const void*&>(frameFactory), paramFrame, "IFrame", factoryMap);
-	SetFactory(reinterpret_cast<const void*&>(threadFactory), paramThread, "IThread", factoryMap);
-	SetFactory(reinterpret_cast<const void*&>(audioFactory), paramAudio, "IAudio", factoryMap);
-	SetFactory(reinterpret_cast<const void*&>(archiveFactory), paramArchive, "IArchive", factoryMap);
-	SetFactory(reinterpret_cast<const void*&>(scriptFactory), paramScript, "IScript", factoryMap);
-	SetFactory(reinterpret_cast<const void*&>(networkFactory), paramNetwork, "INetwork", factoryMap);
-	SetFactory(reinterpret_cast<const void*&>(randomFactory), paramRandom, "IRandom", factoryMap);
-	SetFactory(reinterpret_cast<const void*&>(timerFactory), paramTimer, "ITimer", factoryMap);
-	SetFactory(reinterpret_cast<const void*&>(timerFactoryForFrame), paramTimerFrame, "ITimerForFrame", factoryMap);
-	SetFactory(reinterpret_cast<const void*&>(imageFactory), paramImage, "IImage", factoryMap);
-	SetFactory(reinterpret_cast<const void*&>(assetFilterFactory), paramAssetFilter, "IFilterBase::Asset", factoryMap);
-	SetFactory(reinterpret_cast<const void*&>(fontFactory), paramFont, "IFontBase", factoryMap);
-	SetFactory(reinterpret_cast<const void*&>(audioFilterFactory), paramAudio, "IFilterBase::Audio", factoryMap);
-	SetFactory(reinterpret_cast<const void*&>(databaseFactory), paramDatabase, "IDatabase", factoryMap);
+	if (!nogui) {
+		// Must have render factory in GUI mode.
+		assert(renderFactory);
+	}
 
-	thread = (*threadFactory)(paramThread);
 	mainThread = thread->OpenCurrentThread();
 	{
-		frame = (*frameFactory)(paramFrame);
+		frame = frameFactory();
 
-		IScript* script = (*scriptFactory)(paramScript);
-		IRender* render = (*renderFactory)(paramRender);
-		ITimer* timer = (*timerFactory)(paramTimer);
-		IImage* image = (*imageFactory)(paramImage);
-		INetwork* network = static_cast<INetwork*>((*networkFactory)(paramNetwork));
-		ITunnel* tunnel = (*tunnelFactory)(paramTunnel);
-		IAudio* audio = (*audioFactory)(paramAudio);
-		IArchive* archive = (*archiveFactory)(paramArchive);
-		IRandom* random = (*randomFactory)(paramRandom);
-		IDatabase* database = (*databaseFactory)(paramDatabase);
-		IFilterBase* assetFilter = (*assetFilterFactory)(paramAssetFilter);
-		IFilterBase* audioFilter = (*audioFilterFactory)(paramAudioFilter);
-		IFontBase* font = (*fontFactory)(paramFont);
+		IScript* script = scriptFactory();
+		IRender* render = renderFactory();
+		ITimer* timer = timerFactory();
+		IImage* image = imageFactory();
+		INetwork* network = networkFactory();
+		ITunnel* tunnel = tunnelFactory();
+		IAudio* audio = audioFactory();
+		IArchive* archive = archiveFactory();
+		IRandom* random = randomFactory();
+		IDatabase* database = databaseFactory();
+		IFilterBase* assetFilter = assetFilterFactory();
+		IFilterBase* audioFilter = audioFilterFactory();
+		IFontBase* font = fontFactory();
 
 		{
 			Interfaces interfaces(*archive, *audio, *database, *assetFilter, *audioFilter, *font, *frame, *image, *network, *random, *render, *script, *thread, *timer, *tunnel);
 			LeavesFlute leavesFlute(nogui, interfaces, subArchiveCreator, threadCount, warpCount);
-			config.PostRuntimeState(&leavesFlute, LeavesApi::RUNTIME_INITIALIZE);
 			this->leavesFlute = &leavesFlute;
-			std::vector<String> paramList = Split(paramScript);
+
+			std::vector<String> paramList;
+			std::map<String, CmdLine::Option>::const_iterator scriptParam = configMap.find("IScript");
+			if (scriptParam != configMap.end()) {
+				paramList = Split(scriptParam->second.param);
+			}
+
 			leavesFlute.Execute(entry, paramList);
 
 			std::map<String, CmdLine::Option>::const_iterator quit = configMap.find("Quit");
@@ -386,9 +339,6 @@ void Loader::Load(const CmdLine& cmdLine) {
 					leavesFlute.EnterMainLoop();
 				}
 			}
-
-			// leavesFlute.Reset(false);
-			config.PostRuntimeState(&leavesFlute, LeavesApi::RUNTIME_UNINITIALIZE);
 		}
 
 		font->ReleaseDevice();

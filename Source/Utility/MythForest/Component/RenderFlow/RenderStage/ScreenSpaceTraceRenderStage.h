@@ -13,7 +13,7 @@ namespace PaintsNow {
 	namespace NsMythForest {
 		class ScreenSpaceTraceRenderStage : public TReflected<ScreenSpaceTraceRenderStage, RenderStage> {
 		public:
-			ScreenSpaceTraceRenderStage();
+			ScreenSpaceTraceRenderStage(const String& s);
 
 			RenderPortTextureInput Depth;
 		};

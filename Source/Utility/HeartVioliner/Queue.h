@@ -8,7 +8,6 @@
 
 #include "../../Core/Interface/IScript.h"
 #include "../../General/Interface/ITimer.h"
-#include "../../Core/Template/TFactory.h"
 #include "../../Core/System/Kernel.h"
 #include "../../Core/Interface/IType.h"
 #include "Clock.h"

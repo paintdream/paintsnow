@@ -22,28 +22,23 @@ using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
 #define REGISTER_TEMPLATE(type) \
-	TFactory<type, RenderStage> stage##type; \
-	stageTemplates[#type] = stage##type;
-
-#define REGISTER_TEMPLATE_CONSTRUCT(type) \
-	TFactoryConstruct<type, RenderStage> stage##type; \
-	stageTemplates[#type] = stage##type;
+	stageTemplates[#type] = Wrap(&New<type, const String&>::Invoke);
 
 RenderFlowComponentModule::RenderFlowComponentModule(Engine& engine) : BaseClass(engine) {
 	// Register built-ins
 	REGISTER_TEMPLATE(AntiAliasingRenderStage);
-	REGISTER_TEMPLATE_CONSTRUCT(BloomRenderStage);
+	REGISTER_TEMPLATE(BloomRenderStage);
 	REGISTER_TEMPLATE(FrameBarrierRenderStage);
 	REGISTER_TEMPLATE(ForwardLightingRenderStage);
 	REGISTER_TEMPLATE(DepthResolveRenderStage);
-	REGISTER_TEMPLATE_CONSTRUCT(DepthBoundingRenderStage);
-	REGISTER_TEMPLATE_CONSTRUCT(DepthBoundingSetupRenderStage);
+	REGISTER_TEMPLATE(DepthBoundingRenderStage);
+	REGISTER_TEMPLATE(DepthBoundingSetupRenderStage);
 	REGISTER_TEMPLATE(DeferredLightingRenderStage);
-	REGISTER_TEMPLATE_CONSTRUCT(DeviceRenderStage);
+	REGISTER_TEMPLATE(DeviceRenderStage);
 	REGISTER_TEMPLATE(GeometryBufferRenderStage);
-	REGISTER_TEMPLATE_CONSTRUCT(LightBufferRenderStage);
+	REGISTER_TEMPLATE(LightBufferRenderStage);
 	REGISTER_TEMPLATE(PhaseLightRenderStage);
-	REGISTER_TEMPLATE_CONSTRUCT(ScreenRenderStage);
+	REGISTER_TEMPLATE(ScreenRenderStage);
 	REGISTER_TEMPLATE(ScreenSpaceTraceRenderStage);
 	REGISTER_TEMPLATE(ShadowMaskRenderStage);
 	REGISTER_TEMPLATE(WidgetRenderStage);
@@ -67,7 +62,7 @@ TObject<IReflect>& RenderFlowComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void RenderFlowComponentModule::RegisterNodeTemplate(String& key, const TFactoryBase<RenderStage>& t) {
+void RenderFlowComponentModule::RegisterNodeTemplate(String& key, const TWrapper<RenderStage*, const String&>& t) {
 	stageTemplates[key] = t;
 }
 
@@ -84,7 +79,7 @@ TShared<RenderStage> RenderFlowComponentModule::RequestNewRenderStage(IScript::R
 	CHECK_DELEGATE(renderFlowComponent);
 	CHECK_THREAD_IN_MODULE(renderFlowComponent);
 
-	std::map<String, TFactoryBase<RenderStage> >::const_iterator it = stageTemplates.find(name);
+	std::map<String, TWrapper<RenderStage*, const String&> >::const_iterator it = stageTemplates.find(name);
 	if (it != stageTemplates.end()) {
 		TShared<RenderStage> renderStage = TShared<RenderStage>::From(it->second(config));
 		renderStage->ReflectNodePorts();

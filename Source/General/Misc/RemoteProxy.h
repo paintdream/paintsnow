@@ -251,7 +251,7 @@ namespace PaintsNow {
 	class RemoteProxy : public TReflected<RemoteProxy, IReflectObjectComplex>, public IScript {
 	public:
 		enum STATUS { CONNECTED = 0, CLOSED, ABORTED, TIMEOUT };
-		RemoteProxy(IThread& threadApi, ITunnel& tunnel, const TFactoryBase<IScript::Object>& creator, const String& entry, const TWrapper<void, IScript::Request&, bool, STATUS, const String&>& statusHandler = TWrapper<void, IScript::Request&, bool, STATUS, const String&>());
+		RemoteProxy(IThread& threadApi, ITunnel& tunnel, const TWrapper<IScript::Object*, const String&>& creator, const String& entry, const TWrapper<void, IScript::Request&, bool, STATUS, const String&>& statusHandler = TWrapper<void, IScript::Request&, bool, STATUS, const String&>());
 		virtual ~RemoteProxy();
 		virtual void SetEntry(const String& entry);
 		virtual void Reconnect(IScript::Request& request);
@@ -406,7 +406,7 @@ namespace PaintsNow {
 		virtual IScript::Request* NewRequest(const String& entry);
 		virtual IScript::Request& GetDefaultRequest();
 
-		const TFactoryBase<IScript::Object>& GetObjectCreator() const;
+		const TWrapper<IScript::Object*, const String&>& GetObjectCreator() const;
 		bool Run();
 		virtual void Reset() override;
 		void Stop();
@@ -418,7 +418,7 @@ namespace PaintsNow {
 
 	protected:
 		ITunnel& tunnel;
-		TFactoryBase<IScript::Object> objectCreator;
+		TWrapper<IScript::Object*, const String&> objectCreator;
 		TWrapper<void, IScript::Request&, bool, STATUS, const String&> statusHandler;
 		Request defaultRequest;
 		ITunnel::Dispatcher* dispatcher;

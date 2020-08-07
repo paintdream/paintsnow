@@ -4,7 +4,7 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
-PhaseLightRenderStage::PhaseLightRenderStage() : OutputColor(renderTargetDescription.colorBufferStorages[0]) {
+PhaseLightRenderStage::PhaseLightRenderStage(const String& s) : OutputColor(renderTargetDescription.colorBufferStorages[0]) {
 	renderStateDescription.alphaBlend = 1;
 	clearDescription.clearColorBit = 0; // Load & Store
 }

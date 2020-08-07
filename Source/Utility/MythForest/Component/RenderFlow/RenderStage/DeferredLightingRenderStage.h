@@ -18,7 +18,7 @@ namespace PaintsNow {
 	namespace NsMythForest {
 		class DeferredLightingRenderStage : public TReflected<DeferredLightingRenderStage, GeneralRenderStageRect<NsSnowyStream::DeferredLightingPass> > {
 		public:
-			DeferredLightingRenderStage();
+			DeferredLightingRenderStage(const String& s);
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 			virtual void PrepareResources(Engine& engine, IRender::Queue* queue) override;
 			virtual void UpdatePass(Engine& engine, IRender::Queue* queue) override;

@@ -8,7 +8,6 @@
 
 #include "../../Core/Interface/IScript.h"
 #include "../../General/Interface/ITimer.h"
-#include "../../Core/Template/TFactory.h"
 #include "Queue.h"
 #include "Clock.h"
 #include "../BridgeSunset/BridgeSunset.h"

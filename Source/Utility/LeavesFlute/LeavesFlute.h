@@ -9,7 +9,6 @@
 
 #include "../../Core/PaintsNow.h"
 #include "../../General/Interface/Interfaces.h"
-#include "../../Core/Template/TFactory.h"
 #include "../../Core/Interface/IType.h"
 #include "../../Utility/BridgeSunset/BridgeSunset.h"
 #include "../../Utility/HeartVioliner/HeartVioliner.h"

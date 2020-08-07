@@ -7,7 +7,6 @@
 #ifndef __BRIDGESUNSET_H__
 #define __BRIDGESUNSET_H__
 
-#include "../../Core/Template/TFactory.h"
 #include "../../Core/Interface/IScript.h"
 #include "../../Core/System/Kernel.h"
 #include "RoutineGraph.h"

@@ -17,7 +17,7 @@ namespace PaintsNow {
 	namespace NsMythForest {
 		class PhaseLightRenderStage : public TReflected<PhaseLightRenderStage, GeneralRenderStageRect<NsSnowyStream::MultiHashTracePass> > {
 		public:
-			PhaseLightRenderStage();
+			PhaseLightRenderStage(const String& s);
 			virtual void PrepareResources(Engine& engine, IRender::Queue* queue) override;
 			virtual void UpdatePass(Engine& engine, IRender::Queue* queue) override;
 			virtual void Tick(Engine& engine, IRender::Queue* queue) override;

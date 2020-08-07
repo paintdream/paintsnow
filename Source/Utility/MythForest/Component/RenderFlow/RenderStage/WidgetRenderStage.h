@@ -14,7 +14,7 @@ namespace PaintsNow {
 	namespace NsMythForest {
 		class WidgetRenderStage : public TReflected<WidgetRenderStage, RenderStage> {
 		public:
-			WidgetRenderStage();
+			WidgetRenderStage(const String& s);
 			virtual void PrepareResources(Engine& engine, IRender::Queue* queue) override;
 			virtual void UpdatePass(Engine& engine, IRender::Queue* queue) override;
 

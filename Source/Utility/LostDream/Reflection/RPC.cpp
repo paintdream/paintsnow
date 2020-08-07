@@ -27,9 +27,9 @@ public:
 };
 
 
-class PrefabFactory : public TFactoryBase<IScript::Object> {
+class PrefabFactory : public TWrapper<IScript::Object*, const String&> {
 public:
-	PrefabFactory(IThread& threadApi) : TFactoryBase<IScript::Object>(Wrap(this, &PrefabFactory::CreateObject)), thread(threadApi) {}
+	PrefabFactory(IThread& threadApi) : TWrapper<IScript::Object*, const String&>(Wrap(this, &PrefabFactory::CreateObject)), thread(threadApi) {}
 	class Prefab : public TReflected<Prefab, IScript::Object> {
 	public:
 		virtual TObject<IReflect>& operator () (IReflect& reflect) {

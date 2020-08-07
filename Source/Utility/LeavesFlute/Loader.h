@@ -90,55 +90,24 @@ namespace PaintsNow {
 			Loader();
 			~Loader();
 			void Load(const CmdLine& cmdLine);
-			void SetFactory(const void*& ptr, String& param, const String& key, const std::map<String, CmdLine::Option>& factoryMap);
+			void SetFactory(TWrapper<IDevice*>& factory, const String& key, const std::map<String, CmdLine::Option>& factoryMap);
 
-			const TFactoryBase<IFrame>* frameFactory;
-			String paramFrame;
-			const TFactoryBase<IRender>* renderFactory;
-			String paramRender;
-			const TFactoryBase<IThread>* threadFactory;
-			String paramThread;
-			const TFactoryBase<IAudio>* audioFactory;
-			String paramAudio;
-			const TFactoryBase<IArchive>* archiveFactory;
-			String paramArchive;
-			const TFactoryBase<IScript>* scriptFactory;
-			String paramScript;
-			const TFactoryBase<ITunnel>* networkFactory;
-			String paramNetwork;
-			const TFactoryBase<ITunnel>* tunnelFactory;
-			String paramTunnel;
-			const TFactoryBase<IRandom>* randomFactory;
-			String paramRandom;
-			const TFactoryBase<ITimer>* timerFactory;
-			String paramTimer;
-			const TFactoryBase<ITimer>* timerFactoryForFrame;
-			String paramTimerFrame;
-			const TFactoryBase<IImage>* imageFactory;
-			String paramImage;
-			const TFactoryBase<IFilterBase>* assetFilterFactory;
-			String paramAssetFilter;
-			const TFactoryBase<IFontBase>* fontFactory;
-			String paramFont;
-			const TFactoryBase<IFilterBase>* audioFilterFactory;
-			String paramAudioFilter;
-			const TFactoryBase<IDatabase>* databaseFactory;
-			String paramDatabase;
-			const TFactoryBase<IDebugger>* debuggerFactory;
-			String paramDebugger;
-
-			template <class T, class B>
-			class FactoryInitWithThread : public TFactoryBase<B> {
-			public:
-				FactoryInitWithThread(Loader* l) : TFactoryBase<B>(Wrap(this, &FactoryInitWithThread<T, B>::CreateEx)), loader(l) {}
-
-				B* CreateEx(const String& info = "") const {
-					return new T(*loader->thread);
-				}
-
-			private:
-				Loader* loader;
-			};
+			TWrapper<IFrame*> frameFactory;
+			TWrapper<IRender*> renderFactory;
+			TWrapper<IThread*> threadFactory;
+			TWrapper<IAudio*> audioFactory;
+			TWrapper<IArchive*> archiveFactory;
+			TWrapper<IScript*> scriptFactory;
+			TWrapper<ITunnel*> networkFactory;
+			TWrapper<ITunnel*> tunnelFactory;
+			TWrapper<IRandom*> randomFactory;
+			TWrapper<ITimer*> timerFactory;
+			TWrapper<IImage*> imageFactory;
+			TWrapper<IFilterBase*> assetFilterFactory;
+			TWrapper<IFontBase*> fontFactory;
+			TWrapper<IFilterBase*> audioFilterFactory;
+			TWrapper<IDatabase*> databaseFactory;
+			TWrapper<IDebugger*> debuggerFactory;
 
 			IThread::Thread* mainThread;
 			IThread* thread;

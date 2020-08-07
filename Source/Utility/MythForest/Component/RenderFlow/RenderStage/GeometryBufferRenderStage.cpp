@@ -6,7 +6,7 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
-GeometryBufferRenderStage::GeometryBufferRenderStage() : BaseClass(2),
+GeometryBufferRenderStage::GeometryBufferRenderStage(const String& s) : BaseClass(2),
 	BaseColorOcclusion(renderTargetDescription.colorBufferStorages[0]),
 	NormalRoughnessMetallic(renderTargetDescription.colorBufferStorages[1]),
 	Depth(renderTargetDescription.depthStencilStorage) {

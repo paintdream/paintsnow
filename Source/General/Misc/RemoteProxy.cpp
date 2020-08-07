@@ -137,7 +137,7 @@ public:
 	RemoteProxy::ObjectInfo& objectInfo;
 };
 
-RemoteProxy::RemoteProxy(IThread& threadApi, ITunnel& t, const TFactoryBase<IScript::Object>& creator, const String& entry, const TWrapper<void, IScript::Request&, bool, STATUS, const String&>& sh) : IScript(threadApi), tunnel(t), defaultRequest(*this, nullptr, statusHandler), objectCreator(creator), statusHandler(sh), dispatcher(nullptr) {
+RemoteProxy::RemoteProxy(IThread& threadApi, ITunnel& t, const TWrapper<IScript::Object*, const String&>& creator, const String& entry, const TWrapper<void, IScript::Request&, bool, STATUS, const String&>& sh) : IScript(threadApi), tunnel(t), defaultRequest(*this, nullptr, statusHandler), objectCreator(creator), statusHandler(sh), dispatcher(nullptr) {
 	SetEntry(entry);
 	dispThread.store(nullptr, std::memory_order_release);
 }
@@ -162,7 +162,7 @@ RemoteProxy::~RemoteProxy() {
 	}
 }
 
-const TFactoryBase<IScript::Object>& RemoteProxy::GetObjectCreator() const {
+const TWrapper<IScript::Object*, const String&>& RemoteProxy::GetObjectCreator() const {
 	return objectCreator;
 }
 

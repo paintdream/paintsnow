@@ -16,7 +16,7 @@ namespace PaintsNow {
 	namespace NsMythForest {
 		class AntiAliasingRenderStage : public TReflected<AntiAliasingRenderStage, GeneralRenderStageRect<NsSnowyStream::AntiAliasingPass> > {
 		public:
-			AntiAliasingRenderStage();
+			AntiAliasingRenderStage(const String& options);
 			virtual void PrepareResources(Engine& engine, IRender::Queue* queue) override;
 			virtual void UpdatePass(Engine& engine, IRender::Queue* queue) override;
 

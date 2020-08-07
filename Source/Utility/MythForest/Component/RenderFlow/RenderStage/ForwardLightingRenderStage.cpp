@@ -6,7 +6,7 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
-ForwardLightingRenderStage::ForwardLightingRenderStage() : OutputColor(renderTargetDescription.colorBufferStorages[0]) {}
+ForwardLightingRenderStage::ForwardLightingRenderStage(const String& s) : OutputColor(renderTargetDescription.colorBufferStorages[0]) {}
 
 TObject<IReflect>& ForwardLightingRenderStage::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);

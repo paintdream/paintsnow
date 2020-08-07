@@ -3,4 +3,4 @@
 using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 
-ScreenSpaceTraceRenderStage::ScreenSpaceTraceRenderStage() {}
+ScreenSpaceTraceRenderStage::ScreenSpaceTraceRenderStage(const String& s) {}

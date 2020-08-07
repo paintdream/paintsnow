@@ -6,7 +6,7 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
-DeferredLightingRenderStage::DeferredLightingRenderStage() : OutputColor(renderTargetDescription.colorBufferStorages[0]), LoadDepth(renderTargetDescription.depthStencilStorage) {
+DeferredLightingRenderStage::DeferredLightingRenderStage(const String& s) : OutputColor(renderTargetDescription.colorBufferStorages[0]), LoadDepth(renderTargetDescription.depthStencilStorage) {
 	renderStateDescription.stencilReplacePass = 1;
 	clearDescription.clearColorBit = IRender::Resource::ClearDescription::CLEAR; // stencil culled, must clear previous result.
 	clearDescription.clearDepthBit = clearDescription.clearStencilBit = IRender::Resource::ClearDescription::DISCARD_STORE;

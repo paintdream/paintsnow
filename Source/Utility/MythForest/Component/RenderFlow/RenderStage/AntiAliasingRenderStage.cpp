@@ -4,7 +4,7 @@ using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 using namespace PaintsNow::NsSnowyStream;
 
-AntiAliasingRenderStage::AntiAliasingRenderStage() : OutputColor(renderTargetDescription.colorBufferStorages[0]) {}
+AntiAliasingRenderStage::AntiAliasingRenderStage(const String& options) : OutputColor(renderTargetDescription.colorBufferStorages[0]) {}
 
 TObject<IReflect>& AntiAliasingRenderStage::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);

@@ -10,7 +10,6 @@
 #include "../../Core/Interface/IScript.h" 
 #include "../../Core/System/Kernel.h"
 #include "../../General/Interface/ITimer.h" 
-#include "../../Core/Template/TFactory.h"
 #include "../../Core/Template/TEvent.h"
 #include "../BridgeSunset/BridgeSunset.h"
 #include <map>

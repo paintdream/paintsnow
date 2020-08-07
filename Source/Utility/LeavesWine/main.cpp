@@ -109,16 +109,6 @@ public:
 	bool init;
 };
 
-class FrameImGuiFactory : public TFactoryBase<IFrame> {
-public:
-	FrameImGuiFactory(LeavesWine& wine) : leavesWine(wine), TFactoryBase<IFrame>(Wrap(this, &FrameImGuiFactory::CreateInstance)) {}
-	IFrame* CreateInstance(const String& info = "") const {
-		return new ZFrameGLFWForImGui(leavesWine);
-	}
-
-	LeavesWine& leavesWine;
-};
-
 int main(int argc, char* argv[]) {
 	CmdLine cmdLine;
 	cmdLine.Process(argc, argv);
@@ -133,9 +123,9 @@ int main(int argc, char* argv[]) {
 		Script script;
 
 		LeavesWine leavesWine(loader.leavesFlute);
-		const FrameImGuiFactory sframeFactory(leavesWine);
+		TWrapper<IFrame*> frameFactory = WrapFactory(UniqueType<ZFrameGLFWForImGui>(), std::ref(leavesWine));
 
-		loader.config.RegisterFactory("IFrame", "ZFrameGLFWForImGui", sframeFactory);
+		loader.config.RegisterFactory("IFrame", "ZFrameGLFWForImGui", frameFactory);
 		leavesWine.AddWidget(&system);
 		leavesWine.AddWidget(&repository);
 		leavesWine.AddWidget(&visualizer);

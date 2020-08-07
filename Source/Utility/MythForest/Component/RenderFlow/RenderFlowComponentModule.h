@@ -18,7 +18,7 @@ namespace PaintsNow {
 		public:
 			RenderFlowComponentModule(Engine& engine);
 			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-			virtual void RegisterNodeTemplate(String& key, const TFactoryBase<RenderStage>& t);
+			virtual void RegisterNodeTemplate(String& key, const TWrapper<RenderStage*, const String&>& t);
 
 			TShared<RenderFlowComponent> RequestNew(IScript::Request& request);
 			TShared<RenderPolicy> RequestNewRenderPolicy(IScript::Request& request, const String& name, uint32_t priority);
@@ -31,7 +31,7 @@ namespace PaintsNow {
 			void RequestDeleteRenderStage(IScript::Request& request, IScript::Delegate<RenderFlowComponent> renderFlow, IScript::Delegate<RenderStage> renderStage);
 
 		protected:
-			std::map<String, TFactoryBase<RenderStage> > stageTemplates;
+			std::map<String, TWrapper<RenderStage*, const String&> > stageTemplates;
 		};
 	}
 }

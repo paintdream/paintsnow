@@ -14,8 +14,8 @@ extern "C" DLL_PUBLIC void* LeavesCreate() {
 extern "C" DLL_PUBLIC bool LeavesRegisterFactory(void* instance, const char* key, const char* name, const void* value) {
 	Loader* loader = reinterpret_cast<Loader*>(instance);
 	if (loader != nullptr) {
-		const TWrapper<void*, const String&>* wrapper = reinterpret_cast<const TWrapper<void*, const String&>*>(value);
-		loader->config.RegisterFactory(key, name, wrapper);
+		const TWrapper<IDevice*>* wrapper = reinterpret_cast<const TWrapper<IDevice*>*>(value);
+		loader->config.RegisterFactory(key, name, *wrapper);
 		return true;
 	} else {
 		return false;
@@ -130,13 +130,12 @@ LRESULT CALLBACK HookProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 class ZFrameWin32AttachWindow : public IFrame {
 public:
-	ZFrameWin32AttachWindow(const String& param) : hdc(NULL), originalProc(nullptr), isRendering(false) {
-		// parse hWnd from param string
-		void* p = nullptr;
-		sscanf(param.c_str(), "%p", &p);
-		window = reinterpret_cast<HWND>(p);
-
+	ZFrameWin32AttachWindow() : window(NULL), hdc(NULL), originalProc(nullptr), isRendering(false) {
 		mainLoopEvent = ::CreateEventW(NULL, TRUE, FALSE, NULL);
+	}
+
+	void Attach(HWND h) {
+		window = h;
 	}
 
 	virtual ~ZFrameWin32AttachWindow() {
@@ -287,7 +286,7 @@ LRESULT CALLBACK HookProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 static void* InternalQueryBuiltinFactory(const char* key, const char* name) {
 	if (strcmp(key, "IFrame") == 0 && strcmp(name, "ZFrameWin32AttachWindow") == 0) {
-		static TFactoryConstruct<ZFrameWin32AttachWindow, IFrame> factory;
+		static TWrapper<IFrame*> factory = WrapFactory(UniqueType<ZFrameWin32AttachWindow>());
 		return &factory;
 	} else {
 		return nullptr;

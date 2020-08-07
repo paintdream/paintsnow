@@ -14,7 +14,7 @@ namespace PaintsNow {
 	namespace NsMythForest {
 		class FrameBarrierRenderStage : public TReflected<FrameBarrierRenderStage, RenderStage> {
 		public:
-			FrameBarrierRenderStage();
+			FrameBarrierRenderStage(const String& s);
 
 			virtual void SetMainResolution(Engine& engine, IRender::Queue* queue, uint32_t width, uint32_t height) override;
 			virtual void PrepareResources(Engine& engine, IRender::Queue* queue) override;

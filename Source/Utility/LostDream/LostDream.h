@@ -6,7 +6,6 @@
 #ifndef __LOSTDREAM_H__
 #define __LOSTDREAM_H__
 
-#include "../../Core/Template/TFactory.h"
 #include "../../Core/Interface/IReflect.h"
 #include <list>
 
@@ -23,7 +22,7 @@ namespace PaintsNow {
 			};
 
 			virtual ~LostDream();
-			bool RegisterQualifier(const TFactoryBase<Qualifier>& q, int count);
+			bool RegisterQualifier(const TWrapper<Qualifier*>& q, int count);
 			bool RunQualifiers(bool stopOnError, int initRandomSeed, int length);
 
 		protected:

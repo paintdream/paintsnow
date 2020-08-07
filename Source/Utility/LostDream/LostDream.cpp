@@ -12,8 +12,8 @@ LostDream::~LostDream() {
 	}
 }
 
-bool LostDream::RegisterQualifier(const TFactoryBase<Qualifier>& q, int count) {
-	Qualifier* qualifier = q.Create();
+bool LostDream::RegisterQualifier(const TWrapper<Qualifier*>& q, int count) {
+	Qualifier* qualifier = q();
 	if (!qualifier->Initialize()) {
 		printf("Qualifier initialize failed!\n");
 		delete qualifier;
