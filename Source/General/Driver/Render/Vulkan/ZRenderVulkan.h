@@ -12,6 +12,8 @@
 #include "../../../../Core/Interface/IReflect.h"
 #include "../../../../Core/Template/TQueue.h"
 
+typedef struct VkInstance_T* VkInstance;
+
 namespace PaintsNow {
 	class ZRenderVulkan final : public IRender {
 	public:
@@ -44,10 +46,7 @@ namespace PaintsNow {
 		virtual void DeleteResource(Queue* queue, Resource* resource) override;
 
 	protected:
-		void ClearDeletedQueues();
-
-	protected:
-		TQueueList<Queue*, 4> deletedQueues;
+		VkInstance instance;
 	};
 }
 

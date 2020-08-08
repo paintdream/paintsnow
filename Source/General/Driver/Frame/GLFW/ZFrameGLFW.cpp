@@ -8,9 +8,14 @@
 #endif
 #endif
 
+#if !defined(_MSC_VER) || _MSC_VER > 1200
+#define GLFW_INCLUDE_VULKAN
+#endif
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <cassert>
+
 using namespace PaintsNow;
 
 static void OnErrorCallback(int error, const char* description) {
@@ -93,7 +98,7 @@ void OnKeyboardCallback(GLFWwindow* window, int key, int scancode, int action, i
 	frame->OnKeyboardCallback(key, scancode, action, mods);
 }
 
-ZFrameGLFW::ZFrameGLFW(const Int2& size, IFrame::Callback* cb) : windowSize(size), isRendering(false), lastdown(false), lastbutton(false) {
+ZFrameGLFW::ZFrameGLFW(bool vulkan, const Int2& size, IFrame::Callback* cb) : windowSize(size), isRendering(false), lastdown(false), lastbutton(false), isVulkan(vulkan) {
 	SetCallback(cb);
 	glfwSetErrorCallback(OnErrorCallback);
 
@@ -108,10 +113,14 @@ ZFrameGLFW::ZFrameGLFW(const Int2& size, IFrame::Callback* cb) : windowSize(size
 	assert(glfwGetError(nullptr) == 0);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
 	assert(glfwGetError(nullptr) == 0);*/
+
+	if (isVulkan) {
+		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	}
+
 	window = glfwCreateWindow(size.x(), size.y(), "PaintsNow.Net", NULL, NULL);
 
 	glfwSetWindowUserPointer(window, this);
-
 	OnWindowSize(size);
 
 	glfwSetKeyCallback(window, ::OnKeyboardCallback);
@@ -123,6 +132,7 @@ ZFrameGLFW::ZFrameGLFW(const Int2& size, IFrame::Callback* cb) : windowSize(size
 }
 
 ZFrameGLFW::~ZFrameGLFW() {
+	glfwDestroyWindow(window);
 	glfwTerminate();
 }
 

@@ -14,7 +14,7 @@ struct GLFWwindow;
 namespace PaintsNow {
 	class ZFrameGLFW : public IFrame {
 	public:
-		ZFrameGLFW(const Int2& size = Int2(800, 600), Callback* callback = nullptr);
+		ZFrameGLFW(bool isVulkan = false, const Int2& size = Int2(800, 600), Callback* callback = nullptr);
 		virtual ~ZFrameGLFW();
 		virtual void SetCallback(Callback* callback);
 		virtual const Int2& GetWindowSize() const;
@@ -44,9 +44,9 @@ namespace PaintsNow {
 		Callback* callback;
 		Int2 windowSize;
 		bool isRendering;
+		bool isVulkan;
 		bool lastbutton;
 		bool lastdown;
-		bool reserved;
 	};
 }
 

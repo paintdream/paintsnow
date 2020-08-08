@@ -106,6 +106,17 @@ struct DelayedReference {
 	T*& ptr;
 };
 
+template <class T>
+struct DelayedValue {
+	DelayedValue(T& p) : value(p) {}
+
+	operator T& () {
+		return value;
+	}
+
+	T& value;
+};
+
 void Loader::Load(const CmdLine& cmdLine) {
 	// Load necessary modules
 	const std::list<CmdLine::Option>& modules = cmdLine.GetModuleList();
@@ -113,6 +124,7 @@ void Loader::Load(const CmdLine& cmdLine) {
 	printf("LeavesFlute %s\nPaintDream (paintdream@paintdream.com) (C) 2014-2020\nBased on PaintsNow [https://github.com/paintdream/paintsnow]\n", PAINTSNOW_VERSION_MINOR);
 
 	bool nogui = true;
+	bool isVulkan = true;
 	bool enableModuleLog = false;
 	const std::map<String, CmdLine::Option>& configMap = cmdLine.GetConfigMap();
 	std::string entry = "Entry";
@@ -178,23 +190,24 @@ void Loader::Load(const CmdLine& cmdLine) {
 	TWrapper<IRender*> renderFactory = WrapFactory(UniqueType<ZRenderDummy>());
 	config.RegisterFactory("IRender", "ZRenderDummy", renderFactory);
 
-#if !defined(CMAKE_PAINTSNOW) || ADD_RENDER_OPENGL
-	if (!nogui) {
-		renderFactory = WrapFactory(UniqueType<ZRenderOpenGL>());
-		config.RegisterFactory("IRender", "ZRenderOpenGL", renderFactory);
-	}
-#endif
-
-#if (!defined(CMAKE_PAINTSNOW) || ADD_RENDER_OPENGL) && (!defined(_MSC_VER) || _MSC_VER > 1200)
+#if (!defined(CMAKE_PAINTSNOW) || ADD_RENDER_VULKAN) && (!defined(_MSC_VER) || _MSC_VER > 1200)
 	if (!nogui) {
 		renderFactory = WrapFactory(UniqueType<ZRenderVulkan>());
 		config.RegisterFactory("IRender", "ZRenderVulkan", renderFactory);
 	}
 #endif
 
+#if !defined(CMAKE_PAINTSNOW) || ADD_RENDER_OPENGL
+	static TWrapper<IRender*> glFactory = WrapFactory(UniqueType<ZRenderOpenGL>());
+	if (!nogui) {
+		renderFactory = glFactory;
+		config.RegisterFactory("IRender", "ZRenderOpenGL", renderFactory);
+	}
+#endif
+
 #if !defined(CMAKE_PAINTSNOW) || ADD_FRAME_GLFW
 	if (!nogui) {
-		frameFactory = WrapFactory(UniqueType<ZFrameGLFW>());
+		frameFactory = WrapFactory(UniqueType<ZFrameGLFW>(), DelayedValue<bool>(isVulkan));
 		config.RegisterFactory("IFrame", "ZFrameGLFW", frameFactory);
 	}
 #endif
@@ -303,6 +316,13 @@ void Loader::Load(const CmdLine& cmdLine) {
 	if (!nogui) {
 		// Must have render factory in GUI mode.
 		assert(renderFactory);
+
+#if !defined(CMAKE_PAINTSNOW) || (ADD_RENDER_OPENGL && ADD_FRAME_GLFW)
+		// initialize for GLFW
+		if (renderFactory == glFactory) {
+			isVulkan = false; // fallback to opengl
+		}
+#endif
 	}
 
 	thread = threadFactory(); // precreate thread
