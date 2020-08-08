@@ -330,8 +330,8 @@ void Loader::Load(const CmdLine& cmdLine) {
 			this->leavesFlute = &leavesFlute;
 
 			std::vector<String> paramList;
-			std::map<String, CmdLine::Option>::const_iterator scriptParam = configMap.find("IScript");
-			if (scriptParam != configMap.end()) {
+			std::map<String, CmdLine::Option>::const_iterator scriptParam = factoryMap.find("IScript");
+			if (scriptParam != factoryMap.end()) {
 				paramList = Split(scriptParam->second.param);
 			}
 

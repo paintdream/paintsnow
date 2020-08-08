@@ -42,7 +42,7 @@ if EnableTL then
 			return file
 		end
 
-		return nil, "Unable to find " .. f
+		return nil, "Unable to find or empty content: " .. f
 	end
 
 	io.close = function (f)
