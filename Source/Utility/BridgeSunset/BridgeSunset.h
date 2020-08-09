@@ -675,7 +675,7 @@ namespace PaintsNow {
 
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
-				IScript::Request& req = *bridgeSunset.AllocateRequest();
+				IScript::Request& req = *bridgeSunset.AcquireRequest();
 				req.DoLock();
 				req.Push();
 				Writer<decltype(arguments), sizeof...(Args)>()(req, arguments);
@@ -685,7 +685,7 @@ namespace PaintsNow {
 				}
 				req.Pop();
 				req.UnLock();
-				bridgeSunset.FreeRequest(&req);
+				bridgeSunset.ReleaseRequest(&req);
 
 				delete this;
 			}
@@ -729,9 +729,9 @@ namespace PaintsNow {
 
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
-				IScript::Request& req = *bridgeSunset.AllocateRequest();
+				IScript::Request& req = *bridgeSunset.AcquireRequest();
 				Apply(req, gen_seq<sizeof...(Args)>());
-				bridgeSunset.FreeRequest(&req);
+				bridgeSunset.ReleaseRequest(&req);
 
 				delete this;
 			}

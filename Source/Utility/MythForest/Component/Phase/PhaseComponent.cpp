@@ -75,7 +75,9 @@ void PhaseComponent::Initialize(Engine& engine, Entity* entity) {
 			emptyColorAttachment->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 			emptyColorAttachment->description.state.layout = IRender::Resource::TextureDescription::R;
 			emptyColorAttachment->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
-			emptyColorAttachment->GetResourceManager().InvokeUpload(emptyColorAttachment(), engine.snowyStream.GetResourceQueue());
+
+			IRender::Queue* queue = engine.snowyStream.GetResourceQueue();
+			emptyColorAttachment->GetResourceManager().InvokeUpload(emptyColorAttachment(), queue);
 		}
 
 		SnowyStream& snowyStream = engine.snowyStream;
@@ -90,20 +92,20 @@ void PhaseComponent::Initialize(Engine& engine, Entity* entity) {
 		IRender::Device* device = engine.snowyStream.GetRenderDevice();
 		renderQueue = render.CreateQueue(device);
 
-		clearResource = render.CreateResource(renderQueue, IRender::Resource::RESOURCE_CLEAR);
+		clearResource = render.CreateResource(device, IRender::Resource::RESOURCE_CLEAR);
 		IRender::Resource::ClearDescription clear;
 		clear.clearColorBit = IRender::Resource::ClearDescription::DISCARD_LOAD;
 		clear.clearDepthBit = IRender::Resource::ClearDescription::DISCARD_LOAD | IRender::Resource::ClearDescription::DISCARD_STORE;
 		clear.clearStencilBit = IRender::Resource::ClearDescription::DISCARD_LOAD | IRender::Resource::ClearDescription::DISCARD_STORE;
 		render.UploadResource(renderQueue, clearResource, &clear);
 
-		clearShadowResource = render.CreateResource(renderQueue, IRender::Resource::RESOURCE_CLEAR);
+		clearShadowResource = render.CreateResource(device, IRender::Resource::RESOURCE_CLEAR);
 		clear.clearColorBit = IRender::Resource::ClearDescription::DISCARD_LOAD | IRender::Resource::ClearDescription::DISCARD_STORE;
 		clear.clearDepthBit = 0;
 		clear.clearStencilBit = IRender::Resource::ClearDescription::DISCARD_LOAD | IRender::Resource::ClearDescription::DISCARD_STORE;
 		render.UploadResource(renderQueue, clearShadowResource, &clear);
 
-		stateResource = render.CreateResource(renderQueue, IRender::Resource::RESOURCE_RENDERSTATE);
+		stateResource = render.CreateResource(device, IRender::Resource::RESOURCE_RENDERSTATE);
 		IRender::Resource::RenderStateDescription state;
 		state.cull = 1;
 		state.fill = 1;
@@ -124,7 +126,7 @@ void PhaseComponent::Initialize(Engine& engine, Entity* entity) {
 		state.stencilTest = IRender::Resource::RenderStateDescription::DISABLED;
 		state.stencilWrite = 0;
 		state.cullFrontFace = 1;
-		stateShadowResource = render.CreateResource(renderQueue, IRender::Resource::RESOURCE_RENDERSTATE);
+		stateShadowResource = render.CreateResource(device, IRender::Resource::RESOURCE_RENDERSTATE);
 		render.UploadResource(renderQueue, stateShadowResource, &state);
 	}
 }
@@ -208,7 +210,7 @@ void PhaseComponent::Setup(Engine& engine, uint32_t phaseCount, uint32_t taskCou
 		TaskData& task = tasks[j];
 		task.warpData.resize(warpCount);
 		task.renderQueue = render.CreateQueue(device);
-		task.renderTarget = render.CreateResource(task.renderQueue, IRender::Resource::RESOURCE_RENDERTARGET);
+		task.renderTarget = render.CreateResource(device, IRender::Resource::RESOURCE_RENDERTARGET);
 	}
 
 	// prepare uniform buffers for tracing
@@ -220,7 +222,7 @@ void PhaseComponent::Setup(Engine& engine, uint32_t phaseCount, uint32_t taskCou
 		phase.tracePipeline.Reset(static_cast<ShaderResourceImpl<MultiHashTracePass>*>(tracePipeline->Clone()));
 		phase.tracePipeline->GetPassUpdater().Capture(phase.drawCallDescription, bufferData, 1 << IRender::Resource::BufferDescription::UNIFORM);
 		phase.tracePipeline->GetPassUpdater().Update(render, renderQueue, phase.drawCallDescription, phase.uniformBuffers, bufferData, 1 << IRender::Resource::BufferDescription::UNIFORM);
-		phase.drawCallResource = render.CreateResource(renderQueue, IRender::Resource::RESOURCE_DRAWCALL);
+		phase.drawCallResource = render.CreateResource(device, IRender::Resource::RESOURCE_DRAWCALL);
 
 		phase.depth = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseDepth", &phase), false, 0, nullptr);
 		phase.depth->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
@@ -314,7 +316,7 @@ void PhaseComponent::TickRender(Engine& engine) {
 			}
 
 			// engine.mythForest.StartCaptureFrame("cap", "");
-			render.YieldQueue(task.renderQueue);
+			render.FlushQueue(task.renderQueue);
 			bakeQueues.emplace_back(task.renderQueue);
 			finalStatus.store(status, std::memory_order_release);
 			// render.PresentQueues(&task.renderQueue, 1, IRender::PRESENT_EXECUTE_ALL);
@@ -410,7 +412,7 @@ void PhaseComponent::ResolveTasks(Engine& engine) {
 								const PassBase::Parameter& output = group.instanceUpdater->parameters[k];
 								// instanceable.
 								assert(output.slot < group.drawCallDescription.bufferResources.size());
-								IRender::Resource* buffer = render.CreateResource(queue, IRender::Resource::RESOURCE_BUFFER);
+								IRender::Resource* buffer = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_BUFFER);
 								IRender::Resource::BufferDescription desc;
 								desc.format = IRender::Resource::BufferDescription::FLOAT;
 								desc.usage = IRender::Resource::BufferDescription::INSTANCED;
@@ -428,7 +430,7 @@ void PhaseComponent::ResolveTasks(Engine& engine) {
 						group.drawCallDescription.instanceCounts.x() = group.instanceCount;
 
 						if (PassBase::ValidateDrawCall(group.drawCallDescription)) {
-							IRender::Resource* drawCall = render.CreateResource(queue, IRender::Resource::RESOURCE_DRAWCALL);
+							IRender::Resource* drawCall = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_DRAWCALL);
 							IRender::Resource::DrawCallDescription dc = group.drawCallDescription; // make copy
 							render.UploadResource(queue, drawCall, &dc);
 							render.ExecuteResource(queue, drawCall);
@@ -658,7 +660,7 @@ void PhaseComponent::CollectRenderableComponent(Engine& engine, TaskData& taskDa
 							desc.dynamic = 1;
 							desc.format = IRender::Resource::BufferDescription::FLOAT;
 							desc.data = std::move(data);
-							IRender::Resource* res = render.CreateResource(queue, IRender::Resource::RESOURCE_BUFFER);
+							IRender::Resource* res = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_BUFFER);
 							render.UploadResource(queue, res, &desc);
 							ip->second.buffers[i] = res;
 							warpData.runtimeResources.emplace_back(res);

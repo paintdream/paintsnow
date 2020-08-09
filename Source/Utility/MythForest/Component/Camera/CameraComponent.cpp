@@ -175,7 +175,7 @@ void CameraComponent::Instancing(Engine& engine, TaskData& taskData) {
 						policyData.instanceData.Append(data);
 						IRender::Resource*& drawCall = group.drawCallResource;
 						if (drawCall == nullptr) {
-							drawCall = render.CreateResource(queue, IRender::Resource::RESOURCE_DRAWCALL);
+							drawCall = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_DRAWCALL);
 							policyData.runtimeResources.emplace_back(drawCall);
 						}
 
@@ -538,13 +538,13 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 			IRender::Queue*& queue = policyData.portQueue;
 			if (queue == nullptr) {
 				queue = render.CreateQueue(device);
-				policyData.instanceBuffer = render.CreateResource(queue, IRender::Resource::RESOURCE_BUFFER);
+				policyData.instanceBuffer = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_BUFFER);
 			}
 
 			// add renderstate if exists
 			IRender::Resource*& state = warpData.renderStateMap[drawCall.renderStateDescription];
 			if (state == nullptr) {
-				state = render.CreateResource(queue, IRender::Resource::RESOURCE_RENDERSTATE);
+				state = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_RENDERSTATE);
 				render.UploadResource(queue, state, &drawCall.renderStateDescription);
 				policyData.runtimeResources.emplace_back(state);
 			}
@@ -581,7 +581,7 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 						desc.dynamic = 1;
 						desc.format = IRender::Resource::BufferDescription::FLOAT;
 						desc.data = std::move(data);
-						IRender::Resource* res = render.CreateResource(queue, IRender::Resource::RESOURCE_BUFFER);
+						IRender::Resource* res = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_BUFFER);
 						render.UploadResource(queue, res, &desc);
 						ip->second.buffers[i] = res;
 						policyData.runtimeResources.emplace_back(res);

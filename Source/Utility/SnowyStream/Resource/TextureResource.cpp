@@ -19,7 +19,7 @@ void TextureResource::Attach(IRender& render, void* deviceContext) {
 	IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(deviceContext);
 	assert(queue != nullptr);
 	assert(instance == nullptr);
-	instance = render.CreateResource(queue, IRender::Resource::RESOURCE_TEXTURE);
+	instance = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_TEXTURE);
 }
 
 void TextureResource::Detach(IRender& render, void* deviceContext) {

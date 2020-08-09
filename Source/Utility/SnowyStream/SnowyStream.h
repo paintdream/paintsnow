@@ -22,7 +22,7 @@ namespace PaintsNow {
 			SnowyStream(Interfaces& interfaces, NsBridgeSunset::BridgeSunset& bs, const TWrapper<IArchive*, IStreamBase&, size_t>& subArchiveCreator, const TWrapper<void, const String&>& errorHandler);
 			virtual ~SnowyStream();
 			IRender::Device* GetRenderDevice() const;
-			IRender::Queue* GetResourceQueue() const;
+			IRender::Queue* GetResourceQueue();
 
 			virtual void TickDevice(IDevice& device);
 			virtual void Initialize() override;
@@ -126,6 +126,7 @@ namespace PaintsNow {
 			// Device related
 			// Render
 			IRender::Device* renderDevice;
+			std::atomic<uint32_t> resourceCritical;
 			IRender::Queue* resourceQueue;
 		};
 

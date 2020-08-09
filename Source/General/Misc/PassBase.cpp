@@ -37,7 +37,7 @@ public:
 };
 
 IRender::Resource* PassBase::Compile(IRender& render, IRender::Queue* queue) {
-	IRender::Resource* shader = render.CreateResource(queue, IRender::Resource::RESOURCE_SHADER);
+	IRender::Resource* shader = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_SHADER);
 
 	if (shader == nullptr) {
 		return nullptr;
@@ -307,7 +307,7 @@ void PassBase::Updater::Update(IRender& render, IRender::Queue* queue, IRender::
 				buffer = bindBuffer->resource;
 			} else {
 				if (buffer == nullptr) {
-					buffer = render.CreateResource(queue, IRender::Resource::RESOURCE_BUFFER);
+					buffer = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_BUFFER);
 					newBuffers.emplace_back(buffer);
 				}
 

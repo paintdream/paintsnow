@@ -219,9 +219,9 @@ namespace PaintsNow {
 		// The only API that requires calling on device thread.
 		enum PresentOption {
 			PRESENT_EXECUTE_ALL,
-			PRESENT_REPEAT_TO_YIELD,
-			PRESENT_EXECUTE_TO_YIELD,
-			PRESENT_CONSUME_YIELD,
+			PRESENT_REPEAT,
+			PRESENT_EXECUTE,
+			PRESENT_CONSUME,
 			PRESENT_CLEAR_ALL
 		};
 
@@ -235,21 +235,27 @@ namespace PaintsNow {
 		virtual void DeleteDevice(Device* device) = 0;
 
 		// Queue
-		virtual Queue* CreateQueue(Device* device, bool shared = false) = 0;
+		enum QueueFlag {
+			QUEUE_MULTITHREAD
+		};
+
+		virtual Queue* CreateQueue(Device* device, uint32_t flag = 0) = 0;
 		virtual Device* GetQueueDevice(Queue* queue) = 0;
 		virtual void DeleteQueue(Queue* queue) = 0;
 		virtual void MergeQueue(Queue* target, Queue* source) = 0;
-		virtual void YieldQueue(Queue* queue) = 0;
+		virtual void FlushQueue(Queue* queue) = 0;
 		virtual bool IsQueueEmpty(Queue* queue) = 0;
 
 		// Resource
-		virtual Resource* CreateResource(Queue* queue, Resource::Type resourceType) = 0;
+		virtual Resource* CreateResource(Device* device, Resource::Type resourceType) = 0;
+		virtual void DeleteResource(Queue* queue, Resource* resource) = 0; // must delete resource on a queue
 		virtual void UploadResource(Queue* queue, Resource* resource, Resource::Description* description) = 0;
+		virtual void AcquireResource(Queue* queue, Resource* resource) = 0;
+		virtual void ReleaseResource(Queue* queue, Resource* resource) = 0;
 		virtual void RequestDownloadResource(Queue* queue, Resource* resource, Resource::Description* description) = 0;
 		virtual void CompleteDownloadResource(Queue* queue, Resource* resource) = 0;
 		virtual void ExecuteResource(Queue* queue, Resource* resource) = 0;
 		virtual void SwapResource(Queue* queue, Resource* lhs, Resource* rhs) = 0;
-		virtual void DeleteResource(Queue* queue, Resource* resource) = 0;
 	};
 }
 

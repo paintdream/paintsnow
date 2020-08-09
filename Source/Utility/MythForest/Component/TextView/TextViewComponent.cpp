@@ -136,8 +136,8 @@ void TextViewComponent::Initialize(Engine& engine, Entity* entity) {
 	IRender& render = engine.interfaces.render;
 	IRender::Queue* queue = engine.GetWarpResourceQueue();
 
-	unitCoordBuffer = render.CreateResource(queue, IRender::Resource::RESOURCE_BUFFER);
-	indexBuffer = render.CreateResource(queue, IRender::Resource::RESOURCE_BUFFER);
+	unitCoordBuffer = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_BUFFER);
+	indexBuffer = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_BUFFER);
 }
 
 void TextViewComponent::Uninitialize(Engine& engine, Entity* entity) {

@@ -38,12 +38,13 @@ using namespace NsBridgeSunset;
 String SnowyStream::reflectedExtension = "*.rds";
 
 SnowyStream::SnowyStream(Interfaces& inters, BridgeSunset& bs, const TWrapper<IArchive*, IStreamBase&, size_t>& psubArchiveCreator, const TWrapper<void, const String&>& err) : interfaces(inters), bridgeSunset(bs), errorHandler(err), subArchiveCreator(psubArchiveCreator), resourceQueue(nullptr) {
+	resourceCritical.store(0, std::memory_order_release);
 }
 
 void SnowyStream::Initialize() {
 	assert(resourceManagers.empty());
 	renderDevice = interfaces.render.CreateDevice("");
-	resourceQueue = interfaces.render.CreateQueue(renderDevice, true);
+	resourceQueue = interfaces.render.CreateQueue(renderDevice);
 	RegisterReflectedSerializers();
 	RegisterBuiltinPasses();
 
@@ -457,22 +458,22 @@ private:
 
 		if (callbackStep) {
 			NsBridgeSunset::BridgeSunset& bridgeSunset = *reinterpret_cast<NsBridgeSunset::BridgeSunset*>(context);
-			IScript::Request& request = *bridgeSunset.AllocateRequest();
+			IScript::Request& request = *bridgeSunset.AcquireRequest();
 			request.DoLock();
 			request.Push();
 			request.Call(sync, callbackStep, pathList[index], resourceList[index]);
 			request.Pop();
 			request.UnLock();
-			bridgeSunset.FreeRequest(&request);
+			bridgeSunset.ReleaseRequest(&request);
 		}
 
 		// is abount to finish
 		if (GetExtReferCount() == 0) {
 			assert(context != nullptr);
 			NsBridgeSunset::BridgeSunset& bridgeSunset = *reinterpret_cast<NsBridgeSunset::BridgeSunset*>(context);
-			IScript::Request& request = *bridgeSunset.AllocateRequest();
+			IScript::Request& request = *bridgeSunset.AcquireRequest();
 			Finalize(request);
-			bridgeSunset.FreeRequest(&request);
+			bridgeSunset.ReleaseRequest(&request);
 		}
 
 		ReleaseObject();
@@ -596,14 +597,14 @@ struct CompressTask : public TaskOnce {
 		bool success = resource->Compress(compressType);
 		if (callback) {
 			NsBridgeSunset::BridgeSunset& bridgeSunset = *reinterpret_cast<NsBridgeSunset::BridgeSunset*>(context);
-			IScript::Request& request = *bridgeSunset.AllocateRequest();
+			IScript::Request& request = *bridgeSunset.AcquireRequest();
 			request.DoLock();
 			request.Push();
 			request.Call(sync, callback, success);
 			request.Pop();
 			request.Dereference(callback);
 			request.UnLock();
-			bridgeSunset.FreeRequest(&request);
+			bridgeSunset.ReleaseRequest(&request);
 		} else {
 			Finalize(context);
 		}
@@ -620,11 +621,11 @@ struct CompressTask : public TaskOnce {
 	void Finalize(void* context) {
 		if (callback) {
 			NsBridgeSunset::BridgeSunset& bridgeSunset = *reinterpret_cast<NsBridgeSunset::BridgeSunset*>(context);
-			IScript::Request& request = *bridgeSunset.AllocateRequest();
+			IScript::Request& request = *bridgeSunset.AcquireRequest();
 			request.DoLock();
 			request.Dereference(callback);
 			request.UnLock();
-			bridgeSunset.FreeRequest(&request);
+			bridgeSunset.ReleaseRequest(&request);
 		}
 	}
 
@@ -713,7 +714,8 @@ void SnowyStream::RegisterBuiltinPasses() {
 	RegisterPass(*resourceManager(), UniqueType<WaterPass>());*/
 }
 
-IRender::Queue* SnowyStream::GetResourceQueue() const {
+IRender::Queue* SnowyStream::GetResourceQueue() {
+	SpinLock(resourceCritical);
 	return resourceQueue;
 }
 

@@ -278,7 +278,7 @@ void LightComponent::ShadowLayer::CompleteCollect(Engine& engine, TaskData& task
 	IRender::Queue* queue = task.renderQueue;
 	IRender& render = engine.interfaces.render;
 
-	IRender::Resource* buffer = render.CreateResource(queue, IRender::Resource::RESOURCE_BUFFER);
+	IRender::Resource* buffer = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_BUFFER);
 	Bytes bufferData;
 	std::vector<IRender::Resource*> drawCallResources;
 
@@ -308,7 +308,7 @@ void LightComponent::ShadowLayer::CompleteCollect(Engine& engine, TaskData& task
 			group.drawCallDescription.instanceCounts.x() = group.instanceCount;
 			assert(PassBase::ValidateDrawCall(group.drawCallDescription));
 
-			IRender::Resource* drawCall = render.CreateResource(queue, IRender::Resource::RESOURCE_DRAWCALL);
+			IRender::Resource* drawCall = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_DRAWCALL);
 			IRender::Resource::DrawCallDescription dc = group.drawCallDescription; // make copy
 			render.UploadResource(queue, drawCall, &dc);
 			drawCallResources.emplace_back(drawCall);
@@ -433,7 +433,7 @@ ShadowLayerConfig::TaskData::TaskData(Engine& engine, uint32_t warpCount, const 
 	cls.clearStencilBit = IRender::Resource::ClearDescription::DISCARD_LOAD | IRender::Resource::ClearDescription::DISCARD_STORE;
 	cls.clearDepthBit = IRender::Resource::ClearDescription::CLEAR;
 
-	clearResource = render.CreateResource(renderQueue, IRender::Resource::RESOURCE_CLEAR);
+	clearResource = render.CreateResource(device, IRender::Resource::RESOURCE_CLEAR);
 	render.UploadResource(renderQueue, clearResource, &cls);
 
 	IRender::Resource::RenderStateDescription rs;
@@ -449,10 +449,10 @@ ShadowLayerConfig::TaskData::TaskData(Engine& engine, uint32_t warpCount, const 
 	rs.stencilWrite = 0;
 	rs.stencilValue = 0;
 	rs.stencilMask = 0;
-	stateResource = render.CreateResource(renderQueue, IRender::Resource::RESOURCE_RENDERSTATE);
+	stateResource = render.CreateResource(device, IRender::Resource::RESOURCE_RENDERSTATE);
 	render.UploadResource(renderQueue, stateResource, &rs);
 
-	renderTargetResource = render.CreateResource(renderQueue, IRender::Resource::RESOURCE_RENDERTARGET);
+	renderTargetResource = render.CreateResource(device, IRender::Resource::RESOURCE_RENDERTARGET);
 }
 
 void ShadowLayerConfig::TaskData::Destroy(IRender& render) {

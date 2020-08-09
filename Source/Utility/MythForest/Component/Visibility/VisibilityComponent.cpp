@@ -64,7 +64,7 @@ void VisibilityComponent::Initialize(Engine& engine, Entity* entity) {
 	cls.clearDepthBit = IRender::Resource::ClearDescription::CLEAR;
 	cls.clearStencilBit = IRender::Resource::ClearDescription::DISCARD_LOAD | IRender::Resource::ClearDescription::DISCARD_STORE;
 
-	clearResource = render.CreateResource(renderQueue, IRender::Resource::RESOURCE_CLEAR);
+	clearResource = render.CreateResource(device, IRender::Resource::RESOURCE_CLEAR);
 	render.UploadResource(renderQueue, clearResource, &cls);
 
 	IRender::Resource::RenderStateDescription rs;
@@ -79,7 +79,7 @@ void VisibilityComponent::Initialize(Engine& engine, Entity* entity) {
 	rs.stencilWrite = 0;
 	rs.stencilValue = 0;
 	rs.stencilMask = 0;
-	stateResource = render.CreateResource(renderQueue, IRender::Resource::RESOURCE_RENDERSTATE);
+	stateResource = render.CreateResource(device, IRender::Resource::RESOURCE_RENDERSTATE);
 	render.UploadResource(renderQueue, stateResource, &rs);
 
 	UShort3 dim(resolution.x(), resolution.y(), 0);
@@ -87,7 +87,7 @@ void VisibilityComponent::Initialize(Engine& engine, Entity* entity) {
 	depthStencilDescription.dimension = dim;
 	depthStencilDescription.state.format = IRender::Resource::TextureDescription::FLOAT;
 	depthStencilDescription.state.layout = IRender::Resource::TextureDescription::DEPTH_STENCIL;
-	depthStencilResource = render.CreateResource(renderQueue, IRender::Resource::RESOURCE_TEXTURE);
+	depthStencilResource = render.CreateResource(device, IRender::Resource::RESOURCE_TEXTURE);
 	render.UploadResource(renderQueue, depthStencilResource, &depthStencilDescription);
 
 	tasks.resize(taskCount);
@@ -109,7 +109,7 @@ void VisibilityComponent::Initialize(Engine& engine, Entity* entity) {
 		IRender::Resource::RenderTargetDescription::Storage& s = desc.colorBufferStorages[0];
 		s.resource = texture->GetTexture();
 		desc.depthStencilStorage.resource = depthStencilResource;
-		task.renderTarget = render.CreateResource(renderQueue, IRender::Resource::RESOURCE_RENDERTARGET);
+		task.renderTarget = render.CreateResource(device, IRender::Resource::RESOURCE_RENDERTARGET);
 		render.UploadResource(renderQueue, task.renderTarget, &desc);
 	}
 
@@ -301,7 +301,7 @@ void VisibilityComponent::TickRender(Engine& engine) {
 			finalStatus.store(TaskData::STATUS_START, std::memory_order_release);
 		} else if (task.status == TaskData::STATUS_ASSEMBLED) {
 			render.RequestDownloadResource(task.renderQueue, texture->GetTexture(), &texture->description);
-			render.YieldQueue(task.renderQueue);
+			render.FlushQueue(task.renderQueue);
 			bakeQueues.emplace_back(task.renderQueue);
 			finalStatus.store(TaskData::STATUS_BAKING, std::memory_order_release);
 		} else if (task.status == TaskData::STATUS_BAKING) {
@@ -494,7 +494,7 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 
 				task.dataUpdaters.clear();
 
-				IRender::Resource* buffer = render.CreateResource(queue, IRender::Resource::RESOURCE_BUFFER);
+				IRender::Resource* buffer = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_BUFFER);
 				Bytes bufferData;
 				std::vector<IRender::Resource*> drawCallResources;
 
@@ -524,7 +524,7 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 						group.drawCallDescription.instanceCounts.x() = group.instanceCount;
 						PassBase::ValidateDrawCall(group.drawCallDescription);
 
-						IRender::Resource* drawCall = render.CreateResource(queue, IRender::Resource::RESOURCE_DRAWCALL);
+						IRender::Resource* drawCall = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_DRAWCALL);
 						IRender::Resource::DrawCallDescription dc = group.drawCallDescription; // make copy
 						render.UploadResource(queue, drawCall, &dc);
 						drawCallResources.emplace_back(drawCall);

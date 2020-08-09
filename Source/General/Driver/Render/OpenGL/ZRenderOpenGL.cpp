@@ -227,7 +227,7 @@ struct QueueImplOpenGL : public IRender::Queue {
 #endif
 	};
 
-	void RepeatToYield() {
+	void Repeat() {
 		Scanner scanner(*this);
 		queuedCommands.Iterate(scanner);
 	}
@@ -252,7 +252,7 @@ struct QueueImplOpenGL : public IRender::Queue {
 		}
 	}
 
-	void ConsumeYield() {
+	void Consume() {
 		while (!queuedCommands.Empty()) {
 			ResourceCommandImplOpenGL command = queuedCommands.Top();
 			queuedCommands.Pop();
@@ -268,7 +268,7 @@ struct QueueImplOpenGL : public IRender::Queue {
 		assert(false); // No yield detected
 	}
 
-	void ExecuteToYield() {
+	void Execute() {
 		while (!queuedCommands.Empty()) {
 			ResourceCommandImplOpenGL command = queuedCommands.Top();
 			if (command.GetOperation() != ResourceCommandImplOpenGL::OP_NOP) {
@@ -1912,9 +1912,9 @@ void ZRenderOpenGL::DeleteDevice(IRender::Device* device) {
 }
 
 // Queue
-IRender::Queue* ZRenderOpenGL::CreateQueue(Device* device, bool shared) {
+IRender::Queue* ZRenderOpenGL::CreateQueue(Device* device, uint32_t flag) {
 	assert(device != nullptr);
-	return new QueueImplOpenGL(static_cast<DeviceImplOpenGL*>(device), shared);
+	return new QueueImplOpenGL(static_cast<DeviceImplOpenGL*>(device), flag & IRender::QUEUE_MULTITHREAD);
 }
 
 IRender::Device* ZRenderOpenGL::GetQueueDevice(Queue* queue) {
@@ -1929,14 +1929,14 @@ void ZRenderOpenGL::PresentQueues(Queue** queues, uint32_t count, PresentOption 
 	case PresentOption::PRESENT_EXECUTE_ALL:
 		op = &QueueImplOpenGL::ExecuteAll;
 		break;
-	case PresentOption::PRESENT_REPEAT_TO_YIELD:
-		op = &QueueImplOpenGL::RepeatToYield;
+	case PresentOption::PRESENT_REPEAT:
+		op = &QueueImplOpenGL::Repeat;
 		break;
-	case PresentOption::PRESENT_EXECUTE_TO_YIELD:
-		op = &QueueImplOpenGL::ExecuteToYield;
+	case PresentOption::PRESENT_EXECUTE:
+		op = &QueueImplOpenGL::Execute;
 		break;
-	case PresentOption::PRESENT_CONSUME_YIELD:
-		op = &QueueImplOpenGL::ConsumeYield;
+	case PresentOption::PRESENT_CONSUME:
+		op = &QueueImplOpenGL::Consume;
 		break;
 	case PresentOption::PRESENT_CLEAR_ALL:
 		op = &QueueImplOpenGL::ClearAll;
@@ -1971,7 +1971,7 @@ void ZRenderOpenGL::MergeQueue(Queue* target, Queue* source) {
 	t->Merge(s);
 }
 
-void ZRenderOpenGL::YieldQueue(Queue* queue) {
+void ZRenderOpenGL::FlushQueue(Queue* queue) {
 	QueueImplOpenGL* q = static_cast<QueueImplOpenGL*>(queue);
 	assert(queue != nullptr);
 	q->QueueCommand(ResourceCommandImplOpenGL(ResourceCommandImplOpenGL::OP_EXECUTE, nullptr));
@@ -1984,7 +1984,7 @@ void ZRenderOpenGL::DeleteQueue(Queue* queue) {
 }
 
 // Resource
-IRender::Resource* ZRenderOpenGL::CreateResource(Queue* queue, Resource::Type resourceType) {
+IRender::Resource* ZRenderOpenGL::CreateResource(Device* device, Resource::Type resourceType) {
 	switch (resourceType) {
 	case Resource::RESOURCE_TEXTURE:
 		return new ResourceImplOpenGL<Resource::TextureDescription>();
@@ -2042,6 +2042,14 @@ void ZRenderOpenGL::ExecuteResource(Queue* queue, Resource* resource) {
 	q->QueueCommand(ResourceCommandImplOpenGL(ResourceCommandImplOpenGL::OP_EXECUTE, resource));
 }
 
+void ZRenderOpenGL::AcquireResource(Queue* queue, Resource* resource) {
+	// OpenGL does not support multi-thread committing and reordering
+}
+
+void ZRenderOpenGL::ReleaseResource(Queue* queue, Resource* resource) {
+	// OpenGL does not support multi-thread committing and reordering
+}
+
 void ZRenderOpenGL::SwapResource(Queue* queue, Resource* lhs, Resource* rhs) {
 	assert(queue != nullptr);
 	assert(lhs != nullptr);
@@ -2052,7 +2060,6 @@ void ZRenderOpenGL::SwapResource(Queue* queue, Resource* lhs, Resource* rhs) {
 }
 
 void ZRenderOpenGL::DeleteResource(Queue* queue, Resource* resource) {
-	assert(queue != nullptr);
 	assert(resource != nullptr);
 	QueueImplOpenGL* q = static_cast<QueueImplOpenGL*>(queue);
 	q->QueueCommand(ResourceCommandImplOpenGL(ResourceCommandImplOpenGL::OP_DELETE, resource));

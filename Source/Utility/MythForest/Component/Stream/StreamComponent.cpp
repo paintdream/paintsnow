@@ -22,7 +22,7 @@ void StreamComponent::Unload(Engine& engine, const UShort3& coord, TShared<Share
 
 void StreamComponent::UnloadInternal(Engine& engine, Grid& grid, TShared<SharedTiny> context) {
 	if (unloadHandler.script) {
-		IScript::Request& request = *engine.bridgeSunset.AllocateRequest();
+		IScript::Request& request = *engine.bridgeSunset.AcquireRequest();
 		IScript::Delegate<SharedTiny> w;
 
 		request.DoLock();
@@ -33,7 +33,7 @@ void StreamComponent::UnloadInternal(Engine& engine, Grid& grid, TShared<SharedT
 		request.UnLock();
 
 		grid.object = w.Get();
-		engine.bridgeSunset.FreeRequest(&request);
+		engine.bridgeSunset.ReleaseRequest(&request);
 	} else if (unloadHandler.native) {
 		grid.object = unloadHandler.native(engine, grid.coord, grid.object, context);
 	}
@@ -56,7 +56,7 @@ SharedTiny* StreamComponent::Load(Engine& engine, const UShort3& coord, TShared<
 		recycleStart = (recycleStart + 1) % safe_cast<uint16_t>(recycleQueue.size());
 
 		if (loadHandler.script) {
-			IScript::Request& request = *engine.bridgeSunset.AllocateRequest();
+			IScript::Request& request = *engine.bridgeSunset.AcquireRequest();
 			IScript::Delegate<SharedTiny> w;
 
 			request.DoLock();
@@ -68,7 +68,7 @@ SharedTiny* StreamComponent::Load(Engine& engine, const UShort3& coord, TShared<
 
 			assert(w);
 			grid.object = w.Get();
-			engine.bridgeSunset.FreeRequest(&request);
+			engine.bridgeSunset.ReleaseRequest(&request);
 		} else {
 			assert(loadHandler.native);
 			grid.object = loadHandler.native(engine, coord, grid.object, context);

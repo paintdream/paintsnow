@@ -29,16 +29,18 @@ namespace PaintsNow {
 		virtual bool SupportParallelPresent(Device* device) override;
 
 		// Queue
-		virtual Queue* CreateQueue(Device* device, bool shared) override;
+		virtual Queue* CreateQueue(Device* device, uint32_t flag) override;
 		virtual Device* GetQueueDevice(Queue* queue) override;
 		virtual void MergeQueue(Queue* target, Queue* source) override;
 		virtual void DeleteQueue(Queue* queue) override;
-		virtual void YieldQueue(Queue* queue) override;
+		virtual void FlushQueue(Queue* queue) override;
 		virtual bool IsQueueEmpty(Queue* queue) override;
 
 		// Resource
-		virtual Resource* CreateResource(Queue* queue, Resource::Type resourceType) override;
+		virtual Resource* CreateResource(Device* device, Resource::Type resourceType) override;
 		virtual void UploadResource(Queue* queue, Resource* resource, Resource::Description* description) override;
+		virtual void AcquireResource(Queue* queue, Resource* resource) override;
+		virtual void ReleaseResource(Queue* queue, Resource* resource) override;
 		virtual void RequestDownloadResource(Queue* queue, Resource* resource, Resource::Description* description) override;
 		virtual void CompleteDownloadResource(Queue* queue, Resource* resource) override;
 		virtual void ExecuteResource(Queue* queue, Resource* resource) override;

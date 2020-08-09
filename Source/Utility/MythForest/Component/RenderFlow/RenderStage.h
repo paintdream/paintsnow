@@ -114,7 +114,7 @@ namespace PaintsNow {
 						(1 << IRender::Resource::BufferDescription::VERTEX) | (1 << IRender::Resource::BufferDescription::UNIFORM) | (1 << IRender::Resource::BufferDescription::INSTANCED));
 					drawCallDescription.indexBufferResource.buffer = quadMeshResource->bufferCollection.indexBuffer;
 					drawCallDescription.shaderResource = BaseClass::GetShaderResource();
-					BaseClass::drawCallResource = render.CreateResource(queue, IRender::Resource::RESOURCE_DRAWCALL);
+					BaseClass::drawCallResource = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_DRAWCALL);
 				} else {
 					// recapture all data (uniforms by default)
 					size_t count = BaseClass::newResources.size();

@@ -112,7 +112,7 @@ Short2Pair FontResource::Slice::AllocRect(IRender& render, IRender::Queue* queue
 	assert(size.y() <= dim);
 
 	if (lastRect.second.y() + size.y() > dim || cacheTextures.empty()) {
-		IRender::Resource* texture = render.CreateResource(queue, IRender::Resource::RESOURCE_TEXTURE);
+		IRender::Resource* texture = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_TEXTURE);
 		cacheTextures.push_back(texture);
 		lastRect.first.y() = 0;
 		lastRect.second.y() = size.y();

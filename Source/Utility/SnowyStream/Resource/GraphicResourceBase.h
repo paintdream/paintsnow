@@ -66,7 +66,7 @@ namespace PaintsNow {
 					memcpy(description.data.GetData(), &data[0], data.size() * sizeof(T));
 
 					if (buffer == nullptr) {
-						buffer = render.CreateResource(queue, IRender::Resource::RESOURCE_BUFFER);
+						buffer = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_BUFFER);
 					}
 
 					render.UploadResource(queue, buffer, &description);

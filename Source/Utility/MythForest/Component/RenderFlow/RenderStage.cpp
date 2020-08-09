@@ -42,11 +42,11 @@ void RenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	assert(renderTarget == nullptr);
 	assert(!renderTargetDescription.colorBufferStorages.empty());
 
-	renderState = render.CreateResource(queue, IRender::Resource::RESOURCE_RENDERSTATE);
+	renderState = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_RENDERSTATE);
 	render.UploadResource(queue, renderState, &renderStateDescription);
-	clear = render.CreateResource(queue, IRender::Resource::RESOURCE_CLEAR);
+	clear = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_CLEAR);
 	render.UploadResource(queue, clear, &clearDescription);
-	renderTarget = render.CreateResource(queue, IRender::Resource::RESOURCE_RENDERTARGET);
+	renderTarget = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_RENDERTARGET);
 }
 
 

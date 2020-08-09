@@ -13,7 +13,7 @@ FencedRenderQueue::~FencedRenderQueue() {
 void FencedRenderQueue::Initialize(IRender& render, IRender::Device* device) {
 	assert(queue == nullptr);
 	queue = render.CreateQueue(device);
-	render.YieldQueue(queue);
+	render.FlushQueue(queue);
 }
 
 void FencedRenderQueue::Uninitialize(IRender& render) {
@@ -38,7 +38,7 @@ void FencedRenderQueue::InvokeRenderQueuesParallel(IRender& render, std::vector<
 
 		if (renderQueues.empty()) break;
 
-		render.PresentQueues(&renderQueues[0], (uint32_t)renderQueues.size(), IRender::PRESENT_CONSUME_YIELD);
+		render.PresentQueues(&renderQueues[0], (uint32_t)renderQueues.size(), IRender::PRESENT_CONSUME);
 		renderQueues.clear();
 	}
 
@@ -47,21 +47,21 @@ void FencedRenderQueue::InvokeRenderQueuesParallel(IRender& render, std::vector<
 		renderQueues.emplace_back(q->GetQueue());
 	}
 
-	render.PresentQueues(&renderQueues[0], (uint32_t)renderQueues.size(), IRender::PRESENT_REPEAT_TO_YIELD);
+	render.PresentQueues(&renderQueues[0], (uint32_t)renderQueues.size(), IRender::PRESENT_REPEAT);
 }
 
 void FencedRenderQueue::InvokeRender(IRender& render) {
 	assert(queue != nullptr);
 	while (yieldCount.load(std::memory_order_acquire) != 0) {
-		render.PresentQueues(&queue, 1, IRender::PRESENT_CONSUME_YIELD);
+		render.PresentQueues(&queue, 1, IRender::PRESENT_CONSUME);
 		yieldCount.fetch_sub(1, std::memory_order_relaxed);
 	}
 
-	render.PresentQueues(&queue, 1, IRender::PRESENT_EXECUTE_TO_YIELD);
+	render.PresentQueues(&queue, 1, IRender::PRESENT_EXECUTE);
 }
 
 void FencedRenderQueue::UpdateFrame(IRender& render) {
-	render.YieldQueue(queue);
+	render.FlushQueue(queue);
 	yieldCount.fetch_add(1, std::memory_order_acquire);
 }
 

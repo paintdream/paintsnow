@@ -37,7 +37,6 @@ public:
 	}
 };
 
-
 class ZRenderDummy : public IRender {
 public:
 	virtual Device* CreateDevice(const String& description) override { return nullptr; }
@@ -47,7 +46,7 @@ public:
 
 	// Queue
 	virtual Device* GetQueueDevice(Queue* queue) override { return nullptr; }
-	virtual Queue* CreateQueue(Device* device, bool shared) override {
+	virtual Queue* CreateQueue(Device* device, uint32_t flag) override {
 		static Queue q;
 		return &q; // Make asserts happy
 	}
@@ -55,17 +54,19 @@ public:
 	virtual bool SupportParallelPresent(Device* device) override { return false; }
 	virtual void PresentQueues(Queue** queue, uint32_t count, PresentOption option) override {}
 	virtual void DeleteQueue(Queue* queue) override {}
-	virtual void YieldQueue(Queue* queue) override {}
+	virtual void FlushQueue(Queue* queue) override {}
 	virtual void MergeQueue(Queue* target, Queue* src) override {}
 	virtual bool IsQueueEmpty(Queue* queue) override {
 		return true;
 	}
 
 	// Resource
-	virtual Resource* CreateResource(Queue* queue, Resource::Type resourceType) override {
+	virtual Resource* CreateResource(Device* device, Resource::Type resourceType) override {
 		static Resource r;
 		return &r;
 	}
+	virtual void AcquireResource(Queue* queue, Resource* resource) override {}
+	virtual void ReleaseResource(Queue* queue, Resource* resource) override {}
 	virtual void UploadResource(Queue* queue, Resource* resource, Resource::Description* description) override {}
 	virtual void RequestDownloadResource(Queue* queue, Resource* resource, Resource::Description* description) override {}
 	virtual void CompleteDownloadResource(Queue* queue, Resource* resource) override {}

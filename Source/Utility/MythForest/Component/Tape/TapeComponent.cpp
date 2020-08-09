@@ -61,11 +61,11 @@ bool TapeComponent::Seek(int64_t seq) {
 void TapeComponent::OnAsyncFlush(Engine& engine, IScript::Request::Ref callback) {
 	bool result = FlushInternal();
 
-	IScript::Request& request = *engine.bridgeSunset.AllocateRequest();
+	IScript::Request& request = *engine.bridgeSunset.AcquireRequest();
 	request.DoLock();
 	request.Call(sync, callback, result);
 	request.UnLock();
-	engine.bridgeSunset.FreeRequest(&request);
+	engine.bridgeSunset.ReleaseRequest(&request);
 
 	Flag().fetch_and(~TINY_UPDATING);
 	ReleaseObject();

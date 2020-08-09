@@ -24,7 +24,7 @@ IRender::Device* ZRenderVulkan::CreateDevice(const String& description) {
 void ZRenderVulkan::SetDeviceResolution(IRender::Device* device, const Int2& resolution) {}
 Int2 ZRenderVulkan::GetDeviceResolution(IRender::Device* device) { return Int2(0, 0); }
 void ZRenderVulkan::DeleteDevice(IRender::Device* device) {}
-IRender::Queue* ZRenderVulkan::CreateQueue(Device* device, bool shared) { return nullptr; }
+IRender::Queue* ZRenderVulkan::CreateQueue(Device* device, uint32_t flag) { return nullptr; }
 IRender::Device* ZRenderVulkan::GetQueueDevice(Queue* queue) { return nullptr; }
 void ZRenderVulkan::PresentQueues(Queue** queues, uint32_t count, PresentOption option) {}
 
@@ -34,12 +34,14 @@ bool ZRenderVulkan::SupportParallelPresent(Device* device) {
 
 bool ZRenderVulkan::IsQueueEmpty(Queue* queue) { return true; }
 void ZRenderVulkan::MergeQueue(Queue* target, Queue* source) {}
-void ZRenderVulkan::YieldQueue(Queue* queue) {}
+void ZRenderVulkan::FlushQueue(Queue* queue) {}
 void ZRenderVulkan::DeleteQueue(Queue* queue) {}
 
 // Resource
-IRender::Resource* ZRenderVulkan::CreateResource(Queue* queue, Resource::Type resourceType) { return nullptr; }
+IRender::Resource* ZRenderVulkan::CreateResource(Device* device, Resource::Type resourceType) { return nullptr; }
 void ZRenderVulkan::UploadResource(Queue* queue, Resource* resource, Resource::Description* description) {}
+void ZRenderVulkan::AcquireResource(Queue* queue, Resource* resource) {}
+void ZRenderVulkan::ReleaseResource(Queue* queue, Resource* resource) {}
 void ZRenderVulkan::RequestDownloadResource(Queue* queue, Resource* resource, Resource::Description* description) {}
 void ZRenderVulkan::CompleteDownloadResource(Queue* queue, Resource* resource) {}
 void ZRenderVulkan::ExecuteResource(Queue* queue, Resource* resource) {}

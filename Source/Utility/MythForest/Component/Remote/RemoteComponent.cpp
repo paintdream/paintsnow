@@ -217,7 +217,7 @@ static void CopyTable(uint32_t flag, IScript::Request& request, IScript::Request
 
 void RemoteComponent::Call(IScript::Request& fromRequest, TShared<RemoteRoutine> remoteRoutine, IScript::Request::Arguments& args) {
 	if (remoteRoutine->pool == this && remoteRoutine->ref) {
-		IScript::Request& toRequest = *AllocateRequest();
+		IScript::Request& toRequest = *AcquireRequest();
 		toRequest.DoLock();
 		fromRequest.DoLock();
 
@@ -239,7 +239,7 @@ void RemoteComponent::Call(IScript::Request& fromRequest, TShared<RemoteRoutine>
 		fromRequest.UnLock();
 		toRequest.UnLock();
 
-		FreeRequest(&toRequest);
+		ReleaseRequest(&toRequest);
 	} else {
 		fromRequest.Error("Invalid ref.");
 	}
@@ -248,7 +248,7 @@ void RemoteComponent::Call(IScript::Request& fromRequest, TShared<RemoteRoutine>
 void RemoteComponent::Complete(IScript::RequestPool* returnPool, IScript::Request& toRequest, IScript::Request::Ref callback, TShared<RemoteRoutine> remoteRoutine) {
 	toRequest.Call(sync, remoteRoutine->ref);
 
-	IScript::Request& returnRequest = *returnPool->AllocateRequest();
+	IScript::Request& returnRequest = *returnPool->AcquireRequest();
 	returnRequest.DoLock();
 	returnRequest.Push();
 
@@ -265,13 +265,13 @@ void RemoteComponent::Complete(IScript::RequestPool* returnPool, IScript::Reques
 	returnRequest.Pop();
 	returnRequest.UnLock();
 
-	FreeRequest(&toRequest);
-	returnPool->FreeRequest(&returnRequest);
+	ReleaseRequest(&toRequest);
+	returnPool->ReleaseRequest(&returnRequest);
 }
 
 void RemoteComponent::CallAsync(IScript::Request& fromRequest, IScript::Request::Ref callback, TShared<RemoteRoutine> remoteRoutine, IScript::Request::Arguments& args) {
 	if (remoteRoutine->pool == this && remoteRoutine->ref) {
-		IScript::Request& toRequest = *AllocateRequest();
+		IScript::Request& toRequest = *AcquireRequest();
 		fromRequest.DoLock();
 		toRequest.DoLock();
 
