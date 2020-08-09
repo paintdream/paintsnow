@@ -49,7 +49,6 @@ void ZRenderVulkan::SwapResource(Queue* queue, Resource* lhs, Resource* rhs) {}
 void ZRenderVulkan::DeleteResource(Queue* queue, Resource* resource) {}
 
 ZRenderVulkan::ZRenderVulkan() {
-/*
 	VkApplicationInfo appInfo = {};
 	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 	appInfo.pNext = nullptr;
@@ -86,6 +85,7 @@ ZRenderVulkan::ZRenderVulkan() {
 	vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
 
 	// TODO: select first device now
+	/*
 	uint32_t queueFamilyCount = 0;
 	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
 
@@ -94,5 +94,5 @@ ZRenderVulkan::ZRenderVulkan() {
 }
 
 ZRenderVulkan::~ZRenderVulkan() {
-	// vkDestroyInstance(instance, nullptr);
+	vkDestroyInstance(instance, nullptr);
 }

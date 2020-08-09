@@ -29,6 +29,10 @@
 #endif
 #endif
 
+#if (!defined(CMAKE_PAINTSNOW) || ADD_RENDER_VULKAN) && (!defined(_MSC_VER) || _MSC_VER > 1200)
+#pragma comment(lib, "vulkan-1.lib")
+#endif
+
 #if !defined(CMAKE_PAINTSNOW) || ADD_AUDIO_OPENAL
 #if defined(_DEBUG) && _MSC_VER > 1200
 #pragma comment(lib, "OpenAL32D.lib")
