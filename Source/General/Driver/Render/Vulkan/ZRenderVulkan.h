@@ -13,6 +13,8 @@
 #include "../../../../Core/Template/TQueue.h"
 
 typedef struct VkInstance_T* VkInstance;
+typedef struct VkPhysicalDevice_T* VkPhysicalDevice;
+struct VkAllocationCallbacks;
 
 namespace PaintsNow {
 	class ZRenderVulkan final : public IRender {
@@ -20,6 +22,7 @@ namespace PaintsNow {
 		ZRenderVulkan();
 		virtual ~ZRenderVulkan();
 
+		virtual std::vector<String> EnumerateDevices() override;
 		virtual Device* CreateDevice(const String& description) override;
 		virtual Int2 GetDeviceResolution(Device* device) override;
 		virtual void SetDeviceResolution(Device* device, const Int2& resolution) override;
@@ -49,6 +52,11 @@ namespace PaintsNow {
 
 	protected:
 		VkInstance instance;
+		VkAllocationCallbacks* allocator;
+		std::vector<VkPhysicalDevice> gpus;
+		#ifdef _DEBUG
+		size_t debugCallback;
+		#endif
 	};
 }
 

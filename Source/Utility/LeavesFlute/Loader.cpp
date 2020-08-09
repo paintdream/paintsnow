@@ -39,6 +39,7 @@ public:
 
 class ZRenderDummy : public IRender {
 public:
+	virtual std::vector<String> EnumerateDevices() { return std::vector<String>(); }
 	virtual Device* CreateDevice(const String& description) override { return nullptr; }
 	virtual Int2 GetDeviceResolution(Device* device) override { return Int2(640, 480); }
 	virtual void SetDeviceResolution(Device* device, const Int2& resolution) override {}

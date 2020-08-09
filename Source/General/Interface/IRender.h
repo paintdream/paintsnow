@@ -228,6 +228,7 @@ namespace PaintsNow {
 		virtual void PresentQueues(Queue** queues, uint32_t count, PresentOption option) = 0;
 
 		// Device
+		virtual std::vector<String> EnumerateDevices() = 0;
 		virtual Device* CreateDevice(const String& description) = 0;
 		virtual bool SupportParallelPresent(Device* device) = 0;
 		virtual Int2 GetDeviceResolution(Device* device) = 0;

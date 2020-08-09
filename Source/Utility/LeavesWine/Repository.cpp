@@ -78,7 +78,7 @@ void Repository::TickRender(LeavesFlute& leavesFlute) {
 		ImGui::BeginChild("Local Files:", ImVec2(ImGui::GetWindowContentRegionWidth() * 0.5f, 260));
 		RenderItem(*item, 0);
 		ImGui::EndChild();
-        ImGui::SameLine();
+		ImGui::SameLine();
 		ImGui::BeginChild("Details:", ImVec2(ImGui::GetWindowContentRegionWidth() * 0.5f, 260));
 		if (!viewResourcePath.empty()) {
 			if (!viewResource || viewResource->GetLocation() != viewResourcePath) {

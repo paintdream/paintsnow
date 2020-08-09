@@ -18,6 +18,7 @@ namespace PaintsNow {
 		ZRenderOpenGL();
 		virtual ~ZRenderOpenGL();
 
+		virtual std::vector<String> EnumerateDevices() override;
 		virtual Device* CreateDevice(const String& description) override;
 		virtual Int2 GetDeviceResolution(Device* device) override;
 		virtual void SetDeviceResolution(Device* device, const Int2& resolution) override;

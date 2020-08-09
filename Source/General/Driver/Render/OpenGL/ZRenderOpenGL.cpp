@@ -1922,6 +1922,10 @@ IRender::Device* ZRenderOpenGL::GetQueueDevice(Queue* queue) {
 	return q->device;
 }
 
+std::vector<String> ZRenderOpenGL::EnumerateDevices() {
+	return std::vector<String>();
+}
+
 void ZRenderOpenGL::PresentQueues(Queue** queues, uint32_t count, PresentOption option) {
 	GL_GUARD();
 	void (QueueImplOpenGL::*op)() = &QueueImplOpenGL::ExecuteAll;

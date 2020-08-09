@@ -21,7 +21,7 @@ int64_t ITimer::GetSystemClock() {
 	uint64_t MillSeconds = LeftPart * 1000 / TicksPerSecond.QuadPart;
 	return Seconds * 1000 + MillSeconds;
 #else
-	struct timeval    tv;
+	struct timeval	tv;
 	struct timezone tz;
 
 	gettimeofday(&tv, &tz);

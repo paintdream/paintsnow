@@ -120,6 +120,13 @@ ZFrameGLFW::ZFrameGLFW(bool vulkan, const Int2& size, IFrame::Callback* cb) : wi
 
 	window = glfwCreateWindow(size.x(), size.y(), "PaintsNow.Net", NULL, NULL);
 
+	if (isVulkan) {
+		if (!glfwVulkanSupported()) {
+			fprintf(stderr, "Vulkan not supported.");
+			exit(0);
+		}
+	}
+
 	glfwSetWindowUserPointer(window, this);
 	OnWindowSize(size);
 

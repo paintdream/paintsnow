@@ -17,13 +17,72 @@
 
 using namespace PaintsNow;
 
+struct VulkanDeviceImpl : public IRender::Device {
+	VulkanDeviceImpl(VkPhysicalDevice dev) : device(dev), resolution(0, 0) {}
+
+	VkPhysicalDevice device;
+	Int2 resolution;
+};
+
+std::vector<String> ZRenderVulkan::EnumerateDevices() {
+	std::vector<String> devices;
+
+	uint32_t gpuCount;
+	VkResult err = vkEnumeratePhysicalDevices(instance, &gpuCount, NULL);
+	if (err != VK_SUCCESS || gpuCount == 0) {
+		return devices;
+	}
+
+	std::vector<VkPhysicalDevice> gpus(gpuCount);
+	err = vkEnumeratePhysicalDevices(instance, &gpuCount, &gpus[0]);
+	devices.resize(gpuCount);
+
+	for (size_t i = 0; i < gpus.size(); i++) {
+		VkPhysicalDeviceProperties prop;
+		vkGetPhysicalDeviceProperties(gpus[i], &prop);
+		devices.emplace_back(String(prop.deviceName) + " [" + std::to_string(i) + "]");
+	}
+
+	return devices;
+}
+
 IRender::Device* ZRenderVulkan::CreateDevice(const String& description) {
+	uint32_t gpuCount;
+	VkResult err = vkEnumeratePhysicalDevices(instance, &gpuCount, NULL);
+	if (err != VK_SUCCESS || gpuCount == 0) {
+		return nullptr;
+	}
+
+	std::vector<VkPhysicalDevice> gpus(gpuCount);
+	err = vkEnumeratePhysicalDevices(instance, &gpuCount, &gpus[0]);
+
+	for (size_t i = 0; i < gpus.size(); i++) {
+		VkPhysicalDeviceProperties prop;
+		vkGetPhysicalDeviceProperties(gpus[i], &prop);
+		String name = String(prop.deviceName) + " [" + std::to_string(i) + "]";
+		if (name == description) {
+			return new VulkanDeviceImpl(gpus[i]);
+		}
+	}
+
 	return nullptr;
 }
 
-void ZRenderVulkan::SetDeviceResolution(IRender::Device* device, const Int2& resolution) {}
-Int2 ZRenderVulkan::GetDeviceResolution(IRender::Device* device) { return Int2(0, 0); }
-void ZRenderVulkan::DeleteDevice(IRender::Device* device) {}
+void ZRenderVulkan::DeleteDevice(IRender::Device* device) {
+	VulkanDeviceImpl* impl = static_cast<VulkanDeviceImpl*>(device);
+	delete impl;
+}
+
+void ZRenderVulkan::SetDeviceResolution(IRender::Device* device, const Int2& resolution) {
+	VulkanDeviceImpl* impl = static_cast<VulkanDeviceImpl*>(device);
+	impl->resolution = resolution;
+}
+
+Int2 ZRenderVulkan::GetDeviceResolution(IRender::Device* device) {
+	VulkanDeviceImpl* impl = static_cast<VulkanDeviceImpl*>(device);
+	return impl->resolution;
+}
+
 IRender::Queue* ZRenderVulkan::CreateQueue(Device* device, uint32_t flag) { return nullptr; }
 IRender::Device* ZRenderVulkan::GetQueueDevice(Queue* queue) { return nullptr; }
 void ZRenderVulkan::PresentQueues(Queue** queues, uint32_t count, PresentOption option) {}
@@ -48,7 +107,14 @@ void ZRenderVulkan::ExecuteResource(Queue* queue, Resource* resource) {}
 void ZRenderVulkan::SwapResource(Queue* queue, Resource* lhs, Resource* rhs) {}
 void ZRenderVulkan::DeleteResource(Queue* queue, Resource* resource) {}
 
-ZRenderVulkan::ZRenderVulkan() {
+#ifdef _DEBUG
+static VKAPI_ATTR VkBool32 VKAPI_CALL DebugReportCallback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType, uint64_t object, size_t location, int32_t messageCode, const char* pLayerPrefix, const char* pMessage, void* pUserData) {
+	fprintf(stderr, "Vulkan debug: %d - %s\n", objectType, pMessage);
+	return VK_FALSE;
+}
+#endif
+
+ZRenderVulkan::ZRenderVulkan() : allocator(nullptr) {
 	VkApplicationInfo appInfo = {};
 	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 	appInfo.pNext = nullptr;
@@ -58,41 +124,60 @@ ZRenderVulkan::ZRenderVulkan() {
 	appInfo.engineVersion = VK_MAKE_VERSION(0, 0, 0);
 	appInfo.apiVersion = VK_API_VERSION_1_1;
 
+	uint32_t extensionsCount = 0;
+	const char** extensions = glfwGetRequiredInstanceExtensions(&extensionsCount);
+
 	VkInstanceCreateInfo createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-	createInfo.pApplicationInfo = &appInfo;
+	createInfo.enabledExtensionCount = extensionsCount;
+	createInfo.ppEnabledExtensionNames = extensions;
 
-	uint32_t glfwExtensionCount = 0;
-	const char** glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-	createInfo.enabledExtensionCount = glfwExtensionCount;
-	createInfo.ppEnabledExtensionNames = glfwExtensions;
-	createInfo.enabledLayerCount = 0;
+#ifdef _DEBUG 
+	// Enabling multiple validation layers grouped as LunarG standard validation
+	const char* layers[] = { "VK_LAYER_LUNARG_standard_validation" };
+	createInfo.enabledLayerCount = 1;
+	createInfo.ppEnabledLayerNames = layers;
 
-	if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
-		fprintf(stderr, "Create vulkan instance failed!");
+	// Enable debug report extension (we need additional storage, so we duplicate the user array to add our new extension to it)
+	std::vector<const char*> extensions_ext(extensionsCount + 1);
+	memcpy(&extensions_ext[0], extensions, extensionsCount * sizeof(const char*));
+	extensions_ext[extensionsCount] = "VK_EXT_debug_report";
+	createInfo.enabledExtensionCount = extensionsCount + 1;
+	createInfo.ppEnabledExtensionNames = &extensions_ext[0];
+
+	// Create Vulkan Instance
+	VkResult err = vkCreateInstance(&createInfo, allocator, &instance);
+	if (err != VK_SUCCESS) {
+		fprintf(stderr, "Unable to create vulkan instance (debug).\n");
 		exit(0);
 	}
 
-	uint32_t deviceCount = 0;
-	vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+	// Get the function pointer (required for any extensions)
+	auto vkCreateDebugReportCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT");
+	assert(vkCreateDebugReportCallbackEXT != NULL);
 
-	if (deviceCount == 0) {
-		fprintf(stderr, "No supported vulkan device!");
+	// Setup the debug report callback
+	VkDebugReportCallbackCreateInfoEXT debugReport = {};
+	debugReport.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+	debugReport.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
+	debugReport.pfnCallback = DebugReportCallback;
+	debugReport.pUserData = NULL;
+	err = vkCreateDebugReportCallbackEXT(instance, &debugReport, allocator, (VkDebugReportCallbackEXT*)&debugCallback);
+#else
+	// Create Vulkan Instance without any debug feature
+	VkResult err = vkCreateInstance(&createInfo, allocator, &instance);
+	if (err != VK_SUCCESS) {
+		fprintf(stderr, "Unable to create vulkan instance (release).\n");
 		exit(0);
 	}
-
-	std::vector<VkPhysicalDevice> devices(deviceCount);
-	vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
-
-	// TODO: select first device now
-	/*
-	uint32_t queueFamilyCount = 0;
-	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
-
-	std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-	vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());*/
+#endif
 }
 
 ZRenderVulkan::~ZRenderVulkan() {
+#ifdef _DEBUG
+	PFN_vkDestroyDebugReportCallbackEXT vkDestroyDebugReportCallbackEXT = (PFN_vkDestroyDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugReportCallbackEXT");
+	vkDestroyDebugReportCallbackEXT(instance, (VkDebugReportCallbackEXT)debugCallback, allocator);
+#endif
+
 	vkDestroyInstance(instance, nullptr);
 }
