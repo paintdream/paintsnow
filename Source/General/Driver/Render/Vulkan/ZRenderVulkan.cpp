@@ -17,6 +17,8 @@
 
 using namespace PaintsNow;
 
+const int MIN_IMAGE_COUNT = 2;
+
 static void Verify(const char* message, VkResult res) {
 	if (res != VK_SUCCESS) {
 		fprintf(stderr, "Unable to %s (debug).\n", message);
@@ -25,12 +27,16 @@ static void Verify(const char* message, VkResult res) {
 }
 
 struct VulkanDeviceImpl : public IRender::Device {
-	VulkanDeviceImpl(VkDevice dev, uint32_t family, VkQueue q) : device(dev), resolution(0, 0), queueFamily(family), queue(q) {}
+	VulkanDeviceImpl(VkPhysicalDevice phy, VkDevice dev, uint32_t family, VkQueue q) : physicalDevice(phy), device(dev), resolution(0, 0), queueFamily(family), queue(q), swapChain(0) {}
 
+	VkPhysicalDevice physicalDevice;
 	VkDevice device;
 	VkQueue queue;
 	Int2 resolution;
 	uint32_t queueFamily;
+	VkSwapchainKHR swapChain;
+
+	std::vector<VkImage> backBuffers;
 };
 
 std::vector<String> ZRenderVulkan::EnumerateDevices() {
@@ -113,9 +119,13 @@ IRender::Device* ZRenderVulkan::CreateDevice(const String& description) {
 			VkBool32 res;
 			vkGetPhysicalDeviceSurfaceSupportKHR(device, family, (VkSurfaceKHR)surface, &res);
 
-			// TODO: swap chain resizing ...
+			VulkanDeviceImpl* impl = new VulkanDeviceImpl(device, logicDevice, family, queue);
 
-			return new VulkanDeviceImpl(logicDevice, family, queue);
+			int w, h;
+			glfwGetFramebufferSize(window, &w, &h);
+			SetDeviceResolution(impl, Int2(w, h));
+
+			return impl;
 		}
 	}
 
@@ -124,13 +134,59 @@ IRender::Device* ZRenderVulkan::CreateDevice(const String& description) {
 
 void ZRenderVulkan::DeleteDevice(IRender::Device* device) {
 	VulkanDeviceImpl* impl = static_cast<VulkanDeviceImpl*>(device);
+	vkDestroySwapchainKHR(impl->device, impl->swapChain, allocator);
 	vkDestroyDevice(impl->device, allocator);
 	delete impl;
 }
 
-void ZRenderVulkan::SetDeviceResolution(IRender::Device* device, const Int2& resolution) {
-	VulkanDeviceImpl* impl = static_cast<VulkanDeviceImpl*>(device);
-	impl->resolution = resolution;
+void ZRenderVulkan::SetDeviceResolution(IRender::Device* dev, const Int2& resolution) {
+	VulkanDeviceImpl* impl = static_cast<VulkanDeviceImpl*>(dev);
+	VkSwapchainKHR oldSwapChain = impl->swapChain;
+	impl->swapChain = 0;
+
+	// reset device swap chain
+	VkDevice device = impl->device;
+	Verify("wait idle", vkDeviceWaitIdle(device));
+
+	VkSwapchainCreateInfoKHR info = {};
+	info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+	info.surface = surface;
+	info.minImageCount = MIN_IMAGE_COUNT;
+	info.imageFormat = VK_FORMAT_B8G8R8A8_UNORM;
+	info.imageColorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+	info.imageArrayLayers = 1;
+	info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+	info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;           // Assume that graphics family == present family
+	info.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
+	info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+	info.presentMode = VK_PRESENT_MODE_FIFO_KHR;
+	info.clipped = VK_TRUE;
+	info.oldSwapchain = oldSwapChain;
+
+	VkSurfaceCapabilitiesKHR cap;
+	Verify("get physical device cap", vkGetPhysicalDeviceSurfaceCapabilitiesKHR(impl->physicalDevice, surface, &cap));
+	if (info.minImageCount < cap.minImageCount)
+		info.minImageCount = cap.minImageCount;
+	else if (cap.maxImageCount != 0 && info.minImageCount > cap.maxImageCount)
+		info.minImageCount = cap.maxImageCount;
+
+	if (cap.currentExtent.width == 0xffffffff) {
+		info.imageExtent.width = impl->resolution.x() = resolution.x();
+		info.imageExtent.height = impl->resolution.y() = resolution.y();
+	} else {
+		info.imageExtent.width = impl->resolution.x() = cap.currentExtent.width;
+		info.imageExtent.height = impl->resolution.y() = cap.currentExtent.height;
+	}
+
+	Verify("create swap chain", vkCreateSwapchainKHR(device, &info, allocator, &impl->swapChain));
+	uint32_t imageCount;
+	Verify("get swapchain images", vkGetSwapchainImagesKHR(device, impl->swapChain, &imageCount, NULL));
+
+	impl->backBuffers.resize(imageCount);
+	Verify("get swap chain images", vkGetSwapchainImagesKHR(device, impl->swapChain, &imageCount, &impl->backBuffers[0]));
+
+	if (oldSwapChain)
+		vkDestroySwapchainKHR(device, oldSwapChain, allocator);
 }
 
 Int2 ZRenderVulkan::GetDeviceResolution(IRender::Device* device) {
