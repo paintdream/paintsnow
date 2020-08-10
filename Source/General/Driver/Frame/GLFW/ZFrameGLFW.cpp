@@ -8,7 +8,7 @@
 #endif
 #endif
 
-#if !defined(_MSC_VER) || _MSC_VER > 1200
+#if (!defined(CMAKE_PAINTSNOW) || ADD_RENDER_VULKAN) && (!defined(_MSC_VER) || _MSC_VER > 1200)
 #define GLFW_INCLUDE_VULKAN
 #endif
 
