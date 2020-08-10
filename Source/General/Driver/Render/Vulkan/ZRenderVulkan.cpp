@@ -17,11 +17,20 @@
 
 using namespace PaintsNow;
 
-struct VulkanDeviceImpl : public IRender::Device {
-	VulkanDeviceImpl(VkPhysicalDevice dev) : device(dev), resolution(0, 0) {}
+static void Verify(const char* message, VkResult res) {
+	if (res != VK_SUCCESS) {
+		fprintf(stderr, "Unable to %s (debug).\n", message);
+		exit(0);
+	}
+}
 
-	VkPhysicalDevice device;
+struct VulkanDeviceImpl : public IRender::Device {
+	VulkanDeviceImpl(VkDevice dev, uint32_t family, VkQueue q) : device(dev), resolution(0, 0), queueFamily(family), queue(q) {}
+
+	VkDevice device;
+	VkQueue queue;
 	Int2 resolution;
+	uint32_t queueFamily;
 };
 
 std::vector<String> ZRenderVulkan::EnumerateDevices() {
@@ -60,8 +69,53 @@ IRender::Device* ZRenderVulkan::CreateDevice(const String& description) {
 		VkPhysicalDeviceProperties prop;
 		vkGetPhysicalDeviceProperties(gpus[i], &prop);
 		String name = String(prop.deviceName) + " [" + std::to_string(i) + "]";
-		if (name == description) {
-			return new VulkanDeviceImpl(gpus[i]);
+		if (name == description || description.empty()) {
+			VkPhysicalDevice device = gpus[i];
+
+			uint32_t count;
+			vkGetPhysicalDeviceQueueFamilyProperties(device, &count, NULL);
+			std::vector<VkQueueFamilyProperties> queues(count);
+			if (count == 0) return nullptr;
+
+			uint32_t family = ~(uint32_t)0;
+			vkGetPhysicalDeviceQueueFamilyProperties(device, &count, &queues[0]);
+			for (uint32_t i = 0; i < count; i++) {
+				if (queues[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+					family = i;
+					break;
+				}
+			}
+
+			if (family == ~(uint32_t)0) {
+				return nullptr;
+			}
+
+			int deviceExtensionCount = 1;
+			const char* deviceExtensions[] = { "VK_KHR_swapchain" };
+			const float queuePriority[] = { 1.0f };
+			VkDeviceQueueCreateInfo queueInfo[1] = {};
+			queueInfo[0].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+			queueInfo[0].queueFamilyIndex = family;
+			queueInfo[0].queueCount = 1;
+			queueInfo[0].pQueuePriorities = queuePriority;
+			VkDeviceCreateInfo createInfo = {};
+			createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+			createInfo.queueCreateInfoCount = sizeof(queueInfo) / sizeof(queueInfo[0]);
+			createInfo.pQueueCreateInfos = queueInfo;
+			createInfo.enabledExtensionCount = deviceExtensionCount;
+			createInfo.ppEnabledExtensionNames = deviceExtensions;
+
+			VkDevice logicDevice;
+			Verify("create device", vkCreateDevice(device, &createInfo, allocator, &logicDevice));
+			VkQueue queue;
+			vkGetDeviceQueue(logicDevice, family, 0, &queue);
+
+			VkBool32 res;
+			vkGetPhysicalDeviceSurfaceSupportKHR(device, family, (VkSurfaceKHR)surface, &res);
+
+			// TODO: swap chain resizing ...
+
+			return new VulkanDeviceImpl(logicDevice, family, queue);
 		}
 	}
 
@@ -70,6 +124,7 @@ IRender::Device* ZRenderVulkan::CreateDevice(const String& description) {
 
 void ZRenderVulkan::DeleteDevice(IRender::Device* device) {
 	VulkanDeviceImpl* impl = static_cast<VulkanDeviceImpl*>(device);
+	vkDestroyDevice(impl->device, allocator);
 	delete impl;
 }
 
@@ -85,10 +140,10 @@ Int2 ZRenderVulkan::GetDeviceResolution(IRender::Device* device) {
 
 IRender::Queue* ZRenderVulkan::CreateQueue(Device* device, uint32_t flag) { return nullptr; }
 IRender::Device* ZRenderVulkan::GetQueueDevice(Queue* queue) { return nullptr; }
-void ZRenderVulkan::PresentQueues(Queue** queues, uint32_t count, PresentOption option) {}
 
+void ZRenderVulkan::PresentQueues(Queue** queues, uint32_t count, PresentOption option) {}
 bool ZRenderVulkan::SupportParallelPresent(Device* device) {
-	return false;
+	return true;
 }
 
 bool ZRenderVulkan::IsQueueEmpty(Queue* queue) { return true; }
@@ -114,7 +169,8 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugReportCallback(VkDebugReportFlagsEXT 
 }
 #endif
 
-ZRenderVulkan::ZRenderVulkan() : allocator(nullptr) {
+
+ZRenderVulkan::ZRenderVulkan(GLFWwindow* win) : allocator(nullptr), window(win) {
 	VkApplicationInfo appInfo = {};
 	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 	appInfo.pNext = nullptr;
@@ -146,11 +202,7 @@ ZRenderVulkan::ZRenderVulkan() : allocator(nullptr) {
 	createInfo.ppEnabledExtensionNames = &extensions_ext[0];
 
 	// Create Vulkan Instance
-	VkResult err = vkCreateInstance(&createInfo, allocator, &instance);
-	if (err != VK_SUCCESS) {
-		fprintf(stderr, "Unable to create vulkan instance (debug).\n");
-		exit(0);
-	}
+	Verify("create vulkan instance (debug)", vkCreateInstance(&createInfo, allocator, &instance));
 
 	// Get the function pointer (required for any extensions)
 	auto vkCreateDebugReportCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugReportCallbackEXT");
@@ -162,15 +214,14 @@ ZRenderVulkan::ZRenderVulkan() : allocator(nullptr) {
 	debugReport.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
 	debugReport.pfnCallback = DebugReportCallback;
 	debugReport.pUserData = NULL;
-	err = vkCreateDebugReportCallbackEXT(instance, &debugReport, allocator, (VkDebugReportCallbackEXT*)&debugCallback);
+	Verify("create debug report", vkCreateDebugReportCallbackEXT(instance, &debugReport, allocator, (VkDebugReportCallbackEXT*)&debugCallback));
 #else
 	// Create Vulkan Instance without any debug feature
-	VkResult err = vkCreateInstance(&createInfo, allocator, &instance);
-	if (err != VK_SUCCESS) {
-		fprintf(stderr, "Unable to create vulkan instance (release).\n");
-		exit(0);
-	}
+	Verify("create vulkan instance (release)", vkCreateInstance(&createInfo, allocator, &instance));
 #endif
+
+	// Bind to window
+	Verify("bind to window", glfwCreateWindowSurface(instance, window, allocator, (VkSurfaceKHR*)&surface));
 }
 
 ZRenderVulkan::~ZRenderVulkan() {

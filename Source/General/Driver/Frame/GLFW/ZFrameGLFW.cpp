@@ -98,7 +98,7 @@ void OnKeyboardCallback(GLFWwindow* window, int key, int scancode, int action, i
 	frame->OnKeyboardCallback(key, scancode, action, mods);
 }
 
-ZFrameGLFW::ZFrameGLFW(bool vulkan, const Int2& size, IFrame::Callback* cb) : windowSize(size), isRendering(false), lastdown(false), lastbutton(false), isVulkan(vulkan) {
+ZFrameGLFW::ZFrameGLFW(GLFWwindow** windowPtr, bool vulkan, const Int2& size, IFrame::Callback* cb) : windowSize(size), isRendering(false), lastdown(false), lastbutton(false), isVulkan(vulkan) {
 	SetCallback(cb);
 	glfwSetErrorCallback(OnErrorCallback);
 
@@ -119,6 +119,9 @@ ZFrameGLFW::ZFrameGLFW(bool vulkan, const Int2& size, IFrame::Callback* cb) : wi
 	}
 
 	window = glfwCreateWindow(size.x(), size.y(), "PaintsNow.Net", NULL, NULL);
+	if (windowPtr != nullptr) {
+		*windowPtr = window;
+	}
 
 	if (isVulkan) {
 		if (!glfwVulkanSupported()) {

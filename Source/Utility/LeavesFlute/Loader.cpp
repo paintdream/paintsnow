@@ -193,8 +193,9 @@ void Loader::Load(const CmdLine& cmdLine) {
 	config.RegisterFactory("IRender", "ZRenderDummy", renderFactory);
 
 #if (!defined(CMAKE_PAINTSNOW) || ADD_RENDER_VULKAN) && (!defined(_MSC_VER) || _MSC_VER > 1200)
+	GLFWwindow* window = nullptr;
 	if (!nogui) {
-		renderFactory = WrapFactory(UniqueType<ZRenderVulkan>());
+		renderFactory = WrapFactory(UniqueType<ZRenderVulkan>(), DelayedValue<GLFWwindow*>(window));
 		config.RegisterFactory("IRender", "ZRenderVulkan", renderFactory);
 	}
 #endif
@@ -209,7 +210,12 @@ void Loader::Load(const CmdLine& cmdLine) {
 
 #if !defined(CMAKE_PAINTSNOW) || ADD_FRAME_GLFW
 	if (!nogui) {
-		frameFactory = WrapFactory(UniqueType<ZFrameGLFW>(), DelayedValue<bool>(isVulkan));
+#if (!defined(CMAKE_PAINTSNOW) || ADD_RENDER_VULKAN) && (!defined(_MSC_VER) || _MSC_VER > 1200)
+		GLFWwindow** ptr = &window;
+#else
+		GLFWwindow** ptr = nullptr;
+#endif
+		frameFactory = WrapFactory(UniqueType<ZFrameGLFW>(), DelayedValue<GLFWwindow**>(ptr), DelayedValue<bool>(isVulkan));
 		config.RegisterFactory("IFrame", "ZFrameGLFW", frameFactory);
 	}
 #endif

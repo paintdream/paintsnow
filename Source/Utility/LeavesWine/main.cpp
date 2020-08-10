@@ -45,7 +45,7 @@ IMGUI_IMPL_API void	 ImGui_ImplGlfw_CharCallback(GLFWwindow* window, unsigned in
 
 class ZFrameGLFWForImGui : public ZFrameGLFW {
 public:
-	ZFrameGLFWForImGui(LeavesWine& wine, const Int2& size = Int2(1450, 800), Callback* callback = nullptr) : ZFrameGLFW(false, size, callback), leavesWine(wine), init(false) {}
+	ZFrameGLFWForImGui(LeavesWine& wine, const Int2& size = Int2(1450, 800), Callback* callback = nullptr) : ZFrameGLFW(nullptr, false, size, callback), leavesWine(wine), init(false) {}
 
 	virtual void OnMouseButtonCallback(int button, int action, int mods) override {
 		ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);

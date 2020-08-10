@@ -15,11 +15,12 @@
 typedef struct VkInstance_T* VkInstance;
 typedef struct VkPhysicalDevice_T* VkPhysicalDevice;
 struct VkAllocationCallbacks;
+struct GLFWwindow;
 
 namespace PaintsNow {
 	class ZRenderVulkan final : public IRender {
 	public:
-		ZRenderVulkan();
+		ZRenderVulkan(GLFWwindow* window);
 		virtual ~ZRenderVulkan();
 
 		virtual std::vector<String> EnumerateDevices() override;
@@ -51,9 +52,12 @@ namespace PaintsNow {
 		virtual void DeleteResource(Queue* queue, Resource* resource) override;
 
 	protected:
+		GLFWwindow* window;
 		VkInstance instance;
+		size_t surface;
 		VkAllocationCallbacks* allocator;
 		std::vector<VkPhysicalDevice> gpus;
+
 		#ifdef _DEBUG
 		size_t debugCallback;
 		#endif
