@@ -1568,7 +1568,9 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> : public R
 		IRender::Resource::RenderTargetDescription* t = static_cast<IRender::Resource::RenderTargetDescription*>(d);
 		for (size_t i = 0; i < t->colorBufferStorages.size(); i++) {
 			ResourceImplOpenGL<IRender::Resource::TextureDescription>* x = static_cast<ResourceImplOpenGL<IRender::Resource::TextureDescription>*>(t->colorBufferStorages[i].resource);
-			assert(x->GetNextDescription().dimension.x() != 0 && x->GetNextDescription().dimension.y() != 0);
+			if (x != nullptr) {
+				assert(x->GetNextDescription().dimension.x() != 0 && x->GetNextDescription().dimension.y() != 0);
+			}
 		}
 		ResourceBaseImplOpenGLDesc<IRender::Resource::RenderTargetDescription>::SetUploadDescription(d);
 	}
