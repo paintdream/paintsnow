@@ -26,6 +26,14 @@ static void Verify(const char* message, VkResult res) {
 	}
 }
 
+struct FrameData {
+	VkImage backBufferImage;
+	VkImageView backBufferView;
+	VkFence fence;
+	VkSemaphore acquireSemaphore;
+	VkSemaphore releaseSemaphore;
+};
+
 struct VulkanDeviceImpl : public IRender::Device {
 	VulkanDeviceImpl(VkPhysicalDevice phy, VkDevice dev, uint32_t family, VkQueue q) : physicalDevice(phy), device(dev), resolution(0, 0), queueFamily(family), queue(q), swapChain(0) {}
 
@@ -36,7 +44,20 @@ struct VulkanDeviceImpl : public IRender::Device {
 	uint32_t queueFamily;
 	VkSwapchainKHR swapChain;
 
-	std::vector<VkImage> backBuffers;
+	std::vector<FrameData> frames;
+};
+
+struct VulkanQueueImpl : public IRender::Queue {
+	VulkanQueueImpl(VulkanDeviceImpl* dev, VkCommandPool pool) : device(dev), commandPool(pool) {}
+
+	VulkanDeviceImpl* device;
+	VkCommandPool commandPool;
+	struct Frame {
+		std::vector<VkCommandBuffer> commandBuffers;
+	};
+
+	std::vector<Frame> frameCommandBuffers;
+	std::vector<VkCommandBuffer> freeCommandBuffers;
 };
 
 std::vector<String> ZRenderVulkan::EnumerateDevices() {
@@ -99,11 +120,13 @@ IRender::Device* ZRenderVulkan::CreateDevice(const String& description) {
 			int deviceExtensionCount = 1;
 			const char* deviceExtensions[] = { "VK_KHR_swapchain" };
 			const float queuePriority[] = { 1.0f };
+
 			VkDeviceQueueCreateInfo queueInfo[1] = {};
 			queueInfo[0].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
 			queueInfo[0].queueFamilyIndex = family;
 			queueInfo[0].queueCount = 1;
 			queueInfo[0].pQueuePriorities = queuePriority;
+
 			VkDeviceCreateInfo createInfo = {};
 			createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 			createInfo.queueCreateInfoCount = sizeof(queueInfo) / sizeof(queueInfo[0]);
@@ -132,8 +155,23 @@ IRender::Device* ZRenderVulkan::CreateDevice(const String& description) {
 	return nullptr;
 }
 
+static void CleanupFrameData(VkAllocationCallbacks* allocator, VulkanDeviceImpl* impl) {
+	for (size_t i = 0; i < impl->frames.size(); i++) {
+		FrameData& frameData = impl->frames[i];
+		vkDestroySemaphore(impl->device, frameData.acquireSemaphore, allocator);
+		vkDestroySemaphore(impl->device, frameData.releaseSemaphore, allocator);
+		vkDestroyImage(impl->device, frameData.backBufferImage, allocator);
+		vkDestroyImageView(impl->device, frameData.backBufferView, allocator);
+		vkDestroyFence(impl->device, frameData.fence, allocator);
+	}
+
+	impl->frames.clear();
+}
+
+
 void ZRenderVulkan::DeleteDevice(IRender::Device* device) {
 	VulkanDeviceImpl* impl = static_cast<VulkanDeviceImpl*>(device);
+	CleanupFrameData(allocator, impl);
 	vkDestroySwapchainKHR(impl->device, impl->swapChain, allocator);
 	vkDestroyDevice(impl->device, allocator);
 	delete impl;
@@ -182,8 +220,39 @@ void ZRenderVulkan::SetDeviceResolution(IRender::Device* dev, const Int2& resolu
 	uint32_t imageCount;
 	Verify("get swapchain images", vkGetSwapchainImagesKHR(device, impl->swapChain, &imageCount, NULL));
 
-	impl->backBuffers.resize(imageCount);
-	Verify("get swap chain images", vkGetSwapchainImagesKHR(device, impl->swapChain, &imageCount, &impl->backBuffers[0]));
+	// Cleanup old frame data
+	CleanupFrameData(allocator, impl);
+
+	std::vector<VkImage> images(imageCount);
+	Verify("get swap chain images", vkGetSwapchainImagesKHR(device, impl->swapChain, &imageCount, &images[0]));
+
+	impl->frames.resize(imageCount);
+	VkImageViewCreateInfo viewinfo = {};
+	viewinfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+	viewinfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+	viewinfo.format = VK_FORMAT_B8G8R8A8_UNORM;
+	viewinfo.components.r = VK_COMPONENT_SWIZZLE_R;
+	viewinfo.components.g = VK_COMPONENT_SWIZZLE_G;
+	viewinfo.components.b = VK_COMPONENT_SWIZZLE_B;
+	viewinfo.components.a = VK_COMPONENT_SWIZZLE_A;
+	VkImageSubresourceRange image_range = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
+	viewinfo.subresourceRange = image_range;
+
+	VkFenceCreateInfo fenceinfo = {};
+	fenceinfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fenceinfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+	VkSemaphoreCreateInfo seminfo = {};
+	seminfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+	for (uint32_t i = 0; i < imageCount; i++) {
+		FrameData& frameData = impl->frames[i];
+		viewinfo.image = frameData.backBufferImage = images[i];
+		Verify("create image view", vkCreateImageView(device, &viewinfo, allocator, &frameData.backBufferView));
+		Verify("create fence", vkCreateFence(device, &fenceinfo, allocator, &frameData.fence));
+		Verify("create semaphore (acquire)", vkCreateSemaphore(device, &seminfo, allocator, &frameData.acquireSemaphore));
+		Verify("create semaphore (release)", vkCreateSemaphore(device, &seminfo, allocator, &frameData.releaseSemaphore));
+	}
 
 	if (oldSwapChain)
 		vkDestroySwapchainKHR(device, oldSwapChain, allocator);
@@ -194,18 +263,44 @@ Int2 ZRenderVulkan::GetDeviceResolution(IRender::Device* device) {
 	return impl->resolution;
 }
 
-IRender::Queue* ZRenderVulkan::CreateQueue(Device* device, uint32_t flag) { return nullptr; }
-IRender::Device* ZRenderVulkan::GetQueueDevice(Queue* queue) { return nullptr; }
+IRender::Queue* ZRenderVulkan::CreateQueue(Device* dev, uint32_t flag) {
+	VulkanDeviceImpl* device = static_cast<VulkanDeviceImpl*>(dev);
+	VkCommandPoolCreateInfo info = {};
+	info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+	info.queueFamilyIndex = device->queueFamily;
+	VkCommandPool commandPool;
+	vkCreateCommandPool(device->device, &info, allocator, &commandPool);
+	return new VulkanQueueImpl(device, commandPool);
+}
 
-void ZRenderVulkan::PresentQueues(Queue** queues, uint32_t count, PresentOption option) {}
+IRender::Device* ZRenderVulkan::GetQueueDevice(Queue* q) {
+	VulkanQueueImpl* queue = static_cast<VulkanQueueImpl*>(q);
+	return queue->device;
+}
+
 bool ZRenderVulkan::SupportParallelPresent(Device* device) {
 	return true;
 }
 
-bool ZRenderVulkan::IsQueueEmpty(Queue* queue) { return true; }
-void ZRenderVulkan::MergeQueue(Queue* target, Queue* source) {}
+void ZRenderVulkan::PresentQueues(Queue** queues, uint32_t count, PresentOption option) {}
+
+bool ZRenderVulkan::IsQueueEmpty(Queue* q) {
+	VulkanQueueImpl* queue = static_cast<VulkanQueueImpl*>(q);
+	return queue->frameCommandBuffers.empty() || queue->frameCommandBuffers[0].commandBuffers.empty();
+}
+
+void ZRenderVulkan::DeleteQueue(Queue* q) {
+	// TODO: add to delayed execution items
+	VulkanQueueImpl* queue = static_cast<VulkanQueueImpl*>(q);
+	vkDestroyDescriptorPool(queue->device->device, queue->commandPool, allocator);
+	delete queue;
+}
+
+void ZRenderVulkan::MergeQueue(Queue* target, Queue* source) {
+}
+
 void ZRenderVulkan::FlushQueue(Queue* queue) {}
-void ZRenderVulkan::DeleteQueue(Queue* queue) {}
 
 // Resource
 IRender::Resource* ZRenderVulkan::CreateResource(Device* device, Resource::Type resourceType) { return nullptr; }

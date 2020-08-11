@@ -44,6 +44,7 @@ function LocalInput.New(timeline : Timeline) : LocalInput
 	local object = setmetatable({}, LocalInput as METATABLE) as LocalInput
 	object._timeline = timeline
 	object._component = Activity("LocalInput", object)
+	
 	return object
 end
 
