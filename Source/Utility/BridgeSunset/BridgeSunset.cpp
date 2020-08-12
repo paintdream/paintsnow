@@ -6,9 +6,7 @@ using namespace PaintsNow::NsBridgeSunset;
 BridgeSunset::BridgeSunset(IThread& t, IScript& s, uint32_t threadCount, uint32_t warpCount) : ISyncObject(t), RequestPool(s, warpCount), threadPool(t, threadCount), kernel(threadPool, warpCount) {
 }
 
-BridgeSunset::~BridgeSunset() {
-	assert(requests.empty());
-}
+BridgeSunset::~BridgeSunset() {}
 
 void BridgeSunset::ScriptInitialize(IScript::Request& request) {
 	Library::ScriptInitialize(request);

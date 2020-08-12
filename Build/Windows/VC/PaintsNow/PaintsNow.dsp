@@ -355,6 +355,13 @@ SOURCE=..\..\..\..\Source\Core\Template\TObject.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Core\Template\TPool.h
+# PROP Exclude_From_Scan -1
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Core\Template\TProxy.h
 # PROP Exclude_From_Scan -1
 # PROP BASE Exclude_From_Build 1

@@ -188,7 +188,7 @@ void ZRenderVulkan::SetDeviceResolution(IRender::Device* dev, const Int2& resolu
 
 	VkSwapchainCreateInfoKHR info = {};
 	info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-	info.surface = surface;
+	info.surface = (VkSurfaceKHR)surface;
 	info.minImageCount = MIN_IMAGE_COUNT;
 	info.imageFormat = VK_FORMAT_B8G8R8A8_UNORM;
 	info.imageColorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
@@ -202,7 +202,7 @@ void ZRenderVulkan::SetDeviceResolution(IRender::Device* dev, const Int2& resolu
 	info.oldSwapchain = oldSwapChain;
 
 	VkSurfaceCapabilitiesKHR cap;
-	Verify("get physical device cap", vkGetPhysicalDeviceSurfaceCapabilitiesKHR(impl->physicalDevice, surface, &cap));
+	Verify("get physical device cap", vkGetPhysicalDeviceSurfaceCapabilitiesKHR(impl->physicalDevice, (VkSurfaceKHR)surface, &cap));
 	if (info.minImageCount < cap.minImageCount)
 		info.minImageCount = cap.minImageCount;
 	else if (cap.maxImageCount != 0 && info.minImageCount > cap.maxImageCount)
@@ -293,7 +293,7 @@ bool ZRenderVulkan::IsQueueEmpty(Queue* q) {
 void ZRenderVulkan::DeleteQueue(Queue* q) {
 	// TODO: add to delayed execution items
 	VulkanQueueImpl* queue = static_cast<VulkanQueueImpl*>(q);
-	vkDestroyDescriptorPool(queue->device->device, queue->commandPool, allocator);
+	vkDestroyCommandPool(queue->device->device, queue->commandPool, allocator);
 	delete queue;
 }
 

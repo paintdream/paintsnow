@@ -456,7 +456,7 @@ public:
 
 	virtual void Execute(void* context) override {
 		NsBridgeSunset::BridgeSunset& bridgeSunset = *reinterpret_cast<NsBridgeSunset::BridgeSunset*>(context);
-		IScript::Request& request = *bridgeSunset.AcquireRequest();
+		IScript::Request& request = *bridgeSunset.AcquireSafe();
 		String text;
 		if (LoadScriptText(path, text)) {
 			request.DoLock();
@@ -475,7 +475,7 @@ public:
 			request.UnLock();
 		}
 
-		bridgeSunset.ReleaseRequest(&request);
+		bridgeSunset.ReleaseSafe(&request);
 		ReleaseObject();
 	}
 

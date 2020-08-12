@@ -458,22 +458,22 @@ private:
 
 		if (callbackStep) {
 			NsBridgeSunset::BridgeSunset& bridgeSunset = *reinterpret_cast<NsBridgeSunset::BridgeSunset*>(context);
-			IScript::Request& request = *bridgeSunset.AcquireRequest();
+			IScript::Request& request = *bridgeSunset.AcquireSafe();
 			request.DoLock();
 			request.Push();
 			request.Call(sync, callbackStep, pathList[index], resourceList[index]);
 			request.Pop();
 			request.UnLock();
-			bridgeSunset.ReleaseRequest(&request);
+			bridgeSunset.ReleaseSafe(&request);
 		}
 
 		// is abount to finish
 		if (GetExtReferCount() == 0) {
 			assert(context != nullptr);
 			NsBridgeSunset::BridgeSunset& bridgeSunset = *reinterpret_cast<NsBridgeSunset::BridgeSunset*>(context);
-			IScript::Request& request = *bridgeSunset.AcquireRequest();
+			IScript::Request& request = *bridgeSunset.AcquireSafe();
 			Finalize(request);
-			bridgeSunset.ReleaseRequest(&request);
+			bridgeSunset.ReleaseSafe(&request);
 		}
 
 		ReleaseObject();
@@ -597,14 +597,14 @@ struct CompressTask : public TaskOnce {
 		bool success = resource->Compress(compressType);
 		if (callback) {
 			NsBridgeSunset::BridgeSunset& bridgeSunset = *reinterpret_cast<NsBridgeSunset::BridgeSunset*>(context);
-			IScript::Request& request = *bridgeSunset.AcquireRequest();
+			IScript::Request& request = *bridgeSunset.AcquireSafe();
 			request.DoLock();
 			request.Push();
 			request.Call(sync, callback, success);
 			request.Pop();
 			request.Dereference(callback);
 			request.UnLock();
-			bridgeSunset.ReleaseRequest(&request);
+			bridgeSunset.ReleaseSafe(&request);
 		} else {
 			Finalize(context);
 		}
@@ -621,11 +621,11 @@ struct CompressTask : public TaskOnce {
 	void Finalize(void* context) {
 		if (callback) {
 			NsBridgeSunset::BridgeSunset& bridgeSunset = *reinterpret_cast<NsBridgeSunset::BridgeSunset*>(context);
-			IScript::Request& request = *bridgeSunset.AcquireRequest();
+			IScript::Request& request = *bridgeSunset.AcquireSafe();
 			request.DoLock();
 			request.Dereference(callback);
 			request.UnLock();
-			bridgeSunset.ReleaseRequest(&request);
+			bridgeSunset.ReleaseSafe(&request);
 		}
 	}
 

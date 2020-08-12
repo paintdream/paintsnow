@@ -53,7 +53,7 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = *bridgeSunset.AcquireRequest();
+				IScript::Request& req = *bridgeSunset.AcquireSafe();
 				req.DoLock();
 				req.Push();
 				req.Call(sync, callback);
@@ -63,7 +63,7 @@ namespace PaintsNow {
 				}
 				req.UnLock();
 				
-				bridgeSunset.ReleaseRequest(&req);
+				bridgeSunset.ReleaseSafe(&req);
 				delete this;
 			}
 
@@ -98,7 +98,7 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = *bridgeSunset.AcquireRequest();
+				IScript::Request& req = *bridgeSunset.AcquireSafe();
 				req.DoLock();
 				req.Push();
 				req.Call(sync, callback, pa);
@@ -109,7 +109,7 @@ namespace PaintsNow {
 				req.UnLock();
 				
 
-				bridgeSunset.ReleaseRequest(&req);
+				bridgeSunset.ReleaseSafe(&req);
 				delete this;
 			}
 			virtual void Abort(void* context) override {
@@ -146,7 +146,7 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = *bridgeSunset.AcquireRequest();
+				IScript::Request& req = *bridgeSunset.AcquireSafe();
 				req.DoLock();
 				req.Push();
 				req.Call(sync, callback, pa, pb);
@@ -157,7 +157,7 @@ namespace PaintsNow {
 				req.UnLock();
 				
 
-				bridgeSunset.ReleaseRequest(&req);
+				bridgeSunset.ReleaseSafe(&req);
 				delete this;
 			}
 			virtual void Abort(void* context) override {
@@ -195,7 +195,7 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = *bridgeSunset.AcquireRequest();
+				IScript::Request& req = *bridgeSunset.AcquireSafe();
 				req.DoLock();
 				req.Push();
 				req.Call(sync, callback, pa, pb, pc);
@@ -205,7 +205,7 @@ namespace PaintsNow {
 				}
 				req.UnLock();
 				
-				bridgeSunset.ReleaseRequest(&req);
+				bridgeSunset.ReleaseSafe(&req);
 				delete this;
 			}
 			virtual void Abort(void* context) override {
@@ -244,7 +244,7 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = *bridgeSunset.AcquireRequest();
+				IScript::Request& req = *bridgeSunset.AcquireSafe();
 				req.DoLock();
 				req.Push();
 				req.Call(sync, callback, pa, pb, pc, pd);
@@ -254,7 +254,7 @@ namespace PaintsNow {
 				}
 				req.UnLock();
 				
-				bridgeSunset.ReleaseRequest(&req);
+				bridgeSunset.ReleaseSafe(&req);
 				delete this;
 			}
 			virtual void Abort(void* context) override {
@@ -294,7 +294,7 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = *bridgeSunset.AcquireRequest();
+				IScript::Request& req = *bridgeSunset.AcquireSafe();
 				req.DoLock();
 				req.Push();
 				req.Call(sync, callback, pa, pb, pc, pd, pe);
@@ -304,7 +304,7 @@ namespace PaintsNow {
 				}
 				req.UnLock();
 				
-				bridgeSunset.ReleaseRequest(&req);
+				bridgeSunset.ReleaseSafe(&req);
 				delete this;
 			}
 			virtual void Abort(void* context) override {
@@ -345,7 +345,7 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = *bridgeSunset.AcquireRequest();
+				IScript::Request& req = *bridgeSunset.AcquireSafe();
 				req.DoLock();
 				req.Push();
 				req.Call(sync, callback, pa, pb, pc, pd, pe, pf);
@@ -355,7 +355,7 @@ namespace PaintsNow {
 				}
 				req.UnLock();
 				
-				bridgeSunset.ReleaseRequest(&req);
+				bridgeSunset.ReleaseSafe(&req);
 				delete this;
 			}
 			virtual void Abort(void* context) override {
@@ -399,7 +399,7 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = *bridgeSunset.AcquireRequest();
+				IScript::Request& req = *bridgeSunset.AcquireSafe();
 				req.DoLock();
 				req.Push();
 				req.Call(sync, callback, pa, pb, pc, pd, pe, pf, pg);
@@ -409,7 +409,7 @@ namespace PaintsNow {
 				}
 				req.UnLock();
 				
-				bridgeSunset.ReleaseRequest(&req);
+				bridgeSunset.ReleaseSafe(&req);
 				delete this;
 			}
 			virtual void Abort(void* context) override {
@@ -454,10 +454,10 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = *bridgeSunset.AcquireRequest();
+				IScript::Request& req = *bridgeSunset.AcquireSafe();
 				callback(req);
 				
-				bridgeSunset.ReleaseRequest(&req);
+				bridgeSunset.ReleaseSafe(&req);
 				delete this;
 			}
 
@@ -476,10 +476,10 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = *bridgeSunset.AcquireRequest();
+				IScript::Request& req = *bridgeSunset.AcquireSafe();
 				callback(req, pa);
 				
-				bridgeSunset.ReleaseRequest(&req);
+				bridgeSunset.ReleaseSafe(&req);
 				delete this;
 			}
 
@@ -499,10 +499,10 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = *bridgeSunset.AcquireRequest();
+				IScript::Request& req = *bridgeSunset.AcquireSafe();
 				callback(req, pa, pb);
 				
-				bridgeSunset.ReleaseRequest(&req);
+				bridgeSunset.ReleaseSafe(&req);
 				delete this;
 			}
 
@@ -523,10 +523,10 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = *bridgeSunset.AcquireRequest();
+				IScript::Request& req = *bridgeSunset.AcquireSafe();
 				callback(req, pa, pb, pc);
 				
-				bridgeSunset.ReleaseRequest(&req);
+				bridgeSunset.ReleaseSafe(&req);
 				delete this;
 			}
 
@@ -548,10 +548,10 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = *bridgeSunset.AcquireRequest();
+				IScript::Request& req = *bridgeSunset.AcquireSafe();
 				callback(pa, pb, pc, pd);
 				
-				bridgeSunset.ReleaseRequest(&req);
+				bridgeSunset.ReleaseSafe(&req);
 				delete this;
 			}
 
@@ -574,10 +574,10 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = *bridgeSunset.AcquireRequest();
+				IScript::Request& req = *bridgeSunset.AcquireSafe();
 				callback(req, pa, pb, pc, pd, pe);
 				
-				bridgeSunset.ReleaseRequest(&req);
+				bridgeSunset.ReleaseSafe(&req);
 				delete this;
 			}
 
@@ -601,10 +601,10 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = *bridgeSunset.AcquireRequest();
+				IScript::Request& req = *bridgeSunset.AcquireSafe();
 				callback(req, pa, pb, pc, pd, pe, pf);
 				
-				bridgeSunset.ReleaseRequest(&req);
+				bridgeSunset.ReleaseSafe(&req);
 				delete this;
 			}
 
@@ -631,10 +631,10 @@ namespace PaintsNow {
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = *bridgeSunset.AcquireRequest();
+				IScript::Request& req = *bridgeSunset.AcquireSafe();
 				callback(req, pa, pb, pc, pd, pe, pf, pg);
 				
-				bridgeSunset.ReleaseRequest(&req);
+				bridgeSunset.ReleaseSafe(&req);
 				delete this;
 			}
 
@@ -675,7 +675,7 @@ namespace PaintsNow {
 
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
-				IScript::Request& req = *bridgeSunset.AcquireRequest();
+				IScript::Request& req = *bridgeSunset.AcquireSafe();
 				req.DoLock();
 				req.Push();
 				Writer<decltype(arguments), sizeof...(Args)>()(req, arguments);
@@ -685,7 +685,7 @@ namespace PaintsNow {
 				}
 				req.Pop();
 				req.UnLock();
-				bridgeSunset.ReleaseRequest(&req);
+				bridgeSunset.ReleaseSafe(&req);
 
 				delete this;
 			}
@@ -729,9 +729,9 @@ namespace PaintsNow {
 
 			virtual void Execute(void* context) override {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
-				IScript::Request& req = *bridgeSunset.AcquireRequest();
+				IScript::Request& req = *bridgeSunset.AcquireSafe();
 				Apply(req, gen_seq<sizeof...(Args)>());
-				bridgeSunset.ReleaseRequest(&req);
+				bridgeSunset.ReleaseSafe(&req);
 
 				delete this;
 			}
