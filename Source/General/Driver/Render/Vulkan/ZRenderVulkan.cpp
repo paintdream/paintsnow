@@ -6,6 +6,7 @@
 #include "../../../Interface/IShader.h"
 #include "../../../../Core/Interface/IMemory.h"
 #include "../../../../Core/Template/TQueue.h"
+#include "../../../../Core/Template/TPool.h"
 #include "ZRenderVulkan.h"
 #include <cstdio>
 #include <vector>
@@ -47,17 +48,56 @@ struct VulkanDeviceImpl : public IRender::Device {
 	std::vector<FrameData> frames;
 };
 
-struct VulkanQueueImpl : public IRender::Queue {
-	VulkanQueueImpl(VulkanDeviceImpl* dev, VkCommandPool pool) : device(dev), commandPool(pool) {}
+struct VulkanQueueImpl : public IRender::Queue, public TPool<VulkanQueueImpl, VkCommandBuffer> {
+	VulkanQueueImpl(VulkanDeviceImpl* dev, VkCommandPool pool) : device(dev), commandPool(pool), TPool<VulkanQueueImpl, VkCommandBuffer>(4) {
+		VkCommandBufferAllocateInfo info;
+		info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		info.commandBufferCount = maxCount;
+		info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		info.commandPool = commandPool;
+		info.pNext = nullptr;
+
+		freeItems.reserve(maxCount);
+		vkAllocateCommandBuffers(device->device, &info, &freeItems[0]);
+	}
+
+	~VulkanQueueImpl() {
+		// delete all command buffers
+		for (size_t k = 0; k < frameCommandBuffers.size(); k++) {
+			assert(frameCommandBuffers[k].commandBuffers.empty());
+		}
+
+		if (!freeItems.empty()) {
+			vkFreeCommandBuffers(device->device, commandPool, safe_cast<uint32_t>(freeItems.size()), &freeItems[0]);
+			freeItems.clear();
+		}
+	}
+
+	VkCommandBuffer New() {
+		VkCommandBufferAllocateInfo info;
+		info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		info.commandBufferCount = 1;
+		info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		info.commandPool = commandPool;
+		info.pNext = nullptr;
+
+		VkCommandBuffer ret = nullptr;
+		vkAllocateCommandBuffers(device->device, &info, &ret);
+		return ret;
+	}
+
+	void Delete(VkCommandBuffer buffer) {
+		vkFreeCommandBuffers(device->device, commandPool, 1, &buffer);
+	}
 
 	VulkanDeviceImpl* device;
 	VkCommandPool commandPool;
+
 	struct Frame {
 		std::vector<VkCommandBuffer> commandBuffers;
 	};
 
 	std::vector<Frame> frameCommandBuffers;
-	std::vector<VkCommandBuffer> freeCommandBuffers;
 };
 
 std::vector<String> ZRenderVulkan::EnumerateDevices() {
