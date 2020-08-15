@@ -9,6 +9,7 @@
 #include "../../Entity.h"
 #include "../../Component.h"
 #include "../../../../Core/Template/TBuffer.h"
+#include "../../../../Core/Template/TAlgorithm.h"
 #include "../Animation/AnimationComponent.h"
 #include "../RenderFlow/RenderFlowComponent.h"
 #include "../RenderFlow/RenderPort/RenderPortCommandQueue.h"
@@ -119,9 +120,9 @@ namespace PaintsNow {
 						std::vector<IRender::Resource*> buffers;
 					};
 
-					std::map<NsSnowyStream::ShaderResource*, GlobalBufferItem> worldGlobalBufferMap;
-					std::map<IRender::Resource::RenderStateDescription, IRender::Resource*> renderStateMap;
-					std::map<RenderPolicy*, PolicyData> renderPolicyMap;
+					std::vector<std::key_value<NsSnowyStream::ShaderResource*, GlobalBufferItem> > worldGlobalBufferMap;
+					std::vector<std::key_value<IRender::Resource::RenderStateDescription, IRender::Resource*> > renderStateMap;
+					std::vector<std::key_value<RenderPolicy*, PolicyData> > renderPolicyMap;
 					std::vector<std::pair<TShared<RenderPolicy>, LightElement> > lightElements;
 					std::vector<std::pair<TShared<RenderPolicy>, EnvCubeElement> > envCubeElements;
 					std::vector<NsSnowyStream::IDataUpdater*> dataUpdaters;

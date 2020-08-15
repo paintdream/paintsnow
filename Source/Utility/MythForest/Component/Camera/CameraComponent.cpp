@@ -158,7 +158,12 @@ void CameraComponent::Instancing(Engine& engine, TaskData& taskData) {
 					PassBase::Parameter& output = group.instanceUpdater->parameters[k];
 					// instanceable.
 					assert(output.slot < group.drawCallDescription.bufferResources.size());
-					TaskData::PolicyData& policyData = warpData.renderPolicyMap[group.renderPolicy()];
+					std::vector<std::key_value<RenderPolicy*, TaskData::PolicyData> >::iterator ip = std::binary_find(warpData.renderPolicyMap.begin(), warpData.renderPolicyMap.end(), group.renderPolicy());
+					if (ip == warpData.renderPolicyMap.end()) {
+						ip = std::binary_insert(warpData.renderPolicyMap, group.renderPolicy());
+					}
+
+					TaskData::PolicyData& policyData = ip->second;
 					IRender::Queue* queue = policyData.portQueue;
 					assert(queue != nullptr);
 
@@ -186,8 +191,8 @@ void CameraComponent::Instancing(Engine& engine, TaskData& taskData) {
 			}
 		}
 
-		for (std::map<RenderPolicy*, TaskData::PolicyData>::iterator ip = warpData.renderPolicyMap.begin(); ip != warpData.renderPolicyMap.end(); ++ip) {
-			TaskData::PolicyData& policyData = ip->second;
+		for (size_t n = 0; n < warpData.renderPolicyMap.size(); n++) {
+			TaskData::PolicyData& policyData = warpData.renderPolicyMap[n].second;
 			if (!policyData.instanceData.Empty()) {
 				IRender::Resource::BufferDescription desc;
 				desc.data = std::move(policyData.instanceData);
@@ -315,14 +320,17 @@ void CameraComponent::CommitRenderRequests(Engine& engine, TaskData& taskData, I
 					lastRenderState = nullptr;
 					lastCommandQueue = lastRenderPolicy == nullptr ? nullptr : QueryPort(render, policyPortMap, renderFlowComponent(), lastRenderPolicy, UniqueType<RenderPortCommandQueue>());
 					if (lastCommandQueue != nullptr) {
-						TaskData::PolicyData& policyData = warpData.renderPolicyMap[lastRenderPolicy];
-						if (policyData.instanceBuffer != nullptr) {
-							if (render.IsQueueEmpty(queue)) {
-								render.DeleteResource(policyData.portQueue, policyData.instanceBuffer);
-								policyData.instanceBuffer = nullptr;
-							}
+						std::vector<std::key_value<RenderPolicy*, TaskData::PolicyData> >::iterator ip = std::binary_find(warpData.renderPolicyMap.begin(), warpData.renderPolicyMap.end(), lastRenderPolicy);
+						if (ip != warpData.renderPolicyMap.end()) {
+							TaskData::PolicyData& policyData = ip->second;
+							if (policyData.instanceBuffer != nullptr) {
+								if (render.IsQueueEmpty(queue)) {
+									render.DeleteResource(policyData.portQueue, policyData.instanceBuffer);
+									policyData.instanceBuffer = nullptr;
+								}
 
-							lastCommandQueue->MergeQueue(render, policyData.portQueue);
+								lastCommandQueue->MergeQueue(render, policyData.portQueue);
+							}
 						}
 					}
 				}
@@ -339,18 +347,20 @@ void CameraComponent::CommitRenderRequests(Engine& engine, TaskData& taskData, I
 				}
 			}
 
-			for (std::map<RenderPolicy*, TaskData::PolicyData>::iterator ip = warpData.renderPolicyMap.begin(); ip != warpData.renderPolicyMap.end();) {
-				TaskData::PolicyData& policyData = (*ip).second;
+			size_t k = 0;
+			for (size_t n = 0; n < warpData.renderPolicyMap.size(); n++) {
+				TaskData::PolicyData& policyData = warpData.renderPolicyMap[n].second;
 				IRender::Queue* queue = policyData.portQueue;
 				if (policyData.instanceBuffer == nullptr) {
 					// no longer used
 					assert(policyData.runtimeResources.empty() && policyData.instanceData.Empty());
-					render.DeleteQueue(queue);
-					warpData.renderPolicyMap.erase(ip++);
-				} else {
-					++ip;
+					render.DeleteQueue(queue); // TODO: may crash the app if n-frame backbuffer swapchain (n > 2) enabled!
+				} else if (k++ != n) {
+					warpData.renderPolicyMap[k] = warpData.renderPolicyMap[n];
 				}
 			}
+
+			warpData.renderPolicyMap.resize(k);
 
 			// pass lights
 			std::vector<std::pair<TShared<RenderPolicy>, LightElement> >& lightElements = warpData.lightElements;
@@ -437,7 +447,7 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 		if (Flag() & (CAMERACOMPONENT_SMOOTH_TRACK | CAMERACOMPONENT_SUBPIXEL_JITTER)) {
 			for (size_t i = 0; i < warpData.size(); i++) {
 				TaskData::WarpData& w = warpData[i];
-				typedef std::map<ShaderResource*, TaskData::WarpData::GlobalBufferItem> GlobalMap;
+				typedef std::vector<std::key_value<NsSnowyStream::ShaderResource*, TaskData::WarpData::GlobalBufferItem> > GlobalMap;
 				GlobalMap& globalMap = w.worldGlobalBufferMap;
 				for (GlobalMap::iterator it = globalMap.begin(); it != globalMap.end(); ++it) {
 					std::vector<Bytes> buffers;
@@ -534,7 +544,12 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 			RenderPolicy* renderPolicy = renderableComponent->renderPolicy();
 			group.renderPolicy = renderPolicy;
 
-			TaskData::PolicyData& policyData = warpData.renderPolicyMap[renderPolicy];
+			std::vector<std::key_value<RenderPolicy*, TaskData::PolicyData> >::iterator ip = std::binary_find(warpData.renderPolicyMap.begin(), warpData.renderPolicyMap.end(), group.renderPolicy());
+			if (ip == warpData.renderPolicyMap.end()) {
+				ip = std::binary_insert(warpData.renderPolicyMap, group.renderPolicy());
+			}
+
+			TaskData::PolicyData& policyData = ip->second;
 			IRender::Queue*& queue = policyData.portQueue;
 			if (queue == nullptr) {
 				queue = render.CreateQueue(device);
@@ -542,7 +557,12 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 			}
 
 			// add renderstate if exists
-			IRender::Resource*& state = warpData.renderStateMap[drawCall.renderStateDescription];
+			std::vector<std::key_value<IRender::Resource::RenderStateDescription, IRender::Resource*> >::iterator is = std::binary_find(warpData.renderStateMap.begin(), warpData.renderStateMap.end(), drawCall.renderStateDescription);
+			if (is == warpData.renderStateMap.end()) {
+				is = std::binary_insert(warpData.renderStateMap, drawCall.renderStateDescription);
+			}
+
+			IRender::Resource*& state = is->second;
 			if (state == nullptr) {
 				state = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_RENDERSTATE);
 				render.UploadResource(queue, state, &drawCall.renderStateDescription);
@@ -556,21 +576,20 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 			group.description = renderableComponent->GetDescription();
 #endif // _DEBUG
 
-			std::map<ShaderResource*, TaskData::WarpData::GlobalBufferItem>::iterator ip = warpData.worldGlobalBufferMap.find(drawCall.shaderResource());
 			PassBase::Updater& updater = drawCall.shaderResource->GetPassUpdater();
+			std::vector<std::key_value<NsSnowyStream::ShaderResource*, TaskData::WarpData::GlobalBufferItem> >::iterator ig = std::binary_find(warpData.worldGlobalBufferMap.begin(), warpData.worldGlobalBufferMap.end(), drawCall.shaderResource());
+			if (ig == warpData.worldGlobalBufferMap.end()) {
+				ig = std::binary_insert(warpData.worldGlobalBufferMap, drawCall.shaderResource());
 
-			if (ip == warpData.worldGlobalBufferMap.end()) {
-				ip = warpData.worldGlobalBufferMap.insert(std::make_pair(drawCall.shaderResource(), TaskData::WarpData::GlobalBufferItem())).first;
-
-				ip->second.renderQueue = queue;
-				taskData.worldGlobalData.Export(ip->second.globalUpdater, updater);
-				instanceData.Export(ip->second.instanceUpdater, updater);
+				ig->second.renderQueue = queue;
+				taskData.worldGlobalData.Export(ig->second.globalUpdater, updater);
+				instanceData.Export(ig->second.instanceUpdater, updater);
 
 				std::vector<Bytes> s;
 				std::vector<IRender::Resource::DrawCallDescription::BufferRange> bufferResources;
 				std::vector<IRender::Resource*> textureResources;
-				ip->second.globalUpdater.Snapshot(s, bufferResources, textureResources, taskData.worldGlobalData);
-				ip->second.buffers.resize(updater.GetBufferCount());
+				ig->second.globalUpdater.Snapshot(s, bufferResources, textureResources, taskData.worldGlobalData);
+				ig->second.buffers.resize(updater.GetBufferCount());
 
 				for (size_t i = 0; i < s.size(); i++) {
 					Bytes& data = s[i];
@@ -583,7 +602,7 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 						desc.data = std::move(data);
 						IRender::Resource* res = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_BUFFER);
 						render.UploadResource(queue, res, &desc);
-						ip->second.buffers[i] = res;
+						ig->second.buffers[i] = res;
 						policyData.runtimeResources.emplace_back(res);
 					}
 				}
@@ -591,13 +610,13 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 
 			for (size_t n = 0; n < group.drawCallDescription.bufferResources.size(); n++) {
 				IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[n];
-				if (ip->second.buffers[n] != nullptr) {
-					bufferRange.buffer = ip->second.buffers[n];
+				if (ig->second.buffers[n] != nullptr) {
+					bufferRange.buffer = ig->second.buffers[n];
 					bufferRange.offset = bufferRange.length = 0;
 				}
 			}
 
-			group.instanceUpdater = &ip->second.instanceUpdater;
+			group.instanceUpdater = &ig->second.instanceUpdater;
 			group.instanceUpdater->Snapshot(group.instancedData, bufferResources, textureResources, instanceData);
 
 			// skinning
@@ -816,7 +835,7 @@ TObject<IReflect>& CameraComponent::TaskData::operator () (IReflect& reflect) {
 void CameraComponent::TaskData::Cleanup(IRender& render) {
 	for (size_t i = 0; i < warpData.size(); i++) {
 		WarpData& data = warpData[i];
-		for (std::map<RenderPolicy*, PolicyData>::iterator it = data.renderPolicyMap.begin(); it != data.renderPolicyMap.end(); ++it) {
+		for (std::vector<std::key_value<RenderPolicy*, PolicyData> >::iterator it = data.renderPolicyMap.begin(); it != data.renderPolicyMap.end(); ++it) {
 			PolicyData& policyData = it->second;
 			IRender::Queue* queue = policyData.portQueue;
 
@@ -872,7 +891,7 @@ void CameraComponent::TaskData::Destroy(IRender& render) {
 
 	for (size_t i = 0; i < warpData.size(); i++) {
 		WarpData& data = warpData[i];
-		for (std::map<RenderPolicy*, PolicyData>::iterator it = data.renderPolicyMap.begin(); it != data.renderPolicyMap.end(); ++it) {
+		for (std::vector<std::key_value<RenderPolicy*, PolicyData> >::iterator it = data.renderPolicyMap.begin(); it != data.renderPolicyMap.end(); ++it) {
 			render.DeleteResource(it->second.portQueue, it->second.instanceBuffer);
 			render.DeleteQueue(it->second.portQueue);
 		}
