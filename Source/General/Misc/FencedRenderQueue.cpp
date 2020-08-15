@@ -12,7 +12,7 @@ FencedRenderQueue::~FencedRenderQueue() {
 
 void FencedRenderQueue::Initialize(IRender& render, IRender::Device* device) {
 	assert(queue == nullptr);
-	queue = render.CreateQueue(device);
+	queue = render.CreateQueue(device, IRender::QUEUE_REPEATABLE);
 	render.FlushQueue(queue);
 }
 

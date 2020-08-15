@@ -43,6 +43,7 @@ public:
 	virtual Device* CreateDevice(const String& description) override { return nullptr; }
 	virtual Int2 GetDeviceResolution(Device* device) override { return Int2(640, 480); }
 	virtual void SetDeviceResolution(Device* device, const Int2& resolution) override {}
+	virtual void NextDeviceFrame(Device* device) override {}
 	virtual void DeleteDevice(Device* device) override {}
 
 	// Queue
@@ -56,7 +57,6 @@ public:
 	virtual void PresentQueues(Queue** queue, uint32_t count, PresentOption option) override {}
 	virtual void DeleteQueue(Queue* queue) override {}
 	virtual void FlushQueue(Queue* queue) override {}
-	virtual void MergeQueue(Queue* target, Queue* src) override {}
 	virtual bool IsQueueEmpty(Queue* queue) override {
 		return true;
 	}

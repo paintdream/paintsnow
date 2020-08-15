@@ -27,6 +27,7 @@ namespace PaintsNow {
 		virtual Device* CreateDevice(const String& description) override;
 		virtual Int2 GetDeviceResolution(Device* device) override;
 		virtual void SetDeviceResolution(Device* device, const Int2& resolution) override;
+		virtual void NextDeviceFrame(Device* device) override;
 		virtual void DeleteDevice(Device* device) override;
 
 		virtual void PresentQueues(Queue** queues, uint32_t count, PresentOption option) override;
@@ -35,7 +36,6 @@ namespace PaintsNow {
 		// Queue
 		virtual Queue* CreateQueue(Device* device, uint32_t flag) override;
 		virtual Device* GetQueueDevice(Queue* queue) override;
-		virtual void MergeQueue(Queue* target, Queue* source) override;
 		virtual void DeleteQueue(Queue* queue) override;
 		virtual void FlushQueue(Queue* queue) override;
 		virtual bool IsQueueEmpty(Queue* queue) override;
@@ -55,6 +55,7 @@ namespace PaintsNow {
 		GLFWwindow* window;
 		VkInstance instance;
 		size_t surface;
+		uint64_t frameIndex;
 		VkAllocationCallbacks* allocator;
 		std::vector<VkPhysicalDevice> gpus;
 

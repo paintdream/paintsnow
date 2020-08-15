@@ -202,7 +202,10 @@ void ZFrameGLFW::EnterMainLoop() {
 			callback->OnRender();
 
 			OnCustomRender();
-			glfwSwapBuffers(window);
+
+			if (!isVulkan) {
+				glfwSwapBuffers(window);
+			}
 			isRendering = false;
 		}
 

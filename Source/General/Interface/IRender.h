@@ -233,17 +233,18 @@ namespace PaintsNow {
 		virtual bool SupportParallelPresent(Device* device) = 0;
 		virtual Int2 GetDeviceResolution(Device* device) = 0;
 		virtual void SetDeviceResolution(Device* device, const Int2& resolution) = 0;
+		virtual void NextDeviceFrame(Device* device) = 0;
 		virtual void DeleteDevice(Device* device) = 0;
 
 		// Queue
 		enum QueueFlag {
-			QUEUE_MULTITHREAD
+			QUEUE_REPEATABLE = 1 << 0,
+			QUEUE_MULTITHREAD = 1 << 1
 		};
 
 		virtual Queue* CreateQueue(Device* device, uint32_t flag = 0) = 0;
 		virtual Device* GetQueueDevice(Queue* queue) = 0;
 		virtual void DeleteQueue(Queue* queue) = 0;
-		virtual void MergeQueue(Queue* target, Queue* source) = 0;
 		virtual void FlushQueue(Queue* queue) = 0;
 		virtual bool IsQueueEmpty(Queue* queue) = 0;
 

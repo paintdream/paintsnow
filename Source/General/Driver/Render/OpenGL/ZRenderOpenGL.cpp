@@ -170,14 +170,6 @@ struct QueueImplOpenGL : public IRender::Queue {
 		}
 	}
 
-	inline void Merge(QueueImplOpenGL* source) {
-		while (!source->queuedCommands.Empty()) {
-			ResourceCommandImplOpenGL command = source->queuedCommands.Top();
-			source->queuedCommands.Pop();
-			queuedCommands.Push(command);
-		}
-	}
-
 	static inline void PrefetchCommand(const ResourceCommandImplOpenGL& predict) {
 		IMemory::PrefetchRead(&predict);
 		IRender::Resource* resource = predict.GetResource();
@@ -1913,6 +1905,10 @@ void ZRenderOpenGL::DeleteDevice(IRender::Device* device) {
 	delete impl;
 }
 
+void ZRenderOpenGL::NextDeviceFrame(IRender::Device* device) {
+	// DO NOTHING
+}
+
 // Queue
 IRender::Queue* ZRenderOpenGL::CreateQueue(Device* device, uint32_t flag) {
 	assert(device != nullptr);
@@ -1965,16 +1961,6 @@ bool ZRenderOpenGL::IsQueueEmpty(Queue* queue) {
 	QueueImplOpenGL* q = static_cast<QueueImplOpenGL*>(queue);
 	assert(queue != nullptr);
 	return q->queuedCommands.Empty();
-}
-
-void ZRenderOpenGL::MergeQueue(Queue* target, Queue* source) {
-	assert(target != nullptr);
-	assert(source != nullptr);
-
-	QueueImplOpenGL* t = static_cast<QueueImplOpenGL*>(target);
-	QueueImplOpenGL* s = static_cast<QueueImplOpenGL*>(source);
-
-	t->Merge(s);
 }
 
 void ZRenderOpenGL::FlushQueue(Queue* queue) {

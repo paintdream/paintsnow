@@ -3,8 +3,7 @@
 using namespace PaintsNow;
 using namespace PaintsNow::NsMythForest;
 
-RenderPortCommandQueue::RenderPortCommandQueue() {
-}
+RenderPortCommandQueue::RenderPortCommandQueue() {}
 
 TObject<IReflect>& RenderPortCommandQueue::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
@@ -36,8 +35,13 @@ void RenderPortCommandQueue::Uninitialize(IRender& render, IRender::Queue* mainQ
 	renderQueue.Uninitialize(render);
 }
 
-void RenderPortCommandQueue::Commit(std::vector<FencedRenderQueue*>& queues) {
-	queues.emplace_back(&renderQueue);
+void RenderPortCommandQueue::Commit(std::vector<FencedRenderQueue*>& fencedQueues, std::vector<IRender::Queue*>& instanceQueues) {
+	while (!mergedQueues.Empty()) {
+		instanceQueues.emplace_back(mergedQueues.Top());
+		mergedQueues.Pop();
+	}
+
+	fencedQueues.emplace_back(&renderQueue);
 }
 
 bool RenderPortCommandQueue::UpdateDataStream(RenderPort& source) {
@@ -45,5 +49,5 @@ bool RenderPortCommandQueue::UpdateDataStream(RenderPort& source) {
 }
 
 void RenderPortCommandQueue::MergeQueue(IRender& render, IRender::Queue* queue) {
-	render.MergeQueue(renderQueue.GetQueue(), queue);
+	mergedQueues.Push(queue);
 }

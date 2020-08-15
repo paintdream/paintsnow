@@ -33,7 +33,7 @@ namespace PaintsNow {
 			virtual void SetMainResolution(Engine& engine, IRender::Queue* resourceQueue, uint32_t width, uint32_t height);
 			virtual void UpdatePass(Engine& engine, IRender::Queue* resourceQueue);
 			virtual void Tick(Engine& engine, IRender::Queue* resourceQueue);
-			virtual void Commit(Engine& engine, std::vector<FencedRenderQueue*>& queues, IRender::Queue* instantQueue);
+			virtual void Commit(Engine& engine, std::vector<FencedRenderQueue*>& queues, std::vector<IRender::Queue*>& instantQueues, IRender::Queue* instantQueue);
 
 			IRender::Resource* GetRenderTargetResource() const;
 			const IRender::Resource::RenderTargetDescription& GetRenderTargetDescription() const;
@@ -126,8 +126,8 @@ namespace PaintsNow {
 				render.UploadResource(queue, BaseClass::drawCallResource, &copy);
 			}
 
-			virtual void Commit(Engine& engine, std::vector<FencedRenderQueue*>& queues, IRender::Queue* instantQueue) override {
-				BaseClass::Commit(engine, queues, instantQueue);
+			virtual void Commit(Engine& engine, std::vector<FencedRenderQueue*>& queues, std::vector<IRender::Queue*>& instantQueues, IRender::Queue* instantQueue) override {
+				BaseClass::Commit(engine, queues, instantQueues, instantQueue);
 				IRender& render = engine.interfaces.render;
 				render.ExecuteResource(instantQueue, BaseClass::drawCallResource);
 			}

@@ -132,11 +132,16 @@ void RenderFlowComponent::Render(Engine& engine) {
 		for (size_t n = 0, m = 0; n < cachedRenderStages.size(); n++) {
 			if (cachedRenderStages[n] == nullptr) {
 				std::vector<FencedRenderQueue*> renderQueues;
+				std::vector<IRender::Queue*> instantQueues;
 				for (size_t i = m; i < n; i++) {
-					cachedRenderStages[i]->Commit(engine, renderQueues, instantQueue);
+					cachedRenderStages[i]->Commit(engine, renderQueues, instantQueues, instantQueue);
 				}
 
 				render.PresentQueues(&instantQueue, 1, IRender::PRESENT_EXECUTE_ALL);
+				if (!instantQueues.empty()) {
+					render.PresentQueues(&instantQueues[0], safe_cast<uint32_t>(instantQueues.size()), IRender::PRESENT_EXECUTE_ALL);
+				}
+
 				FencedRenderQueue::InvokeRenderQueuesParallel(render, renderQueues);
 				m = n + 1;
 			}

@@ -303,6 +303,10 @@ Int2 ZRenderVulkan::GetDeviceResolution(IRender::Device* device) {
 	return impl->resolution;
 }
 
+void ZRenderVulkan::NextDeviceFrame(IRender::Device* device) {
+	// TODO:
+}
+
 IRender::Queue* ZRenderVulkan::CreateQueue(Device* dev, uint32_t flag) {
 	VulkanDeviceImpl* device = static_cast<VulkanDeviceImpl*>(dev);
 	VkCommandPoolCreateInfo info = {};
@@ -311,6 +315,7 @@ IRender::Queue* ZRenderVulkan::CreateQueue(Device* dev, uint32_t flag) {
 	info.queueFamilyIndex = device->queueFamily;
 	VkCommandPool commandPool;
 	vkCreateCommandPool(device->device, &info, allocator, &commandPool);
+
 	return new VulkanQueueImpl(device, commandPool);
 }
 
@@ -337,9 +342,6 @@ void ZRenderVulkan::DeleteQueue(Queue* q) {
 	delete queue;
 }
 
-void ZRenderVulkan::MergeQueue(Queue* target, Queue* source) {
-}
-
 void ZRenderVulkan::FlushQueue(Queue* queue) {}
 
 // Resource
@@ -361,7 +363,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugReportCallback(VkDebugReportFlagsEXT 
 #endif
 
 
-ZRenderVulkan::ZRenderVulkan(GLFWwindow* win) : allocator(nullptr), window(win) {
+ZRenderVulkan::ZRenderVulkan(GLFWwindow* win) : allocator(nullptr), window(win), frameIndex(0) {
 	VkApplicationInfo appInfo = {};
 	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 	appInfo.pNext = nullptr;
