@@ -237,7 +237,7 @@ void PhaseComponent::Setup(Engine& engine, uint32_t phaseCount, uint32_t taskCou
 		phase.irradiance = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseIrradiance", &phase), false, 0, nullptr);
 		phase.irradiance->description.state.attachment = true;
 		phase.irradiance->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
-		phase.irradiance->description.state.format = IRender::Resource::TextureDescription::HALF_FLOAT;
+		phase.irradiance->description.state.format = IRender::Resource::TextureDescription::HALF;
 		phase.irradiance->description.state.layout = IRender::Resource::TextureDescription::RGBA;
 		phase.irradiance->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
 		phase.irradiance->GetResourceManager().InvokeUpload(phase.irradiance(), renderQueue);

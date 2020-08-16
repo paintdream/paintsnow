@@ -7,7 +7,7 @@ int IImage::GetPixelSize(IRender::Resource::TextureDescription::Format dataType,
 	int count = sizeof(float), size = 4;
 	switch (dataType) {
 		case IRender::Resource::TextureDescription::FLOAT: size = sizeof(float); break;
-		case IRender::Resource::TextureDescription::HALF_FLOAT: size = sizeof(float) / 2; break;
+		case IRender::Resource::TextureDescription::HALF: size = sizeof(float) / 2; break;
 		case IRender::Resource::TextureDescription::UNSIGNED_BYTE: size = sizeof(unsigned char); break;
 		case IRender::Resource::TextureDescription::UNSIGNED_SHORT: size = sizeof(unsigned short); break;
 	}

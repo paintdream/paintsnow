@@ -364,8 +364,8 @@ void CameraComponent::CommitRenderRequests(Engine& engine, TaskData& taskData, I
 
 			// pass lights
 			std::vector<std::pair<TShared<RenderPolicy>, LightElement> >& lightElements = warpData.lightElements;
-			for (size_t n = 0; n < lightElements.size(); n++) {
-				std::pair<TShared<RenderPolicy>, LightElement>& e = lightElements[n];
+			for (size_t u = 0; u < lightElements.size(); u++) {
+				std::pair<TShared<RenderPolicy>, LightElement>& e = lightElements[u];
 				LightElement& element = e.second;
 				RenderPolicy* renderPolicy = e.first();
 				if (renderPolicy != nullptr) {
@@ -390,8 +390,8 @@ void CameraComponent::CommitRenderRequests(Engine& engine, TaskData& taskData, I
 				}
 			}
 
-			for (size_t k = 0; k < warpData.envCubeElements.size(); k++) {
-				std::pair<TShared<RenderPolicy>, EnvCubeElement>& e = warpData.envCubeElements[k];
+			for (size_t j = 0; j < warpData.envCubeElements.size(); j++) {
+				std::pair<TShared<RenderPolicy>, EnvCubeElement>& e = warpData.envCubeElements[j];
 				EnvCubeElement& element = e.second;
 				RenderPolicy* renderPolicy = e.first();
 				if (renderPolicy != nullptr) {

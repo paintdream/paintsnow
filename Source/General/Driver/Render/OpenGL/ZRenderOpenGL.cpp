@@ -483,8 +483,8 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> : public Resour
 		switch (state.format) {
 			case Resource::TextureDescription::UNSIGNED_BYTE:
 			{
-				static const GLuint presets[] = { GL_R8, GL_RG8, GL_RGB8, GL_RGBA8, GL_NONE, GL_STENCIL_INDEX8, GL_DEPTH24_STENCIL8, GL_NONE, GL_NONE };
-				static const GLuint byteDepths[] = { 1, 2, 3, 4, 0, 1, 4, 0, 0 };
+				static const GLuint presets[Resource::TextureDescription::Layout::END] = { GL_R8, GL_RG8, GL_RGB8, GL_RGBA8, GL_NONE, GL_STENCIL_INDEX8, GL_DEPTH24_STENCIL8, GL_NONE };
+				static const GLuint byteDepths[Resource::TextureDescription::Layout::END] = { 1, 2, 3, 4, 0, 1, 4, 0 };
 				format = presets[state.layout];
 				byteDepth = byteDepths[state.layout];
 				srcDataType = GL_UNSIGNED_BYTE;
@@ -492,17 +492,17 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> : public Resour
 			}
 			case Resource::TextureDescription::UNSIGNED_SHORT:
 			{
-				static const GLuint presets[] = { GL_R16, GL_RG16, GL_RGB16, GL_RGBA16, GL_DEPTH_COMPONENT16, GL_STENCIL_INDEX16, GL_NONE, GL_RGB10_A2, GL_NONE };
-				static const GLuint byteDepths[] = { 2, 4, 6, 8, 2, 2, 0, 4, 0 };
+				static const GLuint presets[Resource::TextureDescription::Layout::END] = { GL_R16, GL_RG16, GL_RGB16, GL_RGBA16, GL_DEPTH_COMPONENT16, GL_STENCIL_INDEX16, GL_NONE, GL_RGB10_A2 };
+				static const GLuint byteDepths[Resource::TextureDescription::Layout::END] = { 2, 4, 6, 8, 2, 2, 0, 4 };
 				format = presets[state.layout];
 				byteDepth = byteDepths[state.layout];
 				srcDataType = GL_UNSIGNED_SHORT;
 				break;
 			}
-			case Resource::TextureDescription::HALF_FLOAT:
+			case Resource::TextureDescription::HALF:
 			{
-				static const GLuint presets[] = { GL_R16F, GL_RG16F, GL_RGB16F, GL_RGBA16F, GL_DEPTH_COMPONENT16, GL_STENCIL_INDEX16, GL_NONE, GL_NONE, GL_NONE };
-				static const GLuint byteDepths[] = { 2, 4, 6, 8, 2, 2, 0, 0, 0 };
+				static const GLuint presets[Resource::TextureDescription::Layout::END] = { GL_R16F, GL_RG16F, GL_RGB16F, GL_RGBA16F, GL_DEPTH_COMPONENT16, GL_STENCIL_INDEX16, GL_NONE, GL_NONE };
+				static const GLuint byteDepths[Resource::TextureDescription::Layout::END] = { 2, 4, 6, 8, 2, 2, 0, 0 };
 				format = presets[state.layout];
 				byteDepth = byteDepths[state.layout];
 				srcDataType = GL_HALF_FLOAT;
@@ -510,8 +510,8 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> : public Resour
 			}
 			case Resource::TextureDescription::FLOAT:
 			{
-				static const GLuint presets[] = { GL_R32F, GL_RG32F, GL_RGB32F, GL_RGBA32F, GL_DEPTH24_STENCIL8, GL_NONE, GL_DEPTH24_STENCIL8, GL_NONE, GL_R11F_G11F_B10F };
-				static const GLuint byteDepths[] = { 4, 8, 12, 16, 4, 0, 4, 0, 4 };
+				static const GLuint presets[Resource::TextureDescription::Layout::END] = { GL_R32F, GL_RG32F, GL_RGB32F, GL_RGBA32F, GL_DEPTH_COMPONENT32F, GL_NONE, GL_DEPTH24_STENCIL8, GL_R11F_G11F_B10F };
+				static const GLuint byteDepths[Resource::TextureDescription::Layout::END] = { 4, 8, 12, 16, 4, 0, 4, 4 };
 				format = presets[state.layout];
 				byteDepth = byteDepths[state.layout];
 				srcDataType = GL_FLOAT;
@@ -524,7 +524,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> : public Resour
 		}
 
 		assert(format != GL_NONE);
-		static const GLuint layouts[] = { GL_RED, GL_RG, GL_RGB, GL_RGBA, GL_DEPTH_COMPONENT, GL_STENCIL_INDEX, GL_DEPTH_STENCIL, GL_RGBA, GL_RGB };
+		const GLint layouts[Resource::TextureDescription::Layout::END] = { GL_RED, GL_RG, GL_RGB, GL_RGBA, GL_DEPTH_COMPONENT, GL_STENCIL_INDEX, GL_DEPTH_COMPONENT, srcDataType == GL_FLOAT ? GL_RGB : GL_RGBA };
 		srcLayout = layouts[state.layout];
 
 		uint32_t bitDepth = byteDepth * 8;
@@ -1610,10 +1610,11 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> : public R
 				// do not support other types :D
 				assert(t->GetDescription().state.layout == IRender::Resource::TextureDescription::DEPTH_STENCIL || t->GetDescription().state.layout == IRender::Resource::TextureDescription::DEPTH);
 
-				if (t->GetDescription().state.sample == IRender::Resource::TextureDescription::RENDERBUFFER) {
-					glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, t->renderbufferID);
+				IRender::Resource::TextureDescription& desc = t->GetDescription();
+				if (desc.state.sample == IRender::Resource::TextureDescription::RENDERBUFFER) {
+					glFramebufferRenderbuffer(GL_FRAMEBUFFER, desc.state.layout == IRender::Resource::TextureDescription::DEPTH ? GL_DEPTH_ATTACHMENT : GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, t->renderbufferID);
 				} else {
-					glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, t->textureID, d.depthStencilStorage.mipLevel);
+					glFramebufferTexture2D(GL_FRAMEBUFFER, desc.state.layout == IRender::Resource::TextureDescription::DEPTH ? GL_DEPTH_ATTACHMENT : GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, t->textureID, d.depthStencilStorage.mipLevel);
 				}
 			}
 

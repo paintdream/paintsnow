@@ -39,10 +39,11 @@ namespace PaintsNow {
 			struct Description {
 				enum Format {
 					UNSIGNED_BYTE, UNSIGNED_SHORT, 
-					HALF_FLOAT,
+					HALF, // maybe 16-bit float or 16-bit unorm, depends on layout
 					FLOAT,
 					// Following are not available in texture
-					UNSIGNED_INT
+					UNSIGNED_INT,
+					END
 				};
 			};
 
@@ -66,7 +67,7 @@ namespace PaintsNow {
 				};
 
 				enum Layout {
-					R, RG, RGB, RGBA, DEPTH, STENCIL, DEPTH_STENCIL, RGB10A2, RGB10F
+					R, RG, RGB, RGBA, DEPTH, STENCIL, DEPTH_STENCIL, RGB10PACK, END
 				};
 
 				enum Sample {

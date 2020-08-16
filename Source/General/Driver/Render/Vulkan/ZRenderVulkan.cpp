@@ -379,18 +379,46 @@ struct ResourceImplVulkanDesc : public ResourceImplVulkanBase {
 template <class T>
 struct ResourceImplVulkan {};
 
+static VkFormat TranslateImageFormat(IRender::Resource::TextureDescription::Format format, IRender::Resource::TextureDescription::Layout layout) {
+	static const VkFormat formats[IRender::Resource::TextureDescription::Layout::END][IRender::Resource::Description::Format::END] = {
+		{ VK_FORMAT_R8_UNORM, VK_FORMAT_R16_SFLOAT, VK_FORMAT_R32_SFLOAT, VK_FORMAT_R32_UINT },
+		{ VK_FORMAT_R8G8_UNORM, VK_FORMAT_R16G16_SFLOAT, VK_FORMAT_R32G32_SFLOAT, VK_FORMAT_R32G32_UINT },
+		{ VK_FORMAT_R8G8B8_UNORM, VK_FORMAT_R16G16B16_SFLOAT, VK_FORMAT_R32G32B32_SFLOAT, VK_FORMAT_R32G32B32_UINT },
+		{ VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R32G32B32A32_SFLOAT, VK_FORMAT_R32G32B32A32_UINT },
+		{ VK_FORMAT_UNDEFINED, VK_FORMAT_D16_UNORM, VK_FORMAT_D32_SFLOAT, VK_FORMAT_UNDEFINED },
+		{ VK_FORMAT_S8_UINT, VK_FORMAT_UNDEFINED, VK_FORMAT_UNDEFINED, VK_FORMAT_UNDEFINED },
+		{ VK_FORMAT_UNDEFINED, VK_FORMAT_UNDEFINED, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_UNDEFINED },
+		{ VK_FORMAT_A2R10G10B10_UNORM_PACK32, VK_FORMAT_B10G11R11_UFLOAT_PACK32, VK_FORMAT_UNDEFINED, VK_FORMAT_UNDEFINED },
+	};
+
+	return formats[layout][format];
+}
+
 template <>
 struct ResourceImplVulkan<IRender::Resource::TextureDescription> : public ResourceImplVulkanDesc< IRender::Resource::TextureDescription> {
-	ResourceImplVulkan() : image(0) {}
+	ResourceImplVulkan() : image(0), imageView(0) {}
+	~ResourceImplVulkan() {
+	}
+
+	void Clear() {
+		if (image != 0) {
+			vkDestroyImage(device->device, image, device->allocator);
+			image = 0;
+		}
+
+		if (imageView != 0) {
+			vkDestroyImageView(device->device, imageView, device->allocator);
+			imageView = 0;
+		}
+	}
 
 	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* d) override {
-		VulkanDeviceImpl* device = queue->device;
+		assert(device == 0 || device == queue->device);
+		device = queue->device;
 		IRender::Resource::TextureDescription& desc = *static_cast<IRender::Resource::TextureDescription*>(d);
 
 		if (image == 0 || desc.dimension != description.dimension || desc.state != description.state) {
-			if (image != 0) {
-				vkDestroyImage(device->device, image, device->allocator);
-			}
+			Clear();
 
 			VkImageCreateInfo info = {};
 			info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -409,6 +437,7 @@ struct ResourceImplVulkan<IRender::Resource::TextureDescription> : public Resour
 				break;
 			}
 
+			info.format = TranslateImageFormat((IRender::Resource::TextureDescription::Format)desc.state.format, (IRender::Resource::TextureDescription::Layout)desc.state.layout);
 			info.extent.width = desc.dimension.x();
 			info.extent.height = desc.dimension.y();
 			info.extent.depth = desc.state.type == IRender::Resource::TextureDescription::TEXTURE_3D ? Math::Max((uint32_t)desc.dimension.z(), 1u) : 1u;
@@ -416,7 +445,7 @@ struct ResourceImplVulkan<IRender::Resource::TextureDescription> : public Resour
 			info.arrayLayers = desc.state.type != IRender::Resource::TextureDescription::TEXTURE_3D ? Math::Max((uint32_t)desc.dimension.z(), 1u) : 1u;
 			info.samples = VK_SAMPLE_COUNT_1_BIT;
 			info.tiling = VK_IMAGE_TILING_OPTIMAL;
-			info.usage = desc.state.attachment ? VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT: VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+			info.usage = desc.state.attachment ? VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT : VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 			info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
 			Verify("create image", vkCreateImage(device->device, &info, device->allocator, &image));
@@ -434,12 +463,111 @@ struct ResourceImplVulkan<IRender::Resource::TextureDescription> : public Resour
 			Verify("bind image", vkBindImageMemory(device->device, image, memory, 0));
 		}
 
-		// TODO: update data
-
 		description = std::move(desc);
+
+		if (!description.data.Empty()) {
+			/*
+			if (imageView == 0) {
+				VkImageViewCreateInfo viewInfo = {};
+				viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+				viewInfo.image = image;
+
+				switch (description.state.type) {
+				case IRender::Resource::TextureDescription::TEXTURE_1D:
+					viewInfo.viewType = VK_IMAGE_VIEW_TYPE_1D;
+					break;
+				case IRender::Resource::TextureDescription::TEXTURE_2D:
+					viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+					break;
+				case IRender::Resource::TextureDescription::TEXTURE_2D_CUBE:
+					viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+					break;
+				case IRender::Resource::TextureDescription::TEXTURE_3D:
+					viewInfo.viewType = VK_IMAGE_VIEW_TYPE_3D;
+					break;
+				}
+
+				viewInfo.format = TranslateImageFormat((IRender::Resource::TextureDescription::Format)description.state.format, (IRender::Resource::TextureDescription::Layout)description.state.layout);
+				viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+				viewInfo.subresourceRange.levelCount = 1;
+				viewInfo.subresourceRange.layerCount = 1;
+
+				Verify("create image view", vkCreateImageView(device->device, &viewInfo, device->allocator, &imageView));
+			}*/
+
+			VkBufferCreateInfo bufferInfo = {};
+			bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+			bufferInfo.size = description.data.GetSize();
+			bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+			bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+			VkBuffer uploadBuffer;
+			Verify("create buffer", vkCreateBuffer(device->device, &bufferInfo, device->allocator, &uploadBuffer));
+
+			VkMemoryRequirements req;
+			vkGetBufferMemoryRequirements(device->device, uploadBuffer, &req);
+			// assert(((size_t)description.data.GetData() & ~req.alignment) == 0);
+			VkMemoryAllocateInfo allocInfo = {};
+			allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+			allocInfo.allocationSize = req.size;
+			allocInfo.memoryTypeIndex = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+
+			VkDeviceMemory deviceMemory;
+			Verify("allocate memory", vkAllocateMemory(device->device, &allocInfo, device->allocator, &deviceMemory));
+			Verify("bind memory", vkBindBufferMemory(device->device, uploadBuffer, deviceMemory, 0));
+
+			void* map = nullptr;
+			Verify("map memory", vkMapMemory(device->device, deviceMemory, 0, description.data.GetSize(), 0, &map));
+			memcpy(map, description.data.GetData(), description.data.GetSize());
+			VkMappedMemoryRange range = {};
+			range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+			range.memory = deviceMemory;
+			range.size = description.data.GetSize();
+			Verify("flush memory", vkFlushMappedMemoryRanges(device->device, 1, &range));
+			vkUnmapMemory(device->device, deviceMemory);
+
+			// Copy buffer to image
+			VkImageMemoryBarrier copyBarrier = {};
+			copyBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			copyBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			copyBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+			copyBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			copyBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			copyBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			copyBarrier.image = image;
+			copyBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			copyBarrier.subresourceRange.levelCount = 1;
+			copyBarrier.subresourceRange.layerCount = 1;
+			vkCmdPipelineBarrier(queue->currentCommandBuffer, VK_PIPELINE_STAGE_HOST_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1, &copyBarrier);
+
+			VkBufferImageCopy region = {};
+			region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			region.imageSubresource.layerCount = 1;
+			region.imageExtent.width = description.dimension.x();
+			region.imageExtent.height = description.dimension.y();
+			region.imageExtent.depth = description.state.type == IRender::Resource::TextureDescription::TEXTURE_3D ? Math::Max((uint32_t)description.dimension.z(), 1u) : 1u;
+			vkCmdCopyBufferToImage(queue->currentCommandBuffer, uploadBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+
+			VkImageMemoryBarrier useBarrier = {};
+			useBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			useBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			useBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+			useBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+			useBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			useBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			useBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			useBarrier.image = image;
+			useBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			useBarrier.subresourceRange.levelCount = 1;
+			useBarrier.subresourceRange.layerCount = 1;
+			vkCmdPipelineBarrier(queue->currentCommandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, NULL, 0, NULL, 1, &useBarrier);
+
+			description.data.Clear();
+		}
 	}
 
+	VulkanDeviceImpl* device;
 	VkImage image;
+	VkImageView imageView;
 };
 
 template <>

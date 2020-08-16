@@ -24,7 +24,7 @@ TObject<IReflect>& AntiAliasingRenderStage::operator () (IReflect& reflect) {
 void AntiAliasingRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	SnowyStream& snowyStream = engine.snowyStream;
 	OutputColor.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("RT", &OutputColor), false, 0, nullptr);
-	OutputColor.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::HALF_FLOAT;
+	OutputColor.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::HALF;
 	OutputColor.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::RGBA;
 	OutputColor.renderTargetTextureResource->description.state.immutable = false;
 	OutputColor.renderTargetTextureResource->description.state.attachment = true;
