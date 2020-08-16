@@ -102,6 +102,7 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 		if (!shadowGrid->texture) {
 			TShared<NsSnowyStream::TextureResource> texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("LightShadowBake", shadowGrid()), false, 0, nullptr);
 			texture->description.dimension = dim;
+			texture->description.state.attachment = true;
 			texture->description.state.format = IRender::Resource::TextureDescription::FLOAT;
 			texture->description.state.layout = IRender::Resource::TextureDescription::DEPTH;
 			texture->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
@@ -510,6 +511,7 @@ void LightComponent::ShadowLayer::Initialize(Engine& engine, TShared<StreamCompo
 
 	TShared<NsSnowyStream::TextureResource> texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("LightShadowBakeDummy", this), false, 0, nullptr);
 	texture->description.dimension = UShort3(res.x(), res.y(), 1);
+	texture->description.state.attachment = true;
 	texture->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 	texture->description.state.layout = IRender::Resource::TextureDescription::R;
 	texture->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);

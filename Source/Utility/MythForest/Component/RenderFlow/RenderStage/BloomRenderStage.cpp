@@ -25,6 +25,7 @@ void BloomRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	OutputColor.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::HALF_FLOAT;
 	OutputColor.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::RGB;
 	OutputColor.renderTargetTextureResource->description.state.immutable = false;
+	OutputColor.renderTargetTextureResource->description.state.attachment = true;
 
 	BaseClass::PrepareResources(engine, queue);
 }

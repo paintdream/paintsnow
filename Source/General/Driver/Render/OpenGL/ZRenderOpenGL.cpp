@@ -1562,6 +1562,7 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> : public R
 			ResourceImplOpenGL<IRender::Resource::TextureDescription>* x = static_cast<ResourceImplOpenGL<IRender::Resource::TextureDescription>*>(t->colorBufferStorages[i].resource);
 			if (x != nullptr) {
 				assert(x->GetNextDescription().dimension.x() != 0 && x->GetNextDescription().dimension.y() != 0);
+				assert(x->GetNextDescription().state.attachment);
 			}
 		}
 		ResourceBaseImplOpenGLDesc<IRender::Resource::RenderTargetDescription>::SetUploadDescription(d);
@@ -1867,21 +1868,6 @@ struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> : public Resou
 	}
 };
 
-template <>
-struct ResourceImplOpenGL<IRender::Resource::NotifyDescription> : public ResourceBaseImplOpenGLDesc<IRender::Resource::NotifyDescription> {
-	virtual IRender::Resource::Type GetType() const override { return RESOURCE_DRAWCALL; }
-	virtual void Upload(QueueImplOpenGL& queue) override {
-		UpdateDescription();
-	}
-	virtual void Download(QueueImplOpenGL& queue) override {}
-	virtual void Execute(QueueImplOpenGL& queue) override {
-		GetDescription().notifier(queue.device->render, &queue);
-	}
-	virtual void Delete(QueueImplOpenGL& queue) override {
-		delete this;
-	}
-};
-
 IRender::Device* ZRenderOpenGL::CreateDevice(const String& description) {
 	if (description.empty()) {
 		return new DeviceImplOpenGL(*this); // by now we only supports one device
@@ -1957,7 +1943,7 @@ bool ZRenderOpenGL::SupportParallelPresent(Device* device) {
 	return false;
 }
 
-bool ZRenderOpenGL::IsQueueEmpty(Queue* queue) {
+bool ZRenderOpenGL::IsQueueModified(Queue* queue) {
 	QueueImplOpenGL* q = static_cast<QueueImplOpenGL*>(queue);
 	assert(queue != nullptr);
 	return q->queuedCommands.Empty();
@@ -1992,8 +1978,6 @@ IRender::Resource* ZRenderOpenGL::CreateResource(Device* device, Resource::Type 
 		return new ResourceImplOpenGL<Resource::ClearDescription>();
 	case Resource::RESOURCE_DRAWCALL:
 		return new ResourceImplOpenGL<Resource::DrawCallDescription>();
-	case Resource::RESOURCE_NOTIFY:
-		return new ResourceImplOpenGL<Resource::NotifyDescription>();
 	}
 
 	assert(false);

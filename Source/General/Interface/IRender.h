@@ -34,7 +34,6 @@ namespace PaintsNow {
 				RESOURCE_RENDERTARGET,
 				RESOURCE_CLEAR,
 				RESOURCE_DRAWCALL,
-				RESOURCE_NOTIFY
 			};
 
 			struct Description {
@@ -82,7 +81,7 @@ namespace PaintsNow {
 				
 				struct State {
 					State() : type(TEXTURE_2D), format(UNSIGNED_BYTE), 
-						wrap(1), immutable(1), reserved(1), layout(RGBA), sample(LINEAR), mip(NOMIP), compress(0) {}
+						wrap(1), immutable(1), attachment(0), layout(RGBA), sample(LINEAR), mip(NOMIP), compress(0) {}
 
 					inline bool operator == (const State& rhs) const {
 						return memcmp(this, &rhs, sizeof(*this)) == 0;
@@ -100,7 +99,7 @@ namespace PaintsNow {
 					uint32_t format : 2;
 					uint32_t wrap : 1;
 					uint32_t immutable : 1;
-					uint32_t reserved : 1;
+					uint32_t attachment : 1;
 					uint32_t compress : 1;
 					uint32_t layout : 4;
 					uint32_t sample : 2;
@@ -210,10 +209,6 @@ namespace PaintsNow {
 				std::vector<BufferRange> bufferResources;
 				std::vector<Resource*> textureResources;
 			};
-
-			struct NotifyDescription : public Description {
-				TWrapper<void, IRender&, Queue*> notifier;
-			};
 		};
 
 		// The only API that requires calling on device thread.
@@ -246,7 +241,7 @@ namespace PaintsNow {
 		virtual Device* GetQueueDevice(Queue* queue) = 0;
 		virtual void DeleteQueue(Queue* queue) = 0;
 		virtual void FlushQueue(Queue* queue) = 0;
-		virtual bool IsQueueEmpty(Queue* queue) = 0;
+		virtual bool IsQueueModified(Queue* queue) = 0;
 
 		// Resource
 		virtual Resource* CreateResource(Device* device, Resource::Type resourceType) = 0;

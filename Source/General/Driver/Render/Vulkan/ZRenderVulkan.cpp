@@ -35,21 +35,27 @@ struct FrameData {
 	VkSemaphore releaseSemaphore;
 };
 
+struct VulkanQueueImpl;
 struct VulkanDeviceImpl : public IRender::Device {
-	VulkanDeviceImpl(VkPhysicalDevice phy, VkDevice dev, uint32_t family, VkQueue q) : physicalDevice(phy), device(dev), resolution(0, 0), queueFamily(family), queue(q), swapChain(0) {}
+	VulkanDeviceImpl(VkAllocationCallbacks* alloc, VkPhysicalDevice phy, VkDevice dev, uint32_t family, VkQueue q) : allocator(alloc), physicalDevice(phy), device(dev), resolution(0, 0), queueFamily(family), queue(q), swapChain(0) {
+		critical.store(0, std::memory_order_release);
+	}
 
+	std::atomic<uint32_t> critical;
 	VkPhysicalDevice physicalDevice;
 	VkDevice device;
+	VkAllocationCallbacks* allocator;
 	VkQueue queue;
 	Int2 resolution;
 	uint32_t queueFamily;
 	VkSwapchainKHR swapChain;
 
 	std::vector<FrameData> frames;
+	std::vector<VulkanQueueImpl*> deletedQueues;
 };
 
 struct VulkanQueueImpl : public IRender::Queue, public TPool<VulkanQueueImpl, VkCommandBuffer> {
-	VulkanQueueImpl(VulkanDeviceImpl* dev, VkCommandPool pool) : device(dev), commandPool(pool), TPool<VulkanQueueImpl, VkCommandBuffer>(4) {
+	VulkanQueueImpl(VulkanDeviceImpl* dev, VkCommandPool pool) : device(dev), commandPool(pool), TPool<VulkanQueueImpl, VkCommandBuffer>(4), commandCount(0) {
 		VkCommandBufferAllocateInfo info;
 		info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		info.commandBufferCount = maxCount;
@@ -57,20 +63,23 @@ struct VulkanQueueImpl : public IRender::Queue, public TPool<VulkanQueueImpl, Vk
 		info.commandPool = commandPool;
 		info.pNext = nullptr;
 
-		freeItems.reserve(maxCount);
-		vkAllocateCommandBuffers(device->device, &info, &freeItems[0]);
+		// freeItems.reserve(maxCount);
+		// vkAllocateCommandBuffers(device->device, &info, &freeItems[0]);
+		currentCommandBuffer = Acquire();
 	}
 
 	~VulkanQueueImpl() {
 		// delete all command buffers
-		for (size_t k = 0; k < frameCommandBuffers.size(); k++) {
-			assert(frameCommandBuffers[k].commandBuffers.empty());
+		for (size_t k = 0; k < frames.size(); k++) {
+			assert(frames[k].commandBuffers.empty());
 		}
 
 		if (!freeItems.empty()) {
 			vkFreeCommandBuffers(device->device, commandPool, safe_cast<uint32_t>(freeItems.size()), &freeItems[0]);
 			freeItems.clear();
 		}
+
+		vkFreeCommandBuffers(device->device, commandPool, 1, &currentCommandBuffer);
 	}
 
 	VkCommandBuffer New() {
@@ -92,12 +101,14 @@ struct VulkanQueueImpl : public IRender::Queue, public TPool<VulkanQueueImpl, Vk
 
 	VulkanDeviceImpl* device;
 	VkCommandPool commandPool;
+	VkCommandBuffer currentCommandBuffer;
+	uint32_t commandCount;
 
 	struct Frame {
 		std::vector<VkCommandBuffer> commandBuffers;
 	};
 
-	std::vector<Frame> frameCommandBuffers;
+	std::vector<Frame> frames;
 };
 
 std::vector<String> ZRenderVulkan::EnumerateDevices() {
@@ -182,7 +193,7 @@ IRender::Device* ZRenderVulkan::CreateDevice(const String& description) {
 			VkBool32 res;
 			vkGetPhysicalDeviceSurfaceSupportKHR(device, family, (VkSurfaceKHR)surface, &res);
 
-			VulkanDeviceImpl* impl = new VulkanDeviceImpl(device, logicDevice, family, queue);
+			VulkanDeviceImpl* impl = new VulkanDeviceImpl(allocator, device, logicDevice, family, queue);
 
 			int w, h;
 			glfwGetFramebufferSize(window, &w, &h);
@@ -330,23 +341,179 @@ bool ZRenderVulkan::SupportParallelPresent(Device* device) {
 
 void ZRenderVulkan::PresentQueues(Queue** queues, uint32_t count, PresentOption option) {}
 
-bool ZRenderVulkan::IsQueueEmpty(Queue* q) {
+bool ZRenderVulkan::IsQueueModified(Queue* q) {
 	VulkanQueueImpl* queue = static_cast<VulkanQueueImpl*>(q);
-	return queue->frameCommandBuffers.empty() || queue->frameCommandBuffers[0].commandBuffers.empty();
+	return queue->commandCount != 0;
 }
 
 void ZRenderVulkan::DeleteQueue(Queue* q) {
-	// TODO: add to delayed execution items
 	VulkanQueueImpl* queue = static_cast<VulkanQueueImpl*>(q);
+	SpinLock(queue->device->critical);
+	queue->device->deletedQueues.emplace_back(queue); // delayed delete
+	SpinUnLock(queue->device->critical);
+
+	/*
 	vkDestroyCommandPool(queue->device->device, queue->commandPool, allocator);
 	delete queue;
+	*/
 }
 
-void ZRenderVulkan::FlushQueue(Queue* queue) {}
+void ZRenderVulkan::FlushQueue(Queue* q) {
+	// start new segment
+	VulkanQueueImpl* queue = static_cast<VulkanQueueImpl*>(q);
+	uint32_t frame = frameIndex.load(std::memory_order_acquire);
+	VulkanQueueImpl::Frame& currentFrame = queue->frames[frame % queue->frames.size()];
+	currentFrame.commandBuffers.emplace_back(queue->currentCommandBuffer);
+	queue->currentCommandBuffer = queue->AcquireSafe();
+}
+
+struct ResourceImplVulkanBase : public IRender::Resource {
+	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* description) = 0;
+};
+
+template <class T>
+struct ResourceImplVulkanDesc : public ResourceImplVulkanBase {
+	T description;
+};
+
+template <class T>
+struct ResourceImplVulkan {};
+
+template <>
+struct ResourceImplVulkan<IRender::Resource::TextureDescription> : public ResourceImplVulkanDesc< IRender::Resource::TextureDescription> {
+	ResourceImplVulkan() : image(0) {}
+
+	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* d) override {
+		VulkanDeviceImpl* device = queue->device;
+		IRender::Resource::TextureDescription& desc = *static_cast<IRender::Resource::TextureDescription*>(d);
+
+		if (image == 0 || desc.dimension != description.dimension || desc.state != description.state) {
+			if (image != 0) {
+				vkDestroyImage(device->device, image, device->allocator);
+			}
+
+			VkImageCreateInfo info = {};
+			info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+			switch (desc.state.type) {
+			case IRender::Resource::TextureDescription::TEXTURE_1D:
+				info.imageType = VK_IMAGE_TYPE_1D;
+				break;
+			case IRender::Resource::TextureDescription::TEXTURE_2D:
+				info.imageType = VK_IMAGE_TYPE_2D;
+				break;
+			case IRender::Resource::TextureDescription::TEXTURE_2D_CUBE:
+				info.imageType = VK_IMAGE_TYPE_2D;
+				break;
+			case IRender::Resource::TextureDescription::TEXTURE_3D:
+				info.imageType = VK_IMAGE_TYPE_3D;
+				break;
+			}
+
+			info.extent.width = desc.dimension.x();
+			info.extent.height = desc.dimension.y();
+			info.extent.depth = desc.state.type == IRender::Resource::TextureDescription::TEXTURE_3D ? Math::Max((uint32_t)desc.dimension.z(), 1u) : 1u;
+			info.mipLevels = desc.state.mip == IRender::Resource::TextureDescription::NOMIP ? 1 : Math::Log2((uint32_t)Math::Min(desc.dimension.x(), desc.dimension.y())) + 1;
+			info.arrayLayers = desc.state.type != IRender::Resource::TextureDescription::TEXTURE_3D ? Math::Max((uint32_t)desc.dimension.z(), 1u) : 1u;
+			info.samples = VK_SAMPLE_COUNT_1_BIT;
+			info.tiling = VK_IMAGE_TILING_OPTIMAL;
+			info.usage = desc.state.attachment ? VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT: VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+			info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+
+			Verify("create image", vkCreateImage(device->device, &info, device->allocator, &image));
+
+			VkMemoryRequirements req;
+			vkGetImageMemoryRequirements(device->device, image, &req);
+
+			VkMemoryAllocateInfo allocInfo;
+			allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+			allocInfo.allocationSize = req.size;
+			allocInfo.memoryTypeIndex = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+			VkDeviceMemory memory;
+			Verify("allocate texture memory", vkAllocateMemory(device->device, &allocInfo, device->allocator, &memory));
+			Verify("bind image", vkBindImageMemory(device->device, image, memory, 0));
+		}
+
+		// TODO: update data
+
+		description = std::move(desc);
+	}
+
+	VkImage image;
+};
+
+template <>
+struct ResourceImplVulkan<IRender::Resource::BufferDescription> : public ResourceImplVulkanBase {
+	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* description) override {
+
+	}
+};
+
+template <>
+struct ResourceImplVulkan<IRender::Resource::ShaderDescription> : public ResourceImplVulkanBase {
+	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* description) override {
+
+	}
+};
+
+template <>
+struct ResourceImplVulkan<IRender::Resource::RenderStateDescription> : public ResourceImplVulkanBase {
+	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* description) override {
+
+	}
+};
+
+template <>
+struct ResourceImplVulkan<IRender::Resource::RenderTargetDescription> : public ResourceImplVulkanBase {
+	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* description) override {
+
+	}
+};
+
+template <>
+struct ResourceImplVulkan<IRender::Resource::ClearDescription> : public ResourceImplVulkanBase {
+	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* description) override {
+
+	}
+};
+
+template <>
+struct ResourceImplVulkan<IRender::Resource::DrawCallDescription> : public ResourceImplVulkanBase {
+	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* description) override {
+
+	}
+};
+
 
 // Resource
-IRender::Resource* ZRenderVulkan::CreateResource(Device* device, Resource::Type resourceType) { return nullptr; }
-void ZRenderVulkan::UploadResource(Queue* queue, Resource* resource, Resource::Description* description) {}
+IRender::Resource* ZRenderVulkan::CreateResource(Device* device, Resource::Type resourceType) {
+	switch (resourceType)
+	{
+	case Resource::RESOURCE_TEXTURE:
+		return new ResourceImplVulkan<Resource::TextureDescription>();
+	case Resource::RESOURCE_BUFFER:
+		return new ResourceImplVulkan<Resource::BufferDescription>();
+	case Resource::RESOURCE_SHADER:
+		return new ResourceImplVulkan<Resource::ShaderDescription>();
+	case Resource::RESOURCE_RENDERSTATE:
+		return new ResourceImplVulkan<Resource::RenderStateDescription>();
+	case Resource::RESOURCE_RENDERTARGET:
+		return new ResourceImplVulkan<Resource::RenderTargetDescription>();
+	case Resource::RESOURCE_CLEAR:
+		return new ResourceImplVulkan<Resource::ClearDescription>();
+	case Resource::RESOURCE_DRAWCALL:
+		return new ResourceImplVulkan<Resource::DrawCallDescription>();
+	}
+
+	assert(false);
+	return nullptr;
+}
+
+void ZRenderVulkan::UploadResource(Queue* queue, Resource* resource, Resource::Description* description) {
+	ResourceImplVulkanBase* res = static_cast<ResourceImplVulkanBase*>(resource);
+	res->Upload(static_cast<VulkanQueueImpl*>(queue), description);
+}
+
 void ZRenderVulkan::AcquireResource(Queue* queue, Resource* resource) {}
 void ZRenderVulkan::ReleaseResource(Queue* queue, Resource* resource) {}
 void ZRenderVulkan::RequestDownloadResource(Queue* queue, Resource* resource, Resource::Description* description) {}
@@ -363,7 +530,8 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugReportCallback(VkDebugReportFlagsEXT 
 #endif
 
 
-ZRenderVulkan::ZRenderVulkan(GLFWwindow* win) : allocator(nullptr), window(win), frameIndex(0) {
+ZRenderVulkan::ZRenderVulkan(GLFWwindow* win) : allocator(nullptr), window(win) {
+	frameIndex.store(0, std::memory_order_release);
 	VkApplicationInfo appInfo = {};
 	appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 	appInfo.pNext = nullptr;

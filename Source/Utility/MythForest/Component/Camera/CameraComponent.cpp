@@ -324,7 +324,7 @@ void CameraComponent::CommitRenderRequests(Engine& engine, TaskData& taskData, I
 						if (ip != warpData.renderPolicyMap.end()) {
 							TaskData::PolicyData& policyData = ip->second;
 							if (policyData.instanceBuffer != nullptr) {
-								if (render.IsQueueEmpty(queue)) {
+								if (render.IsQueueModified(queue)) {
 									render.DeleteResource(policyData.portQueue, policyData.instanceBuffer);
 									policyData.instanceBuffer = nullptr;
 								}

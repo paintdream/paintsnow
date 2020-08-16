@@ -71,6 +71,7 @@ void PhaseComponent::Initialize(Engine& engine, Entity* entity) {
 
 		if (!emptyColorAttachment) {
 			emptyColorAttachment = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), location, false, 0, nullptr);
+			emptyColorAttachment->description.state.attachment = true;
 			emptyColorAttachment->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
 			emptyColorAttachment->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 			emptyColorAttachment->description.state.layout = IRender::Resource::TextureDescription::R;
@@ -225,6 +226,8 @@ void PhaseComponent::Setup(Engine& engine, uint32_t phaseCount, uint32_t taskCou
 		phase.drawCallResource = render.CreateResource(device, IRender::Resource::RESOURCE_DRAWCALL);
 
 		phase.depth = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseDepth", &phase), false, 0, nullptr);
+
+		phase.depth->description.state.attachment = true;
 		phase.depth->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
 		phase.depth->description.state.format = IRender::Resource::TextureDescription::FLOAT;
 		phase.depth->description.state.layout = IRender::Resource::TextureDescription::DEPTH;
@@ -232,6 +235,7 @@ void PhaseComponent::Setup(Engine& engine, uint32_t phaseCount, uint32_t taskCou
 		phase.depth->GetResourceManager().InvokeUpload(phase.depth(), renderQueue);
 
 		phase.irradiance = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseIrradiance", &phase), false, 0, nullptr);
+		phase.irradiance->description.state.attachment = true;
 		phase.irradiance->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
 		phase.irradiance->description.state.format = IRender::Resource::TextureDescription::HALF_FLOAT;
 		phase.irradiance->description.state.layout = IRender::Resource::TextureDescription::RGBA;
@@ -239,6 +243,7 @@ void PhaseComponent::Setup(Engine& engine, uint32_t phaseCount, uint32_t taskCou
 		phase.irradiance->GetResourceManager().InvokeUpload(phase.irradiance(), renderQueue);
 
 		phase.baseColorOcclusion = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseBaseColorOcclusion", &phase), false, 0, nullptr);
+		phase.baseColorOcclusion->description.state.attachment = true;
 		phase.baseColorOcclusion->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
 		phase.baseColorOcclusion->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 		phase.baseColorOcclusion->description.state.layout = IRender::Resource::TextureDescription::RGBA;
@@ -246,6 +251,7 @@ void PhaseComponent::Setup(Engine& engine, uint32_t phaseCount, uint32_t taskCou
 		phase.baseColorOcclusion->GetResourceManager().InvokeUpload(phase.baseColorOcclusion(), renderQueue);
 
 		phase.normalRoughnessMetallic = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseNormalRoughness", &phase), false, 0, nullptr);
+		phase.normalRoughnessMetallic->description.state.attachment = true;
 		phase.normalRoughnessMetallic->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
 		phase.normalRoughnessMetallic->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 		phase.normalRoughnessMetallic->description.state.layout = IRender::Resource::TextureDescription::RGBA;
@@ -703,6 +709,7 @@ void PhaseComponent::CompleteUpdateLights(Engine& engine, std::vector<LightEleme
 		const LightElement& lightElement = elements[i];
 		if (!shadow.shadow) {
 			shadow.shadow = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseShadow", &shadow), false, 0, nullptr);
+			shadow.shadow->description.state.attachment = true;
 			shadow.shadow->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
 			shadow.shadow->description.state.format = IRender::Resource::TextureDescription::FLOAT;
 			shadow.shadow->description.state.layout = IRender::Resource::TextureDescription::DEPTH;

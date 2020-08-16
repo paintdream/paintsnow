@@ -99,6 +99,7 @@ void VisibilityComponent::Initialize(Engine& engine, Entity* entity) {
 		TShared<TextureResource>& texture = task.texture;
 		texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("VisBake", &task), false, 0, nullptr);
 		texture->description.dimension = dim;
+		texture->description.state.attachment = true;
 		texture->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 		texture->description.state.layout = IRender::Resource::TextureDescription::RGBA;
 		texture->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);

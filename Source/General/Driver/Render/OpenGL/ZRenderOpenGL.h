@@ -33,7 +33,7 @@ namespace PaintsNow {
 		virtual Device* GetQueueDevice(Queue* queue) override;
 		virtual void DeleteQueue(Queue* queue) override;
 		virtual void FlushQueue(Queue* queue) override;
-		virtual bool IsQueueEmpty(Queue* queue) override;
+		virtual bool IsQueueModified(Queue* queue) override;
 
 		// Resource
 		virtual Resource* CreateResource(Device* device, Resource::Type resourceType) override;

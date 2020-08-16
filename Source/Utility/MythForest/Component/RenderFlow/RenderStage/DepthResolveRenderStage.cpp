@@ -26,6 +26,7 @@ void DepthResolveRenderStage::PrepareResources(Engine& engine, IRender::Queue* q
 	OutputDepth.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::FLOAT;
 	OutputDepth.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::R;
 	OutputDepth.renderTargetTextureResource->description.state.immutable = false;
+	OutputDepth.renderTargetTextureResource->description.state.attachment = true;
 
 	BaseClass::PrepareResources(engine, queue);
 }

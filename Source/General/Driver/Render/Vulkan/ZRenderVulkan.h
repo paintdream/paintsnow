@@ -38,7 +38,7 @@ namespace PaintsNow {
 		virtual Device* GetQueueDevice(Queue* queue) override;
 		virtual void DeleteQueue(Queue* queue) override;
 		virtual void FlushQueue(Queue* queue) override;
-		virtual bool IsQueueEmpty(Queue* queue) override;
+		virtual bool IsQueueModified(Queue* queue) override;
 
 		// Resource
 		virtual Resource* CreateResource(Device* device, Resource::Type resourceType) override;
@@ -55,7 +55,7 @@ namespace PaintsNow {
 		GLFWwindow* window;
 		VkInstance instance;
 		size_t surface;
-		uint64_t frameIndex;
+		std::atomic<uint32_t> frameIndex;
 		VkAllocationCallbacks* allocator;
 		std::vector<VkPhysicalDevice> gpus;
 

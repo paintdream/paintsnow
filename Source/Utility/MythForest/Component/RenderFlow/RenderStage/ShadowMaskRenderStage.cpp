@@ -28,6 +28,7 @@ void ShadowMaskRenderStage::PrepareResources(Engine& engine, IRender::Queue* que
 	OutputMask.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 	OutputMask.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::R;
 	OutputMask.renderTargetTextureResource->description.state.immutable = false;
+	OutputMask.renderTargetTextureResource->description.state.attachment = true;
 
 	emptyShadowMask = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), "[Runtime]/TextureResource/Black", true, 0, nullptr);
 

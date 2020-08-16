@@ -41,16 +41,19 @@ void GeometryBufferRenderStage::PrepareResources(Engine& engine, IRender::Queue*
 	BaseColorOcclusion.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 	BaseColorOcclusion.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::RGBA;
 	BaseColorOcclusion.renderTargetTextureResource->description.state.immutable = false;
+	BaseColorOcclusion.renderTargetTextureResource->description.state.attachment = true;
 
 	NormalRoughnessMetallic.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("RT", &NormalRoughnessMetallic), false, 0, nullptr);
 	NormalRoughnessMetallic.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 	NormalRoughnessMetallic.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::RGBA;
 	NormalRoughnessMetallic.renderTargetTextureResource->description.state.immutable = false;
+	NormalRoughnessMetallic.renderTargetTextureResource->description.state.attachment = true;
 
 	Depth.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("RT", &Depth), false, 0, nullptr);
 	Depth.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::FLOAT;
 	Depth.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::DEPTH;
 	Depth.renderTargetTextureResource->description.state.immutable = false;
+	Depth.renderTargetTextureResource->description.state.attachment = true;
 
 	BaseClass::PrepareResources(engine, queue);
 }

@@ -39,6 +39,7 @@ void DeferredLightingRenderStage::PrepareResources(Engine& engine, IRender::Queu
 	OutputColor.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::HALF_FLOAT;
 	OutputColor.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::RGBA;
 	OutputColor.renderTargetTextureResource->description.state.immutable = false;
+	OutputColor.renderTargetTextureResource->description.state.attachment = true;
 
 	BaseClass::PrepareResources(engine, queue);
 }

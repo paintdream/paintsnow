@@ -57,7 +57,7 @@ public:
 	virtual void PresentQueues(Queue** queue, uint32_t count, PresentOption option) override {}
 	virtual void DeleteQueue(Queue* queue) override {}
 	virtual void FlushQueue(Queue* queue) override {}
-	virtual bool IsQueueEmpty(Queue* queue) override {
+	virtual bool IsQueueModified(Queue* queue) override {
 		return true;
 	}
 

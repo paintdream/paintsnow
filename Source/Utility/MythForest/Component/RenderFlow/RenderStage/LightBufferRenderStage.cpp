@@ -32,6 +32,7 @@ void LightBufferRenderStage::PrepareResources(Engine& engine, IRender::Queue* qu
 	LightTexture.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::RGBA;
 	LightTexture.renderTargetTextureResource->description.state.sample = IRender::Resource::TextureDescription::POINT;
 	LightTexture.renderTargetTextureResource->description.state.immutable = false;
+	LightTexture.renderTargetTextureResource->description.state.attachment = true;
 
 	BaseClass::PrepareResources(engine, queue);
 }
