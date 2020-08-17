@@ -617,7 +617,6 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 			}
 
 			group.instanceUpdater = &ig->second.instanceUpdater;
-			group.instanceUpdater->Snapshot(group.instancedData, bufferResources, textureResources, instanceData);
 
 			// skinning
 			if (animationComponent) {
@@ -628,19 +627,31 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 					group.drawCallDescription.bufferResources[parameter.slot].buffer = animationComponent->AcquireBoneMatrixBuffer(render, queue);
 				}
 			}
-		} else {
-			InstanceGroup& group = (*it).second;
-			group.instanceUpdater->Snapshot(s, bufferResources, textureResources, instanceData);
-			assert(!group.instanceUpdater->parameters.empty());
-			assert(s.size() == group.instancedData.size());
-
-			// merge slice
-			for (size_t m = 0; m < group.instancedData.size(); m++) {
-				group.instancedData[m].Append(s[m]);
-			}
 		}
 
-		group.instanceCount++;
+		// process local instanced data
+		if (drawCall.localInstancedData.empty()) {
+			group.instanceUpdater->Snapshot(group.instancedData, bufferResources, textureResources, instanceData);
+			assert(!group.instanceUpdater->parameters.empty());
+			group.instanceCount++;
+		} else {
+			std::vector<Bytes> s;
+			group.instanceUpdater->Snapshot(s, bufferResources, textureResources, instanceData);
+			for (size_t i = 0; i < drawCall.localInstancedData.size(); i++) {
+				std::pair<uint32_t, Bytes>& localInstancedData = drawCall.localInstancedData[i];
+				if (group.instancedData.size() <= localInstancedData.first) {
+					group.instancedData.resize(localInstancedData.first + 1);
+				}
+
+				group.instancedData[localInstancedData.first].Append(localInstancedData.second);
+			}
+
+			for (size_t j = 0; j < s.size(); j++) {
+				for (size_t n = 0; n < drawCall.drawCallDescription.instanceCounts.x(); n++) {
+					group.instancedData[j].Append(s[j]);
+				}
+			}
+		}
 	}
 }
 

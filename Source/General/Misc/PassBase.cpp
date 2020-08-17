@@ -380,6 +380,8 @@ void PassBase::PartialUpdater::Snapshot(std::vector<Bytes>& bufferData, std::vec
 	static Unique uniqueBindBuffer = UniqueType<IShader::BindBuffer>::Get();
 	static Unique uniqueBindTexture = UniqueType<IShader::BindTexture>::Get();
 
+	std::vector<uint32_t> starts(bufferData.size(), ~(uint32_t)0);
+
 	for (size_t i = 0; i < parameters.size(); i++) {
 		const Parameter& parameter = parameters[i];
 		if (parameter.type == uniqueBindBuffer) {
@@ -402,16 +404,19 @@ void PassBase::PartialUpdater::Snapshot(std::vector<Bytes>& bufferData, std::vec
 		} else {
 			if (bufferData.size() <= parameter.slot) {
 				bufferData.resize(parameter.slot + 1);
+				starts.resize(parameter.slot + 1, ~(uint32_t)0);
 			}
 
 			assert(parameter.slot < bufferData.size());
 			Bytes& buffer = bufferData[parameter.slot];
 			const PassBase::Parameter& p = parameters[i];
-			if (buffer.Empty()) {
-				buffer.Resize(p.stride);
+			uint32_t& start = starts[parameter.slot];
+			if (start == ~(uint32_t)0) {
+				start = buffer.GetSize();
+				buffer.Resize(start + p.stride);
 			}
 
-			memcpy(buffer.GetData() + p.offset, (const char*)&partialData + (size_t)p.internalAddress, p.type->GetSize());
+			memcpy(buffer.GetData() + start + p.offset, (const char*)&partialData + (size_t)p.internalAddress, p.type->GetSize());
 		}
 	}
 }
