@@ -6,7 +6,7 @@
 #ifndef __TEXTVIEWCOMPONENT_H__
 #define __TEXTVIEWCOMPONENT_H__
 
-#include "../../Component/Renderable/RenderableComponent.h"
+#include "../../Component/Model/ModelComponent.h"
 #include "../../../SnowyStream/SnowyStream.h"
 #include "../../../SnowyStream/Resource/FontResource.h"
 #include "../../../SnowyStream/Resource/MaterialResource.h"
@@ -14,7 +14,7 @@
 
 namespace PaintsNow {
 	namespace NsMythForest {
-		class TextViewComponent : public TAllocatedTiny<TextViewComponent, RenderableComponent> {
+		class TextViewComponent : public TAllocatedTiny<TextViewComponent, ModelComponent> {
 		public:
 			enum {
 				TEXTVIEWCOMPONENT_SELECT_REV_COLOR = COMPONENT_CUSTOM_BEGIN,

@@ -706,7 +706,6 @@ uint32_t CameraComponent::GetCollectedTriangleCount() const {
 	return collectedTriangleCount;
 }
 
-
 void CameraComponent::CollectComponents(Engine& engine, TaskData& taskData, const WorldInstanceData& instanceData, const CaptureData& captureData, Entity* entity) {
 	Tiny::FLAG rootFlag = entity->Flag().load(std::memory_order_acquire);
 	uint32_t warpIndex = entity->GetWarpIndex();

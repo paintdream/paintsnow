@@ -63,23 +63,12 @@ struct VulkanQueueImpl : public IRender::Queue, public TPool<VulkanQueueImpl, Vk
 		info.commandPool = commandPool;
 		info.pNext = nullptr;
 
-		// freeItems.reserve(maxCount);
-		// vkAllocateCommandBuffers(device->device, &info, &freeItems[0]);
 		currentCommandBuffer = Acquire();
 	}
 
 	~VulkanQueueImpl() {
-		// delete all command buffers
-		for (size_t k = 0; k < frames.size(); k++) {
-			assert(frames[k].commandBuffers.empty());
-		}
-
-		if (!freeItems.empty()) {
-			vkFreeCommandBuffers(device->device, commandPool, safe_cast<uint32_t>(freeItems.size()), &freeItems[0]);
-			freeItems.clear();
-		}
-
-		vkFreeCommandBuffers(device->device, commandPool, 1, &currentCommandBuffer);
+		freeItems.clear(); // VkCommandBuffer can be automatically freed as command pool destroys
+		vkDestroyCommandPool(device->device, commandPool, device->allocator);
 	}
 
 	VkCommandBuffer New() {
@@ -99,16 +88,37 @@ struct VulkanQueueImpl : public IRender::Queue, public TPool<VulkanQueueImpl, Vk
 		vkFreeCommandBuffers(device->device, commandPool, 1, &buffer);
 	}
 
+	void FlushCommandBuffer() {
+		preparedCommandBuffers.Push(currentCommandBuffer);
+		commandCount = 0;
+		currentCommandBuffer = Acquire();
+		vkResetCommandBuffer(currentCommandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+	}
+
+	void BeginFrame() {
+		preparedCommandBuffers.Push((VkCommandBuffer)0);
+		transientDataBuffers.Push((VkBuffer)0);
+	}
+
+	void EndFrame() {
+		for (VkCommandBuffer commandBuffer = preparedCommandBuffers.Top(); commandBuffer != 0; commandBuffer = preparedCommandBuffers.Top()) {
+			Release(commandBuffer);
+			preparedCommandBuffers.Pop();
+		}
+
+		for (VkBuffer buffer = transientDataBuffers.Top(); buffer != 0; buffer = transientDataBuffers.Top()) {
+			vkDestroyBuffer(device->device, buffer, device->allocator);
+			transientDataBuffers.Pop();
+		}
+	}
+
 	VulkanDeviceImpl* device;
 	VkCommandPool commandPool;
 	VkCommandBuffer currentCommandBuffer;
 	uint32_t commandCount;
 
-	struct Frame {
-		std::vector<VkCommandBuffer> commandBuffers;
-	};
-
-	std::vector<Frame> frames;
+	TQueueList<VkBuffer, 4> transientDataBuffers;
+	TQueueList<VkCommandBuffer, 4> preparedCommandBuffers;
 };
 
 std::vector<String> ZRenderVulkan::EnumerateDevices() {
@@ -361,10 +371,7 @@ void ZRenderVulkan::DeleteQueue(Queue* q) {
 void ZRenderVulkan::FlushQueue(Queue* q) {
 	// start new segment
 	VulkanQueueImpl* queue = static_cast<VulkanQueueImpl*>(q);
-	uint32_t frame = frameIndex.load(std::memory_order_acquire);
-	VulkanQueueImpl::Frame& currentFrame = queue->frames[frame % queue->frames.size()];
-	currentFrame.commandBuffers.emplace_back(queue->currentCommandBuffer);
-	queue->currentCommandBuffer = queue->AcquireSafe();
+	queue->FlushCommandBuffer();
 }
 
 struct ResourceImplVulkanBase : public IRender::Resource {
@@ -373,7 +380,11 @@ struct ResourceImplVulkanBase : public IRender::Resource {
 
 template <class T>
 struct ResourceImplVulkanDesc : public ResourceImplVulkanBase {
-	T description;
+	void UpdateDescription(T&& desc) {
+		cacheDescription = std::move(desc);
+	}
+
+	T cacheDescription;
 };
 
 template <class T>
@@ -396,19 +407,14 @@ static VkFormat TranslateImageFormat(IRender::Resource::TextureDescription::Form
 
 template <>
 struct ResourceImplVulkan<IRender::Resource::TextureDescription> : public ResourceImplVulkanDesc< IRender::Resource::TextureDescription> {
-	ResourceImplVulkan() : image(0), imageView(0) {}
+	ResourceImplVulkan() : image(0) {}
 	~ResourceImplVulkan() {
 	}
 
 	void Clear() {
-		if (image != 0) {
+		if (device != 0 && image != 0) {
 			vkDestroyImage(device->device, image, device->allocator);
 			image = 0;
-		}
-
-		if (imageView != 0) {
-			vkDestroyImageView(device->device, imageView, device->allocator);
-			imageView = 0;
 		}
 	}
 
@@ -417,7 +423,7 @@ struct ResourceImplVulkan<IRender::Resource::TextureDescription> : public Resour
 		device = queue->device;
 		IRender::Resource::TextureDescription& desc = *static_cast<IRender::Resource::TextureDescription*>(d);
 
-		if (image == 0 || desc.dimension != description.dimension || desc.state != description.state) {
+		if (image == 0 || cacheDescription.dimension != desc.dimension || cacheDescription.state != desc.state) {
 			Clear();
 
 			VkImageCreateInfo info = {};
@@ -463,41 +469,10 @@ struct ResourceImplVulkan<IRender::Resource::TextureDescription> : public Resour
 			Verify("bind image", vkBindImageMemory(device->device, image, memory, 0));
 		}
 
-		description = std::move(desc);
-
-		if (!description.data.Empty()) {
-			/*
-			if (imageView == 0) {
-				VkImageViewCreateInfo viewInfo = {};
-				viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-				viewInfo.image = image;
-
-				switch (description.state.type) {
-				case IRender::Resource::TextureDescription::TEXTURE_1D:
-					viewInfo.viewType = VK_IMAGE_VIEW_TYPE_1D;
-					break;
-				case IRender::Resource::TextureDescription::TEXTURE_2D:
-					viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-					break;
-				case IRender::Resource::TextureDescription::TEXTURE_2D_CUBE:
-					viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-					break;
-				case IRender::Resource::TextureDescription::TEXTURE_3D:
-					viewInfo.viewType = VK_IMAGE_VIEW_TYPE_3D;
-					break;
-				}
-
-				viewInfo.format = TranslateImageFormat((IRender::Resource::TextureDescription::Format)description.state.format, (IRender::Resource::TextureDescription::Layout)description.state.layout);
-				viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-				viewInfo.subresourceRange.levelCount = 1;
-				viewInfo.subresourceRange.layerCount = 1;
-
-				Verify("create image view", vkCreateImageView(device->device, &viewInfo, device->allocator, &imageView));
-			}*/
-
+		if (!desc.data.Empty()) {
 			VkBufferCreateInfo bufferInfo = {};
 			bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-			bufferInfo.size = description.data.GetSize();
+			bufferInfo.size = desc.data.GetSize();
 			bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 			bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 			VkBuffer uploadBuffer;
@@ -516,12 +491,12 @@ struct ResourceImplVulkan<IRender::Resource::TextureDescription> : public Resour
 			Verify("bind memory", vkBindBufferMemory(device->device, uploadBuffer, deviceMemory, 0));
 
 			void* map = nullptr;
-			Verify("map memory", vkMapMemory(device->device, deviceMemory, 0, description.data.GetSize(), 0, &map));
-			memcpy(map, description.data.GetData(), description.data.GetSize());
+			Verify("map memory", vkMapMemory(device->device, deviceMemory, 0, desc.data.GetSize(), 0, &map));
+			memcpy(map, desc.data.GetData(), desc.data.GetSize());
 			VkMappedMemoryRange range = {};
 			range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
 			range.memory = deviceMemory;
-			range.size = description.data.GetSize();
+			range.size = desc.data.GetSize();
 			Verify("flush memory", vkFlushMappedMemoryRanges(device->device, 1, &range));
 			vkUnmapMemory(device->device, deviceMemory);
 
@@ -542,9 +517,9 @@ struct ResourceImplVulkan<IRender::Resource::TextureDescription> : public Resour
 			VkBufferImageCopy region = {};
 			region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 			region.imageSubresource.layerCount = 1;
-			region.imageExtent.width = description.dimension.x();
-			region.imageExtent.height = description.dimension.y();
-			region.imageExtent.depth = description.state.type == IRender::Resource::TextureDescription::TEXTURE_3D ? Math::Max((uint32_t)description.dimension.z(), 1u) : 1u;
+			region.imageExtent.width = desc.dimension.x();
+			region.imageExtent.height = desc.dimension.y();
+			region.imageExtent.depth = desc.state.type == IRender::Resource::TextureDescription::TEXTURE_3D ? Math::Max((uint32_t)desc.dimension.z(), 1u) : 1u;
 			vkCmdCopyBufferToImage(queue->currentCommandBuffer, uploadBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
 			VkImageMemoryBarrier useBarrier = {};
@@ -561,20 +536,87 @@ struct ResourceImplVulkan<IRender::Resource::TextureDescription> : public Resour
 			useBarrier.subresourceRange.layerCount = 1;
 			vkCmdPipelineBarrier(queue->currentCommandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, NULL, 0, NULL, 1, &useBarrier);
 
-			description.data.Clear();
+			queue->transientDataBuffers.Push(uploadBuffer);
+			desc.data.Clear();
 		}
+		
+		UpdateDescription(std::move(desc));
 	}
 
 	VulkanDeviceImpl* device;
 	VkImage image;
-	VkImageView imageView;
 };
 
 template <>
-struct ResourceImplVulkan<IRender::Resource::BufferDescription> : public ResourceImplVulkanBase {
-	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* description) override {
-
+struct ResourceImplVulkan<IRender::Resource::BufferDescription> : public ResourceImplVulkanDesc< IRender::Resource::BufferDescription> {
+	ResourceImplVulkan() : buffer(0) {}
+	~ResourceImplVulkan() {
+		Clear();
 	}
+
+	void Clear() {
+		if (device != 0 && buffer != 0) {
+			vkDestroyBuffer(device->device, buffer, device->allocator);
+		}
+	}
+
+	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* d) override {
+		if (buffer != 0) {
+			Clear();
+		}
+
+		device = queue->device;
+		VkBufferCreateInfo createInfo = {};
+		createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		IRender::Resource::BufferDescription& desc = *static_cast<IRender::Resource::BufferDescription*>(d);
+		createInfo.size = desc.data.GetSize();
+		switch (desc.usage) {
+		case IRender::Resource::BufferDescription::INDEX:
+			createInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+			break;
+		case IRender::Resource::BufferDescription::VERTEX:
+			createInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+			break;
+		case IRender::Resource::BufferDescription::INSTANCED:
+			createInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+			break;
+		case IRender::Resource::BufferDescription::UNIFORM:
+			createInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+			break;
+		case IRender::Resource::BufferDescription::STORAGE:
+			createInfo.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+			break;
+		}
+
+		createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		Verify("create buffer", vkCreateBuffer(device->device, &createInfo, device->allocator, &buffer));
+
+		VkMemoryRequirements req;
+		vkGetBufferMemoryRequirements(device->device, buffer, &req);
+		VkMemoryAllocateInfo allocInfo = {};
+		allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+		allocInfo.allocationSize = req.size;
+		allocInfo.memoryTypeIndex = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+
+		VkDeviceMemory deviceMemory;
+		Verify("allocate memory", vkAllocateMemory(device->device, &allocInfo, device->allocator, &deviceMemory));
+		Verify("bind memory", vkBindBufferMemory(device->device, buffer, deviceMemory, 0));
+
+		void* map = nullptr;
+		Verify("map memory", vkMapMemory(device->device, deviceMemory, 0, desc.data.GetSize(), 0, &map));
+		memcpy(map, desc.data.GetData(), desc.data.GetSize());
+		VkMappedMemoryRange range = {};
+		range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+		range.memory = deviceMemory;
+		range.size = desc.data.GetSize();
+		Verify("flush memory", vkFlushMappedMemoryRanges(device->device, 1, &range));
+		vkUnmapMemory(device->device, deviceMemory);
+
+		UpdateDescription(std::move(desc));
+	}
+
+	VulkanDeviceImpl* device;
+	VkBuffer buffer;
 };
 
 template <>

@@ -49,7 +49,7 @@ namespace PaintsNow {
 
 			struct BufferDescription : public Description {
 				enum Usage {
-					INDEX, VERTEX, INSTANCED, UNIFORM, SHARED
+					INDEX, VERTEX, INSTANCED, UNIFORM, STORAGE
 				};
 
 				BufferDescription() : usage(VERTEX), format(FLOAT), dynamic(0), component(4) {}

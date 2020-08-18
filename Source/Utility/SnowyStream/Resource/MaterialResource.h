@@ -28,6 +28,7 @@ namespace PaintsNow {
 				IDataUpdater* dataUpdater;
 				TShared<ShaderResource> shaderResource;
 				TShared<SharedTiny> host;
+				std::vector<std::pair<uint32_t, Bytes> > localInstancedData;
 			};
 
 			virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) = 0;

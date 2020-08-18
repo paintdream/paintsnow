@@ -884,7 +884,7 @@ struct ResourceImplOpenGL<IRender::Resource::BufferDescription> : public Resourc
 			case Resource::BufferDescription::UNIFORM:
 				bufferType = GL_UNIFORM_BUFFER;
 				break;
-			case Resource::BufferDescription::SHARED:
+			case Resource::BufferDescription::STORAGE:
 				bufferType = GL_SHADER_STORAGE_BUFFER;
 				break;
 		}
@@ -963,9 +963,9 @@ public:
 					declaration += info.second;
 					break;
 				case IRender::Resource::BufferDescription::UNIFORM:
-				case IRender::Resource::BufferDescription::SHARED:
+				case IRender::Resource::BufferDescription::STORAGE:
 					if (!info.second.empty()) {
-						declaration += (buffer->description.usage == IRender::Resource::BufferDescription::SHARED ? String("buffer _") : stage == IRender::Resource::ShaderDescription::COMPUTE ? String("shared _") : String("uniform _")) + info.first + " {\n" + info.second + "} " + info.first + ";\n";
+						declaration += (buffer->description.usage == IRender::Resource::BufferDescription::STORAGE ? String("buffer _") : stage == IRender::Resource::ShaderDescription::COMPUTE ? String("shared _") : String("uniform _")) + info.first + " {\n" + info.second + "} " + info.first + ";\n";
 					}
 					break;
 			}
@@ -1187,7 +1187,7 @@ public:
 				mapBufferEnabled[bindBuffer] = enabled;
 				if (bindBuffer->description.usage == IRender::Resource::BufferDescription::UNIFORM) {
 					uniformBufferNames.emplace_back(String("_") + name);
-				} else if (bindBuffer->description.usage == IRender::Resource::BufferDescription::SHARED) {
+				} else if (bindBuffer->description.usage == IRender::Resource::BufferDescription::STORAGE) {
 					sharedBufferNames.emplace_back(String("_") + name);
 				}
 				orderedBuffers.emplace_back(bindBuffer);
@@ -1818,7 +1818,7 @@ struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> : public Resou
 					uniformBufferBindingCount++;
 					break;
 				}
-				case Resource::BufferDescription::SHARED:
+				case Resource::BufferDescription::STORAGE:
 				{
 					GL_GUARD();
 					GLuint blockIndex = program.sharedBufferLocations[sharedBufferBindingCount];
