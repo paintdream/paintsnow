@@ -31,6 +31,7 @@
 
 #if (!defined(CMAKE_PAINTSNOW) || ADD_RENDER_VULKAN) && (!defined(_MSC_VER) || _MSC_VER > 1200)
 #pragma comment(lib, "vulkan-1.lib")
+#pragma comment(lib, "glslang.lib")
 #endif
 
 #if !defined(CMAKE_PAINTSNOW) || ADD_AUDIO_OPENAL

@@ -654,7 +654,6 @@ struct ResourceImplVulkan<IRender::Resource::DrawCallDescription> : public Resou
 	}
 };
 
-
 // Resource
 IRender::Resource* ZRenderVulkan::CreateResource(Device* device, Resource::Type resourceType) {
 	switch (resourceType)

@@ -1168,6 +1168,14 @@ SOURCE=..\..\..\..\Source\General\Driver\Network\LibEvent\ZNetworkLibEvent.h
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\General\Driver\Render\OpenGL\GLSLShaderGenerator.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\General\Driver\Render\OpenGL\GLSLShaderGenerator.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\General\Driver\Render\OpenGL\ZRenderOpenGL.cpp
 # End Source File
 # Begin Source File
