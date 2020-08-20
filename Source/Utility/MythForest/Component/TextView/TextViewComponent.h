@@ -54,17 +54,6 @@ namespace PaintsNow {
 			String text;
 
 		protected:
-			void SetSize(Engine& engine, const Short2& size);
-			void UpdateRenderData(Engine& engine);
-			void RenderCharacter(IRender::Resource* textureResource, std::stringstream& stream, const Short2Pair& rect, const Short2Pair& uv, const Float4& color, uint32_t fontSize);
-
-			uint32_t GetLineCount() const;
-			void SetPasswordChar(int ch);
-			bool IsEmpty() const;
-			const Short2& GetSize() const;
-			const Short2& GetFullSize() const;
-			void SetPadding(const Short2& padding);
-
 			class TagParser {
 			public:
 				struct Node {
@@ -92,9 +81,18 @@ namespace PaintsNow {
 				std::vector<Node> nodes;
 			};
 
+			void SetSize(Engine& engine, const Short2& size);
+			void UpdateRenderData(Engine& engine);
+
+			uint32_t GetLineCount() const;
+			void SetPasswordChar(int ch);
+			bool IsEmpty() const;
+			const Short2& GetSize() const;
+			const Short2& GetFullSize() const;
+			void SetPadding(const Short2& padding);
+
+
 		protected:
-			IRender::Resource* unitCoordBuffer;
-			IRender::Resource* indexBuffer;
 			std::vector<std::pair<IRender::Resource*, uint32_t> > textureRange;
 
 			TagParser parser;
@@ -106,9 +104,9 @@ namespace PaintsNow {
 			int32_t passwordChar;
 			int32_t cursorChar;
 			int32_t cursorPos;
-			Float4 cursorColor;
 			Short2 selectRange;
-			Float4 selectColor;
+			UChar4 cursorColor;
+			UChar4 selectColor;
 		};
 	}
 }

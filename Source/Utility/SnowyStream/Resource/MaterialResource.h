@@ -28,6 +28,7 @@ namespace PaintsNow {
 				IDataUpdater* dataUpdater;
 				TShared<ShaderResource> shaderResource;
 				TShared<SharedTiny> host;
+				MatrixFloat4x4 localTransform;
 				std::vector<std::pair<uint32_t, Bytes> > localInstancedData;
 			};
 

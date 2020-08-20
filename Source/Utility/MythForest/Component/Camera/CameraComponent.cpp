@@ -151,6 +151,14 @@ void CameraComponent::Instancing(Engine& engine, TaskData& taskData) {
 		for (TaskData::WarpData::InstanceGroupMap::iterator it = instanceGroup.begin(); it != instanceGroup.end(); ++it) {
 			InstanceGroup& group = (*it).second;
 			if (group.instanceCount == 0) continue;
+			std::vector<std::key_value<RenderPolicy*, TaskData::PolicyData> >::iterator ip = std::binary_find(warpData.renderPolicyMap.begin(), warpData.renderPolicyMap.end(), group.renderPolicy());
+			if (ip == warpData.renderPolicyMap.end()) {
+				ip = std::binary_insert(warpData.renderPolicyMap, group.renderPolicy());
+			}
+		
+			TaskData::PolicyData& policyData = ip->second;
+			IRender::Queue* queue = policyData.portQueue;
+			assert(queue != nullptr);
 
 			for (size_t k = 0; k < group.instancedData.size(); k++) {
 				Bytes& data = group.instancedData[k];
@@ -158,36 +166,28 @@ void CameraComponent::Instancing(Engine& engine, TaskData& taskData) {
 					PassBase::Parameter& output = group.instanceUpdater->parameters[k];
 					// instanceable.
 					assert(output.slot < group.drawCallDescription.bufferResources.size());
-					std::vector<std::key_value<RenderPolicy*, TaskData::PolicyData> >::iterator ip = std::binary_find(warpData.renderPolicyMap.begin(), warpData.renderPolicyMap.end(), group.renderPolicy());
-					if (ip == warpData.renderPolicyMap.end()) {
-						ip = std::binary_insert(warpData.renderPolicyMap, group.renderPolicy());
-					}
-
-					TaskData::PolicyData& policyData = ip->second;
-					IRender::Queue* queue = policyData.portQueue;
-					assert(queue != nullptr);
 
 					// assign instanced buffer	
 					assert(group.drawCallDescription.bufferResources[output.slot].buffer == nullptr);
 					IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[output.slot];
 					bufferRange.buffer = policyData.instanceBuffer;
-					bufferRange.offset = policyData.instanceData.GetSize();
+					bufferRange.offset = policyData.instanceData.GetSize(); // TODO: alignment
 					bufferRange.component = data.GetSize() / (group.instanceCount * sizeof(float));
-
-					group.drawCallDescription.instanceCounts.x() = group.instanceCount;
-
-					if (PassBase::ValidateDrawCall(group.drawCallDescription)) {
-						policyData.instanceData.Append(data);
-						IRender::Resource*& drawCall = group.drawCallResource;
-						if (drawCall == nullptr) {
-							drawCall = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_DRAWCALL);
-							policyData.runtimeResources.emplace_back(drawCall);
-						}
-
-						assert(group.drawCallDescription.shaderResource != nullptr);
-						render.UploadResource(queue, drawCall, &group.drawCallDescription);
-					}
+					policyData.instanceData.Append(data);
 				}
+			}
+
+			group.drawCallDescription.instanceCounts.x() = group.instanceCount;
+
+			if (PassBase::ValidateDrawCall(group.drawCallDescription)) {
+				IRender::Resource*& drawCall = group.drawCallResource;
+				if (drawCall == nullptr) {
+					drawCall = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_DRAWCALL);
+					policyData.runtimeResources.emplace_back(drawCall);
+				}
+
+				assert(group.drawCallDescription.shaderResource != nullptr);
+				render.UploadResource(queue, drawCall, &group.drawCallDescription);
 			}
 		}
 

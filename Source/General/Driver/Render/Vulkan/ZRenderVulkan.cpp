@@ -8,6 +8,7 @@
 #include "../../../../Core/Template/TQueue.h"
 #include "../../../../Core/Template/TPool.h"
 #include "ZRenderVulkan.h"
+#include <glslang/Public/ShaderLang.h>
 #include <cstdio>
 #include <vector>
 #include <iterator>

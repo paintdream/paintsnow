@@ -127,26 +127,15 @@ void TextViewComponent::TagParser::Clear() {
 	nodes.clear();
 }
 
-TextViewComponent::TextViewComponent(TShared<FontResource> font, TShared<MaterialResource> material) : materialResource(material), fontResource(font), unitCoordBuffer(nullptr), indexBuffer(nullptr), passwordChar(0), cursorChar(0), cursorPos(0), fontSize(12) {
+TextViewComponent::TextViewComponent(TShared<FontResource> font, TShared<MaterialResource> material) : materialResource(material), fontResource(font), passwordChar(0), cursorChar(0), cursorPos(0), fontSize(12) {
 	Flag().fetch_or((TEXTVIEWCOMPONENT_CURSOR_REV_COLOR | TEXTVIEWCOMPONENT_SELECT_REV_COLOR), std::memory_order_acquire);
 }
 
 void TextViewComponent::Initialize(Engine& engine, Entity* entity) {
 	BaseClass::Initialize(engine, entity);
-	IRender& render = engine.interfaces.render;
-	IRender::Queue* queue = engine.GetWarpResourceQueue();
-
-	unitCoordBuffer = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_BUFFER);
-	indexBuffer = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_BUFFER);
 }
 
 void TextViewComponent::Uninitialize(Engine& engine, Entity* entity) {
-	IRender& render = engine.interfaces.render;
-	IRender::Queue* queue = engine.GetWarpResourceQueue();
-	render.DeleteResource(queue, indexBuffer);
-	render.DeleteResource(queue, unitCoordBuffer);
-	unitCoordBuffer = nullptr;
-
 	BaseClass::Uninitialize(engine, entity);
 }
 
@@ -201,6 +190,14 @@ static int Utf8ToUnicode(const unsigned char* s, int size) {
 TextViewComponent::Descriptor::Descriptor(int16_t h, int16_t s) : totalWidth(0), firstOffset(h) {}
 TextViewComponent::Descriptor::Char::Char(int16_t c, int16_t off) : xCoord(c), offset(off) {}
 
+struct RenderInfo {
+	RenderInfo(const Short2Pair& tr, const Short2Pair& pr, IRender::Resource* tex, const UChar4& c) : texRect(tr), posRect(pr), texture(tex), color(c) {}
+	Short2Pair texRect;
+	Short2Pair posRect;
+	IRender::Resource* texture;
+	UChar4 color;
+};
+
 void TextViewComponent::UpdateRenderData(Engine& engine) {
 	if (!fontResource) {
 		return;
@@ -237,10 +234,10 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 	const FontResource::Char& cursor = fontResource->Get(render, queue, fontBase, cursorChar, fontSize);
 	Short2 current;
 	const FontResource::Char& pwd = fontResource->Get(render, queue, fontBase, passwordChar, fontSize);
-	Float4 color(1, 1, 1, 1);
+	UChar4 color(255, 255, 255, 255);
 	lines.emplace_back(Descriptor(currentHeight, 0));
 	FontResource::Char info;
-	std::stringstream ss;
+	std::vector<RenderInfo> renderInfos;
 
 	for (size_t j = 0; j < parser.nodes.size(); j++) {
 		const TagParser::Node& node = parser.nodes[j];
@@ -285,10 +282,10 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 					int alignOffset = (size_t)count >= this->lines.size() ? 0 : align == TagParser::Node::ALIGN_LEFT ? 0 : align == TagParser::Node::ALIGN_CENTER ? (ws - this->lines[count].totalWidth) / 2 : (ws - this->lines[count].totalWidth);
 					current = Short2(currentWidth - temp + alignOffset + info.info.bearing.x(), currentHeight + (h - ht) - info.info.delta.y());
 
-					Float4 c = color;
+					UChar4 c = color;
 					if (selectRange.x() <= offset && selectRange.y() > offset) {
 						if (selectRevColor) {
-							c = Float4(1.0, 1.0, 1.0, 1.0) - color;
+							c = UChar4(255, 255, 255, 255) - color;
 							c.a() = color.a();
 						} else {
 							c = selectColor;
@@ -296,20 +293,20 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 					}
 
 					Short2 end(current.x() + wt, current.y() + ht);
-					RenderCharacter(info.textureResource, ss, Short2Pair(current, end), info.rect, c, fontSize);
+					renderInfos.emplace_back(RenderInfo(info.rect, Short2Pair(current, end), info.textureResource, c));
 
 					// if cursor ?
 					if (!showCursor && cursorPos <= offset && cursorChar != 0) {
 						current.y() += info.info.delta.y() - cursor.info.delta.y() + ht - cursor.info.height;
 						// current.x() -= cursor.info.width;
 						if (cursorRevColor) {
-							c = Float4(1.0, 1.0, 1.0, 1.0) - color;
+							c = UChar4(255, 255, 255, 255) - color;
 						} else {
 							c = cursorColor;
 						}
 
 						Short2 m(current.x() + cursor.info.width, current.y() + cursor.info.height);
-						RenderCharacter(info.textureResource, ss, Short2Pair(current, m), cursor.rect, c, fontSize);
+						renderInfos.emplace_back(RenderInfo(cursor.rect, Short2Pair(current, m), info.textureResource, c));
 						showCursor = true;
 					}
 				}
@@ -326,25 +323,25 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 		} else if (node.type == TagParser::Node::COLOR) {
 			int value = 0;
 			sscanf(text.data() + node.offset, "%x", &value);
-			color = Float4((float)((value >> 16) & 0xff) / 255, (float)((value >> 8) & 0xff) / 255, (float)(value & 0xff) / 255, 1);
+			color = UChar4((float)((value >> 16) & 0xff), (float)((value >> 8) & 0xff), (float)(value & 0xff), 1);
 		}
 	}
 
 	// if cursor ?
 	if (!full && currentHeight >= 0 && !showCursor && cursorChar != 0) {
-		Float4 c;
+		UChar4 c;
 		const FontResource::Char& ch = fontResource->Get(render, queue, fontBase, Utf8ToUnicode((const unsigned char*)&cursorChar, GetUtf8Size(cursorChar >> 24)), fontSize);
 		current.x() += info.info.width;
 		current.y() += info.info.delta.y() - cursor.info.delta.y() + info.info.height - cursor.info.height;
 		// current.x() -= cursor.info.width;
 		if (cursorRevColor) {
-			c = Float4(1.0, 1.0, 1.0, 1.0) - color;
+			c = UChar4(255, 255, 255, 255) - color;
 		} else {
 			c = cursorColor;
 		}
 
 		Short2 m(current.x() + cursor.info.width, current.y() + cursor.info.height);
-		RenderCharacter(ch.textureResource, ss, Short2Pair(current, m), cursor.rect, c, fontSize);
+		renderInfos.emplace_back(RenderInfo(cursor.rect, Short2Pair(current, m), ch.textureResource, c));
 		showCursor = true;
 	}
 
@@ -355,32 +352,19 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 	fullSize.y() = currentHeight + start.y();
 
 	// do update
+	/*
 	IRender::Resource::BufferDescription bufferDescription;
 	bufferDescription.usage = IRender::Resource::BufferDescription::VERTEX;
 	bufferDescription.component = 4;
 	bufferDescription.format = IRender::Resource::BufferDescription::UNSIGNED_SHORT;
 	bufferDescription.dynamic = 1;
-	std::string str = ss.str();
 
 	bufferDescription.data.Assign((const uint8_t*)str.data(), safe_cast<uint32_t>(str.size()));
-	render.UploadResource(queue, unitCoordBuffer, &bufferDescription);
-
-	uint16_t quadCount = safe_cast<uint16_t>(str.size() / (sizeof(UShort4) * 4));
-	UShort3* p = reinterpret_cast<UShort3*>(const_cast<char*>(str.data()));
-	for (uint16_t i = 0; i < quadCount; i++) {
-		UShort3& t = p[i * 2];
-		t.x() = i; t.y() = i + 1; t.z() = i + 2;
-		UShort3& s = p[i * 2 + 1];
-		s.x() = i; s.y() = i + 2; s.z() = i + 3;
-	}
-
-	bufferDescription.usage = IRender::Resource::BufferDescription::INDEX;
-	bufferDescription.data.Assign((const uint8_t*)str.data(), safe_cast<uint32_t>(sizeof(UShort3) * 2 * quadCount));
-
-	render.UploadResource(queue, indexBuffer, &bufferDescription);
+	render.UploadResource(queue, unitCoordBuffer, &bufferDescription);*/
 }
 
 uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) {
+	/*
 	OutputRenderData drawCall;
 	IRender::Resource::RenderStateDescription& renderState = drawCall.renderStateDescription;
 	renderState.stencilReplacePass = 1;
@@ -420,35 +404,9 @@ uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData>& outp
 	}
 
 	return safe_cast<uint32_t>(textureRange.size());
-}
+	*/
 
-void TextViewComponent::RenderCharacter(IRender::Resource* textureResource, std::stringstream& stream, const Short2Pair& rect, const Short2Pair& uv, const Float4& color, uint32_t fontSize) {
-	Short2 fontTexSize;
-	UShort4 pos(rect.first.x(), (size.y() - rect.second.y()), rect.second.y(), (size.y() - rect.first.y()));
-	UShort4 tex = UShort4(
-		uv.first.x() / fontTexSize.x(),
-		uv.first.y() / fontTexSize.y(),
-		uv.second.x() / fontTexSize.x(),
-		uv.second.y() / fontTexSize.y()
-	);
-
-	// Add triangles
-	UShort4 item[4] = {
-		UShort4(pos[0], pos[1], tex[0], tex[1]),
-		UShort4(pos[2], pos[1], tex[2], tex[1]),
-		UShort4(pos[2], pos[3], tex[2], tex[3]),
-		UShort4(pos[0], pos[3], tex[0], tex[3]),
-	};
-
-	stream.write((const char*)item, sizeof(item));
-
-	if (textureRange.empty()) {
-		textureRange.emplace_back(std::make_pair(textureResource, 1));
-	} else if (textureRange.back().first != textureResource) {
-		textureRange.emplace_back(std::make_pair(textureResource, textureRange.back().second));
-	} else {
-		textureRange.back().second++;
-	}
+	return 0;
 }
 
 uint32_t TextViewComponent::GetLineCount() const {

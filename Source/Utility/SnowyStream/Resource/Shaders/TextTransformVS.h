@@ -18,8 +18,12 @@ namespace PaintsNow {
 			virtual String GetShaderText() override;
 
 			IShader::BindBuffer positionBuffer;
-			IShader::BindBuffer globalBuffer;
+			IShader::BindBuffer instanceBuffer;
+			IShader::BindBuffer texCoordRectBuffer;
+
+			// Instanced
 			MatrixFloat4x4 worldMatrix;
+			Float4 texCoordRect;
 
 			// Input
 			Float4 unitTexCoord;
