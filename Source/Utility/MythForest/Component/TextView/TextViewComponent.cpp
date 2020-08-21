@@ -190,14 +190,6 @@ static int Utf8ToUnicode(const unsigned char* s, int size) {
 TextViewComponent::Descriptor::Descriptor(int16_t h, int16_t s) : totalWidth(0), firstOffset(h) {}
 TextViewComponent::Descriptor::Char::Char(int16_t c, int16_t off) : xCoord(c), offset(off) {}
 
-struct RenderInfo {
-	RenderInfo(const Short2Pair& tr, const Short2Pair& pr, IRender::Resource* tex, const UChar4& c) : texRect(tr), posRect(pr), texture(tex), color(c) {}
-	Short2Pair texRect;
-	Short2Pair posRect;
-	IRender::Resource* texture;
-	UChar4 color;
-};
-
 void TextViewComponent::UpdateRenderData(Engine& engine) {
 	if (!fontResource) {
 		return;
@@ -208,7 +200,7 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 	IFontBase& fontBase = engine.interfaces.fontBase;
 	IRender& render = engine.interfaces.render;
 	IRender::Queue* queue = engine.GetWarpResourceQueue();
-	textureRange.clear();
+	renderInfos.clear();
 
 	Short2 fullSize;
 	int ws = size.x();
@@ -237,7 +229,6 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 	UChar4 color(255, 255, 255, 255);
 	lines.emplace_back(Descriptor(currentHeight, 0));
 	FontResource::Char info;
-	std::vector<RenderInfo> renderInfos;
 
 	for (size_t j = 0; j < parser.nodes.size(); j++) {
 		const TagParser::Node& node = parser.nodes[j];
@@ -323,7 +314,7 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 		} else if (node.type == TagParser::Node::COLOR) {
 			int value = 0;
 			sscanf(text.data() + node.offset, "%x", &value);
-			color = UChar4((float)((value >> 16) & 0xff), (float)((value >> 8) & 0xff), (float)(value & 0xff), 1);
+			color = UChar4(((value >> 16) & 0xff), ((value >> 8) & 0xff), (value & 0xff), 1);
 		}
 	}
 
@@ -364,49 +355,55 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 }
 
 uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) {
-	/*
-	OutputRenderData drawCall;
-	IRender::Resource::RenderStateDescription& renderState = drawCall.renderStateDescription;
-	renderState.stencilReplacePass = 1;
-	renderState.cull = 1;
-	renderState.fill = 1;
-	renderState.colorWrite = 1;
-	renderState.alphaBlend = 0;
-	renderState.depthTest = IRender::Resource::RenderStateDescription::GREATER_EQUAL;
-	renderState.depthWrite = 0;
-	renderState.stencilTest = IRender::Resource::RenderStateDescription::ALWAYS;
-	renderState.stencilWrite = 0;
-	renderState.stencilMask = 0;
-	renderState.stencilValue = 0;
+	if (renderInfos.empty()) return 0;
 
-	drawCall.dataUpdater = fontResource();
-	PassBase::Updater& updater = materialResource->mutationShaderResource->GetPassUpdater();
-	size_t slot = updater[IShader::BindInput::UNITCOORD].slot;
-	drawCall.drawCallDescription.bufferResources.resize(slot + 1);
-	IRender::Resource::DrawCallDescription::BufferRange& rangePosition = drawCall.drawCallDescription.bufferResources[slot];
-	rangePosition.buffer = unitCoordBuffer;
-	rangePosition.component = 4;
-	IRender::Resource::DrawCallDescription::BufferRange& rangeIndex = drawCall.drawCallDescription.indexBufferResource;
-	rangeIndex.buffer = indexBuffer;
+	uint32_t start = safe_cast<uint32_t>(outputDrawCalls.size());
+	uint32_t count = BaseClass::CollectDrawCalls(outputDrawCalls, inputRenderData);
+	static Bytes texCoordRectKey = PassBase::Updater::MakeKeyFromString("texCoordRect");
+	float invTexSize = 1.0f / fontResource->GetFontTextureSize();
 
-	size_t texSlot = updater[IShader::BindInput::MAINTEXTURE].slot;
-	drawCall.drawCallDescription.textureResources.resize(texSlot + 1);
-	drawCall.shaderResource = materialResource->mutationShaderResource;
+	for (uint32_t i = start; i < count; i++) {
+		OutputRenderData& renderData = outputDrawCalls[i];
+		PassBase::Updater& updater = renderData.shaderResource->GetPassUpdater();
+		IRender::Resource::DrawCallDescription& drawCall = renderData.drawCallDescription;
+		PassBase::Parameter& paramMainTexture = updater[IShader::BindInput::MAINTEXTURE];
+		assert(paramMainTexture);
 
-	uint32_t n = 0;
-	for (size_t i = 0; i < textureRange.size(); i++) {
-		uint32_t k = textureRange[i].second;
-		drawCall.drawCallDescription.textureResources[texSlot] = textureRange[i].first;
-		drawCall.drawCallDescription.indexBufferResource.offset = n * sizeof(Int3) * 2;
-		drawCall.drawCallDescription.indexBufferResource.length = (k - n) * sizeof(Int3) * 2;
-		outputDrawCalls.emplace_back(drawCall);
-		n = k;
+		PassBase::Parameter& paramTexCoordRect = updater[texCoordRectKey];
+		assert(paramTexCoordRect);
+
+		IRender::Resource* lastMainTexture = renderInfos[0].texture;
+		renderData.localInstancedData.emplace_back(std::make_pair(paramTexCoordRect.slot, Bytes::Null()));
+
+		for (size_t j = 0; j < renderInfos.size(); j++) {
+			RenderInfo& renderInfo = renderInfos[j];
+			if (renderInfo.texture != lastMainTexture) { // texture changed?
+				outputDrawCalls.emplace_back(renderData);
+				renderData.localInstancedData.clear();
+				renderData.localTransforms.clear();
+			}
+
+			drawCall.textureResources[paramMainTexture.slot] = renderInfo.texture;
+			Float4 texRect = {
+				renderInfo.texRect.first.x() * invTexSize,
+				renderInfo.texRect.first.y() * invTexSize,
+				renderInfo.texRect.second.x() * invTexSize,
+				renderInfo.texRect.second.y() * invTexSize
+			};
+
+			renderData.localInstancedData[0].second.Append(reinterpret_cast<const uint8_t*>(&texRect), sizeof(Float4));
+			float mat[16] = {
+				renderInfo.posRect.second.x() - renderInfo.posRect.first.x(), 0, 0, 0,
+				0, renderInfo.posRect.second.x() - renderInfo.posRect.first.x(), 0, 0,
+				0, 0, 1, 0,
+				(renderInfo.posRect.second.x() + renderInfo.posRect.first.x()) / 2.0f, (renderInfo.posRect.second.y() + renderInfo.posRect.first.y()) / 2.0f, 0.0f, 1.0f
+			};
+
+			renderData.localTransforms.emplace_back(MatrixFloat4x4(mat));
+		}
 	}
 
-	return safe_cast<uint32_t>(textureRange.size());
-	*/
-
-	return 0;
+	return safe_cast<uint32_t>(outputDrawCalls.size()) - start;
 }
 
 uint32_t TextViewComponent::GetLineCount() const {

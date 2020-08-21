@@ -630,13 +630,13 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 		}
 
 		// process local instanced data
-		if (drawCall.localInstancedData.empty()) {
+		if (drawCall.localInstancedData.empty() && drawCall.localTransforms.empty()) {
 			group.instanceUpdater->Snapshot(group.instancedData, bufferResources, textureResources, instanceData);
 			assert(!group.instanceUpdater->parameters.empty());
 			group.instanceCount++;
 		} else {
-			std::vector<Bytes> s;
-			group.instanceUpdater->Snapshot(s, bufferResources, textureResources, instanceData);
+			assert(drawCall.drawCallDescription.instanceCounts.x() != 0);
+
 			for (size_t i = 0; i < drawCall.localInstancedData.size(); i++) {
 				std::pair<uint32_t, Bytes>& localInstancedData = drawCall.localInstancedData[i];
 				if (group.instancedData.size() <= localInstancedData.first) {
@@ -646,11 +646,25 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 				group.instancedData[localInstancedData.first].Append(localInstancedData.second);
 			}
 
-			for (size_t j = 0; j < s.size(); j++) {
+			if (drawCall.localTransforms.empty()) {
+				std::vector<Bytes> s;
+				group.instanceUpdater->Snapshot(s, bufferResources, textureResources, instanceData);
+
+				for (size_t j = 0; j < s.size(); j++) {
+					for (size_t n = 0; n < drawCall.drawCallDescription.instanceCounts.x(); n++) {
+						group.instancedData[j].Append(s[j]);
+					}
+				}
+			} else {
+				assert(drawCall.drawCallDescription.instanceCounts.x() == drawCall.localTransforms.size());
 				for (size_t n = 0; n < drawCall.drawCallDescription.instanceCounts.x(); n++) {
-					group.instancedData[j].Append(s[j]);
+					WorldInstanceData subInstanceData = instanceData;
+					subInstanceData.worldMatrix = drawCall.localTransforms[n] * subInstanceData.worldMatrix;
+					group.instanceUpdater->Snapshot(group.instancedData, bufferResources, textureResources, instanceData);
 				}
 			}
+
+			group.instanceCount += drawCall.drawCallDescription.instanceCounts.x();
 		}
 	}
 }

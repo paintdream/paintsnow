@@ -91,11 +91,18 @@ namespace PaintsNow {
 			const Short2& GetFullSize() const;
 			void SetPadding(const Short2& padding);
 
+			struct RenderInfo {
+				RenderInfo(const Short2Pair& tr, const Short2Pair& pr, IRender::Resource* tex, const UChar4& c) : texRect(tr), posRect(pr), texture(tex), color(c) {}
+				Short2Pair texRect;
+				Short2Pair posRect;
+				IRender::Resource* texture;
+				UChar4 color;
+			};
 
 		protected:
-			std::vector<std::pair<IRender::Resource*, uint32_t> > textureRange;
-
 			TagParser parser;
+
+			std::vector<RenderInfo> renderInfos;
 			std::vector<Descriptor> lines;
 			Short2 size;
 			Short2 scroll;
