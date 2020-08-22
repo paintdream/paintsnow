@@ -1,7 +1,6 @@
 #include "MultiHashTracePass.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
 
 MultiHashTracePass::MultiHashTracePass() {}
 

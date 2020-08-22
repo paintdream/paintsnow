@@ -2,8 +2,6 @@
 #include "Entity.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
 uint32_t Component::GetQuickUniqueID() const {
 	return ~(uint32_t)0;
@@ -90,7 +88,6 @@ void Component::RaycastTask::RemovePendingTask() {
 
 	ReleaseObject();
 }
-
 
 bool Component::RaycastTask::EmplaceResult(std::vector<RaycastResult>& result, rvalue<Component::RaycastResult> it) {
 	Component::RaycastResult& item = it;

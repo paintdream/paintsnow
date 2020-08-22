@@ -3,48 +3,42 @@
 // 2015-5-5
 //
 
-#ifndef __REMOTECOMPONENT_H__
-#define __REMOTECOMPONENT_H__
-
+#pragma once
 #include "../../Component.h"
 #include "../../../SnowyStream/SnowyStream.h"
 
 namespace PaintsNow {
-	namespace NsMythForest {
-		class RemoteRoutine : public TReflected<RemoteRoutine, SharedTiny> {
-		public:
-			RemoteRoutine(IScript::RequestPool* pool, IScript::Request::Ref ref);
-			virtual ~RemoteRoutine();
-			virtual void ScriptUninitialize(IScript::Request& request) override;
-			void Clear();
+	class RemoteRoutine : public TReflected<RemoteRoutine, SharedTiny> {
+	public:
+		RemoteRoutine(IScript::RequestPool* pool, IScript::Request::Ref ref);
+		virtual ~RemoteRoutine();
+		virtual void ScriptUninitialize(IScript::Request& request) override;
+		void Clear();
 
-			IScript::RequestPool* pool;
-			IScript::Request::Ref ref;
+		IScript::RequestPool* pool;
+		IScript::Request::Ref ref;
+	};
+
+	class RemoteComponent : public TAllocatedTiny<RemoteComponent, Component>, public IScript::RequestPool {
+	public:
+		enum {
+			REMOTECOMPONENT_TRANSPARENT = COMPONENT_CUSTOM_BEGIN,
+			REMOTECOMPONENT_CUSTOM_BEGIN = COMPONENT_CUSTOM_BEGIN << 1
 		};
 
-		class RemoteComponent : public TAllocatedTiny<RemoteComponent, Component>, public IScript::RequestPool {
-		public:
-			enum {
-				REMOTECOMPONENT_TRANSPARENT = COMPONENT_CUSTOM_BEGIN,
-				REMOTECOMPONENT_CUSTOM_BEGIN = COMPONENT_CUSTOM_BEGIN << 1
-			};
+		RemoteComponent(Engine& engine);
+		virtual ~RemoteComponent();
+		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
-			RemoteComponent(Engine& engine);
-			virtual ~RemoteComponent();
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TShared<RemoteRoutine> Load(const String& code);
+		void Call(IScript::Request& fromRequest, TShared<RemoteRoutine> remoteRoutine, IScript::Request::Arguments& args);
+		void CallAsync(IScript::Request& fromRequest, IScript::Request::Ref callback, TShared<RemoteRoutine> remoteRoutine, IScript::Request::Arguments& args);
 
-			TShared<RemoteRoutine> Load(const String& code);
-			void Call(IScript::Request& fromRequest, TShared<RemoteRoutine> remoteRoutine, IScript::Request::Arguments& args);
-			void CallAsync(IScript::Request& fromRequest, IScript::Request::Ref callback, TShared<RemoteRoutine> remoteRoutine, IScript::Request::Arguments& args);
+	protected:
+		void Complete(IScript::RequestPool* returnPool, IScript::Request& request, IScript::Request::Ref callback, TShared<RemoteRoutine> remoteRoutine);
 
-		protected:
-			void Complete(IScript::RequestPool* returnPool, IScript::Request& request, IScript::Request::Ref callback, TShared<RemoteRoutine> remoteRoutine);
-
-		protected:
-			Engine& engine;
-		};
-	}
+	protected:
+		Engine& engine;
+	};
 }
 
-
-#endif // __REMOTECOMPONENT_H__

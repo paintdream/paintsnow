@@ -3,76 +3,70 @@
 // 2015-9-12
 //
 
-#ifndef __EVENT_H__
-#define __EVENT_H__
-
+#pragma once
 #include "../../Core/System/Tiny.h"
 #include "Engine.h"
 
 namespace PaintsNow {
-	namespace NsMythForest {
-		class Event {
-		public:
-			enum EVENT_ID {
-				// Inner events
-				EVENT_BEGIN = 0,
-				EVENT_PRETICK = EVENT_BEGIN,
-				EVENT_TICK,
-				EVENT_POSTTICK,
-				EVENT_ATTACH_COMPONENT,
-				EVENT_DETACH_COMPONENT,
-				EVENT_ENTITY_ACTIVATE,
-				EVENT_ENTITY_DEACTIVATE,
-				// Special Events
-				EVENT_SPECIAL_BEGIN,
-				EVENT_FRAME = EVENT_SPECIAL_BEGIN,
-				EVENT_FRAME_SYNC_TICK,
-				EVENT_INPUT,
-				EVENT_OUTPUT,
-				EVENT_CUSTOM,
-				EVENT_END
-			};
+	class Event {
+	public:
+		enum EVENT_ID {
+			// Inner events
+			EVENT_BEGIN = 0,
+			EVENT_PRETICK = EVENT_BEGIN,
+			EVENT_TICK,
+			EVENT_POSTTICK,
+			EVENT_ATTACH_COMPONENT,
+			EVENT_DETACH_COMPONENT,
+			EVENT_ENTITY_ACTIVATE,
+			EVENT_ENTITY_DEACTIVATE,
+			// Special Events
+			EVENT_SPECIAL_BEGIN,
+			EVENT_FRAME = EVENT_SPECIAL_BEGIN,
+			EVENT_FRAME_SYNC_TICK,
+			EVENT_INPUT,
+			EVENT_OUTPUT,
+			EVENT_CUSTOM,
+			EVENT_END
+		};
 
-			static void ReflectEventIDs(IReflect& reflect) {
-				if (reflect.IsReflectEnum()) {
-					ReflectEnum(EVENT_PRETICK);
-					ReflectEnum(EVENT_TICK);
-					ReflectEnum(EVENT_POSTTICK);
-					ReflectEnum(EVENT_ATTACH_COMPONENT);
-					ReflectEnum(EVENT_DETACH_COMPONENT);
-					ReflectEnum(EVENT_ENTITY_ACTIVATE);
-					ReflectEnum(EVENT_ENTITY_DEACTIVATE);
-					ReflectEnum(EVENT_FRAME);
-					ReflectEnum(EVENT_FRAME_SYNC_TICK);
-					ReflectEnum(EVENT_INPUT);
-					ReflectEnum(EVENT_OUTPUT);
-					ReflectEnum(EVENT_CUSTOM);
-					ReflectEnum(EVENT_END);
-				}
+		static void ReflectEventIDs(IReflect& reflect) {
+			if (reflect.IsReflectEnum()) {
+				ReflectEnum(EVENT_PRETICK);
+				ReflectEnum(EVENT_TICK);
+				ReflectEnum(EVENT_POSTTICK);
+				ReflectEnum(EVENT_ATTACH_COMPONENT);
+				ReflectEnum(EVENT_DETACH_COMPONENT);
+				ReflectEnum(EVENT_ENTITY_ACTIVATE);
+				ReflectEnum(EVENT_ENTITY_DEACTIVATE);
+				ReflectEnum(EVENT_FRAME);
+				ReflectEnum(EVENT_FRAME_SYNC_TICK);
+				ReflectEnum(EVENT_INPUT);
+				ReflectEnum(EVENT_OUTPUT);
+				ReflectEnum(EVENT_CUSTOM);
+				ReflectEnum(EVENT_END);
 			}
-		
-			template <class T>
-			class Wrapper : public TReflected<Wrapper<T>, SharedTiny> {
-			public:
-				Wrapper() {}
-				Wrapper(const T& d) : data(d) {}
-				Wrapper(rvalue<T> d) { data = std::move(d); }
+		}
 
-				T data;
-			};
+		template <class T>
+		class Wrapper : public TReflected<Wrapper<T>, SharedTiny> {
+		public:
+			Wrapper() {}
+			Wrapper(const T& d) : data(d) {}
+			Wrapper(rvalue<T> d) { data = std::move(d); }
 
-			Event(Engine& engine, EVENT_ID id, TShared<SharedTiny> sender, TShared<SharedTiny> detail = nullptr);
+			T data;
+		};
+
+		Event(Engine& engine, EVENT_ID id, TShared<SharedTiny> sender, TShared<SharedTiny> detail = nullptr);
 
 #if defined(_MSC_VER) && _MSC_VER <= 1200
-			Event();
+		Event();
 #endif
-			std::reference_wrapper<Engine> engine;	// (0/0)
-			EVENT_ID eventID;
-			TShared<SharedTiny> sender;		
-			TShared<SharedTiny> detail;		
-		};
-	}
+		std::reference_wrapper<Engine> engine;	// (0/0)
+		EVENT_ID eventID;
+		TShared<SharedTiny> sender;
+		TShared<SharedTiny> detail;
+	};
 }
 
-
-#endif // __EVENT_H__

@@ -4,9 +4,6 @@
 #include "../../../../Core/Interface/IMemory.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
-using namespace PaintsNow::NsBridgeSunset;
 
 SpaceComponent::SpaceComponent(bool sorted) : rootEntity(nullptr), entityCount(0), boundingBox(Float3(FLT_MAX, FLT_MAX, FLT_MAX), Float3(-FLT_MAX, -FLT_MAX, -FLT_MAX)) {
 	if (sorted) {

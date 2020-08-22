@@ -1,9 +1,8 @@
 #include "Looper.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsEchoLegend;
 
-Looper::Looper(NsBridgeSunset::BridgeSunset& bs, INetwork& nt) : network(nt), bridgeSunset(bs) {}
+Looper::Looper(BridgeSunset& bs, INetwork& nt) : network(nt), bridgeSunset(bs) {}
 
 Looper::~Looper() {
 }

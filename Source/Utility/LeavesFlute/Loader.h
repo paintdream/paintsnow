@@ -3,9 +3,7 @@
 // 2016-1-1
 //
 
-#ifndef __LOADER_H__
-#define __LOADER_H__
-
+#pragma once
 #include "Config.h"
 #include "CmdLine.h"
 
@@ -84,39 +82,34 @@
 
 
 namespace PaintsNow {
-	namespace NsLeavesFlute {
-		class Loader {
-		public:
-			Loader();
-			~Loader();
-			void Load(const CmdLine& cmdLine);
-			void SetFactory(TWrapper<IDevice*>& factory, const String& key, const std::map<String, CmdLine::Option>& factoryMap);
+	class Loader {
+	public:
+		Loader();
+		~Loader();
+		void Load(const CmdLine& cmdLine);
+		void SetFactory(TWrapper<IDevice*>& factory, const String& key, const std::map<String, CmdLine::Option>& factoryMap);
 
-			TWrapper<IFrame*> frameFactory;
-			TWrapper<IRender*> renderFactory;
-			TWrapper<IThread*> threadFactory;
-			TWrapper<IAudio*> audioFactory;
-			TWrapper<IArchive*> archiveFactory;
-			TWrapper<IScript*> scriptFactory;
-			TWrapper<ITunnel*> networkFactory;
-			TWrapper<ITunnel*> tunnelFactory;
-			TWrapper<IRandom*> randomFactory;
-			TWrapper<ITimer*> timerFactory;
-			TWrapper<IImage*> imageFactory;
-			TWrapper<IFilterBase*> assetFilterFactory;
-			TWrapper<IFontBase*> fontFactory;
-			TWrapper<IFilterBase*> audioFilterFactory;
-			TWrapper<IDatabase*> databaseFactory;
-			TWrapper<IDebugger*> debuggerFactory;
+		TWrapper<IFrame*> frameFactory;
+		TWrapper<IRender*> renderFactory;
+		TWrapper<IThread*> threadFactory;
+		TWrapper<IAudio*> audioFactory;
+		TWrapper<IArchive*> archiveFactory;
+		TWrapper<IScript*> scriptFactory;
+		TWrapper<ITunnel*> networkFactory;
+		TWrapper<ITunnel*> tunnelFactory;
+		TWrapper<IRandom*> randomFactory;
+		TWrapper<ITimer*> timerFactory;
+		TWrapper<IImage*> imageFactory;
+		TWrapper<IFilterBase*> assetFilterFactory;
+		TWrapper<IFontBase*> fontFactory;
+		TWrapper<IFilterBase*> audioFilterFactory;
+		TWrapper<IDatabase*> databaseFactory;
+		TWrapper<IDebugger*> debuggerFactory;
 
-			IThread::Thread* mainThread;
-			IThread* thread;
-			IFrame* frame;
-			NsLeavesFlute::LeavesFlute* leavesFlute;
-			Config config;
-		};
-	}
+		IThread::Thread* mainThread;
+		IThread* thread;
+		IFrame* frame;
+		LeavesFlute* leavesFlute;
+		Config config;
+	};
 }
-
-
-#endif // __LOADER_H__

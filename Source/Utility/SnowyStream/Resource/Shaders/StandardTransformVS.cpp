@@ -3,8 +3,6 @@
 #include "../../../../General/Template/TShaderMacro.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
-using namespace PaintsNow::ShaderMacro;
 
 StandardTransformVS::StandardTransformVS() : enableInstancing(true), enableSkinning(false), enableViewProjectionMatrix(true), enableVertexColor(false), enableVertexNormal(true), enableInstancedColor(false), enableVertexTangent(true), enableRasterCoord(false), enableClampedNear(false), enableClampedFar(false) {
 	instanceBuffer.description.usage = IRender::Resource::BufferDescription::INSTANCED;

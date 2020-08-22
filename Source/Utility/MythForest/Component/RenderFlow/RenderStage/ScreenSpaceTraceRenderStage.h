@@ -3,21 +3,16 @@
 // 2018-9-11
 //
 
-#ifndef __SCREENSPACETRACERENDERSTAGE_H__
-#define __SCREENSPACETRACERENDERSTAGE_H__
-
+#pragma once
 #include "../RenderStage.h"
 #include "../RenderPort/RenderPortTextureInput.h"
 
 namespace PaintsNow {
-	namespace NsMythForest {
-		class ScreenSpaceTraceRenderStage : public TReflected<ScreenSpaceTraceRenderStage, RenderStage> {
-		public:
-			ScreenSpaceTraceRenderStage(const String& s);
+	class ScreenSpaceTraceRenderStage : public TReflected<ScreenSpaceTraceRenderStage, RenderStage> {
+	public:
+		ScreenSpaceTraceRenderStage(const String& s);
 
-			RenderPortTextureInput Depth;
-		};
-	}
+		RenderPortTextureInput Depth;
+	};
 }
 
-#endif // __SCREENSPACETRACERENDERSTAGE_H__

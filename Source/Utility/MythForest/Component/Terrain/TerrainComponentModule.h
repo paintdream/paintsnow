@@ -3,26 +3,19 @@
 // 2018-1-19
 //
 
-#ifndef __TERRAINCOMPONENTMODULE_H__
-#define __TERRAINCOMPONENTMODULE_H__
-
+#pragma once
 #include "TerrainComponent.h"
 #include "../../Module.h"
 
 namespace PaintsNow {
-	namespace NsMythForest {
-		class TerrainComponent;
-		class TerrainComponentModule  : public TReflected<TerrainComponentModule, ModuleImpl<TerrainComponent> > {
-		public:
-			TerrainComponentModule(Engine& engine);
+	class TerrainComponent;
+	class TerrainComponentModule : public TReflected<TerrainComponentModule, ModuleImpl<TerrainComponent> > {
+	public:
+		TerrainComponentModule(Engine& engine);
 
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
-			TShared<TerrainComponent> RequestNew(IScript::Request& request, IScript::Delegate<NsSnowyStream::TerrainResource> terrainResource);
-			void RequestRebuild(IScript::Request& request, IScript::Delegate<TerrainComponent> terrainComponent);
-		};
-	}
+		TShared<TerrainComponent> RequestNew(IScript::Request& request, IScript::Delegate<TerrainResource> terrainResource);
+		void RequestRebuild(IScript::Request& request, IScript::Delegate<TerrainComponent> terrainComponent);
+	};
 }
-
-
-#endif // __TERRAINCOMPONENTMODULE_H__

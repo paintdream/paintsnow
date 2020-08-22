@@ -4,8 +4,6 @@
 #include "../../MythForest.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
 AnimationComponent::AnimationComponent(TShared<SkeletonResource> resource) : skeletonResource(resource), animationTime(0), speed(1), clipIndex(0), boneMatrixBuffer(nullptr) {
 	// can be shared between entities

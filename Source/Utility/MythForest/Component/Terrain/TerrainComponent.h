@@ -3,24 +3,17 @@
 // 2018-1-19
 //
 
-#ifndef __TERRAINCOMPONENT_H__
-#define __TERRAINCOMPONENT_H__
-
+#pragma once
 #include "../../Entity.h"
 #include "../Renderable/RenderableComponent.h"
 #include "../../../SnowyStream/Resource/TerrainResource.h"
 
 namespace PaintsNow {
-	namespace NsMythForest {
-		class TerrainComponent : public TAllocatedTiny<TerrainComponent, RenderableComponent> {
-		public:
-			TerrainComponent();
-			virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) override;
+	class TerrainComponent : public TAllocatedTiny<TerrainComponent, RenderableComponent> {
+	public:
+		TerrainComponent();
+		virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) override;
 
-			TShared<NsSnowyStream::TerrainResource> terrainResource;
-		};
-	}
+		TShared<TerrainResource> terrainResource;
+	};
 }
-
-
-#endif // __TERRAINCOMPONENT_H__

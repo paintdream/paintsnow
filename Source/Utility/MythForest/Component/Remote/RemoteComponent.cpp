@@ -1,8 +1,6 @@
 #include "RemoteComponent.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
 static void ErrorHandler(IScript::Request& request, const String& err) {
 	fprintf(stderr, "RemoteRoutine subscript error: %s\n", err.c_str());

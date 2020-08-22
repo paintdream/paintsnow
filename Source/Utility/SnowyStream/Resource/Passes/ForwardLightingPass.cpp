@@ -1,7 +1,6 @@
 #include "ForwardLightingPass.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
 
 ForwardLightingPass::ForwardLightingPass() {}
 

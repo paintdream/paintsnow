@@ -3,8 +3,6 @@
 #include "RenderPort/RenderPortLoadTarget.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
 RenderStage::RenderStage(uint32_t colorAttachmentCount) : renderState(nullptr), renderTarget(nullptr), clear(nullptr), drawCallResource(nullptr), resolutionShift(0, 0) {
 	Flag().fetch_or(RENDERSTAGE_ADAPT_MAIN_RESOLUTION, std::memory_order_acquire);
@@ -48,7 +46,6 @@ void RenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	render.UploadResource(queue, clear, &clearDescription);
 	renderTarget = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_RENDERTARGET);
 }
-
 
 class AutoAdaptRenderTarget : public IReflect {
 public:

@@ -2,7 +2,6 @@
 #include "../../Core/Interface/IStreamBase.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
 
 File::File(IStreamBase* s, size_t len, uint64_t modTime) : stream(s), length(len), lastModifiedTime(modTime) {}
 

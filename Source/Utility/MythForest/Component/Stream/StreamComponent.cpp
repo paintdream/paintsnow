@@ -2,7 +2,6 @@
 #include "../../../BridgeSunset/BridgeSunset.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
 
 StreamComponent::StreamComponent(const UShort3& dim, uint16_t cacheCount) : dimension(dim), recycleStart(0) {
 	idGrids.resize(dim.x() * dim.y() * dim.z(), (uint16_t)~0);
@@ -102,7 +101,6 @@ void StreamComponent::Uninitialize(Engine& engine, Entity* entity) {
 
 	Component::Uninitialize(engine, entity);
 }
-
 
 void StreamComponent::SetLoadHandler(IScript::Request& request, IScript::Request::Ref ref) {
 	loadHandler.ReplaceScript(request, ref);

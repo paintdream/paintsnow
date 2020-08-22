@@ -8,7 +8,6 @@
 #endif
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
 
 TextureResource::TextureResource(ResourceManager& manager, const String& uniqueID) : BaseClass(manager, uniqueID), instance(nullptr), deviceMemoryUsage(0) {
 	description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
@@ -171,7 +170,6 @@ bool TextureResource::Compress(const String& compressionType) {
 			w >>= 1;
 			h >>= 1;
 		}
-
 
 		// TODO: conflicts with mapped resource
 		assert(mapCount.load(std::memory_order_relaxed) == 0);

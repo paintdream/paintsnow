@@ -6,9 +6,6 @@
 #include <queue>
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
-using namespace PaintsNow::NsBridgeSunset;
 
 LayoutComponent::LayoutComponent() : hostEntity(nullptr) {
 	runningLayoutCount.store(0, std::memory_order_relaxed);
@@ -258,7 +255,6 @@ public:
 
 			CheckRect(win->rect);
 		}
-
 
 		widget->scrollSize = scrollSize;
 

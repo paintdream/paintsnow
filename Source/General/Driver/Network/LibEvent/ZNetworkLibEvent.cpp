@@ -98,7 +98,6 @@ void UpdateConnectionInfo(ConnectionImpl* c, evutil_socket_t s) {
 	c->dstPort = htons(sock.sin_port);
 }
 
-
 // sample code from : http://www.cnblogs.com/luxiaoxun/p/3603399.html
 
 static void conn_writecb(struct bufferevent *bev, void *user_data) {
@@ -164,7 +163,6 @@ static void conn_eventcb(struct bufferevent *bev, short events, void *user_data)
 		// c->callback(INetwork::WRITE);
 	}
 
-
 	/* None of the other events can happen here, since we haven't enabled
 	* timeouts */
  	// bufferevent_free(bev);
@@ -195,9 +193,6 @@ static void signal_cb(evutil_socket_t sig, short events, void *user_data) {
 
 	*/
 }
-
-
-
 struct HttpdImpl : public INetwork::Httpd {
 	evhttp* http;
 	ListenerImpl* listener;
@@ -272,7 +267,6 @@ void ToHost(String& host, const String& ip, int port) {
 	ss << ip.c_str() << ":" << port;
 	host = ss.str().c_str();
 }
-
 
 static void listener_cb(struct evconnlistener *listener, evutil_socket_t fd, struct sockaddr *sa, int socklen, void *user_data) {
 	ListenerImpl* p = reinterpret_cast<ListenerImpl*>(user_data);
@@ -368,7 +362,6 @@ INetwork::Listener* ZNetworkLibEvent::OpenListener(Dispatcher* dispatcher, const
 	return p;
 }
 
-
 bool ZNetworkLibEvent::ActivateListenerWithHttpd(Listener* listener, Httpd* httpd) {
 	ListenerImpl* p = static_cast<ListenerImpl*>(listener);
 	IThread& threadApi = *p->threadApi;
@@ -442,7 +435,6 @@ void ZNetworkLibEvent::DeactivateListener(Listener* l) {
 	}
 }
 
-
 void ZNetworkLibEvent::GetListenerInfo(Listener* listener, String& info) {
 	ListenerImpl* impl = static_cast<ListenerImpl*>(listener);
 	ToHost(info, impl->ip, impl->port);
@@ -505,7 +497,6 @@ void ZNetworkLibEvent::Flush(Connection* c) {
 	bufferevent_flush(connection->bev, EV_WRITE, BEV_FLUSH);
 }
 
-
 bool ZNetworkLibEvent::WriteConnection(Connection* c, const void* data, size_t& length) {
 	ConnectionImpl* connection = static_cast<ConnectionImpl*>(c);
 	evbuffer* buf = bufferevent_get_output(connection->bev);
@@ -524,7 +515,6 @@ bool ZNetworkLibEvent::ReadConnection(Connection* c, void* data, size_t& length)
 	length = bufferevent_read(connection->bev, data, length);
 	return true;
 }
-
 
 void ZNetworkLibEvent::GetConnectionInfo(INetwork::Connection* connection, String& src, String& dst) {
 	ConnectionImpl* c = static_cast<ConnectionImpl*>(connection);
@@ -545,7 +535,6 @@ void ZNetworkLibEvent::CloseConnection(Connection* c) {
 #endif
 	delete connection;
 }
-
 
 INetwork::Httpd* ZNetworkLibEvent::OpenHttpd(Listener* listener, const TWrapper<void, Connection*, HttpRequest*>& requestHandler) {
 	HttpdImpl* p = new HttpdImpl();
@@ -588,7 +577,6 @@ void ZNetworkLibEvent::PrepareHttpRequest(HttpRequest* req) {
 	p->committed = false;
 	// evhttp_request_own(p->request);
 }
-
 
 INetwork::HttpRequest* ZNetworkLibEvent::OpenHttpRequest(Connection* connection, const TWrapper<void, int>& callback) {
 	ConnectionImpl* con = static_cast<ConnectionImpl*>(connection);
@@ -719,7 +707,6 @@ static void ToList(evkeyvalq* kv, std::list<std::pair<String, String> >& header)
 		}
 	}
 }
-
 
 void ZNetworkLibEvent::GetHttpRequestHeader(HttpRequest* request, std::list<std::pair<String, String> >& header) {
 	HttpRequestImpl* r = static_cast<HttpRequestImpl*>(request);

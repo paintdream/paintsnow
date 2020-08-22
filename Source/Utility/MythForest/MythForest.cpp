@@ -33,16 +33,13 @@
 #define USE_FRAME_CAPTURE !defined(CMAKE_PAINTSNOW) || ADD_DEBUGGER_RENDERDOC_BUILTIN
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
-using namespace PaintsNow::NsBridgeSunset;
 
 #if USE_FRAME_CAPTURE
 #include "../../General/Driver/Debugger/RenderDoc/ZDebuggerRenderDoc.h"
 static ZDebuggerRenderDoc debugger;
 #endif
 
-MythForest::MythForest(Interfaces& interfaces, NsSnowyStream::SnowyStream& snowyStream, NsBridgeSunset::BridgeSunset& bridgeSunset)
+MythForest::MythForest(Interfaces& interfaces, SnowyStream& snowyStream, BridgeSunset& bridgeSunset)
 	: engine(interfaces, bridgeSunset, snowyStream), lastFrameTick(0), currentFrameTime(1) {
 	entityAllocator = TShared<Entity::Allocator>::From(new Entity::Allocator());
 

@@ -11,7 +11,7 @@ enum { GLOBAL_INTERFACE_CREATE = 0, GLOBAL_INTERFACE_QUERY };
 void Value<TableImpl>::Reflect(IReflect& reflect) {
 	if (reflect.IsReflectProperty()) {
 		ReflectProperty(value.arrayPart);
-		size_t count = value.mapPart.size();
+		uint64_t count = value.mapPart.size();
 		ReflectProperty(count);
 		if (value.mapPart.size() == 0) { // Read
 			for (size_t i = 0; i < count; i++) {
@@ -486,7 +486,6 @@ void RemoteProxy::Request::OnConnection(ITunnel::EVENT event) {
 	}
 }
 
-
 ValueBase::ValueBase() {}
 
 ValueBase::~ValueBase() {}
@@ -852,7 +851,6 @@ IScript::Request& RemoteProxy::Request::operator >> (const Key& k) {
 	return *this;
 }
 
-
 IScript::Request& RemoteProxy::Request::operator << (double value) {
 	assert(lockCount != 0);
 	Write(*this, value);
@@ -1008,7 +1006,6 @@ IScript::Request& RemoteProxy::Request::operator << (const Ref& ref) {
 	*this << *reinterpret_cast<BaseDelegate*>(ref.value);
 	return *this;
 }
-
 
 bool RemoteProxy::Request::Call(const AutoWrapperBase& wrapper, const Request::Ref& ref) {
 	assert(lockCount != 0);

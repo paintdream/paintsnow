@@ -4,9 +4,7 @@
 //
 
 
-#ifndef __ITIMER_H__
-#define __ITIMER_H__
-
+#pragma once
 
 #include "../../Core/PaintsNow.h"
 #include "../../Core/Interface/IType.h"
@@ -26,4 +24,3 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __ITIMER_H__

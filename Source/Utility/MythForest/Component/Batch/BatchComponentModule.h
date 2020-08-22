@@ -3,28 +3,22 @@
 // 2018-1-19
 //
 
-#ifndef __BATCHCOMPONENTMODULE_H__
-#define __BATCHCOMPONENTMODULE_H__
-
+#pragma once
 #include "BatchComponent.h"
 #include "../../Module.h"
 
 namespace PaintsNow {
-	namespace NsMythForest {
-		class BatchComponentModule  : public TReflected<BatchComponentModule, ModuleImpl<BatchComponent> > {
-		public:
-			BatchComponentModule(Engine& engine);
+	class BatchComponentModule : public TReflected<BatchComponentModule, ModuleImpl<BatchComponent> > {
+	public:
+		BatchComponentModule(Engine& engine);
 
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-			TShared<BatchComponent> Create(IRender::Resource::BufferDescription::Usage usage);
+		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TShared<BatchComponent> Create(IRender::Resource::BufferDescription::Usage usage);
 
-		public:
-			// APIs
-			TShared<BatchComponent> RequestNew(IScript::Request& request, const String& usage);
-			void RequestGetCaptureStatistics(IScript::Request& request, IScript::Delegate<BatchComponent> component);
-		};
-	}
+	public:
+		// APIs
+		TShared<BatchComponent> RequestNew(IScript::Request& request, const String& usage);
+		void RequestGetCaptureStatistics(IScript::Request& request, IScript::Delegate<BatchComponent> component);
+	};
 }
 
-
-#endif // __BATCHCOMPONENTMODULE_H__

@@ -3,9 +3,7 @@
 // 2015-1-25
 //
 
-#ifndef __INETWORK_H__
-#define __INETWORK_H__
-
+#pragma once
 #include "../../Core/PaintsNow.h"
 #include "ITunnel.h"
 
@@ -66,4 +64,3 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __INETWORK_H__

@@ -3,29 +3,22 @@
 // By PaintDream (paintdream@paintdream.com)
 //
 
-#ifndef __DEPTHBOUNDINGSETUP_PASS_H__
-#define __DEPTHBOUNDINGSETUP_PASS_H__
-
+#pragma once
 #include "../../../../General/Misc/PassBase.h"
 #include "../Shaders/ScreenTransformVS.h"
 #include "../Shaders/DepthMinMaxSetupFS.h"
 
 namespace PaintsNow {
-	namespace NsSnowyStream {
-		class DepthBoundingSetupPass : public TReflected<DepthBoundingSetupPass, PassBase> {
-		public:
-			DepthBoundingSetupPass();
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+	class DepthBoundingSetupPass : public TReflected<DepthBoundingSetupPass, PassBase> {
+	public:
+		DepthBoundingSetupPass();
+		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
-		public:
-			// Vertex shaders
-			ScreenTransformVS transform;
+	public:
+		// Vertex shaders
+		ScreenTransformVS transform;
 
-			// Fragment shaders
-			DepthMinMaxSetupFS minmax;
-		};
-	}
+		// Fragment shaders
+		DepthMinMaxSetupFS minmax;
+	};
 }
-
-
-#endif // __DEPTHBOUNDINGSETUP_PASS_H__

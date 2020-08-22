@@ -1,7 +1,6 @@
 #include "DepthBoundingSetupPass.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
 
 DepthBoundingSetupPass::DepthBoundingSetupPass() {
 }

@@ -6,19 +6,15 @@
 #include "../../../../../Source/Utility/SnowyStream/ResourceBase.h"
 
 namespace PaintsNow {
-	namespace NsGalaxyWeaver {
-		class Service;
-	}
-	namespace NsMythForest {
-		class Entity;
-	}
+	class Service;
+	class Entity;
 }
 
 class SLeavesWidget : public SCompoundWidget, public ISceneExplorer
 {
 public:
 	SLATE_BEGIN_ARGS(SLeavesWidget) {}
-	SLATE_ARGUMENT(TSharedPtr<PaintsNow::NsGalaxyWeaver::Service>, service);
+	SLATE_ARGUMENT(TSharedPtr<PaintsNow::Service>, service);
 	SLATE_END_ARGS()
 
 public:
@@ -51,10 +47,10 @@ protected:
 	template <class T>
 	void OnExportTextureResource(UTexture* texture, T op);
 
-	TMap<UObject*, PaintsNow::TShared<PaintsNow::NsSnowyStream::ResourceBase> > collectedObjects;
+	TMap<UObject*, PaintsNow::TShared<PaintsNow::ResourceBase> > collectedObjects;
 	TMap<UStaticMesh*, uint32> mapModelComponent;
 	uint32 componentCount;
 	uint32 entityCount;
 	uint32 entityGroupCount;
-	TSharedPtr<PaintsNow::NsGalaxyWeaver::Service> service;
+	TSharedPtr<PaintsNow::Service> service;
 };

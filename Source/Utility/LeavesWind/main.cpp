@@ -5,7 +5,6 @@
 #pragma comment(lib, "Opengl32.lib")
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsLeavesFlute;
 
 extern "C" DLL_PUBLIC void* LeavesCreate() {
 	return new Loader();

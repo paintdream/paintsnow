@@ -3,8 +3,6 @@
 #include "../../../MythForest/MythForest.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
 BatchComponent::BatchComponent(IRender::Resource::BufferDescription::Usage usage) : referenceCount(0), buffer(nullptr), bufferUsage(usage) {}
 

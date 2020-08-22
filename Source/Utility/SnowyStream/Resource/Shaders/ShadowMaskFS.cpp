@@ -3,8 +3,6 @@
 #include "../../../../General/Template/TShaderMacro.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
-using namespace PaintsNow::ShaderMacro;
 
 ShadowMaskFS::ShadowMaskFS() {
 	uniformBuffer.description.usage = IRender::Resource::BufferDescription::UNIFORM;

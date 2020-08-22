@@ -12,11 +12,6 @@
 #endif
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsLeavesFlute;
-using namespace PaintsNow::NsSnowyStream;
-using namespace PaintsNow::NsHeartVioliner;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsBridgeSunset;
 
 class ScanModules : public IReflect {
 public:
@@ -272,7 +267,6 @@ void LeavesFlute::RequestShowCursor(IScript::Request& request, const String& typ
 	interfaces.frame.ShowCursor(cursor);
 }
 
-
 void LeavesFlute::RequestSetAppTitle(IScript::Request& request, const String& title) {
 	DoLock();
 	newAppTitle = title;
@@ -455,7 +449,7 @@ public:
 	}
 
 	virtual void Execute(void* context) override {
-		NsBridgeSunset::BridgeSunset& bridgeSunset = *reinterpret_cast<NsBridgeSunset::BridgeSunset*>(context);
+		BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 		IScript::Request& request = *bridgeSunset.AcquireSafe();
 		String text;
 		if (LoadScriptText(path, text)) {
@@ -768,7 +762,6 @@ struct InspectProcs : public IReflect {
 			meta = meta->GetNext();
 		}
 	}
-
 
 	IScript::Request& request;
 };

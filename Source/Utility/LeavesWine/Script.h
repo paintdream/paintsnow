@@ -3,18 +3,13 @@
 // 2019-11-1
 //
 
-#ifndef __SCRIPT_H__
-#define __SCRIPT_H__
-
+#pragma once
 #include "IWidget.h"
 
 namespace PaintsNow {
-	namespace NsLeavesWine {
-		class Script : public IWidget {
-		public:
-			virtual void TickRender(NsLeavesFlute::LeavesFlute& leavesFlute) override;
-		};
-	}
+	class Script : public IWidget {
+	public:
+		virtual void TickRender(LeavesFlute& leavesFlute) override;
+	};
 }
 
-#endif // __SCRIPT_H__

@@ -3,7 +3,6 @@
 #include "../../General/Interface/Interfaces.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
 
 Module::Module(Engine& e) : engine(e) {}
 

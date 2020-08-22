@@ -3,46 +3,39 @@
 // 2019-11-1
 //
 
-#ifndef __REPOSITORY_H__
-#define __REPOSITORY_H__
-
+#pragma once
 #include "IWidget.h"
 #include "../../Core/Interface/IArchive.h"
 #include "../../Core/System/Kernel.h"
 #include "../../Core/Template/TAllocator.h"
 
 namespace PaintsNow {
-	namespace NsSnowyStream {
-		class ResourceBase;
-	}
+	class ResourceBase;
 
-	namespace NsLeavesWine {
-		class Repository : public TReflected<Repository, WarpTiny>, public IWidget {
-		public:
-			Repository();
-			virtual void TickRender(NsLeavesFlute::LeavesFlute& leavesFlute) override;
+	class Repository : public TReflected<Repository, WarpTiny>, public IWidget {
+	public:
+		Repository();
+		virtual void TickRender(LeavesFlute& leavesFlute) override;
 
-			struct Item final : public TAllocatedTiny<Item, SharedTiny> {
-				enum { ITEM_DIRECTORY = SharedTiny::TINY_CUSTOM_BEGIN };
-				Item() : parent(nullptr) {}
-				Item* parent;
-				String name;
-				TShared<NsSnowyStream::ResourceBase> resource;
-				std::vector<TShared<Item> > children;
-			};
-
-			void RenderItem(Item& item, uint32_t depth);
-			void RefreshLocalFilesRecursive(IArchive& archive, const String& path, Item& item);
-			void RefreshLocalFiles(IArchive& archive);
-
-		protected:
-			TShared<Item> rootItem;
-			TShared<Item::Allocator> itemAllocator;
-			String viewResourcePath;
-			TShared<NsSnowyStream::ResourceBase> viewResource;
-			std::atomic<uint32_t> critical;
+		struct Item final : public TAllocatedTiny<Item, SharedTiny> {
+			enum { ITEM_DIRECTORY = SharedTiny::TINY_CUSTOM_BEGIN };
+			Item() : parent(nullptr) {}
+			Item* parent;
+			String name;
+			TShared<ResourceBase> resource;
+			std::vector<TShared<Item> > children;
 		};
-	}
+
+		void RenderItem(Item& item, uint32_t depth);
+		void RefreshLocalFilesRecursive(IArchive& archive, const String& path, Item& item);
+		void RefreshLocalFiles(IArchive& archive);
+
+	protected:
+		TShared<Item> rootItem;
+		TShared<Item::Allocator> itemAllocator;
+		String viewResourcePath;
+		TShared<ResourceBase> viewResource;
+		std::atomic<uint32_t> critical;
+	};
 }
 
-#endif // __REPOSITORY_H__

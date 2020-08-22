@@ -1,7 +1,6 @@
 #include "LightBufferPass.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
 
 LightBufferPass::LightBufferPass() {
 }

@@ -2,8 +2,6 @@
 #include <ctime>
 #include <iterator>
 using namespace PaintsNow;
-using namespace PaintsNow::NsHeartVioliner;
-using namespace PaintsNow::NsBridgeSunset;
 
 Clock::Clock(ITimer& base, BridgeSunset& b, int64_t interval, int64_t start, bool mergeTicks) : bridgeSunset(b), timerBase(base), now(start), offset(0) {
 	if (mergeTicks) {

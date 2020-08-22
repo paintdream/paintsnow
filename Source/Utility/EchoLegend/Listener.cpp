@@ -2,8 +2,6 @@
 #include "Connection.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsEchoLegend;
-using namespace PaintsNow::NsBridgeSunset;
 
 Listener::Listener(BridgeSunset& bs, INetwork& nt, WorkDispatcher* disp, IScript::Request::Ref peventHandler, IScript::Request::Ref pcallback, IScript::Request::Ref pconnectCallback, const String& ip, bool h, bool mode) : network(nt), bridgeSunset(bs), listener(nullptr), dispatcher(disp), httpd(nullptr), eventHandler(peventHandler), callback(pcallback), connectCallback(pconnectCallback) {
 //	, http(h), activated(false), packetMode(mode)
@@ -75,7 +73,6 @@ void Listener::OnAcceptHttp(INetwork::Connection* connection, INetwork::HttpRequ
 
 	bridgeSunset.GetKernel().QueueRoutine(this, CreateTaskScript(callback, this, c));
 }
-
 
 void Listener::ScriptUninitialize(IScript::Request& request) {
 	request.DoLock();

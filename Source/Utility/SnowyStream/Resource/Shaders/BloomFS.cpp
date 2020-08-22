@@ -3,8 +3,6 @@
 #include "../../../../General/Template/TShaderMacro.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
-using namespace PaintsNow::ShaderMacro;
 
 BloomFS::BloomFS() {
 	screenTexture.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;

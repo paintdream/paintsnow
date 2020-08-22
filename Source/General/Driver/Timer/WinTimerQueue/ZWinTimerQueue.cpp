@@ -39,7 +39,6 @@ static VOID WINAPI TimerFunc(PVOID pContext, BOOLEAN bTimeOrWait) {
 ZWinTimerQueue::ZWinTimerQueue() {
 }
 
-
 ZWinTimerQueue::~ZWinTimerQueue() {}
 
 static DWORD WINAPI DeleteTimerFunc(LPVOID pContext) {
@@ -86,6 +85,5 @@ ITimer::Timer* ZWinTimerQueue::StartTimer(size_t inter, const TWrapper<void, siz
 
 	return impl;
 }
-
 
 #endif // _WIN32

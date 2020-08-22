@@ -3,9 +3,6 @@
 #include "../../../HeartVioliner/Clock.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsHeartVioliner;
-using namespace PaintsNow::NsBridgeSunset;
 
 EventComponent::EventComponent() : rootEntity(nullptr), tickTimeStamp(0), tickTimeDelta(0) {
 	Flag().fetch_or(Tiny::TINY_UNIQUE, std::memory_order_acquire);
@@ -63,7 +60,6 @@ void EventComponent::UninstallFrame() {
 	SpinLock(critical);
 	frameTickerCollection.clear();
 	SpinUnLock(critical);}
-
 
 void EventComponent::InstallTick(Engine& engine, TShared<Clock> c) {
 	assert(c->GetWarpIndex() == GetWarpIndex());

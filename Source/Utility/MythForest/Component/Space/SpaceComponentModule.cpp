@@ -3,9 +3,6 @@
 #include "../../../BridgeSunset/BridgeSunset.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
-using namespace PaintsNow::NsBridgeSunset;
 
 // Script interfaces
 SpaceComponentModule::SpaceComponentModule(Engine& engine) : BaseClass(engine) {}
@@ -54,7 +51,6 @@ uint32_t SpaceComponentModule::RequestGetEntityCount(IScript::Request& request, 
 	return spaceComponent->GetEntityCount();
 }
 
-
 void SpaceComponentModule::RequestInsertEntity(IScript::Request& request, IScript::Delegate<SpaceComponent> spaceComponent, IScript::Delegate<Entity> entity) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(spaceComponent);
@@ -76,7 +72,6 @@ void SpaceComponentModule::RequestRemoveEntity(IScript::Request& request, IScrip
 
 	spaceComponent->Remove(engine, entity.Get());
 }
-
 
 void SpaceComponentModule::RequestQueryEntities(IScript::Request& request, IScript::Delegate<SpaceComponent> spaceComponent, const Float3Pair& box) {
 	CHECK_REFERENCES_NONE();

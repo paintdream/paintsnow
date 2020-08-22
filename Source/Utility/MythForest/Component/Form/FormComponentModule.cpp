@@ -2,7 +2,6 @@
 #include "FormComponent.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
 
 FormComponentModule::FormComponentModule(Engine& engine) : BaseClass(engine) {}
 

@@ -2,7 +2,6 @@
 #include "../../Entity.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
 
 ProfileComponent::ProfileComponent(float ratio) : timeStamp(0), tickInterval(0), historyRatio(ratio) {}
 

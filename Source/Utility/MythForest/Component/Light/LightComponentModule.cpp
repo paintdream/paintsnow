@@ -1,7 +1,6 @@
 #include "LightComponentModule.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
 
 LightComponentModule::LightComponentModule(Engine& engine) : BaseClass(engine) {}
 

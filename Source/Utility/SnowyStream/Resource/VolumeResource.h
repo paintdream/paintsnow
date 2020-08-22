@@ -3,25 +3,20 @@
 // 2018-3-10
 //
 
-#ifndef __VOLUME_RESOURCE_H__
-#define __VOLUME_RESOURCE_H__
-
+#pragma once
 #include "GraphicResourceBase.h"
 #include "../../../General/Interface/IAsset.h"
 
 namespace PaintsNow {
-	namespace NsSnowyStream {
-		class VolumeResource : public TReflected<VolumeResource, GraphicResourceBase> {
-		public:
-			VolumeResource(ResourceManager& manager, const String& uniqueID);
-			virtual bool operator << (IStreamBase& stream) override;
-			virtual bool operator >> (IStreamBase& stream) const override;
-			virtual void Upload(IRender& render, void* deviceContext) override;
-			virtual void Download(IRender& render, void* deviceContext) override;
-			virtual void Attach(IRender& render, void* deviceContext) override;
-			virtual void Detach(IRender& render, void* deviceContext) override;
-		};
-	}
+	class VolumeResource : public TReflected<VolumeResource, GraphicResourceBase> {
+	public:
+		VolumeResource(ResourceManager& manager, const String& uniqueID);
+		virtual bool operator << (IStreamBase& stream) override;
+		virtual bool operator >> (IStreamBase& stream) const override;
+		virtual void Upload(IRender& render, void* deviceContext) override;
+		virtual void Download(IRender& render, void* deviceContext) override;
+		virtual void Attach(IRender& render, void* deviceContext) override;
+		virtual void Detach(IRender& render, void* deviceContext) override;
+	};
 }
 
-#endif // __VOLUME_RESOURCE_H__

@@ -1,7 +1,6 @@
 #include "StreamResource.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
 
 StreamResource::StreamResource(ResourceManager& manager, const String& uniqueID) : BaseClass(manager, uniqueID) {
 	Flag().fetch_or(RESOURCE_STREAM, std::memory_order_acquire);
@@ -32,7 +31,6 @@ bool StreamResource::operator >> (IStreamBase& base) const {
 
 	return shadowStream >> base.GetBaseStream();
 }
-
 
 IReflectObject* StreamResource::Clone() const {
 	StreamResource* clone = new StreamResource(resourceManager, "");

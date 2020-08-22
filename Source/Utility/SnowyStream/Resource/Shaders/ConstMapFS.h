@@ -9,22 +9,19 @@
 #include "../../../../General/Interface/IShader.h"
 
 namespace PaintsNow {
-	namespace NsSnowyStream {
-		class ConstMapFS : public TReflected<ConstMapFS, IShader> {
-		public:
-			ConstMapFS();
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-			virtual String GetShaderText() override;
+	class ConstMapFS : public TReflected<ConstMapFS, IShader> {
+	public:
+		ConstMapFS();
+		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		virtual String GetShaderText() override;
 
-		protected:
-			// varyings
-			Float4 tintColor;
+	protected:
+		// varyings
+		Float4 tintColor;
 
-			// targets
-			Float4 target;
-		};
-	}
+		// targets
+		Float4 target;
+	};
 }
-
 
 #endif // __CONSTMAP_FS_H

@@ -4,7 +4,6 @@
 #include "../../SnowyStream/SnowyStream.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
 
 FontResource::FontResource(ResourceManager& manager, const String& uniqueID) : BaseClass(manager, uniqueID), font(nullptr), dim(512), weight(0) {}
 FontResource::~FontResource() {}

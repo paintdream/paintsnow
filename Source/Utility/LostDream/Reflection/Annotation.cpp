@@ -1,7 +1,6 @@
 #include "Annotation.h"
 
 using namespace PaintsNow;
-using namespace NsLostDream;
 
 class Inner : public TReflected<Inner, IReflectObjectComplex> {
 public:
@@ -153,7 +152,6 @@ static void Test() {
 	func(1, "2");
 	func2('a', 0.1f);
 }
-
 
 bool Annotation::Initialize() {
 	return true;

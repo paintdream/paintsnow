@@ -3,9 +3,7 @@
 // 2016-5-16
 //
 
-#ifndef __IRANDOM_H__
-#define __IRANDOM_H__
-
+#pragma once
 #include "../../Core/PaintsNow.h"
 #include "../../Core/Template/TProxy.h"
 #include "../../Core/Interface/IType.h"
@@ -33,4 +31,3 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __IRANDOM_H__

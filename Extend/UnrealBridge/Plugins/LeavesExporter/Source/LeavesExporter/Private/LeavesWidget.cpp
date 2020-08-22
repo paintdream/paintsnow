@@ -13,7 +13,6 @@
 #include "../../../../../Source/Core/Driver/Filter/Pod/ZFilterPod.h"
 
 #define LOCTEXT_NAMESPACE "SLeavesWidget"
-using namespace PaintsNow::NsGalaxyWeaver;
 
 void SLeavesWidget::Construct(const FArguments& InArgs) {
 	UE_LOG(LogTemp, Log, TEXT("SLeavesWidget::Construct..."));
@@ -176,10 +175,9 @@ static PaintsNow::String& ConvertPath(PaintsNow::String& path) {
 	return path;
 }
 
-static void PostResource(Service& service, PaintsNow::NsSnowyStream::ResourceBase& resource, const PaintsNow::String& location) {
+static void PostResource(PaintsNow::Service& service, PaintsNow::ResourceBase& resource, const PaintsNow::String& location) {
 	// PostResource
 	using namespace PaintsNow;
-	using namespace PaintsNow::NsSnowyStream;
 	MemoryStream stream(409600, true);
 	static ZFilterPod filter;
 	IStreamBase* f = filter.CreateFilter(stream);
@@ -194,7 +192,7 @@ static void PostResource(Service& service, PaintsNow::NsSnowyStream::ResourceBas
 	request.Pop();
 }
 
-static void CompleteSync(Service& service) {
+static void CompleteSync(PaintsNow::Service& service) {
 	using namespace PaintsNow;
 	auto& request = service.GetMainRequest();
 	request.Push();
@@ -248,7 +246,6 @@ static inline PaintsNow::UChar4 EncodeNormal(const FVector4& vec) {
 
 void SLeavesWidget::CollectSceneEntity(AActor& actor) {
 	using namespace PaintsNow;
-	using namespace PaintsNow::NsMythForest;
 	// Add necessary component(s)
 	String actorName = TCHAR_TO_UTF8(*actor.GetName());
 	/*
@@ -301,7 +298,6 @@ void SRMHToMixture(uint8_t* pixel) {
 template <class T>
 void SLeavesWidget::OnExportTextureResource(UTexture* t, T op) {
 	using namespace PaintsNow;
-	using namespace PaintsNow::NsSnowyStream;
 
 	if (!t->IsA(UTexture2D::StaticClass())) {
 		return;
@@ -337,7 +333,7 @@ void SLeavesWidget::OnExportTextureResource(UTexture* t, T op) {
 			break;
 		case TSF_RGBA16F:
 			state.layout = IRender::Resource::TextureDescription::RGBA;
-			state.format = IRender::Resource::TextureDescription::HALF_FLOAT;
+			state.format = IRender::Resource::TextureDescription::HALF;
 			break;
 		}
 
@@ -410,7 +406,6 @@ inline bool EndsWith(const PaintsNow::String& s, const PaintsNow::String& p) {
 
 void SLeavesWidget::OnExportMeshComponent(UMeshComponent* meshComponent) {
 	using namespace PaintsNow;
-	using namespace PaintsNow::NsSnowyStream;
 
 	if (meshComponent->IsA(UStaticMeshComponent::StaticClass())) {
 		auto staticMeshComponent = static_cast<UStaticMeshComponent*>(meshComponent);
@@ -682,7 +677,6 @@ void SLeavesWidget::OnExportMeshComponent(UMeshComponent* meshComponent) {
 void SLeavesWidget::OnExportLandscapeComponent(ULandscapeComponent* landspaceComponent) {}
 void SLeavesWidget::OnExportSphereReflectionComponent(UReflectionCaptureComponent* sphereReflectionComponent) {
 	using namespace PaintsNow;
-	using namespace PaintsNow::NsSnowyStream;
 	IScript::Request& request = service->GetMainRequest();
 	String textureName = TCHAR_TO_UTF8(*sphereReflectionComponent->GetName());
 	ConvertPath(textureName);
@@ -697,7 +691,7 @@ void SLeavesWidget::OnExportSphereReflectionComponent(UReflectionCaptureComponen
 		TShared<TextureResource> textureResource = TShared<TextureResource>::From(new TextureResource(resourceManager, textureName));
 		IRender::Resource::TextureDescription::State& state = textureResource->description.state;
 		state.compress = 0;
-		state.format = IRender::Resource::TextureDescription::HALF_FLOAT;
+		state.format = IRender::Resource::TextureDescription::HALF;
 		state.layout = IRender::Resource::TextureDescription::RGBA;
 		state.mip = IRender::Resource::TextureDescription::SPECMIP;
 		state.sample = IRender::Resource::TextureDescription::LINEAR;

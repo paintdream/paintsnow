@@ -3,9 +3,7 @@
 // 2018-9-11
 //
 
-#ifndef __SHADOWMASKRENDERSTAGE_H__
-#define __SHADOWMASKRENDERSTAGE_H__
-
+#pragma once
 #include "../RenderStage.h"
 #include "../RenderPort/RenderPortRenderTarget.h"
 #include "../RenderPort/RenderPortTextureInput.h"
@@ -14,23 +12,20 @@
 #include "../../../../SnowyStream/Resource/Passes/ShadowMaskPass.h"
 
 namespace PaintsNow {
-	namespace NsMythForest {
-		class ShadowMaskRenderStage : public TReflected<ShadowMaskRenderStage, GeneralRenderStageRect<NsSnowyStream::ShadowMaskPass> > {
-		public:
-			ShadowMaskRenderStage(const String& config = "1");
-			virtual void PrepareResources(Engine& engine, IRender::Queue* queue) override;
-			virtual void UpdatePass(Engine& engine, IRender::Queue* queue) override;
+	class ShadowMaskRenderStage : public TReflected<ShadowMaskRenderStage, GeneralRenderStageRect<ShadowMaskPass> > {
+	public:
+		ShadowMaskRenderStage(const String& config = "1");
+		virtual void PrepareResources(Engine& engine, IRender::Queue* queue) override;
+		virtual void UpdatePass(Engine& engine, IRender::Queue* queue) override;
 
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
-			TRenderPortReference<RenderPortLightSource> LightSource;
-			TRenderPortReference<RenderPortCameraView> CameraView;
-			RenderPortTextureInput InputDepth;
-			RenderPortRenderTarget OutputMask;
+		TRenderPortReference<RenderPortLightSource> LightSource;
+		TRenderPortReference<RenderPortCameraView> CameraView;
+		RenderPortTextureInput InputDepth;
+		RenderPortRenderTarget OutputMask;
 
-			TShared<NsSnowyStream::TextureResource> emptyShadowMask;
-		};
-	}
+		TShared<TextureResource> emptyShadowMask;
+	};
 }
 
-#endif // __SHADOWMASKRENDERSTAGE_H__

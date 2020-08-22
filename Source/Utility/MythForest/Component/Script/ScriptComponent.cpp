@@ -5,8 +5,6 @@
 #include "../Event/EventComponent.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
 ScriptComponent::ScriptComponent(const String& n) : name(n), entityFlagMask(0) {
 	memset(handlers, 0, sizeof(handlers));

@@ -3,8 +3,6 @@
 #include "ImGui/imgui.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsLeavesWine;
-using namespace PaintsNow::NsLeavesFlute;
 
 Repository::Repository() {
 	critical.store(0, std::memory_order_relaxed);

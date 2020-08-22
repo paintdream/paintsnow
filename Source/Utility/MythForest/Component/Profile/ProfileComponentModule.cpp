@@ -1,7 +1,6 @@
 #include "ProfileComponentModule.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
 
 ProfileComponentModule::ProfileComponentModule(Engine& engine) : BaseClass(engine) {}
 

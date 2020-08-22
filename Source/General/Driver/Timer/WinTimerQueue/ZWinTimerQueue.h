@@ -3,9 +3,7 @@
 // 2014-12-14
 //
 
-#ifndef __ZWINTIMERQUEUE_H__
-#define __ZWINTIMERQUEUE_H__
-
+#pragma once
 #include "../../../Interface/ITimer.h"
 
 #if !defined(_WIN32) && !defined(WIN32)
@@ -25,5 +23,3 @@ namespace PaintsNow {
 
 	};
 }
-
-#endif // __ZWINTIMERQUEUE__

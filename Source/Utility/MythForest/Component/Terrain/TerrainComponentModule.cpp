@@ -1,8 +1,6 @@
 #include "TerrainComponentModule.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
 TerrainComponentModule::TerrainComponentModule(Engine& engine) : BaseClass(engine) {}
 

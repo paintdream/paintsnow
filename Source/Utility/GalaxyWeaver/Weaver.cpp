@@ -2,10 +2,6 @@
 #include <sstream>
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsGalaxyWeaver;
-using namespace PaintsNow::NsBridgeSunset;
-using namespace PaintsNow::NsSnowyStream;
-using namespace PaintsNow::NsMythForest;
 
 static const String WEAVER_VERSION = "2018.1.25";
 

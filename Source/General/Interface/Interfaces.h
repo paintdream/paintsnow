@@ -3,9 +3,7 @@
 // 2018-4-4
 //
 
-#ifndef __INTERFACES_H__
-#define __INTERFACES_H__
-
+#pragma once
 #ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
 #endif
@@ -52,5 +50,3 @@ namespace PaintsNow {
 	};
 }
 
-
-#endif // __INTERFACES_H__

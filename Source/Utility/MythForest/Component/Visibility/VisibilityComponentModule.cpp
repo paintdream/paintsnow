@@ -1,7 +1,6 @@
 #include "VisibilityComponentModule.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
 
 VisibilityComponentModule::VisibilityComponentModule(Engine& engine) : BaseClass(engine) {}
 

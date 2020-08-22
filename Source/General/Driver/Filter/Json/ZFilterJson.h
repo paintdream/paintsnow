@@ -3,9 +3,7 @@
 // 2015-6-10
 //
 
-#ifndef __ZFILTERJSON_H__
-#define __ZFILTERJSON_H__
-
+#pragma once
 #include "../../../../Core/Interface/IFilterBase.h"
 
 namespace PaintsNow {
@@ -15,4 +13,3 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __ZFILTERJSON_H__

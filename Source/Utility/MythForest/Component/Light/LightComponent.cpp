@@ -6,8 +6,6 @@
 #include "../../../MythForest/MythForest.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
 
 LightComponent::LightComponent() : attenuation(0) /*, spotAngle(1), temperature(6500) */ {
@@ -100,7 +98,7 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 		depthStencilDescription.state.layout = IRender::Resource::TextureDescription::DEPTH;
 
 		if (!shadowGrid->texture) {
-			TShared<NsSnowyStream::TextureResource> texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("LightShadowBake", shadowGrid()), false, 0, nullptr);
+			TShared<TextureResource> texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("LightShadowBake", shadowGrid()), false, 0, nullptr);
 			texture->description.dimension = dim;
 			texture->description.state.attachment = true;
 			texture->description.state.format = IRender::Resource::TextureDescription::FLOAT;
@@ -185,14 +183,14 @@ void LightComponent::SetRange(const Float3& r) {
 void LightComponent::ShadowLayer::CollectRenderableComponent(Engine& engine, TaskData& taskData, RenderableComponent* renderableComponent, TaskData::WarpData& warpData, const WorldInstanceData& instanceData) {
 	IRender& render = engine.interfaces.render;
 	IRender::Device* device = engine.snowyStream.GetRenderDevice();
-	NsSnowyStream::IDrawCallProvider::InputRenderData inputRenderData(0.0f, pipeline());
-	std::vector<NsSnowyStream::IDrawCallProvider::OutputRenderData> drawCalls;
+	IDrawCallProvider::InputRenderData inputRenderData(0.0f, pipeline());
+	std::vector<IDrawCallProvider::OutputRenderData> drawCalls;
 	renderableComponent->CollectDrawCalls(drawCalls, inputRenderData);
 	TaskData::WarpData::InstanceGroupMap& instanceGroups = warpData.instanceGroups;
 
 	for (size_t k = 0; k < drawCalls.size(); k++) {
 		// PassBase& Pass = provider->GetPass(k);
-		NsSnowyStream::IDrawCallProvider::OutputRenderData& drawCall = drawCalls[k];
+		IDrawCallProvider::OutputRenderData& drawCall = drawCalls[k];
 		const IRender::Resource::DrawCallDescription& drawCallTemplate = drawCall.drawCallDescription;
 		AnimationComponent* animationComponent = instanceData.animationComponent();
 
@@ -505,11 +503,11 @@ void LightComponent::ShadowLayer::Initialize(Engine& engine, TShared<StreamCompo
 	}
 
 	if (!pipeline) {
-		String path = NsSnowyStream::ShaderResource::GetShaderPathPrefix() + UniqueType<ConstMapPass>::Get()->GetBriefName();
+		String path = ShaderResource::GetShaderPathPrefix() + UniqueType<ConstMapPass>::Get()->GetBriefName();
 		pipeline = engine.snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), path, true, 0, nullptr)->QueryInterface(UniqueType<ShaderResourceImpl<ConstMapPass> >());
 	}
 
-	TShared<NsSnowyStream::TextureResource> texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("LightShadowBakeDummy", this), false, 0, nullptr);
+	TShared<TextureResource> texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("LightShadowBakeDummy", this), false, 0, nullptr);
 	texture->description.dimension = UShort3(res.x(), res.y(), 1);
 	texture->description.state.attachment = true;
 	texture->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;

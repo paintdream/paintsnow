@@ -2,25 +2,18 @@
 // By PaintDream (paintdream@paintdream.com)
 //
 
-#ifndef __MULTIHASHTRACE_PASS_H__
-#define __MULTIHASHTRACE_PASS_H__
-
+#pragma once
 #include "../../../../General/Misc/PassBase.h"
 #include "../Shaders/ScreenTransformVS.h"
 #include "../Shaders/MultiHashTraceFS.h"
 
 namespace PaintsNow {
-	namespace NsSnowyStream {
-		class MultiHashTracePass : public TReflected<MultiHashTracePass, PassBase> {
-		public:
-			MultiHashTracePass();
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+	class MultiHashTracePass : public TReflected<MultiHashTracePass, PassBase> {
+	public:
+		MultiHashTracePass();
+		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
-			ScreenTransformVS screenTransform;
-			MultiHashTraceFS shaderMultiHashTrace;
-		};
-	}
+		ScreenTransformVS screenTransform;
+		MultiHashTraceFS shaderMultiHashTrace;
+	};
 }
-
-
-#endif // __MULTIHASHTRACE_PASS_H__

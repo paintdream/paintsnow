@@ -3,10 +3,8 @@
 // 2014-12-14
 //
 
-#ifndef __ZPOSIXTIMER_H__
-#define __ZPOSIXTIMER_H__
+#pragma oncex
 
-#if !defined(_WIN32)
 #include "../../../Interface/ITimer.h"
 
 #include <cstdlib>
@@ -25,7 +23,3 @@ namespace PaintsNow {
 
 	};
 }
-
-#endif // _WIN32
-
-#endif // __ZPOSIXTIMER__

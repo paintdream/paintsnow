@@ -3,9 +3,7 @@
 // 2014-12-16
 //
 
-#ifndef __ZFONTFREETYPE_H__
-#define __ZFONTFREETYPE_H__
-
+#pragma once
 #include "../../../Interface/IFontBase.h"
 #include <iconv.h>
 
@@ -17,6 +15,3 @@ namespace PaintsNow {
 		virtual CHARINFO RenderTexture(Font* font, String& data, FONTCHAR character, size_t bitmapSiz, float hinting) const;
 	};
 }
-
-
-#endif // __ZFONTFREETYPE_H__

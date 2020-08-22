@@ -3,9 +3,7 @@
 // 2018-4-10
 //
 
-#ifndef __TSHADERMACRO_H__
-#define __TSHADERMACRO_H__
-
+#pragma once
 #include "../../Core/Interface/IType.h"
 #include "../Interface/IRender.h"
 
@@ -25,7 +23,6 @@
 #endif
 
 namespace PaintsNow {
-	namespace ShaderMacro {
 
 #define IF (f)
 #define ELSE
@@ -220,7 +217,6 @@ namespace PaintsNow {
 	TType4<T> _DecodeNormalMaterial(const TVector<T, 4>& output) {
 		return output;
 	}
-	}
 
 	inline void barrier() {}
 	inline void memoryBarrier() {}
@@ -240,7 +236,6 @@ namespace PaintsNow {
 	ATOMIC_OP(int32_t)
 	ATOMIC_OP(uint32_t)
 }
-
 
 #ifndef USE_SHADER_CODE_DEBUG
 #define UnifyShaderCode(code) \
@@ -603,6 +598,3 @@ namespace PaintsNow {
 #define wwwz _wwwz()
 #define wwww _wwww()
 
-
-
-#endif // __TSHADERMACRO_H__

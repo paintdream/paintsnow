@@ -1,7 +1,6 @@
 #include "SurfaceComponent.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
 
 SurfaceComponent::SurfaceComponent() {}
 

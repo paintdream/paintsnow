@@ -9,29 +9,26 @@
 #include "../../../../General/Interface/IShader.h"
 
 namespace PaintsNow {
-	namespace NsSnowyStream {
-		class WidgetShadingFS : public TReflected<WidgetShadingFS, IShader> {
-		public:
-			WidgetShadingFS();
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-			virtual String GetShaderText() override;
+	class WidgetShadingFS : public TReflected<WidgetShadingFS, IShader> {
+	public:
+		WidgetShadingFS();
+		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		virtual String GetShaderText() override;
 
-		public:
-			IShader::BindTexture mainTexture;
+	public:
+		IShader::BindTexture mainTexture;
 
-		protected:
-			// varyings
-			Float4 texCoord;
-			Float4 texCoordRect;
-			Float4 texCoordMark;
-			Float4 texCoordScale;
-			Float4 tintColor;
+	protected:
+		// varyings
+		Float4 texCoord;
+		Float4 texCoordRect;
+		Float4 texCoordMark;
+		Float4 texCoordScale;
+		Float4 tintColor;
 
-			// targets
-			Float4 target;
-		};
-	}
+		// targets
+		Float4 target;
+	};
 }
-
 
 #endif // __WIDGETSHADING_FS_H

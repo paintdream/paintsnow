@@ -1,7 +1,6 @@
 #include "CmdLine.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsLeavesFlute;
 
 CmdLine::~CmdLine() {}
 

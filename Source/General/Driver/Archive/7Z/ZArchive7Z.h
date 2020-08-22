@@ -2,9 +2,7 @@
 // By PaintDream (paintdream@paintdream.com)
 //
 
-#ifndef __ZARCHIVE7Z_H__
-#define __ZARCHIVE7Z_H__
-
+#pragma once
 #include "../../../../Core/Interface/IType.h"
 #include "../../../../Core/Interface/IArchive.h"
 #include "../../../../Core/Interface/IStreamBase.h"
@@ -55,4 +53,3 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __ZARCHIVE7Z_H__

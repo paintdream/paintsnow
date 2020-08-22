@@ -4,8 +4,6 @@
 #include <sstream>
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsEchoLegend;
-using namespace PaintsNow::NsBridgeSunset;
 
 EchoLegend::EchoLegend(IThread& threadApi, INetwork& n, BridgeSunset& bs) : network(n), bridgeSunset(bs) {}
 
@@ -39,7 +37,6 @@ TObject<IReflect>& EchoLegend::operator () (IReflect& reflect) {
 
 	return *this;
 }
-
 
 TShared<Listener> EchoLegend::RequestOpenListener(IScript::Request& request, IScript::Delegate<WorkDispatcher> dispatcher, const String& ip, bool http, IScript::Request::Ref eventHandler, IScript::Request::Ref callback, IScript::Request::Ref connectCallback, bool packetMode) {
 	CHECK_REFERENCES_WITH_TYPE(eventHandler U connectCallback U callback, IScript::Request::FUNCTION U IScript::Request::FUNCTION U IScript::Request::FUNCTION);
@@ -143,7 +140,6 @@ void EchoLegend::RequestWriteConnectionHttpResponse(IScript::Request& request, I
 		request.Error("EchoLegend::WriteConnectionHttpReponse(connection, data) : invalid connection");
 	}
 }
-
 
 void EchoLegend::RequestReadConnectionHttpRequest(IScript::Request& request, IScript::Delegate<Connection> connection) {
 	if (connection) {

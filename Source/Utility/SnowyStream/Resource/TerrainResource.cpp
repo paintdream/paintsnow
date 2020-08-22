@@ -1,7 +1,6 @@
 #include "TerrainResource.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
 
 TerrainResource::TerrainResource(ResourceManager& manager, const String& uniqueID) : BaseClass(manager, uniqueID), width(0), height(0), deltaHeight(0.05f) {}
 

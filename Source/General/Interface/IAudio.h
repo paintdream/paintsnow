@@ -3,9 +3,7 @@
 // 2014-12-1
 //
 
-#ifndef __IAUDIO_H__
-#define __IAUDIO_H__
-
+#pragma once
 
 #include "../../Core/PaintsNow.h"
 #include "../../Core/Interface/IFilterBase.h"
@@ -52,4 +50,3 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __IAUDIO_H__

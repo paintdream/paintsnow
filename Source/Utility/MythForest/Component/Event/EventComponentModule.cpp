@@ -5,9 +5,6 @@
 #include <iterator>
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
-using namespace PaintsNow::NsBridgeSunset;
 
 EventComponentModule::EventComponentModule(Engine& engine) : BaseClass(engine) {
 	critical.store(0, std::memory_order_relaxed);
@@ -47,7 +44,7 @@ TShared<EventComponent> EventComponentModule::RequestNew(IScript::Request& reque
 	return eventComponent;
 }
 
-void EventComponentModule::RequestBindEventTick(IScript::Request& request, IScript::Delegate<EventComponent> eventComponent, IScript::Delegate<NsHeartVioliner::Clock> clock) {
+void EventComponentModule::RequestBindEventTick(IScript::Request& request, IScript::Delegate<EventComponent> eventComponent, IScript::Delegate<Clock> clock) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(eventComponent);
 
@@ -150,7 +147,7 @@ void EventComponentModule::RequestBindEventUserInput(IScript::Request& request, 
 	}
 }
 
-void EventComponentModule::RequestBindEventNetwork(IScript::Request& request, IScript::Delegate<EventComponent> eventComponent, IScript::Delegate<NsEchoLegend::Connection> connection) {
+void EventComponentModule::RequestBindEventNetwork(IScript::Request& request, IScript::Delegate<EventComponent> eventComponent, IScript::Delegate<Connection> connection) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(eventComponent);
 

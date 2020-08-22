@@ -1,7 +1,6 @@
 #include "TextPass.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
 
 TextPass::TextPass() {}
 

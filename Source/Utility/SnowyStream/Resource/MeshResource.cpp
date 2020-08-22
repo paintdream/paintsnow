@@ -2,7 +2,6 @@
 #include "../../../General/Interface/IShader.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
 
 MeshResource::MeshResource(ResourceManager& manager, const String& uniqueID) : BaseClass(manager, uniqueID), deviceMemoryUsage(0) {}
 
@@ -123,7 +122,6 @@ void MeshResource::Detach(IRender& render, void* deviceContext) {
 
 	GraphicResourceBase::Detach(render, deviceContext);
 }
-
 
 void MeshResource::Download(IRender& render, void* deviceContext) {
 	// download from device is not supported now

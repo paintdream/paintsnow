@@ -8,7 +8,6 @@
 #include <ctime>
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsLeavesFlute;
 
 static bool DumpHandler() {
 	// always write minidump file

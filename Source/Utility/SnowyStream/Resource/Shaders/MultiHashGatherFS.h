@@ -9,29 +9,26 @@
 #include "../../../../General/Interface/IShader.h"
 
 namespace PaintsNow {
-	namespace NsSnowyStream {
-		class MultiHashGatherFS : public TReflected<MultiHashGatherFS, IShader> {
-		public:
-			MultiHashGatherFS();
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-			virtual String GetShaderText() override;
-		
-			BindTexture depthTexture;
+	class MultiHashGatherFS : public TReflected<MultiHashGatherFS, IShader> {
+	public:
+		MultiHashGatherFS();
+		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		virtual String GetShaderText() override;
 
-			// ref data
-			BindTexture refDepthTexture;
-			BindTexture refBaseColorOcclusionTexture;
-			BindTexture refNormalRoughnessMetallicTexture;
+		BindTexture depthTexture;
 
-			BindBuffer gatherParamBuffer;
+		// ref data
+		BindTexture refDepthTexture;
+		BindTexture refBaseColorOcclusionTexture;
+		BindTexture refNormalRoughnessMetallicTexture;
 
-			Float2 rasterCoord;
+		BindBuffer gatherParamBuffer;
 
-			// acc lit
-			Float4 blendColor;
-		};
-	}
+		Float2 rasterCoord;
+
+		// acc lit
+		Float4 blendColor;
+	};
 }
-
 
 #endif // __MULTIHASHGATHER_FS_H

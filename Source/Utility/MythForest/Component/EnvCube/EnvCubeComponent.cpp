@@ -2,8 +2,6 @@
 #include "../../Entity.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
 EnvCubeComponent::EnvCubeComponent() {
 }

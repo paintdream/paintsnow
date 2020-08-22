@@ -2,7 +2,6 @@
 #include "BatchComponent.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
 
 BatchComponentModule::BatchComponentModule(Engine& engine) : BaseClass(engine) {}
 

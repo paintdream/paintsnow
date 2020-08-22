@@ -2,16 +2,12 @@
 #include "../../../SnowyStream/Resource/MeshResource.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
-WidgetComponent::WidgetComponent(TShared<NsSnowyStream::MeshResource> mesh, TShared<BatchComponent> batch, TShared<BatchComponent> batchInstanced) {
-	batchComponent = batch;
+WidgetComponent::WidgetComponent(TShared<MeshResource> mesh, TShared<BatchComponent> batch, TShared<BatchComponent> batchInstanced) : BaseClass(mesh, batch) {
 	batchInstancedDataComponent = batchInstanced;
-	meshResource = mesh;
 }
 
-void WidgetComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTemplates, std::vector<std::pair<uint32_t, TShared<NsSnowyStream::MaterialResource> > >& materialResources) {
+void WidgetComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTemplates, std::vector<std::pair<uint32_t, TShared<MaterialResource> > >& materialResources) {
 	size_t origCount = drawCallTemplates.size();
 	GenerateDrawCalls(drawCallTemplates, materialResources);
 

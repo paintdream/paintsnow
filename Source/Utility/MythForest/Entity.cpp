@@ -4,8 +4,6 @@
 #include "../../Core/Interface/IMemory.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
 Entity::Entity(Engine& engine) {
 	Flag().fetch_or(Tiny::TINY_ACTIVATED, std::memory_order_acquire);

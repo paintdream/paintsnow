@@ -1,7 +1,6 @@
 #include "TerrainComponent.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
 
 TerrainComponent::TerrainComponent() {}
 

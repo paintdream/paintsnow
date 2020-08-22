@@ -3,9 +3,7 @@
 // 2014-12-3
 //
 
-#ifndef __ISHADER_H__
-#define __ISHADER_H__
-
+#pragma once
 
 #include "../../Core/PaintsNow.h"
 #include "../../Core/Interface/IType.h"
@@ -217,6 +215,3 @@ namespace PaintsNow {
 		};
 	};
 }
-
-
-#endif // __ZSHADER_H__

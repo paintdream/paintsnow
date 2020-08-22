@@ -5,7 +5,6 @@
 #include "../../../General/Misc/RemoteProxy.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsLostDream;
 
 class Foo : public TReflected<Foo, IScript::Library> {
 public:
@@ -19,7 +18,6 @@ public:
 
 		return *this;
 	}
-
 
 	void RequestNewFoo(IScript::Request& request, int a, const String& str) {
 
@@ -88,7 +86,6 @@ void After(IScript::Request& request, IScript::Request::Ref prefab) {
 	request.Pop();
 	request.UnLock();
 }
-
 
 struct MyPrefab : public TReflected<MyPrefab, IReflectObjectComplex> {
 public:

@@ -3,9 +3,7 @@
 // 2014-12-1
 //
 
-#ifndef __ZFRAMEGLFW_H__
-#define __ZFRAMEGLFW_H__
-
+#pragma once
 #include "../../../../Core/PaintsNow.h"
 #include "../../../Interface/IFrame.h"
 #include <cstdlib>
@@ -50,5 +48,3 @@ namespace PaintsNow {
 	};
 }
 
-
-#endif // __ZFRAMEGLFW_H__

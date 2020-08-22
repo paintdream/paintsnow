@@ -3,9 +3,7 @@
 // 2016-7-5
 //
 
-#ifndef __ITUNNEL_H__
-#define __ITUNNEL_H__
-
+#pragma once
 #include "../../Core/Interface/IStreamBase.h"
 #include "../../Core/Interface/IDevice.h"
 #include "../../Core/Template/TProxy.h"
@@ -64,4 +62,3 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __ITUNNEL_H__

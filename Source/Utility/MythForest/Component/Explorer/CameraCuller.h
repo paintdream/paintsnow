@@ -3,36 +3,31 @@
 // 2019-11-24
 //
 
-#ifndef __CAMERACULLER_H__
-#define __CAMERACULLER_H__
-
+#pragma once
 #include "../../../../Core/Interface/IType.h"
 #include "../../../../Core/Template/TBuffer.h"
 
 namespace PaintsNow {
-	namespace NsMythForest {
-		struct FrustrumCuller {
-			bool operator () (const Float3Pair& box) const;
-			Float3 GetPosition() const;
-			Float3 GetDirection() const;
+	struct FrustrumCuller {
+		bool operator () (const Float3Pair& box) const;
+		Float3 GetPosition() const;
+		Float3 GetDirection() const;
 
-			MatrixFloat4x4 viewTransform;
-			Float4 planes[6];
-		};
+		MatrixFloat4x4 viewTransform;
+		Float4 planes[6];
+	};
 
-		struct PerspectiveCamera {
-			PerspectiveCamera();
-			void UpdateCaptureData(FrustrumCuller& captureData, const MatrixFloat4x4& cameraWorldMatrix) const;
-			float nearPlane;
-			float farPlane;
-			float fov;
-			float aspect;
-		};
+	struct PerspectiveCamera {
+		PerspectiveCamera();
+		void UpdateCaptureData(FrustrumCuller& captureData, const MatrixFloat4x4& cameraWorldMatrix) const;
+		float nearPlane;
+		float farPlane;
+		float fov;
+		float aspect;
+	};
 
-		struct OrthoCamera {
-			static void UpdateCaptureData(FrustrumCuller& captureData, const MatrixFloat4x4& cameraWorldMatrix);
-		};
-	}
+	struct OrthoCamera {
+		static void UpdateCaptureData(FrustrumCuller& captureData, const MatrixFloat4x4& cameraWorldMatrix);
+	};
 }
 
-#endif // __CAMERACULLER_H__

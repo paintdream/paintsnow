@@ -3,26 +3,20 @@
 // 2018-1-4
 //
 
-#ifndef __CACHECOMPONENT_H__
-#define __CACHECOMPONENT_H__
-
+#pragma once
 #include "../../Entity.h"
 #include "../../Component.h"
 #include "../../../../Core/Interface/IType.h"
 
 namespace PaintsNow {
-	namespace NsMythForest {
-		class CacheComponent : public TAllocatedTiny<CacheComponent, Component> {
-		public:
-			CacheComponent();
-			void PushObjects(rvalue<std::vector<TShared<SharedTiny> > > objects);
-			void ClearObjects();
+	class CacheComponent : public TAllocatedTiny<CacheComponent, Component> {
+	public:
+		CacheComponent();
+		void PushObjects(rvalue<std::vector<TShared<SharedTiny> > > objects);
+		void ClearObjects();
 
-		protected:
-			std::vector<TShared<SharedTiny> > cachedObjects;
-		};
-	}
+	protected:
+		std::vector<TShared<SharedTiny> > cachedObjects;
+	};
 }
 
-
-#endif // __CACHECOMPONENT_H__

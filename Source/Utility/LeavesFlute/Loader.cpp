@@ -3,8 +3,6 @@
 #include "../LeavesFlute/Platform.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsLeavesFlute;
-using namespace PaintsNow::NsLeavesFlute;
 
 #if !defined(CMAKE_PAINTSNOW) || ADD_FILTER_LZMA_BUILTIN
 IArchive* Create7ZArchive(IStreamBase& streamBase, size_t length) {
@@ -144,7 +142,7 @@ void Loader::Load(const CmdLine& cmdLine) {
 		} else if ((*p).first == "Entry") {
 			entry = (*p).second.name;
 		} else if ((*p).first == "Warp") {
-			// According to NsMythForest::Unit::WARP_INDEX
+			// According to Unit::WARP_INDEX
 			warpCount = Math::Min(maxWarpCount, (uint32_t)safe_cast<uint32_t>(atoi((*p).second.name.c_str())));
 		} else if ((*p).first == "Thread") {
 			int32_t expectedThreadCount = (int32_t)safe_cast<int32_t>(atoi((*p).second.name.c_str()));
@@ -411,5 +409,4 @@ Loader::~Loader() {
 	::CoUninitialize();
 #endif
 }
-
 

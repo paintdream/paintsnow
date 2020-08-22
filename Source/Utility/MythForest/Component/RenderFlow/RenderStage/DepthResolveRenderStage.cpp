@@ -4,8 +4,6 @@
 #include <sstream>
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
 DepthResolveRenderStage::DepthResolveRenderStage(const String& config) : OutputDepth(renderTargetDescription.colorBufferStorages[0]) {}
 

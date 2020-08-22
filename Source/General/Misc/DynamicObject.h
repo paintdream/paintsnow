@@ -3,9 +3,7 @@
 // By PaintDream (paintdream@paintdream.com)
 //
 
-#ifndef __DYNAMICOBJECT_H__
-#define __DYNAMICOBJECT_H__
-
+#pragma once
 #include "../../Core/Interface/IReflect.h"
 
 namespace PaintsNow {
@@ -136,4 +134,3 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __DYHNAMICOBJECT_H__

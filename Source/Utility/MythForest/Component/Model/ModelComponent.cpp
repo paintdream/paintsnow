@@ -3,12 +3,6 @@
 #include "../Transform/TransformComponent.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
-
-ModelComponent::ModelComponent() {
-	Flag().fetch_or(COMPONENT_SHARED, std::memory_order_acquire); // can be shared among different entities
-}
 
 ModelComponent::ModelComponent(TShared<MeshResource> res, TShared<BatchComponent> batch) : batchComponent(batch), meshResource(res), hostCount(0) {
 	Flag().fetch_or(COMPONENT_SHARED, std::memory_order_acquire); // can be shared among different entities
@@ -69,7 +63,7 @@ static void GenerateDrawCall(IDrawCallProvider::OutputRenderData& renderData, Sh
 	renderState.stencilValue = 0;
 }
 
-void ModelComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTemplates, std::vector<std::pair<uint32_t, TShared<NsSnowyStream::MaterialResource> > >& materialResources) {
+void ModelComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTemplates, std::vector<std::pair<uint32_t, TShared<MaterialResource> > >& materialResources) {
 	MeshResource::BufferCollection& bufferCollection = meshResource->bufferCollection;
 	std::vector<IRender::Resource*> meshBuffers;
 	bufferCollection.UpdateData(meshBuffers);
@@ -124,7 +118,7 @@ uint32_t ModelComponent::CollectDrawCalls(std::vector<OutputRenderData>& drawCal
 		// new ones
 		if (shaderOverriders.size() != orgCount) {
 			drawCallTemplates.resize(drawCallTemplates.size() + materialResources.size());
-			std::vector<std::pair<uint32_t, TShared<NsSnowyStream::MaterialResource> > > overrideMaterialResources;
+			std::vector<std::pair<uint32_t, TShared<MaterialResource> > > overrideMaterialResources;
 			overrideMaterialResources.resize(materialResources.size());
 			for (size_t i = 0; i < materialResources.size(); i++) {
 				overrideMaterialResources[i].first = materialResources[i].first;

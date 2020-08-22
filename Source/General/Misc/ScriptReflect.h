@@ -3,9 +3,7 @@
 // 2015-7-8
 //
 
-#ifndef __SCRIPTREFLECT_H__
-#define __SCRIPTREFLECT_H__
-
+#pragma once
 #include "../../Core/Interface/IScript.h"
 #include "../../Core/Interface/IReflect.h"
 #include "../../Core/Interface/IArchive.h"
@@ -128,4 +126,3 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __SCRIPTREFLECT_H__

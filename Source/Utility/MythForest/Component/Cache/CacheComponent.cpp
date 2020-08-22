@@ -1,7 +1,6 @@
 #include "CacheComponent.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
 
 CacheComponent::CacheComponent() {}
 

@@ -5,8 +5,6 @@
 #include <vector>
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsLostDream;
-using namespace PaintsNow::NsMythForest;
 
 inline Float3Pair BuildBoundingFromVertex(const Float3& first, const Float3& second) {
 	Float3Pair box(first, first);
@@ -121,13 +119,11 @@ bool RandomQuery::Run(int randomSeed, int length) {
 		}
 	}
 
-
 	return true;
 }
 
 void RandomQuery::Summary() {
 }
-
 
 TObject<IReflect>& RandomQuery::operator ()(IReflect& reflect) {
 	BaseClass::operator () (reflect);

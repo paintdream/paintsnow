@@ -1,7 +1,6 @@
 #include "ConstMapPass.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
 
 ConstMapPass::ConstMapPass() {
 	// Use uniform world

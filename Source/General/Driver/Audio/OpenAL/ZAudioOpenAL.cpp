@@ -167,7 +167,6 @@ void ZAudioOpenAL::SwitchBufferType(IAudio::Buffer* buf, bool online) {
 	}
 }
 
-
 /*
 void ZAudioOpenAL::Seek(SourceImpl* sourceHandle, IStreamBase::SEEK_OPTION option, int64_t offset) {
 	assert(sourceHandle->buffer->isQueuedBuffer);
@@ -249,7 +248,6 @@ void ZAudioOpenAL::SetSourcePosition(Source* source, const Float3& position) {
 	SourceImpl* sourceHandle = static_cast<SourceImpl*>(source);
 	alSource3f(sourceHandle->sourceID, AL_POSITION, position.x(), position.y(), position.z());
 }
-
 
 TWrapper<size_t> ZAudioOpenAL::SetSourceBuffer(Source* source, const Buffer* buf) {
 	const BufferImpl* buffer = static_cast<const BufferImpl*>(buf);

@@ -1,7 +1,6 @@
 #include "MultiHashSetupPass.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
 
 MultiHashSetupPass::MultiHashSetupPass() {
 	standardTransform.enableRasterCoord = true;

@@ -3,9 +3,7 @@
 // 2014-12-3
 //
 
-#ifndef __PASSBASE_H__
-#define __PASSBASE_H__
-
+#pragma once
 #include "../../General/Interface/IShader.h"
 #include "../../Core/Interface/IReflect.h"
 #include "../../Core/Template/TEvent.h"
@@ -125,4 +123,3 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __PASSBASE_H__

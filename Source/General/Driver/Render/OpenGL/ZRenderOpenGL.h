@@ -3,9 +3,7 @@
 // 2014-12-1
 //
 
-#ifndef __ZRENDEROPENGL_H__
-#define __ZRENDEROPENGL_H__
-
+#pragma once
 #include "../../../../Core/PaintsNow.h"
 #include "../../../Interface/IRender.h"
 #include "../../../../Core/Interface/IThread.h"
@@ -53,6 +51,3 @@ namespace PaintsNow {
 		TQueueList<Queue*, 4> deletedQueues;
 	};
 }
-
-
-#endif // __ZRENDEROPENGL_H__

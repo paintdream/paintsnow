@@ -2,8 +2,6 @@
 #include "../../Engine.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
 StreamComponentModule::StreamComponentModule(Engine& engine) : BaseClass(engine) {}
 StreamComponentModule::~StreamComponentModule() {}

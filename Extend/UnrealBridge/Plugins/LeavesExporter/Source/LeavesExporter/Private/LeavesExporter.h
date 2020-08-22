@@ -1,9 +1,7 @@
 #pragma once
 
 namespace PaintsNow {
-	namespace NsGalaxyWeaver {
-		class Service;
-	}
+	class Service;
 }
 
 class FLeavesExporter : public ILeavesExporter
@@ -23,5 +21,5 @@ protected:
 	TSharedPtr<FExtensibilityManager> extensionManager;
 	TSharedPtr<const FExtensionBase> toolbarExtension;
 	TSharedPtr<FExtender> toolbarExtender;
-	TSharedPtr<PaintsNow::NsGalaxyWeaver::Service> service;
+	TSharedPtr<PaintsNow::Service> service;
 };

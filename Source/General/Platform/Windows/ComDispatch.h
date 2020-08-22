@@ -3,9 +3,7 @@
 // 2015-7-4
 //
 
-#ifndef __COMDISPATCH_H__
-#define __COMDISPATCH_H__
-
+#pragma once
 #include "../../../Core/PaintsNow.h"
 #include "ComDef.h"
 
@@ -41,4 +39,3 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __COMDISPATCH_H__

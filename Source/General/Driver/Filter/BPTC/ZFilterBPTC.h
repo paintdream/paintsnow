@@ -3,9 +3,7 @@
 // 2019-7-29
 //
 
-#ifndef __ZFILTERBPTC_H__
-#define __ZFILTERBPTC_H__
-
+#pragma once
 #include "../../../../Core/Interface/IFilterBase.h"
 
 namespace PaintsNow {
@@ -15,4 +13,3 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __ZFILTERBPTC_H__

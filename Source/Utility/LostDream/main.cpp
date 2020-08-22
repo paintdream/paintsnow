@@ -16,7 +16,6 @@
 #include "../LeavesFlute/Platform.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsLostDream;
 
 #if defined(_MSC_VER) && _MSC_VER <= 1200 && _DEBUG
 extern "C" int _CrtDbgReport() {

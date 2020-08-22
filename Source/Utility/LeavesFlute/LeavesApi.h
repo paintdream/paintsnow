@@ -3,9 +3,7 @@
 // 2016-1-2
 //
 
-#ifndef __LEAVESAPI_H__
-#define __LEAVESAPI_H__
-
+#pragma once
 #include "../../Core/Interface/IReflect.h"
 #include "../../General/Interface/IFrame.h"
 #include "../../Core/Interface/IArchive.h"
@@ -25,17 +23,11 @@
 
 
 namespace PaintsNow {
-	namespace NsLeavesFlute {
-		class LeavesFlute;
-	}
-	namespace NsLeavesFlute {
-		class LeavesApi {
-		public:
-			virtual ~LeavesApi() {}
-			virtual void RegisterFactory(const String& factoryEntry, const String& name, const TWrapper<IDevice*>& factoryBase) = 0;
-			virtual void UnregisterFactory(const String& factoryEntry, const String& name) = 0;
-		};
-	}
+	class LeavesApi {
+	public:
+		virtual ~LeavesApi() {}
+		virtual void RegisterFactory(const String& factoryEntry, const String& name, const TWrapper<IDevice*>& factoryBase) = 0;
+		virtual void UnregisterFactory(const String& factoryEntry, const String& name) = 0;
+	};
 }
 
-#endif // __LEAVESAPI_H__

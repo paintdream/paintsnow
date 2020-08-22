@@ -1,8 +1,6 @@
 #include "Connection.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsEchoLegend;
-using namespace PaintsNow::NsBridgeSunset;
 
 namespace PaintsNow {
 	IScript::Request& operator >> (IScript::Request& request, std::list<std::pair<String, String> >& mylist) {

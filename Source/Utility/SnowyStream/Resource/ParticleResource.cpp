@@ -1,7 +1,6 @@
 #include "ParticleResource.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
 
 ParticleResource::ParticleResource(ResourceManager& manager, const String& uniqueID) : BaseClass(manager, uniqueID) {}
 

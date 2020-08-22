@@ -12,8 +12,6 @@ static inline float RandFloat() {
 }
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
 PhaseComponent::LightConfig::TaskData::TaskData(uint32_t warpCount) : pendingCount(0) {
 	warpData.resize(warpCount);
@@ -83,7 +81,7 @@ void PhaseComponent::Initialize(Engine& engine, Entity* entity) {
 
 		SnowyStream& snowyStream = engine.snowyStream;
 		const String path = "[Runtime]/MeshResource/StandardSquare";
-		quadMeshResource = snowyStream.CreateReflectedResource(UniqueType<NsSnowyStream::MeshResource>(), path, true, 0, nullptr);
+		quadMeshResource = snowyStream.CreateReflectedResource(UniqueType<MeshResource>(), path, true, 0, nullptr);
 
 		tracePipeline = snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), ShaderResource::GetShaderPathPrefix() + UniqueType<MultiHashTracePass>::Get()->GetBriefName())->QueryInterface(UniqueType<ShaderResourceImpl<MultiHashTracePass> >());
 		setupPipeline = snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), ShaderResource::GetShaderPathPrefix() + UniqueType<MultiHashSetupPass>::Get()->GetBriefName())->QueryInterface(UniqueType<ShaderResourceImpl<MultiHashSetupPass> >());
@@ -344,7 +342,7 @@ void PhaseComponent::TickRender(Engine& engine) {
 	}
 }
 
-void PhaseComponent::CoTaskWriteDebugTexture(Engine& engine, uint32_t index, Bytes& data, TShared<NsSnowyStream::TextureResource> texture) {
+void PhaseComponent::CoTaskWriteDebugTexture(Engine& engine, uint32_t index, Bytes& data, TShared<TextureResource> texture) {
 	if (!debugPath.empty()) {
 		std::stringstream ss;
 		ss << debugPath << "phase_" << index << ".png";
@@ -627,8 +625,8 @@ void PhaseComponent::CollectRenderableComponent(Engine& engine, TaskData& taskDa
 			group.instanceCount++;
 		}
 	} else {
-		NsSnowyStream::IDrawCallProvider::InputRenderData inputRenderData(0.0f, taskData.pipeline);
-		std::vector<NsSnowyStream::IDrawCallProvider::OutputRenderData> drawCalls;
+		IDrawCallProvider::InputRenderData inputRenderData(0.0f, taskData.pipeline);
+		std::vector<IDrawCallProvider::OutputRenderData> drawCalls;
 		renderableComponent->CollectDrawCalls(drawCalls, inputRenderData);
 		assert(drawCalls.size() < sizeof(RenderableComponent) - 1);
 

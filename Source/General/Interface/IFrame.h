@@ -3,9 +3,7 @@
 // 2014-12-1
 //
 
-#ifndef __IFRAME_H__
-#define __IFRAME_H__
-
+#pragma once
 
 #include "../../Core/PaintsNow.h"
 #include "../../Core/Interface/IType.h"
@@ -143,5 +141,3 @@ namespace PaintsNow {
 	};
 }
 
-
-#endif // __IFRAME_H__

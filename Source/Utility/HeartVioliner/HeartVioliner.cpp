@@ -3,8 +3,6 @@
 #include "Clock.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsHeartVioliner;
-using namespace PaintsNow::NsBridgeSunset;
 
 
 HeartVioliner::HeartVioliner(IThread& thread, ITimer& base, BridgeSunset& b) : timerFactory(base), bridgeSunset(b) {}
@@ -29,7 +27,6 @@ TObject<IReflect>& HeartVioliner::operator () (IReflect& reflect) {
 
 	return *this;
 }
-
 
 TShared<Queue> HeartVioliner::RequestNewQueue(IScript::Request& request) {
 	TShared<Queue> q = TShared<Queue>::From(new Queue());
@@ -122,7 +119,6 @@ void HeartVioliner::RequestDetach(IScript::Request& request, IScript::Delegate<Q
 
 	queue->Detach();
 }
-
 
 /*
 #include "../../General/Driver/Thread/Pthread/ZThreadPthread.h"

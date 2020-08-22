@@ -2,8 +2,6 @@
 #include "AnimationComponent.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
 AnimationComponentModule::AnimationComponentModule(Engine& engine) : BaseClass(engine) {
 }

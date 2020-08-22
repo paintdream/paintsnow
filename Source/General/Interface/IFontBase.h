@@ -3,9 +3,7 @@
 // 2014-12-1
 //
 
-#ifndef __IFONTBASE_H__
-#define __IFONTBASE_H__
-
+#pragma once
 
 #include "../../Core/PaintsNow.h"
 #include "../../Core/Template/TMatrix.h"
@@ -42,5 +40,3 @@ namespace PaintsNow {
 	};
 }
 
-
-#endif // __IFONTBASE_H__

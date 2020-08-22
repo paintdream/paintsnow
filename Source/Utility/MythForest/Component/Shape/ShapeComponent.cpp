@@ -1,8 +1,6 @@
 #include "ShapeComponent.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
 ShapeComponent::ShapeComponent() {}
 ShapeComponent::~ShapeComponent() {
@@ -62,7 +60,6 @@ void ShapeComponent::MakeHeapInternal(std::vector<Patch>& output, Patch* begin, 
 	MakeHeapInternal(output, begin, mid);
 	MakeHeapInternal(output, mid + 1, end);
 }
-
 
 ShapeComponent::Patch* ShapeComponent::MakeBound(Patch& patch, const std::vector<Float3>& vertices, const std::vector<UInt3>& indices, int index) {
 	Float3Pair box;

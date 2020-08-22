@@ -4,9 +4,7 @@
 // 2014-12-1
 //
 
-#ifndef __IDATABASE_H__
-#define __IDATABASE_H__
-
+#pragma once
 #include "../../Core/PaintsNow.h"
 #include "../../Core/Interface/IType.h"
 #include "../../Core/Interface/IReflect.h"
@@ -28,4 +26,3 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __IDATABASE_H__

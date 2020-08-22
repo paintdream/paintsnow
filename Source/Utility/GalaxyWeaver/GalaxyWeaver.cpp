@@ -1,11 +1,8 @@
 #include "GalaxyWeaver.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsGalaxyWeaver;
-using namespace PaintsNow::NsBridgeSunset;
-using namespace PaintsNow::NsMythForest;
 
-GalaxyWeaver::GalaxyWeaver(IThread& threadApi, ITunnel& net, NsBridgeSunset::BridgeSunset& sunset, NsSnowyStream::SnowyStream& ns, NsMythForest::MythForest& my) : network(net), bridgeSunset(sunset), snowyStream(ns), mythForest(my) {}
+GalaxyWeaver::GalaxyWeaver(IThread& threadApi, ITunnel& net, BridgeSunset& sunset, SnowyStream& ns, MythForest& my) : network(net), bridgeSunset(sunset), snowyStream(ns), mythForest(my) {}
 
 TObject<IReflect>& GalaxyWeaver::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);

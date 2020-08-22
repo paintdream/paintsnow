@@ -2,9 +2,7 @@
 // By PaintDream (paintdream@paintdream.com)
 //
 
-#ifndef __ZDEBUGGERWIN_H__
-#define __ZDEBUGGERWIN_H__
-
+#pragma once
 #include "../../../Interface/IDebugger.h"
 
 namespace PaintsNow {
@@ -21,6 +19,3 @@ namespace PaintsNow {
 		String path;
 	};
 }
-
-
-#endif // __ZDEBUGGERWIN_H__

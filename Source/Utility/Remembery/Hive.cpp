@@ -1,7 +1,6 @@
 #include "Hive.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsRemembery;
 
 Hive::Hive(IDatabase& db, IDatabase::Database* dbInst) : base(db), database(dbInst) {}
 

@@ -57,6 +57,8 @@ end
 
 function Database.New(path : string) : Database
 	local handle : Hive = Remembery.NewDatabase(path, "", "", true)
+	if not handle then return nil end
+
 	local meta = {
 		Handle = handle
 	}

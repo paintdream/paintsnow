@@ -73,7 +73,6 @@ int LzmaCompress(unsigned char *dest, size_t  *destLen, const unsigned char *src
 	return LzmaEncode(dest, destLen, src, srcLen, &props, outProps, outPropsSize, 0, nullptr, &g_Alloc, &g_Alloc);
 }
 
-
 int LzmaUncompress(unsigned char *dest, size_t  *destLen, const unsigned char *src, size_t  *srcLen,
 						 const unsigned char *props, size_t propsSize)
 {

@@ -9,31 +9,28 @@
 #include "../../../../General/Interface/IShader.h"
 
 namespace PaintsNow {
-	namespace NsSnowyStream {
-		class TextTransformVS : public TReflected<TextTransformVS, IShader> {
-		public:
-			TextTransformVS();
+	class TextTransformVS : public TReflected<TextTransformVS, IShader> {
+	public:
+		TextTransformVS();
 
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-			virtual String GetShaderText() override;
+		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		virtual String GetShaderText() override;
 
-			IShader::BindBuffer positionBuffer;
-			IShader::BindBuffer instanceBuffer;
-			IShader::BindBuffer texCoordRectBuffer;
+		IShader::BindBuffer positionBuffer;
+		IShader::BindBuffer instanceBuffer;
+		IShader::BindBuffer texCoordRectBuffer;
 
-			// Instanced
-			MatrixFloat4x4 worldMatrix;
-			Float4 texCoordRect;
+		// Instanced
+		MatrixFloat4x4 worldMatrix;
+		Float4 texCoordRect;
 
-			// Input
-			Float4 unitTexCoord;
+		// Input
+		Float4 unitTexCoord;
 
-			// Output
-			Float2 rasterCoord;
-			Float4 rasterPosition;
-		};
-	}
+		// Output
+		Float2 rasterCoord;
+		Float4 rasterPosition;
+	};
 }
-
 
 #endif // __TEXTTRANSFORM_VS_H

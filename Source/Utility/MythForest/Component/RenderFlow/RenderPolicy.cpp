@@ -1,7 +1,6 @@
 #include "RenderPolicy.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
 
 RenderPolicy::RenderPolicy() : priority(0) {}
 

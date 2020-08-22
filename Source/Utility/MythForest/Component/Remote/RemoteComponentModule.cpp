@@ -2,8 +2,6 @@
 #include "../../Engine.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
 RemoteComponentModule::RemoteComponentModule(Engine& engine) : BaseClass(engine) {}
 RemoteComponentModule::~RemoteComponentModule() {}

@@ -1,7 +1,6 @@
 #include "ScreenPass.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
 
 ScreenPass::ScreenPass() {}
 

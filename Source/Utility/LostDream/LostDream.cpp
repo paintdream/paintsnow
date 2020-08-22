@@ -2,7 +2,6 @@
 #include <ctime>
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsLostDream;
 
 LostDream::Qualifier::~Qualifier() {}
 

@@ -3,30 +3,25 @@
 // 2018-9-11
 //
 
-#ifndef __SCREENRENDERSTAGE_H__
-#define __SCREENRENDERSTAGE_H__
-
+#pragma once
 #include "../RenderStage.h"
 #include "../RenderPort/RenderPortRenderTarget.h"
 #include "../RenderPort/RenderPortTextureInput.h"
 #include "../../../../SnowyStream/Resource/Passes/ScreenPass.h"
 
 namespace PaintsNow {
-	namespace NsMythForest {
-		class ScreenRenderStage : public TReflected<ScreenRenderStage, GeneralRenderStageRect<NsSnowyStream::ScreenPass> > {
-		public:
-			ScreenRenderStage(const String& config = "1");
-			virtual void PrepareResources(Engine& engine, IRender::Queue* queue) override;
-			virtual void UpdatePass(Engine& engine, IRender::Queue* queue) override;
+	class ScreenRenderStage : public TReflected<ScreenRenderStage, GeneralRenderStageRect<ScreenPass> > {
+	public:
+		ScreenRenderStage(const String& config = "1");
+		virtual void PrepareResources(Engine& engine, IRender::Queue* queue) override;
+		virtual void UpdatePass(Engine& engine, IRender::Queue* queue) override;
 
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
-			RenderPortTextureInput InputColor;
-			RenderPortRenderTarget OutputColor;
+		RenderPortTextureInput InputColor;
+		RenderPortRenderTarget OutputColor;
 
-			std::vector<TShared<RenderPortTextureInput> > BloomLayers;
-		};
-	}
+		std::vector<TShared<RenderPortTextureInput> > BloomLayers;
+	};
 }
 
-#endif // __SCREENRENDERSTAGE_H__

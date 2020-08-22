@@ -2,7 +2,6 @@
 #include "../RenderPort/RenderPortRenderTarget.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
 
 DeviceRenderStage::DeviceRenderStage(const String& config) : BaseClass(0) {}
 

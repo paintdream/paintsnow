@@ -3,9 +3,7 @@
 // 2014-12-1
 //
 
-#ifndef __IASSET_H__
-#define __IASSET_H__
-
+#pragma once
 #include "../../Core/PaintsNow.h"
 #include "../../Core/Interface/IFilterBase.h"
 #include "../../Core/Interface/IType.h"
@@ -209,6 +207,3 @@ namespace PaintsNow {
 		};
 	}
 }
-
-
-#endif // __IASSET_H__

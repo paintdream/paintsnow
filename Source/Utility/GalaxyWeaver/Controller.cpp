@@ -2,7 +2,6 @@
 #include "Weaver.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsGalaxyWeaver;
 
 Controller::Controller(IThread& threadApi, ITunnel& tunnel, const String& entry) : BaseClass(threadApi, tunnel, entry) {}
 Controller::~Controller() {}

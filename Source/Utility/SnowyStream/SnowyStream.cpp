@@ -32,8 +32,6 @@
 #include <iterator>
 
 using namespace PaintsNow;
-using namespace NsSnowyStream;
-using namespace NsBridgeSunset;
 
 String SnowyStream::reflectedExtension = "*.rds";
 
@@ -67,7 +65,6 @@ Interfaces& SnowyStream::GetInterfaces() const {
 
 void SnowyStream::Reset() {
 }
-
 
 TObject<IReflect>& SnowyStream::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
@@ -223,7 +220,6 @@ void SnowyStream::RequestFileExists(IScript::Request& request, const String& pat
 	request.UnLock();
 }
 
-
 void SnowyStream::RequestFetchFileData(IScript::Request& request, const String& path) {
 	bridgeSunset.GetKernel().YieldCurrentWarp();
 	size_t length;
@@ -343,7 +339,6 @@ void SnowyStream::RequestFlushFile(IScript::Request& request, IScript::Delegate<
 	}
 }
 
-
 void SnowyStream::RequestSeekFile(IScript::Request& request, IScript::Delegate<File> file, const String& type, int64_t offset) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(file);
@@ -457,7 +452,7 @@ private:
 		}
 
 		if (callbackStep) {
-			NsBridgeSunset::BridgeSunset& bridgeSunset = *reinterpret_cast<NsBridgeSunset::BridgeSunset*>(context);
+			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 			IScript::Request& request = *bridgeSunset.AcquireSafe();
 			request.DoLock();
 			request.Push();
@@ -470,7 +465,7 @@ private:
 		// is abount to finish
 		if (GetExtReferCount() == 0) {
 			assert(context != nullptr);
-			NsBridgeSunset::BridgeSunset& bridgeSunset = *reinterpret_cast<NsBridgeSunset::BridgeSunset*>(context);
+			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 			IScript::Request& request = *bridgeSunset.AcquireSafe();
 			Finalize(request);
 			bridgeSunset.ReleaseSafe(&request);
@@ -596,7 +591,7 @@ struct CompressTask : public TaskOnce {
 		snowyStream.MapResource(resource);
 		bool success = resource->Compress(compressType);
 		if (callback) {
-			NsBridgeSunset::BridgeSunset& bridgeSunset = *reinterpret_cast<NsBridgeSunset::BridgeSunset*>(context);
+			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 			IScript::Request& request = *bridgeSunset.AcquireSafe();
 			request.DoLock();
 			request.Push();
@@ -620,7 +615,7 @@ struct CompressTask : public TaskOnce {
 
 	void Finalize(void* context) {
 		if (callback) {
-			NsBridgeSunset::BridgeSunset& bridgeSunset = *reinterpret_cast<NsBridgeSunset::BridgeSunset*>(context);
+			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 			IScript::Request& request = *bridgeSunset.AcquireSafe();
 			request.DoLock();
 			request.Dereference(callback);

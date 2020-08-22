@@ -1,7 +1,6 @@
 #include "ShadowMaskPass.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
 
 ShadowMaskPass::ShadowMaskPass() {
 }

@@ -3,9 +3,7 @@
 // 2015-1-21
 //
 
-#ifndef __ILAYOUT_H__
-#define __ILAYOUT_H__
-
+#pragma once
 #include "../../Core/Interface/IType.h"
 #include <list>
 
@@ -40,4 +38,3 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __ILAYOUT_H__

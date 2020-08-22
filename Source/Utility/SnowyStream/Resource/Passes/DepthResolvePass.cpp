@@ -1,7 +1,6 @@
 #include "DepthResolvePass.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
 
 DepthResolvePass::DepthResolvePass() {
 }

@@ -1,6 +1,4 @@
-#ifndef __ZFILTERLZMA_H__
-#define __ZFILTERLZMA_H__
-
+#pragma once
 #include "../../../../Core/Interface/IFilterBase.h"
 
 namespace PaintsNow {
@@ -9,6 +7,3 @@ namespace PaintsNow {
 		virtual IStreamBase* CreateFilter(IStreamBase& streamBase);
 	};
 }
-
-
-#endif // __ZFILTERLZMA_H__

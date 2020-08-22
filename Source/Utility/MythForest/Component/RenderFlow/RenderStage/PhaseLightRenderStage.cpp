@@ -1,8 +1,6 @@
 #include "PhaseLightRenderStage.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
 PhaseLightRenderStage::PhaseLightRenderStage(const String& s) : OutputColor(renderTargetDescription.colorBufferStorages[0]) {
 	renderStateDescription.alphaBlend = 1;

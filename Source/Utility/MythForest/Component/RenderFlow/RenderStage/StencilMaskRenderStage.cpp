@@ -4,8 +4,6 @@
 #include <sstream>
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
 StencilMaskRenderStage::StencilMaskRenderStage(const String& config) : InputDepth(renderTargetDescription.depthStencilStorage), InputColorPlaceHolder(renderTargetDescription.colorBufferStorages[0]), OutputDepth(renderTargetDescription.depthStencilStorage) {
 	renderStateDescription.colorWrite = 0;

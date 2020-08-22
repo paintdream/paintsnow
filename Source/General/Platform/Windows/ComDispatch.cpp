@@ -17,7 +17,6 @@ static IReflect::Param GetParamFromDesc(std::unordered_map<size_t, Unique>& type
 	return IReflect::Param(typeMap[vt], alias);
 }
 
-
 ComDispatch::ComDispatch(IScript::Request& request, ComBridge* br, IDispatch* disp) : bridge(br), dispatch(disp) {
 	std::unordered_map<Unique, ScriptReflect::Type>& reflectMap = bridge->GetReflectMap();
 	std::unordered_map<size_t, Unique>& typeMap = bridge->GetTypeMap();
@@ -134,6 +133,5 @@ IDispatch* ComDispatch::GetDispatch() const {
 ComDispatch::~ComDispatch() {
 	dispatch->Release();
 }
-
 
 #endif // _WIN32

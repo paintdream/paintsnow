@@ -1,7 +1,6 @@
 #include "BridgeSunset.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsBridgeSunset;
 
 BridgeSunset::BridgeSunset(IThread& t, IScript& s, uint32_t threadCount, uint32_t warpCount) : ISyncObject(t), RequestPool(s, warpCount), threadPool(t, threadCount), kernel(threadPool, warpCount) {
 }

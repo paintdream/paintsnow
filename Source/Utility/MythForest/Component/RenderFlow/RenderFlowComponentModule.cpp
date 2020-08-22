@@ -18,8 +18,6 @@
 #include "RenderStage/WidgetRenderStage.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
 template <class T>
 struct Create {

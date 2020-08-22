@@ -3,7 +3,6 @@
 #include "../RenderStage.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
 
 // RenderPortLoadTarget
 

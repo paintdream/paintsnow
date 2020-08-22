@@ -1,7 +1,6 @@
 #include "WidgetRenderStage.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
 
 WidgetRenderStage::WidgetRenderStage(const String& s) : OutputColor(renderTargetDescription.colorBufferStorages[0]) {}
 

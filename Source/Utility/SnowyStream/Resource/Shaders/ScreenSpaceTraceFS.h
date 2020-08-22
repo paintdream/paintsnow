@@ -9,26 +9,23 @@
 #include "../../../../General/Interface/IShader.h"
 
 namespace PaintsNow {
-	namespace NsSnowyStream {
-		class ScreenSpaceTraceFS : public TReflected<ScreenSpaceTraceFS, IShader> {
-		public:
-			ScreenSpaceTraceFS();
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-			virtual String GetShaderText() override;
+	class ScreenSpaceTraceFS : public TReflected<ScreenSpaceTraceFS, IShader> {
+	public:
+		ScreenSpaceTraceFS();
+		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		virtual String GetShaderText() override;
 
-			BindTexture Depth;
-			BindBuffer traceBuffer;
+		BindTexture Depth;
+		BindBuffer traceBuffer;
 
-			MatrixFloat4x4 viewProjectionMatrix;
-			Float3 invScreenSize;
-			Float3 worldPosition;
-			Float3 traceDirection;
-			Float2 rasterCoord;
+		MatrixFloat4x4 viewProjectionMatrix;
+		Float3 invScreenSize;
+		Float3 worldPosition;
+		Float3 traceDirection;
+		Float2 rasterCoord;
 
-			Float2 traceCoord;
-		};
-	}
+		Float2 traceCoord;
+	};
 }
-
 
 #endif // __SCREENSPACETRACE_FS_H

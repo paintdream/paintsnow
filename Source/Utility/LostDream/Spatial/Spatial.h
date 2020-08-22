@@ -3,11 +3,8 @@
 // 2017-12-30
 //
 
-#ifndef __SPATIAL_H__
-#define __SPATIAL_H__
-
+#pragma once
 #include "../LostDream.h"
 #include "RandomQuery.h"
 #include "Memory.h"
 
-#endif // __SPATIAL_H__

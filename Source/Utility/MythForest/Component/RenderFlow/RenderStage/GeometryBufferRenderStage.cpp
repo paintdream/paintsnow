@@ -3,8 +3,6 @@
 #include <sstream>
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
 GeometryBufferRenderStage::GeometryBufferRenderStage(const String& s) : BaseClass(2),
 	BaseColorOcclusion(renderTargetDescription.colorBufferStorages[0]),

@@ -1,7 +1,6 @@
 #include "StandardPass.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
 
 StandardPass::StandardPass() {}
 

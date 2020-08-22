@@ -3,8 +3,7 @@
 // 2018-2-9
 //
 
-#ifndef __PROVIDER_H__
-#define __PROVIDER_H__
+#pragma once
 
 #define _WIN32_WINNT_WIN10_RS1 0
 #define _WIN32_WINNT_WIN10_RS2 0
@@ -22,22 +21,18 @@
 #include "../../../../../Source/Utility/GalaxyWeaver/Weaver.h"
 
 namespace PaintsNow {
-	namespace NsGalaxyWeaver {
-		class Provider : public Controller {
-		public:
-			Provider(IThread& threadApi, ITunnel& tunnel, const String& entry);
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-			virtual void Destroy(IScript::Request& request);
-		};
+	class Provider : public Controller {
+	public:
+		Provider(IThread& threadApi, ITunnel& tunnel, const String& entry);
+		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		virtual void Destroy(IScript::Request& request);
+	};
 
-		class ProviderFactory : public TWrapper<IScript::Object*, const String&> {
-		public:
-			ProviderFactory(IThread& threadApi, ITunnel& t);
-			IScript::Object* CreateObject(const String& entry) const;
-			IThread& thread;
-			ITunnel& tunnel;
-		};
-	}
+	class ProviderFactory : public TWrapper<IScript::Object*, const String&> {
+	public:
+		ProviderFactory(IThread& threadApi, ITunnel& t);
+		IScript::Object* CreateObject(const String& entry) const;
+		IThread& thread;
+		ITunnel& tunnel;
+	};
 }
-
-#endif // __PROVIDER_H__

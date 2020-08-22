@@ -21,9 +21,6 @@
 #include <iterator>
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
-using namespace PaintsNow::NsBridgeSunset;
 
 // From glu source code
 const double PI = 3.14159265358979323846;
@@ -300,8 +297,8 @@ void CameraComponent::CommitRenderRequests(Engine& engine, TaskData& taskData, I
 		std::map<RenderPolicy*, RenderStage::Port*> policyPortMap;
 		const Float3& viewPosition = taskData.worldGlobalData.viewPosition;
 
-		TShared<NsSnowyStream::TextureResource> cubeMapTexture;
-		TShared<NsSnowyStream::TextureResource> skyMapTexture;
+		TShared<TextureResource> cubeMapTexture;
+		TShared<TextureResource> skyMapTexture;
 		float minDist = FLT_MAX;
 		for (size_t j = 0; j < taskData.warpData.size(); j++) {
 			TaskData::WarpData& warpData = taskData.warpData[j];
@@ -447,7 +444,7 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 		if (Flag() & (CAMERACOMPONENT_SMOOTH_TRACK | CAMERACOMPONENT_SUBPIXEL_JITTER)) {
 			for (size_t i = 0; i < warpData.size(); i++) {
 				TaskData::WarpData& w = warpData[i];
-				typedef std::vector<std::key_value<NsSnowyStream::ShaderResource*, TaskData::WarpData::GlobalBufferItem> > GlobalMap;
+				typedef std::vector<std::key_value<ShaderResource*, TaskData::WarpData::GlobalBufferItem> > GlobalMap;
 				GlobalMap& globalMap = w.worldGlobalBufferMap;
 				for (GlobalMap::iterator it = globalMap.begin(); it != globalMap.end(); ++it) {
 					std::vector<Bytes> buffers;
@@ -507,14 +504,14 @@ void CameraComponent::OnTickHost(Engine& engine, Entity* hostEntity) {
 void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskData, RenderableComponent* renderableComponent, TaskData::WarpData& warpData, const WorldInstanceData& instanceData) {
 	IRender& render = engine.interfaces.render;
 	IRender::Device* device = engine.snowyStream.GetRenderDevice();
-	NsSnowyStream::IDrawCallProvider::InputRenderData inputRenderData(instanceData.viewReference);
-	std::vector<NsSnowyStream::IDrawCallProvider::OutputRenderData> drawCalls;
+	IDrawCallProvider::InputRenderData inputRenderData(instanceData.viewReference);
+	std::vector<IDrawCallProvider::OutputRenderData> drawCalls;
 	renderableComponent->CollectDrawCalls(drawCalls, inputRenderData);
 	TaskData::WarpData::InstanceGroupMap& instanceGroups = warpData.instanceGroups;
 
 	for (size_t k = 0; k < drawCalls.size(); k++) {
 		// PassBase& Pass = provider->GetPass(k);
-		NsSnowyStream::IDrawCallProvider::OutputRenderData& drawCall = drawCalls[k];
+		IDrawCallProvider::OutputRenderData& drawCall = drawCalls[k];
 		warpData.triangleCount += drawCall.drawCallDescription.indexBufferResource.length / sizeof(Int3);
 
 		const IRender::Resource::DrawCallDescription& drawCallTemplate = drawCall.drawCallDescription;
@@ -577,7 +574,7 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 #endif // _DEBUG
 
 			PassBase::Updater& updater = drawCall.shaderResource->GetPassUpdater();
-			std::vector<std::key_value<NsSnowyStream::ShaderResource*, TaskData::WarpData::GlobalBufferItem> >::iterator ig = std::binary_find(warpData.worldGlobalBufferMap.begin(), warpData.worldGlobalBufferMap.end(), drawCall.shaderResource());
+			std::vector<std::key_value<ShaderResource*, TaskData::WarpData::GlobalBufferItem> >::iterator ig = std::binary_find(warpData.worldGlobalBufferMap.begin(), warpData.worldGlobalBufferMap.end(), drawCall.shaderResource());
 			if (ig == warpData.worldGlobalBufferMap.end()) {
 				ig = std::binary_insert(warpData.worldGlobalBufferMap, drawCall.shaderResource());
 

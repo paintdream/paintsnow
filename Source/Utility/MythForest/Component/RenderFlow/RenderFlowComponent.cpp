@@ -6,8 +6,6 @@
 #include <vector>
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
 RenderFlowComponent::RenderFlowComponent() {
 	Flag().fetch_or(RENDERFLOWCOMPONENT_SYNC_DEVICE_RESOLUTION, std::memory_order_acquire);

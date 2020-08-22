@@ -3,7 +3,6 @@
 #include "../../../BridgeSunset/BridgeSunset.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
 
 TapeComponent::TapeComponent(IStreamBase& stream, TShared<SharedTiny> holder, size_t cache) : tape(stream), streamHolder(holder), cacheBytes(cache), bufferStream(cache) {}
 

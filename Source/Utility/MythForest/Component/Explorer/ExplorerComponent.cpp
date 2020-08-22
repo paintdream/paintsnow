@@ -1,8 +1,6 @@
 #include "ExplorerComponent.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
 ExplorerComponent::ProxyConfig::ProxyConfig() : layer(0), activateThreshold(0), deactivateThreshold(0) {}
 

@@ -2,7 +2,6 @@
 #include "../../Light/LightComponent.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
 
 RenderPortLightSource::RenderPortLightSource() : stencilMask(0) {}
 

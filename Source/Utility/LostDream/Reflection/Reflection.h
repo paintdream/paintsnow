@@ -3,12 +3,10 @@
 // 2018-2-10
 //
 
-#ifndef __REFLECTION_H__
-#define __REFLECTION_H__
-
+#pragma once
 #include "../LostDream.h"
 #include "RPC.h"
 #include "Serialization.h"
 #include "Annotation.h"
 
-#endif // __REFLECTION_H__
+

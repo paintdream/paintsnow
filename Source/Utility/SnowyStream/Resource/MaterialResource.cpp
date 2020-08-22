@@ -3,7 +3,6 @@
 #include <sstream>
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
 
 MaterialResource::MaterialResource(ResourceManager& manager, const String& uniqueID) : BaseClass(manager, uniqueID) {}
 

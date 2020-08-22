@@ -1,7 +1,6 @@
 #include "MultiHashGatherPass.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
 
 MultiHashGatherPass::MultiHashGatherPass() {}
 

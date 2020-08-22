@@ -3,8 +3,6 @@
 #include "../../../../General/Template/TShaderMacro.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
-using namespace PaintsNow::ShaderMacro;
 
 ScreenTransformVS::ScreenTransformVS() {
 	vertexBuffer.description.usage = IRender::Resource::BufferDescription::VERTEX;

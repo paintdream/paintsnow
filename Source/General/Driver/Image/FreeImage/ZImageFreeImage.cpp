@@ -59,7 +59,6 @@ FreeImageImpl::~FreeImageImpl() {
 	}
 }
 
-
 size_t FreeImageImpl::GetBPP() const {
 	return IImage::GetPixelSize(dataType, layout) * 8;
 }
@@ -237,7 +236,6 @@ void FreeImageImpl::Set(int i, int j, const Float4& color) {
 		s[3] = (unsigned char)(color.a() > 1 ? 255.0f : color.a() * 255.0f);
 	}
 }
-
 
 void FreeImageImpl::Inverse() {
 	size_t step = layout == IRender::Resource::TextureDescription::RGB ? 3 : 4;

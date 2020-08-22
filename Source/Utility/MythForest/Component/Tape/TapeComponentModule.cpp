@@ -4,8 +4,6 @@
 #include "../../../SnowyStream/Resource/StreamResource.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
 TapeComponentModule::TapeComponentModule(Engine& engine) : BaseClass(engine) {}
 

@@ -1,6 +1,4 @@
-#ifndef __ZAUDIOOPENAL_H__
-#define __ZAUDIOOPENAL_H__
-
+#pragma once
 #include "../../../Interface/IAudio.h"
 #include <cstdlib>
 #define AL_LIBTYPE_STATIC
@@ -37,4 +35,3 @@ namespace PaintsNow
 	};
 }
 
-#endif // __ZAUDIOOPENAL_H__

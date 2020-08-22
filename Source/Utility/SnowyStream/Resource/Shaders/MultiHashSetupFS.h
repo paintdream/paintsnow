@@ -9,20 +9,17 @@
 #include "../../../../General/Interface/IShader.h"
 
 namespace PaintsNow {
-	namespace NsSnowyStream {
-		class MultiHashSetupFS : public TReflected<MultiHashSetupFS, IShader> {
-		public:
-			MultiHashSetupFS();
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-			virtual String GetShaderText() override;
-			
-			BindTexture noiseTexture;
+	class MultiHashSetupFS : public TReflected<MultiHashSetupFS, IShader> {
+	public:
+		MultiHashSetupFS();
+		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		virtual String GetShaderText() override;
 
-			Float2 rasterCoord;
-			Float4 tintColor;
-		};
-	}
+		BindTexture noiseTexture;
+
+		Float2 rasterCoord;
+		Float4 tintColor;
+	};
 }
-
 
 #endif // __MULTIHASHSETUP_FS_H

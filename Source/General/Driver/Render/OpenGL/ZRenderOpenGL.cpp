@@ -769,7 +769,6 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> : public Resour
 			}
 		}
 
-
 		glTexParameteri(textureType, GL_TEXTURE_MIN_FILTER, d.state.sample == Resource::TextureDescription::POINT ? GL_NEAREST : GL_LINEAR);
 		glTexParameteri(textureType, GL_TEXTURE_MAG_FILTER, d.state.sample == Resource::TextureDescription::POINT ? GL_NEAREST : GL_LINEAR);
 			

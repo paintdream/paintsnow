@@ -1,7 +1,6 @@
 #include "RenderPortCommandQueue.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
 
 RenderPortCommandQueue::RenderPortCommandQueue() {}
 

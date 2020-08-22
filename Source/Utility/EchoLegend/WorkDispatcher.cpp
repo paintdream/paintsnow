@@ -1,9 +1,8 @@
 #include "WorkDispatcher.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsEchoLegend;
 
-WorkDispatcher::WorkDispatcher(NsBridgeSunset::BridgeSunset& bridgeSunset, INetwork& network, ITunnel::Dispatcher* disp) : BaseClass(std::ref(bridgeSunset), std::ref(network)), dispatcher(disp) {}
+WorkDispatcher::WorkDispatcher(BridgeSunset& bridgeSunset, INetwork& network, ITunnel::Dispatcher* disp) : BaseClass(std::ref(bridgeSunset), std::ref(network)), dispatcher(disp) {}
 
 ITunnel::Dispatcher* WorkDispatcher::GetDispatcher() const {
 	return dispatcher;

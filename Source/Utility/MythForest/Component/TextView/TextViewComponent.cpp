@@ -2,8 +2,6 @@
 #include "../../MythForest.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
 static inline int GetUtf8Size(char c) {
 	int t = 1 << 7;
@@ -127,7 +125,7 @@ void TextViewComponent::TagParser::Clear() {
 	nodes.clear();
 }
 
-TextViewComponent::TextViewComponent(TShared<FontResource> font, TShared<MaterialResource> material) : materialResource(material), fontResource(font), passwordChar(0), cursorChar(0), cursorPos(0), fontSize(12) {
+TextViewComponent::TextViewComponent(TShared<FontResource> font, TShared<MeshResource> mesh, TShared<BatchComponent> batch, TShared<MaterialResource> material) : BaseClass(mesh, batch), fontResource(font), passwordChar(0), cursorChar(0), cursorPos(0), fontSize(12) {
 	Flag().fetch_or((TEXTVIEWCOMPONENT_CURSOR_REV_COLOR | TEXTVIEWCOMPONENT_SELECT_REV_COLOR), std::memory_order_acquire);
 }
 
@@ -373,6 +371,9 @@ uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData>& outp
 		assert(paramTexCoordRect);
 
 		IRender::Resource* lastMainTexture = renderInfos[0].texture;
+		for (size_t k = 0; k < renderData.localInstancedData.size(); k++) {
+			assert(renderData.localInstancedData[k].first != paramTexCoordRect.slot); // must not overlapped
+		}
 		renderData.localInstancedData.emplace_back(std::make_pair(paramTexCoordRect.slot, Bytes::Null()));
 
 		for (size_t j = 0; j < renderInfos.size(); j++) {
@@ -384,17 +385,17 @@ uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData>& outp
 			}
 
 			drawCall.textureResources[paramMainTexture.slot] = renderInfo.texture;
-			Float4 texRect = {
+			Float4 texRect = Float4(
 				renderInfo.texRect.first.x() * invTexSize,
 				renderInfo.texRect.first.y() * invTexSize,
 				renderInfo.texRect.second.x() * invTexSize,
 				renderInfo.texRect.second.y() * invTexSize
-			};
+			);
 
 			renderData.localInstancedData[0].second.Append(reinterpret_cast<const uint8_t*>(&texRect), sizeof(Float4));
 			float mat[16] = {
-				renderInfo.posRect.second.x() - renderInfo.posRect.first.x(), 0, 0, 0,
-				0, renderInfo.posRect.second.x() - renderInfo.posRect.first.x(), 0, 0,
+				(float)(renderInfo.posRect.second.x() - renderInfo.posRect.first.x()), 0, 0, 0,
+				0, (float)(renderInfo.posRect.second.x() - renderInfo.posRect.first.x()), 0, 0,
 				0, 0, 1, 0,
 				(renderInfo.posRect.second.x() + renderInfo.posRect.first.x()) / 2.0f, (renderInfo.posRect.second.y() + renderInfo.posRect.first.y()) / 2.0f, 0.0f, 1.0f
 			};

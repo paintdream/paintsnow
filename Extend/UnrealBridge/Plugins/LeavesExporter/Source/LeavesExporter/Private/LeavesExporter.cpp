@@ -14,9 +14,8 @@ IMPLEMENT_MODULE(FLeavesExporter, LeavesExporter)
 
 // Just follow the instructions here: https://answers.unrealengine.com/questions/25609/customizing-the-editors-toolbar-buttons-menu-via-c.html
 
-// static PaintsNow::NsGalaxyWeaver::Service service;
+// static PaintsNow::Service service;
 static const FName LeavesTabName("LeavesTab");
-using namespace PaintsNow::NsGalaxyWeaver;
 
 void FLeavesExporter::StartupModule() {
 	UE_LOG(LogStats, Log, TEXT("Start LeavesExporter "));
@@ -50,7 +49,7 @@ void FLeavesExporter::StartupModule() {
 		.SetDisplayName(FText::FromString(TEXT("Leaves Exporter")))
 		.SetIcon(FSlateIcon(FEditorStyle::GetStyleSetName(), "LevelEditor.ViewOptions.Small"));
 
-	service = MakeShared<Service>();
+	service = MakeShared<PaintsNow::Service>();
 }
 
 void FLeavesExporter::OnButtonClicked() {

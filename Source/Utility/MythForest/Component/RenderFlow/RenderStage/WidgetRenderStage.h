@@ -3,27 +3,22 @@
 // 2018-9-11
 //
 
-#ifndef __WIDGETRENDERSTAGE_H__
-#define __WIDGETRENDERSTAGE_H__
-
+#pragma once
 #include "../RenderStage.h"
 #include "../RenderPort/RenderPortCommandQueue.h"
 #include "../RenderPort/RenderPortRenderTarget.h"
 
 namespace PaintsNow {
-	namespace NsMythForest {
-		class WidgetRenderStage : public TReflected<WidgetRenderStage, RenderStage> {
-		public:
-			WidgetRenderStage(const String& s);
-			virtual void PrepareResources(Engine& engine, IRender::Queue* queue) override;
-			virtual void UpdatePass(Engine& engine, IRender::Queue* queue) override;
+	class WidgetRenderStage : public TReflected<WidgetRenderStage, RenderStage> {
+	public:
+		WidgetRenderStage(const String& s);
+		virtual void PrepareResources(Engine& engine, IRender::Queue* queue) override;
+		virtual void UpdatePass(Engine& engine, IRender::Queue* queue) override;
 
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
-			RenderPortCommandQueue Widgets;
-			RenderPortRenderTarget OutputColor;
-		};
-	}
+		RenderPortCommandQueue Widgets;
+		RenderPortRenderTarget OutputColor;
+	};
 }
 
-#endif // __WIDGETRENDERSTAGE_H__

@@ -2,7 +2,6 @@
 #include <sstream>
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
 
 String Unit::GetDescription() const {
 	std::stringstream ss;
@@ -15,7 +14,6 @@ TObject<IReflect>& Unit::operator () (IReflect& reflect) {
 
 	return *this;
 }
-
 
 MetaUnitIdentifier::MetaUnitIdentifier() {}
 

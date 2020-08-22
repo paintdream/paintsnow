@@ -3,7 +3,6 @@
 #include <sstream>
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
 
 #ifdef _DEBUG
 #ifdef _WIN32

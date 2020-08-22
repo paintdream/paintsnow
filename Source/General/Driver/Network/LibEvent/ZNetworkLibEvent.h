@@ -3,9 +3,7 @@
 // 2015-10-24
 //
 
-#ifndef __ZNETWORKLIBEVENT_H__
-#define __ZNETWORKLIBEVENT_H__
-
+#pragma once
 #include "../../../Interface/INetwork.h"
 #include "../../../../Core/Interface/IThread.h"
 
@@ -68,6 +66,3 @@ namespace PaintsNow {
 		IThread& threadApi;
 	};
 }
-
-
-#endif // __ZNETWORKLIBEVENT_H__

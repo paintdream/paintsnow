@@ -3,9 +3,7 @@
 // 2020-8-19
 //
 
-#ifndef __GLSLSHADERGENERATOR_H__
-#define __GLSLSHADERGENERATOR_H__
-
+#pragma once
 #include "../../../Interface/IRender.h"
 #include "../../../Interface/IShader.h"
 
@@ -37,4 +35,3 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __GLSLSHADERGENERATOR_H__

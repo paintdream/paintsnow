@@ -4,9 +4,7 @@
 // 2015-7-4
 //
 
-#ifndef __COMBRIDGE_H__
-#define __COMBRIDGE_H__
-
+#pragma once
 #include "ComDef.h"
 #include "../../../Core/Interface/IArchive.h"
 
@@ -27,4 +25,3 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __COMBRIDGE_H__

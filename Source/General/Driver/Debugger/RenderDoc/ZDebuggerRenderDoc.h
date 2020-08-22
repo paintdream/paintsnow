@@ -3,9 +3,7 @@
 // 2020-4-4
 //
 
-#ifndef __ZDEBUGGERRENDERDOC_H__
-#define __ZDEBUGGERRENDERDOC_H__
-
+#pragma once
 #include "../../../Interface/IDebugger.h"
 
 struct RENDERDOC_API_1_4_0;
@@ -26,4 +24,3 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __ZDEBUGGERRENDERDOC_H__

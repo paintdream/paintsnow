@@ -2,7 +2,6 @@
 #include "../../Entity.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
 
 RenderableComponent::RenderableComponent() {}
 

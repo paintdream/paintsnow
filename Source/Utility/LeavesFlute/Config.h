@@ -3,9 +3,7 @@
 // 2016-1-1
 //
 
-#ifndef __CONFIG_H__
-#define __CONFIG_H__
-
+#pragma once
 #include "../../Core/PaintsNow.h"
 #include "LeavesApi.h"
 #include <string>
@@ -13,25 +11,20 @@
 #include <list>
 
 namespace PaintsNow {
-	namespace NsLeavesFlute {
-		class Config : public LeavesApi {
-		public:
-			virtual ~Config();
-			virtual void RegisterFactory(const String& factoryEntry, const String& name, const TWrapper<IDevice*>& factoryBase);
-			virtual void UnregisterFactory(const String& factoryEntry, const String& name);
+	class Config : public LeavesApi {
+	public:
+		virtual ~Config();
+		virtual void RegisterFactory(const String& factoryEntry, const String& name, const TWrapper<IDevice*>& factoryBase);
+		virtual void UnregisterFactory(const String& factoryEntry, const String& name);
 
-			struct Entry {
-				String name;
-				TWrapper<IDevice*> factoryBase;
-			};
-
-			const std::list<Entry>& GetEntry(const String& factoryEntry) const;
-
-		private:
-			std::map<String, std::list<Entry> > mapFactories;
+		struct Entry {
+			String name;
+			TWrapper<IDevice*> factoryBase;
 		};
-	}
+
+		const std::list<Entry>& GetEntry(const String& factoryEntry) const;
+
+	private:
+		std::map<String, std::list<Entry> > mapFactories;
+	};
 }
-
-
-#endif // __CONFIG_H__

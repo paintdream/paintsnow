@@ -45,6 +45,13 @@ local function SetFrameMonitorOnTitle(deltaTime : number, cameraComponent : Came
 end
 
 local function InitializeWorld(databasePath : string)
+	print("InitializeWorld: Loading repository " .. databasePath .. " ...")
+	local database = Database.New(databasePath)
+	if not database then
+		print("No repostory found.")
+		return
+	end
+
 	local clock : Clock = HeartVioliner.NewClock(1000.0 / 80, 0) -- 80 FPS logic by default
 	print("InitializeWorld: Creating ticker ...")
 	local eventComponent : EventComponent = EventComponentModule.New()
@@ -55,9 +62,6 @@ local function InitializeWorld(databasePath : string)
 	print("InitializeWorld: Creating GUI ...")
 	-- local GUI = require("Script/Root/GUI")
 	-- local guiEntity = GUI.New()
-
-	print("InitializeWorld: Loading repository " .. databasePath .. " ...")
-	local database = Database.New(databasePath)
 
 	print("InitializeWorld: Creating scene ...")
 	local Scene = require("Script/Root/Scene")

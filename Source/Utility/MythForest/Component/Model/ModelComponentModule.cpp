@@ -1,8 +1,6 @@
 #include "ModelComponentModule.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
 ModelComponentModule::ModelComponentModule(Engine& engine) : BaseClass(engine) {
 	batchComponentModule = (engine.GetComponentModuleFromName("BatchComponent")->QueryInterface(UniqueType<BatchComponentModule>()));
@@ -39,7 +37,7 @@ TShared<ModelComponent> ModelComponentModule::RequestNew(IScript::Request& reque
 	return modelComponent;
 }
 
-void ModelComponentModule::RequestAddMaterial(IScript::Request& request, IScript::Delegate<ModelComponent> modelComponent, uint32_t meshGroupIndex, IScript::Delegate<NsSnowyStream::MaterialResource> materialResource) {
+void ModelComponentModule::RequestAddMaterial(IScript::Request& request, IScript::Delegate<ModelComponent> modelComponent, uint32_t meshGroupIndex, IScript::Delegate<MaterialResource> materialResource) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(modelComponent);
 	CHECK_DELEGATE(materialResource);

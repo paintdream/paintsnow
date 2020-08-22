@@ -1,7 +1,6 @@
 #include "RoutineGraph.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsBridgeSunset;
 
 RoutineGraph::RoutineGraph() : taskGraph(nullptr) {}
 

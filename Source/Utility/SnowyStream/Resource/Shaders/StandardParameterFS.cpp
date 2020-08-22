@@ -3,8 +3,6 @@
 #include "../../../../General/Template/TShaderMacro.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
-using namespace PaintsNow::ShaderMacro;
 
 StandardParameterFS::StandardParameterFS() : enableBaseColorTexture(true), enableNormalTexture(true), enableMaterialTexture(true) {
 	baseColorTexture.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;

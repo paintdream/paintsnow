@@ -3,9 +3,7 @@
 // 2015-6-16
 //
 
-#ifndef __IDEBUGGER_H__
-#define __IDEBUGGER_H__
-
+#pragma once
 #include "../../Core/Interface/IType.h"
 #include "../../Core/Template/TProxy.h"
 #include "../../Core/Interface/IDevice.h"
@@ -22,5 +20,3 @@ namespace PaintsNow {
 	};
 }
 
-
-#endif // __IDEBUGEER_H__

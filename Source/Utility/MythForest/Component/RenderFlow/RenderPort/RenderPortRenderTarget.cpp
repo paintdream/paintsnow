@@ -1,7 +1,6 @@
 #include "RenderPortRenderTarget.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
 
 // RenderPortRenderTarget
 RenderPortRenderTarget::RenderPortRenderTarget(IRender::Resource::RenderTargetDescription::Storage& storage) : bindingStorage(storage) {}

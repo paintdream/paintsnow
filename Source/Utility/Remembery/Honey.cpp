@@ -2,18 +2,15 @@
 #include <sstream>
 
 using namespace PaintsNow;
-using namespace NsRemembery;
 
 namespace PaintsNow {
-	namespace NsRemembery {
-		IScript::Request& operator << (IScript::Request& request, HoneyData& honey) {
-			return request;
-		}
+	IScript::Request& operator << (IScript::Request& request, HoneyData& honey) {
+		return request;
+	}
 
-		IScript::Request& operator >> (IScript::Request& request, HoneyData& honey) {
-			honey.Attach(&request);
-			return request;
-		}
+	IScript::Request& operator >> (IScript::Request& request, HoneyData& honey) {
+		honey.Attach(&request);
+		return request;
 	}
 }
 
@@ -87,7 +84,6 @@ IIterator* HoneyData::New() const {
 	return nullptr;
 }
 
-
 SchemaResolver::SchemaResolver() : IReflect(true, false) {}
 void SchemaResolver::Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) {
 	size_t offset = (const char*)ptr - (const char*)base;
@@ -140,7 +136,6 @@ static void StringAssigner(void* dst, const void* src) {
 	*reinterpret_cast<String*>(dst) = *reinterpret_cast<const String*>(src);
 }
 
-
 void HoneyData::Attach(void* base) {
 	assert(request == nullptr);
 	this->request = reinterpret_cast<IScript::Request*>(base);
@@ -172,23 +167,23 @@ void HoneyData::Attach(void* base) {
 			double doubleValue;
 			String strValue;
 			switch (request.GetCurrentType()) {
-				case IScript::Request::INTEGER:
-					field.type = UniqueType<int>::Get();
-					sets.emplace_back(&HoneyData::SetInteger);
-					request >> intValue;
-					break;
-				case IScript::Request::NUMBER:
-					field.type = UniqueType<double>::Get();
-					sets.emplace_back(&HoneyData::SetFloat);
-					request >> doubleValue;
-					break;
-				case IScript::Request::STRING:
-				default:
-					field.type = UniqueType<String>::Get();
-					field.controller = &mc;
-					sets.emplace_back(&HoneyData::SetString);
-					request >> strValue;
-					break;
+			case IScript::Request::INTEGER:
+				field.type = UniqueType<int>::Get();
+				sets.emplace_back(&HoneyData::SetInteger);
+				request >> intValue;
+				break;
+			case IScript::Request::NUMBER:
+				field.type = UniqueType<double>::Get();
+				sets.emplace_back(&HoneyData::SetFloat);
+				request >> doubleValue;
+				break;
+			case IScript::Request::STRING:
+			default:
+				field.type = UniqueType<String>::Get();
+				field.controller = &mc;
+				sets.emplace_back(&HoneyData::SetString);
+				request >> strValue;
+				break;
 			}
 		}
 		request >> endtable;

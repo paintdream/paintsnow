@@ -7,7 +7,7 @@
 #include "System.h"
 #include "Repository.h"
 #include "Script.h"
-#include "Module.h"
+#include "IModule.h"
 #include "ImGui/imgui.h"
 #include "ImGui/imgui_impl_glfw.h"
 #include "ImGui/imgui_impl_opengl3.h"
@@ -24,8 +24,6 @@
 #include <GLFW/glfw3.h>
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsLeavesFlute;
-using namespace PaintsNow::NsLeavesWine;
 
 /*
 IMGUI_IMPL_API bool	 ImGui_ImplGlfw_InitForOpenGL(GLFWwindow* window, bool install_callbacks);
@@ -117,7 +115,7 @@ int main(int argc, char* argv[]) {
 	Loader loader;
 	{
 		System system;
-		Module visualizer;
+		IModule visualizer;
 		Repository repository;
 		Script script;
 

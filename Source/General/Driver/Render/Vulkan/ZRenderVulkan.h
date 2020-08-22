@@ -3,9 +3,7 @@
 // 2014-12-1
 //
 
-#ifndef __ZRENDERVULKAN_H__
-#define __ZRENDERVULKAN_H__
-
+#pragma once
 #include "../../../../Core/PaintsNow.h"
 #include "../../../Interface/IRender.h"
 #include "../../../../Core/Interface/IThread.h"
@@ -64,6 +62,3 @@ namespace PaintsNow {
 		#endif
 	};
 }
-
-
-#endif // __ZRENDERVULKAN_H__

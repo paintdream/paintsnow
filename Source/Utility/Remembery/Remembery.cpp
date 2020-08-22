@@ -1,13 +1,10 @@
 #include "Remembery.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsRemembery;
-using namespace PaintsNow::NsBridgeSunset;
 
 Remembery::Remembery(IThread& threadApi, IArchive& ar, IDatabase& db, BridgeSunset& bs) : archive(ar), databaseFactory(db), bridgeSunset(bs) {}
 
 Remembery::~Remembery() {}
-
 
 TObject<IReflect>& Remembery::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);

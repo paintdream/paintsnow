@@ -4,8 +4,6 @@
 #include <iterator>
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsLeavesWine;
-using namespace PaintsNow::NsLeavesFlute;
 
 System::System() : statWindowDuration(500) {}
 

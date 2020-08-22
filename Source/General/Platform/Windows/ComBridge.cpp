@@ -106,7 +106,6 @@ void ComBridge::Call(IReflectObject* object, const TProxy<>* p, IScript::Request
 	dispatch->Call(p, request);
 }
 
-
 std::unordered_map<Unique, ScriptReflect::Type>& ComBridge::GetReflectMap() {
 	return reflectMap;
 }

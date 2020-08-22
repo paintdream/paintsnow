@@ -3,7 +3,6 @@
 #include <sstream>
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsLeavesWine;
 
 static void FromString(const void* ptr) {
 	const String& str = *reinterpret_cast<const String*>(ptr);

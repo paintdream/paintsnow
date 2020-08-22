@@ -16,7 +16,6 @@ TObject<IReflect>& IShader::MetaShader::operator () (IReflect& reflect) {
 	return *this;
 }
 
-
 String IShader::GetShaderText() {
 	return "";
 }

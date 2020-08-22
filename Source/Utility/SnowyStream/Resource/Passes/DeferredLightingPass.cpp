@@ -1,7 +1,6 @@
 #include "DeferredLightingPass.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
 
 DeferredLightingPass::DeferredLightingPass() {}
 

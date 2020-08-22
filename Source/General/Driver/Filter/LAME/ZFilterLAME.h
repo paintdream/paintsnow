@@ -3,9 +3,7 @@
 // 2014-12-13
 //
 
-#ifndef __ZFILTERLAME_H__
-#define __ZFILTERLAME_H__
-
+#pragma once
 #ifndef __linux__
 #include <lame.h>
 #else
@@ -21,4 +19,3 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __ZFILTERLAME_H__

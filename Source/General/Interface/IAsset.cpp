@@ -65,7 +65,6 @@ TObject<IReflect>& MeshGroup::operator () (IReflect& reflect) {
 	return *this;
 }
 
-
 Material::Variable::Variable() {}
 
 TObject<IReflect>& Material::Variable::operator () (IReflect& reflect) {
@@ -115,7 +114,6 @@ TObject<IReflect>& BoneAnimation::Clip::operator () (IReflect& reflect) {
 
 	return *this;
 }
-
 
 TObject<IReflect>& BoneAnimation::Joint::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);

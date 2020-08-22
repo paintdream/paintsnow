@@ -2,29 +2,22 @@
 // By PaintDream (paintdream@paintdream.com)
 //
 
-#ifndef __CONSTMAP_PASS_H__
-#define __CONSTMAP_PASS_H__
-
+#pragma once
 #include "../../../../General/Misc/PassBase.h"
 #include "../Shaders/StandardTransformVS.h"
 #include "../Shaders/ConstMapFS.h"
 
 namespace PaintsNow {
-	namespace NsSnowyStream {
-		// standard pbr deferred shading Pass using ggx prdf
-		class ConstMapPass : public TReflected<ConstMapPass, PassBase> {
-		public:
-			ConstMapPass();
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+	// standard pbr deferred shading Pass using ggx prdf
+	class ConstMapPass : public TReflected<ConstMapPass, PassBase> {
+	public:
+		ConstMapPass();
+		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
-		protected:
-			// Vertex shaders
-			StandardTransformVS vertexTransform;
-			// Fragment shaders
-			ConstMapFS constWriter;
-		};
-	}
+	protected:
+		// Vertex shaders
+		StandardTransformVS vertexTransform;
+		// Fragment shaders
+		ConstMapFS constWriter;
+	};
 }
-
-
-#endif // __CONSTMAP_PASS_H__

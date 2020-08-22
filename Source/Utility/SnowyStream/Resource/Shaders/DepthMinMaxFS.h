@@ -9,25 +9,22 @@
 #include "../../../../General/Interface/IShader.h"
 
 namespace PaintsNow {
-	namespace NsSnowyStream {
-		class DepthMinMaxFS : public TReflected<DepthMinMaxFS, IShader> {
-		public:
-			DepthMinMaxFS();
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-			virtual String GetShaderText() override;
-			BindTexture depthTexture;
-			BindBuffer uniformBuffer;
-			Float2 invScreenSize;
+	class DepthMinMaxFS : public TReflected<DepthMinMaxFS, IShader> {
+	public:
+		DepthMinMaxFS();
+		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		virtual String GetShaderText() override;
+		BindTexture depthTexture;
+		BindBuffer uniformBuffer;
+		Float2 invScreenSize;
 
-		protected:
-			// inputs
-			Float2 rasterCoord;
+	protected:
+		// inputs
+		Float2 rasterCoord;
 
-			// outputs
-			Float4 outputDepth;
-		};
-	}
+		// outputs
+		Float4 outputDepth;
+	};
 }
-
 
 #endif // __DEPTHMINMAX_FS_H

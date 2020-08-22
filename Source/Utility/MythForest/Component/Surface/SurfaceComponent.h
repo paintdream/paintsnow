@@ -3,21 +3,14 @@
 // 2018-1-19
 //
 
-#ifndef __SURFACECOMPONENT_H__
-#define __SURFACECOMPONENT_H__
-
+#pragma once
 #include "../../Entity.h"
 #include "../Renderable/RenderableComponent.h"
 
 namespace PaintsNow {
-	namespace NsMythForest {
-		class SurfaceComponent : public TAllocatedTiny<SurfaceComponent, RenderableComponent> {
-		public:
-			SurfaceComponent();
-			virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) override;
-		};
-	}
+	class SurfaceComponent : public TAllocatedTiny<SurfaceComponent, RenderableComponent> {
+	public:
+		SurfaceComponent();
+		virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) override;
+	};
 }
-
-
-#endif // __SURFACECOMPONENT_H__

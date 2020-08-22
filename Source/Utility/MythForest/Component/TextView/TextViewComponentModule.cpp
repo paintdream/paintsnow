@@ -2,11 +2,12 @@
 #include "../../Engine.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
 TextViewComponentModule::TextViewComponentModule(Engine& engine) : BaseClass(engine) {
+	batchComponentModule = (engine.GetComponentModuleFromName("BatchComponent")->QueryInterface(UniqueType<BatchComponentModule>()));
+	assert(batchComponentModule != nullptr);
 	defaultTextMaterial = engine.snowyStream.CreateReflectedResource(UniqueType<MaterialResource>(), "[Runtime]/MaterialResource/Text");
+	defaultTextMesh = engine.snowyStream.CreateReflectedResource(UniqueType<MeshResource>(), "[Runtime]/MeshResource/StandardSquare");
 }
 
 TextViewComponentModule::~TextViewComponentModule() {}
@@ -24,11 +25,18 @@ TObject<IReflect>& TextViewComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-TShared<TextViewComponent> TextViewComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<FontResource> fontResource) {
+TShared<TextViewComponent> TextViewComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<FontResource> fontResource, IScript::Delegate<MeshResource> meshResource, IScript::Delegate<BatchComponent> batch, IScript::Delegate<MaterialResource> materialResource) {
 	CHECK_REFERENCES_NONE();
 
+	TShared<BatchComponent> batchComponent;
+	if (batch.Get() == nullptr) {
+		batchComponent = batchComponentModule->Create(IRender::Resource::BufferDescription::UNIFORM);
+	} else {
+		batchComponent = batch.Get();
+	}
+
 	TShared<FontResource> res = fontResource.Get();
-	TShared<TextViewComponent> textViewComponent = TShared<TextViewComponent>::From(allocator->New(res, defaultTextMaterial));
+	TShared<TextViewComponent> textViewComponent = TShared<TextViewComponent>::From(allocator->New(res, meshResource ? TShared<MeshResource>(meshResource.Get()) : defaultTextMesh, batchComponent, materialResource ? TShared<MaterialResource>(materialResource.Get()) : defaultTextMaterial));
 	textViewComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
 	return textViewComponent;
 }

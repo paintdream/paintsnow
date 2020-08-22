@@ -3,9 +3,7 @@
 // 2015-7-4
 //
 
-#ifndef __COMDEF_H__
-#define __COMDEF_H__
-
+#pragma once
 #include "../../../Core/PaintsNow.h"
 
 #if defined(_MSC_VER) && _MSC_VER <= 1200
@@ -175,4 +173,3 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __COMDEF_H__

@@ -2,9 +2,7 @@
 // By PaintDream
 //
 
-#ifndef __ZRANDOMLIBNOISEPERLIN_H__
-#define __ZRANDOMLIBNOISEPERLIN_H__
-
+#pragma once
 #include "../../../Interface/IRandom.h"
 #include "Core/module/perlin.h"
 
@@ -21,5 +19,3 @@ namespace PaintsNow {
 	};
 }
 
-
-#endif // __ZRANDOMLIBNOISEPERLIN_H__

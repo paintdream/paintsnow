@@ -3,9 +3,7 @@
 // 2019-1-7
 //
 
-#ifndef __FENCEDRENDERQUEUE_H__
-#define __FENCEDRENDERQUEUE_H__
-
+#pragma once
 #include "../../General/Interface/IRender.h"
 #include "../../Core/Template/TAtomic.h"
 
@@ -29,4 +27,3 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __FENCEDRENDERQUEUE_H__

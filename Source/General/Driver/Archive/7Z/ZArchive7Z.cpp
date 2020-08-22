@@ -124,7 +124,6 @@ extern "C" SRes StreamRead(void* p, void* buf, size_t* size) {
 	return stream.Read(buf, *size) ? SZ_OK : SZ_ERROR_FAIL;
 }
 
-
 extern "C" SRes StreamSeek(void* p, Int64* buf, ESzSeek origin) {
 	CFileInStream* is = (CFileInStream*)p;
 	ZArchive7Z& z = **(ZArchive7Z**)(&is->file);
@@ -181,7 +180,6 @@ ZArchive7Z::ZArchive7Z(IStreamBase& s, size_t len) : stream(s), pos(0), size(len
 
 	SzArEx_Init(&db);
 }
-
 
 IStreamBase& ZArchive7Z::GetStream() {
 	return stream;
@@ -297,7 +295,6 @@ bool ZArchive7Z::Delete(const String& uri) {
 	assert(false); // do not support this operation
 	return false;
 }
-
 
 // Unit test
 #include "../../../../Core/Driver/Archive/Dirent/ZArchiveDirent.h"

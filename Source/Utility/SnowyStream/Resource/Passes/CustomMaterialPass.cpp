@@ -1,7 +1,6 @@
 #include "CustomMaterialPass.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
 
 CustomMaterialPass::CustomMaterialPass() {}
 

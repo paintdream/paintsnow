@@ -3,8 +3,6 @@
 #include "Types/FieldSimplygon.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
 FieldComponentModule::FieldComponentModule(Engine& engine) : BaseClass(engine) {}
 FieldComponentModule::~FieldComponentModule() {}
@@ -61,14 +59,14 @@ void FieldComponentModule::RequestFromSimplygon(IScript::Request& request, IScri
 	request.UnLock();
 }
 
-void FieldComponentModule::RequestFromTexture(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, IScript::Delegate<NsSnowyStream::TextureResource> textureResource) {
+void FieldComponentModule::RequestFromTexture(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, IScript::Delegate<TextureResource> textureResource) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(fieldComponent);
 	CHECK_DELEGATE(textureResource);
 
 }
 
-void FieldComponentModule::RequestFromMesh(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, IScript::Delegate<NsSnowyStream::MeshResource> meshResource) {
+void FieldComponentModule::RequestFromMesh(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, IScript::Delegate<MeshResource> meshResource) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(fieldComponent);
 	CHECK_DELEGATE(meshResource);

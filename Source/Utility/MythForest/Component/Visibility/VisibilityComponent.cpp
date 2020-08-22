@@ -7,8 +7,6 @@
 #include "../../../../Core/Interface/IMemory.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
 VisibilityComponent::VisibilityComponent() : nextCoord(~(uint16_t)0, ~(uint16_t)0, ~(uint16_t)0), subDivision(1, 1, 1), taskCount(32), resolution(256, 256), maxFrameExecutionTime(5), viewDistance(512.0f), activeCellCacheIndex(0), hostEntity(nullptr), renderQueue(nullptr), clearResource(nullptr), depthStencilResource(nullptr), stateResource(nullptr) {
 	maxVisIdentity.store(0, std::memory_order_relaxed);
@@ -56,7 +54,7 @@ void VisibilityComponent::Initialize(Engine& engine, Entity* entity) {
 	IRender::Device* device = engine.snowyStream.GetRenderDevice();
 	renderQueue = render.CreateQueue(device);
 
-	String path = NsSnowyStream::ShaderResource::GetShaderPathPrefix() + UniqueType<ConstMapPass>::Get()->GetBriefName();
+	String path = ShaderResource::GetShaderPathPrefix() + UniqueType<ConstMapPass>::Get()->GetBriefName();
 	pipeline = engine.snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), path, true, 0, nullptr)->QueryInterface(UniqueType<ShaderResourceImpl<ConstMapPass> >());
 
 	IRender::Resource::ClearDescription cls;
@@ -365,8 +363,8 @@ void VisibilityComponent::CollectRenderableComponent(Engine& engine, TaskData& t
 			group.instanceCount++;
 		}
 	} else {
-		NsSnowyStream::IDrawCallProvider::InputRenderData inputRenderData(0.0f, pipeline());
-		std::vector<NsSnowyStream::IDrawCallProvider::OutputRenderData> drawCalls;
+		IDrawCallProvider::InputRenderData inputRenderData(0.0f, pipeline());
+		std::vector<IDrawCallProvider::OutputRenderData> drawCalls;
 		SpinLock(collectCritical);
 		renderableComponent->CollectDrawCalls(drawCalls, inputRenderData);
 		SpinUnLock(collectCritical);

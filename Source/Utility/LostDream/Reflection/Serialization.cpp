@@ -4,8 +4,6 @@
 #include "../../SnowyStream/ResourceManager.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsLostDream;
-using namespace PaintsNow::NsSnowyStream;
 
 struct EmptyType : public TReflected<EmptyType, IReflectObjectComplex, MetaConstructable> {
 	virtual TObject<IReflect>& operator () (IReflect& reflect) {

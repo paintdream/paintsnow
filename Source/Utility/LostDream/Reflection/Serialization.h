@@ -3,22 +3,17 @@
 // 2018-2-10
 //
 
-#ifndef __SERIALIZATION_H__
-#define __SERIALIZATION_H__
-
+#pragma once
 #include "../LostDream.h"
 
 namespace PaintsNow {
-	namespace NsLostDream {
-		class Serialization : public TReflected<Serialization, LostDream::Qualifier> {
-		public:
-			virtual bool Initialize();
-			virtual bool Run(int randomSeed, int length);
-			virtual void Summary();
+	class Serialization : public TReflected<Serialization, LostDream::Qualifier> {
+	public:
+		virtual bool Initialize();
+		virtual bool Run(int randomSeed, int length);
+		virtual void Summary();
 
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		};
-	}
+		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+	};
 }
 
-#endif // __SERIALIZATION_H__

@@ -3,9 +3,7 @@
 // 2015-12-30
 //
 
-#ifndef __ZDATABSESQLITE_H__
-#define __ZDATABSESQLITE_H__
-
+#pragma once
 #include "../../../Interface/IDatabase.h"
 extern "C" {
 	#include "Core/sqlite3.h"
@@ -22,5 +20,3 @@ namespace PaintsNow {
 	};
 }
 
-
-#endif // __ZDATABSESQLITE_H__

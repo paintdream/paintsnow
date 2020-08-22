@@ -3,9 +3,7 @@
 // 2018-8-24
 //
 
-#ifndef __PLATFORM_H__
-#define __PLATFORM_H__
-
+#pragma once
 #include "../../Core/PaintsNow.h"
 #define PAINTSNOW_VERSION_MAJOR "0"
 #define PAINTSNOW_VERSION_MINOR "0.20.7.16"
@@ -109,5 +107,3 @@
 #pragma comment(lib, "../../../../Build/Windows/VC/GalaxyWeaver/Release/GalaxyWeaver.lib")
 #endif
 #endif // _MSC_VER
-
-#endif

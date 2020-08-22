@@ -1,7 +1,6 @@
 #include "FieldSimplygon.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
 
 FieldSimplygon::FieldSimplygon(SIMPOLYGON_TYPE t) : type(t) {
 

@@ -1,7 +1,6 @@
 #include "AntiAliasingPass.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
 
 AntiAliasingPass::AntiAliasingPass() {
 }

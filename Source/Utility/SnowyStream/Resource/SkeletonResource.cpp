@@ -8,7 +8,6 @@ const double EPSILON = 1e-7;
 typedef Quaternion<float> Quater;
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
 
 SkeletonResource::SkeletonResource(ResourceManager& manager, const String& uniqueID) : BaseClass(manager, uniqueID) {}
 

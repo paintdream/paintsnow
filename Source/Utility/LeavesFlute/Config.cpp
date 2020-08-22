@@ -1,7 +1,6 @@
 #include "Config.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsLeavesFlute;
 
 Config::~Config() {}
 
@@ -13,7 +12,6 @@ void Config::RegisterFactory(const String& factoryEntry, const String& name, con
 	mapFactories[factoryEntry].emplace_back(std::move(entry));
 	// printf("Register new factory<%s> : %s\n", factoryEntry.c_str(), name.c_str());
 }
-
 
 void Config::UnregisterFactory(const String& factoryEntry, const String& name) {
 	std::list<Entry> entries = mapFactories[factoryEntry];

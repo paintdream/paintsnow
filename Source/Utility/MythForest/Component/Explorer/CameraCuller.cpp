@@ -1,6 +1,5 @@
 #include "CameraCuller.h"
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
 
 const double PI = 3.14159265358979323846;
 PerspectiveCamera::PerspectiveCamera() : fov((float)PI / 2.0f), aspect(1.0f), nearPlane(0.05f), farPlane(1000.0f) {}
@@ -28,7 +27,6 @@ bool FrustrumCuller::operator () (const Float3Pair& box) const {
 
 	return true;
 }
-
 
 Float3 FrustrumCuller::GetPosition() const {
 	return Float3(viewTransform(3, 0), viewTransform(3, 1), viewTransform(3, 2));

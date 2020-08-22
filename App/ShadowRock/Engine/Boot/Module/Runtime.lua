@@ -10,7 +10,7 @@ local function CollectIndexersRecursive(modname, collection)
 					local mainName
 					local function Register(params)
 						for i, param in ipairs(params) do
-							if type(param) == "table" and param.Type:find("PaintsNow::Ns") then
+							if type(param) == "table" and param.Type:find("PaintsNow::") then
 								if i == 1 then
 									mainName = param.Type
 									methodMap[mainName] = methodMap[mainName] or {}
@@ -116,7 +116,7 @@ if EnableTL then
 
 				local declare = "\t" .. name .. ": function (" .. table.concat(paramsList, ", ") .. ") : (" .. table.concat(returnList, ", ") .. ")"
 				table.insert(tld, declare)
-				if typeName:find("PaintsNow::Ns") and name ~= "New" then
+				if typeName:find("PaintsNow::") and name ~= "New" then
 					local selfDeclare = "\t" .. name .. ": function (" .. table.concat(paramsList, ", ") .. ") : (" .. table.concat(returnList, ", ") .. ")"
 					methodTldMap[typeName] = methodTldMap[typeName] or {}
 					table.insert(methodTldMap[typeName], selfDeclare)

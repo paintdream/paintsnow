@@ -3,26 +3,20 @@
 // 2018-9-24
 //
 
-#ifndef __RENDERPOLICY_H__
-#define __RENDERPOLICY_H__
-
+#pragma once
 #include "../../../../Core/System/Tiny.h"
 #include "../../../../General/Interface/IRender.h"
 
 namespace PaintsNow {
-	namespace NsMythForest {
-		class RenderPolicy : public TReflected<RenderPolicy, SharedTiny> {
-		public:
-			RenderPolicy();
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+	class RenderPolicy : public TReflected<RenderPolicy, SharedTiny> {
+	public:
+		RenderPolicy();
+		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
-			String renderPortName;
-			uint32_t priority;
-			IRender::Resource::RenderStateDescription renderStateTemplate;
-			IRender::Resource::RenderStateDescription renderStateMask;
-		};
-	}
+		String renderPortName;
+		uint32_t priority;
+		IRender::Resource::RenderStateDescription renderStateTemplate;
+		IRender::Resource::RenderStateDescription renderStateMask;
+	};
 }
 
-
-#endif // __RENDERPOLICY_H__

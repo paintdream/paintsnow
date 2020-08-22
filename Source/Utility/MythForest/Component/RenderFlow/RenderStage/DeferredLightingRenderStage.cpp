@@ -3,8 +3,6 @@
 #include <sstream>
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
 DeferredLightingRenderStage::DeferredLightingRenderStage(const String& s) : OutputColor(renderTargetDescription.colorBufferStorages[0]), LoadDepth(renderTargetDescription.depthStencilStorage) {
 	renderStateDescription.stencilReplacePass = 1;

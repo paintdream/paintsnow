@@ -3,9 +3,7 @@
 // 2016-7-15
 //
 
-#ifndef __REMOTERPOXY_H__
-#define __REMOTEPROXY_H__
-
+#pragma once
 #include "../../Core/Interface/IScript.h"
 #include "../../General/Interface/ITunnel.h"
 #include "../../Core/System/MemoryStream.h"
@@ -427,6 +425,3 @@ namespace PaintsNow {
 		String entry;
 	};
 }
-
-
-#endif // __REMOTEPROXY_H__

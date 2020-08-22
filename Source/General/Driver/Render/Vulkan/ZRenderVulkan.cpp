@@ -8,7 +8,7 @@
 #include "../../../../Core/Template/TQueue.h"
 #include "../../../../Core/Template/TPool.h"
 #include "ZRenderVulkan.h"
-#include <glslang/Public/ShaderLang.h>
+// #include <glslang/Public/ShaderLang.h>
 #include <cstdio>
 #include <vector>
 #include <iterator>
@@ -229,7 +229,6 @@ static void CleanupFrameData(VkAllocationCallbacks* allocator, VulkanDeviceImpl*
 
 	impl->frames.clear();
 }
-
 
 void ZRenderVulkan::DeleteDevice(IRender::Device* device) {
 	VulkanDeviceImpl* impl = static_cast<VulkanDeviceImpl*>(device);

@@ -9,28 +9,25 @@
 #include "../../../../General/Interface/IShader.h"
 
 namespace PaintsNow {
-	namespace NsSnowyStream {
-		class MultiHashLightFS : public TReflected<MultiHashLightFS, IShader> {
-		public:
-			MultiHashLightFS();
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-			virtual String GetShaderText() override;
+	class MultiHashLightFS : public TReflected<MultiHashLightFS, IShader> {
+	public:
+		MultiHashLightFS();
+		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		virtual String GetShaderText() override;
 
-			BindTexture depthTexture;
-			BindTexture lightDepthTexture;
-			BindBuffer lightParamBuffer;
+		BindTexture depthTexture;
+		BindTexture lightDepthTexture;
+		BindBuffer lightParamBuffer;
 
-			Float2 rasterCoord;
-			MatrixFloat4x4 invProjectionMatrix;
-			MatrixFloat4x4 lightProjectionMatrix;
-			Float3 lightColor;
-			float lightAttenuation;
+		Float2 rasterCoord;
+		MatrixFloat4x4 invProjectionMatrix;
+		MatrixFloat4x4 lightProjectionMatrix;
+		Float3 lightColor;
+		float lightAttenuation;
 
-			// output
-			Float4 blendColor;
-		};
-	}
+		// output
+		Float4 blendColor;
+	};
 }
-
 
 #endif // __MULTIHASHLIGHT_FS_H

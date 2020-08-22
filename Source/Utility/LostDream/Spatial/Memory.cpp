@@ -4,7 +4,6 @@
 #include "../../../Core/Driver/Thread/Pthread/ZThreadPthread.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsLostDream;
 
 bool Memory::Initialize() {
 	return true;
@@ -45,7 +44,6 @@ bool Memory::Run(int randomSeed, int length) {
 
 void Memory::Summary() {
 }
-
 
 TObject<IReflect>& Memory::operator ()(IReflect& reflect) {
 	BaseClass::operator () (reflect);

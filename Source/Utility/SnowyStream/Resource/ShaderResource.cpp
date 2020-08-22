@@ -3,7 +3,6 @@
 #include "../../../General/Interface/IShader.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
 
 ShaderResource::ShaderResource(ResourceManager& manager, const String& uniqueID) : BaseClass(manager, uniqueID), shaderResource(nullptr) {}
 

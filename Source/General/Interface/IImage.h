@@ -3,9 +3,7 @@
 // 2014-12-14
 //
 
-#ifndef __IIMAGE_H__
-#define __IIMAGE_H__
-
+#pragma once
 
 #include "../../Core/PaintsNow.h"
 #include "../../Core/Interface/IType.h"
@@ -33,5 +31,3 @@ namespace PaintsNow {
 	};
 }
 
-
-#endif // __IIMAGE_H__

@@ -3,9 +3,7 @@
 // 2019-9-19
 //
 
-#ifndef __IRENDER_H__
-#define __IRENDER_H__
-
+#pragma once
 #include "../../Core/PaintsNow.h"
 #include "../../Core/Interface/IReflect.h"
 #include "../../Core/Interface/IType.h"
@@ -257,4 +255,3 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __IRENDER_H__

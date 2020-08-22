@@ -2,8 +2,6 @@
 #include "../../../SnowyStream/SnowyStream.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
 WidgetComponentModule::WidgetComponentModule(Engine& engine) : BaseClass(engine) {
 	batchComponentModule = (engine.GetComponentModuleFromName("BatchComponent")->QueryInterface(UniqueType<BatchComponentModule>()));
@@ -47,8 +45,7 @@ TShared<WidgetComponent> WidgetComponentModule::RequestNew(IScript::Request& req
 	return widgetComponent;
 }
 
-
-void WidgetComponentModule::RequestSetWidgetTexture(IScript::Request& request, IScript::Delegate<WidgetComponent> widgetComponent, IScript::Delegate<NsSnowyStream::TextureResource> texture) {
+void WidgetComponentModule::RequestSetWidgetTexture(IScript::Request& request, IScript::Delegate<WidgetComponent> widgetComponent, IScript::Delegate<TextureResource> texture) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(widgetComponent);
 	CHECK_THREAD_IN_MODULE(widgetComponent);

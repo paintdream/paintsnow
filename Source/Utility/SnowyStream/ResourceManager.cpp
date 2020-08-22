@@ -3,7 +3,6 @@
 #include "../../Core/Interface/IArchive.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
 
 static const String uniExtension = ".pod";
 

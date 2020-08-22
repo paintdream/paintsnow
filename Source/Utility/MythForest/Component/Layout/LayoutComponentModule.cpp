@@ -2,8 +2,6 @@
 #include "../../Engine.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
-using namespace PaintsNow::NsSnowyStream;
 
 LayoutComponentModule::LayoutComponentModule(Engine& engine) : BaseClass(engine) {}
 LayoutComponentModule::~LayoutComponentModule() {}
@@ -174,7 +172,6 @@ Float4 LayoutComponentModule::RequestGetMargin(IScript::Request& request, IScrip
 
 	return Float4(layoutComponent->margin);
 }
-
 
 void LayoutComponentModule::RequestSetIndexRange(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent, int start, int count) {
 	CHECK_REFERENCES_NONE();

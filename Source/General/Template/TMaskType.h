@@ -3,9 +3,7 @@
 // 2015-7-10
 //
 
-#ifndef __TMASKTYPE_H__
-#define __TMASKTYPE_H__
-
+#pragma once
 namespace PaintsNow {
 #define BEGIN_TYPEMASK(TMaskCast, size) \
 	namespace NsTypeMask##TMaskCast { \
@@ -39,4 +37,3 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __TMASKTYPE_H__

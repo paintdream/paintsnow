@@ -1,7 +1,6 @@
 #include "CustomMaterialParameterFS.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
 
 CustomShaderDescription::CustomShaderDescription() : textureCount(0) {}
 

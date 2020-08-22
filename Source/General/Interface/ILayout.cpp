@@ -15,5 +15,4 @@ void ILayout::Target::UpdateLayout(bool forceUpdate) {
 	}
 }
 
-
 ILayout::~ILayout() {}

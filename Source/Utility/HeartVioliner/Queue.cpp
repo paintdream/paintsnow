@@ -1,7 +1,6 @@
 #include "Queue.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsHeartVioliner;
 
 Queue::Queue() {}
 
@@ -54,7 +53,7 @@ void Queue::Push(IScript::Request& request, IScript::Request::Ref& ref, int64_t 
 
 void Queue::Execute(void* context) {
 	int64_t timeStamp = clock->Now();
-	NsBridgeSunset::BridgeSunset& bridgeSunset = *reinterpret_cast<NsBridgeSunset::BridgeSunset*>(context);
+	BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 	IScript::Request& request = *bridgeSunset.AcquireSafe();
 	ExecuteWithTimeStamp(request, timeStamp);
 	bridgeSunset.ReleaseSafe(&request);

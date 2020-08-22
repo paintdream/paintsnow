@@ -1,7 +1,6 @@
 #include "BloomPass.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsSnowyStream;
 
 BloomPass::BloomPass() {}
 

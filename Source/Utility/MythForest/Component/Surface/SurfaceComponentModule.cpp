@@ -1,10 +1,8 @@
 #include "SurfaceComponentModule.h"
 
 using namespace PaintsNow;
-using namespace PaintsNow::NsMythForest;
 
 SurfaceComponentModule::SurfaceComponentModule(Engine& engine) : BaseClass(engine) {}
-
 
 TObject<IReflect>& SurfaceComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);

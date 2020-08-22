@@ -3,9 +3,7 @@
 // 2014-12-14
 //
 
-#ifndef __ZIMAGEFREEIMAGE_H__
-#define __ZIMAGEFREEIMAGE_H__
-
+#pragma once
 #include "../../../../Core/Interface/IStreamBase.h"
 #include "../../../Interface/Interfaces.h"
 #include "../../../../Core/Interface/IType.h"
@@ -27,4 +25,3 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __ZIMAGEFREEIMAGE_H__
