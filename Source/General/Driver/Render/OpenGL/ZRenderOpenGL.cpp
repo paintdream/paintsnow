@@ -1199,7 +1199,7 @@ struct ResourceImplOpenGL<IRender::Resource::RenderStateDescription> : public Re
 			glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 		}
 
-		if (d.alphaBlend) {
+		if (d.blend) {
 			glEnable(GL_BLEND);
 			glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA); // premultiplied
 		} else {
@@ -1610,7 +1610,7 @@ void ZRenderOpenGL::NextDeviceFrame(IRender::Device* device) {
 // Queue
 IRender::Queue* ZRenderOpenGL::CreateQueue(Device* device, uint32_t flag) {
 	assert(device != nullptr);
-	return new QueueImplOpenGL(static_cast<DeviceImplOpenGL*>(device), flag & IRender::QUEUE_MULTITHREAD);
+	return new QueueImplOpenGL(static_cast<DeviceImplOpenGL*>(device), !!(flag & IRender::QUEUE_MULTITHREAD));
 }
 
 IRender::Device* ZRenderOpenGL::GetQueueDevice(Queue* queue) {

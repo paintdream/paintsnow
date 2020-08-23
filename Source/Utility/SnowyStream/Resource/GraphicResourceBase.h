@@ -60,6 +60,7 @@ namespace PaintsNow {
 				description.component = sizeof(T) / sizeof(typename T::type) * groupSize;
 				description.format = MapFormat<typename T::type>::format;
 #endif
+				description.stride = sizeof(T) * groupSize;
 				memcpy(description.data.GetData(), &data[0], data.size() * sizeof(T));
 
 				if (buffer == nullptr) {

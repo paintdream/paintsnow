@@ -54,7 +54,7 @@ static void GenerateDrawCall(IDrawCallProvider::OutputRenderData& renderData, Sh
 	renderState.cull = 1;
 	renderState.fill = 1;
 	renderState.colorWrite = 1;
-	renderState.alphaBlend = 0;
+	renderState.blend = 0;
 	renderState.depthTest = IRender::Resource::RenderStateDescription::GREATER_EQUAL;
 	renderState.depthWrite = 1;
 	renderState.stencilTest = IRender::Resource::RenderStateDescription::ALWAYS;

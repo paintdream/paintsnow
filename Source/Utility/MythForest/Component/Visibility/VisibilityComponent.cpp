@@ -69,7 +69,7 @@ void VisibilityComponent::Initialize(Engine& engine, Entity* entity) {
 	rs.stencilReplacePass = 1;
 	rs.cull = 0;
 	rs.fill = 1;
-	rs.alphaBlend = 0;
+	rs.blend = 0;
 	rs.colorWrite = 1;
 	rs.depthTest = IRender::Resource::RenderStateDescription::GREATER_EQUAL;
 	rs.depthWrite = 1;

@@ -3,7 +3,7 @@
 using namespace PaintsNow;
 
 PhaseLightRenderStage::PhaseLightRenderStage(const String& s) : OutputColor(renderTargetDescription.colorBufferStorages[0]) {
-	renderStateDescription.alphaBlend = 1;
+	renderStateDescription.blend = 1;
 	clearDescription.clearColorBit = 0; // Load & Store
 }
 

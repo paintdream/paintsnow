@@ -108,7 +108,7 @@ void PhaseComponent::Initialize(Engine& engine, Entity* entity) {
 		IRender::Resource::RenderStateDescription state;
 		state.cull = 1;
 		state.fill = 1;
-		state.alphaBlend = 0;
+		state.blend = 0;
 		state.colorWrite = 1;
 		state.depthTest = IRender::Resource::RenderStateDescription::DISABLED;
 		state.depthWrite = 0;
@@ -118,7 +118,7 @@ void PhaseComponent::Initialize(Engine& engine, Entity* entity) {
 
 		state.cull = 1;
 		state.fill = 1;
-		state.alphaBlend = 0;
+		state.blend = 0;
 		state.colorWrite = 0;
 		state.depthTest = IRender::Resource::RenderStateDescription::GREATER_EQUAL;
 		state.depthWrite = 1;

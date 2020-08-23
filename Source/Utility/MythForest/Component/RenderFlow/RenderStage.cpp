@@ -12,7 +12,7 @@ RenderStage::RenderStage(uint32_t colorAttachmentCount) : renderState(nullptr), 
 	s.stencilReplacePass = 1;
 	s.cull = 1;
 	s.fill = 1;
-	s.alphaBlend = 0;
+	s.blend = 0;
 	s.colorWrite = 1;
 	s.depthTest = 0;
 	s.depthWrite = 0;

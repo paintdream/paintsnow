@@ -440,7 +440,7 @@ ShadowLayerConfig::TaskData::TaskData(Engine& engine, uint32_t warpCount, const 
 	rs.cull = 1;
 	rs.cullFrontFace = 1;
 	rs.fill = 1;
-	rs.alphaBlend = 0;
+	rs.blend = 0;
 	rs.colorWrite = 0;
 	rs.depthTest = IRender::Resource::RenderStateDescription::GREATER_EQUAL;
 	rs.depthWrite = 1;

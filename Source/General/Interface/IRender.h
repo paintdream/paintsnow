@@ -36,8 +36,9 @@ namespace PaintsNow {
 
 			struct Description {
 				enum Format {
-					UNSIGNED_BYTE, UNSIGNED_SHORT, 
-					HALF, // maybe 16-bit float or 16-bit unorm, depends on layout
+					UNSIGNED_BYTE,
+					UNSIGNED_SHORT, 
+					HALF,
 					FLOAT,
 					// Following are not available in texture
 					UNSIGNED_INT,
@@ -47,15 +48,17 @@ namespace PaintsNow {
 
 			struct BufferDescription : public Description {
 				enum Usage {
-					INDEX, VERTEX, INSTANCED, UNIFORM, STORAGE
+					INDEX, VERTEX, INSTANCED, CONSTANT, UNIFORM, STORAGE
 				};
 
-				BufferDescription() : usage(VERTEX), format(FLOAT), dynamic(0), component(4) {}
+				BufferDescription() : usage(VERTEX), format(FLOAT), dynamic(0), component(4), stride(0) {}
 
-				uint8_t usage;
-				uint8_t format;
-				uint16_t dynamic : 1;
-				uint16_t component : 15;
+				uint32_t usage : 4;
+				uint32_t format : 3;
+				uint32_t dynamic : 1;
+				uint8_t component;
+				uint16_t stride;
+
 				Bytes data;
 			};
 
@@ -145,7 +148,7 @@ namespace PaintsNow {
 				uint32_t cullFrontFace : 1;
 				uint32_t cull : 1;
 				uint32_t fill : 1;
-				uint32_t alphaBlend : 1;
+				uint32_t blend : 1;
 				uint32_t colorWrite : 1;
 
 				uint32_t depthTest : 3;
