@@ -1012,9 +1012,18 @@ struct ResourceImplOpenGL<IRender::Resource::ShaderDescription> : public Resourc
 				body += declaration.initialization + shader->GetShaderText() + declaration.finalization + "\n";
 				head += declaration.declaration;
 
-				std::copy(declaration.textureNames.begin(), declaration.textureNames.end(), std::back_inserter(textureNames));
-				std::copy(declaration.uniformBufferNames.begin(), declaration.uniformBufferNames.end(), std::back_inserter(uniformBufferNames));
-				std::copy(declaration.sharedBufferNames.begin(), declaration.sharedBufferNames.end(), std::back_inserter(sharedBufferNames));
+				for (size_t k = 0; k < declaration.bufferBindings.size(); k++) {
+					std::pair<const IShader::BindBuffer*, String>& item = declaration.bufferBindings[k];
+					if (item.first->description.usage == IRender::Resource::BufferDescription::UNIFORM) {
+						uniformBufferNames.emplace_back(item.second);
+					} else if (item.first->description.usage == IRender::Resource::BufferDescription::STORAGE) {
+						sharedBufferNames.emplace_back(item.second);
+					}
+				}
+
+				for (size_t m = 0; m < declaration.textureBindings.size(); m++) {
+					textureNames.emplace_back(declaration.textureBindings[m].second);
+				}
 			}
 
 			body += "\n}\n"; // make a call to our function

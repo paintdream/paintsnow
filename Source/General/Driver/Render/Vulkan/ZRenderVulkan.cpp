@@ -7,6 +7,7 @@
 #include "../../../../Core/Interface/IMemory.h"
 #include "../../../../Core/Template/TQueue.h"
 #include "../../../../Core/Template/TPool.h"
+#include "../OpenGL/GLSLShaderGenerator.h"
 #include "ZRenderVulkan.h"
 // #include <glslang/Public/ShaderLang.h>
 #include <cstdio>
@@ -20,6 +21,7 @@
 using namespace PaintsNow;
 
 const int MIN_IMAGE_COUNT = 2;
+const int MAX_DESCRIPTOR_SIZE = 1000;
 
 static void Verify(const char* message, VkResult res) {
 	if (res != VK_SUCCESS) {
@@ -38,7 +40,7 @@ struct FrameData {
 
 struct VulkanQueueImpl;
 struct VulkanDeviceImpl : public IRender::Device {
-	VulkanDeviceImpl(VkAllocationCallbacks* alloc, VkPhysicalDevice phy, VkDevice dev, uint32_t family, VkQueue q) : allocator(alloc), physicalDevice(phy), device(dev), resolution(0, 0), queueFamily(family), queue(q), swapChain(0) {
+	VulkanDeviceImpl(VkAllocationCallbacks* alloc, VkPhysicalDevice phy, VkDevice dev, uint32_t family, VkQueue q, VkDescriptorPool pool) : allocator(alloc), physicalDevice(phy), device(dev), resolution(0, 0), queueFamily(family), queue(q), swapChain(0), descriptorPool(pool) {
 		critical.store(0, std::memory_order_release);
 	}
 
@@ -50,6 +52,7 @@ struct VulkanDeviceImpl : public IRender::Device {
 	Int2 resolution;
 	uint32_t queueFamily;
 	VkSwapchainKHR swapChain;
+	VkDescriptorPool descriptorPool;
 
 	std::vector<FrameData> frames;
 	std::vector<VulkanQueueImpl*> deletedQueues;
@@ -179,8 +182,8 @@ IRender::Device* ZRenderVulkan::CreateDevice(const String& description) {
 				return nullptr;
 			}
 
-			int deviceExtensionCount = 1;
-			const char* deviceExtensions[] = { "VK_KHR_swapchain" };
+			const char* deviceExtensions[] = { "VK_KHR_swapchain", "VK_NV_glsl_shader" };
+			int deviceExtensionCount = sizeof(deviceExtensions) / sizeof(deviceExtensions[0]);
 			const float queuePriority[] = { 1.0f };
 
 			VkDeviceQueueCreateInfo queueInfo[1] = {};
@@ -204,7 +207,31 @@ IRender::Device* ZRenderVulkan::CreateDevice(const String& description) {
 			VkBool32 res;
 			vkGetPhysicalDeviceSurfaceSupportKHR(device, family, (VkSurfaceKHR)surface, &res);
 
-			VulkanDeviceImpl* impl = new VulkanDeviceImpl(allocator, device, logicDevice, family, queue);
+			VkDescriptorPoolSize poolSize[] =
+			{
+				{ VK_DESCRIPTOR_TYPE_SAMPLER, MAX_DESCRIPTOR_SIZE },
+				{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, MAX_DESCRIPTOR_SIZE },
+				{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, MAX_DESCRIPTOR_SIZE },
+				{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, MAX_DESCRIPTOR_SIZE },
+				{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, MAX_DESCRIPTOR_SIZE },
+				{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, MAX_DESCRIPTOR_SIZE },
+				{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, MAX_DESCRIPTOR_SIZE },
+				{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, MAX_DESCRIPTOR_SIZE },
+				{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, MAX_DESCRIPTOR_SIZE },
+				{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, MAX_DESCRIPTOR_SIZE },
+				{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, MAX_DESCRIPTOR_SIZE }
+			};
+
+			VkDescriptorPool descriptorPool;
+			VkDescriptorPoolCreateInfo poolInfo = {};
+			poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+			poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+			poolInfo.maxSets = MAX_DESCRIPTOR_SIZE * sizeof(poolSize);
+			poolInfo.poolSizeCount = (uint32_t)sizeof(poolSize);
+			poolInfo.pPoolSizes = poolSize;
+			Verify("create descriptor pool", vkCreateDescriptorPool(logicDevice, &poolInfo, allocator, &descriptorPool));
+
+			VulkanDeviceImpl* impl = new VulkanDeviceImpl(allocator, device, logicDevice, family, queue, descriptorPool);
 
 			int w, h;
 			glfwGetFramebufferSize(window, &w, &h);
@@ -234,7 +261,9 @@ void ZRenderVulkan::DeleteDevice(IRender::Device* device) {
 	VulkanDeviceImpl* impl = static_cast<VulkanDeviceImpl*>(device);
 	CleanupFrameData(allocator, impl);
 	vkDestroySwapchainKHR(impl->device, impl->swapChain, allocator);
+	vkDestroyDescriptorPool(impl->device, impl->descriptorPool, allocator);
 	vkDestroyDevice(impl->device, allocator);
+
 	delete impl;
 }
 
@@ -376,6 +405,7 @@ void ZRenderVulkan::FlushQueue(Queue* q) {
 
 struct ResourceImplVulkanBase : public IRender::Resource {
 	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* description) = 0;
+	virtual void Delete(VulkanQueueImpl* queue) = 0;
 };
 
 template <class T>
@@ -411,20 +441,23 @@ struct ResourceImplVulkan<IRender::Resource::TextureDescription> : public Resour
 	~ResourceImplVulkan() {
 	}
 
-	void Clear() {
-		if (device != 0 && image != 0) {
+	void Clear(VulkanDeviceImpl* device) {
+		if (image != 0) {
 			vkDestroyImage(device->device, image, device->allocator);
 			image = 0;
 		}
 	}
 
+	virtual void Delete(VulkanQueueImpl* queue) override {
+		Clear(queue->device);
+	}
+
 	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* d) override {
-		assert(device == 0 || device == queue->device);
-		device = queue->device;
+		VulkanDeviceImpl* device = queue->device;
 		IRender::Resource::TextureDescription& desc = *static_cast<IRender::Resource::TextureDescription*>(d);
 
 		if (image == 0 || cacheDescription.dimension != desc.dimension || cacheDescription.state != desc.state) {
-			Clear();
+			Clear(device);
 
 			VkImageCreateInfo info = {};
 			info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -543,7 +576,6 @@ struct ResourceImplVulkan<IRender::Resource::TextureDescription> : public Resour
 		UpdateDescription(std::move(desc));
 	}
 
-	VulkanDeviceImpl* device;
 	VkImage image;
 };
 
@@ -551,21 +583,25 @@ template <>
 struct ResourceImplVulkan<IRender::Resource::BufferDescription> : public ResourceImplVulkanDesc< IRender::Resource::BufferDescription> {
 	ResourceImplVulkan() : buffer(0) {}
 	~ResourceImplVulkan() {
-		Clear();
+		assert(buffer == 0);
 	}
 
-	void Clear() {
-		if (device != 0 && buffer != 0) {
+	void Clear(VulkanDeviceImpl* device) {
+		if (buffer != 0) {
 			vkDestroyBuffer(device->device, buffer, device->allocator);
 		}
 	}
 
+	virtual void Delete(VulkanQueueImpl* queue) override {
+		Clear(queue->device);
+	}
+
 	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* d) override {
+		VulkanDeviceImpl* device = queue->device;
 		if (buffer != 0) {
-			Clear();
+			Clear(device);
 		}
 
-		device = queue->device;
 		VkBufferCreateInfo createInfo = {};
 		createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 		IRender::Resource::BufferDescription& desc = *static_cast<IRender::Resource::BufferDescription*>(d);
@@ -615,19 +651,171 @@ struct ResourceImplVulkan<IRender::Resource::BufferDescription> : public Resourc
 		UpdateDescription(std::move(desc));
 	}
 
-	VulkanDeviceImpl* device;
 	VkBuffer buffer;
 };
 
 template <>
 struct ResourceImplVulkan<IRender::Resource::ShaderDescription> : public ResourceImplVulkanBase {
-	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* description) override {
+	ResourceImplVulkan() : pipeline(0), descriptorSetLayout(0), descriptorSet(0), pipelineLayout(0) {}
+	virtual void Delete(VulkanQueueImpl* queue) override {}
 
+	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* d) override {
+		VkShaderModule shaderModules[IRender::Resource::ShaderDescription::Stage::END] = { 0 };
+		IRender::Resource::ShaderDescription& pass = *static_cast<IRender::Resource::ShaderDescription*>(d);
+		VulkanDeviceImpl* device = queue->device;
+
+		std::vector<IShader*> shaders[Resource::ShaderDescription::END];
+		String common;
+		for (size_t i = 0; i < pass.entries.size(); i++) {
+			const std::pair<Resource::ShaderDescription::Stage, IShader*>& component = pass.entries[i];
+
+			if (component.first == Resource::ShaderDescription::GLOBAL) {
+				common += component.second->GetShaderText();
+			} else {
+				shaders[component.first].emplace_back(component.second);
+			}
+		}
+
+		std::vector<VkDescriptorSetLayoutBinding> textureBindings;
+		std::vector<VkSampler> samplers;
+
+		for (size_t k = 0; k < Resource::ShaderDescription::END; k++) {
+			std::vector<IShader*>& pieces = shaders[k];
+			if (pieces.empty()) continue;
+
+			String body = "void main(void) {\n";
+			String head = "";
+			uint32_t inputIndex = 0, outputIndex = 0, textureIndex = 0;
+			for (size_t n = 0; n < pieces.size(); n++) {
+				IShader* shader = pieces[n];
+				// Generate declaration
+				GLSLShaderGenerator declaration((Resource::ShaderDescription::Stage)k, inputIndex, outputIndex, textureIndex);
+				(*shader)(declaration);
+				declaration.Complete();
+
+				body += declaration.initialization + shader->GetShaderText() + declaration.finalization + "\n";
+				head += declaration.declaration;
+
+				/*
+				for (size_t k = 0; k < declaration.bufferBindings.size(); k++) {
+					std::pair<const IShader::BindBuffer*, String>& item = declaration.bufferBindings[k];
+					if (item.first->description.usage == IRender::Resource::BufferDescription::UNIFORM) {
+						uniformBufferNames.emplace_back(item.second);
+					} else if (item.first->description.usage == IRender::Resource::BufferDescription::STORAGE) {
+						sharedBufferNames.emplace_back(item.second);
+					}
+				}*/
+
+				size_t startSamplerIndex = samplers.size();
+				for (size_t m = 0; m < declaration.textureBindings.size(); m++) {
+					std::pair<const IShader::BindTexture*, String>& item = declaration.textureBindings[m];
+					const IRender::Resource::TextureDescription::State& state = item.first->description.state;
+
+					VkSamplerCreateInfo info = {};
+					info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+					info.minFilter = info.magFilter = state.sample == IRender::Resource::TextureDescription::POINT ? VK_FILTER_NEAREST : VK_FILTER_LINEAR;
+					info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST; // not tri-filter
+					info.addressModeV = info.addressModeU = info.addressModeW = state.wrap ? VK_SAMPLER_ADDRESS_MODE_REPEAT : VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+					info.minLod = -1000;
+					info.maxLod = 1000;
+					info.maxAnisotropy = 4.0f;
+					info.anisotropyEnable = state.sample == IRender::Resource::TextureDescription::ANSOTRIPIC;
+
+					VkSampler sampler;
+					Verify("create sampler", vkCreateSampler(device->device, &info, device->allocator, &sampler));
+					samplers.emplace_back(sampler);
+				}
+
+				if (!declaration.textureBindings.empty()) {
+					VkDescriptorSetLayoutBinding binding;
+					binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+					binding.descriptorCount = (uint32_t)declaration.textureBindings.size();
+					binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+					switch (k) {
+					case IRender::Resource::ShaderDescription::VERTEX:
+						binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+						break;
+					case IRender::Resource::ShaderDescription::TESSELLATION_CONTROL:
+						binding.stageFlags = VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+						break;
+					case IRender::Resource::ShaderDescription::TESSELLATION_EVALUATION:
+						binding.stageFlags = VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+						break;
+					case IRender::Resource::ShaderDescription::GEOMETRY:
+						binding.stageFlags = VK_SHADER_STAGE_GEOMETRY_BIT;
+						break;
+					case IRender::Resource::ShaderDescription::FRAGMENT:
+						binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+						break;
+					case IRender::Resource::ShaderDescription::COMPUTE:
+						binding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+						break;
+					}
+
+					binding.pImmutableSamplers = reinterpret_cast<VkSampler*>(startSamplerIndex);
+					textureBindings.emplace_back(binding);
+				}
+			}
+
+			body += "\n}\n"; // make a call to our function
+
+			String fullShader = GLSLShaderGenerator::GetFrameCode() + common + head + body;
+
+			// TODO: fill spirv
+			VkShaderModuleCreateInfo createInfo = {};
+			createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+			createInfo.codeSize = fullShader.size();
+			createInfo.pCode = reinterpret_cast<const uint32_t*>(fullShader.c_str());
+
+			Verify("create shader module", vkCreateShaderModule(device->device, &createInfo, device->allocator, &shaderModules[k]));
+
+			if (pass.compileCallback) {
+				pass.compileCallback(pass, (IRender::Resource::ShaderDescription::Stage)k, "", fullShader);
+			}
+		}
+
+		// fix sampler pointers
+		for (size_t j = 0; j < textureBindings.size(); j++) {
+			textureBindings[j].pImmutableSamplers = &samplers[(uint32_t)textureBindings[j].pImmutableSamplers];
+		}
+
+		if (!textureBindings.empty()) {
+			VkDescriptorSetLayoutCreateInfo info = {};
+			info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+			info.bindingCount = (uint32_t)textureBindings.size();
+			info.pBindings = &textureBindings[0];
+			Verify("create descriptor set layout", vkCreateDescriptorSetLayout(device->device, &info, device->allocator, &descriptorSetLayout));
+
+			VkDescriptorSetAllocateInfo allocInfo = {};
+			allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+			allocInfo.descriptorPool = device->descriptorPool;
+			allocInfo.descriptorSetCount = 1;
+			allocInfo.pSetLayouts = &descriptorSetLayout;
+			Verify("allocate descriptor set", vkAllocateDescriptorSets(device->device, &allocInfo, &descriptorSet));
+
+			// TODO: push constant range
+			// VkPushConstantRange 
+			VkPipelineLayoutCreateInfo layoutInfo = {};
+			layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+			layoutInfo.setLayoutCount = 1;
+			layoutInfo.pSetLayouts = &descriptorSetLayout;
+			layoutInfo.pushConstantRangeCount = 0;
+			layoutInfo.pPushConstantRanges = nullptr;
+			Verify("create pipeline layout", vkCreatePipelineLayout(device->device, &layoutInfo, device->allocator, &pipelineLayout));
+
+			// TOIDO: pipoeline shader stage
+		}
 	}
+
+	VkPipeline pipeline;
+	VkDescriptorSetLayout descriptorSetLayout;
+	VkDescriptorSet descriptorSet;
+	VkPipelineLayout pipelineLayout;
 };
 
 template <>
 struct ResourceImplVulkan<IRender::Resource::RenderStateDescription> : public ResourceImplVulkanBase {
+	virtual void Delete(VulkanQueueImpl* queue) override {}
 	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* description) override {
 
 	}
@@ -635,6 +823,7 @@ struct ResourceImplVulkan<IRender::Resource::RenderStateDescription> : public Re
 
 template <>
 struct ResourceImplVulkan<IRender::Resource::RenderTargetDescription> : public ResourceImplVulkanBase {
+	virtual void Delete(VulkanQueueImpl* queue) override {}
 	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* description) override {
 
 	}
@@ -642,6 +831,7 @@ struct ResourceImplVulkan<IRender::Resource::RenderTargetDescription> : public R
 
 template <>
 struct ResourceImplVulkan<IRender::Resource::ClearDescription> : public ResourceImplVulkanBase {
+	virtual void Delete(VulkanQueueImpl* queue) override {}
 	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* description) override {
 
 	}
@@ -649,6 +839,7 @@ struct ResourceImplVulkan<IRender::Resource::ClearDescription> : public Resource
 
 template <>
 struct ResourceImplVulkan<IRender::Resource::DrawCallDescription> : public ResourceImplVulkanBase {
+	virtual void Delete(VulkanQueueImpl* queue) override {}
 	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* description) override {
 
 	}

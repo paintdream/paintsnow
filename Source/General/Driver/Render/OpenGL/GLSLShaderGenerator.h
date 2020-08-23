@@ -26,10 +26,10 @@ namespace PaintsNow {
 		uint32_t& outputIndex;
 		uint32_t& textureIndex;
 
-		std::vector<String> textureNames;
-		std::vector<String> uniformBufferNames;
-		std::vector<String> sharedBufferNames;
-		std::vector<const IShader::BindBuffer*> orderedBuffers;
+		std::vector<std::pair<const IShader::BindBuffer*, String> > bufferBindings;
+		std::vector<std::pair<const IShader::BindTexture*, String> > textureBindings;
+
+	protected:
 		std::map<const IShader::BindBuffer*, std::pair<String, String> > mapBufferDeclaration;
 		std::map<const IShader::BindBuffer*, bool> mapBufferEnabled;
 	};

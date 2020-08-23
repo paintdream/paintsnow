@@ -41,8 +41,8 @@ const String& GLSLShaderGenerator::GetFrameCode() {
 }
 
 void GLSLShaderGenerator::Complete() {
-	for (size_t i = 0; i < orderedBuffers.size(); i++) {
-		const IShader::BindBuffer* buffer = orderedBuffers[i];
+	for (size_t i = 0; i < bufferBindings.size(); i++) {
+		const IShader::BindBuffer* buffer = bufferBindings[i].first;
 		const std::pair<String, String>& info = mapBufferDeclaration[buffer];
 		switch (buffer->description.usage) {
 		case IRender::Resource::BufferDescription::VERTEX:
@@ -263,12 +263,11 @@ void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refT
 			const IShader::BindBuffer* bindBuffer = static_cast<const IShader::BindBuffer*>(&s);
 			mapBufferDeclaration[bindBuffer] = std::make_pair(String(name), String(""));
 			mapBufferEnabled[bindBuffer] = enabled;
-			if (bindBuffer->description.usage == IRender::Resource::BufferDescription::UNIFORM) {
-				uniformBufferNames.emplace_back(String("_") + name);
-			} else if (bindBuffer->description.usage == IRender::Resource::BufferDescription::STORAGE) {
-				sharedBufferNames.emplace_back(String("_") + name);
+			if (bindBuffer->description.usage == IRender::Resource::BufferDescription::UNIFORM || IRender::Resource::BufferDescription::STORAGE) {
+				bufferBindings.emplace_back(std::make_pair(bindBuffer, String("_") + name));
+			} else {
+				bufferBindings.emplace_back(std::make_pair(bindBuffer, name));
 			}
-			orderedBuffers.emplace_back(bindBuffer);
 		} else if (typeID == uniqueBindTexture) {
 			assert(enabled);
 			const IShader::BindTexture* bindTexture = static_cast<const IShader::BindTexture*>(&s);
@@ -278,7 +277,7 @@ void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refT
 
 			// declaration += String("layout(location = ") + ToString(textureIndex++) + ") uniform " + samplerTypes[bindTexture->description.state.type] + (bindTexture->description.dimension.z() != 0 && bindTexture->description.state.type != IRender::Resource::TextureDescription::TEXTURE_3D ? "Array " : " ") + name + ";\n";
 			declaration += String("uniform ") + samplerTypes[bindTexture->description.state.type] + (bindTexture->description.dimension.z() != 0 && bindTexture->description.state.type != IRender::Resource::TextureDescription::TEXTURE_3D ? "Array " : " ") + name + ";\n";
-			textureNames.push_back(name);
+			textureBindings.emplace_back(std::make_pair(bindTexture, name));
 			textureIndex++;
 		}
 	}
