@@ -58,7 +58,7 @@ struct FrameData {
 
 struct VulkanQueueImpl;
 struct VulkanDeviceImpl : public IRender::Device {
-	VulkanDeviceImpl(VkAllocationCallbacks* alloc, VkPhysicalDevice phy, VkDevice dev, uint32_t family, VkQueue q, VkDescriptorPool pool) : allocator(alloc), physicalDevice(phy), device(dev), resolution(0, 0), queueFamily(family), queue(q), swapChain(0), descriptorPool(pool) {
+	VulkanDeviceImpl(VkAllocationCallbacks* alloc, VkPhysicalDevice phy, VkDevice dev, uint32_t family, VkQueue q, VkDescriptorPool pool) : allocator(alloc), physicalDevice(phy), device(dev), resolution(0, 0), queueFamily(family), queue(q), swapChain(VK_NULL_HANDLE), descriptorPool(pool) {
 		critical.store(0, std::memory_order_release);
 	}
 
@@ -126,17 +126,17 @@ struct VulkanQueueImpl : public IRender::Queue, public TPool<VulkanQueueImpl, Vk
 	}
 
 	void BeginFrame() {
-		preparedCommandBuffers.Push((VkCommandBuffer)0);
-		transientDataBuffers.Push((VkBuffer)0);
+		preparedCommandBuffers.Push((VkCommandBuffer)VK_NULL_HANDLE);
+		transientDataBuffers.Push((VkBuffer)VK_NULL_HANDLE);
 	}
 
 	void EndFrame() {
-		for (VkCommandBuffer commandBuffer = preparedCommandBuffers.Top(); commandBuffer != 0; commandBuffer = preparedCommandBuffers.Top()) {
+		for (VkCommandBuffer commandBuffer = preparedCommandBuffers.Top(); commandBuffer != VK_NULL_HANDLE; commandBuffer = preparedCommandBuffers.Top()) {
 			Release(commandBuffer);
 			preparedCommandBuffers.Pop();
 		}
 
-		for (VkBuffer buffer = transientDataBuffers.Top(); buffer != 0; buffer = transientDataBuffers.Top()) {
+		for (VkBuffer buffer = transientDataBuffers.Top(); buffer != VK_NULL_HANDLE; buffer = transientDataBuffers.Top()) {
 			vkDestroyBuffer(device->device, buffer, device->allocator);
 			transientDataBuffers.Pop();
 		}
@@ -148,6 +148,7 @@ struct VulkanQueueImpl : public IRender::Queue, public TPool<VulkanQueueImpl, Vk
 	uint32_t commandCount;
 
 	IRender::Resource::RenderStateDescription renderStateDescription;
+	IRender::Resource::RenderTargetDescription renderTargetDescription;
 	TQueueList<VkBuffer, 4> transientDataBuffers;
 	TQueueList<VkCommandBuffer, 4> preparedCommandBuffers;
 	TQueueList<ResourceImplVulkanBase*> deletedResources;
@@ -298,7 +299,7 @@ void ZRenderVulkan::DeleteDevice(IRender::Device* device) {
 void ZRenderVulkan::SetDeviceResolution(IRender::Device* dev, const Int2& resolution) {
 	VulkanDeviceImpl* impl = static_cast<VulkanDeviceImpl*>(dev);
 	VkSwapchainKHR oldSwapChain = impl->swapChain;
-	impl->swapChain = 0;
+	impl->swapChain = VK_NULL_HANDLE;
 
 	// reset device swap chain
 	VkDevice device = impl->device;
@@ -451,14 +452,14 @@ static VkFormat TranslateFormat(uint32_t format, uint32_t layout) {
 
 template <>
 struct ResourceImplVulkan<IRender::Resource::TextureDescription> : public ResourceImplVulkanDesc<IRender::Resource::TextureDescription> {
-	ResourceImplVulkan() : image(0) {}
+	ResourceImplVulkan() : image(VK_NULL_HANDLE) {}
 	~ResourceImplVulkan() {
 	}
 
 	void Clear(VulkanDeviceImpl* device) {
-		if (image != 0) {
+		if (image != VK_NULL_HANDLE) {
 			vkDestroyImage(device->device, image, device->allocator);
-			image = 0;
+			image = VK_NULL_HANDLE;
 		}
 	}
 
@@ -595,14 +596,15 @@ struct ResourceImplVulkan<IRender::Resource::TextureDescription> : public Resour
 
 template <>
 struct ResourceImplVulkan<IRender::Resource::BufferDescription> : public ResourceImplVulkanDesc<IRender::Resource::BufferDescription> {
-	ResourceImplVulkan() : buffer(0) {}
+	ResourceImplVulkan() : buffer(VK_NULL_HANDLE) {}
 	~ResourceImplVulkan() {
-		assert(buffer == 0);
+		assert(buffer == VK_NULL_HANDLE);
 	}
 
 	void Clear(VulkanDeviceImpl* device) {
-		if (buffer != 0) {
+		if (buffer != VK_NULL_HANDLE) {
 			vkDestroyBuffer(device->device, buffer, device->allocator);
+			buffer = VK_NULL_HANDLE;
 		}
 	}
 
@@ -612,7 +614,7 @@ struct ResourceImplVulkan<IRender::Resource::BufferDescription> : public Resourc
 
 	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* d) override {
 		VulkanDeviceImpl* device = queue->device;
-		if (buffer != 0) {
+		if (buffer != VK_NULL_HANDLE) {
 			Clear(device);
 		}
 
@@ -771,7 +773,9 @@ static uint32_t ComputeBufferStride(const IRender::Resource::BufferDescription& 
 
 template <>
 struct ResourceImplVulkan<IRender::Resource::ShaderDescription> : public ResourceImplVulkanBase {
-	ResourceImplVulkan() : descriptorSetLayout(0), descriptorSet(0), pipelineLayout(0) {}
+	ResourceImplVulkan() : descriptorSetLayout(VK_NULL_HANDLE), descriptorSet(VK_NULL_HANDLE), pipelineLayout(VK_NULL_HANDLE) {
+		memset(shaderModules, 0, sizeof(shaderModules));
+	}
 
 	void Clear(VulkanDeviceImpl* device) {
 		if (pipelineLayout) {
@@ -784,6 +788,13 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> : public Resourc
 
 		if (descriptorSet) {
 			vkFreeDescriptorSets(device->device, device->descriptorPool, 1, &descriptorSet);
+		}
+
+		for (size_t i = 0; i < sizeof(shaderModules) / sizeof(shaderModules[0]); i++) {
+			VkShaderModule m = shaderModules[i];
+			if (m) {
+				vkDestroyShaderModule(device->device, m, device->allocator);
+			}
 		}
 	}
 
@@ -799,18 +810,6 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> : public Resourc
 			return it->second;
 		}
 
-		// create state instance
-		VkPipelineColorBlendAttachmentState blendState = {};
-		blendState.blendEnable = renderState.blend;
-		if (blendState.blendEnable) {
-			blendState.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-			blendState.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-			blendState.colorBlendOp = VK_BLEND_OP_ADD;
-			blendState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-			blendState.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
-			blendState.alphaBlendOp = VK_BLEND_OP_ADD;
-			blendState.colorWriteMask = renderState.colorWrite ? VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT : 0;
-		}
 
 		VkPipelineDepthStencilStateCreateInfo depthInfo = {};
 		depthInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
@@ -832,8 +831,8 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> : public Resourc
 
 		std::vector<IRender::Resource::DrawCallDescription::BufferRange>& bufferResources = drawCall->cacheDescription.bufferResources;
 		uint32_t binding = 0;
-		std::vector<std::pair<VkVertexInputBindingDescription, std::vector<VkVertexInputAttributeDescription> > > bindingDescriptions;
-		bindingDescriptions.reserve(drawCall->GetVertexBufferCount());
+		std::vector<VkVertexInputBindingDescription> inputBindingDescriptions;
+		std::vector<VkVertexInputAttributeDescription> inputAttributeDescriptions;
 		uint32_t location = 0;
 
 		for (size_t k = 0; k < bufferResources.size(); k++) {
@@ -844,11 +843,11 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> : public Resourc
 			uint32_t bindingIndex = drawCall->GetVertexBufferBindingIndex(k);
 			if (k == bindingIndex) {
 				VkVertexInputBindingDescription bindingDesc = {};
-				bindingDesc.binding = bindingDescriptions.size();
+				bindingDesc.binding = inputBindingDescriptions.size();
 				assert(bindingDesc.binding == k);
 				bindingDesc.inputRate = desc.usage == IRender::Resource::BufferDescription::INSTANCED ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX;
 				bindingDesc.stride = desc.stride == 0 ? ComputeBufferStride(desc) : desc.stride;
-				bindingDescriptions.emplace_back(std::make_pair(bindingDesc, std::vector<VkVertexInputAttributeDescription>()));
+				inputBindingDescriptions.emplace_back(bindingDesc);
 			}
 
 			// process component > 4
@@ -857,12 +856,85 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> : public Resourc
 				attributeDesc.location = location++;
 				attributeDesc.binding = bindingIndex;
 				attributeDesc.format = TranslateFormat(n + 4 >= desc.component ? desc.component % 4 : 4, desc.format);
-				bindingDescriptions[bindingIndex].second.emplace_back(std::move(attributeDesc));
+				inputAttributeDescriptions.emplace_back(std::move(attributeDesc));
 			}
 		}
 
-		// TODO: generate input states
+		assert(!inputBindingDescriptions.empty());
+		assert(!inputAttributeDescriptions.empty());
 
+		VkPipelineVertexInputStateCreateInfo vertexInfo = {};
+		vertexInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+		vertexInfo.vertexBindingDescriptionCount = safe_cast<uint32_t>(inputBindingDescriptions.size());
+		vertexInfo.pVertexBindingDescriptions = &inputBindingDescriptions[0];
+		vertexInfo.vertexAttributeDescriptionCount = safe_cast<uint32_t>(inputAttributeDescriptions.size());
+		vertexInfo.pVertexAttributeDescriptions = &inputAttributeDescriptions[0];
+
+		VkPipelineInputAssemblyStateCreateInfo iaInfo = {};
+		iaInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+		iaInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+
+		VkPipelineViewportStateCreateInfo viewportInfo = {};
+		viewportInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+		viewportInfo.viewportCount = 1;
+		viewportInfo.scissorCount = 1;
+
+		VkPipelineRasterizationStateCreateInfo rasterInfo = {};
+		rasterInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+		rasterInfo.polygonMode = renderState.fill ? VK_POLYGON_MODE_FILL : VK_POLYGON_MODE_LINE;
+		rasterInfo.cullMode = renderState.cull ? renderState.cullFrontFace ? VK_CULL_MODE_FRONT_BIT : VK_CULL_MODE_BACK_BIT : VK_CULL_MODE_NONE;
+		rasterInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+		rasterInfo.lineWidth = 1.0f;
+
+		VkPipelineMultisampleStateCreateInfo msInfo = {};
+		msInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+		// TODO: MSAA
+		msInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+
+		VkPipelineColorBlendStateCreateInfo blendInfo;
+		blendInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+		blendInfo.attachmentCount = safe_cast<uint32_t>(queue->renderTargetDescription.colorBufferStorages.size());
+		assert(blendInfo.attachmentCount != 0);
+		// TODO: different blend operations
+		// create state instance
+		VkPipelineColorBlendAttachmentState blendState = {};
+		blendState.blendEnable = renderState.blend;
+		if (blendState.blendEnable) {
+			blendState.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+			blendState.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+			blendState.colorBlendOp = VK_BLEND_OP_ADD;
+			blendState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+			blendState.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+			blendState.alphaBlendOp = VK_BLEND_OP_ADD;
+			blendState.colorWriteMask = renderState.colorWrite ? VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT : 0;
+		}
+		std::vector<VkPipelineColorBlendAttachmentState> blendStates(blendInfo.attachmentCount, blendState);
+		blendInfo.pAttachments = &blendStates[0];
+
+		VkDynamicState dynamicStates[2] = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+		VkPipelineDynamicStateCreateInfo dynamicState = {};
+		dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+		dynamicState.dynamicStateCount = sizeof(dynamicStates) / sizeof(dynamicStates[0]);
+		dynamicState.pDynamicStates = dynamicStates;
+
+		VkGraphicsPipelineCreateInfo info = {};
+		info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+		info.flags = 0;
+		info.stageCount = safe_cast<uint32_t>(shaderStageCreateInfos.size());
+		info.pStages = &shaderStageCreateInfos[0];
+		info.pVertexInputState = &vertexInfo;
+		info.pViewportState = &viewportInfo;
+		info.pRasterizationState = &rasterInfo;
+		info.pMultisampleState = &msInfo;
+		info.pDepthStencilState = &depthInfo;
+		info.pColorBlendState = &blendInfo;
+		info.pDynamicState = &dynamicState;
+		info.layout = pipelineLayout;
+		info.renderPass = VK_NULL_HANDLE; // TODO: Render Pass
+
+		PipelineInstance instance;
+		VulkanDeviceImpl* device = queue->device;
+		Verify("create graphics pipelines", vkCreateGraphicsPipelines(device->device, VK_NULL_HANDLE, 1, &info, device->allocator, &instance.pipeline));
 	}
 
 	virtual void Delete(VulkanQueueImpl* queue) override {
@@ -870,7 +942,6 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> : public Resourc
 	}
 
 	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* d) override {
-		VkShaderModule shaderModules[IRender::Resource::ShaderDescription::Stage::END] = { 0 };
 		IRender::Resource::ShaderDescription& pass = *static_cast<IRender::Resource::ShaderDescription*>(d);
 		VulkanDeviceImpl* device = queue->device;
 
@@ -887,7 +958,6 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> : public Resourc
 		}
 
 		std::vector<VkDescriptorSetLayoutBinding> textureBindings;
-		std::vector<VkPipelineShaderStageCreateInfo> shaderStageCreateInfos;
 		std::vector<VkSampler> samplers;
 
 		for (size_t k = 0; k < Resource::ShaderDescription::END; k++) {
@@ -1039,13 +1109,14 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> : public Resourc
 		layoutInfo.pushConstantRangeCount = 0;
 		layoutInfo.pPushConstantRanges = nullptr;
 		Verify("create pipeline layout", vkCreatePipelineLayout(device->device, &layoutInfo, device->allocator, &pipelineLayout));
-
-		// vertex buffers
 	}
 
 	VkDescriptorSetLayout descriptorSetLayout;
 	VkDescriptorSet descriptorSet;
 	VkPipelineLayout pipelineLayout;
+	VkShaderModule shaderModules[IRender::Resource::ShaderDescription::Stage::END];
+
+	std::vector<VkPipelineShaderStageCreateInfo> shaderStageCreateInfos;
 	std::vector<IRender::Resource::BufferDescription> bufferDescriptions;
 	std::vector<std::key_value<PipelineKey, PipelineInstance> > stateInstances;
 };
@@ -1061,7 +1132,9 @@ struct ResourceImplVulkan<IRender::Resource::RenderStateDescription> : public Re
 template <>
 struct ResourceImplVulkan<IRender::Resource::RenderTargetDescription> : public ResourceImplVulkanBase {
 	virtual void Delete(VulkanQueueImpl* queue) override {}
-	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* description) override {}
+	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* description) override {
+		queue->renderTargetDescription = *static_cast<IRender::Resource::RenderTargetDescription*>(description);
+	}
 };
 
 template <>
