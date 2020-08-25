@@ -8,9 +8,12 @@ GeometryBufferRenderStage::GeometryBufferRenderStage(const String& s) : BaseClas
 	BaseColorOcclusion(renderTargetDescription.colorBufferStorages[0]),
 	NormalRoughnessMetallic(renderTargetDescription.colorBufferStorages[1]),
 	Depth(renderTargetDescription.depthStencilStorage) {
-	clearDescription.clearColorBit = IRender::Resource::ClearDescription::CLEAR;
-	clearDescription.clearDepthBit = IRender::Resource::ClearDescription::CLEAR;
-	clearDescription.clearStencilBit = IRender::Resource::ClearDescription::CLEAR;
+	renderTargetDescription.colorBufferStorages[0].loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
+	renderTargetDescription.colorBufferStorages[0].storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
+	renderTargetDescription.colorBufferStorages[1].loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
+	renderTargetDescription.colorBufferStorages[1].storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
+	renderTargetDescription.depthStencilStorage.loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
+	renderTargetDescription.depthStencilStorage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 
 	renderStateDescription.depthTest = IRender::Resource::RenderStateDescription::GREATER;
 	renderStateDescription.depthWrite = 1;

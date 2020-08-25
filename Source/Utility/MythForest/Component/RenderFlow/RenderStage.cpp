@@ -4,7 +4,7 @@
 
 using namespace PaintsNow;
 
-RenderStage::RenderStage(uint32_t colorAttachmentCount) : renderState(nullptr), renderTarget(nullptr), clear(nullptr), drawCallResource(nullptr), resolutionShift(0, 0) {
+RenderStage::RenderStage(uint32_t colorAttachmentCount) : renderState(nullptr), renderTarget(nullptr), drawCallResource(nullptr), resolutionShift(0, 0) {
 	Flag().fetch_or(RENDERSTAGE_ADAPT_MAIN_RESOLUTION, std::memory_order_acquire);
 
 	// Initialize state
@@ -21,15 +21,16 @@ RenderStage::RenderStage(uint32_t colorAttachmentCount) : renderState(nullptr), 
 	s.stencilValue = 0;
 	s.stencilMask = 0;
 
-	IRender::Resource::ClearDescription& c = clearDescription;
-	// do clear setting ...
-	uint8_t clearMask = IRender::Resource::ClearDescription::DISCARD_LOAD | IRender::Resource::ClearDescription::DISCARD_STORE;
-	c.clearColorBit = IRender::Resource::ClearDescription::DISCARD_LOAD;
-	c.clearDepthBit = clearMask;
-	c.clearStencilBit = clearMask;
-
 	IRender::Resource::RenderTargetDescription& t = renderTargetDescription;
 	t.colorBufferStorages.resize(colorAttachmentCount);
+	for (size_t i = 0; i < t.colorBufferStorages.size(); i++) {
+		IRender::Resource::RenderTargetDescription::Storage& s = t.colorBufferStorages[i];
+		s.loadOp = IRender::Resource::RenderTargetDescription::DISCARD;
+		s.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
+	}
+
+	t.depthStencilStorage.loadOp = IRender::Resource::RenderTargetDescription::DISCARD;
+	t.depthStencilStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
 }
 
 void RenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
@@ -42,8 +43,6 @@ void RenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 
 	renderState = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_RENDERSTATE);
 	render.UploadResource(queue, renderState, &renderStateDescription);
-	clear = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_CLEAR);
-	render.UploadResource(queue, clear, &clearDescription);
 	renderTarget = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_RENDERTARGET);
 }
 
@@ -130,10 +129,6 @@ void RenderStage::Uninitialize(Engine& engine, IRender::Queue* queue) {
 	if (renderTarget != nullptr) {
 		render.DeleteResource(queue, renderTarget);
 	}
-
-	if (clear != nullptr) {
-		render.DeleteResource(queue, clear);
-	}
 }
 
 void RenderStage::Tick(Engine& engine, IRender::Queue* queue) {
@@ -164,9 +159,8 @@ void RenderStage::Commit(Engine& engine, std::vector<FencedRenderQueue*>& queues
 	}
 
 	IRender& render = engine.interfaces.render;
-	render.ExecuteResource(instantQueue, renderTarget);
 	render.ExecuteResource(instantQueue, renderState);
-	render.ExecuteResource(instantQueue, clear);
+	render.ExecuteResource(instantQueue, renderTarget);
 }
 
 void RenderStage::SetMainResolution(Engine& engine, IRender::Queue* resourceQueue, uint32_t width, uint32_t height) {

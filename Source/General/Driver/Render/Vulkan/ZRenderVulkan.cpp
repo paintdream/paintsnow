@@ -1137,12 +1137,6 @@ struct ResourceImplVulkan<IRender::Resource::RenderTargetDescription> : public R
 	}
 };
 
-template <>
-struct ResourceImplVulkan<IRender::Resource::ClearDescription> : public ResourceImplVulkanBase {
-	virtual void Delete(VulkanQueueImpl* queue) override {}
-	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* description) override {}
-};
-
 // Resource
 IRender::Resource* ZRenderVulkan::CreateResource(Device* device, Resource::Type resourceType) {
 	switch (resourceType)
@@ -1157,8 +1151,6 @@ IRender::Resource* ZRenderVulkan::CreateResource(Device* device, Resource::Type 
 		return new ResourceImplVulkan<Resource::RenderStateDescription>();
 	case Resource::RESOURCE_RENDERTARGET:
 		return new ResourceImplVulkan<Resource::RenderTargetDescription>();
-	case Resource::RESOURCE_CLEAR:
-		return new ResourceImplVulkan<Resource::ClearDescription>();
 	case Resource::RESOURCE_DRAWCALL:
 		return new ResourceImplVulkan<Resource::DrawCallDescription>();
 	}

@@ -138,13 +138,17 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 		desc.colorBufferStorages.resize(1);
 		IRender::Resource::RenderTargetDescription::Storage& s = desc.colorBufferStorages[0];
 		s.resource = dummyColorAttachment->GetTexture();
+		// we don't care color
+		s.loadOp = IRender::Resource::RenderTargetDescription::DISCARD;
+		s.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
+		desc.depthStencilStorage.loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
+		desc.depthStencilStorage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 		desc.depthStencilStorage.resource = shadowGrid->texture->GetTexture();
 
 		IRender& render = engine.interfaces.render;
 		render.UploadResource(taskData->renderQueue, taskData->renderTargetResource, &desc);
-		render.ExecuteResource(taskData->renderQueue, taskData->renderTargetResource);
 		render.ExecuteResource(taskData->renderQueue, taskData->stateResource);
-		render.ExecuteResource(taskData->renderQueue, taskData->clearResource);
+		render.ExecuteResource(taskData->renderQueue, taskData->renderTargetResource);
 
 		CollectComponentsFromEntity(engine, *taskData, instanceData, captureData, shadowContext->rootEntity());
 	}
@@ -425,16 +429,6 @@ ShadowLayerConfig::TaskData::TaskData(Engine& engine, uint32_t warpCount, const 
 
 	renderQueue = render.CreateQueue(device);
 
-	IRender::Resource::ClearDescription cls;
-
-	// we don't care color
-	cls.clearColorBit = IRender::Resource::ClearDescription::DISCARD_LOAD | IRender::Resource::ClearDescription::DISCARD_STORE;
-	cls.clearStencilBit = IRender::Resource::ClearDescription::DISCARD_LOAD | IRender::Resource::ClearDescription::DISCARD_STORE;
-	cls.clearDepthBit = IRender::Resource::ClearDescription::CLEAR;
-
-	clearResource = render.CreateResource(device, IRender::Resource::RESOURCE_CLEAR);
-	render.UploadResource(renderQueue, clearResource, &cls);
-
 	IRender::Resource::RenderStateDescription rs;
 	rs.stencilReplacePass = 1;
 	rs.cull = 1;
@@ -460,7 +454,6 @@ void ShadowLayerConfig::TaskData::Destroy(IRender& render) {
 	}
 
 	render.DeleteResource(renderQueue, stateResource);
-	render.DeleteResource(renderQueue, clearResource);
 	render.DeleteResource(renderQueue, renderTargetResource);
 	render.DeleteQueue(renderQueue);
 }

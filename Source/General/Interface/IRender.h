@@ -30,7 +30,6 @@ namespace PaintsNow {
 				RESOURCE_SHADER,
 				RESOURCE_RENDERSTATE,
 				RESOURCE_RENDERTARGET,
-				RESOURCE_CLEAR,
 				RESOURCE_DRAWCALL,
 			};
 
@@ -165,32 +164,24 @@ namespace PaintsNow {
 				// attachments
 				UShort2Pair range;
 
+				enum {
+					DEFAULT,
+					CLEAR,
+					DISCARD,
+				};
+
 				struct Storage {
-					Storage() : mipLevel(0), resource(nullptr) {}
-					uint32_t mipLevel; // used for render to mip
+					Storage() : loadOp(DEFAULT), storeOp(DEFAULT), mipLevel(DEFAULT), resource(nullptr), clearColor(0, 0, 0, 0) {}
+
+					uint8_t loadOp;
+					uint8_t storeOp;
+					uint16_t mipLevel; // used for render to mip
 					Resource* resource;
+					Float4 clearColor;
 				};
 
 				Storage depthStencilStorage;
 				std::vector<Storage> colorBufferStorages; // 0 for backbuffer
-			};
-
-			struct ClearDescription : public Description {
-				enum {
-					CLEAR = 1 << 0,
-					DISCARD_LOAD = 1 << 1,
-					DISCARD_STORE = 1 << 2
-				};
-
-				ClearDescription() : clearColor(0, 0, 0, 0) {
-					clearColorBit = clearDepthBit = clearStencilBit = 0;
-				}
-
-				uint32_t clearColorBit : 4;
-				uint32_t clearDepthBit : 4;
-				uint32_t clearStencilBit : 4;
-				uint32_t reserved : 4;
-				Float4 clearColor;
 			};
 			
 			struct DrawCallDescription : public Description {

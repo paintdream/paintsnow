@@ -62,7 +62,6 @@ public:
 	IRender& render;
 	Int2 resolution;
 	IRender::Resource::RenderStateDescription lastRenderState;
-	IRender::Resource::ClearDescription lastClear;
 	GLuint lastProgramID;
 	GLuint lastFrameBufferID;
 };
@@ -1217,51 +1216,6 @@ struct ResourceImplOpenGL<IRender::Resource::RenderStateDescription> : public Re
 };
 
 template <>
-struct ResourceImplOpenGL<IRender::Resource::ClearDescription> : public ResourceBaseImplOpenGLDesc<IRender::Resource::ClearDescription> {
-	virtual IRender::Resource::Type GetType() const override { return RESOURCE_CLEAR; }
-	virtual void Upload(QueueImplOpenGL& queue) override {
-		UpdateDescription();
-	}
-
-	virtual void Download(QueueImplOpenGL& queue) override {}
-	virtual void Delete(QueueImplOpenGL& queue) override { delete this; }
-
-	virtual void Execute(QueueImplOpenGL& queue) override {
-		GL_GUARD();
-		IRender::Resource::ClearDescription& d = GetDescription();
-
-		const Float4& clearColor = d.clearColor;
-		if ((d.clearColorBit | d.clearDepthBit | d.clearStencilBit) & IRender::Resource::ClearDescription::CLEAR) {
-			glClearColor(clearColor.r(), clearColor.g(), clearColor.b(), clearColor.a());
-			glClearDepth(0.0f);
-			glClearStencil(0);
-			glClear((d.clearColorBit & IRender::Resource::ClearDescription::CLEAR ? GL_COLOR_BUFFER_BIT : 0)
-				| (d.clearDepthBit & IRender::Resource::ClearDescription::CLEAR ? GL_DEPTH_BUFFER_BIT : 0)
-				| (d.clearStencilBit & IRender::Resource::ClearDescription::CLEAR ? GL_STENCIL_BUFFER_BIT : 0));
-		}
-
-		if (queue.device->lastFrameBufferID != 0 && (d.clearColorBit & IRender::Resource::ClearDescription::DISCARD_LOAD)) {
-			GLErrorGuard subGuard;
-			static const GLuint buffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT0 + 1, GL_COLOR_ATTACHMENT0 + 2, GL_COLOR_ATTACHMENT0 + 3,
-				GL_COLOR_ATTACHMENT0 + 4, GL_COLOR_ATTACHMENT0 + 5, GL_COLOR_ATTACHMENT0 + 6, GL_COLOR_ATTACHMENT0 + 7 };
-			glInvalidateFramebuffer(GL_FRAMEBUFFER, 8, buffers);
-		}
-
-		if (queue.device->lastFrameBufferID != 0 && ((d.clearDepthBit & d.clearStencilBit) & IRender::Resource::ClearDescription::DISCARD_LOAD)) {
-			GLErrorGuard subGuard;
-			static const GLuint buffer = GL_DEPTH_STENCIL_ATTACHMENT;
-			glInvalidateFramebuffer(GL_FRAMEBUFFER, 1, &buffer);
-		}
-
-		// glDepthMask(d.clearDepthBit & IRender::Resource::ClearDescription::STORE ? GL_TRUE : GL_FALSE);
-		// glStencilMask(d.clearStencilBit & IRender::Resource::ClearDescription::STORE ? GL_TRUE : GL_FALSE);
-		// GLuint c = d.clearColorBit & IRender::Resource::ClearDescription::STORE ? GL_TRUE : GL_FALSE;
-		// glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-		queue.device->lastClear = d;
-	}
-};
-
-template <>
 struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> : public ResourceBaseImplOpenGLDesc<IRender::Resource::RenderTargetDescription> {
 	ResourceImplOpenGL() : vertexArrayID(0), frameBufferID(0) {}
 	virtual IRender::Resource::Type GetType() const override { return RESOURCE_RENDERTARGET; }
@@ -1296,7 +1250,6 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> : public R
 	virtual void Upload(QueueImplOpenGL& queue) override {
 		GL_GUARD();
 		Resource::RenderTargetDescription& d = UpdateDescription();
-		Resource::ClearDescription& lastClear = queue.device->lastClear;
 
 		// Not back buffer
 		if (vertexArrayID == 0) {
@@ -1361,26 +1314,60 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> : public R
 		assert(false);
 	}
 
+	static void SetupAttachment(IRender::Resource::RenderTargetDescription::Storage& d, GLuint id) {
+		if (d.loadOp == IRender::Resource::RenderTargetDescription::CLEAR) {
+			glDrawBuffer(id);
+			glClearColor(d.clearColor.r(), d.clearColor.g(), d.clearColor.b(), d.clearColor.a());
+			glClear(GL_COLOR_BUFFER_BIT);
+		}
+		
+		if (d.storeOp == IRender::Resource::RenderTargetDescription::DISCARD) {
+			glInvalidateFramebuffer(GL_FRAMEBUFFER, 1, &id);
+		}
+	}
+
+	static void SetupDepthStencil(IRender::Resource::RenderTargetDescription::Storage& d) {
+		if (d.loadOp == IRender::Resource::RenderTargetDescription::CLEAR) {
+			glClearDepth(0.0f);
+			glClearStencil(0);
+			glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		}
+		
+		if (d.storeOp == IRender::Resource::RenderTargetDescription::DISCARD) {
+			GLuint id = GL_DEPTH_STENCIL_ATTACHMENT;
+			glInvalidateFramebuffer(GL_FRAMEBUFFER, 1, &id);
+		}
+	}
+
 	virtual void Execute(QueueImplOpenGL& queue) override {
 		Resource::RenderTargetDescription& d = GetDescription();
 		GL_GUARD();
-		Resource::ClearDescription& lastClear = queue.device->lastClear;
-		if (queue.device->lastFrameBufferID != 0 && (lastClear.clearColorBit & IRender::Resource::ClearDescription::DISCARD_STORE)) {
-			static const GLuint buffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT0 + 1, GL_COLOR_ATTACHMENT0 + 2, GL_COLOR_ATTACHMENT0 + 3,
-				GL_COLOR_ATTACHMENT0 + 4, GL_COLOR_ATTACHMENT0 + 5, GL_COLOR_ATTACHMENT0 + 6, GL_COLOR_ATTACHMENT0 + 7 };
-			glInvalidateFramebuffer(GL_FRAMEBUFFER, 8, buffers);
-		}
-
-		if (queue.device->lastFrameBufferID != 0 && ((lastClear.clearDepthBit & lastClear.clearStencilBit) & IRender::Resource::ClearDescription::DISCARD_STORE)) {
-			static const GLuint buffer = GL_DEPTH_STENCIL_ATTACHMENT;
-			glInvalidateFramebuffer(GL_FRAMEBUFFER, 1, &buffer);
-		}
 
 		queue.device->lastFrameBufferID = frameBufferID;
 		glBindFramebuffer(GL_FRAMEBUFFER, frameBufferID);
 		glBindVertexArray(vertexArrayID);
-		UShort2Pair range = d.range;
 
+		if (frameBufferID != 0) {
+			GL_GUARD();
+			SetupDepthStencil(d.depthStencilStorage);
+
+			for (size_t i = 0; i < d.colorBufferStorages.size(); i++) {
+				SetupAttachment(d.colorBufferStorages[i], GL_COLOR_ATTACHMENT0 + i);
+			}
+
+			const size_t MAX_ID = 8;
+			static GLuint idlist[MAX_ID] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT0 + 1,
+			GL_COLOR_ATTACHMENT0 + 2, GL_COLOR_ATTACHMENT0 + 3, GL_COLOR_ATTACHMENT0 + 4,
+			GL_COLOR_ATTACHMENT0 + 5, GL_COLOR_ATTACHMENT0 + 6, GL_COLOR_ATTACHMENT0 + 7 };
+
+			if (d.colorBufferStorages.empty()) {
+				glDrawBuffer(GL_NONE);
+			} else {
+				glDrawBuffers((GLsizei)Math::Min(MAX_ID, d.colorBufferStorages.size()), idlist);
+			}
+		}
+
+		UShort2Pair range = d.range;
 		if (range.second.x() == 0) {
 			if (d.colorBufferStorages.empty()) {
 				range.second.x() = queue.device->resolution.x();
@@ -1400,19 +1387,6 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> : public R
 		}
 
 		glViewport(range.first.x(), range.first.y(), range.second.x() - range.first.x(), range.second.y() - range.first.y());
-
-		if (frameBufferID != 0) {
-			const size_t MAX_ID = 8;
-			static GLuint idlist[MAX_ID] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT0 + 1,
-			GL_COLOR_ATTACHMENT0 + 2, GL_COLOR_ATTACHMENT0 + 3, GL_COLOR_ATTACHMENT0 + 4,
-			GL_COLOR_ATTACHMENT0 + 5, GL_COLOR_ATTACHMENT0 + 6, GL_COLOR_ATTACHMENT0 + 7 };
-
-			if (d.colorBufferStorages.empty()) {
-				glDrawBuffer(GL_NONE);
-			} else {
-				glDrawBuffers((GLsizei)Math::Min(MAX_ID, d.colorBufferStorages.size()), idlist);
-			}
-		}
 	}
 
 	virtual void Delete(QueueImplOpenGL& queue) override {
@@ -1686,8 +1660,6 @@ IRender::Resource* ZRenderOpenGL::CreateResource(Device* device, Resource::Type 
 		return new ResourceImplOpenGL<Resource::RenderStateDescription>();
 	case Resource::RESOURCE_RENDERTARGET:
 		return new ResourceImplOpenGL<Resource::RenderTargetDescription>();
-	case Resource::RESOURCE_CLEAR:
-		return new ResourceImplOpenGL<Resource::ClearDescription>();
 	case Resource::RESOURCE_DRAWCALL:
 		return new ResourceImplOpenGL<Resource::DrawCallDescription>();
 	}

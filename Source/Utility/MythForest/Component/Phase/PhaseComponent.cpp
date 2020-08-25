@@ -53,7 +53,7 @@ void PhaseComponentConfig::InstanceGroup::Reset() {
 	instanceCount = 0;
 }
 
-PhaseComponent::PhaseComponent(TShared<RenderFlowComponent> renderFlow, const String& portName) : hostEntity(nullptr), maxTracePerTick(8), renderQueue(nullptr), clearResource(nullptr), stateResource(nullptr), stateShadowResource(nullptr), range(32, 32, 32), resolution(512, 512), lightCollector(this), renderFlowComponent(renderFlow), lightPhaseViewPortName(portName), rootEntity(nullptr) {}
+PhaseComponent::PhaseComponent(TShared<RenderFlowComponent> renderFlow, const String& portName) : hostEntity(nullptr), maxTracePerTick(8), renderQueue(nullptr), stateResource(nullptr), stateShadowResource(nullptr), range(32, 32, 32), resolution(512, 512), lightCollector(this), renderFlowComponent(renderFlow), lightPhaseViewPortName(portName), rootEntity(nullptr) {}
 
 PhaseComponent::~PhaseComponent() {}
 
@@ -90,19 +90,6 @@ void PhaseComponent::Initialize(Engine& engine, Entity* entity) {
 		IRender& render = engine.interfaces.render;
 		IRender::Device* device = engine.snowyStream.GetRenderDevice();
 		renderQueue = render.CreateQueue(device);
-
-		clearResource = render.CreateResource(device, IRender::Resource::RESOURCE_CLEAR);
-		IRender::Resource::ClearDescription clear;
-		clear.clearColorBit = IRender::Resource::ClearDescription::DISCARD_LOAD;
-		clear.clearDepthBit = IRender::Resource::ClearDescription::DISCARD_LOAD | IRender::Resource::ClearDescription::DISCARD_STORE;
-		clear.clearStencilBit = IRender::Resource::ClearDescription::DISCARD_LOAD | IRender::Resource::ClearDescription::DISCARD_STORE;
-		render.UploadResource(renderQueue, clearResource, &clear);
-
-		clearShadowResource = render.CreateResource(device, IRender::Resource::RESOURCE_CLEAR);
-		clear.clearColorBit = IRender::Resource::ClearDescription::DISCARD_LOAD | IRender::Resource::ClearDescription::DISCARD_STORE;
-		clear.clearDepthBit = 0;
-		clear.clearStencilBit = IRender::Resource::ClearDescription::DISCARD_LOAD | IRender::Resource::ClearDescription::DISCARD_STORE;
-		render.UploadResource(renderQueue, clearShadowResource, &clear);
 
 		stateResource = render.CreateResource(device, IRender::Resource::RESOURCE_RENDERSTATE);
 		IRender::Resource::RenderStateDescription state;
@@ -159,13 +146,11 @@ void PhaseComponent::Uninitialize(Engine& engine, Entity* entity) {
 
 		phases.clear();
 
-		render.DeleteResource(queue, clearResource);
-		render.DeleteResource(queue, clearShadowResource);
 		render.DeleteResource(queue, stateResource);
 		render.DeleteResource(queue, stateShadowResource);
 		render.DeleteQueue(renderQueue);
 
-		clearResource = clearShadowResource = stateResource = stateShadowResource = nullptr;
+		stateResource = stateShadowResource = nullptr;
 		renderQueue = nullptr;
 		hostEntity = nullptr;
 
@@ -472,7 +457,11 @@ void PhaseComponent::TaskAssembleTaskBounce(Engine& engine, TaskData& task, cons
 	const Phase& fromPhase = phases[bakePoint.fromPhaseIndex];
 	Phase& toPhase = phases[bakePoint.toPhaseIndex];
 	storage.resource = toPhase.irradiance->GetTexture();
+	storage.loadOp = IRender::Resource::RenderTargetDescription::DISCARD;
+	storage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 	desc.colorBufferStorages.emplace_back(std::move(storage));
+	desc.depthStencilStorage.loadOp = IRender::Resource::RenderTargetDescription::DISCARD; // TODO:
+	desc.depthStencilStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
 	// task.texture = toPhase.irradiance;
 	task.texture = nullptr;
 
@@ -481,9 +470,8 @@ void PhaseComponent::TaskAssembleTaskBounce(Engine& engine, TaskData& task, cons
 
 	// changing state
 	render.UploadResource(task.renderQueue, task.renderTarget, &desc);
-	render.ExecuteResource(task.renderQueue, task.renderTarget);
 	render.ExecuteResource(task.renderQueue, stateResource);
-	render.ExecuteResource(task.renderQueue, clearResource);
+	render.ExecuteResource(task.renderQueue, task.renderTarget);
 
 	// encode draw call
 	std::vector<IRender::Resource*> placeholders;
@@ -506,12 +494,15 @@ void PhaseComponent::CoTaskAssembleTaskShadow(Engine& engine, TaskData& task, co
 	desc.depthStencilStorage.resource = shadow.shadow->GetTexture();
 	IRender::Resource::RenderTargetDescription::Storage color;
 	color.resource = emptyColorAttachment->GetTexture(); // Don't care
+	color.loadOp = IRender::Resource::RenderTargetDescription::DISCARD;
+	color.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
 	desc.colorBufferStorages.emplace_back(std::move(color));
+	desc.depthStencilStorage.loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
+	desc.depthStencilStorage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 
 	render.UploadResource(task.renderQueue, task.renderTarget, &desc);
-	render.ExecuteResource(task.renderQueue, task.renderTarget);
 	render.ExecuteResource(task.renderQueue, stateShadowResource);
-	render.ExecuteResource(task.renderQueue, clearShadowResource);
+	render.ExecuteResource(task.renderQueue, task.renderTarget);
 
 	task.pipeline = shadowPipeline();
 	task.texture = shadow.shadow;
@@ -552,9 +543,8 @@ void PhaseComponent::CoTaskAssembleTaskSetup(Engine& engine, TaskData& task, con
 	}
 
 	render.UploadResource(task.renderQueue, task.renderTarget, &desc);
-	render.ExecuteResource(task.renderQueue, task.renderTarget);
 	render.ExecuteResource(task.renderQueue, stateResource);
-	render.ExecuteResource(task.renderQueue, clearResource);
+	render.ExecuteResource(task.renderQueue, task.renderTarget);
 
 	task.texture = phase.baseColorOcclusion;
 	task.pipeline = setupPipeline();

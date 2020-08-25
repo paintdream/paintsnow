@@ -8,7 +8,7 @@
 
 using namespace PaintsNow;
 
-VisibilityComponent::VisibilityComponent() : nextCoord(~(uint16_t)0, ~(uint16_t)0, ~(uint16_t)0), subDivision(1, 1, 1), taskCount(32), resolution(256, 256), maxFrameExecutionTime(5), viewDistance(512.0f), activeCellCacheIndex(0), hostEntity(nullptr), renderQueue(nullptr), clearResource(nullptr), depthStencilResource(nullptr), stateResource(nullptr) {
+VisibilityComponent::VisibilityComponent() : nextCoord(~(uint16_t)0, ~(uint16_t)0, ~(uint16_t)0), subDivision(1, 1, 1), taskCount(32), resolution(256, 256), maxFrameExecutionTime(5), viewDistance(512.0f), activeCellCacheIndex(0), hostEntity(nullptr), renderQueue(nullptr), depthStencilResource(nullptr), stateResource(nullptr) {
 	maxVisIdentity.store(0, std::memory_order_relaxed);
 	collectCritical.store(0, std::memory_order_relaxed);
 }
@@ -57,14 +57,6 @@ void VisibilityComponent::Initialize(Engine& engine, Entity* entity) {
 	String path = ShaderResource::GetShaderPathPrefix() + UniqueType<ConstMapPass>::Get()->GetBriefName();
 	pipeline = engine.snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), path, true, 0, nullptr)->QueryInterface(UniqueType<ShaderResourceImpl<ConstMapPass> >());
 
-	IRender::Resource::ClearDescription cls;
-	cls.clearColorBit = IRender::Resource::ClearDescription::CLEAR;
-	cls.clearDepthBit = IRender::Resource::ClearDescription::CLEAR;
-	cls.clearStencilBit = IRender::Resource::ClearDescription::DISCARD_LOAD | IRender::Resource::ClearDescription::DISCARD_STORE;
-
-	clearResource = render.CreateResource(device, IRender::Resource::RESOURCE_CLEAR);
-	render.UploadResource(renderQueue, clearResource, &cls);
-
 	IRender::Resource::RenderStateDescription rs;
 	rs.stencilReplacePass = 1;
 	rs.cull = 0;
@@ -107,7 +99,12 @@ void VisibilityComponent::Initialize(Engine& engine, Entity* entity) {
 		desc.colorBufferStorages.resize(1);
 		IRender::Resource::RenderTargetDescription::Storage& s = desc.colorBufferStorages[0];
 		s.resource = texture->GetTexture();
+		s.loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
+		s.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 		desc.depthStencilStorage.resource = depthStencilResource;
+		desc.depthStencilStorage.loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
+		desc.depthStencilStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
+
 		task.renderTarget = render.CreateResource(device, IRender::Resource::RESOURCE_RENDERTARGET);
 		render.UploadResource(renderQueue, task.renderTarget, &desc);
 	}
@@ -127,12 +124,11 @@ void VisibilityComponent::Uninitialize(Engine& engine, Entity* entity) {
 
 	tasks.clear();
 
-	render.DeleteResource(renderQueue, clearResource);
 	render.DeleteResource(renderQueue, stateResource);
 	render.DeleteResource(renderQueue, depthStencilResource);
 	render.DeleteQueue(renderQueue);
 
-	clearResource = stateResource = depthStencilResource = nullptr;
+	stateResource = depthStencilResource = nullptr;
 	renderQueue = nullptr;
 	BaseComponent::Uninitialize(engine, entity);
 }
@@ -556,9 +552,8 @@ void VisibilityComponent::CoTaskAssembleTask(Engine& engine, TaskData& task, con
 	if (hostEntity == nullptr) return;
 	IRender& render = engine.interfaces.render;
 	assert(task.status == TaskData::STATUS_DISPATCHED);
-	render.ExecuteResource(task.renderQueue, task.renderTarget);
 	render.ExecuteResource(task.renderQueue, stateResource);
-	render.ExecuteResource(task.renderQueue, clearResource);
+	render.ExecuteResource(task.renderQueue, task.renderTarget);
 
 	const float t = 0.1f;
 	const float f = 5000.0f;

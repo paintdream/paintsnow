@@ -38,12 +38,10 @@ namespace PaintsNow {
 
 		IRender::Resource::RenderStateDescription renderStateDescription;
 		IRender::Resource::RenderTargetDescription renderTargetDescription;
-		IRender::Resource::ClearDescription clearDescription;
 
 	protected:
 		IRender::Resource* renderState;
 		IRender::Resource* renderTarget;
-		IRender::Resource* clear;
 		IRender::Resource* drawCallResource;
 		Char2 resolutionShift;
 		Char2 reserved;

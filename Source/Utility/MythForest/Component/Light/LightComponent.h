@@ -81,7 +81,6 @@ namespace PaintsNow {
 			TShared<Entity> rootEntity;
 			TShared<SharedTiny> shadowGrid;
 			IRender::Queue* renderQueue;
-			IRender::Resource* clearResource;
 			IRender::Resource* stateResource;
 			IRender::Resource* renderTargetResource;
 		};

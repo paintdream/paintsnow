@@ -140,7 +140,6 @@ namespace PaintsNow {
 
 		// Runtime Baker
 		IRender::Queue* renderQueue;
-		IRender::Resource* clearResource;
 		IRender::Resource* depthStencilResource;
 		IRender::Resource* stateResource;
 		TShared<ShaderResourceImpl<ConstMapPass> > pipeline;

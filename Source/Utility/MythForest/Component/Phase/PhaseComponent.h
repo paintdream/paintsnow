@@ -217,8 +217,6 @@ namespace PaintsNow {
 		UShort2 resolution;
 		Float3 range;
 		IRender::Queue* renderQueue;
-		IRender::Resource* clearResource;
-		IRender::Resource* clearShadowResource;
 		IRender::Resource* stateResource;
 		IRender::Resource* stateShadowResource;
 

@@ -4,7 +4,10 @@ using namespace PaintsNow;
 
 PhaseLightRenderStage::PhaseLightRenderStage(const String& s) : OutputColor(renderTargetDescription.colorBufferStorages[0]) {
 	renderStateDescription.blend = 1;
-	clearDescription.clearColorBit = 0; // Load & Store
+	renderTargetDescription.colorBufferStorages[0].loadOp = IRender::Resource::RenderTargetDescription::DEFAULT;
+	renderTargetDescription.colorBufferStorages[0].storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
+	renderTargetDescription.depthStencilStorage.loadOp = IRender::Resource::RenderTargetDescription::DISCARD;
+	renderTargetDescription.depthStencilStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
 }
 
 TObject<IReflect>& PhaseLightRenderStage::operator () (IReflect& reflect) {

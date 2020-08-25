@@ -13,8 +13,10 @@ StencilMaskRenderStage::StencilMaskRenderStage(const String& config) : InputDept
 	renderStateDescription.stencilValue = atoi(config.c_str());
 	renderStateDescription.stencilMask = 0xff;
 
-	clearDescription.clearColorBit = IRender::Resource::ClearDescription::DISCARD_LOAD | IRender::Resource::ClearDescription::DISCARD_STORE;
-	clearDescription.clearDepthBit = clearDescription.clearStencilBit = 0; // load & store
+	renderTargetDescription.colorBufferStorages[0].loadOp = IRender::Resource::RenderTargetDescription::DISCARD;
+	renderTargetDescription.colorBufferStorages[0].storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
+	renderTargetDescription.depthStencilStorage.loadOp = IRender::Resource::RenderTargetDescription::DEFAULT;
+	renderTargetDescription.depthStencilStorage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 }
 
 TObject<IReflect>& StencilMaskRenderStage::operator () (IReflect& reflect) {
