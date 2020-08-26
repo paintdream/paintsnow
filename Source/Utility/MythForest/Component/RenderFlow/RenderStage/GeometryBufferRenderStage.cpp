@@ -14,6 +14,8 @@ GeometryBufferRenderStage::GeometryBufferRenderStage(const String& s) : BaseClas
 	renderTargetDescription.colorBufferStorages[1].storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 	renderTargetDescription.depthStorage.loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
 	renderTargetDescription.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
+	renderTargetDescription.stencilStorage.loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
+	renderTargetDescription.stencilStorage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 
 	renderStateDescription.depthTest = IRender::Resource::RenderStateDescription::GREATER;
 	renderStateDescription.depthWrite = 1;

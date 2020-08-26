@@ -17,6 +17,8 @@ StencilMaskRenderStage::StencilMaskRenderStage(const String& config) : InputDept
 	renderTargetDescription.colorBufferStorages[0].storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
 	renderTargetDescription.depthStorage.loadOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 	renderTargetDescription.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
+	renderTargetDescription.stencilStorage.loadOp = IRender::Resource::RenderTargetDescription::DEFAULT;
+	renderTargetDescription.stencilStorage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 }
 
 TObject<IReflect>& StencilMaskRenderStage::operator () (IReflect& reflect) {

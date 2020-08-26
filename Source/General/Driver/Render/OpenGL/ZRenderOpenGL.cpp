@@ -573,6 +573,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> : public Resour
 			switch (d.state.type) {
 				case Resource::TextureDescription::TEXTURE_1D:
 				{
+					GL_GUARD();
 					glBindTexture(textureType = GL_TEXTURE_1D, textureID);
 					if (d.state.compress) {
 						assert(data != nullptr);
@@ -594,6 +595,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> : public Resour
 				}
 				case Resource::TextureDescription::TEXTURE_2D:
 				{
+					GL_GUARD();
 					glBindTexture(textureType = GL_TEXTURE_2D, textureID);
 					if (d.state.compress) {
 						glCompressedTexImage2D(textureType, 0, format, d.dimension.x(), d.dimension.y(), 0, bitDepth * d.dimension.x() * d.dimension.y() / 8, data);
@@ -619,6 +621,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> : public Resour
 				}
 				case Resource::TextureDescription::TEXTURE_2D_CUBE:
 				{
+					GL_GUARD();
 					glBindTexture(textureType = GL_TEXTURE_CUBE_MAP, textureID);
 					assert(d.data.GetSize() % 6 == 0);
 					size_t each = d.data.GetSize() / 6;
@@ -654,6 +657,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> : public Resour
 				}
 				case Resource::TextureDescription::TEXTURE_3D:
 				{
+					GL_GUARD();
 					glBindTexture(textureType = GL_TEXTURE_3D, textureID);
 					if (d.state.compress) {
 						assert(data != nullptr);
@@ -678,6 +682,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> : public Resour
 			switch (d.state.type) {
 				case Resource::TextureDescription::TEXTURE_1D:
 				{
+					GL_GUARD();
 					glBindTexture(textureType = GL_TEXTURE_1D_ARRAY, textureID);
 					if (d.state.compress) {
 						assert(data != nullptr);
@@ -700,6 +705,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> : public Resour
 				}
 				case Resource::TextureDescription::TEXTURE_2D:
 				{
+					GL_GUARD();
 					glBindTexture(textureType = GL_TEXTURE_2D_ARRAY, textureID);
 					assert(d.data.GetSize() % d.dimension.z() == 0);
 					if (d.state.compress) {
@@ -726,6 +732,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> : public Resour
 				}
 				case Resource::TextureDescription::TEXTURE_2D_CUBE:
 				{
+					GL_GUARD();
 					glBindTexture(textureType = GL_TEXTURE_CUBE_MAP_ARRAY, textureID);
 					assert(d.data.GetSize() % 6 == 0);
 					size_t each = d.data.GetSize() / 6;

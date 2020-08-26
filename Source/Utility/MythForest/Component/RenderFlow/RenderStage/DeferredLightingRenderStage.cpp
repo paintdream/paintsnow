@@ -10,6 +10,8 @@ DeferredLightingRenderStage::DeferredLightingRenderStage(const String& s) : Outp
 	renderTargetDescription.colorBufferStorages[0].storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 	renderTargetDescription.depthStorage.loadOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 	renderTargetDescription.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
+	renderTargetDescription.stencilStorage.loadOp = IRender::Resource::RenderTargetDescription::DEFAULT;
+	renderTargetDescription.stencilStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
 }
 
 TObject<IReflect>& DeferredLightingRenderStage::operator () (IReflect& reflect) {

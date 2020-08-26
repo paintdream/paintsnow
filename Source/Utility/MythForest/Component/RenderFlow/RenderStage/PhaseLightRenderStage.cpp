@@ -8,6 +8,8 @@ PhaseLightRenderStage::PhaseLightRenderStage(const String& s) : OutputColor(rend
 	renderTargetDescription.colorBufferStorages[0].storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 	renderTargetDescription.depthStorage.loadOp = IRender::Resource::RenderTargetDescription::DISCARD;
 	renderTargetDescription.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
+	renderTargetDescription.stencilStorage.loadOp = IRender::Resource::RenderTargetDescription::DISCARD;
+	renderTargetDescription.stencilStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
 }
 
 TObject<IReflect>& PhaseLightRenderStage::operator () (IReflect& reflect) {
