@@ -396,6 +396,9 @@ void Loader::Load(const CmdLine& cmdLine) {
 
 #ifdef _WIN32
 #include <Windows.h>
+#ifndef _DEBUG
+extern "C" void _except_handler4_common() {}
+#endif
 #endif
 
 Loader::Loader() : leavesFlute(nullptr) {

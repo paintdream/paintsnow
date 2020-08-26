@@ -275,6 +275,7 @@ function Main.Main()
 		end
 	end
 
+	_G as { any : any } ["Debug"] = Debug
 	local RepositoryDaemon = require("Script/Util/RepositoryDaemon")
 	local weaver = RepositoryDaemon:New("127.0.0.1:16384", "Database/Repository.sql", databasePath)
 	Debug.Weaver = weaver

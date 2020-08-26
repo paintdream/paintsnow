@@ -12,7 +12,7 @@ function MakeConsole(filter, ...)
 		for i, prefix in ipairs(prefixes) do
 			v, message = load(prefix .. command, "Console", "t", _ENV)
 			if v then
-				print(v(table.unpack(args)))
+				return print(v(table.unpack(args)))
 			end
 		end
 		
