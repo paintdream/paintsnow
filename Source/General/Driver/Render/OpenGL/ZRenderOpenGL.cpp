@@ -59,11 +59,19 @@ class DeviceImplOpenGL : public IRender::Device {
 public:
 	DeviceImplOpenGL(IRender& r) : lastProgramID(0), lastFrameBufferID(0), render(r) {}
 
+	void CompleteStore() {
+		if (!storeInvalidates.empty()) {
+			glInvalidateFramebuffer(GL_FRAMEBUFFER, storeInvalidates.size(), &storeInvalidates[0]);
+			storeInvalidates.clear();
+		}
+	}
+
 	IRender& render;
 	Int2 resolution;
 	IRender::Resource::RenderStateDescription lastRenderState;
 	GLuint lastProgramID;
 	GLuint lastFrameBufferID;
+	std::vector<GLuint> storeInvalidates;
 };
 
 struct_aligned(8) ResourceAligned : public IRender::Resource {};
@@ -1266,19 +1274,41 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> : public R
 			glBindFramebuffer(GL_FRAMEBUFFER, frameBufferID);
 			queue.device->lastFrameBufferID = frameBufferID;
 
-			if (d.depthStencilStorage.resource == nullptr) {
+			if (d.depthStorage.resource == nullptr && d.stencilStorage.resource == nullptr) {
 				glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, 0);
 			} else {
-				ResourceImplOpenGL<IRender::Resource::TextureDescription>* t = static_cast<ResourceImplOpenGL<IRender::Resource::TextureDescription>*>(d.depthStencilStorage.resource);
+				ResourceImplOpenGL<IRender::Resource::TextureDescription>* t = static_cast<ResourceImplOpenGL<IRender::Resource::TextureDescription>*>(d.depthStorage.resource);
+				ResourceImplOpenGL<IRender::Resource::TextureDescription>* s = static_cast<ResourceImplOpenGL<IRender::Resource::TextureDescription>*>(d.stencilStorage.resource);
 				assert(t->textureID != 0);
 				// do not support other types :D
 				assert(t->GetDescription().state.layout == IRender::Resource::TextureDescription::DEPTH_STENCIL || t->GetDescription().state.layout == IRender::Resource::TextureDescription::DEPTH);
-
+				assert(s == nullptr || s->GetDescription().state.layout == IRender::Resource::TextureDescription::DEPTH_STENCIL || s->GetDescription().state.layout == IRender::Resource::TextureDescription::STENCIL);
 				IRender::Resource::TextureDescription& desc = t->GetDescription();
-				if (desc.state.sample == IRender::Resource::TextureDescription::RENDERBUFFER) {
-					glFramebufferRenderbuffer(GL_FRAMEBUFFER, desc.state.layout == IRender::Resource::TextureDescription::DEPTH ? GL_DEPTH_ATTACHMENT : GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, t->renderbufferID);
-				} else {
-					glFramebufferTexture2D(GL_FRAMEBUFFER, desc.state.layout == IRender::Resource::TextureDescription::DEPTH ? GL_DEPTH_ATTACHMENT : GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, t->textureID, d.depthStencilStorage.mipLevel);
+
+				if (desc.state.layout == IRender::Resource::TextureDescription::DEPTH_STENCIL) { // DEPTH_STENCIL
+					assert(s == nullptr || t == s);
+					if (desc.state.sample == IRender::Resource::TextureDescription::RENDERBUFFER) {
+						glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, t->renderbufferID);
+					} else {
+						glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, t->textureID, d.depthStorage.mipLevel);
+					}
+				} else { // may not be supported on all platforms
+					if (desc.state.sample == IRender::Resource::TextureDescription::RENDERBUFFER) {
+						glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, t->renderbufferID);
+					} else {
+						glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, t->textureID, d.depthStorage.mipLevel);
+					}
+
+					if (s != nullptr) {
+						IRender::Resource::TextureDescription& descs = s->GetDescription();
+						if (descs.state.sample == IRender::Resource::TextureDescription::RENDERBUFFER) {
+							glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, s->renderbufferID);
+						} else {
+							glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, t->textureID, d.depthStorage.mipLevel);
+						}
+					} else {
+						glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, 0);
+					}
 				}
 			}
 
@@ -1326,33 +1356,99 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> : public R
 		}
 	}
 
-	static void SetupDepthStencil(IRender::Resource::RenderTargetDescription::Storage& d) {
-		if (d.loadOp == IRender::Resource::RenderTargetDescription::CLEAR) {
-			glClearDepth(0.0f);
-			glClearStencil(0);
-			glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-		}
-		
-		if (d.storeOp == IRender::Resource::RenderTargetDescription::DISCARD) {
-			GLuint id = GL_DEPTH_STENCIL_ATTACHMENT;
-			glInvalidateFramebuffer(GL_FRAMEBUFFER, 1, &id);
-		}
-	}
-
 	virtual void Execute(QueueImplOpenGL& queue) override {
 		Resource::RenderTargetDescription& d = GetDescription();
 		GL_GUARD();
 
+		queue.device->CompleteStore();
 		queue.device->lastFrameBufferID = frameBufferID;
+
 		glBindFramebuffer(GL_FRAMEBUFFER, frameBufferID);
 		glBindVertexArray(vertexArrayID);
 
 		if (frameBufferID != 0) {
 			GL_GUARD();
-			SetupDepthStencil(d.depthStencilStorage);
+
+			GLuint clearMask = 0;
+			std::vector<GLuint> loadInvalidates;
+			std::vector<GLuint> storeInvalidates;
+			loadInvalidates.reserve(8);
+			storeInvalidates.reserve(8);
+
+			if (d.depthStorage.loadOp == IRender::Resource::RenderTargetDescription::CLEAR) {
+				if (!queue.device->lastRenderState.depthWrite) {
+					glDepthMask(GL_TRUE);
+				}
+
+				clearMask |= GL_DEPTH_BUFFER_BIT;
+			} else if (d.depthStorage.loadOp == IRender::Resource::RenderTargetDescription::DISCARD) {
+				loadInvalidates.emplace_back(GL_DEPTH_ATTACHMENT);
+			}
+
+			if (d.depthStorage.storeOp == IRender::Resource::RenderTargetDescription::DISCARD) {
+				storeInvalidates.emplace_back(GL_DEPTH_ATTACHMENT);
+			}
+
+			if (d.stencilStorage.loadOp == IRender::Resource::RenderTargetDescription::CLEAR) {
+				if (!queue.device->lastRenderState.stencilWrite) {
+					glStencilMask(0xFFFFFFFF);
+				}
+
+				clearMask |= GL_STENCIL_BUFFER_BIT;
+			} else if (d.stencilStorage.loadOp == IRender::Resource::RenderTargetDescription::DISCARD) {
+				if (loadInvalidates.empty()) {
+					loadInvalidates.emplace_back(GL_STENCIL_ATTACHMENT);
+				} else {
+					loadInvalidates[0] = GL_DEPTH_STENCIL_ATTACHMENT;
+				}
+			}
+
+			if (d.stencilStorage.storeOp == IRender::Resource::RenderTargetDescription::DISCARD) {
+				if (storeInvalidates.empty()) {
+					storeInvalidates.emplace_back(GL_STENCIL_ATTACHMENT);
+				} else {
+					storeInvalidates[0] = GL_DEPTH_STENCIL_ATTACHMENT;
+				}
+			}
+
+			if (clearMask != 0) {
+				glClearDepth(0.0f);
+				glClearStencil(0);
+				glClear(clearMask);
+			}
 
 			for (size_t i = 0; i < d.colorBufferStorages.size(); i++) {
-				SetupAttachment(d.colorBufferStorages[i], GL_COLOR_ATTACHMENT0 + i);
+				IRender::Resource::RenderTargetDescription::Storage& t = d.colorBufferStorages[i];
+				if (t.loadOp == IRender::Resource::RenderTargetDescription::CLEAR) {
+					glDrawBuffer(GL_COLOR_ATTACHMENT0 + i);
+					glClearColor(t.clearColor.r(), t.clearColor.g(), t.clearColor.b(), t.clearColor.a());
+					glClear(GL_COLOR_BUFFER_BIT);
+				} else if (t.loadOp == IRender::Resource::RenderTargetDescription::DISCARD) {
+					loadInvalidates.emplace_back(GL_COLOR_ATTACHMENT0 + i);
+				}
+
+				if (t.storeOp == IRender::Resource::RenderTargetDescription::DISCARD) {
+					storeInvalidates.emplace_back(GL_COLOR_ATTACHMENT0 + i);
+				}
+			}
+
+			if (!loadInvalidates.empty()) {
+				glInvalidateFramebuffer(GL_FRAMEBUFFER, loadInvalidates.size(), &loadInvalidates[0]);
+			}
+
+			std::swap(queue.device->storeInvalidates, storeInvalidates);
+
+			// recover state
+			if (d.depthStorage.loadOp == IRender::Resource::RenderTargetDescription::CLEAR) {
+				if (!queue.device->lastRenderState.depthWrite) {
+					glDepthMask(GL_FALSE);
+				}
+			}
+
+			if (d.stencilStorage.loadOp == IRender::Resource::RenderTargetDescription::CLEAR) {
+				if (!queue.device->lastRenderState.stencilWrite) {
+					glStencilMask(0);
+				}
 			}
 
 			const size_t MAX_ID = 8;

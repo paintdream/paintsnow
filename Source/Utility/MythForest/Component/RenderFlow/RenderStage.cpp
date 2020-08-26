@@ -29,8 +29,8 @@ RenderStage::RenderStage(uint32_t colorAttachmentCount) : renderState(nullptr), 
 		s.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 	}
 
-	t.depthStencilStorage.loadOp = IRender::Resource::RenderTargetDescription::DISCARD;
-	t.depthStencilStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
+	t.depthStorage.loadOp = IRender::Resource::RenderTargetDescription::DISCARD;
+	t.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
 }
 
 void RenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {

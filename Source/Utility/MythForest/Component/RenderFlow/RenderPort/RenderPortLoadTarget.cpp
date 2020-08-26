@@ -34,7 +34,7 @@ bool RenderPortLoadTarget::UpdateDataStream(RenderPort& source) {
 		const IRender::Resource::RenderTargetDescription& desc = renderStage->GetRenderTargetDescription();
 		const IRender::Resource::RenderTargetDescription& hostDesc = hostRenderStage->GetRenderTargetDescription();
 
-		if (&bindingStorage == &hostDesc.depthStencilStorage) {
+		if (&bindingStorage == &hostDesc.depthStorage) {
 			bindingStorage.resource = target->bindingStorage.resource;
 			bindingStorage.mipLevel = target->bindingStorage.mipLevel;
 		} else {

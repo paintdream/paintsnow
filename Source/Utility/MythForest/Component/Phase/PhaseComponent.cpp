@@ -460,8 +460,8 @@ void PhaseComponent::TaskAssembleTaskBounce(Engine& engine, TaskData& task, cons
 	storage.loadOp = IRender::Resource::RenderTargetDescription::DISCARD;
 	storage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 	desc.colorBufferStorages.emplace_back(std::move(storage));
-	desc.depthStencilStorage.loadOp = IRender::Resource::RenderTargetDescription::DISCARD; // TODO:
-	desc.depthStencilStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
+	desc.depthStorage.loadOp = IRender::Resource::RenderTargetDescription::DISCARD; // TODO:
+	desc.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
 	// task.texture = toPhase.irradiance;
 	task.texture = nullptr;
 
@@ -491,14 +491,14 @@ void PhaseComponent::CoTaskAssembleTaskShadow(Engine& engine, TaskData& task, co
 	IRender::Resource::RenderTargetDescription desc;
 
 	const Shadow& shadow = shadows[bakePoint.shadowIndex];
-	desc.depthStencilStorage.resource = shadow.shadow->GetTexture();
+	desc.depthStorage.resource = shadow.shadow->GetTexture();
 	IRender::Resource::RenderTargetDescription::Storage color;
 	color.resource = emptyColorAttachment->GetTexture(); // Don't care
 	color.loadOp = IRender::Resource::RenderTargetDescription::DISCARD;
 	color.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
 	desc.colorBufferStorages.emplace_back(std::move(color));
-	desc.depthStencilStorage.loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
-	desc.depthStencilStorage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
+	desc.depthStorage.loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
+	desc.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 
 	render.UploadResource(task.renderQueue, task.renderTarget, &desc);
 	render.ExecuteResource(task.renderQueue, stateShadowResource);

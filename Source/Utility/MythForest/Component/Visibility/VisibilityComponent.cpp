@@ -101,9 +101,9 @@ void VisibilityComponent::Initialize(Engine& engine, Entity* entity) {
 		s.resource = texture->GetTexture();
 		s.loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
 		s.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
-		desc.depthStencilStorage.resource = depthStencilResource;
-		desc.depthStencilStorage.loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
-		desc.depthStencilStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
+		desc.depthStorage.resource = depthStencilResource;
+		desc.depthStorage.loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
+		desc.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
 
 		task.renderTarget = render.CreateResource(device, IRender::Resource::RESOURCE_RENDERTARGET);
 		render.UploadResource(renderQueue, task.renderTarget, &desc);

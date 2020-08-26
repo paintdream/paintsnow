@@ -180,7 +180,8 @@ namespace PaintsNow {
 					Float4 clearColor;
 				};
 
-				Storage depthStencilStorage;
+				Storage depthStorage;
+				Storage stencilStorage;
 				std::vector<Storage> colorBufferStorages; // 0 for backbuffer
 			};
 			

@@ -4,12 +4,12 @@
 
 using namespace PaintsNow;
 
-DeferredLightingRenderStage::DeferredLightingRenderStage(const String& s) : OutputColor(renderTargetDescription.colorBufferStorages[0]), LoadDepth(renderTargetDescription.depthStencilStorage) {
+DeferredLightingRenderStage::DeferredLightingRenderStage(const String& s) : OutputColor(renderTargetDescription.colorBufferStorages[0]), LoadDepth(renderTargetDescription.depthStorage) {
 	renderStateDescription.stencilReplacePass = 1;
 	renderTargetDescription.colorBufferStorages[0].loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
 	renderTargetDescription.colorBufferStorages[0].storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
-	renderTargetDescription.depthStencilStorage.loadOp = IRender::Resource::RenderTargetDescription::DEFAULT;
-	renderTargetDescription.depthStencilStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
+	renderTargetDescription.depthStorage.loadOp = IRender::Resource::RenderTargetDescription::DEFAULT;
+	renderTargetDescription.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
 }
 
 TObject<IReflect>& DeferredLightingRenderStage::operator () (IReflect& reflect) {

@@ -141,9 +141,9 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 		// we don't care color
 		s.loadOp = IRender::Resource::RenderTargetDescription::DISCARD;
 		s.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
-		desc.depthStencilStorage.loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
-		desc.depthStencilStorage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
-		desc.depthStencilStorage.resource = shadowGrid->texture->GetTexture();
+		desc.depthStorage.loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
+		desc.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
+		desc.depthStorage.resource = shadowGrid->texture->GetTexture();
 
 		IRender& render = engine.interfaces.render;
 		render.UploadResource(taskData->renderQueue, taskData->renderTargetResource, &desc);

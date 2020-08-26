@@ -196,8 +196,10 @@ void ZFrameGLFW::OnCustomRender() {}
 void ZFrameGLFW::EnterMainLoop() {
 	while (!glfwWindowShouldClose(window)) 		{
 		if (callback != nullptr) {
-			// glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-			// glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+			glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+			glClearDepth(0.0f);
+			glClearStencil(0);
+			glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 			isRendering = true;
 			callback->OnRender();
 
