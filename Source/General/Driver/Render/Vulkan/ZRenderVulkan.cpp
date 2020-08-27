@@ -1272,6 +1272,9 @@ void ZRenderVulkan::RequestDownloadResource(Queue* queue, Resource* resource, Re
 void ZRenderVulkan::CompleteDownloadResource(Queue* queue, Resource* resource) {}
 void ZRenderVulkan::ExecuteResource(Queue* queue, Resource* resource) {}
 void ZRenderVulkan::SwapResource(Queue* queue, Resource* lhs, Resource* rhs) {}
+void ZRenderVulkan::SetResourceNotation(Resource* lhs, const String& note) {
+
+}
 
 void ZRenderVulkan::DeleteResource(Queue* queue, Resource* resource) {
 	VulkanQueueImpl* impl = static_cast<VulkanQueueImpl*>(queue);

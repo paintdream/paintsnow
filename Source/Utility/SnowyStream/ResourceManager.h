@@ -123,7 +123,8 @@ namespace PaintsNow {
 
 			if (stream != nullptr) {
 				if (LoadData(object(), protocol, *stream)) {
-					if (flag != 0) object->Flag().fetch_or(flag, std::memory_order_acquire);
+					if (flag != 0) object->Flag().fetch_or(flag, std::memory_order_release);
+
 					manager.DoLock();
 					manager.Insert(object());
 					manager.UnLock();
@@ -131,7 +132,8 @@ namespace PaintsNow {
 					object = nullptr;
 				}
 			} else {
-				if (flag != 0) object->Flag().fetch_or(flag, std::memory_order_acquire);
+				object->Flag().fetch_or(flag, std::memory_order_release);
+
 				manager.DoLock();
 				manager.Insert(object());
 				manager.UnLock();

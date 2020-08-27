@@ -120,6 +120,14 @@ TShared<MaterialResource> MaterialResource::CloneWithOverrideShader(TShared<Shad
 
 uint32_t MaterialResource::CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) {
 	if (mutationShaderResource) {
+#ifdef _DEBUG
+		for (size_t k = 0; k < textureResources.size(); k++) {
+			if (!(textureResources[k]->Flag() & ResourceBase::RESOURCE_UPLOADED)) {
+				fprintf(stderr, "Texture Resource Not Uploaded: %s\n", textureResources[k]->GetLocation().c_str());
+			}
+			assert(textureResources[k]->Flag() & ResourceBase::RESOURCE_UPLOADED);
+		}
+#endif
 		// uint32_t count = mutationShaderResource->CollectDrawCalls(outputDrawCalls, inputRenderData);
 		OutputRenderData renderData;
 		renderData.shaderResource = mutationShaderResource();

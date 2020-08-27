@@ -3360,8 +3360,8 @@ local standard_library = {
    ["load"] = a_type({
       typename = "poly",
       types = {
-         a_type({ typename = "function", args = { STRING }, rets = { FUNCTION } }),
-         a_type({ typename = "function", args = { STRING, STRING }, rets = { FUNCTION } }),
+         a_type({ typename = "function", args = { STRING }, rets = { FUNCTION, STRING } }),
+         a_type({ typename = "function", args = { STRING, STRING }, rets = { FUNCTION, STRING } }),
       },
    }),
    ["FILE"] = a_type({

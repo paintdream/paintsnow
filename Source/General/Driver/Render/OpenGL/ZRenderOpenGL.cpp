@@ -91,6 +91,10 @@ struct ResourceBaseImplOpenGL : public ResourceAligned {
 	virtual void PostSwap(QueueImplOpenGL& queue) = 0;
 	virtual void SyncDownload(QueueImplOpenGL& queue) = 0;
 	virtual void Delete(QueueImplOpenGL& queue) = 0;
+
+#ifdef _DEBUG
+	String note;
+#endif
 };
 
 struct ResourceCommandImplOpenGL {
@@ -598,6 +602,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> : public Resour
 					GL_GUARD();
 					glBindTexture(textureType = GL_TEXTURE_2D, textureID);
 					if (d.state.compress) {
+						assert(data != nullptr);
 						glCompressedTexImage2D(textureType, 0, format, d.dimension.x(), d.dimension.y(), 0, bitDepth * d.dimension.x() * d.dimension.y() / 8, data);
 					} else {
 						if (d.state.immutable && glTexStorage2D != nullptr) {
@@ -785,6 +790,11 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> : public Resour
 
 		glTexParameteri(textureType, GL_TEXTURE_MIN_FILTER, d.state.sample == Resource::TextureDescription::POINT ? GL_NEAREST : GL_LINEAR);
 		glTexParameteri(textureType, GL_TEXTURE_MAG_FILTER, d.state.sample == Resource::TextureDescription::POINT ? GL_NEAREST : GL_LINEAR);
+
+		/*
+#ifdef _DEBUG
+		fprintf(stderr, "Device Texture Uploaded: %s\n", note.c_str());
+#endif*/
 			
 		// free memory
 		d.data.Clear();
@@ -1820,6 +1830,13 @@ void ZRenderOpenGL::SwapResource(Queue* queue, Resource* lhs, Resource* rhs) {
 	QueueImplOpenGL* q = static_cast<QueueImplOpenGL*>(queue);
 	q->QueueCommand(ResourceCommandImplOpenGL(ResourceCommandImplOpenGL::OP_PRESWAP, lhs));
 	q->QueueCommand(ResourceCommandImplOpenGL(ResourceCommandImplOpenGL::OP_POSTSWAP, rhs));
+}
+
+void ZRenderOpenGL::SetResourceNotation(Resource* resource, const String& note) {
+#ifdef _DEBUG
+	ResourceBaseImplOpenGL* base = static_cast<ResourceBaseImplOpenGL*>(resource);
+	base->note = note;
+#endif
 }
 
 void ZRenderOpenGL::DeleteResource(Queue* queue, Resource* resource) {

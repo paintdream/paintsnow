@@ -123,7 +123,6 @@ namespace PaintsNow {
 		// Device related
 		// Render
 		IRender::Device* renderDevice;
-		std::atomic<uint32_t> resourceCritical;
 		IRender::Queue* resourceQueue;
 	};
 

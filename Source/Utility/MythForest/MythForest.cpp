@@ -83,6 +83,14 @@ void MythForest::Initialize() {
 }
 
 void MythForest::Uninitialize() {
+	IScript::Request& request = engine.bridgeSunset.GetScript().GetDefaultRequest();
+	request.DoLock();
+	while (!nextFrameListeners.Empty()) {
+		request.Dereference(nextFrameListeners.Top().second);
+		nextFrameListeners.Pop();
+	}
+	request.UnLock();
+
 	engine.Clear();
 }
 
@@ -118,6 +126,7 @@ TObject<IReflect>& MythForest::operator () (IReflect& reflect) {
 		ReflectMethod(RequestGetComponentType)[ScriptMethod = "GetComponentType"];
 		ReflectMethod(RequestClearEntityComponents)[ScriptMethod = "ClearEntityComponents"];
 		ReflectMethod(RequestGetFrameTickTime)[ScriptMethod = "GetFrameTickTime"];
+		ReflectMethod(RequestWaitForNextFrame)[ScriptMethod = "WaitForNextFrame"];
 		ReflectMethod(RequestRaycast)[ScriptMethod = "Raycast"];
 		ReflectMethod(RequestCaptureFrame)[ScriptMethod = "CaptureFrame"];
 	}
@@ -127,16 +136,36 @@ TObject<IReflect>& MythForest::operator () (IReflect& reflect) {
 
 void MythForest::TickDevice(IDevice& device) {
 	if (&device == &engine.interfaces.render) {
+		std::vector<std::pair<TShared<Entity>, IScript::Request::Ref> > listeners;
+
+		while (!nextFrameListeners.Empty()) {
+			listeners.emplace_back(std::move(nextFrameListeners.Top()));
+			nextFrameListeners.Pop();
+		}
+
 		engine.TickFrame();
 
 		uint64_t t = ITimer::GetSystemClock();
 		currentFrameTime = t - lastFrameTick;
 		lastFrameTick = t;
+
+		for (size_t k = 0; k < listeners.size(); k++) {
+			std::pair<TShared<Entity>, IScript::Request::Ref>& entry = listeners[k];
+			engine.GetKernel().QueueRoutine(entry.first(), CreateTaskScriptOnce(entry.second));
+		}
 	}
 }
 
 uint64_t MythForest::RequestGetFrameTickTime(IScript::Request& request) {
 	return currentFrameTime;
+}
+
+void MythForest::RequestWaitForNextFrame(IScript::Request& request, IScript::Delegate<Entity> entity, IScript::Request::Ref callback) {
+	CHECK_REFERENCES_WITH_TYPE(callback, IScript::Request::FUNCTION);
+
+	request.DoLock();
+	nextFrameListeners.Push(std::make_pair(entity.Get(), callback));
+	request.UnLock();
 }
 
 TShared<Entity> MythForest::RequestNewEntity(IScript::Request& request, int32_t warp) {

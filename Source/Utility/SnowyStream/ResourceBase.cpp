@@ -223,13 +223,7 @@ bool MetaResourceInternalPersist::Read(IStreamBase& streamBase, void* ptr) const
 		TShared<ResourceBase>& res = *reinterpret_cast<TShared<ResourceBase>*>(ptr);
 		ResourceManager& manager = (const_cast<ResourceManager&>(resourceManager));
 		IUniformResourceManager& uniformResourceManager = manager.GetUniformResourceManager();
-		if (res = uniformResourceManager.CreateResource(path)) {
-			res->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
-			res->GetResourceManager().InvokeUpload(res());
-			return true;
-		} else {
-			return false;
-		}
+		return res = uniformResourceManager.CreateResource(path);
 	} else {
 		return false;
 	}

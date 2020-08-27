@@ -115,10 +115,6 @@ void ResourceManager::Remove(TShared<ResourceBase> resource) {
 	resource->Flag().fetch_or(ResourceBase::RESOURCE_ORPHAN, std::memory_order_acquire);
 }
 
-inline String PathToUniqueID(const String& path) {
-	return path;
-}
-
 TShared<ResourceBase> ResourceSerializerBase::DeserializeFromArchive(ResourceManager& manager, IArchive& archive, const String& path, IFilterBase& protocol, bool openExisting, Tiny::FLAG flag) {
 	assert(manager.GetDeviceUnique() == GetDeviceUnique());
 	if (manager.GetDeviceUnique() != GetDeviceUnique())
@@ -126,7 +122,7 @@ TShared<ResourceBase> ResourceSerializerBase::DeserializeFromArchive(ResourceMan
 	
 	manager.DoLock();
 
-	TShared<ResourceBase> resource = manager.LoadExist(PathToUniqueID(path));
+	TShared<ResourceBase> resource = manager.LoadExist(path);
 	if (resource) {
 		manager.UnLock();
 		return resource;

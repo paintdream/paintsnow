@@ -49,6 +49,10 @@ void TextureResource::Upload(IRender& render, void* deviceContext) {
 	if (!(Flag().fetch_or(RESOURCE_UPLOADED) & RESOURCE_UPLOADED)) {
 		SpinLock(critical);
 
+		if (description.state.compress) {
+			assert(!description.data.Empty());
+		}
+
 		deviceMemoryUsage = description.data.GetSize();
 		if (mapCount.load(std::memory_order_relaxed) != 0) {
 			IRender::Resource::TextureDescription desc = description;
@@ -56,6 +60,10 @@ void TextureResource::Upload(IRender& render, void* deviceContext) {
 		} else {
 			render.UploadResource(queue, instance, &description);
 		}
+
+#ifdef _DEBUG
+		render.SetResourceNotation(instance, GetLocation());
+#endif
 
 		SpinUnLock(critical);
 

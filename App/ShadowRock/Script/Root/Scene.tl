@@ -38,14 +38,23 @@ function Scene.New(database : Database, clock : Clock) : Scene
 		end
 
 		local running = coroutine.running()
+		local resourceHandles : { ResourceBase } = {}
 		for name, list in pairs(warmingUpResources) do
 			print("\tWarming up " .. name)
 			SnowyStream.NewResourcesAsync(list, name, function (path : string, res : ResourceBase)
 				print("\t\tLoaded: " .. path)
+				table.insert(resourceHandles, res)
 			end, function () coroutine.resume(running) end)
+
+			coroutine.yield()
 		end
 
+		-- wait for all resource scheduled
+		print("\tSynchronizing resource creation ...")
+		rootEntity:WaitForNextFrame(function () coroutine.resume(running) end)
 		coroutine.yield()
+
+		-- all resources prepared.
 
 		local dupCount = 6
 		print("\tCreating entities ...")

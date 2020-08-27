@@ -240,7 +240,7 @@ local function InitializeWorld(databasePath : string)
 		if command:sub(1, 1) == "@" then
 			coroutine.resume(instance, command)
 		else
-			local func, message = load(command) as function, string
+			local func, message = load(command)
 			if func then
 				func()
 			else

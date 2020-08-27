@@ -48,6 +48,7 @@ namespace PaintsNow {
 		virtual void ExecuteResource(Queue* queue, Resource* resource) override;
 		virtual void SwapResource(Queue* queue, Resource* lhs, Resource* rhs) override;
 		virtual void DeleteResource(Queue* queue, Resource* resource) override;
+		virtual void SetResourceNotation(Resource* lhs, const String& note) override;
 
 	protected:
 		GLFWwindow* window;

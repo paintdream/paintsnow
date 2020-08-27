@@ -91,6 +91,11 @@ std::unordered_map<String, Module*>& Engine::GetModuleMap() {
 
 void Engine::TickFrame() {
 	IRender& render = interfaces.render;
+	IRender::Queue* resourceQueue = snowyStream.GetResourceQueue();
+	if (resourceQueue != nullptr) {
+		interfaces.render.PresentQueues(&resourceQueue, 1, IRender::PRESENT_EXECUTE_ALL);
+	}
+
 	for (size_t i = 0; i < warpResourceQueues.size(); i++) {
 		render.PresentQueues(&warpResourceQueues[i], 1, IRender::PRESENT_EXECUTE_ALL);
 	}
