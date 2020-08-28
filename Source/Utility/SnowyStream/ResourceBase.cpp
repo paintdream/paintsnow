@@ -220,10 +220,19 @@ const String& MetaResourceInternalPersist::GetUniqueName() const {
 bool MetaResourceInternalPersist::Read(IStreamBase& streamBase, void* ptr) const {
 	String path;
 	if ((streamBase >> path) && !path.empty()) {
-		TShared<ResourceBase>& res = *reinterpret_cast<TShared<ResourceBase>*>(ptr);
+		TShared<ResourceBase>& resource = *reinterpret_cast<TShared<ResourceBase>*>(ptr);
 		ResourceManager& manager = (const_cast<ResourceManager&>(resourceManager));
 		IUniformResourceManager& uniformResourceManager = manager.GetUniformResourceManager();
-		return res = uniformResourceManager.CreateResource(path);
+		if (resource = uniformResourceManager.CreateResource(path)) {
+			if (!(resource->Flag() & ResourceBase::RESOURCE_UPLOADED) && !(resource->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release) & Tiny::TINY_MODIFIED)) {
+				assert(resource->Flag() & Tiny::TINY_MODIFIED);
+				resource->GetResourceManager().InvokeUpload(resource());
+			}
+
+			return true;
+		} else {
+			return false;
+		}
 	} else {
 		return false;
 	}

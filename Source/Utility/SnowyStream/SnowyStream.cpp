@@ -452,8 +452,6 @@ private:
 			if (resource && !(resource->Flag() & ResourceBase::RESOURCE_UPLOADED) && !(resource->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release) & Tiny::TINY_MODIFIED)) {
 				assert(resource->Flag() & Tiny::TINY_MODIFIED);
 				resource->GetResourceManager().InvokeUpload(resource());
-			} else {
-				assert(!resource);
 			}
 		}
 
@@ -958,6 +956,10 @@ bool MetaResourceExternalPersist::Read(IStreamBase& streamBase, void* ptr) const
 	String path;
 	if (streamBase >> path) {
 		resource = snowyStream.CreateResource(path);
+		if (resource && !(resource->Flag() & ResourceBase::RESOURCE_UPLOADED) && !(resource->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release) & Tiny::TINY_MODIFIED)) {
+			assert(resource->Flag() & Tiny::TINY_MODIFIED);
+			resource->GetResourceManager().InvokeUpload(resource());
+		}
 	}
 
 	return resource;
