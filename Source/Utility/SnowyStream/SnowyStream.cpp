@@ -421,13 +421,14 @@ public:
 	TaskResourceCreator(BridgeSunset& bs, SnowyStream& ss, rvalue<std::vector<String> > pl, rvalue<String> type, IScript::Request::Ref step, IScript::Request::Ref complete) : bridgeSunset(bs), snowyStream(ss), callbackStep(step), callbackComplete(complete), resType(std::move(type)) {
 		std::swap(pathList, (std::vector<String>&)pl);
 		resourceList.resize(pathList.size());
+		completed.store(0, std::memory_order_release);
 	}
 	
 	void Start(IScript::Request& request) {
 		ThreadPool& threadPool = bridgeSunset.GetKernel().threadPool;
+		ReferenceObject();
 		for (uint32_t i = 0; i < safe_cast<uint32_t>(pathList.size()); i++) {
 			// Create async task and use low-level thread pool dispatching it
-			ReferenceObject();
 			threadPool.Push(CreateTask(Wrap(this, &TaskResourceCreator::RoutineCreateResource), i));
 		}
 	}
@@ -468,7 +469,7 @@ private:
 		}
 
 		// is abount to finish
-		if (GetExtReferCount() == 0) {
+		if (completed.fetch_add(1, std::memory_order_release) + 1 == pathList.size()) {
 #ifdef _DEBUG
 			for (size_t k = 0; k < resourceList.size(); k++) {
 				if (resourceList[k]) {
@@ -476,19 +477,20 @@ private:
 				}
 			}
 #endif
-
 			assert(context != nullptr);
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 			IScript::Request& request = *bridgeSunset.AcquireSafe();
 			Finalize(request);
 			bridgeSunset.ReleaseSafe(&request);
-		}
 
-		ReleaseObject();
+			ReleaseObject();
+		}
 	}
 
 	std::vector<String> pathList;
 	std::vector<TShared<ResourceBase> > resourceList;
+	std::atomic<uint32_t> completed;
+
 	String resType;
 	BridgeSunset& bridgeSunset;
 	SnowyStream& snowyStream;
