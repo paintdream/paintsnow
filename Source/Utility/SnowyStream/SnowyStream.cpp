@@ -41,7 +41,7 @@ SnowyStream::SnowyStream(Interfaces& inters, BridgeSunset& bs, const TWrapper<IA
 void SnowyStream::Initialize() {
 	assert(resourceManagers.empty());
 	renderDevice = interfaces.render.CreateDevice("");
-	resourceQueue = interfaces.render.CreateQueue(renderDevice);
+	resourceQueue = interfaces.render.CreateQueue(renderDevice, IRender::QUEUE_MULTITHREAD);
 	RegisterReflectedSerializers();
 	RegisterBuiltinPasses();
 
