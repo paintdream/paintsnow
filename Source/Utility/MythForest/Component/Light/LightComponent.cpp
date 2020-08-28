@@ -135,8 +135,8 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 
 		// Prepare render target
 		IRender::Resource::RenderTargetDescription desc;
-		desc.colorBufferStorages.resize(1);
-		IRender::Resource::RenderTargetDescription::Storage& s = desc.colorBufferStorages[0];
+		desc.colorStorages.resize(1);
+		IRender::Resource::RenderTargetDescription::Storage& s = desc.colorStorages[0];
 		s.resource = dummyColorAttachment->GetTexture();
 		// we don't care color
 		s.loadOp = IRender::Resource::RenderTargetDescription::DISCARD;

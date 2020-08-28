@@ -47,7 +47,7 @@ namespace PaintsNow {
 		}
 
 		template <class T>
-		static inline size_t UpdateBuffer(IRender& render, IRender::Queue* queue, IRender::Resource*& buffer, std::vector<T>& data, IRender::Resource::BufferDescription::Usage usage, uint32_t groupSize = 1) {
+		inline size_t UpdateBuffer(IRender& render, IRender::Queue* queue, IRender::Resource*& buffer, std::vector<T>& data, IRender::Resource::BufferDescription::Usage usage, const char* note, uint32_t groupSize = 1) {
 			size_t size = data.size();
 			if (!data.empty()) {
 				IRender::Resource::BufferDescription description;
@@ -67,6 +67,9 @@ namespace PaintsNow {
 					buffer = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_BUFFER);
 				}
 
+#ifdef _DEBUG
+				render.SetResourceNotation(buffer, GetLocation() + "@" + note);
+#endif
 				render.UploadResource(queue, buffer, &description);
 			}
 

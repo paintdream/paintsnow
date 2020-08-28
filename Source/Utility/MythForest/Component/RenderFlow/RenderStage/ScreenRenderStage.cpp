@@ -5,7 +5,7 @@
 
 using namespace PaintsNow;
 
-ScreenRenderStage::ScreenRenderStage(const String& config) : OutputColor(renderTargetDescription.colorBufferStorages[0]) {
+ScreenRenderStage::ScreenRenderStage(const String& config) : OutputColor(renderTargetDescription.colorStorages[0]) {
 	size_t count = Math::Max(1, atoi(config.c_str()));
 	BloomLayers.resize(count);
 	for (size_t i = 0; i < count; i++) {

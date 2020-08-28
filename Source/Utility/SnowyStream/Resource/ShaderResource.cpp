@@ -35,6 +35,10 @@ void ShaderResource::Attach(IRender& render, void* deviceContext) {
 	assert(shaderResource == nullptr);
 	shaderResource = pass.Compile(render, queue);
 
+#ifdef _DEBUG
+	render.SetResourceNotation(shaderResource, GetLocation());
+#endif
+
 	// compute hash value
 	hashValue = pass.ExportHash(true);
 }

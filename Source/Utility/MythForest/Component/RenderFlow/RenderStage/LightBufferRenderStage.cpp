@@ -5,7 +5,7 @@
 
 using namespace PaintsNow;
 
-LightBufferRenderStage::LightBufferRenderStage(const String& config) : LightTexture(renderTargetDescription.colorBufferStorages[0]) {
+LightBufferRenderStage::LightBufferRenderStage(const String& config) : LightTexture(renderTargetDescription.colorStorages[0]) {
 	uint8_t shift = Math::Min((uint8_t)atoi(config.c_str()), (uint8_t)16);
 	resolutionShift = Char2((char)shift, (char)shift);
 }

@@ -30,7 +30,7 @@ void DeviceRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) 
 
 	// Clear source node renderTarget
 	input->renderTargetTextureResource = nullptr;
-	(static_cast<RenderStage*>(input->GetNode()))->renderTargetDescription.colorBufferStorages.clear();
+	(static_cast<RenderStage*>(input->GetNode()))->renderTargetDescription.colorStorages.clear();
 
 	// BaseClass::PrepareResources(engine, queue);
 }

@@ -5,7 +5,7 @@
 
 using namespace PaintsNow;
 
-ShadowMaskRenderStage::ShadowMaskRenderStage(const String& config) : OutputMask(renderTargetDescription.colorBufferStorages[0]) {}
+ShadowMaskRenderStage::ShadowMaskRenderStage(const String& config) : OutputMask(renderTargetDescription.colorStorages[0]) {}
 
 TObject<IReflect>& ShadowMaskRenderStage::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);

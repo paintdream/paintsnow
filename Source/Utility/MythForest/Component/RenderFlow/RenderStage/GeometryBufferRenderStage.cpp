@@ -5,13 +5,13 @@
 using namespace PaintsNow;
 
 GeometryBufferRenderStage::GeometryBufferRenderStage(const String& s) : BaseClass(2),
-	BaseColorOcclusion(renderTargetDescription.colorBufferStorages[0]),
-	NormalRoughnessMetallic(renderTargetDescription.colorBufferStorages[1]),
+	BaseColorOcclusion(renderTargetDescription.colorStorages[0]),
+	NormalRoughnessMetallic(renderTargetDescription.colorStorages[1]),
 	Depth(renderTargetDescription.depthStorage) {
-	renderTargetDescription.colorBufferStorages[0].loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
-	renderTargetDescription.colorBufferStorages[0].storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
-	renderTargetDescription.colorBufferStorages[1].loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
-	renderTargetDescription.colorBufferStorages[1].storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
+	renderTargetDescription.colorStorages[0].loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
+	renderTargetDescription.colorStorages[0].storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
+	renderTargetDescription.colorStorages[1].loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
+	renderTargetDescription.colorStorages[1].storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 	renderTargetDescription.depthStorage.loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
 	renderTargetDescription.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 	renderTargetDescription.stencilStorage.loadOp = IRender::Resource::RenderTargetDescription::CLEAR;

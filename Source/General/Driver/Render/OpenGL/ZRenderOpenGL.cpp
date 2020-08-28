@@ -1248,8 +1248,8 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> : public R
 #ifdef _DEBUG
 	virtual void SetUploadDescription(IRender::Resource::Description* d) override {
 		IRender::Resource::RenderTargetDescription* t = static_cast<IRender::Resource::RenderTargetDescription*>(d);
-		for (size_t i = 0; i < t->colorBufferStorages.size(); i++) {
-			ResourceImplOpenGL<IRender::Resource::TextureDescription>* x = static_cast<ResourceImplOpenGL<IRender::Resource::TextureDescription>*>(t->colorBufferStorages[i].resource);
+		for (size_t i = 0; i < t->colorStorages.size(); i++) {
+			ResourceImplOpenGL<IRender::Resource::TextureDescription>* x = static_cast<ResourceImplOpenGL<IRender::Resource::TextureDescription>*>(t->colorStorages[i].resource);
 			if (x != nullptr) {
 				assert(x->GetNextDescription().dimension.x() != 0 && x->GetNextDescription().dimension.y() != 0);
 				assert(x->GetNextDescription().state.attachment);
@@ -1281,7 +1281,7 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> : public R
 			glGenVertexArrays(1, &vertexArrayID);
 		}
 
-		if (!d.colorBufferStorages.empty()) {
+		if (!d.colorStorages.empty()) {
 			// currently formats are not configurable for depth & stencil buffer
 			GL_GUARD();
 			if (frameBufferID == 0) {
@@ -1331,9 +1331,9 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> : public R
 
 			// create texture slots first
 			std::vector<uint32_t> renderBufferSlots;
-			for (size_t i = 0; i < d.colorBufferStorages.size(); i++) {
+			for (size_t i = 0; i < d.colorStorages.size(); i++) {
 				GL_GUARD();
-				IRender::Resource::RenderTargetDescription::Storage& storage = d.colorBufferStorages[i];
+				IRender::Resource::RenderTargetDescription::Storage& storage = d.colorStorages[i];
 				ResourceImplOpenGL<IRender::Resource::TextureDescription>* t = static_cast<ResourceImplOpenGL<IRender::Resource::TextureDescription>*>(storage.resource);
 				assert(t != nullptr);
 				assert(t->textureID != 0);
@@ -1434,8 +1434,8 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> : public R
 				glClear(clearMask);
 			}
 
-			for (size_t i = 0; i < d.colorBufferStorages.size(); i++) {
-				IRender::Resource::RenderTargetDescription::Storage& t = d.colorBufferStorages[i];
+			for (size_t i = 0; i < d.colorStorages.size(); i++) {
+				IRender::Resource::RenderTargetDescription::Storage& t = d.colorStorages[i];
 				if (t.loadOp == IRender::Resource::RenderTargetDescription::CLEAR) {
 					glDrawBuffer(GL_COLOR_ATTACHMENT0 + i);
 					glClearColor(t.clearColor.r(), t.clearColor.g(), t.clearColor.b(), t.clearColor.a());
@@ -1473,28 +1473,28 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> : public R
 			GL_COLOR_ATTACHMENT0 + 2, GL_COLOR_ATTACHMENT0 + 3, GL_COLOR_ATTACHMENT0 + 4,
 			GL_COLOR_ATTACHMENT0 + 5, GL_COLOR_ATTACHMENT0 + 6, GL_COLOR_ATTACHMENT0 + 7 };
 
-			if (d.colorBufferStorages.empty()) {
+			if (d.colorStorages.empty()) {
 				glDrawBuffer(GL_NONE);
 			} else {
-				glDrawBuffers((GLsizei)Math::Min(MAX_ID, d.colorBufferStorages.size()), idlist);
+				glDrawBuffers((GLsizei)Math::Min(MAX_ID, d.colorStorages.size()), idlist);
 			}
 		}
 
 		UShort2Pair range = d.range;
 		if (range.second.x() == 0) {
-			if (d.colorBufferStorages.empty()) {
+			if (d.colorStorages.empty()) {
 				range.second.x() = queue.device->resolution.x();
 			} else {
-				ResourceImplOpenGL<TextureDescription>* texture = static_cast<ResourceImplOpenGL<TextureDescription>*>(d.colorBufferStorages[0].resource);
+				ResourceImplOpenGL<TextureDescription>* texture = static_cast<ResourceImplOpenGL<TextureDescription>*>(d.colorStorages[0].resource);
 				range.second.x() = texture->GetDescription().dimension.x();
 			}
 		}
 
 		if (range.second.y() == 0) {
-			if (d.colorBufferStorages.empty()) {
+			if (d.colorStorages.empty()) {
 				range.second.y() = queue.device->resolution.y();
 			} else {
-				ResourceImplOpenGL<TextureDescription>* texture = static_cast<ResourceImplOpenGL<TextureDescription>*>(d.colorBufferStorages[0].resource);
+				ResourceImplOpenGL<TextureDescription>* texture = static_cast<ResourceImplOpenGL<TextureDescription>*>(d.colorStorages[0].resource);
 				range.second.y() = texture->GetDescription().dimension.y();
 			}
 		}

@@ -5,7 +5,7 @@
 
 using namespace PaintsNow;
 
-DepthResolveRenderStage::DepthResolveRenderStage(const String& config) : OutputDepth(renderTargetDescription.colorBufferStorages[0]) {}
+DepthResolveRenderStage::DepthResolveRenderStage(const String& config) : OutputDepth(renderTargetDescription.colorStorages[0]) {}
 
 TObject<IReflect>& DepthResolveRenderStage::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);

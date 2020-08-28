@@ -34,6 +34,7 @@ struct VulkanQueueImpl;
 struct ResourceImplVulkanBase : public IRender::Resource {
 	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* description) = 0;
 	virtual void Delete(VulkanQueueImpl* queue) = 0;
+	virtual void Execute(VulkanQueueImpl* queue) = 0;
 };
 
 template <class T>
@@ -44,6 +45,7 @@ struct ResourceImplVulkanDesc : public ResourceImplVulkanBase {
 	}
 
 	virtual void Delete(VulkanQueueImpl* queue) override {}
+	virtual void Execute(VulkanQueueImpl* queue) override {}
 
 	T cacheDescription;
 };
@@ -77,7 +79,7 @@ struct VulkanDeviceImpl : public IRender::Device {
 };
 
 struct VulkanQueueImpl : public IRender::Queue, public TPool<VulkanQueueImpl, VkCommandBuffer> {
-	VulkanQueueImpl(VulkanDeviceImpl* dev, VkCommandPool pool) : device(dev), commandPool(pool), TPool<VulkanQueueImpl, VkCommandBuffer>(4), commandCount(0), renderTargetSignature(0) {
+	VulkanQueueImpl(VulkanDeviceImpl* dev, VkCommandPool pool) : device(dev), commandPool(pool), TPool<VulkanQueueImpl, VkCommandBuffer>(4), commandCount(0), renderTargetResource(nullptr) {
 		VkCommandBufferAllocateInfo info;
 		info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		info.commandBufferCount = maxCount;
@@ -148,8 +150,7 @@ struct VulkanQueueImpl : public IRender::Queue, public TPool<VulkanQueueImpl, Vk
 	uint32_t commandCount;
 
 	IRender::Resource::RenderStateDescription renderStateDescription;
-	IRender::Resource::RenderTargetDescription renderTargetDescription;
-	uint32_t renderTargetSignature;
+	ResourceImplVulkanBase* renderTargetResource;
 	TQueueList<VkBuffer, 4> transientDataBuffers;
 	TQueueList<VkCommandBuffer, 4> preparedCommandBuffers;
 	TQueueList<ResourceImplVulkanBase*> deletedResources;
@@ -453,11 +454,16 @@ static VkFormat TranslateFormat(uint32_t format, uint32_t layout) {
 
 template <>
 struct ResourceImplVulkan<IRender::Resource::TextureDescription> : public ResourceImplVulkanDesc<IRender::Resource::TextureDescription> {
-	ResourceImplVulkan() : image(VK_NULL_HANDLE) {}
+	ResourceImplVulkan() : image(VK_NULL_HANDLE), imageView(VK_NULL_HANDLE) {}
 	~ResourceImplVulkan() {
 	}
 
 	void Clear(VulkanDeviceImpl* device) {
+		if (imageView != VK_NULL_HANDLE) {
+			vkDestroyImageView(device->device, imageView, device->allocator);
+			imageView = VK_NULL_HANDLE;
+		}
+
 		if (image != VK_NULL_HANDLE) {
 			vkDestroyImage(device->device, image, device->allocator);
 			image = VK_NULL_HANDLE;
@@ -516,6 +522,16 @@ struct ResourceImplVulkan<IRender::Resource::TextureDescription> : public Resour
 			VkDeviceMemory memory;
 			Verify("allocate texture memory", vkAllocateMemory(device->device, &allocInfo, device->allocator, &memory));
 			Verify("bind image", vkBindImageMemory(device->device, image, memory, 0));
+
+			VkImageViewCreateInfo viewInfo = {};
+			viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+			viewInfo.image = image;
+			viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+			viewInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+			viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			viewInfo.subresourceRange.levelCount = 1;
+			viewInfo.subresourceRange.layerCount = 1;
+			Verify("create image view", vkCreateImageView(device->device, &viewInfo, device->allocator, &imageView));
 		}
 
 		if (!desc.data.Empty()) {
@@ -593,6 +609,7 @@ struct ResourceImplVulkan<IRender::Resource::TextureDescription> : public Resour
 	}
 
 	VkImage image;
+	VkImageView imageView;
 };
 
 template <>
@@ -780,32 +797,31 @@ static uint32_t ComputeBufferStride(const IRender::Resource::BufferDescription& 
 	return unit * desc.component;
 }
 
+
 template <>
-struct ResourceImplVulkan<IRender::Resource::ShaderDescription> : public ResourceImplVulkanBase {
-	ResourceImplVulkan() : descriptorSetLayout(VK_NULL_HANDLE), descriptorSet(VK_NULL_HANDLE), pipelineLayout(VK_NULL_HANDLE) {
-		memset(shaderModules, 0, sizeof(shaderModules));
+struct ResourceImplVulkan<IRender::Resource::RenderStateDescription> : public ResourceImplVulkanDesc<IRender::Resource::RenderStateDescription> {
+	virtual void Execute(VulkanQueueImpl* queue) override {
+		queue->renderStateDescription = cacheDescription;
+	}
+};
+
+static uint32_t EncodeRenderTargetSignature(const IRender::Resource::RenderTargetDescription& desc) {
+	uint32_t sig = 0;
+	sig = (sig << 3) | (desc.depthStorage.loadOp << 1) | (desc.depthStorage.storeOp);
+	sig = (sig << 3) | (desc.stencilStorage.loadOp << 1) | (desc.stencilStorage.storeOp);
+
+	for (size_t i = 0; i < desc.colorStorages.size(); i++) {
+		const IRender::Resource::RenderTargetDescription::Storage& s = desc.colorStorages[i];
+		assert(s.loadOp < 4 && s.storeOp < 2);
+		sig = (sig << 3) | (s.loadOp << 1) | (s.storeOp);
 	}
 
-	void Clear(VulkanDeviceImpl* device) {
-		if (pipelineLayout) {
-			vkDestroyPipelineLayout(device->device, pipelineLayout, device->allocator);
-		}
+	return sig;
+}
 
-		if (descriptorSetLayout) {
-			vkDestroyDescriptorSetLayout(device->device, descriptorSetLayout, device->allocator);
-		}
-
-		if (descriptorSet) {
-			vkFreeDescriptorSets(device->device, device->descriptorPool, 1, &descriptorSet);
-		}
-
-		for (size_t i = 0; i < sizeof(shaderModules) / sizeof(shaderModules[0]); i++) {
-			VkShaderModule m = shaderModules[i];
-			if (m) {
-				vkDestroyShaderModule(device->device, m, device->allocator);
-			}
-		}
-	}
+template <>
+struct ResourceImplVulkan<IRender::Resource::RenderTargetDescription> : public ResourceImplVulkanDesc<IRender::Resource::RenderTargetDescription> {
+	ResourceImplVulkan() : signature(0), renderPass(VK_NULL_HANDLE), frameBuffer(VK_NULL_HANDLE) {}
 
 	static VkAttachmentLoadOp ConvertLoadOp(uint32_t k) {
 		switch (k) {
@@ -833,13 +849,139 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> : public Resourc
 		return VK_ATTACHMENT_STORE_OP_STORE;
 	}
 
+	virtual void Delete(VulkanQueueImpl* queue) {
+		VulkanDeviceImpl* device = queue->device;
+		if (renderPass != VK_NULL_HANDLE) {
+			vkDestroyRenderPass(device->device, renderPass, device->allocator);
+			renderPass = VK_NULL_HANDLE;
+		}
+
+		if (frameBuffer != VK_NULL_HANDLE) {
+			vkDestroyFramebuffer(device->device, frameBuffer, device->allocator);
+			frameBuffer = VK_NULL_HANDLE;
+		}
+	}
+
+	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* desc) override {
+		BaseClass::Upload(queue, desc);
+		signature = EncodeRenderTargetSignature(cacheDescription);
+
+		std::vector<VkAttachmentDescription> attachmentDescriptions(cacheDescription.colorStorages.size());
+		std::vector<VkAttachmentReference> attachmentReferences(attachmentDescriptions.size());
+		for (size_t i = 0; i < cacheDescription.colorStorages.size(); i++) {
+			const IRender::Resource::RenderTargetDescription::Storage& storage = cacheDescription.colorStorages[i];
+			ResourceImplVulkan<IRender::Resource::TextureDescription>* resource = static_cast<ResourceImplVulkan<IRender::Resource::TextureDescription>*>(storage.resource);
+
+			VkAttachmentDescription& desc = attachmentDescriptions[i];
+			desc.format = TranslateFormat(resource->cacheDescription.state.format, resource->cacheDescription.state.layout);
+			desc.samples = VK_SAMPLE_COUNT_1_BIT;
+			desc.loadOp = ConvertLoadOp(desc.loadOp);
+			desc.storeOp = ConvertStoreOp(desc.storeOp);
+			desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+			desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+			desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+			desc.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+			VkAttachmentReference& colorAttachment = attachmentReferences[i];
+			colorAttachment.attachment = 0;
+			colorAttachment.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		}
+
+		VkAttachmentReference depthStencilAttachment;
+		depthStencilAttachment.attachment = 0;
+		depthStencilAttachment.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+		VkSubpassDescription subPass = {};
+		subPass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+		subPass.colorAttachmentCount = attachmentReferences.size();
+		subPass.pColorAttachments = &attachmentReferences[0];
+		subPass.pDepthStencilAttachment = &depthStencilAttachment;
+
+		VkSubpassDependency dependency = {};
+		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+		dependency.dstSubpass = 0;
+		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.srcAccessMask = 0;
+		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+		VkRenderPassCreateInfo renderPassInfo = {};
+		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+		renderPassInfo.attachmentCount = attachmentDescriptions.size();
+		renderPassInfo.pAttachments = &attachmentDescriptions[0];
+		renderPassInfo.subpassCount = 1;
+		renderPassInfo.pSubpasses = &subPass;
+		renderPassInfo.dependencyCount = 1;
+		renderPassInfo.pDependencies = &dependency;
+
+		VkRenderPass renderPass;
+		VulkanDeviceImpl* device = queue->device;
+		Verify("create render pass", vkCreateRenderPass(device->device, &renderPassInfo, device->allocator, &renderPass));
+
+		std::vector<VkImageView> attachments(cacheDescription.colorStorages.size());
+		for (size_t i = 0; i < attachments.size(); i++) {
+			ResourceImplVulkan<IRender::Resource::TextureDescription>* texture = static_cast<ResourceImplVulkan<IRender::Resource::TextureDescription>*>(cacheDescription.colorStorages[i].resource);
+			attachments[i] = texture->imageView;
+		}
+
+		VkFramebufferCreateInfo info = {};
+		info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+		info.renderPass = renderPass;
+		info.attachmentCount = cacheDescription.colorStorages.size();
+	}
+
+	virtual void Execute(VulkanQueueImpl* queue) override {
+		queue->renderTargetResource = this;
+
+		// std::vector<VkImageView> attachments()
+	}
+
+	uint32_t signature;
+	VkRenderPass renderPass;
+	VkFramebuffer frameBuffer;
+};
+
+template <>
+struct ResourceImplVulkan<IRender::Resource::ShaderDescription> : public ResourceImplVulkanBase {
+	ResourceImplVulkan() : descriptorSetLayout(VK_NULL_HANDLE), descriptorSet(VK_NULL_HANDLE), pipelineLayout(VK_NULL_HANDLE) {
+		memset(shaderModules, 0, sizeof(shaderModules));
+	}
+
+	void Clear(VulkanDeviceImpl* device) {
+		if (pipelineLayout != VK_NULL_HANDLE) {
+			vkDestroyPipelineLayout(device->device, pipelineLayout, device->allocator);
+			pipelineLayout = VK_NULL_HANDLE;
+		}
+
+		if (descriptorSetLayout != VK_NULL_HANDLE) {
+			vkDestroyDescriptorSetLayout(device->device, descriptorSetLayout, device->allocator);
+			descriptorSetLayout = VK_NULL_HANDLE;
+		}
+
+		if (descriptorSet != VK_NULL_HANDLE) {
+			vkFreeDescriptorSets(device->device, device->descriptorPool, 1, &descriptorSet);
+			descriptorSet = VK_NULL_HANDLE;
+		}
+
+		for (size_t i = 0; i < sizeof(shaderModules) / sizeof(shaderModules[0]); i++) {
+			VkShaderModule& m = shaderModules[i];
+			if (m != VK_NULL_HANDLE) {
+				vkDestroyShaderModule(device->device, m, device->allocator);
+				m = VK_NULL_HANDLE;
+			}
+		}
+	}
+
+
 	PipelineInstance& QueryInstance(VulkanQueueImpl* queue, ResourceImplVulkan<IRender::Resource::DrawCallDescription>* drawCall) {
 		// Generate vertex format.
 		const IRender::Resource::RenderStateDescription& renderState = queue->renderStateDescription;
 		PipelineKey key;
 		key.renderState = renderState;
 		key.bufferSignature = drawCall->signature;
-		key.renderTargetSignature = queue->renderTargetSignature;
+		assert(queue->renderTargetResource != nullptr);
+		ResourceImplVulkan<IRender::Resource::RenderTargetDescription>* target = static_cast<ResourceImplVulkan<IRender::Resource::RenderTargetDescription>*>(queue->renderTargetResource);
+		key.renderTargetSignature = target->signature;
 
 		std::vector<std::key_value<PipelineKey, PipelineInstance> >::iterator it = std::binary_find(stateInstances.begin(), stateInstances.end(), key);
 		if (it != stateInstances.end()) {
@@ -928,7 +1070,7 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> : public Resourc
 
 		VkPipelineColorBlendStateCreateInfo blendInfo;
 		blendInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-		blendInfo.attachmentCount = safe_cast<uint32_t>(queue->renderTargetDescription.colorBufferStorages.size());
+		blendInfo.attachmentCount = safe_cast<uint32_t>(target->cacheDescription.colorStorages.size());
 		assert(blendInfo.attachmentCount != 0);
 		// TODO: different blend operations
 		// create state instance
@@ -952,59 +1094,6 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> : public Resourc
 		dynamicState.dynamicStateCount = sizeof(dynamicStates) / sizeof(dynamicStates[0]);
 		dynamicState.pDynamicStates = dynamicStates;
 
-		const IRender::Resource::RenderTargetDescription& renderTargetDescription = queue->renderTargetDescription;
-		std::vector<VkAttachmentDescription> attachmentDescriptions(renderTargetDescription.colorBufferStorages.size());
-		std::vector<VkAttachmentReference> attachmentReferences(attachmentDescriptions.size());
-		for (size_t i = 0; i < renderTargetDescription.colorBufferStorages.size(); i++) {
-			const IRender::Resource::RenderTargetDescription::Storage& storage = queue->renderTargetDescription.colorBufferStorages[i];
-			ResourceImplVulkan<IRender::Resource::TextureDescription>* resource = static_cast<ResourceImplVulkan<IRender::Resource::TextureDescription>*>(storage.resource);
-
-			VkAttachmentDescription& desc = attachmentDescriptions[i];
-			desc.format = TranslateFormat(resource->cacheDescription.state.format, resource->cacheDescription.state.layout);
-			desc.samples = VK_SAMPLE_COUNT_1_BIT;
-			desc.loadOp = ConvertLoadOp(desc.loadOp);
-			desc.storeOp = ConvertStoreOp(desc.storeOp);
-			desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-			desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-			desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-			desc.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-			VkAttachmentReference& colorAttachment = attachmentReferences[i];
-			colorAttachment.attachment = 0;
-			colorAttachment.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-		}
-
-		VkAttachmentReference depthStencilAttachment;
-		depthStencilAttachment.attachment = 0;
-		depthStencilAttachment.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-		VkSubpassDescription subPass = {};
-		subPass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-		subPass.colorAttachmentCount = attachmentReferences.size();
-		subPass.pColorAttachments = &attachmentReferences[0];
-		subPass.pDepthStencilAttachment = &depthStencilAttachment;
-
-		VkSubpassDependency dependency = {};
-		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-		dependency.dstSubpass = 0;
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependency.srcAccessMask = 0;
-		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-		VkRenderPassCreateInfo renderPassInfo = {};
-		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-		renderPassInfo.attachmentCount = attachmentDescriptions.size();
-		renderPassInfo.pAttachments = &attachmentDescriptions[0];
-		renderPassInfo.subpassCount = 1;
-		renderPassInfo.pSubpasses = &subPass;
-		renderPassInfo.dependencyCount = 1;
-		renderPassInfo.pDependencies = &dependency;
-
-		VkRenderPass renderPass;
-		VulkanDeviceImpl* device = queue->device;
-		Verify("create render pass", vkCreateRenderPass(device->device, &renderPassInfo, device->allocator, &renderPass));
-
 		VkGraphicsPipelineCreateInfo info = {};
 		info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 		info.flags = 0;
@@ -1018,9 +1107,10 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> : public Resourc
 		info.pColorBlendState = &blendInfo;
 		info.pDynamicState = &dynamicState;
 		info.layout = pipelineLayout;
-		info.renderPass = renderPass;
+		info.renderPass = target->renderPass;
 
 		PipelineInstance instance;
+		VulkanDeviceImpl* device = queue->device;
 		Verify("create graphics pipelines", vkCreateGraphicsPipelines(device->device, VK_NULL_HANDLE, 1, &info, device->allocator, &instance.pipeline));
 	}
 
@@ -1198,6 +1288,10 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> : public Resourc
 		Verify("create pipeline layout", vkCreatePipelineLayout(device->device, &layoutInfo, device->allocator, &pipelineLayout));
 	}
 
+	virtual void Execute(VulkanQueueImpl* queue) override {
+		assert(false); // not possible
+	}
+
 	VkDescriptorSetLayout descriptorSetLayout;
 	VkDescriptorSet descriptorSet;
 	VkPipelineLayout pipelineLayout;
@@ -1206,37 +1300,6 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> : public Resourc
 	std::vector<VkPipelineShaderStageCreateInfo> shaderStageCreateInfos;
 	std::vector<IRender::Resource::BufferDescription> bufferDescriptions;
 	std::vector<std::key_value<PipelineKey, PipelineInstance> > stateInstances;
-};
-
-template <>
-struct ResourceImplVulkan<IRender::Resource::RenderStateDescription> : public ResourceImplVulkanBase {
-	virtual void Delete(VulkanQueueImpl* queue) override {}
-	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* description) override {
-		queue->renderStateDescription = *static_cast<IRender::Resource::RenderStateDescription*>(description);
-	}
-};
-
-static uint32_t EncodeRenderTargetSignature(const IRender::Resource::RenderTargetDescription& desc) {
-	uint32_t sig = 0;
-	sig = (sig << 3) | (desc.depthStorage.loadOp << 1) | (desc.depthStorage.storeOp);
-	sig = (sig << 3) | (desc.stencilStorage.loadOp << 1) | (desc.stencilStorage.storeOp);
-
-	for (size_t i = 0; i < desc.colorBufferStorages.size(); i++) {
-		const IRender::Resource::RenderTargetDescription::Storage& s = desc.colorBufferStorages[i];
-		assert(s.loadOp < 4 && s.storeOp < 2);
-		sig = (sig << 3) | (s.loadOp << 1) | (s.storeOp);
-	}
-
-	return sig;
-}
-
-template <>
-struct ResourceImplVulkan<IRender::Resource::RenderTargetDescription> : public ResourceImplVulkanBase {
-	virtual void Delete(VulkanQueueImpl* queue) override {}
-	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* description) override {
-		queue->renderTargetDescription = *static_cast<IRender::Resource::RenderTargetDescription*>(description);
-		queue->renderTargetSignature = EncodeRenderTargetSignature(queue->renderTargetDescription);
-	}
 };
 
 // Resource

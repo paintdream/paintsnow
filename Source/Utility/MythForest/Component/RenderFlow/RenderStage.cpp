@@ -22,9 +22,9 @@ RenderStage::RenderStage(uint32_t colorAttachmentCount) : renderState(nullptr), 
 	s.stencilMask = 0;
 
 	IRender::Resource::RenderTargetDescription& t = renderTargetDescription;
-	t.colorBufferStorages.resize(colorAttachmentCount);
-	for (size_t i = 0; i < t.colorBufferStorages.size(); i++) {
-		IRender::Resource::RenderTargetDescription::Storage& s = t.colorBufferStorages[i];
+	t.colorStorages.resize(colorAttachmentCount);
+	for (size_t i = 0; i < t.colorStorages.size(); i++) {
+		IRender::Resource::RenderTargetDescription::Storage& s = t.colorStorages[i];
 		s.loadOp = IRender::Resource::RenderTargetDescription::DISCARD;
 		s.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 	}
@@ -39,7 +39,7 @@ void RenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 
 	assert(renderState == nullptr);
 	assert(renderTarget == nullptr);
-	assert(!renderTargetDescription.colorBufferStorages.empty());
+	assert(!renderTargetDescription.colorStorages.empty());
 
 	renderState = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_RENDERSTATE);
 	render.UploadResource(queue, renderState, &renderStateDescription);

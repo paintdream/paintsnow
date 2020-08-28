@@ -38,9 +38,9 @@ bool RenderPortLoadTarget::UpdateDataStream(RenderPort& source) {
 			bindingStorage.resource = target->bindingStorage.resource;
 			bindingStorage.mipLevel = target->bindingStorage.mipLevel;
 		} else {
-			size_t index = &target->bindingStorage - &desc.colorBufferStorages[0];
-			bindingStorage.resource = desc.colorBufferStorages[index].resource;
-			bindingStorage.mipLevel = desc.colorBufferStorages[index].mipLevel;
+			size_t index = &target->bindingStorage - &desc.colorStorages[0];
+			bindingStorage.resource = desc.colorStorages[index].resource;
+			bindingStorage.mipLevel = desc.colorStorages[index].mipLevel;
 		}
 	}
 

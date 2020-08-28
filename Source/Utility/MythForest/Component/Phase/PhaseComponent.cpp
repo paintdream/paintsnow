@@ -459,7 +459,7 @@ void PhaseComponent::TaskAssembleTaskBounce(Engine& engine, TaskData& task, cons
 	storage.resource = toPhase.irradiance->GetTexture();
 	storage.loadOp = IRender::Resource::RenderTargetDescription::DISCARD;
 	storage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
-	desc.colorBufferStorages.emplace_back(std::move(storage));
+	desc.colorStorages.emplace_back(std::move(storage));
 	desc.depthStorage.loadOp = IRender::Resource::RenderTargetDescription::DISCARD; // TODO:
 	desc.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
 	// task.texture = toPhase.irradiance;
@@ -496,7 +496,7 @@ void PhaseComponent::CoTaskAssembleTaskShadow(Engine& engine, TaskData& task, co
 	color.resource = emptyColorAttachment->GetTexture(); // Don't care
 	color.loadOp = IRender::Resource::RenderTargetDescription::DISCARD;
 	color.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
-	desc.colorBufferStorages.emplace_back(std::move(color));
+	desc.colorStorages.emplace_back(std::move(color));
 	desc.depthStorage.loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
 	desc.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 
@@ -539,7 +539,7 @@ void PhaseComponent::CoTaskAssembleTaskSetup(Engine& engine, TaskData& task, con
 	for (size_t k = 0; k < sizeof(rt) / sizeof(rt[0]); k++) {
 		IRender::Resource::RenderTargetDescription::Storage storage;
 		storage.resource = rt[k]->GetTexture();
-		desc.colorBufferStorages.emplace_back(std::move(storage));
+		desc.colorStorages.emplace_back(std::move(storage));
 	}
 
 	render.UploadResource(task.renderQueue, task.renderTarget, &desc);

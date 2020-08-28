@@ -2,7 +2,7 @@
 
 using namespace PaintsNow;
 
-WidgetRenderStage::WidgetRenderStage(const String& s) : OutputColor(renderTargetDescription.colorBufferStorages[0]) {}
+WidgetRenderStage::WidgetRenderStage(const String& s) : OutputColor(renderTargetDescription.colorStorages[0]) {}
 
 TObject<IReflect>& WidgetRenderStage::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);

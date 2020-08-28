@@ -2,7 +2,7 @@
 
 using namespace PaintsNow;
 
-AntiAliasingRenderStage::AntiAliasingRenderStage(const String& options) : OutputColor(renderTargetDescription.colorBufferStorages[0]) {}
+AntiAliasingRenderStage::AntiAliasingRenderStage(const String& options) : OutputColor(renderTargetDescription.colorStorages[0]) {}
 
 TObject<IReflect>& AntiAliasingRenderStage::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);

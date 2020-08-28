@@ -96,8 +96,8 @@ void VisibilityComponent::Initialize(Engine& engine, Entity* entity) {
 		texture->GetResourceManager().InvokeUpload(texture(), renderQueue);
 
 		IRender::Resource::RenderTargetDescription desc;
-		desc.colorBufferStorages.resize(1);
-		IRender::Resource::RenderTargetDescription::Storage& s = desc.colorBufferStorages[0];
+		desc.colorStorages.resize(1);
+		IRender::Resource::RenderTargetDescription::Storage& s = desc.colorStorages[0];
 		s.resource = texture->GetTexture();
 		s.loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
 		s.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;

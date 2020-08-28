@@ -2,10 +2,10 @@
 
 using namespace PaintsNow;
 
-PhaseLightRenderStage::PhaseLightRenderStage(const String& s) : OutputColor(renderTargetDescription.colorBufferStorages[0]) {
+PhaseLightRenderStage::PhaseLightRenderStage(const String& s) : OutputColor(renderTargetDescription.colorStorages[0]) {
 	renderStateDescription.blend = 1;
-	renderTargetDescription.colorBufferStorages[0].loadOp = IRender::Resource::RenderTargetDescription::DEFAULT;
-	renderTargetDescription.colorBufferStorages[0].storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
+	renderTargetDescription.colorStorages[0].loadOp = IRender::Resource::RenderTargetDescription::DEFAULT;
+	renderTargetDescription.colorStorages[0].storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 	renderTargetDescription.depthStorage.loadOp = IRender::Resource::RenderTargetDescription::DISCARD;
 	renderTargetDescription.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
 	renderTargetDescription.stencilStorage.loadOp = IRender::Resource::RenderTargetDescription::DISCARD;

@@ -78,15 +78,15 @@ void MeshResource::Upload(IRender& render, void* deviceContext) {
 			boneData[i * 2 + 1] = meshCollection.boneWeights[i];
 		}
 
-		deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.indexBuffer, meshCollection.indices, Description::INDEX);
-		deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.positionBuffer, meshCollection.vertices, Description::VERTEX);
-		deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.normalTangentColorBuffer, normalTangentColorData, Description::VERTEX, cnt);
-		deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.boneIndexWeightBuffer, boneData, Description::VERTEX, 2);
+		deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.indexBuffer, meshCollection.indices, Description::INDEX, "Index");
+		deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.positionBuffer, meshCollection.vertices, Description::VERTEX, "Position");
+		deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.normalTangentColorBuffer, normalTangentColorData, Description::VERTEX, "NormalColor", cnt);
+		deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.boneIndexWeightBuffer, boneData, Description::VERTEX, "BoneIndexWeight", 2);
 
 		bufferCollection.texCoordBuffers.resize(meshCollection.texCoords.size(), nullptr);
 		for (size_t j = 0; j < meshCollection.texCoords.size(); j++) {
 			IAsset::TexCoord& texCoord = meshCollection.texCoords[j];
-			deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.texCoordBuffers[j], texCoord.coords, Description::VERTEX);
+			deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.texCoordBuffers[j], texCoord.coords, Description::VERTEX, "TexCoord");
 		}
 
 		if (mapCount.load(std::memory_order_relaxed) == 0) {

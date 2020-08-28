@@ -5,7 +5,7 @@
 
 using namespace PaintsNow;
 
-DepthBoundingSetupRenderStage::DepthBoundingSetupRenderStage(const String& config) : OutputDepth(renderTargetDescription.colorBufferStorages[0]) {
+DepthBoundingSetupRenderStage::DepthBoundingSetupRenderStage(const String& config) : OutputDepth(renderTargetDescription.colorStorages[0]) {
 	uint8_t shift = Math::Min((uint8_t)atoi(config.c_str()), (uint8_t)16);
 	resolutionShift = Char2((char)shift, (char)shift);
 }

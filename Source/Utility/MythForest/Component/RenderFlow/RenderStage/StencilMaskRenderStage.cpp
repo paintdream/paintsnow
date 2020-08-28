@@ -5,7 +5,7 @@
 
 using namespace PaintsNow;
 
-StencilMaskRenderStage::StencilMaskRenderStage(const String& config) : InputDepth(renderTargetDescription.depthStorage), InputColorPlaceHolder(renderTargetDescription.colorBufferStorages[0]), OutputDepth(renderTargetDescription.depthStorage) {
+StencilMaskRenderStage::StencilMaskRenderStage(const String& config) : InputDepth(renderTargetDescription.depthStorage), InputColorPlaceHolder(renderTargetDescription.colorStorages[0]), OutputDepth(renderTargetDescription.depthStorage) {
 	renderStateDescription.colorWrite = 0;
 	renderStateDescription.depthTest = 1;
 	renderStateDescription.stencilTest = IRender::Resource::RenderStateDescription::ALWAYS;
@@ -13,8 +13,8 @@ StencilMaskRenderStage::StencilMaskRenderStage(const String& config) : InputDept
 	renderStateDescription.stencilValue = atoi(config.c_str());
 	renderStateDescription.stencilMask = 0xff;
 
-	renderTargetDescription.colorBufferStorages[0].loadOp = IRender::Resource::RenderTargetDescription::DISCARD;
-	renderTargetDescription.colorBufferStorages[0].storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
+	renderTargetDescription.colorStorages[0].loadOp = IRender::Resource::RenderTargetDescription::DISCARD;
+	renderTargetDescription.colorStorages[0].storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
 	renderTargetDescription.depthStorage.loadOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 	renderTargetDescription.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 	renderTargetDescription.stencilStorage.loadOp = IRender::Resource::RenderTargetDescription::DEFAULT;
