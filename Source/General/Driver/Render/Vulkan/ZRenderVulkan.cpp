@@ -59,7 +59,7 @@ struct FrameData {
 };
 
 struct VulkanQueueImpl;
-struct VulkanDeviceImpl : public IRender::Device {
+struct VulkanDeviceImpl final : public IRender::Device {
 	VulkanDeviceImpl(VkAllocationCallbacks* alloc, VkPhysicalDevice phy, VkDevice dev, uint32_t family, VkQueue q, VkDescriptorPool pool) : allocator(alloc), physicalDevice(phy), device(dev), resolution(0, 0), queueFamily(family), queue(q), swapChain(VK_NULL_HANDLE), descriptorPool(pool) {
 		critical.store(0, std::memory_order_release);
 	}
@@ -78,8 +78,8 @@ struct VulkanDeviceImpl : public IRender::Device {
 	std::vector<VulkanQueueImpl*> deletedQueues;
 };
 
-struct VulkanQueueImpl : public IRender::Queue, public TPool<VulkanQueueImpl, VkCommandBuffer> {
-	VulkanQueueImpl(VulkanDeviceImpl* dev, VkCommandPool pool) : device(dev), commandPool(pool), TPool<VulkanQueueImpl, VkCommandBuffer>(4), commandCount(0), renderTargetResource(nullptr) {
+struct VulkanQueueImpl final : public IRender::Queue, public TPool<VulkanQueueImpl, VkCommandBuffer> {
+	VulkanQueueImpl(VulkanDeviceImpl* dev, VkCommandPool pool, uint32_t f) : device(dev), commandPool(pool), TPool<VulkanQueueImpl, VkCommandBuffer>(4), commandCount(0), renderTargetResource(nullptr), flag(f) {
 		VkCommandBufferAllocateInfo info;
 		info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		info.commandBufferCount = maxCount;
@@ -130,9 +130,22 @@ struct VulkanQueueImpl : public IRender::Queue, public TPool<VulkanQueueImpl, Vk
 	void BeginFrame() {
 		preparedCommandBuffers.Push((VkCommandBuffer)VK_NULL_HANDLE);
 		transientDataBuffers.Push((VkBuffer)VK_NULL_HANDLE);
+		assert(renderTargetResource != nullptr);
+
+		VkCommandBufferBeginInfo info = {};
+		info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		info.flags = !(flag & IRender::PRESENT_REPEAT) ? VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT : 0;
+		vkBeginCommandBuffer(currentCommandBuffer, &info);
 	}
 
 	void EndFrame() {
+		if (renderTargetResource != nullptr) {
+			vkCmdEndRenderPass(currentCommandBuffer);
+			renderTargetResource = nullptr;
+		}
+
+		vkEndCommandBuffer(currentCommandBuffer);
+
 		for (VkCommandBuffer commandBuffer = preparedCommandBuffers.Top(); commandBuffer != VK_NULL_HANDLE; commandBuffer = preparedCommandBuffers.Top()) {
 			Release(commandBuffer);
 			preparedCommandBuffers.Pop();
@@ -148,6 +161,7 @@ struct VulkanQueueImpl : public IRender::Queue, public TPool<VulkanQueueImpl, Vk
 	VkCommandPool commandPool;
 	VkCommandBuffer currentCommandBuffer;
 	uint32_t commandCount;
+	uint32_t flag;
 
 	IRender::Resource::RenderStateDescription renderStateDescription;
 	ResourceImplVulkanBase* renderTargetResource;
@@ -397,7 +411,7 @@ IRender::Queue* ZRenderVulkan::CreateQueue(Device* dev, uint32_t flag) {
 	VkCommandPool commandPool;
 	vkCreateCommandPool(device->device, &info, allocator, &commandPool);
 
-	return new VulkanQueueImpl(device, commandPool);
+	return new VulkanQueueImpl(device, commandPool, flag);
 }
 
 IRender::Device* ZRenderVulkan::GetQueueDevice(Queue* q) {
@@ -409,7 +423,14 @@ bool ZRenderVulkan::SupportParallelPresent(Device* device) {
 	return true;
 }
 
-void ZRenderVulkan::PresentQueues(Queue** queues, uint32_t count, PresentOption option) {}
+void ZRenderVulkan::PresentQueues(Queue** queues, uint32_t count, PresentOption option) {
+	if (count != 0) {
+		VkQueue q = static_cast<VulkanQueueImpl*>(queues[0])->device->queue;
+		std::vector<VkSubmitInfo> info(count);
+
+		// TODO: submit at once
+	}
+}
 
 bool ZRenderVulkan::IsQueueModified(Queue* q) {
 	VulkanQueueImpl* queue = static_cast<VulkanQueueImpl*>(q);
@@ -453,7 +474,7 @@ static VkFormat TranslateFormat(uint32_t format, uint32_t layout) {
 }
 
 template <>
-struct ResourceImplVulkan<IRender::Resource::TextureDescription> : public ResourceImplVulkanDesc<IRender::Resource::TextureDescription> {
+struct ResourceImplVulkan<IRender::Resource::TextureDescription> final : public ResourceImplVulkanDesc<IRender::Resource::TextureDescription> {
 	ResourceImplVulkan() : image(VK_NULL_HANDLE), imageView(VK_NULL_HANDLE) {}
 	~ResourceImplVulkan() {
 	}
@@ -613,7 +634,7 @@ struct ResourceImplVulkan<IRender::Resource::TextureDescription> : public Resour
 };
 
 template <>
-struct ResourceImplVulkan<IRender::Resource::BufferDescription> : public ResourceImplVulkanDesc<IRender::Resource::BufferDescription> {
+struct ResourceImplVulkan<IRender::Resource::BufferDescription> final : public ResourceImplVulkanDesc<IRender::Resource::BufferDescription> {
 	ResourceImplVulkan() : buffer(VK_NULL_HANDLE) {}
 	~ResourceImplVulkan() {
 		assert(buffer == VK_NULL_HANDLE);
@@ -690,7 +711,7 @@ struct ResourceImplVulkan<IRender::Resource::BufferDescription> : public Resourc
 };
 
 template <>
-struct ResourceImplVulkan<IRender::Resource::DrawCallDescription> : public ResourceImplVulkanDesc<IRender::Resource::DrawCallDescription> {
+struct ResourceImplVulkan<IRender::Resource::DrawCallDescription> final : public ResourceImplVulkanDesc<IRender::Resource::DrawCallDescription> {
 	uint32_t GetVertexBufferCount() {
 		return signature.GetSize() / 3;
 	}
@@ -730,6 +751,10 @@ struct ResourceImplVulkan<IRender::Resource::DrawCallDescription> : public Resou
 		}
 
 		BaseClass::Upload(queue, description);
+	}
+
+	virtual void Execute(VulkanQueueImpl* queue) override {
+
 	}
 
 	Bytes signature;
@@ -799,7 +824,7 @@ static uint32_t ComputeBufferStride(const IRender::Resource::BufferDescription& 
 
 
 template <>
-struct ResourceImplVulkan<IRender::Resource::RenderStateDescription> : public ResourceImplVulkanDesc<IRender::Resource::RenderStateDescription> {
+struct ResourceImplVulkan<IRender::Resource::RenderStateDescription> final : public ResourceImplVulkanDesc<IRender::Resource::RenderStateDescription> {
 	virtual void Execute(VulkanQueueImpl* queue) override {
 		queue->renderStateDescription = cacheDescription;
 	}
@@ -820,7 +845,7 @@ static uint32_t EncodeRenderTargetSignature(const IRender::Resource::RenderTarge
 }
 
 template <>
-struct ResourceImplVulkan<IRender::Resource::RenderTargetDescription> : public ResourceImplVulkanDesc<IRender::Resource::RenderTargetDescription> {
+struct ResourceImplVulkan<IRender::Resource::RenderTargetDescription> final : public ResourceImplVulkanDesc<IRender::Resource::RenderTargetDescription> {
 	ResourceImplVulkan() : signature(0), renderPass(VK_NULL_HANDLE), frameBuffer(VK_NULL_HANDLE) {}
 
 	static VkAttachmentLoadOp ConvertLoadOp(uint32_t k) {
@@ -865,6 +890,9 @@ struct ResourceImplVulkan<IRender::Resource::RenderTargetDescription> : public R
 	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* desc) override {
 		BaseClass::Upload(queue, desc);
 		signature = EncodeRenderTargetSignature(cacheDescription);
+
+		// is backbuffer?
+		if (cacheDescription.colorStorages.empty()) return;
 
 		std::vector<VkAttachmentDescription> attachmentDescriptions(cacheDescription.colorStorages.size());
 		std::vector<VkAttachmentReference> attachmentReferences(attachmentDescriptions.size());
@@ -928,12 +956,76 @@ struct ResourceImplVulkan<IRender::Resource::RenderTargetDescription> : public R
 		info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		info.renderPass = renderPass;
 		info.attachmentCount = cacheDescription.colorStorages.size();
+		info.pAttachments = &attachments[0];
+		info.layers = 1;
+
+		if (cacheDescription.colorStorages.empty()) {
+			info.width = device->resolution.x();
+		} else {
+			ResourceImplVulkan<TextureDescription>* texture = static_cast<ResourceImplVulkan<TextureDescription>*>(cacheDescription.colorStorages[0].resource);
+			info.width = texture->cacheDescription.dimension.x();
+		}
+		if (cacheDescription.colorStorages.empty()) {
+			info.height = device->resolution.y();
+		} else {
+			ResourceImplVulkan<TextureDescription>* texture = static_cast<ResourceImplVulkan<TextureDescription>*>(cacheDescription.colorStorages[0].resource);
+			info.height = texture->cacheDescription.dimension.y();
+		}
+
+		Verify("create framebuffer", vkCreateFramebuffer(device->device, &info, device->allocator, &frameBuffer));
 	}
 
 	virtual void Execute(VulkanQueueImpl* queue) override {
-		queue->renderTargetResource = this;
+		if (queue->renderTargetResource != nullptr) {
+			vkCmdEndRenderPass(queue->currentCommandBuffer);
+		}
 
-		// std::vector<VkImageView> attachments()
+		queue->renderTargetResource = this;
+		VulkanDeviceImpl* device = queue->device;
+
+		VkRenderPassBeginInfo info = {};
+		info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		info.renderPass = renderPass;
+		info.framebuffer = frameBuffer;
+		info.renderArea.offset.x = cacheDescription.range.first.x();
+		info.renderArea.offset.y = cacheDescription.range.second.y();
+
+		UShort2Pair range = cacheDescription.range;
+
+		if (range.second.x() == 0) {
+			if (cacheDescription.colorStorages.empty()) {
+				info.renderArea.extent.width = device->resolution.x();
+			} else {
+				ResourceImplVulkan<TextureDescription>* texture = static_cast<ResourceImplVulkan<TextureDescription>*>(cacheDescription.colorStorages[0].resource);
+				info.renderArea.extent.width = texture->cacheDescription.dimension.x();
+			}
+		} else {
+			info.renderArea.extent.width = range.second.x() - range.first.x();
+		}
+
+		if (range.second.y() == 0) {
+			if (cacheDescription.colorStorages.empty()) {
+				info.renderArea.extent.height = device->resolution.y();
+			} else {
+				ResourceImplVulkan<TextureDescription>* texture = static_cast<ResourceImplVulkan<TextureDescription>*>(cacheDescription.colorStorages[0].resource);
+				info.renderArea.extent.height = texture->cacheDescription.dimension.y();
+			}
+		} else {
+			info.renderArea.extent.height = range.second.y() - range.first.y();
+		}
+
+		info.clearValueCount = 1;
+
+		std::vector<VkClearValue> clearValue(cacheDescription.colorStorages.size());
+		for (size_t i = 0; i < cacheDescription.colorStorages.size(); i++) {
+			VkClearValue& cv = clearValue[i];
+			IRender::Resource::RenderTargetDescription::Storage& s = cacheDescription.colorStorages[i];
+			static_assert(sizeof(cv.color.float32) == sizeof(s.clearColor), "Invalid color size");
+			memcpy(&cv.color.float32, &s.clearColor, sizeof(s.clearColor));
+		}
+
+		info.pClearValues = &clearValue[0];
+		vkCmdBeginRenderPass(queue->currentCommandBuffer, &info, VK_SUBPASS_CONTENTS_INLINE);
 	}
 
 	uint32_t signature;
@@ -942,7 +1034,7 @@ struct ResourceImplVulkan<IRender::Resource::RenderTargetDescription> : public R
 };
 
 template <>
-struct ResourceImplVulkan<IRender::Resource::ShaderDescription> : public ResourceImplVulkanBase {
+struct ResourceImplVulkan<IRender::Resource::ShaderDescription> final : public ResourceImplVulkanBase {
 	ResourceImplVulkan() : descriptorSetLayout(VK_NULL_HANDLE), descriptorSet(VK_NULL_HANDLE), pipelineLayout(VK_NULL_HANDLE) {
 		memset(shaderModules, 0, sizeof(shaderModules));
 	}
@@ -981,6 +1073,7 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> : public Resourc
 		key.bufferSignature = drawCall->signature;
 		assert(queue->renderTargetResource != nullptr);
 		ResourceImplVulkan<IRender::Resource::RenderTargetDescription>* target = static_cast<ResourceImplVulkan<IRender::Resource::RenderTargetDescription>*>(queue->renderTargetResource);
+		assert(target != nullptr);
 		key.renderTargetSignature = target->signature;
 
 		std::vector<std::key_value<PipelineKey, PipelineInstance> >::iterator it = std::binary_find(stateInstances.begin(), stateInstances.end(), key);

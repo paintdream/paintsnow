@@ -55,7 +55,7 @@ bool GLErrorGuard::enableGuard = true;
 
 #define GL_GUARD() GLErrorGuard guard;
 
-class DeviceImplOpenGL : public IRender::Device {
+class DeviceImplOpenGL final : public IRender::Device {
 public:
 	DeviceImplOpenGL(IRender& r) : lastProgramID(0), lastFrameBufferID(0), render(r) {}
 
@@ -166,7 +166,7 @@ private:
 	IRender::Resource* resource;
 };
 
-struct QueueImplOpenGL : public IRender::Queue {
+struct QueueImplOpenGL final : public IRender::Queue {
 	QueueImplOpenGL(DeviceImplOpenGL* d, bool shared) : device(d) {
 		critical.store(shared ? 0u : ~(uint32_t)0u, std::memory_order_relaxed);
 	}
@@ -388,7 +388,7 @@ public:
 };
 
 template <class T>
-struct ResourceImplOpenGL : public ResourceBaseImplOpenGLDesc<T> {
+struct ResourceImplOpenGL final : public ResourceBaseImplOpenGLDesc<T> {
 	virtual IRender::Resource::Type GetType() const  override { return IRender::Resource::RESOURCE_UNKNOWN; }
 	virtual void Upload(QueueImplOpenGL& queue) override { assert(false); }
 	virtual void Download(QueueImplOpenGL& queue) override { assert(false); }
@@ -397,7 +397,7 @@ struct ResourceImplOpenGL : public ResourceBaseImplOpenGLDesc<T> {
 };
 
 template <>
-struct ResourceImplOpenGL<IRender::Resource::TextureDescription> : public ResourceBaseImplOpenGLDesc<IRender::Resource::TextureDescription> {
+struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public ResourceBaseImplOpenGLDesc<IRender::Resource::TextureDescription> {
 	ResourceImplOpenGL() : textureID(0), textureType(GL_TEXTURE_2D), pixelBufferObjectID(0) {}
 	virtual IRender::Resource::Type GetType() const override { return RESOURCE_TEXTURE; }
 
@@ -876,7 +876,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> : public Resour
 };
 
 template <>
-struct ResourceImplOpenGL<IRender::Resource::BufferDescription> : public ResourceBaseImplOpenGLDesc<IRender::Resource::BufferDescription> {
+struct ResourceImplOpenGL<IRender::Resource::BufferDescription> final : public ResourceBaseImplOpenGLDesc<IRender::Resource::BufferDescription> {
 	ResourceImplOpenGL() : bufferID(0) {}
 
 	virtual IRender::Resource::Type GetType() const  override { return RESOURCE_BUFFER; }
@@ -943,7 +943,7 @@ struct ResourceImplOpenGL<IRender::Resource::BufferDescription> : public Resourc
 };
 
 template <>
-struct ResourceImplOpenGL<IRender::Resource::ShaderDescription> : public ResourceBaseImplOpenGLDesc<IRender::Resource::ShaderDescription> {
+struct ResourceImplOpenGL<IRender::Resource::ShaderDescription> final : public ResourceBaseImplOpenGLDesc<IRender::Resource::ShaderDescription> {
 	ResourceImplOpenGL() {}
 	virtual IRender::Resource::Type GetType() const  override { return RESOURCE_SHADER; }
 
@@ -1137,7 +1137,7 @@ struct ResourceImplOpenGL<IRender::Resource::ShaderDescription> : public Resourc
 };
 
 template <>
-struct ResourceImplOpenGL<IRender::Resource::RenderStateDescription> : public ResourceBaseImplOpenGLDesc<IRender::Resource::RenderStateDescription> {
+struct ResourceImplOpenGL<IRender::Resource::RenderStateDescription> final : public ResourceBaseImplOpenGLDesc<IRender::Resource::RenderStateDescription> {
 	virtual IRender::Resource::Type GetType() const  override { return RESOURCE_RENDERSTATE; }
 	virtual void Upload(QueueImplOpenGL& queue) override {
 		UpdateDescription();
@@ -1241,7 +1241,7 @@ struct ResourceImplOpenGL<IRender::Resource::RenderStateDescription> : public Re
 };
 
 template <>
-struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> : public ResourceBaseImplOpenGLDesc<IRender::Resource::RenderTargetDescription> {
+struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> final : public ResourceBaseImplOpenGLDesc<IRender::Resource::RenderTargetDescription> {
 	ResourceImplOpenGL() : vertexArrayID(0), frameBufferID(0) {}
 	virtual IRender::Resource::Type GetType() const override { return RESOURCE_RENDERTARGET; }
 
@@ -1514,7 +1514,7 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> : public R
 };
 
 template <>
-struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> : public ResourceBaseImplOpenGLDesc<IRender::Resource::DrawCallDescription> {
+struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> final : public ResourceBaseImplOpenGLDesc<IRender::Resource::DrawCallDescription> {
 	virtual IRender::Resource::Type GetType() const override { return RESOURCE_DRAWCALL; }
 	virtual void Upload(QueueImplOpenGL& queue) override {
 #ifdef _DEBUG
