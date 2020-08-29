@@ -321,10 +321,11 @@ void CameraComponent::CommitRenderRequests(Engine& engine, TaskData& taskData, I
 						if (ip != warpData.renderPolicyMap.end()) {
 							TaskData::PolicyData& policyData = ip->second;
 							if (policyData.instanceBuffer != nullptr) {
-								if (render.IsQueueModified(queue)) {
+								/*
+								if (!render.IsQueueModified(queue)) {
 									render.DeleteResource(policyData.portQueue, policyData.instanceBuffer);
 									policyData.instanceBuffer = nullptr;
-								}
+								}*/
 
 								lastCommandQueue->MergeQueue(render, policyData.portQueue);
 							}
@@ -344,6 +345,7 @@ void CameraComponent::CommitRenderRequests(Engine& engine, TaskData& taskData, I
 				}
 			}
 
+			/*
 			size_t k = 0;
 			for (size_t n = 0; n < warpData.renderPolicyMap.size(); n++) {
 				TaskData::PolicyData& policyData = warpData.renderPolicyMap[n].second;
@@ -358,6 +360,7 @@ void CameraComponent::CommitRenderRequests(Engine& engine, TaskData& taskData, I
 			}
 
 			warpData.renderPolicyMap.resize(k);
+			*/
 
 			// pass lights
 			std::vector<std::pair<TShared<RenderPolicy>, LightElement> >& lightElements = warpData.lightElements;

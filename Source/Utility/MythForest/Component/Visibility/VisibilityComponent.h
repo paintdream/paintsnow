@@ -9,7 +9,6 @@
 #include "../Explorer/SpaceTraversal.h"
 #include "../Explorer/CameraCuller.h"
 #include "../../../../Core/Template/TBuffer.h"
-#include "../../../../General/Misc/FencedRenderQueue.h"
 #include "../../../SnowyStream/Resource/ShaderResource.h"
 #include "../../../SnowyStream/Resource/TextureResource.h"
 #include "../../../SnowyStream/Resource/MeshResource.h"

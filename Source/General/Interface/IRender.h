@@ -209,9 +209,8 @@ namespace PaintsNow {
 		// The only API that requires calling on device thread.
 		enum PresentOption {
 			PRESENT_EXECUTE_ALL,
-			PRESENT_REPEAT,
 			PRESENT_EXECUTE,
-			PRESENT_CONSUME,
+			PRESENT_REPEAT,
 			PRESENT_CLEAR_ALL
 		};
 
@@ -236,7 +235,6 @@ namespace PaintsNow {
 		virtual Device* GetQueueDevice(Queue* queue) = 0;
 		virtual void DeleteQueue(Queue* queue) = 0;
 		virtual void FlushQueue(Queue* queue) = 0;
-		virtual bool IsQueueModified(Queue* queue) = 0;
 
 		// Resource
 		virtual Resource* CreateResource(Device* device, Resource::Type resourceType) = 0;

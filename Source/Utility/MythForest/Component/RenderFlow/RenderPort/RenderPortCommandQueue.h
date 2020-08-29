@@ -5,7 +5,6 @@
 
 #pragma once
 #include "../RenderPort.h"
-#include "../../../../../General/Misc/FencedRenderQueue.h"
 #include "../../Renderable/RenderableComponent.h"
 
 namespace PaintsNow {
@@ -13,10 +12,11 @@ namespace PaintsNow {
 	class RenderPortCommandQueue : public TReflected<RenderPortCommandQueue, RenderPort> {
 	public:
 		RenderPortCommandQueue();
+		virtual ~RenderPortCommandQueue();
 		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 		virtual void Initialize(IRender& render, IRender::Queue* mainQueue) override;
 		virtual void Uninitialize(IRender& render, IRender::Queue* mainQueue) override;
-		virtual void Commit(std::vector<FencedRenderQueue*>& fencedQueues, std::vector<IRender::Queue*>& instanceQueues) override;
+		virtual void Commit(std::vector<IRender::Queue*>& fencedQueues, std::vector<IRender::Queue*>& instanceQueues) override;
 		virtual bool UpdateDataStream(RenderPort& source) override;
 
 		virtual bool BeginFrame(IRender& render);
@@ -27,7 +27,7 @@ namespace PaintsNow {
 
 	protected:
 		TQueueList<IRender::Queue*> mergedQueues;
-		FencedRenderQueue renderQueue;
+		IRender::Queue* renderQueue;
 	};
 }
 

@@ -100,14 +100,13 @@ struct ResourceBaseImplOpenGL : public ResourceAligned {
 struct ResourceCommandImplOpenGL {
 	typedef void (ResourceBaseImplOpenGL::*Action)(QueueImplOpenGL& queue);
 	enum Operation {
-		OP_NOP = 0,
-		OP_EXECUTE = 1,
-		OP_UPLOAD = 2,
-		OP_DOWNLOAD = 3,
-		OP_DELETE = 4,
-		OP_PRESWAP = 5,
-		OP_POSTSWAP = 6,
-		OP_MAX = 6,
+		OP_EXECUTE = 0,
+		OP_UPLOAD = 1,
+		OP_DOWNLOAD = 2,
+		OP_DELETE = 3,
+		OP_PRESWAP = 4,
+		OP_POSTSWAP = 5,
+		OP_MAX = 5,
 		OP_MASK = 7
 	};
 
@@ -127,7 +126,6 @@ struct ResourceCommandImplOpenGL {
 	bool Invoke(QueueImplOpenGL& queue) {
 		// decode mask	
 		static Action actionTable[] = {
-			&ResourceBaseImplOpenGL::Nop,
 			&ResourceBaseImplOpenGL::Execute,
 			&ResourceBaseImplOpenGL::Upload,
 			&ResourceBaseImplOpenGL::Download,
@@ -137,7 +135,7 @@ struct ResourceCommandImplOpenGL {
 		};
 
 		if (GetResource() == nullptr) {
-			return GetOperation() == OP_NOP;
+			return false;
 		}
 
 		ResourceBaseImplOpenGL* impl = static_cast<ResourceBaseImplOpenGL*>(GetResource());
@@ -146,11 +144,11 @@ struct ResourceCommandImplOpenGL {
 		Action action = actionTable[index];
 #ifdef _DEBUG
 		const char* opnames[] = {
-			"Nop", "Execute", "Upload", "Download", "Delete", "PreSwap"
+			"Execute", "Upload", "Download", "Delete", "PreSwap", "PostSwap"
 		};
 
 		const char* types[] = {
-			"Nop", "Unknown", "Texture", "Buffer", "Shader", "RenderState", "RenderTarget", "Clear", "DrawCall"
+			"Unknown", "Texture", "Buffer", "Shader", "RenderState", "RenderTarget", "DrawCall"
 		};
 
 #ifdef LOG_OPENGL
@@ -169,6 +167,12 @@ private:
 struct QueueImplOpenGL final : public IRender::Queue {
 	QueueImplOpenGL(DeviceImplOpenGL* d, bool shared) : device(d) {
 		critical.store(shared ? 0u : ~(uint32_t)0u, std::memory_order_relaxed);
+		flushCount.store(0u, std::memory_order_release);
+	}
+
+	inline void Flush() {
+		QueueCommand(ResourceCommandImplOpenGL(ResourceCommandImplOpenGL::OP_EXECUTE, nullptr));
+		flushCount.fetch_add(1, std::memory_order_release);
 	}
 
 	inline void QueueCommand(const ResourceCommandImplOpenGL& command) {
@@ -206,15 +210,11 @@ struct QueueImplOpenGL final : public IRender::Queue {
 
 		bool operator () (ResourceCommandImplOpenGL& command, ResourceCommandImplOpenGL& predict) {
 			PrefetchCommand(predict);
+			assert(command.GetOperation() != ResourceCommandImplOpenGL::OP_UPLOAD && command.GetOperation() != ResourceCommandImplOpenGL::OP_DELETE);
 			if (command.Invoke(queue)) {
 #ifdef _DEBUG
 				count++;
 #endif
-				if (command.GetOperation() != ResourceCommandImplOpenGL::OP_EXECUTE) {
-					// replace it with nop
-					command = ResourceCommandImplOpenGL(ResourceCommandImplOpenGL::OP_NOP, nullptr);
-				}
-
 				return true;
 			} else {
 #ifdef _DEBUG
@@ -232,17 +232,31 @@ struct QueueImplOpenGL final : public IRender::Queue {
 	};
 
 	void Repeat() {
-		Scanner scanner(*this);
-		queuedCommands.Iterate(scanner);
+		while (flushCount.load(std::memory_order_acquire) > 1) {
+			while (!queuedCommands.Empty()) {
+				ResourceCommandImplOpenGL& command = queuedCommands.Top();
+				queuedCommands.Pop();
+
+				if (command.GetResource() == nullptr)
+					break;
+			}
+
+			flushCount.fetch_sub(1, std::memory_order_relaxed);
+		}
+
+		if (flushCount.load(std::memory_order_acquire) > 0) {
+			Scanner scanner(*this);
+			queuedCommands.Iterate(scanner);
+		}
 	}
 
 	void ExecuteAll() {
-		ResourceCommandImplOpenGL command;
 		while (!queuedCommands.Empty()) {
-			ResourceCommandImplOpenGL& command = queuedCommands.Top();
+			ResourceCommandImplOpenGL command = queuedCommands.Top();
+			queuedCommands.Pop();
+
 			PrefetchCommand(queuedCommands.Predict());
 			command.Invoke(*this);
-			queuedCommands.Pop();
 		}
 	}
 
@@ -250,47 +264,26 @@ struct QueueImplOpenGL final : public IRender::Queue {
 		while (!queuedCommands.Empty()) {
 			ResourceCommandImplOpenGL command = queuedCommands.Top();
 			queuedCommands.Pop();
+
 			if (command.GetOperation() == ResourceCommandImplOpenGL::OP_DELETE) {
 				command.Invoke(*this);
 			}
 		}
 	}
 
-	void Consume() {
-		while (!queuedCommands.Empty()) {
-			ResourceCommandImplOpenGL command = queuedCommands.Top();
-			queuedCommands.Pop();
-			if (command.GetOperation() != ResourceCommandImplOpenGL::OP_NOP) {
-				if (command.GetResource() == nullptr) { // yield?
-					return;
-				} else if (command.GetOperation() != ResourceCommandImplOpenGL::OP_EXECUTE) {
-					command.Invoke(*this);
-				}
-			}
-		}
-
-		assert(false); // No yield detected
-	}
-
 	void Execute() {
 		while (!queuedCommands.Empty()) {
 			ResourceCommandImplOpenGL command = queuedCommands.Top();
-			if (command.GetOperation() != ResourceCommandImplOpenGL::OP_NOP) {
-				if (command.GetResource() == nullptr) { // yield?
-					return;
-				} else {
-					command.Invoke(*this);
-				}
-			}
-
 			queuedCommands.Pop();
-		}
 
-		assert(false); // No yield detected
+			if (!command.Invoke(*this))
+				return;
+		}
 	}
 
 	DeviceImplOpenGL* device;
 	std::atomic<int32_t> critical;
+	std::atomic<uint32_t> flushCount;
 	ResourceBaseImplOpenGL* swapResource;
 	TQueueList<ResourceCommandImplOpenGL> queuedCommands;
 };
@@ -1722,9 +1715,6 @@ void ZRenderOpenGL::PresentQueues(Queue** queues, uint32_t count, PresentOption 
 	case PresentOption::PRESENT_EXECUTE:
 		op = &QueueImplOpenGL::Execute;
 		break;
-	case PresentOption::PRESENT_CONSUME:
-		op = &QueueImplOpenGL::Consume;
-		break;
 	case PresentOption::PRESENT_CLEAR_ALL:
 		op = &QueueImplOpenGL::ClearAll;
 		break;
@@ -1742,16 +1732,10 @@ bool ZRenderOpenGL::SupportParallelPresent(Device* device) {
 	return false;
 }
 
-bool ZRenderOpenGL::IsQueueModified(Queue* queue) {
-	QueueImplOpenGL* q = static_cast<QueueImplOpenGL*>(queue);
-	assert(queue != nullptr);
-	return q->queuedCommands.Empty();
-}
-
 void ZRenderOpenGL::FlushQueue(Queue* queue) {
 	QueueImplOpenGL* q = static_cast<QueueImplOpenGL*>(queue);
 	assert(queue != nullptr);
-	q->QueueCommand(ResourceCommandImplOpenGL(ResourceCommandImplOpenGL::OP_EXECUTE, nullptr));
+	q->Flush();
 }
 
 void ZRenderOpenGL::DeleteQueue(Queue* queue) {

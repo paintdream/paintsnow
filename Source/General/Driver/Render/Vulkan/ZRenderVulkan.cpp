@@ -80,6 +80,7 @@ struct VulkanDeviceImpl final : public IRender::Device {
 
 struct VulkanQueueImpl final : public IRender::Queue, public TPool<VulkanQueueImpl, VkCommandBuffer> {
 	VulkanQueueImpl(VulkanDeviceImpl* dev, VkCommandPool pool, uint32_t f) : device(dev), commandPool(pool), TPool<VulkanQueueImpl, VkCommandBuffer>(4), commandCount(0), renderTargetResource(nullptr), flag(f) {
+		critical.store(0u, std::memory_order_relaxed);
 		VkCommandBufferAllocateInfo info;
 		info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		info.commandBufferCount = maxCount;
@@ -88,6 +89,19 @@ struct VulkanQueueImpl final : public IRender::Queue, public TPool<VulkanQueueIm
 		info.pNext = nullptr;
 
 		currentCommandBuffer = Acquire();
+		BeginCurrentCommandBuffer();
+	}
+
+	inline void Lock() {
+		if (flag & IRender::QUEUE_MULTITHREAD) {
+			SpinLock(critical);
+		}
+	}
+
+	inline void UnLock() {
+		if (flag & IRender::QUEUE_MULTITHREAD) {
+			SpinUnLock(critical);
+		}
 	}
 
 	~VulkanQueueImpl() {
@@ -120,32 +134,40 @@ struct VulkanQueueImpl final : public IRender::Queue, public TPool<VulkanQueueIm
 		vkFreeCommandBuffers(device->device, commandPool, 1, &buffer);
 	}
 
-	void FlushCommandBuffer() {
-		preparedCommandBuffers.Push(currentCommandBuffer);
-		commandCount = 0;
-		currentCommandBuffer = Acquire();
-		vkResetCommandBuffer(currentCommandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
-	}
-
-	void BeginFrame() {
-		preparedCommandBuffers.Push((VkCommandBuffer)VK_NULL_HANDLE);
-		transientDataBuffers.Push((VkBuffer)VK_NULL_HANDLE);
-		assert(renderTargetResource != nullptr);
-
-		VkCommandBufferBeginInfo info = {};
-		info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		info.flags = !(flag & IRender::PRESENT_REPEAT) ? VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT : 0;
-		vkBeginCommandBuffer(currentCommandBuffer, &info);
-	}
-
-	void EndFrame() {
+	void EndCurrentCommandBuffer() {
 		if (renderTargetResource != nullptr) {
 			vkCmdEndRenderPass(currentCommandBuffer);
 			renderTargetResource = nullptr;
 		}
 
 		vkEndCommandBuffer(currentCommandBuffer);
+	}
 
+	void BeginCurrentCommandBuffer() {
+		VkCommandBufferBeginInfo info = {};
+		info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		info.flags = !(flag & IRender::PRESENT_REPEAT) ? VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT : 0;
+		vkBeginCommandBuffer(currentCommandBuffer, &info);
+	}
+
+	void FlushCommandBuffer() {
+		EndCurrentCommandBuffer();
+
+		preparedCommandBuffers.Push(currentCommandBuffer);
+		commandCount = 0;
+		currentCommandBuffer = Acquire();
+		vkResetCommandBuffer(currentCommandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+
+		BeginCurrentCommandBuffer();
+	}
+
+	void BeginFrame() {
+		preparedCommandBuffers.Push((VkCommandBuffer)VK_NULL_HANDLE);
+		transientDataBuffers.Push((VkBuffer)VK_NULL_HANDLE);
+		assert(renderTargetResource != nullptr);
+	}
+
+	void EndFrame() {
 		for (VkCommandBuffer commandBuffer = preparedCommandBuffers.Top(); commandBuffer != VK_NULL_HANDLE; commandBuffer = preparedCommandBuffers.Top()) {
 			Release(commandBuffer);
 			preparedCommandBuffers.Pop();
@@ -162,6 +184,8 @@ struct VulkanQueueImpl final : public IRender::Queue, public TPool<VulkanQueueIm
 	VkCommandBuffer currentCommandBuffer;
 	uint32_t commandCount;
 	uint32_t flag;
+
+	std::atomic<uint32_t> critical;
 
 	IRender::Resource::RenderStateDescription renderStateDescription;
 	ResourceImplVulkanBase* renderTargetResource;
@@ -425,16 +449,32 @@ bool ZRenderVulkan::SupportParallelPresent(Device* device) {
 
 void ZRenderVulkan::PresentQueues(Queue** queues, uint32_t count, PresentOption option) {
 	if (count != 0) {
-		VkQueue q = static_cast<VulkanQueueImpl*>(queues[0])->device->queue;
-		std::vector<VkSubmitInfo> info(count);
+		VulkanDeviceImpl* device = static_cast<VulkanQueueImpl*>(queues[0])->device;
+		FrameData& frame = device->frames[0];
 
-		// TODO: submit at once
+		// TODO:
+		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		VkSubmitInfo info = {};
+
+		std::vector<VkCommandBuffer> commandBuffers;
+		commandBuffers.reserve(count);
+		for (uint32_t i = 0; i < count; i++) {
+			VulkanQueueImpl* q = static_cast<VulkanQueueImpl*>(queues[i]);
+			// commandBuffers = q->currentCommandBuffer;
+			q->EndFrame();
+		}
+
+		info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+		info.waitSemaphoreCount = 1;
+		info.pWaitSemaphores = &frame.acquireSemaphore;
+		info.pWaitDstStageMask = &waitStage;
+		info.commandBufferCount = count;
+		info.pCommandBuffers = &commandBuffers[0];
+		info.signalSemaphoreCount = 1;
+		info.pSignalSemaphores = &frame.releaseSemaphore;
+
+		Verify("queue submit", vkQueueSubmit(device->queue, 1, &info, frame.fence));
 	}
-}
-
-bool ZRenderVulkan::IsQueueModified(Queue* q) {
-	VulkanQueueImpl* queue = static_cast<VulkanQueueImpl*>(q);
-	return queue->commandCount != 0;
 }
 
 void ZRenderVulkan::DeleteQueue(Queue* q) {
