@@ -137,8 +137,9 @@ Short2Pair FontResource::Slice::AllocRect(IRender& render, IRender::Queue* queue
 	return w;
 }
 
-void FontResource::Slice::UpdateFontTexture(IRender& render, IRender::Queue* queue) {
+uint32_t FontResource::Slice::UpdateFontTexture(IRender& render, IRender::Queue* queue) {
 	std::atomic<uint32_t>& lock = reinterpret_cast<std::atomic<uint32_t>&>(critical);
+	uint32_t count = 0;
 
 	if (SpinLock(lock) == 2u) {
 		for (size_t i = 0; i < cacheTextures.size(); i++) {
@@ -155,11 +156,13 @@ void FontResource::Slice::UpdateFontTexture(IRender& render, IRender::Queue* que
 
 				render.UploadResource(queue, ptr(), &desc);
 				ptr.Tag(0);
+				count++;
 			}
 		}
 	}
 	
 	SpinUnLock(lock);
+	return count;
 }
 
 Short2 FontResource::Slice::GetTextureSize() const {
@@ -170,17 +173,20 @@ uint16_t FontResource::GetFontTextureSize() const {
 	return dim;
 }
 
-void FontResource::Update(IRender& render, IRender::Queue* queue) {
+uint32_t FontResource::Update(IRender& render, IRender::Queue* queue) {
+	uint32_t count = 0;
 	if (Flag() & TINY_MODIFIED) {
 		for (std::map<uint32_t, Slice>::iterator it = sliceMap.begin(); it != sliceMap.end(); it++) {
 			std::atomic<uint32_t>& lock = reinterpret_cast<std::atomic<uint32_t>&>(it->second.critical);
 			if (lock.load(std::memory_order_acquire) == 2u) {
-				it->second.UpdateFontTexture(render, queue);
+				count += it->second.UpdateFontTexture(render, queue);
 			}
 		}
 
 		Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release);
 	}
+
+	return count;
 }
 
 const FontResource::Char& FontResource::Slice::Get(IRender& render, IRender::Queue* queue, IFontBase& fontBase, IFontBase::FONTCHAR ch) {

@@ -11,7 +11,7 @@
 namespace PaintsNow {
 	class IDataUpdater {
 	public:
-		virtual void Update(IRender& render, IRender::Queue* queue) = 0;
+		virtual uint32_t Update(IRender& render, IRender::Queue* queue) = 0;
 	};
 
 	template <class T>

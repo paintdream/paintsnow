@@ -22,7 +22,7 @@ namespace PaintsNow {
 		}
 
 		IRender::Resource::DrawCallDescription::BufferRange Allocate(const void* data, uint32_t size);
-		void Update(IRender& render, IRender::Queue* queue);
+		virtual uint32_t Update(IRender& render, IRender::Queue* queue) override;
 		void InstanceInitialize(Engine& engine);
 		void InstanceUninitialize(Engine& engine);
 

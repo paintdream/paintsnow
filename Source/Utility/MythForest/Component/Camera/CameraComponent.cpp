@@ -286,11 +286,12 @@ void CameraComponent::CommitRenderRequests(Engine& engine, TaskData& taskData, I
 	// update data updaters
 	if (renderFlowComponent) {
 		IRender& render = engine.interfaces.render;
+		uint32_t updateCount = 0;
 		std::vector<TaskData::WarpData>& warpData = taskData.warpData;
 		for (size_t i = 0; i < warpData.size(); i++) {
 			TaskData::WarpData& w = warpData[i];
 			for (size_t k = 0; k < w.dataUpdaters.size(); k++) {
-				w.dataUpdaters[k]->Update(render, queue);
+				updateCount += w.dataUpdaters[k]->Update(render, queue);
 			}
 		}
 		
@@ -320,15 +321,9 @@ void CameraComponent::CommitRenderRequests(Engine& engine, TaskData& taskData, I
 						std::vector<std::key_value<RenderPolicy*, TaskData::PolicyData> >::iterator ip = std::binary_find(warpData.renderPolicyMap.begin(), warpData.renderPolicyMap.end(), lastRenderPolicy);
 						if (ip != warpData.renderPolicyMap.end()) {
 							TaskData::PolicyData& policyData = ip->second;
-							if (policyData.instanceBuffer != nullptr) {
-								/*
-								if (!render.IsQueueModified(queue)) {
-									render.DeleteResource(policyData.portQueue, policyData.instanceBuffer);
-									policyData.instanceBuffer = nullptr;
-								}*/
-
-								lastCommandQueue->MergeQueue(render, policyData.portQueue);
-							}
+							assert(policyData.instanceBuffer != nullptr);
+							policyData.instanceBuffer = (IRender::Resource*)((size_t)policyData.instanceBuffer | 1);
+							lastCommandQueue->MergeQueue(render, policyData.portQueue);
 						}
 					}
 				}
@@ -345,22 +340,34 @@ void CameraComponent::CommitRenderRequests(Engine& engine, TaskData& taskData, I
 				}
 			}
 
-			/*
 			size_t k = 0;
 			for (size_t n = 0; n < warpData.renderPolicyMap.size(); n++) {
 				TaskData::PolicyData& policyData = warpData.renderPolicyMap[n].second;
 				IRender::Queue* queue = policyData.portQueue;
-				if (policyData.instanceBuffer == nullptr) {
-					// no longer used
-					assert(policyData.runtimeResources.empty() && policyData.instanceData.Empty());
-					render.DeleteQueue(queue); // TODO: may crash the app if n-frame backbuffer swapchain (n > 2) enabled!
+				bool cleanup = ((size_t)policyData.instanceBuffer & 1) == 0;
+				policyData.instanceBuffer = (IRender::Resource*)((size_t)policyData.instanceBuffer & ~(size_t)1);
+
+				if (cleanup) { // not visited, cleanup
+					assert(policyData.instanceData.Empty());
+					render.DeleteResource(queue, policyData.instanceBuffer);
+					for (size_t m = 0; m < policyData.runtimeResources.size(); m++) {
+						render.DeleteResource(queue, policyData.runtimeResources[m]);
+					}
+
+					RenderPortCommandQueue* port = QueryPort(render, policyPortMap, renderFlowComponent(), warpData.renderPolicyMap[n].first, UniqueType<RenderPortCommandQueue>());
+					if (port == nullptr) {
+						render.DeleteQueue(queue);
+					} else {
+						port->DeleteMergedQueue(render, queue);
+					}
+
+					policyData.runtimeResources.clear();
 				} else if (k++ != n) {
 					warpData.renderPolicyMap[k] = warpData.renderPolicyMap[n];
 				}
 			}
 
 			warpData.renderPolicyMap.resize(k);
-			*/
 
 			// pass lights
 			std::vector<std::pair<TShared<RenderPolicy>, LightElement> >& lightElements = warpData.lightElements;

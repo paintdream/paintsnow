@@ -493,14 +493,6 @@ SOURCE=..\..\..\..\Source\General\Misc\DynamicObject.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\General\Misc\FencedRenderQueue.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\General\Misc\FencedRenderQueue.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\..\..\Source\General\Misc\PassBase.cpp
 # End Source File
 # Begin Source File

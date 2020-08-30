@@ -413,6 +413,8 @@ void LeavesFlute::OnRender() {
 	for (size_t i = 0; i < modules.size(); i++) {
 		modules[i]->TickDevice(interfaces.render);
 	}
+
+	interfaces.render.NextDeviceFrame(snowyStream.GetRenderDevice());
 }
 
 class ExpandParamsScriptTask : public WarpTiny, public TaskRepeat {

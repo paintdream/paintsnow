@@ -1684,7 +1684,7 @@ void ZRenderOpenGL::DeleteDevice(IRender::Device* device) {
 }
 
 void ZRenderOpenGL::NextDeviceFrame(IRender::Device* device) {
-	// DO NOTHING
+	ClearDeletedQueues();
 }
 
 // Queue
@@ -1724,8 +1724,6 @@ void ZRenderOpenGL::PresentQueues(Queue** queues, uint32_t count, PresentOption 
 		QueueImplOpenGL* q = static_cast<QueueImplOpenGL*>(queues[k]);
 		(q->*op)();
 	}
-
-	ClearDeletedQueues();
 }
 
 bool ZRenderOpenGL::SupportParallelPresent(Device* device) {
@@ -1741,7 +1739,9 @@ void ZRenderOpenGL::FlushQueue(Queue* queue) {
 void ZRenderOpenGL::DeleteQueue(Queue* queue) {
 	QueueImplOpenGL* q = static_cast<QueueImplOpenGL*>(queue);
 	assert(queue != nullptr);
+	SpinLock(critical);
 	deletedQueues.Push(q);
+	SpinUnLock(critical);
 }
 
 // Resource
@@ -1848,6 +1848,7 @@ public:
 
 ZRenderOpenGL::ZRenderOpenGL() {
 	static GlewInit init;
+	critical.store(0, std::memory_order_release);
 }
 
 void ZRenderOpenGL::ClearDeletedQueues() {

@@ -9,7 +9,6 @@
 #include "../../../../Core/System/Graph.h"
 
 namespace PaintsNow {
-	class IRender::Queue;
 	class Engine;
 	class RenderPort : public TReflected<RenderPort, GraphPort<SharedTiny> > {
 	public:
@@ -17,7 +16,7 @@ namespace PaintsNow {
 		virtual void Initialize(IRender& render, IRender::Queue* queue);
 		virtual void Uninitialize(IRender& render, IRender::Queue* queue);
 		virtual bool UpdateDataStream(RenderPort& source);
-		virtual void Commit(std::vector<IRender::Queue*>& fencedQueues, std::vector<IRender::Queue*>& instanceQueues);
+		virtual void Commit(std::vector<IRender::Queue*>& fencedQueues, std::vector<IRender::Queue*>& instanceQueues, std::vector<IRender::Queue*>& deletedQueues);
 		virtual bool BeginFrame(IRender& render);
 		virtual void EndFrame(IRender& render);
 		virtual void Tick(Engine& engine, IRender::Queue* queue);

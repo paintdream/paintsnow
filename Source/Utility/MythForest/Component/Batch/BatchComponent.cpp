@@ -39,7 +39,7 @@ Bytes& BatchComponent::GetCurrentData() {
 	return currentData;
 }
 
-void BatchComponent::Update(IRender& render, IRender::Queue* queue) {
+uint32_t BatchComponent::Update(IRender& render, IRender::Queue* queue) {
 	if (Flag() & Tiny::TINY_MODIFIED) {
 		IRender::Resource::BufferDescription desc;
 		desc.component = 4; // packed by float4
@@ -50,6 +50,9 @@ void BatchComponent::Update(IRender& render, IRender::Queue* queue) {
 		render.UploadResource(queue, buffer, &desc);
 
 		Flag().fetch_and(~Tiny::TINY_MODIFIED, std::memory_order_release);
+		return 1;
+	} else {
+		return 0;
 	}
 }
 

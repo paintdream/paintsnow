@@ -122,17 +122,19 @@ void RenderFlowComponent::Compile() {
 // Notice that this function is called in render device thread
 void RenderFlowComponent::Render(Engine& engine) {
 	if (Flag() & TINY_ACTIVATED) {
+		Flag().fetch_or(RENDERFLOWCOMPONENT_RENDERING, std::memory_order_acquire);
 		// Commit resource queue first
 		IRender& render = engine.interfaces.render;
 		render.PresentQueues(&resourceQueue, 1, IRender::PRESENT_EXECUTE_ALL);
 		assert(cachedRenderStages[cachedRenderStages.size() - 1] == nullptr);
+		std::vector<IRender::Queue*> deletedQueues;
 
 		for (size_t n = 0, m = 0; n < cachedRenderStages.size(); n++) {
 			if (cachedRenderStages[n] == nullptr) {
 				std::vector<IRender::Queue*> repeatQueues;
 				std::vector<IRender::Queue*> instantQueues;
 				for (size_t i = m; i < n; i++) {
-					cachedRenderStages[i]->Commit(engine, repeatQueues, instantQueues, resourceQueue);
+					cachedRenderStages[i]->Commit(engine, repeatQueues, instantQueues, deletedQueues, resourceQueue);
 				}
 
 				render.PresentQueues(&resourceQueue, 1, IRender::PRESENT_EXECUTE_ALL);
@@ -148,6 +150,13 @@ void RenderFlowComponent::Render(Engine& engine) {
 				m = n + 1;
 			}
 		}
+
+		for (size_t k = 0; k < deletedQueues.size(); k++) {
+			render.DeleteQueue(deletedQueues[k]);
+		}
+
+		deletedQueues.clear();
+		Flag().fetch_and(~RENDERFLOWCOMPONENT_RENDERING, std::memory_order_release);
 	}
 }
 
@@ -272,6 +281,13 @@ void RenderFlowComponent::Initialize(Engine& engine, Entity* entity) {
 }
 
 void RenderFlowComponent::Uninitialize(Engine& engine, Entity* entity) {
+	// Wait for rendering finished.
+	Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_release);
+
+	while (Flag().load(std::memory_order_acquire) & RENDERFLOWCOMPONENT_RENDERING) {
+		YieldThread();
+	}
+
 	for (size_t i = 0; i < allNodes.size(); i++) {
 		allNodes[i]->Uninitialize(engine, resourceQueue);
 	}
@@ -281,7 +297,6 @@ void RenderFlowComponent::Uninitialize(Engine& engine, Entity* entity) {
 	resourceQueue = nullptr;
 
 	// Deactivate this
-	Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_release);
 	BaseClass::Uninitialize(engine, entity);
 }
 

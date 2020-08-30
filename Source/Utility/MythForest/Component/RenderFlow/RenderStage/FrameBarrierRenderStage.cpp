@@ -36,7 +36,7 @@ void FrameBarrierRenderStage::PrepareResources(Engine& engine, IRender::Queue* q
 
 void FrameBarrierRenderStage::SetMainResolution(Engine& engine, IRender::Queue* queue, uint32_t width, uint32_t height) {}
 void FrameBarrierRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {}
-void FrameBarrierRenderStage::Commit(Engine& engine, std::vector<IRender::Queue*>& queues, std::vector<IRender::Queue*>& instantQueues, IRender::Queue* queue) {}
+void FrameBarrierRenderStage::Commit(Engine& engine, std::vector<IRender::Queue*>& queues, std::vector<IRender::Queue*>& instantQueues, std::vector<IRender::Queue*>& deletedQueues, IRender::Queue* instantQueue) {}
 
 void FrameBarrierRenderStage::Tick(Engine& engine, IRender::Queue* queue) {
 	// Force update source 

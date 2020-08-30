@@ -16,12 +16,13 @@ namespace PaintsNow {
 		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 		virtual void Initialize(IRender& render, IRender::Queue* mainQueue) override;
 		virtual void Uninitialize(IRender& render, IRender::Queue* mainQueue) override;
-		virtual void Commit(std::vector<IRender::Queue*>& fencedQueues, std::vector<IRender::Queue*>& instanceQueues) override;
+		virtual void Commit(std::vector<IRender::Queue*>& fencedQueues, std::vector<IRender::Queue*>& instanceQueues, std::vector<IRender::Queue*>& deletedQueues) override;
 		virtual bool UpdateDataStream(RenderPort& source) override;
 
 		virtual bool BeginFrame(IRender& render);
 		virtual void EndFrame(IRender& render);
 		void MergeQueue(IRender& render, IRender::Queue* instanceQueue);
+		void DeleteMergedQueue(IRender& render, IRender::Queue* mergedQueue);
 		void DrawElement(IRender& render, IRender::Resource* drawCallResource);
 		void CheckinState(IRender& render, IRender::Resource* stateResource);
 

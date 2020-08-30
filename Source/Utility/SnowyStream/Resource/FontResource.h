@@ -23,7 +23,7 @@ namespace PaintsNow {
 		virtual void Download(IFontBase& font, void* deviceContext) override;
 		virtual void Attach(IFontBase& font, void* deviceContext) override;
 		virtual void Detach(IFontBase& font, void* deviceContext) override;
-		virtual void Update(IRender& render, IRender::Queue* queue) override;
+		virtual uint32_t Update(IRender& render, IRender::Queue* queue) override;
 		uint16_t GetFontTextureSize() const;
 
 		struct Char {
@@ -57,7 +57,7 @@ namespace PaintsNow {
 			std::vector<TTagged<IRender::Resource*, 2> > cacheTextures;
 
 			Short2 GetTextureSize() const;
-			void UpdateFontTexture(IRender& render, IRender::Queue* queue);
+			uint32_t UpdateFontTexture(IRender& render, IRender::Queue* queue);
 			Short2Pair AllocRect(IRender& render, IRender::Queue* queue, const Short2& size);
 		};
 

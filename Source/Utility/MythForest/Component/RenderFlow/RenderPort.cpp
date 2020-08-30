@@ -29,5 +29,5 @@ void RenderPort::UpdateRenderStage() {
 	}
 }
 
-void RenderPort::Commit(std::vector<IRender::Queue*>& fencedQueues, std::vector<IRender::Queue*>& instanceQueues) {}
+void RenderPort::Commit(std::vector<IRender::Queue*>& fencedQueues, std::vector<IRender::Queue*>& instanceQueues, std::vector<IRender::Queue*>& deletedQueues) {}
 bool RenderPort::UpdateDataStream(RenderPort& source) { return true; }
