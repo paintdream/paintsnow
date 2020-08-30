@@ -51,6 +51,9 @@ struct ResourceImplVulkanDesc : public ResourceImplVulkanBase {
 };
 
 struct FrameData {
+	std::vector<VulkanQueueImpl*> activeQueues;
+	std::vector<VulkanQueueImpl*> deletedQueues;
+
 	VkImage backBufferImage;
 	VkImageView backBufferView;
 	VkFence fence;
@@ -60,8 +63,39 @@ struct FrameData {
 
 struct VulkanQueueImpl;
 struct VulkanDeviceImpl final : public IRender::Device {
-	VulkanDeviceImpl(VkAllocationCallbacks* alloc, VkPhysicalDevice phy, VkDevice dev, uint32_t family, VkQueue q, VkDescriptorPool pool) : allocator(alloc), physicalDevice(phy), device(dev), resolution(0, 0), queueFamily(family), queue(q), swapChain(VK_NULL_HANDLE), descriptorPool(pool) {
+	VulkanDeviceImpl(VkAllocationCallbacks* alloc, VkPhysicalDevice phy, VkDevice dev, uint32_t family, VkQueue q, VkDescriptorPool pool) : allocator(alloc), physicalDevice(phy), device(dev), resolution(0, 0), queueFamily(family), queue(q), swapChain(VK_NULL_HANDLE), descriptorPool(pool), currentFrameIndex(0) {
 		critical.store(0, std::memory_order_release);
+	}
+
+	void DestroyAllFrames(VkAllocationCallbacks* allocator) {
+		for (size_t i = 0; i < frames.size(); i++) {
+			FrameData& frameData = frames[i];
+			CleanupFrame(frameData);
+
+			vkDestroySemaphore(device, frameData.acquireSemaphore, allocator);
+			vkDestroySemaphore(device, frameData.releaseSemaphore, allocator);
+			vkDestroyImage(device, frameData.backBufferImage, allocator);
+			vkDestroyImageView(device, frameData.backBufferView, allocator);
+			vkDestroyFence(device, frameData.fence, allocator);
+		}
+
+		frames.clear();
+	}
+
+	~VulkanDeviceImpl() {
+		DestroyAllFrames(allocator);
+
+		vkDestroySwapchainKHR(device, swapChain, allocator);
+		vkDestroyDescriptorPool(device, descriptorPool, allocator);
+		vkDestroyDevice(device, allocator);
+	}
+
+	void CleanupFrame(FrameData& lastFrame);
+
+	void NextFrame() {
+		// rotate frames
+		FrameData& lastFrame = frames[(currentFrameIndex + frames.size() - 1) % frames.size()];
+		CleanupFrame(lastFrame);
 	}
 
 	std::atomic<uint32_t> critical;
@@ -71,6 +105,7 @@ struct VulkanDeviceImpl final : public IRender::Device {
 	VkQueue queue;
 	Int2 resolution;
 	uint32_t queueFamily;
+	uint32_t currentFrameIndex;
 	VkSwapchainKHR swapChain;
 	VkDescriptorPool descriptorPool;
 
@@ -79,8 +114,10 @@ struct VulkanDeviceImpl final : public IRender::Device {
 };
 
 struct VulkanQueueImpl final : public IRender::Queue, public TPool<VulkanQueueImpl, VkCommandBuffer> {
-	VulkanQueueImpl(VulkanDeviceImpl* dev, VkCommandPool pool, uint32_t f) : device(dev), commandPool(pool), TPool<VulkanQueueImpl, VkCommandBuffer>(4), commandCount(0), renderTargetResource(nullptr), flag(f) {
+	VulkanQueueImpl(VulkanDeviceImpl* dev, VkCommandPool pool, uint32_t f) : device(dev), commandPool(pool), TPool<VulkanQueueImpl, VkCommandBuffer>(4), renderTargetResource(nullptr), flag(f) {
 		critical.store(0u, std::memory_order_relaxed);
+		preparedCount.store(0, std::memory_order_release);
+
 		VkCommandBufferAllocateInfo info;
 		info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		info.commandBufferCount = maxCount;
@@ -92,7 +129,7 @@ struct VulkanQueueImpl final : public IRender::Queue, public TPool<VulkanQueueIm
 		BeginCurrentCommandBuffer();
 	}
 
-	inline void Lock() {
+	inline void DoLock() {
 		if (flag & IRender::QUEUE_MULTITHREAD) {
 			SpinLock(critical);
 		}
@@ -105,6 +142,12 @@ struct VulkanQueueImpl final : public IRender::Queue, public TPool<VulkanQueueIm
 	}
 
 	~VulkanQueueImpl() {
+		ClearFrameData();
+		freeItems.clear(); // VkCommandBuffer can be automatically freed as command pool destroys
+		vkDestroyCommandPool(device->device, commandPool, device->allocator);
+	}
+
+	void ClearFrameData() {
 		while (!deletedResources.Empty()) {
 			ResourceImplVulkanBase* res = deletedResources.Top();
 			res->Delete(this);
@@ -113,8 +156,11 @@ struct VulkanQueueImpl final : public IRender::Queue, public TPool<VulkanQueueIm
 			deletedResources.Pop();
 		}
 
-		freeItems.clear(); // VkCommandBuffer can be automatically freed as command pool destroys
-		vkDestroyCommandPool(device->device, commandPool, device->allocator);
+		while (!transientDataBuffers.Empty()) {
+			VkBuffer buffer = transientDataBuffers.Top();
+			vkDestroyBuffer(device->device, buffer, device->allocator);
+			transientDataBuffers.Pop();
+		}
 	}
 
 	VkCommandBuffer New() {
@@ -154,45 +200,48 @@ struct VulkanQueueImpl final : public IRender::Queue, public TPool<VulkanQueueIm
 		EndCurrentCommandBuffer();
 
 		preparedCommandBuffers.Push(currentCommandBuffer);
-		commandCount = 0;
+		preparedCount.fetch_add(1, std::memory_order_release);
+
 		currentCommandBuffer = Acquire();
 		vkResetCommandBuffer(currentCommandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 
 		BeginCurrentCommandBuffer();
 	}
 
-	void BeginFrame() {
-		preparedCommandBuffers.Push((VkCommandBuffer)VK_NULL_HANDLE);
+	void FlushFrame() {
 		transientDataBuffers.Push((VkBuffer)VK_NULL_HANDLE);
-		assert(renderTargetResource != nullptr);
-	}
-
-	void EndFrame() {
-		for (VkCommandBuffer commandBuffer = preparedCommandBuffers.Top(); commandBuffer != VK_NULL_HANDLE; commandBuffer = preparedCommandBuffers.Top()) {
-			Release(commandBuffer);
-			preparedCommandBuffers.Pop();
-		}
-
-		for (VkBuffer buffer = transientDataBuffers.Top(); buffer != VK_NULL_HANDLE; buffer = transientDataBuffers.Top()) {
-			vkDestroyBuffer(device->device, buffer, device->allocator);
-			transientDataBuffers.Pop();
-		}
+		deletedResources.Push(nullptr);
 	}
 
 	VulkanDeviceImpl* device;
 	VkCommandPool commandPool;
 	VkCommandBuffer currentCommandBuffer;
-	uint32_t commandCount;
 	uint32_t flag;
-
 	std::atomic<uint32_t> critical;
+	std::atomic<uint32_t> preparedCount;
 
 	IRender::Resource::RenderStateDescription renderStateDescription;
 	ResourceImplVulkanBase* renderTargetResource;
 	TQueueList<VkBuffer, 4> transientDataBuffers;
 	TQueueList<VkCommandBuffer, 4> preparedCommandBuffers;
-	TQueueList<ResourceImplVulkanBase*> deletedResources;
+	TQueueList<ResourceImplVulkanBase*, 4> deletedResources;
 };
+
+void VulkanDeviceImpl::CleanupFrame(FrameData& lastFrame) {
+	for (size_t k = 0; k < lastFrame.activeQueues.size(); k++) {
+		VulkanQueueImpl* queue = lastFrame.activeQueues[k];
+		queue->ClearFrameData();
+	}
+
+	lastFrame.activeQueues.clear();
+
+	for (size_t n = 0; n < lastFrame.deletedQueues.size(); n++) {
+		VulkanQueueImpl* queue = lastFrame.deletedQueues[n];
+		delete queue;
+	}
+
+	lastFrame.deletedQueues.clear();
+}
 
 std::vector<String> ZRenderVulkan::EnumerateDevices() {
 	std::vector<String> devices;
@@ -313,26 +362,8 @@ IRender::Device* ZRenderVulkan::CreateDevice(const String& description) {
 	return nullptr;
 }
 
-static void CleanupFrameData(VkAllocationCallbacks* allocator, VulkanDeviceImpl* impl) {
-	for (size_t i = 0; i < impl->frames.size(); i++) {
-		FrameData& frameData = impl->frames[i];
-		vkDestroySemaphore(impl->device, frameData.acquireSemaphore, allocator);
-		vkDestroySemaphore(impl->device, frameData.releaseSemaphore, allocator);
-		vkDestroyImage(impl->device, frameData.backBufferImage, allocator);
-		vkDestroyImageView(impl->device, frameData.backBufferView, allocator);
-		vkDestroyFence(impl->device, frameData.fence, allocator);
-	}
-
-	impl->frames.clear();
-}
-
 void ZRenderVulkan::DeleteDevice(IRender::Device* device) {
 	VulkanDeviceImpl* impl = static_cast<VulkanDeviceImpl*>(device);
-	CleanupFrameData(allocator, impl);
-	vkDestroySwapchainKHR(impl->device, impl->swapChain, allocator);
-	vkDestroyDescriptorPool(impl->device, impl->descriptorPool, allocator);
-	vkDestroyDevice(impl->device, allocator);
-
 	delete impl;
 }
 
@@ -380,7 +411,7 @@ void ZRenderVulkan::SetDeviceResolution(IRender::Device* dev, const Int2& resolu
 	Verify("get swapchain images", vkGetSwapchainImagesKHR(device, impl->swapChain, &imageCount, NULL));
 
 	// Cleanup old frame data
-	CleanupFrameData(allocator, impl);
+	impl->DestroyAllFrames(allocator);
 
 	std::vector<VkImage> images(imageCount);
 	Verify("get swap chain images", vkGetSwapchainImagesKHR(device, impl->swapChain, &imageCount, &images[0]));
@@ -423,7 +454,8 @@ Int2 ZRenderVulkan::GetDeviceResolution(IRender::Device* device) {
 }
 
 void ZRenderVulkan::NextDeviceFrame(IRender::Device* device) {
-	// TODO:
+	VulkanDeviceImpl* impl = static_cast<VulkanDeviceImpl*>(device);
+	impl->NextFrame();
 }
 
 IRender::Queue* ZRenderVulkan::CreateQueue(Device* dev, uint32_t flag) {
@@ -450,25 +482,47 @@ bool ZRenderVulkan::SupportParallelPresent(Device* device) {
 void ZRenderVulkan::PresentQueues(Queue** queues, uint32_t count, PresentOption option) {
 	if (count != 0) {
 		VulkanDeviceImpl* device = static_cast<VulkanQueueImpl*>(queues[0])->device;
-		FrameData& frame = device->frames[0];
+		FrameData& frame = device->frames[device->currentFrameIndex];
 
-		// TODO:
 		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		VkSubmitInfo info = {};
 
 		std::vector<VkCommandBuffer> commandBuffers;
-		commandBuffers.reserve(count);
+		commandBuffers.reserve(count * 2);
+
 		for (uint32_t i = 0; i < count; i++) {
 			VulkanQueueImpl* q = static_cast<VulkanQueueImpl*>(queues[i]);
-			// commandBuffers = q->currentCommandBuffer;
-			q->EndFrame();
+			if (q->preparedCount.load(std::memory_order_acquire) > 0) {
+				std::binary_insert(frame.activeQueues, q);
+
+				while (!q->preparedCommandBuffers.Empty()) {
+					VkCommandBuffer commandBuffer = q->preparedCommandBuffers.Top();
+					assert(commandBuffer != VK_NULL_HANDLE);
+					assert(q->preparedCount.load(std::memory_order_acquire) >= 0);
+
+					if (option == IRender::PRESENT_REPEAT) {
+						if (q->preparedCount.load(std::memory_order_acquire) == 1) {
+							commandBuffers.push_back(commandBuffer);
+							break;
+						}
+					}
+
+					q->preparedCount.fetch_sub(1, std::memory_order_relaxed);
+					q->preparedCommandBuffers.Pop();
+					commandBuffers.push_back(commandBuffer); // TODO: add acquire-release
+
+					if (option == IRender::PRESENT_EXECUTE) {
+						break;
+					}
+				}
+			}
 		}
 
 		info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 		info.waitSemaphoreCount = 1;
 		info.pWaitSemaphores = &frame.acquireSemaphore;
 		info.pWaitDstStageMask = &waitStage;
-		info.commandBufferCount = count;
+		info.commandBufferCount = safe_cast<uint32_t>(commandBuffers.size());
 		info.pCommandBuffers = &commandBuffers[0];
 		info.signalSemaphoreCount = 1;
 		info.pSignalSemaphores = &frame.releaseSemaphore;
@@ -793,8 +847,22 @@ struct ResourceImplVulkan<IRender::Resource::DrawCallDescription> final : public
 		BaseClass::Upload(queue, description);
 	}
 
-	virtual void Execute(VulkanQueueImpl* queue) override {
+	inline VkBuffer GetBuffer(IRender::Resource::DrawCallDescription::BufferRange& range) {
+		ResourceImplVulkan<IRender::Resource::BufferDescription>* bufferResource = static_cast<ResourceImplVulkan<IRender::Resource::BufferDescription>*>(range.buffer);
+		return bufferResource->buffer;
+	}
 
+	virtual void Execute(VulkanQueueImpl* queue) override {
+		/*
+		ResourceImplVulkan<IRender::Resource::ShaderDescription>* shaderResource = static_cast<ResourceImplVulkan<IRender::Resource::ShaderDescription>*>(cacheDescription.shaderResource);
+
+		PipelineInstance& pipelineInstance = shaderResource->QueryInstance(queue, this);
+		VkCommandBuffer commandBuffer = queue->currentCommandBuffer;
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineInstance.pipeline);
+
+		// TODO:  Bind DescriptorSets
+		vkCmdBindIndexBuffer(commandBuffer, GetBuffer(cacheDescription.indexBufferResource), cacheDescription.indexBufferResource.offset, VK_INDEX_TYPE_UINT32);
+		*/
 	}
 
 	Bytes signature;
@@ -1103,7 +1171,6 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> final : public R
 			}
 		}
 	}
-
 
 	PipelineInstance& QueryInstance(VulkanQueueImpl* queue, ResourceImplVulkan<IRender::Resource::DrawCallDescription>* drawCall) {
 		// Generate vertex format.
@@ -1474,7 +1541,9 @@ void ZRenderVulkan::SetResourceNotation(Resource* lhs, const String& note) {
 
 void ZRenderVulkan::DeleteResource(Queue* queue, Resource* resource) {
 	VulkanQueueImpl* impl = static_cast<VulkanQueueImpl*>(queue);
+	impl->DoLock();
 	impl->deletedResources.Push(static_cast<ResourceImplVulkanBase*>(resource));
+	impl->UnLock();
 }
 
 #ifdef _DEBUG
