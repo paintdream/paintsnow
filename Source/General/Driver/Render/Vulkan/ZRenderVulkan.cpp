@@ -847,24 +847,7 @@ struct ResourceImplVulkan<IRender::Resource::DrawCallDescription> final : public
 		BaseClass::Upload(queue, description);
 	}
 
-	inline VkBuffer GetBuffer(IRender::Resource::DrawCallDescription::BufferRange& range) {
-		ResourceImplVulkan<IRender::Resource::BufferDescription>* bufferResource = static_cast<ResourceImplVulkan<IRender::Resource::BufferDescription>*>(range.buffer);
-		return bufferResource->buffer;
-	}
-
-	virtual void Execute(VulkanQueueImpl* queue) override {
-		/*
-		ResourceImplVulkan<IRender::Resource::ShaderDescription>* shaderResource = static_cast<ResourceImplVulkan<IRender::Resource::ShaderDescription>*>(cacheDescription.shaderResource);
-
-		PipelineInstance& pipelineInstance = shaderResource->QueryInstance(queue, this);
-		VkCommandBuffer commandBuffer = queue->currentCommandBuffer;
-		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineInstance.pipeline);
-
-		// TODO:  Bind DescriptorSets
-		vkCmdBindIndexBuffer(commandBuffer, GetBuffer(cacheDescription.indexBufferResource), cacheDescription.indexBufferResource.offset, VK_INDEX_TYPE_UINT32);
-		*/
-	}
-
+	virtual void Execute(VulkanQueueImpl* queue) override;
 	Bytes signature;
 };
 
@@ -1133,7 +1116,17 @@ struct ResourceImplVulkan<IRender::Resource::RenderTargetDescription> final : pu
 		}
 
 		info.pClearValues = &clearValue[0];
+
+		VkViewport viewport;
+		viewport.x = info.renderArea.offset.x;
+		viewport.y = info.renderArea.offset.y;
+		viewport.width = info.renderArea.extent.width;
+		viewport.height = info.renderArea.extent.height;
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+
 		vkCmdBeginRenderPass(queue->currentCommandBuffer, &info, VK_SUBPASS_CONTENTS_INLINE);
+		vkCmdSetViewport(queue->currentCommandBuffer, 0, 1, &viewport);
 	}
 
 	uint32_t signature;
@@ -1143,7 +1136,7 @@ struct ResourceImplVulkan<IRender::Resource::RenderTargetDescription> final : pu
 
 template <>
 struct ResourceImplVulkan<IRender::Resource::ShaderDescription> final : public ResourceImplVulkanBase {
-	ResourceImplVulkan() : descriptorSetLayout(VK_NULL_HANDLE), descriptorSet(VK_NULL_HANDLE), pipelineLayout(VK_NULL_HANDLE) {
+	ResourceImplVulkan() : descriptorSetLayoutTexture(VK_NULL_HANDLE), descriptorSetLayoutBuffer(VK_NULL_HANDLE), descriptorSet(VK_NULL_HANDLE), pipelineLayout(VK_NULL_HANDLE) {
 		memset(shaderModules, 0, sizeof(shaderModules));
 	}
 
@@ -1153,9 +1146,14 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> final : public R
 			pipelineLayout = VK_NULL_HANDLE;
 		}
 
-		if (descriptorSetLayout != VK_NULL_HANDLE) {
-			vkDestroyDescriptorSetLayout(device->device, descriptorSetLayout, device->allocator);
-			descriptorSetLayout = VK_NULL_HANDLE;
+		if (descriptorSetLayoutTexture != VK_NULL_HANDLE) {
+			vkDestroyDescriptorSetLayout(device->device, descriptorSetLayoutTexture, device->allocator);
+			descriptorSetLayoutTexture = VK_NULL_HANDLE;
+		}
+
+		if (descriptorSetLayoutBuffer != VK_NULL_HANDLE) {
+			vkDestroyDescriptorSetLayout(device->device, descriptorSetLayoutBuffer, device->allocator);
+			descriptorSetLayoutBuffer = VK_NULL_HANDLE;
 		}
 
 		if (descriptorSet != VK_NULL_HANDLE) {
@@ -1312,6 +1310,8 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> final : public R
 		PipelineInstance instance;
 		VulkanDeviceImpl* device = queue->device;
 		Verify("create graphics pipelines", vkCreateGraphicsPipelines(device->device, VK_NULL_HANDLE, 1, &info, device->allocator, &instance.pipeline));
+
+		return std::binary_insert(stateInstances, std::make_key_value(std::move(key), std::move(instance)))->second;
 	}
 
 	virtual void Delete(VulkanQueueImpl* queue) override {
@@ -1335,6 +1335,7 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> final : public R
 		}
 
 		std::vector<VkDescriptorSetLayoutBinding> textureBindings;
+		std::vector<VkDescriptorSetLayoutBinding> bufferBindings;
 		std::vector<VkSampler> samplers;
 
 		for (size_t k = 0; k < Resource::ShaderDescription::END; k++) {
@@ -1344,6 +1345,28 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> final : public R
 			String body = "void main(void) {\n";
 			String head = "";
 			uint32_t inputIndex = 0, outputIndex = 0, textureIndex = 0;
+			VkShaderStageFlags stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+			switch (k) {
+			case IRender::Resource::ShaderDescription::VERTEX:
+				stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+				break;
+			case IRender::Resource::ShaderDescription::TESSELLATION_CONTROL:
+				stageFlags = VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+				break;
+			case IRender::Resource::ShaderDescription::TESSELLATION_EVALUATION:
+				stageFlags = VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+				break;
+			case IRender::Resource::ShaderDescription::GEOMETRY:
+				stageFlags = VK_SHADER_STAGE_GEOMETRY_BIT;
+				break;
+			case IRender::Resource::ShaderDescription::FRAGMENT:
+				stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+				break;
+			case IRender::Resource::ShaderDescription::COMPUTE:
+				stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+				break;
+			}
+
 			for (size_t n = 0; n < pieces.size(); n++) {
 				IShader* shader = pieces[n];
 				// Generate declaration
@@ -1358,6 +1381,15 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> final : public R
 					std::pair<const IShader::BindBuffer*, String>& item = declaration.bufferBindings[k];
 					const IShader::BindBuffer* bindBuffer = item.first;
 					bufferDescriptions.emplace_back(bindBuffer->description);
+					if (bindBuffer->description.usage == IRender::Resource::BufferDescription::UNIFORM || bindBuffer->description.usage == IRender::Resource::BufferDescription::STORAGE) {
+						VkDescriptorSetLayoutBinding binding = {};
+						binding.binding = safe_cast<uint32_t>(bufferBindings.size());
+						binding.descriptorCount = 1;
+						binding.descriptorType = bindBuffer->description.usage == IRender::Resource::BufferDescription::UNIFORM ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+						binding.stageFlags = stageFlags;
+						binding.pImmutableSamplers = nullptr;
+						bufferBindings.emplace_back(std::move(binding));
+					}
 				}
 
 				size_t startSamplerIndex = samplers.size();
@@ -1384,27 +1416,7 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> final : public R
 					VkDescriptorSetLayoutBinding binding;
 					binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 					binding.descriptorCount = (uint32_t)declaration.textureBindings.size();
-					binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-					switch (k) {
-					case IRender::Resource::ShaderDescription::VERTEX:
-						binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-						break;
-					case IRender::Resource::ShaderDescription::TESSELLATION_CONTROL:
-						binding.stageFlags = VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
-						break;
-					case IRender::Resource::ShaderDescription::TESSELLATION_EVALUATION:
-						binding.stageFlags = VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
-						break;
-					case IRender::Resource::ShaderDescription::GEOMETRY:
-						binding.stageFlags = VK_SHADER_STAGE_GEOMETRY_BIT;
-						break;
-					case IRender::Resource::ShaderDescription::FRAGMENT:
-						binding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-						break;
-					case IRender::Resource::ShaderDescription::COMPUTE:
-						binding.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-						break;
-					}
+					binding.stageFlags = stageFlags;
 
 					binding.pImmutableSamplers = reinterpret_cast<VkSampler*>(startSamplerIndex);
 					textureBindings.emplace_back(binding);
@@ -1463,26 +1475,42 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> final : public R
 		}
 
 		if (!textureBindings.empty()) {
-			VkDescriptorSetLayoutCreateInfo info = {};
-			info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-			info.bindingCount = (uint32_t)textureBindings.size();
-			info.pBindings = &textureBindings[0];
-			Verify("create descriptor set layout", vkCreateDescriptorSetLayout(device->device, &info, device->allocator, &descriptorSetLayout));
+			uint32_t layoutCount = 0;
+			VkDescriptorSetLayout layouts[2] = {};
+			if (!textureBindings.empty()) {
+				VkDescriptorSetLayoutCreateInfo textureInfo = {};
+				textureInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+				textureInfo.bindingCount = (uint32_t)textureBindings.size();
+				textureInfo.pBindings = &textureBindings[0];
+				Verify("create descriptor set layout", vkCreateDescriptorSetLayout(device->device, &textureInfo, device->allocator, &descriptorSetLayoutTexture));
+				layouts[layoutCount++] = descriptorSetLayoutTexture;
+			}
 
-			VkDescriptorSetAllocateInfo allocInfo = {};
-			allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-			allocInfo.descriptorPool = device->descriptorPool;
-			allocInfo.descriptorSetCount = 1;
-			allocInfo.pSetLayouts = &descriptorSetLayout;
-			Verify("allocate descriptor set", vkAllocateDescriptorSets(device->device, &allocInfo, &descriptorSet));
+			if (!bufferBindings.empty()) {
+				VkDescriptorSetLayoutCreateInfo bufferInfo = {};
+				bufferInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+				bufferInfo.bindingCount = (uint32_t)bufferBindings.size();
+				bufferInfo.pBindings = &bufferBindings[0];
+				Verify("create descriptor set layout", vkCreateDescriptorSetLayout(device->device, &bufferInfo, device->allocator, &descriptorSetLayoutBuffer));
+				layouts[layoutCount++] = descriptorSetLayoutBuffer;
+			}
+
+			if (layoutCount != 0) {
+				VkDescriptorSetAllocateInfo allocInfo = {};
+				allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+				allocInfo.descriptorPool = device->descriptorPool;
+				allocInfo.descriptorSetCount = layoutCount;
+				allocInfo.pSetLayouts = layouts;
+				Verify("allocate descriptor set", vkAllocateDescriptorSets(device->device, &allocInfo, &descriptorSet));
+			}
 		}
 
 		// TODO: push constant range
 		// VkPushConstantRange 
 		VkPipelineLayoutCreateInfo layoutInfo = {};
 		layoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		layoutInfo.setLayoutCount = descriptorSetLayout ? 1 : 0;
-		layoutInfo.pSetLayouts = &descriptorSetLayout;
+		layoutInfo.setLayoutCount = descriptorSetLayoutTexture ? 1 : 0;
+		layoutInfo.pSetLayouts = &descriptorSetLayoutTexture;
 		layoutInfo.pushConstantRangeCount = 0;
 		layoutInfo.pPushConstantRanges = nullptr;
 		Verify("create pipeline layout", vkCreatePipelineLayout(device->device, &layoutInfo, device->allocator, &pipelineLayout));
@@ -1492,7 +1520,8 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> final : public R
 		assert(false); // not possible
 	}
 
-	VkDescriptorSetLayout descriptorSetLayout;
+	VkDescriptorSetLayout descriptorSetLayoutTexture;
+	VkDescriptorSetLayout descriptorSetLayoutBuffer;
 	VkDescriptorSet descriptorSet;
 	VkPipelineLayout pipelineLayout;
 	VkShaderModule shaderModules[IRender::Resource::ShaderDescription::Stage::END];
@@ -1544,6 +1573,34 @@ void ZRenderVulkan::DeleteResource(Queue* queue, Resource* resource) {
 	impl->DoLock();
 	impl->deletedResources.Push(static_cast<ResourceImplVulkanBase*>(resource));
 	impl->UnLock();
+}
+
+inline VkBuffer GetBuffer(IRender::Resource::DrawCallDescription::BufferRange& range) {
+	ResourceImplVulkan<IRender::Resource::BufferDescription>* bufferResource = static_cast<ResourceImplVulkan<IRender::Resource::BufferDescription>*>(range.buffer);
+	return bufferResource->buffer;
+}
+
+void ResourceImplVulkan<IRender::Resource::DrawCallDescription>::Execute(VulkanQueueImpl* queue) {
+	ResourceImplVulkan<IRender::Resource::ShaderDescription>* shaderResource = static_cast<ResourceImplVulkan<IRender::Resource::ShaderDescription>*>(cacheDescription.shaderResource);
+
+	PipelineInstance& pipelineInstance = shaderResource->QueryInstance(queue, this);
+	VkCommandBuffer commandBuffer = queue->currentCommandBuffer;
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineInstance.pipeline);
+	if (shaderResource->descriptorSet) {
+		vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shaderResource->pipelineLayout, 0, 1, &shaderResource->descriptorSet, 0, nullptr);
+	}
+
+	vkCmdBindIndexBuffer(commandBuffer, static_cast<ResourceImplVulkan<IRender::Resource::BufferDescription>*>(cacheDescription.indexBufferResource.buffer)->buffer, cacheDescription.indexBufferResource.offset, VK_INDEX_TYPE_UINT32);
+
+	std::vector<VkBuffer> vertexBuffers;
+	for (size_t k = 0; k < cacheDescription.bufferResources.size(); k++) {
+		ResourceImplVulkan<IRender::Resource::BufferDescription>* p = static_cast<ResourceImplVulkan<IRender::Resource::BufferDescription>*>(cacheDescription.bufferResources[k].buffer);
+		if (p->cacheDescription.usage == IRender::Resource::BufferDescription::VERTEX) {
+			vertexBuffers.emplace_back(p->buffer);
+		}
+	}
+
+	vkCmdBindVertexBuffers(commandBuffer, 0, vertexBuffers.size(), &vertexBuffers[0], nullptr);
 }
 
 #ifdef _DEBUG
