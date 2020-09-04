@@ -22,6 +22,7 @@ void Component::Initialize(Engine& engine, Entity* entity) {
 }
 
 void Component::Uninitialize(Engine& engine, Entity* entity) {
+	Flag().fetch_and(~Tiny::TINY_ACTIVATED, std::memory_order_release);
 }
 
 void Component::DispatchEvent(Event& event, Entity* entity) {}

@@ -103,6 +103,26 @@ void CameraComponent::Uninitialize(Engine& engine, Entity* entity) {
 	if (rootEntity == entity) {
 		rootEntity = nullptr;
 	} else {
+		if (Flag().load(std::memory_order_acquire) & CAMERACOMPONENT_UPDATE_COLLECTING) {
+			Kernel& kernel = engine.GetKernel();
+			ThreadPool& threadPool = kernel.threadPool;
+			if (threadPool.GetThreadCount() != 0) {
+				uint32_t threadIndex = threadPool.GetCurrentThreadIndex();
+				uint32_t warpIndex = kernel.GetCurrentWarpIndex();
+				kernel.YieldCurrentWarp();
+				while (Flag().load(std::memory_order_acquire) & CAMERACOMPONENT_UPDATE_COLLECTING) {
+					// wait for it finishes
+					threadPool.PollRoutine(safe_cast<uint32_t>(threadIndex));
+				}
+
+				Kernel::SubTaskQueue& queue = kernel.taskQueueGrid[warpIndex];
+				while (!queue.PreemptExecution()) {
+					// wait for preemption
+					threadPool.PollRoutine(safe_cast<uint32_t>(threadIndex));
+				}
+			}
+		}
+
 		RenderPort* port = renderFlowComponent->BeginPort(cameraViewPortName);
 		if (port != nullptr) {
 			RenderPortCameraView* cameraViewPort = port->QueryInterface(UniqueType<RenderPortCameraView>());
@@ -225,8 +245,11 @@ MatrixFloat4x4 CameraComponent::ComputeSmoothTrackTransform() const {
 
 void CameraComponent::UpdateTaskData(Engine& engine, Entity* hostEntity) {
 	// Next collection ready? 
-	if (!(Flag() & CAMERACOMPONENT_UPDATE_COMMITTED)) return;
-	Flag().fetch_and(~CAMERACOMPONENT_UPDATE_COMMITTED, std::memory_order_release);
+	if (!(Flag().fetch_and(~CAMERACOMPONENT_UPDATE_COMMITTED, std::memory_order_relaxed) & CAMERACOMPONENT_UPDATE_COMMITTED)) {
+		return;
+	}
+
+	Flag().fetch_or(CAMERACOMPONENT_UPDATE_COLLECTING, std::memory_order_acq_rel);
 
 	std::swap(prevTaskData, nextTaskData);
 	// Tick new collection
@@ -425,8 +448,8 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 	if ((Flag() & CAMERACOMPONENT_UPDATE_COLLECTED)) {
 		taskData = nextTaskData;
 		CommitRenderRequests(engine, *taskData, queue);
-		Flag().fetch_and(~CAMERACOMPONENT_UPDATE_COLLECTED, std::memory_order_release);
-		Flag().fetch_or(CAMERACOMPONENT_UPDATE_COMMITTED, std::memory_order_acquire);
+		Flag().fetch_and(~CAMERACOMPONENT_UPDATE_COLLECTED, std::memory_order_relaxed);
+		Flag().fetch_or(CAMERACOMPONENT_UPDATE_COMMITTED, std::memory_order_acq_rel);
 	} else {
 		taskData = prevTaskData;
 	}
@@ -502,7 +525,7 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 	worldGlobalData.lastViewProjectionMatrix = worldGlobalData.viewProjectionMatrix;
 	worldGlobalData.viewProjectionMatrix = worldGlobalData.viewMatrix * worldGlobalData.projectionMatrix;
 
-	renderPort.Flag().fetch_or(TINY_MODIFIED, std::memory_order_acquire);
+	renderPort.Flag().fetch_or(TINY_MODIFIED, std::memory_order_acq_rel);
 }
 
 void CameraComponent::OnTickHost(Engine& engine, Entity* hostEntity) {
@@ -685,11 +708,13 @@ void CameraComponent::CollectEnvCubeComponent(EnvCubeComponent* envCubeComponent
 
 void CameraComponent::CompleteCollect(Engine& engine, TaskData& taskData) {
 	Kernel& kernel = engine.GetKernel();
+	Flag().fetch_and(~CAMERACOMPONENT_UPDATE_COLLECTING, std::memory_order_release);
+
 	if (kernel.GetCurrentWarpIndex() != GetWarpIndex()) {
 		kernel.QueueRoutine(this, CreateTaskContextFree(Wrap(this, &CameraComponent::CompleteCollect), std::ref(engine), std::ref(taskData)));
 	} else {
 		Instancing(engine, taskData);
-		Flag().fetch_or(CAMERACOMPONENT_UPDATE_COLLECTED, std::memory_order_acquire);
+		Flag().fetch_or(CAMERACOMPONENT_UPDATE_COLLECTED, std::memory_order_acq_rel);
 	}
 }
 

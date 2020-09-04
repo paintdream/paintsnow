@@ -198,7 +198,9 @@ void DescriptorSetAllocator::FreeDescriptorSet(const std::pair<Node*, VkDescript
 		}
 	} else {
 		Node* expected = nullptr;
-		activeNode.compare_exchange_strong(expected, p, std::memory_order_release);
+		if (activeNode.load(std::memory_order_acquire) == nullptr) {
+			activeNode.compare_exchange_strong(expected, p, std::memory_order_release);
+		}
 	}
 }
 
