@@ -16,6 +16,7 @@ namespace PaintsNow {
 		TextViewComponentModule(Engine& engine);
 		virtual ~TextViewComponentModule();
 		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		virtual void Initialize() override;
 
 		TShared<TextViewComponent> RequestNew(IScript::Request& request, IScript::Delegate<FontResource> fontResource, IScript::Delegate<BatchComponent> batch, IScript::Delegate<MeshResource> meshResource, IScript::Delegate<MaterialResource> materialResource);
 		void RequestSetFontSize(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent, uint32_t fontSize);

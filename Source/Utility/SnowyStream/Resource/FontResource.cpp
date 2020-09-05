@@ -95,7 +95,6 @@ const FontResource::Char& FontResource::Get(IRender& render, IRender::Queue* que
 }
 
 FontResource::Slice::Slice(uint16_t fs, uint16_t d) : font(nullptr), fontSize(fs), critical(0), dim(d) {
-	buffer.Resize(dim * dim * sizeof(uint8_t));
 }
 
 void FontResource::Slice::Uninitialize(IRender& render, IRender::Queue* queue, ResourceManager& resourceManager) {
@@ -198,6 +197,10 @@ const FontResource::Char& FontResource::Slice::Get(IRender& render, IRender::Que
 		return (*p).second;
 	} else {
 		assert(font != nullptr);
+		if (buffer.Empty()) {
+			buffer.Resize(dim * dim * sizeof(uint8_t));
+		}
+
 		Char c;
 		String data;
 		c.info = fontBase.RenderTexture(font, data, ch, fontSize, 0);
@@ -206,6 +209,7 @@ const FontResource::Char& FontResource::Slice::Get(IRender& render, IRender::Que
 		SpinUnLock(lock);
 
 		Short2Pair& r = c.rect;
+		assert(r.second.x() <= dim && r.second.y() <= dim);
 		uint8_t* target = buffer.GetData();
 
 		const uint32_t* p = (const uint32_t*)data.data();

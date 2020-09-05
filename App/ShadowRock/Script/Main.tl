@@ -60,8 +60,9 @@ local function InitializeWorld(databasePath : string)
 	eventComponent:BindEventUserInput(true)
 
 	print("InitializeWorld: Creating GUI ...")
-	-- local GUI = require("Script/Root/GUI")
-	-- local guiEntity = GUI.New()
+	local GUI = require("Script/Root/GUI")
+	local gui = GUI.New()
+	local guiEntity = gui.rootEntity
 
 	print("InitializeWorld: Creating scene ...")
 	local Scene = require("Script/Root/Scene")
@@ -74,7 +75,7 @@ local function InitializeWorld(databasePath : string)
 
 	local spaceComponent = scene.spaceComponent
 	spaceComponent:InsertEntity(player.entity)
-	-- spaceComponent:InsertEntity(guiEntity) -- use scene renderer to render gui at this moment
+	spaceComponent:InsertEntity(guiEntity) -- use scene renderer to render gui at this moment
 
 	local cameraController = player.cameraController
 	local cameraComponent = cameraController.cameraComponent

@@ -6,6 +6,9 @@ using namespace PaintsNow;
 TextViewComponentModule::TextViewComponentModule(Engine& engine) : BaseClass(engine) {
 	batchComponentModule = (engine.GetComponentModuleFromName("BatchComponent")->QueryInterface(UniqueType<BatchComponentModule>()));
 	assert(batchComponentModule != nullptr);
+}
+
+void TextViewComponentModule::Initialize() {
 	defaultTextMaterial = engine.snowyStream.CreateReflectedResource(UniqueType<MaterialResource>(), "[Runtime]/MaterialResource/Text");
 	defaultTextMesh = engine.snowyStream.CreateReflectedResource(UniqueType<MeshResource>(), "[Runtime]/MeshResource/StandardSquare");
 }
@@ -16,7 +19,7 @@ TObject<IReflect>& TextViewComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 	if (reflect.IsReflectMethod()) {
 		ReflectMethod(RequestNew)[ScriptMethod = "New"];
-		ReflectMethod(RequestSetFont)[ScriptMethod = "SetFont"];
+		ReflectMethod(RequestSetFontSize)[ScriptMethod = "SetFontSize"];
 		ReflectMethod(RequestGetText)[ScriptMethod = "GetText"];
 		ReflectMethod(RequestSetText)[ScriptMethod = "SetText"];
 		ReflectMethod(RequestLocateText)[ScriptMethod = "LocateText"];

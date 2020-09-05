@@ -13,7 +13,7 @@ using namespace PaintsNow;
 
 class FontFreetypeImpl : public IFontBase::Font {
 public:
-	unsigned char* buffer;
+	uint8_t* buffer;
 	size_t fontSize;
 	FT_Library lib;
 	FT_Face face;
@@ -39,7 +39,7 @@ void ZFontFreetype::Close(Font* font) {
 
 IFontBase::Font* ZFontFreetype::Load(IStreamBase& stream, size_t length) {
 	// Read a memory block
-	unsigned char* buffer = new unsigned char[length];
+	uint8_t* buffer = new uint8_t[length];
 	if (!stream.Read(buffer, length)) {
 		delete[] buffer;
 		return nullptr;
@@ -108,22 +108,8 @@ IFontBase::CHARINFO ZFontFreetype::RenderTexture(Font* font, String& texture, FO
 
 	const int size = bitmap.width * bitmap.rows;
 	texture.resize(size);
-	unsigned char* data = (unsigned char*)texture.data();
-//	static char buf[256];
-//	printf("Data allocated at: %p, size = %d\n", data, size);
-
-	// printf("CHAR %c\n", character);
-	for (size_t j = 0; j < (size_t)bitmap.rows; j++) {
-		for (size_t i = 0; i < (size_t)bitmap.width; i++) {
-			unsigned char* p = &data[4 * (i + (bitmap.rows - j - 1) * bitmap.width)];
-			// p[0] = p[1] = p[2] = 255;
-			p[0] = p[1] = p[2] = bitmap.buffer[i + bitmap.width * j];
-			p[3] = 255;
-			// printf("%02X ", bitmap.buffer[i + bitmap.width * j]);
-		}
-		// printf("\n");
-	}
-	// printf("\n");
+	uint8_t* data = (uint8_t*)texture.data();
+	memcpy(data, bitmap.buffer, size);
 
 	IFontBase::CHARINFO info;
 	info.height = safe_cast<uint16_t>(bitmap.rows);

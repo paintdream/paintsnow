@@ -43,6 +43,12 @@ MythForest::MythForest(Interfaces& interfaces, SnowyStream& snowyStream, BridgeS
 	: engine(interfaces, bridgeSunset, snowyStream), lastFrameTick(0), currentFrameTime(1) {
 	entityAllocator = TShared<Entity::Allocator>::From(new Entity::Allocator());
 
+}
+
+MythForest::~MythForest() {
+}
+
+void MythForest::Initialize() {
 	// add builtin modules
 	engine.InstallModule(new AnimationComponentModule(engine));
 	engine.InstallModule(new BatchComponentModule(engine));
@@ -74,12 +80,6 @@ MythForest::MythForest(Interfaces& interfaces, SnowyStream& snowyStream, BridgeS
 	engine.InstallModule(new TransformComponentModule(engine));
 	engine.InstallModule(new VisibilityComponentModule(engine));
 	engine.InstallModule(new WidgetComponentModule(engine));
-}
-
-MythForest::~MythForest() {
-}
-
-void MythForest::Initialize() {
 }
 
 void MythForest::Uninitialize() {
