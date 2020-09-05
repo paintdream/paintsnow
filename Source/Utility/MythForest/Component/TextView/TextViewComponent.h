@@ -24,8 +24,8 @@ namespace PaintsNow {
 		virtual void Initialize(Engine& engine, Entity* entity) override;
 		virtual void Uninitialize(Engine& engine, Entity* entity) override;
 
-		struct Descriptor {
-			Descriptor(int16_t h, int16_t fs);
+		struct Element {
+			Element(int16_t h, int16_t fs);
 			int16_t totalWidth;
 			int16_t yCoord;
 			int16_t firstOffset;
@@ -100,7 +100,7 @@ namespace PaintsNow {
 		TagParser parser;
 
 		std::vector<RenderInfo> renderInfos;
-		std::vector<Descriptor> lines;
+		std::vector<Element> lines;
 		Short2 size;
 		Short2 scroll;
 		Short2 fullSize;

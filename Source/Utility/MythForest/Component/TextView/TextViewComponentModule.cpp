@@ -25,7 +25,7 @@ TObject<IReflect>& TextViewComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-TShared<TextViewComponent> TextViewComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<FontResource> fontResource, IScript::Delegate<MeshResource> meshResource, IScript::Delegate<BatchComponent> batch, IScript::Delegate<MaterialResource> materialResource) {
+TShared<TextViewComponent> TextViewComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<FontResource> fontResource, IScript::Delegate<BatchComponent> batch, IScript::Delegate<MeshResource> meshResource, IScript::Delegate<MaterialResource> materialResource) {
 	CHECK_REFERENCES_NONE();
 
 	TShared<BatchComponent> batchComponent;
@@ -41,17 +41,13 @@ TShared<TextViewComponent> TextViewComponentModule::RequestNew(IScript::Request&
 	return textViewComponent;
 }
 
-void TextViewComponentModule::RequestSetFont(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent, const String& font, int64_t fontSize, float reinforce) {
+void TextViewComponentModule::RequestSetFontSize(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent, uint32_t fontSize) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(textViewComponent);
 
 	// Get font
-	TShared<FontResource> fontResource = engine.snowyStream.CreateReflectedResource(UniqueType<FontResource>(), font);
-	if (fontResource) {
-		textViewComponent->fontResource = fontResource;
-		textViewComponent->fontSize = safe_cast<uint32_t>(fontSize);
-		textViewComponent->SetUpdateMark();
-	}
+	textViewComponent->fontSize = safe_cast<uint32_t>(fontSize);
+	textViewComponent->SetUpdateMark();
 }
 
 String TextViewComponentModule::RequestGetText(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent) {

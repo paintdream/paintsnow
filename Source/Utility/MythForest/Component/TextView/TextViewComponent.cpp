@@ -185,8 +185,8 @@ static int Utf8ToUnicode(const unsigned char* s, int size) {
 	return data;
 }
 
-TextViewComponent::Descriptor::Descriptor(int16_t h, int16_t s) : totalWidth(0), firstOffset(h) {}
-TextViewComponent::Descriptor::Char::Char(int16_t c, int16_t off) : xCoord(c), offset(off) {}
+TextViewComponent::Element::Element(int16_t h, int16_t s) : totalWidth(0), firstOffset(h) {}
+TextViewComponent::Element::Char::Char(int16_t c, int16_t off) : xCoord(c), offset(off) {}
 
 void TextViewComponent::UpdateRenderData(Engine& engine) {
 	if (!fontResource) {
@@ -225,7 +225,7 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 	Short2 current;
 	const FontResource::Char& pwd = fontResource->Get(render, queue, fontBase, passwordChar, fontSize);
 	UChar4 color(255, 255, 255, 255);
-	lines.emplace_back(Descriptor(currentHeight, 0));
+	lines.emplace_back(Element(currentHeight, 0));
 	FontResource::Char info;
 
 	for (size_t j = 0; j < parser.nodes.size(); j++) {
@@ -251,7 +251,7 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 				}
 
 				if (currentWidth + start.x() >= ws) {
-					lines.emplace_back(Descriptor(currentHeight, node.offset));
+					lines.emplace_back(Element(currentHeight, node.offset));
 					currentWidth = -start.x();
 					currentHeight += h;
 					p -= step;
@@ -261,7 +261,7 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 				}
 
 				int16_t offset = (int16_t)(p - text.data());
-				lines.back().allOffsets.emplace_back(Descriptor::Char(currentWidth - temp / 2, offset));
+				lines.back().allOffsets.emplace_back(Element::Char(currentWidth - temp / 2, offset));
 				lines.back().totalWidth = currentWidth + start.x();
 
 				if (!full && currentHeight >= 0) {
@@ -305,7 +305,7 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 		} else if (node.type == TagParser::Node::ALIGN_LEFT || node.type == TagParser::Node::ALIGN_RIGHT || node.type == TagParser::Node::ALIGN_CENTER) {
 			align = node.type;
 		} else if (node.type == TagParser::Node::RETURN) {
-			lines.emplace_back(Descriptor(start.x(), (int16_t)node.offset));
+			lines.emplace_back(Element(start.x(), (int16_t)node.offset));
 			currentWidth = -start.x();
 			currentHeight += h;
 			count++;
@@ -425,25 +425,25 @@ const Short2& TextViewComponent::GetSize() const {
 }
 
 struct LocateLineOffset {
-	bool operator () (const TextViewComponent::Descriptor& desc, int offset) {
+	bool operator () (const TextViewComponent::Element& desc, int offset) {
 		return desc.firstOffset < offset;
 	}
 };
 
 struct LocatePosOffset {
-	bool operator () (const TextViewComponent::Descriptor::Char& desc, int offset) {
+	bool operator () (const TextViewComponent::Element::Char& desc, int offset) {
 		return desc.offset < offset;
 	}
 };
 
 struct LocateLine {
-	bool operator () (const TextViewComponent::Descriptor& desc, const Short2& pt) {
+	bool operator () (const TextViewComponent::Element& desc, const Short2& pt) {
 		return desc.yCoord < pt.y();
 	}
 };
 
 struct LocatePos {
-	bool operator () (const TextViewComponent::Descriptor::Char& desc, const Short2& pt) {
+	bool operator () (const TextViewComponent::Element::Char& desc, const Short2& pt) {
 		return desc.xCoord < pt.x();
 	}
 };
@@ -455,7 +455,7 @@ int32_t TextViewComponent::Locate(Short2& rowCol, const Short2& pt, bool isPtRow
 	}
 
 	if (isPtRowCol) {
-		const Descriptor& desc = lines[rowCol.y()];
+		const Element& desc = lines[rowCol.y()];
 		rowCol.x() = Math::Max((int16_t)0, Math::Min((int16_t)(lines.size() - 1), pt.x()));
 		rowCol.y() = Math::Max((int16_t)0, Math::Min((int16_t)(desc.allOffsets.size()), pt.y()));
 
@@ -465,17 +465,17 @@ int32_t TextViewComponent::Locate(Short2& rowCol, const Short2& pt, bool isPtRow
 			return desc.allOffsets[rowCol.y()].offset;
 		}
 	} else {
-		std::vector<Descriptor>::const_iterator p = std::lower_bound(lines.begin(), lines.end(), pt, LocateLine());
+		std::vector<Element>::const_iterator p = std::lower_bound(lines.begin(), lines.end(), pt, LocateLine());
 		if (p == lines.end()) {
 			--p;
 		}
 		rowCol.x() = (int16_t)(p - lines.begin());
 
-		std::vector<TextViewComponent::Descriptor::Char>::const_iterator t = std::lower_bound(p->allOffsets.begin(), p->allOffsets.end(), pt, LocatePos());
+		std::vector<TextViewComponent::Element::Char>::const_iterator t = std::lower_bound(p->allOffsets.begin(), p->allOffsets.end(), pt, LocatePos());
 
 		rowCol.y() = (int16_t)(t - p->allOffsets.begin());
 		if (t == p->allOffsets.end()) {
-			std::vector<Descriptor>::const_iterator q = p;
+			std::vector<Element>::const_iterator q = p;
 			q++;
 			if (q != lines.end() && !(*q).allOffsets.empty()) {
 				return q->firstOffset;

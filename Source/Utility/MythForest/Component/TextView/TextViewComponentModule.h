@@ -17,8 +17,8 @@ namespace PaintsNow {
 		virtual ~TextViewComponentModule();
 		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
 
-		TShared<TextViewComponent> RequestNew(IScript::Request& request, IScript::Delegate<FontResource> fontResource, IScript::Delegate<MeshResource> meshResource, IScript::Delegate<BatchComponent> batchComponent, IScript::Delegate<MaterialResource> materialResource);
-		void RequestSetFont(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent, const String& font, int64_t fontSize, float reinforce);
+		TShared<TextViewComponent> RequestNew(IScript::Request& request, IScript::Delegate<FontResource> fontResource, IScript::Delegate<BatchComponent> batch, IScript::Delegate<MeshResource> meshResource, IScript::Delegate<MaterialResource> materialResource);
+		void RequestSetFontSize(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent, uint32_t fontSize);
 		String RequestGetText(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent);
 		void RequestSetText(IScript::Request& request, IScript::Delegate<TextViewComponent> window, const String& text);
 		Short3 RequestLocateText(IScript::Request& request, IScript::Delegate<TextViewComponent> window, Short2& offset, bool isRowCol);
