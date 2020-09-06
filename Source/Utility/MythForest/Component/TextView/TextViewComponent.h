@@ -23,6 +23,7 @@ namespace PaintsNow {
 		virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) override;
 		virtual void Initialize(Engine& engine, Entity* entity) override;
 		virtual void Uninitialize(Engine& engine, Entity* entity) override;
+		virtual void UpdateBoundingBox(Engine& engine, Float3Pair& box) override;
 
 		struct Element {
 			Element(int16_t h, int16_t fs);
@@ -56,8 +57,7 @@ namespace PaintsNow {
 			struct Node {
 				enum TYPE { TEXT = 0, RETURN, COLOR, COLOR_CLOSED, ALIGN_LEFT, ALIGN_RIGHT, ALIGN_CENTER };
 
-				Node(TYPE t, uint32_t off, uint32_t len = 0) : type(t), offset(off), length(0) {}
-				virtual ~Node() {}
+				Node(TYPE t, uint32_t off, uint32_t len = 0) : type(t), offset(off), length(len) {}
 
 				TYPE type;
 				uint32_t offset;
@@ -105,12 +105,12 @@ namespace PaintsNow {
 		Short2 scroll;
 		Short2 fullSize;
 		Short2 padding;
-		int32_t passwordChar;
-		int32_t cursorChar;
-		int32_t cursorPos;
 		Short2 selectRange;
 		UChar4 cursorColor;
 		UChar4 selectColor;
+		int32_t passwordChar;
+		int32_t cursorChar;
+		int32_t cursorPos;
 	};
 }
 

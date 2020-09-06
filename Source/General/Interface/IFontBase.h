@@ -26,9 +26,9 @@ namespace PaintsNow {
 		struct CHARINFO {
 			uint16_t height;
 			uint16_t width;
-			UShort2 adv;
-			UShort2 delta;
-			UShort2 bearing;
+			Short2 adv;
+			Short2 delta;
+			Short2 bearing;
 		};
 
 		class Font {};

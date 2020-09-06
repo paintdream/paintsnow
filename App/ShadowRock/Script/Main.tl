@@ -75,10 +75,10 @@ local function InitializeWorld(databasePath : string)
 
 	local spaceComponent = scene.spaceComponent
 	spaceComponent:InsertEntity(player.entity)
-	spaceComponent:InsertEntity(guiEntity) -- use scene renderer to render gui at this moment
 
 	local cameraController = player.cameraController
 	local cameraComponent = cameraController.cameraComponent
+	scene.spaceComponent:InsertEntity(guiEntity) -- use scene renderer to render gui at this moment
 	cameraComponent:BindRootEntity(scene.rootEntity)
 
 	-- set camera transform

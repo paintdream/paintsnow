@@ -117,7 +117,8 @@ void TextViewComponent::TagParser::PushFormat(uint32_t offset, const char* start
 
 void TextViewComponent::TagParser::PushText(uint32_t offset, const char* start, const char* end) {
 	if (start != end) {
-		nodes.emplace_back(Node(Node::TEXT, offset, safe_cast<uint32_t>(end - start)));
+		uint32_t length = safe_cast<uint32_t>(end - start);
+		nodes.emplace_back(Node(Node::TEXT, offset, length));
 	}
 }
 
@@ -125,7 +126,7 @@ void TextViewComponent::TagParser::Clear() {
 	nodes.clear();
 }
 
-TextViewComponent::TextViewComponent(TShared<FontResource> font, TShared<MeshResource> mesh, TShared<BatchComponent> batch, TShared<MaterialResource> material) : BaseClass(mesh, batch), fontResource(font), passwordChar(0), cursorChar(0), cursorPos(0), fontSize(12) {
+TextViewComponent::TextViewComponent(TShared<FontResource> font, TShared<MeshResource> mesh, TShared<BatchComponent> batch, TShared<MaterialResource> material) : BaseClass(mesh, batch), fontResource(font), passwordChar(0), cursorChar(0), cursorPos(0), fontSize(12), size(32, 32), scroll(0, 0), padding(0, 0), fullSize(0, 0), selectRange(0, 0), cursorColor(255, 255, 255, 255), selectColor(0, 0, 0, 0) {
 	Flag().fetch_or((TEXTVIEWCOMPONENT_CURSOR_REV_COLOR | TEXTVIEWCOMPONENT_SELECT_REV_COLOR), std::memory_order_acquire);
 }
 
@@ -350,6 +351,11 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 
 	bufferDescription.data.Assign((const uint8_t*)str.data(), safe_cast<uint32_t>(str.size()));
 	render.UploadResource(queue, unitCoordBuffer, &bufferDescription);*/
+}
+
+void TextViewComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box) {
+	Union(box, Float3(-100, -100, -100));
+	Union(box, Float3(100, 100, 100));
 }
 
 uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) {

@@ -94,7 +94,7 @@ const FontResource::Char& FontResource::Get(IRender& render, IRender::Queue* que
 	return ret;
 }
 
-FontResource::Slice::Slice(uint16_t fs, uint16_t d) : font(nullptr), fontSize(fs), critical(0), dim(d) {
+FontResource::Slice::Slice(uint16_t fs, uint16_t d) : font(nullptr), fontSize(fs), critical(0), dim(d), lastRect(Short2(0, 0), Short2(0, 0)) {
 }
 
 void FontResource::Slice::Uninitialize(IRender& render, IRender::Queue* queue, ResourceManager& resourceManager) {
