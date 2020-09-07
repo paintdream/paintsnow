@@ -279,10 +279,12 @@ void RemoteComponent::CallAsync(IScript::Request& fromRequest, IScript::Request:
 		for (int i = 0; i < args.count; i++) {
 			CopyVariable(flag, toRequest, fromRequest, fromRequest.GetCurrentType());
 		}
-		fromRequest.UnLock();
-		assert(&fromRequest.GetRequestPool()->GetScript() == fromRequest.GetScript());
 
-		engine.bridgeSunset.GetKernel().threadPool.Push(CreateTaskContextFree(Wrap(this, &RemoteComponent::Complete), fromRequest.GetRequestPool(), std::ref(toRequest), callback, remoteRoutine));
+		IScript::RequestPool* pool = fromRequest.GetRequestPool();
+		assert(&pool->GetScript() == fromRequest.GetScript());
+		fromRequest.UnLock();
+
+		engine.bridgeSunset.GetKernel().threadPool.Push(CreateTaskContextFree(Wrap(this, &RemoteComponent::Complete), pool, std::ref(toRequest), callback, remoteRoutine));
 	} else {
 		fromRequest.Error("Invalid ref.");
 	}
