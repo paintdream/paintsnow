@@ -30,7 +30,7 @@
 #include "Component/Visibility/VisibilityComponentModule.h"
 #include "Component/Widget/WidgetComponentModule.h"
 
-#define USE_FRAME_CAPTURE !defined(CMAKE_PAINTSNOW) || ADD_DEBUGGER_RENDERDOC_BUILTIN
+#define USE_FRAME_CAPTURE !CMAKE_PAINTSNOW || ADD_DEBUGGER_RENDERDOC_BUILTIN
 
 using namespace PaintsNow;
 

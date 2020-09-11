@@ -13,31 +13,54 @@ struct_aligned(64) data {
 	int32_t values[16];
 };
 
+static void TaskRoutine(TShared<TObjectAllocator<data> > trunks, std::vector<data*>& ptrs, size_t k, size_t length, std::atomic<uint32_t>& count, std::atomic<uint32_t>& total) {
+	for (size_t i = 0; i < 77777; i++) {
+		data*& p = ptrs[(rand() * length + k) % ptrs.size()];
+		if (p == nullptr) {
+			total.fetch_add(1, std::memory_order_release);
+			p = trunks->New();
+		}
+
+		data*& q = ptrs[(rand() * length + k) % ptrs.size()];
+		if (q != nullptr) {
+			trunks->Delete(q);
+			q = nullptr;
+			total.fetch_sub(1, std::memory_order_release);
+		}
+	}
+
+	count.fetch_sub(1, std::memory_order_release);
+}
+
 bool Memory::Run(int randomSeed, int length) {
 	TShared<TObjectAllocator<data> > trunks = TShared<TObjectAllocator<data> >::From(new TObjectAllocator<data>());
 	ZThreadPthread threadApi;
-	ThreadPool threadPool(threadApi, 8);
+	ThreadPool threadPool(threadApi, length);
 
 	std::vector<data*> ptrs;
-	srand(1);
-	for (size_t i = 0; i < 77777; i++) {
-		data* p = trunks->New();
-		ptrs.emplace_back(p);
-		data*& q = ptrs[rand() % ptrs.size()];
-		p = q;
-		q = nullptr;
-		if (p != nullptr) {
-			trunks->Delete(p);
-		}
+	ptrs.resize(8000 * length, nullptr);
+	srand(randomSeed);
+	std::atomic<uint32_t> count;
+	std::atomic<uint32_t> total;
+	total.store(0, std::memory_order_release);
+	count.store(length, std::memory_order_release);
+
+	for (size_t k = 0; k < (size_t)length; k++) {
+		threadPool.Push(CreateTaskContextFree(Wrap(TaskRoutine), trunks, std::ref(ptrs), k, length, std::ref(count), std::ref(total)));
 	}
 
-	getchar();
+	while (count.load(std::memory_order_acquire) != 0) {
+		YieldThread();
+	}
+
 	for (size_t n = 0; n < ptrs.size(); n++) {
 		data* p = ptrs[n];
 		if (p != nullptr) {
+			total.fetch_sub(1, std::memory_order_release);
 			trunks->Delete(p);
 		}
 	}
+
 	getchar();
 	return true;
 }
