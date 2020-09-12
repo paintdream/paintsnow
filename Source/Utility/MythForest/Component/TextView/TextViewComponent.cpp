@@ -363,7 +363,7 @@ uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData>& outp
 
 	uint32_t start = safe_cast<uint32_t>(outputDrawCalls.size());
 	uint32_t count = BaseClass::CollectDrawCalls(outputDrawCalls, inputRenderData);
-	static Bytes texCoordRectKey = PassBase::Updater::MakeKeyFromString("texCoordRect");
+	static Bytes texCoordRectKey = StaticBytes(texCoordRect);
 	float invTexSize = 1.0f / fontResource->GetFontTextureSize();
 
 	for (uint32_t i = start; i < count; i++) {

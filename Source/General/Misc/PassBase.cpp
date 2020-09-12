@@ -70,12 +70,6 @@ uint32_t PassBase::Updater::GetTextureCount() const {
 	return textureCount;
 }
 
-Bytes PassBase::Updater::MakeKeyFromString(const String& s) {
-	Bytes ret;
-	ret.Append((const uint8_t*)s.c_str(), safe_cast<uint32_t>(s.size()));
-	return ret;
-}
-
 PassBase::Parameter::Parameter() : internalAddress(nullptr), linearLayout(0) {}
 
 PassBase::Parameter& PassBase::Updater::operator [] (const Bytes& key) {
@@ -412,7 +406,7 @@ void PassBase::PartialUpdater::Snapshot(std::vector<Bytes>& bufferData, std::vec
 			const PassBase::Parameter& p = parameters[i];
 			uint32_t& start = starts[parameter.slot];
 			if (start == ~(uint32_t)0) {
-				start = buffer.GetSize();
+				start = safe_cast<uint32_t>(buffer.GetSize());
 				buffer.Resize(start + p.stride);
 			}
 

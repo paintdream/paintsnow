@@ -61,7 +61,7 @@ public:
 
 	void CompleteStore() {
 		if (!storeInvalidates.empty()) {
-			glInvalidateFramebuffer(GL_FRAMEBUFFER, storeInvalidates.size(), &storeInvalidates[0]);
+			glInvalidateFramebuffer(GL_FRAMEBUFFER, (GLsizei)storeInvalidates.size(), &storeInvalidates[0]);
 			storeInvalidates.clear();
 		}
 	}
@@ -1430,20 +1430,20 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> final : pu
 			for (size_t i = 0; i < d.colorStorages.size(); i++) {
 				IRender::Resource::RenderTargetDescription::Storage& t = d.colorStorages[i];
 				if (t.loadOp == IRender::Resource::RenderTargetDescription::CLEAR) {
-					glDrawBuffer(GL_COLOR_ATTACHMENT0 + i);
+					glDrawBuffer((GLenum)(GL_COLOR_ATTACHMENT0 + i));
 					glClearColor(t.clearColor.r(), t.clearColor.g(), t.clearColor.b(), t.clearColor.a());
 					glClear(GL_COLOR_BUFFER_BIT);
 				} else if (t.loadOp == IRender::Resource::RenderTargetDescription::DISCARD) {
-					loadInvalidates.emplace_back(GL_COLOR_ATTACHMENT0 + i);
+					loadInvalidates.emplace_back((GLenum)(GL_COLOR_ATTACHMENT0 + i));
 				}
 
 				if (t.storeOp == IRender::Resource::RenderTargetDescription::DISCARD) {
-					storeInvalidates.emplace_back(GL_COLOR_ATTACHMENT0 + i);
+					storeInvalidates.emplace_back((GLenum)(GL_COLOR_ATTACHMENT0 + i));
 				}
 			}
 
 			if (!loadInvalidates.empty()) {
-				glInvalidateFramebuffer(GL_FRAMEBUFFER, loadInvalidates.size(), &loadInvalidates[0]);
+				glInvalidateFramebuffer(GL_FRAMEBUFFER, (GLsizei)loadInvalidates.size(), &loadInvalidates[0]);
 			}
 
 			std::swap(queue.device->storeInvalidates, storeInvalidates);

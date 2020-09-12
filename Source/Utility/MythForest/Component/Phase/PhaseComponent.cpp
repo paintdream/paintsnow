@@ -405,7 +405,7 @@ void PhaseComponent::ResolveTasks(Engine& engine) {
 								IRender::Resource::BufferDescription desc;
 								desc.format = IRender::Resource::BufferDescription::FLOAT;
 								desc.usage = IRender::Resource::BufferDescription::INSTANCED;
-								desc.component = data.GetSize() / (group.instanceCount * sizeof(float));
+								desc.component = safe_cast<uint8_t>(data.GetSize() / (group.instanceCount * sizeof(float)));
 								desc.data = std::move(data);
 								render.UploadResource(queue, buffer, &desc);
 

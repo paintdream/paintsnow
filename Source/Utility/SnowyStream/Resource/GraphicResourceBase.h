@@ -54,13 +54,13 @@ namespace PaintsNow {
 				description.data.Resize(safe_cast<uint32_t>(data.size() * sizeof(T)));
 				description.usage = usage;
 #if defined(_MSC_VER) && _MSC_VER <= 1200
-				description.component = sizeof(T) / sizeof(T::type) * groupSize;
+				description.component = safe_cast<uint8_t>(sizeof(T) / sizeof(T::type) * groupSize);
 				description.format = MapFormat<T::type>::format;
 #else
-				description.component = sizeof(T) / sizeof(typename T::type) * groupSize;
+				description.component = safe_cast<uint8_t>(sizeof(T) / sizeof(typename T::type) * groupSize);
 				description.format = MapFormat<typename T::type>::format;
 #endif
-				description.stride = sizeof(T) * groupSize;
+				description.stride = safe_cast<uint16_t>(sizeof(T) * groupSize);
 				memcpy(description.data.GetData(), &data[0], data.size() * sizeof(T));
 
 				if (buffer == nullptr) {

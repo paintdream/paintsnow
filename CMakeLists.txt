@@ -79,23 +79,10 @@ foreach(variable ${variables})
 endforeach()
 message(STATUS "")
 
-
-
-# SET (PAINTSNOW_VERSION_MAJOR "0") #
-# SET (PAINTSNOW_VERSION_MINOR "2.0413") #
-
-
 INCLUDE(CheckIncludeFiles)
 
 IF (MSVC)
-		IF (MSVC60)
-				ADD_COMPILE_OPTIONS ("-GX")
-				ADD_COMPILE_OPTOINS ("-Zm700")
-		ELSE (MSVC60)
-				ADD_COMPILE_OPTIONS ("/EHsc")
-				# ADD_COMPILE_OPTIONS ("/MTd")
-		ENDIF (MSVC60)
-
+		ADD_COMPILE_OPTIONS ("/EHsc")
 		OPTION (USE_STATIC_THIRDPARTY_LIBRARIES "Use statically-linked third-party libraries" ON)
 		IF (USE_STATIC_THIRDPARTY_LIBRARIES)
 			SET (FLAG_USE_STATIC_THIRDPARTY_LIBRARIES 1)
@@ -109,9 +96,9 @@ ENDIF (MSVC)
 add_definitions(-D_7ZIP_ST)
 add_definitions(-DCMAKE_PAINTSNOW)
 
+set(CMAKE_CXX_STANDARD 11)
 
 IF (CMAKE_COMPILER_IS_GNUCXX)
-		add_definitions(-std=c++11)
 		add_definitions(-lstdc++)
 		IF (IS_X86_64)
 		add_definitions(-msse4.1)

@@ -302,8 +302,8 @@ void LightComponent::ShadowLayer::CompleteCollect(Engine& engine, TaskData& task
 					// assign instanced buffer	
 					IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[output.slot];
 					bufferRange.buffer = buffer;
-					bufferRange.offset = bufferData.GetSize();
-					bufferRange.component = data.GetSize() / (group.instanceCount * sizeof(float));
+					bufferRange.offset = safe_cast<uint32_t>(bufferData.GetSize());
+					bufferRange.component = safe_cast<uint8_t>(data.GetSize() / (group.instanceCount * sizeof(float)));
 					bufferData.Append(data);
 				}
 			}

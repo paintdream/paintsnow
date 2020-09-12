@@ -24,12 +24,12 @@ void WidgetComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallT
 		}
 
 		// instanced data
-		PassBase::Parameter& inTexCoordRectParam = updater[PassBase::Updater::MakeKeyFromString("subTexMark")];
+		PassBase::Parameter& inTexCoordRectParam = updater[StaticBytes(subTexMark)];
 		if (inTexCoordRectParam) {
 			drawCall.bufferResources[inTexCoordRectParam.slot] = batchInstancedDataComponent->Allocate(inTexCoordRect);
 		}
 
-		PassBase::Parameter& outTexCoordRectParam = updater[PassBase::Updater::MakeKeyFromString("mainCoordRect")];
+		PassBase::Parameter& outTexCoordRectParam = updater[StaticBytes(mainCoordRect)];
 		if (outTexCoordRectParam) {
 			drawCall.bufferResources[outTexCoordRectParam.slot] = batchInstancedDataComponent->Allocate(outTexCoordRect);
 		}

@@ -236,7 +236,7 @@ const Bytes& VisibilityComponent::QuerySample(const Float3& position) {
 					UShort3 coord(x, y, z);
 					Cell& cell = cells[coord];
 					if (!cell.payload.Empty()) {
-						mergedSize = Math::Max(mergedSize, cell.payload.GetSize());
+						mergedSize = Math::Max(mergedSize, (uint32_t)safe_cast<uint32_t>(cell.payload.GetSize()));
 						toMerge.emplace_back(&cell.payload);
 					}
 				}
@@ -445,7 +445,7 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 			Bytes& encodedData = cell.payload;
 			const Bytes& data = task.data;
 			assert(data.GetSize() % sizeof(uint32_t) == 0);
-			uint32_t count = data.GetSize() / sizeof(uint32_t);
+			uint32_t count = safe_cast<uint32_t>(data.GetSize()) / sizeof(uint32_t);
 			const uint32_t* p = reinterpret_cast<const uint32_t*>(data.GetData());
 			uint8_t* target = encodedData.GetData();
 
@@ -510,8 +510,8 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 								// assign instanced buffer	
 								IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[output.slot];
 								bufferRange.buffer = buffer;
-								bufferRange.offset = bufferData.GetSize();
-								bufferRange.component = data.GetSize() / (group.instanceCount * sizeof(float));
+								bufferRange.offset = safe_cast<uint32_t>(bufferData.GetSize());
+								bufferRange.component = safe_cast<uint32_t>(data.GetSize()) / (group.instanceCount * sizeof(float));
 								bufferData.Append(data);
 							}
 						}

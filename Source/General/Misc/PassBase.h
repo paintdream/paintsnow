@@ -63,7 +63,6 @@ namespace PaintsNow {
 		class Updater : public IReflect {
 		public:
 			Updater(PassBase& pass);
-			static Bytes MakeKeyFromString(const String& s);
 
 			Parameter& operator [] (const Bytes& key);
 			Parameter& operator [] (IShader::BindInput::SCHEMA schema);

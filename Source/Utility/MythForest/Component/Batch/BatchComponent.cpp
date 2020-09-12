@@ -57,12 +57,12 @@ uint32_t BatchComponent::Update(IRender& render, IRender::Queue* queue) {
 }
 
 IRender::Resource::DrawCallDescription::BufferRange BatchComponent::Allocate(const void* data, uint32_t appendSize) {
-	uint32_t curSize = currentData.GetSize();
+	size_t curSize = currentData.GetSize();
 	currentData.Append(reinterpret_cast<const uint8_t*>(data), appendSize);
 
 	IRender::Resource::DrawCallDescription::BufferRange bufferRange;
 	bufferRange.buffer = buffer;
-	bufferRange.offset = curSize;
+	bufferRange.offset = safe_cast<uint32_t>(curSize);
 	bufferRange.length = appendSize;
 	Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_acquire);
 

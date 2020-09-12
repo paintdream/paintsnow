@@ -85,7 +85,7 @@ void ModelComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTe
 				for (size_t n = 0; n < uniformBufferData.size(); n++) {
 					const Bytes& data = uniformBufferData[n];
 					if (!data.Empty()) {
-						bufferRanges[n] = batchComponent->Allocate(data.GetData(), data.GetSize());
+						bufferRanges[n] = batchComponent->Allocate(data.GetData(), safe_cast<uint32_t>(data.GetSize()));
 					}
 				}
 
