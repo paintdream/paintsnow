@@ -39,25 +39,25 @@ namespace PaintsNow {
 		BridgeSunset& bridgeSunset;
 		SnowyStream& snowyStream;
 
-		void NotifyEntityConstruct(Entity* entity);
-		void NotifyEntityDestruct(Entity* entity);
-		void NotifyEntityAttach(Entity* child, Entity* parent);
-		void NotifyEntityDetach(Entity* child);
+		void NotifyUnitConstruct(Unit* unit);
+		void NotifyUnitDestruct(Unit* unit);
+		void NotifyUnitAttach(Unit* child, Unit* parent);
+		void NotifyUnitDetach(Unit* child);
 
 	protected:
 		Engine(const Engine& engine);
 		Engine& operator = (const Engine& engine);
 
 		std::atomic<uint32_t> frameIndex;
-		std::atomic<uint32_t> entityCount;
+		std::atomic<uint32_t> unitCount;
 		IThread::Event* finalizeEvent;
 		std::unordered_map<String, Module*> modules;
 		std::vector<TQueue<ITask*> > frameTasks;
 		std::vector<IRender::Queue*> warpResourceQueues;
 
 #ifdef _DEBUG
-		std::unordered_map<Entity*, Entity*> entityMap;
-		std::atomic<uint32_t> entityCritical;
+		std::map<Unit*, Unit*> entityMap;
+		std::atomic<uint32_t> unitCritical;
 #endif
 	};
 

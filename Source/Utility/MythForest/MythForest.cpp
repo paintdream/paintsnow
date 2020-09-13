@@ -42,7 +42,6 @@ static ZDebuggerRenderDoc debugger;
 MythForest::MythForest(Interfaces& interfaces, SnowyStream& snowyStream, BridgeSunset& bridgeSunset)
 	: engine(interfaces, bridgeSunset, snowyStream), lastFrameTick(0), currentFrameTime(1) {
 	entityAllocator = TShared<Entity::Allocator>::From(new Entity::Allocator());
-
 }
 
 MythForest::~MythForest() {
@@ -139,7 +138,9 @@ void MythForest::TickDevice(IDevice& device) {
 		std::vector<std::pair<TShared<Entity>, IScript::Request::Ref> > listeners;
 
 		while (!nextFrameListeners.Empty()) {
-			listeners.emplace_back(std::move(nextFrameListeners.Top()));
+			std::pair<TShared<Entity>, IScript::Request::Ref>& entry = nextFrameListeners.Top();
+			listeners.emplace_back(std::move(entry));
+			entry.first = nullptr;
 			nextFrameListeners.Pop();
 		}
 

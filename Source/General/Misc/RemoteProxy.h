@@ -264,6 +264,11 @@ namespace PaintsNow {
 				std::pair<IScript::Request::Ref, size_t> CallFilter(IScript::Request& request, bool pre) {
 					return std::make_pair(IScript::Request::Ref(reinterpret_cast<size_t>((void*)&obj)), index);
 				}
+
+				Entry();
+				Entry(const Entry& rhs);
+				Entry& operator = (const Entry& rhs);
+
 				String name;
 				IReflect::Param retValue;
 				std::vector<IReflect::Param> params;

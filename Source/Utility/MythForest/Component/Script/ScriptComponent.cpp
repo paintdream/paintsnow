@@ -12,8 +12,7 @@ ScriptComponent::ScriptComponent(const String& n) : name(n), entityFlagMask(0) {
 
 ScriptComponent::~ScriptComponent() {}
 
-void ScriptComponent::Uninitialize(Engine& engine, Entity* entity) {
-	IScript::Request& request = engine.interfaces.script.GetDefaultRequest();
+void ScriptComponent::ScriptUninitialize(IScript::Request& request) {
 	request.DoLock();
 	for (size_t i = 0; i < sizeof(handlers) / sizeof(handlers[0]); i++) {
 		if (handlers[i]) {
@@ -23,7 +22,7 @@ void ScriptComponent::Uninitialize(Engine& engine, Entity* entity) {
 	}
 	request.UnLock();
 
-	BaseClass::Uninitialize(engine, entity);
+	BaseClass::ScriptUninitialize(request);
 }
 
 const String& ScriptComponent::GetAliasedTypeName() const {

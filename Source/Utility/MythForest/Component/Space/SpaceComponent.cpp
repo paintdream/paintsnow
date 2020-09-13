@@ -99,7 +99,7 @@ bool SpaceComponent::Insert(Engine& engine, Entity* entity) {
 
 #ifdef _DEBUG
 	assert(hostEntity != nullptr);
-	engine.NotifyEntityAttach(entity, hostEntity);
+	engine.NotifyUnitAttach(entity, hostEntity);
 #endif
 
 	// update bounding box
@@ -252,7 +252,7 @@ bool SpaceComponent::Remove(Engine& engine, Entity* entity) {
 	}
 
 #ifdef _DEBUG
-	engine.NotifyEntityDetach(entity);
+	engine.NotifyUnitDetach(entity);
 #endif
 
 	entity->SetEngineInternal(engine);
@@ -277,7 +277,7 @@ void SpaceComponent::FastRemoveNode(Engine& engine, Entity* entity) {
 	while (entity != nullptr) {
 		FastRemoveNode(engine, entity->Left());
 		Entity* right = entity->Right();
-		engine.NotifyEntityDetach(entity);
+		engine.NotifyUnitDetach(entity);
 		entity->SetEngineInternal(engine); // reset engine
 		entity->ReleaseObject();
 		entity = right;

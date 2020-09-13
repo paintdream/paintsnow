@@ -252,11 +252,33 @@ IScript::Request& RemoteProxy::Request::CleanupIndex() {
 	return *this;
 }
 
+RemoteProxy::ObjectInfo::Entry::Entry(const Entry& rhs) {
+	*this = rhs;
+}
+
+RemoteProxy::ObjectInfo::Entry::Entry() : wrapper(nullptr), index(0) {
+	
+}
+
+RemoteProxy::ObjectInfo::Entry& RemoteProxy::ObjectInfo::Entry::operator = (const Entry& rhs) {
+	name = rhs.name;
+	retValue = rhs.retValue;
+	params = rhs.params;
+	wrapper = rhs.wrapper == nullptr ? nullptr : rhs.wrapper->Clone();
+	method = rhs.method;
+	obj = rhs.obj;
+	index = rhs.index;
+
+	return *this;
+}
+
 RemoteProxy::ObjectInfo::ObjectInfo() : refCount(0), needQuery(true) {}
 
 RemoteProxy::ObjectInfo::~ObjectInfo() {
 	for (size_t i = 0; i < collection.size(); i++) {
-		delete collection[i].wrapper;
+		if (collection[i].wrapper != nullptr) {
+			delete collection[i].wrapper;
+		}
 	}
 }
 
@@ -511,14 +533,17 @@ Variant::Variant(const Variant& var) : value(nullptr) {
 Variant& Variant::operator = (const Variant& var) {
 	if (&var != this) {
 		// add reference
-		size_t* ref2 = (size_t*)((char*)var.value - sizeof(size_t));
-		assert(*ref2 < 0x100);
 		if (value != nullptr) {
 			ReleaseObject();
 		}
 
 		value = var.value;
-		AddRef();
+
+		if (value != nullptr) {
+			size_t* ref2 = (size_t*)((char*)value - sizeof(size_t));
+			assert(*ref2 < 0x100);
+			AddRef();
+		}
 	}
 
 	return *this;

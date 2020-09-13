@@ -18,7 +18,7 @@ namespace PaintsNow {
 		virtual ~ScriptComponent();
 		void SetHandler(IScript::Request& request, Event::EVENT_ID event, IScript::Request::Ref handler);
 		virtual Tiny::FLAG GetEntityFlagMask() const override;
-		virtual void Uninitialize(Engine& engine, Entity* entity) override;
+		virtual void ScriptUninitialize(IScript::Request& request) override;
 		virtual const String& GetAliasedTypeName() const override;
 
 	protected:

@@ -8,7 +8,7 @@
 using namespace PaintsNow;
 
 Engine::Engine(Interfaces& pinterfaces, BridgeSunset& pbridgeSunset, SnowyStream& psnowyStream) : ISyncObject(pinterfaces.thread), interfaces(pinterfaces), bridgeSunset(pbridgeSunset), snowyStream(psnowyStream) {
-	entityCount.store(0, std::memory_order_relaxed);
+	unitCount.store(0, std::memory_order_relaxed);
 	finalizeEvent = interfaces.thread.NewEvent();
 	frameTasks.resize(GetKernel().GetWarpCount());
 
@@ -52,7 +52,7 @@ void Engine::Clear() {
 		}
 	}
 
-	while (entityCount.load(std::memory_order_acquire) != 0) {
+	while (unitCount.load(std::memory_order_acquire) != 0) {
 		threadApi.Wait(finalizeEvent, mutex, 50);
 	}
 
@@ -63,7 +63,6 @@ void Engine::Clear() {
 	modules.clear();
 
 	IRender& render = interfaces.render;
-
 	for (size_t j = 0; j < warpResourceQueues.size(); j++) {
 		render.DeleteQueue(warpResourceQueues[j]);
 	}
@@ -125,56 +124,68 @@ Kernel& Engine::GetKernel() {
 	return bridgeSunset.GetKernel();
 }
 
-void Engine::NotifyEntityConstruct(Entity* entity) {
-	entityCount.fetch_add(1, std::memory_order_release);
-#if defined(_DEBUG) && (!defined(_MSC_VER) || _MSC_VER > 1200)
-	SpinLock(entityCritical);
-	assert(entityMap.find(entity) == entityMap.end());
-	entityMap[entity] = nullptr;
-	SpinUnLock(entityCritical);
+void Engine::NotifyUnitConstruct(Unit* unit) {
+	unitCount.fetch_add(1, std::memory_order_release);
+#if defined(_DEBUG)
+	static Unique entityUnique = UniqueType<Entity>::Get();
+	if (unit->GetUnique() != entityUnique) return;
+
+	SpinLock(unitCritical);
+	assert(entityMap.find(unit) == entityMap.end());
+	entityMap[unit] = nullptr;
+	SpinUnLock(unitCritical);
 #endif
 }
 
-void Engine::NotifyEntityDestruct(Entity* entity) {
-	if (entityCount.fetch_sub(1, std::memory_order_release) == 1) {
+void Engine::NotifyUnitDestruct(Unit* unit) {
+	if (unitCount.fetch_sub(1, std::memory_order_release) == 1) {
 		interfaces.thread.Signal(finalizeEvent, false);
 	}
 
-#if defined(_DEBUG) && (!defined(_MSC_VER) || _MSC_VER > 1200)
-	SpinLock(entityCritical);
-	assert(entityMap.find(entity) != entityMap.end());
-	entityMap.erase(entity);
-	SpinUnLock(entityCritical);
+#if defined(_DEBUG)
+	static Unique entityUnique = UniqueType<Entity>::Get();
+	if (unit->GetUnique() != entityUnique) return;
+
+	SpinLock(unitCritical);
+	assert(entityMap.find(unit) != entityMap.end());
+	entityMap.erase(unit);
+	SpinUnLock(unitCritical);
 #endif
 }
 
-void Engine::NotifyEntityAttach(Entity* entity, Entity* parent) {
-#if defined(_DEBUG) && (!defined(_MSC_VER) || _MSC_VER > 1200)
-	SpinLock(entityCritical);
+void Engine::NotifyUnitAttach(Unit* unit, Unit* parent) {
+#if defined(_DEBUG)
+	static Unique entityUnique = UniqueType<Entity>::Get();
+	assert(unit->GetUnique() == entityUnique && parent->GetUnique() == entityUnique);
+
+	SpinLock(unitCritical);
 	assert(parent != nullptr);
-	assert(entityMap.find(entity) != entityMap.end());
-	assert(entityMap[entity] == nullptr);
-	Entity* p = parent;
+	assert(entityMap.find(unit) != entityMap.end());
+	assert(entityMap[unit] == nullptr);
+	Unit* p = parent;
 	while (true) {
-		assert(p != entity); // cycle detected
-		std::unordered_map<Entity*, Entity*>::const_iterator it = entityMap.find(p);
+		assert(p != unit); // cycle detected
+		std::map<Unit*, Unit*>::const_iterator it = entityMap.find(p);
 		if (it == entityMap.end())
 			break;
 
 		p = (*it).second;
 	}
 
-	entityMap[entity] = parent;
-	SpinUnLock(entityCritical);
+	entityMap[unit] = parent;
+	SpinUnLock(unitCritical);
 #endif
 }
 
-void Engine::NotifyEntityDetach(Entity* entity) {
-#if defined(_DEBUG) && (!defined(_MSC_VER) || _MSC_VER > 1200)
-	SpinLock(entityCritical);
-	assert(entityMap.find(entity) != entityMap.end());
-	assert(entityMap[entity] != nullptr);
-	entityMap[entity] = nullptr;
-	SpinUnLock(entityCritical);
+void Engine::NotifyUnitDetach(Unit* unit) {
+#if defined(_DEBUG)
+	static Unique entityUnique = UniqueType<Entity>::Get();
+	assert(unit->GetUnique() == entityUnique);
+
+	SpinLock(unitCritical);
+	assert(entityMap.find(unit) != entityMap.end());
+	assert(entityMap[unit] != nullptr);
+	entityMap[unit] = nullptr;
+	SpinUnLock(unitCritical);
 #endif
 }

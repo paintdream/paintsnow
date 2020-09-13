@@ -42,27 +42,10 @@ namespace PaintsNow {
 		assert(false); \
 	}
 
-#if defined(_MSC_VER) && _MSC_VER <= 1200
 	template <bool deref>
-	class ScriptTaskTemplate : public TaskOnce {
+	class ScriptTaskTemplateBase : public TaskOnce {
 	public:
-		ScriptTaskTemplate(IScript::Request::Ref ref) : callback(ref) {}
-		virtual void Execute(void* context) override {
-			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
-
-			IScript::Request& req = *bridgeSunset.AcquireSafe();
-			req.DoLock();
-			req.Push();
-			req.Call(sync, callback);
-			req.Pop();
-			if (deref) {
-				req.Dereference(callback);
-			}
-			req.UnLock();
-
-			bridgeSunset.ReleaseSafe(&req);
-			delete this;
-		}
+		ScriptTaskTemplateBase(IScript::Request::Ref ref) : callback(ref) {}
 
 		virtual void Abort(void* context) override {
 			if (deref) {
@@ -80,6 +63,29 @@ namespace PaintsNow {
 		IScript::Request::Ref callback;
 	};
 
+#if defined(_MSC_VER) && _MSC_VER <= 1200
+	template <bool deref>
+	class ScriptTaskTemplate : public ScriptTaskTemplateBase<deref> {
+	public:
+		ScriptTaskTemplate(IScript::Request::Ref ref) : ScriptTaskTemplateBase<deref>(ref) {}
+		virtual void Execute(void* context) override {
+			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
+
+			IScript::Request& req = *bridgeSunset.AcquireSafe();
+			req.DoLock();
+			req.Push();
+			req.Call(sync, callback);
+			req.Pop();
+			if (deref) {
+				req.Dereference(callback);
+			}
+			req.UnLock();
+
+			bridgeSunset.ReleaseSafe(&req);
+			delete this;
+		}
+	};
+
 	inline ITask* CreateTaskScript(IScript::Request::Ref ref) {
 		return new ScriptTaskTemplate<false>(ref);
 	}
@@ -89,9 +95,9 @@ namespace PaintsNow {
 	}
 
 	template <bool deref, class A>
-	class ScriptTaskTemplateA : public TaskOnce {
+	class ScriptTaskTemplateA : public ScriptTaskTemplateBase<deref> {
 	public:
-		ScriptTaskTemplateA(IScript::Request::Ref ref, const A& a) : callback(ref) { pa = const_cast<A&>(a); }
+		ScriptTaskTemplateA(IScript::Request::Ref ref, const A& a) : ScriptTaskTemplateBase<deref>(ref) { pa = const_cast<A&>(a); }
 		virtual void Execute(void* context) override {
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
@@ -109,20 +115,7 @@ namespace PaintsNow {
 			bridgeSunset.ReleaseSafe(&req);
 			delete this;
 		}
-		virtual void Abort(void* context) override {
-			if (deref) {
-				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
-				IScript::Request& req = bridgeSunset.GetScript().GetDefaultRequest();
-				req.DoLock();
-				req.Dereference(callback);
-				req.UnLock();
-			}
-
-			TaskOnce::Abort(context);
-		}
-
-		IScript::Request::Ref callback;
 		typename std::decay<A>::type pa;
 	};
 
@@ -137,9 +130,9 @@ namespace PaintsNow {
 	}
 
 	template <bool deref, class A, class B>
-	class ScriptTaskTemplateB : public TaskOnce {
+	class ScriptTaskTemplateB : public ScriptTaskTemplateBase<deref> {
 	public:
-		ScriptTaskTemplateB(IScript::Request::Ref ref, const A& a, const B& b) : callback(ref) { pa = const_cast<A&>(a); pb = const_cast<B&>(b); }
+		ScriptTaskTemplateB(IScript::Request::Ref ref, const A& a, const B& b) : ScriptTaskTemplateBase<deref>(ref) { pa = const_cast<A&>(a); pb = const_cast<B&>(b); }
 		virtual void Execute(void* context) override {
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
@@ -157,20 +150,6 @@ namespace PaintsNow {
 			bridgeSunset.ReleaseSafe(&req);
 			delete this;
 		}
-		virtual void Abort(void* context) override {
-			if (deref) {
-				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
-
-				IScript::Request& req = bridgeSunset.GetScript().GetDefaultRequest();
-				req.DoLock();
-				req.Dereference(callback);
-				req.UnLock();
-			}
-
-			TaskOnce::Abort(context);
-		}
-
-		IScript::Request::Ref callback;
 		typename std::decay<A>::type pa;
 		typename std::decay<B>::type pb;
 	};
@@ -186,9 +165,9 @@ namespace PaintsNow {
 	}
 
 	template <bool deref, class A, class B, class C>
-	class ScriptTaskTemplateC : public TaskOnce {
+	class ScriptTaskTemplateC : public ScriptTaskTemplateBase<deref> {
 	public:
-		ScriptTaskTemplateC(IScript::Request::Ref ref, const A& a, const B& b, const C& c) : callback(ref) { pa = const_cast<A&>(a); pb = const_cast<B&>(b); pc = const_cast<C&>(c); }
+		ScriptTaskTemplateC(IScript::Request::Ref ref, const A& a, const B& b, const C& c) : ScriptTaskTemplateBase<deref>(ref) { pa = const_cast<A&>(a); pb = const_cast<B&>(b); pc = const_cast<C&>(c); }
 		virtual void Execute(void* context) override {
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
@@ -205,20 +184,6 @@ namespace PaintsNow {
 			bridgeSunset.ReleaseSafe(&req);
 			delete this;
 		}
-		virtual void Abort(void* context) override {
-			if (deref) {
-				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
-
-				IScript::Request& req = bridgeSunset.GetScript().GetDefaultRequest();
-				req.DoLock();
-				req.Dereference(callback);
-				req.UnLock();
-			}
-
-			TaskOnce::Abort(context);
-		}
-
-		IScript::Request::Ref callback;
 		typename std::decay<A>::type pa;
 		typename std::decay<B>::type pb;
 		typename std::decay<C>::type pc;
@@ -235,9 +200,9 @@ namespace PaintsNow {
 	}
 
 	template <bool deref, class A, class B, class C, class D>
-	class ScriptTaskTemplateD : public TaskOnce {
+	class ScriptTaskTemplateD : public ScriptTaskTemplateBase<deref> {
 	public:
-		ScriptTaskTemplateD(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d) : callback(ref) { pa = const_cast<A&>(a); pb = const_cast<B&>(b); pc = const_cast<C&>(c); pd = const_cast<D&>(d); }
+		ScriptTaskTemplateD(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d) : ScriptTaskTemplateBase<deref>(ref) { pa = const_cast<A&>(a); pb = const_cast<B&>(b); pc = const_cast<C&>(c); pd = const_cast<D&>(d); }
 		virtual void Execute(void* context) override {
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
@@ -254,20 +219,6 @@ namespace PaintsNow {
 			bridgeSunset.ReleaseSafe(&req);
 			delete this;
 		}
-		virtual void Abort(void* context) override {
-			if (deref) {
-				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
-
-				IScript::Request& req = bridgeSunset.GetScript().GetDefaultRequest();
-				req.DoLock();
-				req.Dereference(callback);
-				req.UnLock();
-			}
-
-			TaskOnce::Abort(context);
-		}
-
-		IScript::Request::Ref callback;
 		typename std::decay<A>::type pa;
 		typename std::decay<B>::type pb;
 		typename std::decay<C>::type pc;
@@ -285,9 +236,9 @@ namespace PaintsNow {
 	}
 
 	template <bool deref, class A, class B, class C, class D, class E>
-	class ScriptTaskTemplateE : public TaskOnce {
+	class ScriptTaskTemplateE : public ScriptTaskTemplateBase<deref> {
 	public:
-		ScriptTaskTemplateE(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d, const E& e) : callback(ref) { pa = const_cast<A&>(a); pb = const_cast<B&>(b); pc = const_cast<C&>(c); pd = const_cast<D&>(d); pe = const_cast<E&>(e); }
+		ScriptTaskTemplateE(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d, const E& e) : ScriptTaskTemplateBase<deref>(ref) { pa = const_cast<A&>(a); pb = const_cast<B&>(b); pc = const_cast<C&>(c); pd = const_cast<D&>(d); pe = const_cast<E&>(e); }
 		virtual void Execute(void* context) override {
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
@@ -304,20 +255,6 @@ namespace PaintsNow {
 			bridgeSunset.ReleaseSafe(&req);
 			delete this;
 		}
-		virtual void Abort(void* context) override {
-			if (deref) {
-				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
-
-				IScript::Request& req = bridgeSunset.GetScript().GetDefaultRequest();
-				req.DoLock();
-				req.Dereference(callback);
-				req.UnLock();
-			}
-
-			TaskOnce::Abort(context);
-		}
-
-		IScript::Request::Ref callback;
 		typename std::decay<A>::type pa;
 		typename std::decay<B>::type pb;
 		typename std::decay<C>::type pc;
@@ -336,9 +273,9 @@ namespace PaintsNow {
 	}
 
 	template <bool deref, class A, class B, class C, class D, class E, class F>
-	class ScriptTaskTemplateF : public TaskOnce {
+	class ScriptTaskTemplateF : public ScriptTaskTemplateBase<deref> {
 	public:
-		ScriptTaskTemplateF(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d, const E& e, const F& f) : callback(ref) { pa = const_cast<A&>(a); pb = const_cast<B&>(b); pc = const_cast<C&>(c); pd = const_cast<D&>(d); pe = const_cast<E&>(e); pf = const_cast<F&>(f); }
+		ScriptTaskTemplateF(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d, const E& e, const F& f) : ScriptTaskTemplateBase<deref>(ref) { pa = const_cast<A&>(a); pb = const_cast<B&>(b); pc = const_cast<C&>(c); pd = const_cast<D&>(d); pe = const_cast<E&>(e); pf = const_cast<F&>(f); }
 		virtual void Execute(void* context) override {
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
@@ -355,20 +292,6 @@ namespace PaintsNow {
 			bridgeSunset.ReleaseSafe(&req);
 			delete this;
 		}
-		virtual void Abort(void* context) override {
-			if (deref) {
-				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
-
-				IScript::Request& req = bridgeSunset.GetScript().GetDefaultRequest();
-				req.DoLock();
-				req.Dereference(callback);
-				req.UnLock();
-			}
-
-			TaskOnce::Abort(context);
-		}
-
-		IScript::Request::Ref callback;
 		typename std::decay<A>::type pa;
 		typename std::decay<B>::type pb;
 		typename std::decay<C>::type pc;
@@ -388,9 +311,9 @@ namespace PaintsNow {
 	}
 
 	template <bool deref, class A, class B, class C, class D, class E, class F, class G>
-	class ScriptTaskTemplateG : public TaskOnce {
+	class ScriptTaskTemplateG : public ScriptTaskTemplateBase<deref> {
 	public:
-		ScriptTaskTemplateG(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d, const E& e, const F& f, const G& g) : callback(ref) {
+		ScriptTaskTemplateG(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d, const E& e, const F& f, const G& g) : ScriptTaskTemplateBase<deref>(ref) {
 			pa = const_cast<A&>(a); pb = const_cast<B&>(b); pc = const_cast<C&>(c); pd = const_cast<D&>(d); pe = const_cast<E&>(e); pf = const_cast<F&>(f); pg = const_cast<G&>(g);
 		}
 		virtual void Execute(void* context) override {
@@ -409,20 +332,6 @@ namespace PaintsNow {
 			bridgeSunset.ReleaseSafe(&req);
 			delete this;
 		}
-		virtual void Abort(void* context) override {
-			if (deref) {
-				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
-
-				IScript::Request& req = bridgeSunset.GetScript().GetDefaultRequest();
-				req.DoLock();
-				req.Dereference(callback);
-				req.UnLock();
-			}
-
-			TaskOnce::Abort(context);
-		}
-
-		IScript::Request::Ref callback;
 		typename std::decay<A>::type pa;
 		typename std::decay<B>::type pb;
 		typename std::decay<C>::type pc;
@@ -652,10 +561,11 @@ namespace PaintsNow {
 
 #else
 	template <bool deref, typename... Args>
-	class ScriptTaskTemplate : public TaskOnce {
+	class ScriptTaskTemplate : public ScriptTaskTemplateBase<deref> {
 	public:
+		typedef ScriptTaskTemplateBase<deref> BaseClass;
 		template <typename... Params>
-		ScriptTaskTemplate(IScript::Request::Ref c, Params&&... params) : callback(c), arguments(std::forward<Params>(params)...) {}
+		ScriptTaskTemplate(IScript::Request::Ref c, Params&&... params) : BaseClass(c), arguments(std::forward<Params>(params)...) {}
 
 		template <typename T, size_t index>
 		struct Writer {
@@ -676,9 +586,9 @@ namespace PaintsNow {
 			req.DoLock();
 			req.Push();
 			Writer<decltype(arguments), sizeof...(Args)>()(req, arguments);
-			req.Call(sync, callback);
+			req.Call(sync, BaseClass::callback);
 			if (deref) {
-				req.Dereference(callback);
+				req.Dereference(BaseClass::callback);
 			}
 			req.Pop();
 			req.UnLock();
@@ -687,19 +597,6 @@ namespace PaintsNow {
 			delete this;
 		}
 
-		virtual void Abort(void* context) {
-			if (deref) {
-				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
-				IScript::Request& request = bridgeSunset.GetScript().GetDefaultRequest();
-				request.DoLock();
-				request.Dereference(callback);
-				request.UnLock();
-			}
-
-			TaskOnce::Abort(context);
-		}
-
-		IScript::Request::Ref callback;
 		std::tuple<typename std::decay<Args>::type...> arguments;
 	};
 

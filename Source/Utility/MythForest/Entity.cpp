@@ -8,7 +8,7 @@ using namespace PaintsNow;
 Entity::Entity(Engine& engine) {
 	Flag().fetch_or(Tiny::TINY_ACTIVATED, std::memory_order_acquire);
 	SetEngineInternal(engine);
-	engine.NotifyEntityConstruct(this);
+	engine.NotifyUnitConstruct(this);
 	key = Float3Pair(Float3(0, 0, 0), Float3(0, 0, 0));
 
 	assert(QueryInterface(UniqueType<WarpTiny>()) != nullptr);
@@ -17,7 +17,7 @@ Entity::Entity(Engine& engine) {
 Entity::~Entity() {
 	assert(components.empty());
 	Engine& engine = GetEngineInternal();
-	engine.NotifyEntityDestruct(this);
+	engine.NotifyUnitDestruct(this);
 }
 
 static void InvokeClearComponentsAndRelease(void* request, bool run, Engine& engine, Entity* entity) {

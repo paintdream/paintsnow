@@ -3,17 +3,11 @@
 using namespace PaintsNow;
 
 BridgeSunset::BridgeSunset(IThread& t, IScript& s, uint32_t threadCount, uint32_t warpCount) : ISyncObject(t), RequestPool(s, warpCount), threadPool(t, threadCount), kernel(threadPool, warpCount) {
-}
-
-BridgeSunset::~BridgeSunset() {}
-
-void BridgeSunset::ScriptInitialize(IScript::Request& request) {
-	Library::ScriptInitialize(request);
 	if (!threadPool.IsInitialized()) {
 		threadPool.Initialize();
 	}
 
-	request.DoLock();
+	script.DoLock();
 	for (uint32_t k = 0; k < threadPool.GetThreadCount(); k++) {
 		threadPool.SetThreadContext(k, this);
 	}
@@ -21,25 +15,24 @@ void BridgeSunset::ScriptInitialize(IScript::Request& request) {
 	// register script dispatcher hook
 	origDispatcher = script.GetDispatcher();
 	script.SetDispatcher(Wrap(this, &BridgeSunset::ContinueScriptDispatcher));
-	request.UnLock();
+	script.UnLock();
 }
 
-void BridgeSunset::ScriptUninitialize(IScript::Request& request) {
+BridgeSunset::~BridgeSunset() {
 	assert(threadPool.IsInitialized());
 	threadPool.Uninitialize();
 
 	IScript::Request& mainRequest = script.GetDefaultRequest();
 	assert(script.GetDispatcher() == Wrap(this, &BridgeSunset::ContinueScriptDispatcher));
 	script.SetDispatcher(origDispatcher);
-
-	request.DoLock();
-	for (uint32_t k = 0; k < threadPool.GetThreadCount(); k++) {
-		threadPool.SetThreadContext(k, nullptr);
-	}
-
-	request.UnLock();
 	Clear(); // clear request pool
+}
 
+void BridgeSunset::ScriptInitialize(IScript::Request& request) {
+	Library::ScriptInitialize(request);
+}
+
+void BridgeSunset::ScriptUninitialize(IScript::Request& request) {
 	Library::ScriptUninitialize(request);
 }
 
