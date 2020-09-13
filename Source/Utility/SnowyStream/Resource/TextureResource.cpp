@@ -49,6 +49,8 @@ void TextureResource::Upload(IRender& render, void* deviceContext) {
 	if (!(Flag().fetch_or(RESOURCE_UPLOADED) & RESOURCE_UPLOADED)) {
 		SpinLock(critical);
 
+		description.state.reserved = 0;
+		description.state.media = 0;
 		if (description.state.compress) {
 			assert(!description.data.Empty());
 		}

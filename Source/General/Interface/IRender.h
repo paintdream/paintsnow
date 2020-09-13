@@ -71,18 +71,24 @@ namespace PaintsNow {
 				};
 
 				enum Sample {
-					POINT, LINEAR, ANSOTRIPIC, RENDERBUFFER // RenderBuffer can only be used as color attachment.
+					POINT, LINEAR, ANSOTRIPIC
+				};
+
+				enum Media {
+					TEXTURE_RESOURCE,
+					RENDERBUFFER, // RenderBuffer can only be used as color/depth/stencil attachment and render buffer fetch.
+					RENDERBUFFER_FETCH,
 				};
 
 				enum Mip {
 					NOMIP, AUTOMIP, SPECMIP
 				};
 
-				TextureDescription() : dimension(0, 0, 0) {}
+				TextureDescription() : dimension(0, 0, 0), reserved(0) {}
 				
 				struct State {
 					State() : type(TEXTURE_2D), format(UNSIGNED_BYTE), 
-						wrap(1), immutable(1), attachment(0), layout(RGBA), sample(LINEAR), mip(NOMIP), compress(0) {}
+						wrap(1), immutable(1), attachment(0), layout(RGBA), sample(LINEAR), mip(NOMIP), compress(0), media(TEXTURE_RESOURCE), reserved(0) {}
 
 					inline bool operator == (const State& rhs) const {
 						return memcmp(this, &rhs, sizeof(*this)) == 0;
@@ -105,10 +111,13 @@ namespace PaintsNow {
 					uint32_t layout : 4;
 					uint32_t sample : 2;
 					uint32_t mip : 2;
+					uint32_t media : 2;
+					uint32_t reserved : 14;
 				};
 
 				Bytes data;
-				UShort3 dimension;
+				UShort3 dimension; // width, height, depth
+				short reserved;
 				State state;
 			};
 

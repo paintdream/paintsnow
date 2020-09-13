@@ -431,7 +431,7 @@ void RemoteProxy::Request::Process() {
 	while (host.tunnel.ReadConnectionPacket(connection, current.GetData(), bufferLength, state)) {
 		size_t len = bufferLength;
 		if (!stream.WriteBlock(current.GetData(), len)) {
-			stream.Clear();
+			stream.Seek(IStreamBase::BEGIN, 0);
 			break;
 		}
 
@@ -443,7 +443,7 @@ void RemoteProxy::Request::Process() {
 			}
 
 			ProcessPacket(packet);
-			stream.Clear();
+			stream.Seek(IStreamBase::BEGIN, 0);
 		}
 
 		bufferLength = CHUNK_SIZE;

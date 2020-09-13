@@ -12,7 +12,7 @@ std::pair<int64_t, String> TapeComponent::Read() {
 
 	int64_t seq;
 	int64_t length;
-	bufferStream.Clear();
+	bufferStream.Seek(IStreamBase::BEGIN, 0);
 
 	if (tape.ReadPacket(seq, bufferStream, length)) {
 		return std::make_pair(seq, String(reinterpret_cast<const char*>(bufferStream.GetBuffer()), (size_t)length));

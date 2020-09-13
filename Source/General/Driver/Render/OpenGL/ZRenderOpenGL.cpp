@@ -555,7 +555,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 			glGenTextures(1, &textureID);
 		}
 
-		if (d.state.sample == IRender::Resource::TextureDescription::RENDERBUFFER) {
+		if (d.state.media == IRender::Resource::TextureDescription::RENDERBUFFER) {
 			assert(d.data.Empty());
 			assert(renderbufferID == 0);
 			glGenRenderbuffers(1, &renderbufferID);
@@ -836,7 +836,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 		GL_GUARD();
 
 		if (textureID != 0) {
-			if (GetDescription().state.sample != IRender::Resource::TextureDescription::RENDERBUFFER) {
+			if (GetDescription().state.media != IRender::Resource::TextureDescription::RENDERBUFFER) {
 				glDeleteRenderbuffers(1, &renderbufferID);
 			} else {
 				glDeleteTextures(1, &textureID);
@@ -1297,13 +1297,13 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> final : pu
 
 				if (desc.state.layout == IRender::Resource::TextureDescription::DEPTH_STENCIL) { // DEPTH_STENCIL
 					assert(s == nullptr || t == s);
-					if (desc.state.sample == IRender::Resource::TextureDescription::RENDERBUFFER) {
+					if (desc.state.media == IRender::Resource::TextureDescription::RENDERBUFFER) {
 						glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, t->renderbufferID);
 					} else {
 						glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, t->textureID, d.depthStorage.mipLevel);
 					}
 				} else { // may not be supported on all platforms
-					if (desc.state.sample == IRender::Resource::TextureDescription::RENDERBUFFER) {
+					if (desc.state.media == IRender::Resource::TextureDescription::RENDERBUFFER) {
 						glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, t->renderbufferID);
 					} else {
 						glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, t->textureID, d.depthStorage.mipLevel);
@@ -1311,7 +1311,7 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> final : pu
 
 					if (s != nullptr) {
 						IRender::Resource::TextureDescription& descs = s->GetDescription();
-						if (descs.state.sample == IRender::Resource::TextureDescription::RENDERBUFFER) {
+						if (descs.state.media == IRender::Resource::TextureDescription::RENDERBUFFER) {
 							glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, s->renderbufferID);
 						} else {
 							glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, t->textureID, d.depthStorage.mipLevel);
@@ -1330,7 +1330,7 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> final : pu
 				ResourceImplOpenGL<IRender::Resource::TextureDescription>* t = static_cast<ResourceImplOpenGL<IRender::Resource::TextureDescription>*>(storage.resource);
 				assert(t != nullptr);
 				assert(t->textureID != 0);
-				if (t->GetDescription().state.sample == IRender::Resource::TextureDescription::RENDERBUFFER) {
+				if (t->GetDescription().state.media == IRender::Resource::TextureDescription::RENDERBUFFER) {
 					glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + (GLsizei)i, GL_RENDERBUFFER, t->renderbufferID);
 				} else {
 					glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + (GLsizei)i, GL_TEXTURE_2D, t->textureID, storage.mipLevel);
