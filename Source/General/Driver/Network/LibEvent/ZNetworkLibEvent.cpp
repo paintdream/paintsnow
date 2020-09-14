@@ -869,7 +869,7 @@ void ZNetworkLibEvent::CloseDispatcher(Dispatcher* dispatcher) {
 	assert(dispatcher != nullptr);
 	DispatcherImpl* impl = static_cast<DispatcherImpl*>(dispatcher);
 #ifdef _DEBUG
-//	assert(impl->referCount.load() == 0);
+	assert(impl->referCount.load() == 0);
 #endif
 	evdns_base_free(impl->dns, 1);
 	event_base_free(impl->base);
