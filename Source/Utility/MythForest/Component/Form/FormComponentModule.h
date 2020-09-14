@@ -12,7 +12,7 @@ namespace PaintsNow {
 	class FormComponentModule : public TReflected<FormComponentModule, ModuleImpl<FormComponent> > {
 	public:
 		FormComponentModule(Engine& engine);
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		TShared<FormComponent> RequestNew(IScript::Request& request, const String& name);
 		void RequestResize(IScript::Request& request, IScript::Delegate<FormComponent> formComponent, int32_t index);

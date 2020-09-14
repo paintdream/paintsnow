@@ -9,10 +9,10 @@
 namespace PaintsNow {
 	class ZRandomLibnoisePerlin final : public IRandom {
 	public:
-		virtual void Seed(long seed);
-		virtual void SetConfig(const String& parameter, double value);
-		virtual double GetConfig(const String& parameter) const;
-		virtual double GetValue(const double* coords, size_t dimension);
+		void Seed(long seed) override;
+		void SetConfig(const String& parameter, double value) override;
+		double GetConfig(const String& parameter) const override;
+		double GetValue(const double* coords, size_t dimension) override;
 
 	private:
 		noise::module::Perlin perlin;

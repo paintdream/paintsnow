@@ -30,14 +30,14 @@ namespace PaintsNow {
 		struct CaptureData : public FrustrumCuller {};
 
 		struct WorldGlobalData : public TReflected<WorldGlobalData, PassBase::PartialData> {
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+			TObject<IReflect>& operator () (IReflect& reflect) override;
 			MatrixFloat4x4 viewProjectionMatrix;
 			MatrixFloat4x4 viewMatrix;
 			IShader::BindTexture noiseTexture;
 		};
 
 		struct WorldInstanceData : public TReflected<WorldInstanceData, PassBase::PartialData> {
-			virtual TObject<IReflect>& operator () (IReflect& reflect);
+			TObject<IReflect>& operator () (IReflect& reflect) override;
 
 			MatrixFloat4x4 worldMatrix;
 			Float3Pair boundingBox;
@@ -117,12 +117,12 @@ namespace PaintsNow {
 		typedef PhaseComponentConfig::WarpData WarpData;
 
 		PhaseComponent(TShared<RenderFlowComponent> renderFlowComponent, const String& lightPhaseViewName);
-		virtual ~PhaseComponent();
+		~PhaseComponent() override;
 
-		virtual void Initialize(Engine& engine, Entity* entity) override;
-		virtual void Uninitialize(Engine& engine, Entity* entity) override;
-		virtual void DispatchEvent(Event& event, Entity* entity) override;
-		virtual Tiny::FLAG GetEntityFlagMask() const override;
+		void Initialize(Engine& engine, Entity* entity) override;
+		void Uninitialize(Engine& engine, Entity* entity) override;
+		void DispatchEvent(Event& event, Entity* entity) override;
+		Tiny::FLAG GetEntityFlagMask() const override;
 
 		void BindRootEntity(Engine& engine, Entity* entity);
 		void Update(Engine& engine, const Float3& position);

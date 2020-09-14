@@ -15,12 +15,12 @@ class FilterLZMAImpl : public IStreamBase {
 public:
 	FilterLZMAImpl(IStreamBase& streamBase);
 
-	virtual void Flush();
-	virtual bool Read(void* p, size_t& len);
-	virtual bool Write(const void* p, size_t& len);
-	virtual bool Transfer(IStreamBase& stream, size_t& len);
-	virtual bool WriteDummy(size_t& len);
-	virtual bool Seek(SEEK_OPTION option, int64_t offset);
+	void Flush() override;
+	bool Read(void* p, size_t& len) override;
+	bool Write(const void* p, size_t& len) override;
+	bool Transfer(IStreamBase& stream, size_t& len) override;
+	bool WriteDummy(size_t& len) override;
+	bool Seek(SEEK_OPTION option, int64_t offset) override;
 
 	// object writing/reading routine
 	virtual bool Write(IReflectObject& s, void* ptr, size_t length);
@@ -149,13 +149,13 @@ class ReflectWriter : public IReflect {
 public:
 	ReflectWriter() : IReflect(true, false), data(nullptr) {}
 	// IReflect
-	virtual void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) {
+	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override {
 		if (strcmp(name, "data") == 0 && typeID == UniqueType<String>::Get()) {
 			data = reinterpret_cast<String*>(ptr);
 		}
 	}
 
-	virtual void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) {}
+	void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
 
 	String* data;
 };
@@ -164,13 +164,13 @@ class ReflectReader : public IReflect {
 public:
 	ReflectReader(String& d) : IReflect(true, false), data(d) {}
 	// IReflect
-	virtual void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) {
+	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override {
 		if (strcmp(name, "data") == 0 && typeID == UniqueType<String>::Get()) {
 			std::swap(data, *reinterpret_cast<String*>(ptr));
 		}
 	}
 
-	virtual void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) {}
+	void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
 
 	String& data;
 };

@@ -14,7 +14,7 @@ namespace PaintsNow {
 	class DeferredLightingPass : public TReflected<DeferredLightingPass, PassBase> {
 	public:
 		DeferredLightingPass();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		// Vertex shaders
 		ScreenTransformVS screenTransform;

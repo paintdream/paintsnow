@@ -13,9 +13,9 @@ namespace PaintsNow {
 	class WidgetComponentModule : public TReflected<WidgetComponentModule, ModuleImpl<WidgetComponent> > {
 	public:
 		WidgetComponentModule(Engine& engine);
-		virtual void Initialize();
-		virtual void Uninitialize();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		void Initialize() override;
+		void Uninitialize() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		TShared<WidgetComponent> RequestNew(IScript::Request& request, IScript::Delegate<BatchComponent> batchComponent, IScript::Delegate<BatchComponent> batchInstancedDataComponent);
 		void RequestSetWidgetTexture(IScript::Request& request, IScript::Delegate<WidgetComponent> widgetComponent, IScript::Delegate<TextureResource> texture);

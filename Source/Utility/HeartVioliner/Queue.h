@@ -21,10 +21,10 @@ namespace PaintsNow {
 
 		void Listen(IScript::Request& request, const IScript::Request::Ref& listener);
 		void Push(IScript::Request& request, IScript::Request::Ref& ref, int64_t timeStamp);
-		virtual void ScriptUninitialize(IScript::Request& request);
+		void ScriptUninitialize(IScript::Request& request) override;
 		void Clear(IScript::Request& request);
-		virtual void Execute(void* context) override;
-		virtual void Abort(void* context) override;
+		void Execute(void* context) override;
+		void Abort(void* context) override;
 		void ExecuteWithTimeStamp(IScript::Request& request, int64_t timeStamp);
 
 	protected:

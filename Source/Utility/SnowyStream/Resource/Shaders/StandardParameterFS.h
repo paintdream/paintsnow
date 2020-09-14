@@ -12,9 +12,9 @@ namespace PaintsNow {
 	class StandardParameterFS : public TReflected<StandardParameterFS, IShader> {
 	public:
 		StandardParameterFS();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
-		virtual String GetShaderText() override;
+		String GetShaderText() override;
 
 	protected:
 		BindTexture baseColorTexture;

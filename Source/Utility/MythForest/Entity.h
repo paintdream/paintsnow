@@ -18,7 +18,7 @@ namespace PaintsNow {
 	class_aligned(64) Entity final : public TAllocatedTiny<Entity, TKdTree<Float3Pair, Unit> >{
 	public:
 		Entity(Engine & engine);
-		virtual ~Entity();
+		~Entity() override;
 
 		enum {
 			ENTITY_HAS_BEGIN = UNIT_CUSTOM_BEGIN,
@@ -73,8 +73,8 @@ namespace PaintsNow {
 			}
 		}
 
-		virtual void ReleaseObject() override;
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		void ReleaseObject() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		inline Entity* Left() const {
 			// assert(!(Flag() & ENTITY_STORE_ENGINE));

@@ -13,13 +13,13 @@ namespace PaintsNow {
 	class SchemaResolver : public IReflect {
 	public:
 		SchemaResolver();
-		virtual void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta);
+		void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override;
 		static void SetValueString(IScript::Request& request, char* base);
 		static void SetValueText(IScript::Request& request, char* base);
 		static void SetValueFloat(IScript::Request& request, char* base);
 		static void SetValueInt(IScript::Request& request, char* base);
 		static void SetValueNull(IScript::Request& request, char* base);
-		virtual void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta);
+		void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override;
 
 		typedef void(*Set)(IScript::Request& request, char* base);
 		std::vector<std::pair<Set, size_t> > setters;
@@ -28,10 +28,10 @@ namespace PaintsNow {
 	class Honey : public TReflected<Honey, WarpTiny> {
 	public:
 		Honey(IDatabase::MetaData* metaData);
-		virtual ~Honey();
+		~Honey() override;
 		bool Step();
 		void WriteLine(IScript::Request& request);
-		virtual TObject<IReflect>& operator () (IReflect& reflect);
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 	protected:
 		SchemaResolver resolver;
@@ -41,20 +41,20 @@ namespace PaintsNow {
 	class HoneyData : public IDatabase::MetaData {
 	public:
 		HoneyData();
-		virtual ~HoneyData();
+		~HoneyData() override;
 
-		virtual IIterator* New() const;
-		virtual void Attach(void* base);
-		virtual void Initialize(size_t count);
-		virtual size_t GetTotalCount() const;
-		virtual void* Get();
-		virtual const IReflectObject& GetPrototype() const;
-		virtual bool Next();
-		virtual bool IsLayoutLinear() const;
-		virtual bool IsLayoutPinned() const;
-		virtual void* GetHost() const;
-		virtual Unique GetPrototypeUnique() const;
-		virtual Unique GetPrototypeReferenceUnique() const;
+		IIterator* New() const override;
+		void Attach(void* base) override;
+		void Initialize(size_t count) override;
+		size_t GetTotalCount() const override;
+		void* Get() override;
+		const IReflectObject& GetPrototype() const override;
+		bool Next() override;
+		bool IsLayoutLinear() const override;
+		bool IsLayoutPinned() const override;
+		void* GetHost() const override;
+		Unique GetPrototypeUnique() const override;
+		Unique GetPrototypeReferenceUnique() const override;
 		virtual const String& GetInternalName() const;
 
 		void Enter();

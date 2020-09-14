@@ -12,7 +12,7 @@ namespace PaintsNow {
 	class DepthResolvePass : public TReflected<DepthResolvePass, PassBase> {
 	public:
 		DepthResolvePass();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 	public:
 		// Vertex shaders

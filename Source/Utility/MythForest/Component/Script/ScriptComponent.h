@@ -15,14 +15,14 @@ namespace PaintsNow {
 		};
 
 		ScriptComponent(const String& name);
-		virtual ~ScriptComponent();
+		~ScriptComponent() override;
 		void SetHandler(IScript::Request& request, Event::EVENT_ID event, IScript::Request::Ref handler);
-		virtual Tiny::FLAG GetEntityFlagMask() const override;
-		virtual void ScriptUninitialize(IScript::Request& request) override;
-		virtual const String& GetAliasedTypeName() const override;
+		Tiny::FLAG GetEntityFlagMask() const override;
+		void ScriptUninitialize(IScript::Request& request) override;
+		const String& GetAliasedTypeName() const override;
 
 	protected:
-		virtual void DispatchEvent(Event& event, Entity* entity) override;
+		void DispatchEvent(Event& event, Entity* entity) override;
 		void UpdateEntityFlagMask();
 
 	protected:

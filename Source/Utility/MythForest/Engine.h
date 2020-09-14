@@ -24,7 +24,7 @@ namespace PaintsNow {
 	public:
 		Engine(Interfaces& interfaces, BridgeSunset& bridgeSunset, SnowyStream& snowyStream);
 
-		virtual ~Engine();
+		~Engine() override;
 		void Clear();
 		void InstallModule(Module* module);
 		Module* GetComponentModuleFromName(const String& name) const;

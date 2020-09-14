@@ -37,15 +37,15 @@ namespace PaintsNow {
 			EVENTCOMPONENT_CUSTOM_BEGIN = EVENTCOMPONENT_END
 		};
 
-		virtual Entity* GetHostEntity() const override;
-		virtual FLAG GetEntityFlagMask() const override;
-		virtual void Initialize(Engine& engine, Entity* entity) override;
-		virtual void Uninitialize(Engine& engine, Entity* entity) override;
-		virtual void Execute(void* context) override;
-		virtual void Abort(void* context) override;
+		Entity* GetHostEntity() const override;
+		FLAG GetEntityFlagMask() const override;
+		void Initialize(Engine& engine, Entity* entity) override;
+		void Uninitialize(Engine& engine, Entity* entity) override;
+		void Execute(void* context) override;
+		void Abort(void* context) override;
 
 		uint64_t GetTickDeltaTime() const;
-		virtual TObject<IReflect>& operator () (IReflect& reflect);
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 	protected:
 		// Since we can't iterate entity's components in render thread,

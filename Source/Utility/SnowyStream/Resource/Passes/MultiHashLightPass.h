@@ -11,7 +11,7 @@ namespace PaintsNow {
 	class MultiHashLightPass : public TReflected<MultiHashLightPass, PassBase> {
 	public:
 		MultiHashLightPass();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		ScreenTransformVS screenTransform;
 		MultiHashLightFS shaderMultiHashLight;

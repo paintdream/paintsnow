@@ -14,7 +14,7 @@
 namespace PaintsNow {
 	class ITunnel : public IDevice {
 	public:
-		virtual ~ITunnel();
+		~ITunnel() override;
 		class Connection {};
 		class Listener {};
 		class Dispatcher {};

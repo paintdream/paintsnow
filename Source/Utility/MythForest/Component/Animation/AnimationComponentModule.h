@@ -12,7 +12,7 @@ namespace PaintsNow {
 	public:
 		AnimationComponentModule(Engine& engine);
 
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		TShared<AnimationComponent> RequestNew(IScript::Request& request, IScript::Delegate<SkeletonResource> skeletonResource);
 		void RequestPlay(IScript::Request& request, IScript::Delegate<AnimationComponent> animationComponent, const String& clipName, float startTime);

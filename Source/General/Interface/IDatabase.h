@@ -15,7 +15,7 @@
 namespace PaintsNow {
 	class IDatabase : public IDevice {
 	public:
-		virtual ~IDatabase();
+		~IDatabase() override;
 		class Database {};
 
 		// class MetaData : public IIterator {};

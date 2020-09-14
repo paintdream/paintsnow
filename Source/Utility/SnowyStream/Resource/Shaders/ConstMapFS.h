@@ -12,8 +12,8 @@ namespace PaintsNow {
 	class ConstMapFS : public TReflected<ConstMapFS, IShader> {
 	public:
 		ConstMapFS();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual String GetShaderText() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		String GetShaderText() override;
 
 	protected:
 		// varyings

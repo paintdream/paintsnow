@@ -12,8 +12,8 @@ namespace PaintsNow {
 	class StandardLightingFS : public TReflected<StandardLightingFS, IShader> {
 	public:
 		StandardLightingFS();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual String GetShaderText() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		String GetShaderText() override;
 
 		BindTexture lightTexture;
 		BindTexture specTexture;

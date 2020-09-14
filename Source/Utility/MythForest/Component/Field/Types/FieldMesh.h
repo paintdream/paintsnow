@@ -9,7 +9,7 @@
 namespace PaintsNow {
 	class FieldMesh : public FieldComponent::FieldBase {
 	public:
-		virtual Bytes operator [] (const Float3& position) const;
+		Bytes operator [] (const Float3& position) const override;
 	};
 }
 

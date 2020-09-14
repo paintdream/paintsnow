@@ -12,7 +12,7 @@ namespace PaintsNow {
 	public:
 		BatchComponentModule(Engine& engine);
 
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 		TShared<BatchComponent> Create(IRender::Resource::BufferDescription::Usage usage);
 
 	public:

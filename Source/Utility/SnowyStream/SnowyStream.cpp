@@ -600,7 +600,7 @@ void SnowyStream::RequestPersistResource(IScript::Request& request, IScript::Del
 
 struct CompressTask : public TaskOnce {
 	CompressTask(SnowyStream& s) : snowyStream(s) {}
-	virtual void Execute(void* context) override {
+	void Execute(void* context) override {
 		snowyStream.MapResource(resource);
 		bool success = resource->Compress(compressType);
 		if (callback) {
@@ -621,7 +621,7 @@ struct CompressTask : public TaskOnce {
 		delete this;
 	}
 
-	virtual void Abort(void* context) override {
+	void Abort(void* context) override {
 		Finalize(context);
 		TaskOnce::Abort(context);
 	}

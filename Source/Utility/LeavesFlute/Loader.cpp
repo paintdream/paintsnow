@@ -13,63 +13,63 @@ IArchive* Create7ZArchive(IStreamBase& streamBase, size_t length) {
 class ZFrameDummy : public IFrame {
 public:
 	ZFrameDummy() {}
-	virtual void SetCallback(Callback* callback) {}
-	virtual const Int2& GetWindowSize() const {
+	void SetCallback(Callback* callback) override {}
+	const Int2& GetWindowSize() const override {
 		static Int2 size;
 		return size;
 	}
 
-	virtual void SetWindowSize(const Int2& size) {}
-	virtual void SetWindowTitle(const String& title) {}
+	void SetWindowSize(const Int2& size) override {}
+	void SetWindowTitle(const String& title) override {}
 
 	virtual void OnMouse(const EventMouse& mouse) {}
 	virtual void OnKeyboard(const EventKeyboard& keyboard) {}
 	virtual void OnRender() {}
 	virtual void OnWindowSize(const Int2& newSize) {}
-	virtual void EnterMainLoop() {}
-	virtual void ExitMainLoop() {}
-	virtual void ShowCursor(CURSOR cursor) {}
-	virtual void WarpCursor(const Int2& position) {}
-	virtual bool IsRendering() const {
+	void EnterMainLoop() override {}
+	void ExitMainLoop() override {}
+	void ShowCursor(CURSOR cursor) override {}
+	void WarpCursor(const Int2& position) override {}
+	bool IsRendering() const override {
 		return true;
 	}
 };
 
 class ZRenderDummy : public IRender {
 public:
-	virtual std::vector<String> EnumerateDevices() { return std::vector<String>(); }
-	virtual Device* CreateDevice(const String& description) override { return nullptr; }
-	virtual Int2 GetDeviceResolution(Device* device) override { return Int2(640, 480); }
-	virtual void SetDeviceResolution(Device* device, const Int2& resolution) override {}
-	virtual void NextDeviceFrame(Device* device) override {}
-	virtual void DeleteDevice(Device* device) override {}
+	std::vector<String> EnumerateDevices() override { return std::vector<String>(); }
+	Device* CreateDevice(const String& description) override { return nullptr; }
+	Int2 GetDeviceResolution(Device* device) override { return Int2(640, 480); }
+	void SetDeviceResolution(Device* device, const Int2& resolution) override {}
+	void NextDeviceFrame(Device* device) override {}
+	void DeleteDevice(Device* device) override {}
 
 	// Queue
-	virtual Device* GetQueueDevice(Queue* queue) override { return nullptr; }
-	virtual Queue* CreateQueue(Device* device, uint32_t flag) override {
+	Device* GetQueueDevice(Queue* queue) override { return nullptr; }
+	Queue* CreateQueue(Device* device, uint32_t flag) override {
 		static Queue q;
 		return &q; // Make asserts happy
 	}
 
-	virtual bool SupportParallelPresent(Device* device) override { return false; }
-	virtual void PresentQueues(Queue** queue, uint32_t count, PresentOption option) override {}
-	virtual void DeleteQueue(Queue* queue) override {}
-	virtual void FlushQueue(Queue* queue) override {}
+	bool SupportParallelPresent(Device* device) override { return false; }
+	void PresentQueues(Queue** queue, uint32_t count, PresentOption option) override {}
+	void DeleteQueue(Queue* queue) override {}
+	void FlushQueue(Queue* queue) override {}
 
 	// Resource
-	virtual Resource* CreateResource(Device* device, Resource::Type resourceType) override {
+	Resource* CreateResource(Device* device, Resource::Type resourceType) override {
 		static Resource r;
 		return &r;
 	}
-	virtual void AcquireResource(Queue* queue, Resource* resource) override {}
-	virtual void ReleaseResource(Queue* queue, Resource* resource) override {}
-	virtual void UploadResource(Queue* queue, Resource* resource, Resource::Description* description) override {}
-	virtual void RequestDownloadResource(Queue* queue, Resource* resource, Resource::Description* description) override {}
-	virtual void CompleteDownloadResource(Queue* queue, Resource* resource) override {}
-	virtual void ExecuteResource(Queue* queue, Resource* resource) override {}
-	virtual void SwapResource(Queue* queue, Resource* lhs, Resource* rhs) override {}
-	virtual void DeleteResource(Queue* queue, Resource* resource) override {}
-	virtual void SetResourceNotation(Resource* lhs, const String& note) {}
+	void AcquireResource(Queue* queue, Resource* resource) override {}
+	void ReleaseResource(Queue* queue, Resource* resource) override {}
+	void UploadResource(Queue* queue, Resource* resource, Resource::Description* description) override {}
+	void RequestDownloadResource(Queue* queue, Resource* resource, Resource::Description* description) override {}
+	void CompleteDownloadResource(Queue* queue, Resource* resource) override {}
+	void ExecuteResource(Queue* queue, Resource* resource) override {}
+	void SwapResource(Queue* queue, Resource* lhs, Resource* rhs) override {}
+	void DeleteResource(Queue* queue, Resource* resource) override {}
+	void SetResourceNotation(Resource* lhs, const String& note) override {}
 };
 
 

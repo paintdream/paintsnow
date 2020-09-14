@@ -103,21 +103,21 @@ namespace PaintsNow {
 	class Value : public ValueBase {
 	public:
 		enum { Type = TypeTraits<T>::Type };
-		virtual char GetType() const {
+		char GetType() const override {
 			assert((int)Type != TYPE_ERROR);
 			return Type;
 		}
 		Value(const T& v) : value(v) {}
-		virtual Unique QueryValueUnique() const {
+		Unique QueryValueUnique() const override {
 			static Unique type = UniqueType<T>::Get();
 			return type;
 		}
 
-		virtual void Reflect(IReflect& reflect) {
+		void Reflect(IReflect& reflect) override {
 			ReflectProperty(value);
 		}
 
-		virtual ValueBase* Clone() const {
+		ValueBase* Clone() const override {
 			return new Value(value);
 		}
 
@@ -128,20 +128,20 @@ namespace PaintsNow {
 	class Value<const char*> : public ValueBase {
 	public:
 		enum { Type = TypeTraits<String>::Type };
-		virtual char GetType() const {
+		char GetType() const override {
 			return Type;
 		}
 		Value(const char*& t) : value(t) {}
-		virtual Unique QueryValueUnique() const {
+		Unique QueryValueUnique() const override {
 			static Unique u = UniqueType<String>::Get();;
 			return u;
 		}
 
-		virtual ValueBase* Clone() const {
+		ValueBase* Clone() const override {
 			return new Value<String>(value);
 		}
 
-		virtual void Reflect(IReflect& reflect) {
+		void Reflect(IReflect& reflect) override {
 			if (reflect.IsReflectProperty()) {
 				ReflectProperty(value);
 			}
@@ -174,7 +174,7 @@ namespace PaintsNow {
 			}
 		}
 
-		inline void ReleaseObject() {
+		inline void ReleaseObject() override {
 			if (value != nullptr) {
 				size_t* ref = (size_t*)((char*)value - sizeof(size_t));
 				assert(*ref < 0x100);
@@ -188,7 +188,7 @@ namespace PaintsNow {
 		Variant(const Variant& var);
 		Variant& operator = (const Variant& var);
 
-		virtual ~Variant();
+		~Variant() override;
 
 		ValueBase* Get() const {
 			return value;
@@ -214,23 +214,23 @@ namespace PaintsNow {
 	public:
 		enum { Type = TypeTraits<TableImpl>::Type };
 
-		virtual char GetType() const {
+		char GetType() const override {
 			return Type;
 		}
 
 		Value() {}
 		Value(const TableImpl& t) : value(t) {}
 
-		virtual Unique QueryValueUnique() const {
+		Unique QueryValueUnique() const override {
 			static Unique u = UniqueType<TableImpl>::Get();
 			return u;
 		}
 
-		virtual ValueBase* Clone() const {
+		ValueBase* Clone() const override {
 			return new Value<TableImpl>(value);
 		}
 
-		virtual void Reflect(IReflect& reflect);
+		void Reflect(IReflect& reflect) override;
 
 		TableImpl value;
 	};
@@ -250,11 +250,11 @@ namespace PaintsNow {
 	public:
 		enum STATUS { CONNECTED = 0, CLOSED, ABORTED, TIMEOUT };
 		RemoteProxy(IThread& threadApi, ITunnel& tunnel, const TWrapper<IScript::Object*, const String&>& creator, const String& entry, const TWrapper<void, IScript::Request&, bool, STATUS, const String&>& statusHandler = TWrapper<void, IScript::Request&, bool, STATUS, const String&>());
-		virtual ~RemoteProxy();
+		~RemoteProxy() override;
 		virtual void SetEntry(const String& entry);
 		virtual void Reconnect(IScript::Request& request);
 
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		struct ObjectInfo {
 			ObjectInfo();
@@ -286,64 +286,64 @@ namespace PaintsNow {
 		class Request : public TReflected<Request, IScript::Request> {
 		public:
 			Request(RemoteProxy& host, ITunnel::Connection* connection, const TWrapper<void, IScript::Request&, bool, STATUS, const String&>& statusHandler);
-			virtual ~Request();
+			~Request() override;
 			void Attach(ITunnel::Connection* connnection);
 			void Reconnect();
 
 		public:
-			virtual int GetCount();
-			virtual IScript* GetScript();
+			int GetCount() override;
+			IScript* GetScript() override;
 
-			virtual void QueryInterface(const TWrapper<void, IScript::Request&, IReflectObject&, const Ref&>& callback, IReflectObject& target, const Ref& g);
+			void QueryInterface(const TWrapper<void, IScript::Request&, IReflectObject&, const Ref&>& callback, IReflectObject& target, const Ref& g) override;
 
-			virtual bool Call(const AutoWrapperBase& defer, const Request::Ref& g);
-			virtual std::vector<Key> Enumerate();
-			virtual TYPE GetCurrentType();
-			virtual IScript::Request::Ref Load(const String& script, const String& pathname = String());
-			virtual IScript::Request& Push();
-			virtual IScript::Request& Pop();
+			bool Call(const AutoWrapperBase& defer, const Request::Ref& g) override;
+			std::vector<Key> Enumerate() override;
+			TYPE GetCurrentType() override;
+			IScript::Request::Ref Load(const String& script, const String& pathname = String()) override;
+			IScript::Request& Push() override;
+			IScript::Request& Pop() override;
 			virtual IScript::Request& CleanupIndex();
-			virtual IScript::Request& operator >> (IScript::Request::Arguments&) override;
-			virtual IScript::Request& operator >> (Ref&);
-			virtual IScript::Request& operator << (const Ref&);
-			virtual IScript::Request& operator << (const Nil&);
-			virtual IScript::Request& operator << (const BaseDelegate&);
-			virtual IScript::Request& operator >> (BaseDelegate&);
-			virtual IScript::Request& operator << (const Global&);
+			IScript::Request& operator >> (IScript::Request::Arguments&) override;
+			IScript::Request& operator >> (Ref&) override;
+			IScript::Request& operator << (const Ref&) override;
+			IScript::Request& operator << (const Nil&) override;
+			IScript::Request& operator << (const BaseDelegate&) override;
+			IScript::Request& operator >> (BaseDelegate&) override;
+			IScript::Request& operator << (const Global&) override;
 
-			virtual IScript::Request& operator << (const TableStart&);
-			virtual IScript::Request& operator >> (TableStart&);
-			virtual IScript::Request& operator << (const TableEnd&);
-			virtual IScript::Request& operator >> (const TableEnd&);
-			virtual IScript::Request& operator << (const ArrayStart&);
-			virtual IScript::Request& operator >> (ArrayStart&);
-			virtual IScript::Request& operator << (const ArrayEnd&);
-			virtual IScript::Request& operator >> (const ArrayEnd&);
-			virtual IScript::Request& operator << (const Key&);
-			virtual IScript::Request& operator >> (const Key&);
-			virtual IScript::Request& operator << (double value);
-			virtual IScript::Request& operator >> (double& value);
-			virtual IScript::Request& operator << (const String& str);
-			virtual IScript::Request& operator >> (String& str);
-			virtual IScript::Request& operator << (const char* str);
-			virtual IScript::Request& operator >> (const char*& str);
-			virtual IScript::Request& operator << (bool b);
-			virtual IScript::Request& operator >> (bool& b);
+			IScript::Request& operator << (const TableStart&) override;
+			IScript::Request& operator >> (TableStart&) override;
+			IScript::Request& operator << (const TableEnd&) override;
+			IScript::Request& operator >> (const TableEnd&) override;
+			IScript::Request& operator << (const ArrayStart&) override;
+			IScript::Request& operator >> (ArrayStart&) override;
+			IScript::Request& operator << (const ArrayEnd&) override;
+			IScript::Request& operator >> (const ArrayEnd&) override;
+			IScript::Request& operator << (const Key&) override;
+			IScript::Request& operator >> (const Key&) override;
+			IScript::Request& operator << (double value) override;
+			IScript::Request& operator >> (double& value) override;
+			IScript::Request& operator << (const String& str) override;
+			IScript::Request& operator >> (String& str) override;
+			IScript::Request& operator << (const char* str) override;
+			IScript::Request& operator >> (const char*& str) override;
+			IScript::Request& operator << (bool b) override;
+			IScript::Request& operator >> (bool& b) override;
 
-			virtual IScript::Request& operator << (const AutoWrapperBase& wrapper);
-			virtual IScript::Request& operator << (int64_t u);
-			virtual IScript::Request& operator >> (int64_t& u);
+			IScript::Request& operator << (const AutoWrapperBase& wrapper) override;
+			IScript::Request& operator << (int64_t u) override;
+			IScript::Request& operator >> (int64_t& u) override;
 
 			virtual bool IsValid(const BaseDelegate& d);
-			virtual Ref Reference(const Ref& d);
-			virtual TYPE GetReferenceType(const Ref& d);
-			virtual void Dereference(Ref& ref);
-			virtual IScript::Request& MoveVariables(IScript::Request& target, size_t count);
+			Ref Reference(const Ref& d) override;
+			TYPE GetReferenceType(const Ref& d) override;
+			void Dereference(Ref& ref) override;
+			IScript::Request& MoveVariables(IScript::Request& target, size_t count) override;
 
 			class Packet : public TReflected<Packet, IReflectObjectComplex> {
 			public:
 				Packet();
-				virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+				TObject<IReflect>& operator () (IReflect& reflect) override;
 				int64_t object; // 0 for global routines
 				int64_t procedure;
 				int64_t callback;
@@ -368,11 +368,11 @@ namespace PaintsNow {
 			void RequestNewObject(IScript::Request& request, const String& url);
 			void RequestQueryObject(IScript::Request& request, IScript::BaseDelegate base);
 
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+			TObject<IReflect>& operator () (IReflect& reflect) override;
 		public:
 
-			virtual void DoLock();
-			virtual void UnLock();
+			void DoLock() override;
+			void UnLock() override;
 			RemoteProxy& host;
 			IThread& threadApi;
 
@@ -404,14 +404,14 @@ namespace PaintsNow {
 
 		friend class Request;
 
-		virtual const char* GetFileExt() const;
-		virtual IScript* NewScript() const;
-		virtual IScript::Request* NewRequest(const String& entry);
-		virtual IScript::Request& GetDefaultRequest();
+		const char* GetFileExt() const override;
+		IScript* NewScript() const override;
+		IScript::Request* NewRequest(const String& entry) override;
+		IScript::Request& GetDefaultRequest() override;
 
 		const TWrapper<IScript::Object*, const String&>& GetObjectCreator() const;
 		bool Run();
-		virtual void Reset() override;
+		void Reset() override;
 		void Stop();
 
 	protected:

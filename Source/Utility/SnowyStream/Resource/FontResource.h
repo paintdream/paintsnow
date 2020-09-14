@@ -15,15 +15,15 @@ namespace PaintsNow {
 	class FontResource : public TReflected<FontResource, DeviceResourceBase<IFontBase> >, public IDataUpdater {
 	public:
 		FontResource(ResourceManager& manager, const String& uniqueID);
-		virtual ~FontResource();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual bool LoadExternalResource(Interfaces& interfaces, IStreamBase& streamBase, size_t length) override;
+		~FontResource() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		bool LoadExternalResource(Interfaces& interfaces, IStreamBase& streamBase, size_t length) override;
 
-		virtual void Upload(IFontBase& font, void* deviceContext) override;
-		virtual void Download(IFontBase& font, void* deviceContext) override;
-		virtual void Attach(IFontBase& font, void* deviceContext) override;
-		virtual void Detach(IFontBase& font, void* deviceContext) override;
-		virtual uint32_t Update(IRender& render, IRender::Queue* queue) override;
+		void Upload(IFontBase& font, void* deviceContext) override;
+		void Download(IFontBase& font, void* deviceContext) override;
+		void Attach(IFontBase& font, void* deviceContext) override;
+		void Detach(IFontBase& font, void* deviceContext) override;
+		uint32_t Update(IRender& render, IRender::Queue* queue) override;
 		uint16_t GetFontTextureSize() const;
 
 		struct Char {

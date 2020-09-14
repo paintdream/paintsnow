@@ -12,7 +12,7 @@ namespace PaintsNow {
 	class WidgetPass : public TReflected<WidgetPass, PassBase> {
 	public:
 		WidgetPass();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 	public:
 		// Vertex shaders

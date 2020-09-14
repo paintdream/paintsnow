@@ -11,8 +11,8 @@ namespace PaintsNow {
 	class ProfileComponent : public TAllocatedTiny<ProfileComponent, Component> {
 	public:
 		ProfileComponent(float historyRatio);
-		virtual Tiny::FLAG GetEntityFlagMask() const override final;
-		virtual void DispatchEvent(Event& event, Entity* entity) override final;
+		Tiny::FLAG GetEntityFlagMask() const final;
+		void DispatchEvent(Event& event, Entity* entity) final;
 		float GetTickInterval() const;
 
 	protected:

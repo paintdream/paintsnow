@@ -26,7 +26,7 @@ namespace PaintsNow {
 		static String GenerateLocation(const String& prefix, const void* ptr);
 		typedef Void DriverType;
 		ResourceBase(ResourceManager& manager, const String& uniqueLocation);
-		virtual ~ResourceBase();
+		~ResourceBase() override;
 		ResourceManager& GetResourceManager() const;
 		const String& GetLocation() const;
 		void SetLocation(const String& location);
@@ -44,11 +44,11 @@ namespace PaintsNow {
 		virtual void GetDependencies(std::vector<Dependency>& deps) const;
 		virtual bool IsPrepared() const;
 		virtual std::pair<uint16_t, uint16_t> GetProgress() const;
-		virtual void ReleaseObject() override;
+		void ReleaseObject() override;
 		// override them derived from IReflectObject to change behaviors on serialization & deserialization
 		// virtual bool operator >> (IStreamBase& stream) const override;
 		// virtual bool operator << (IStreamBase& stream) override;
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 		virtual bool Map();
 		virtual void Unmap();
 		std::atomic<uint32_t> critical;
@@ -72,7 +72,7 @@ namespace PaintsNow {
 		virtual void Detach(T& device, void* deviceContext) = 0;
 		virtual size_t ReportDeviceMemoryUsage() const { return 0; }
 
-		virtual Unique GetDeviceUnique() const {
+		Unique GetDeviceUnique() const override {
 			return UniqueType<T>::Get();
 		}
 	};
@@ -80,7 +80,7 @@ namespace PaintsNow {
 	class MetaResourceInternalPersist : public TReflected<MetaResourceInternalPersist, MetaStreamPersist> {
 	public:
 		MetaResourceInternalPersist(ResourceManager& resourceManager);
-		virtual IReflectObject* Clone() const override;
+		IReflectObject* Clone() const override;
 
 		template <class T, class D>
 		inline const MetaResourceInternalPersist& FilterField(T* t, D* d) const {
@@ -94,9 +94,9 @@ namespace PaintsNow {
 
 		typedef MetaResourceInternalPersist Type;
 
-		virtual bool Read(IStreamBase& streamBase, void* ptr) const override;
-		virtual bool Write(IStreamBase& streamBase, const void* ptr) const override;
-		virtual const String& GetUniqueName() const override;
+		bool Read(IStreamBase& streamBase, void* ptr) const override;
+		bool Write(IStreamBase& streamBase, const void* ptr) const override;
+		const String& GetUniqueName() const override;
 
 	private:
 		ResourceManager& resourceManager;

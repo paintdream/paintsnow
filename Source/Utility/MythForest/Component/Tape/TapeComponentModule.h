@@ -12,7 +12,7 @@ namespace PaintsNow {
 	class TapeComponentModule : public TReflected<TapeComponentModule, ModuleImpl<TapeComponent> > {
 	public:
 		TapeComponentModule(Engine& engine);
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		TShared<TapeComponent> RequestNew(IScript::Request& request, IScript::Delegate<SharedTiny> streamHolder, size_t cacheBytes);
 		std::pair<int64_t, String> RequestRead(IScript::Request& request, IScript::Delegate<TapeComponent> tapeComponent);

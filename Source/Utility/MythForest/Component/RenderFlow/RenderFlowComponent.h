@@ -13,7 +13,7 @@ namespace PaintsNow {
 	class RenderFlowComponent : public TAllocatedTiny<RenderFlowComponent, Component>, protected Graph<RenderStage> {
 	public:
 		RenderFlowComponent();
-		virtual ~RenderFlowComponent();
+		~RenderFlowComponent() override;
 
 		enum {
 			RENDERFLOWCOMPONENT_SYNC_DEVICE_RESOLUTION = COMPONENT_CUSTOM_BEGIN,
@@ -23,10 +23,10 @@ namespace PaintsNow {
 			RENDERFLOWCOMPONENT_CUSTOM_BEGIN = COMPONENT_CUSTOM_BEGIN << 4
 		};
 
-		virtual void Initialize(Engine& engine, Entity* entity) override;
-		virtual void Uninitialize(Engine& engine, Entity* entity) override;
-		virtual void DispatchEvent(Event& event, Entity* entity) override;
-		virtual Tiny::FLAG GetEntityFlagMask() const override;
+		void Initialize(Engine& engine, Entity* entity) override;
+		void Uninitialize(Engine& engine, Entity* entity) override;
+		void DispatchEvent(Event& event, Entity* entity) override;
+		Tiny::FLAG GetEntityFlagMask() const override;
 
 		void AddNode(RenderStage* renderStage);
 		void RemoveNode(RenderStage* renderStage);
@@ -43,7 +43,7 @@ namespace PaintsNow {
 		void RenderSyncTick(Engine& engine);
 
 	protected:
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 		void SetMainResolution(Engine& engine);
 
 		Int2 mainResolution;

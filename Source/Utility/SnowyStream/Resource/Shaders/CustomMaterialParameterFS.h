@@ -23,8 +23,8 @@ namespace PaintsNow {
 	class CustomMaterialParameterFS : public TReflected<CustomMaterialParameterFS, IShader> {
 	public:
 		CustomMaterialParameterFS();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual String GetShaderText() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		String GetShaderText() override;
 		void UpdateUniforms();
 		void SetCode(const String& text);
 		void SetInput(const String& type, const String& name, const std::vector<std::pair<String, String> >& config);

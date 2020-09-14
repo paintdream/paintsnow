@@ -13,7 +13,7 @@ namespace PaintsNow {
 	class MultiHashSetupPass : public TReflected<MultiHashSetupPass, PassBase> {
 	public:
 		MultiHashSetupPass();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 	protected:
 		// Vertex shaders

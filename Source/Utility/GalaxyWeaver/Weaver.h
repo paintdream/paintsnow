@@ -13,8 +13,8 @@ namespace PaintsNow {
 	class Weaver : public TReflected<Weaver, ProxyStub> {
 	public:
 		Weaver(BridgeSunset& bridgeSunset, SnowyStream& snowyStream, MythForest& mythForest, ITunnel& tunnel, const String& entry);
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual void ScriptUninitialize(IScript::Request& request) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		void ScriptUninitialize(IScript::Request& request) override;
 		void SetRpcCallback(IScript::Request& request, const IScript::Request::Ref& ref);
 		void SetConnectionCallback(IScript::Request& request, const IScript::Request::Ref& ref);
 

@@ -10,7 +10,7 @@
 namespace PaintsNow {
 	class FieldTexture : public FieldComponent::FieldBase {
 	public:
-		virtual Bytes operator [] (const Float3& position) const;
+		Bytes operator [] (const Float3& position) const override;
 
 		enum TEXTURE_TYPE {
 			TEXTURE_2D, TEXTURE_3D,

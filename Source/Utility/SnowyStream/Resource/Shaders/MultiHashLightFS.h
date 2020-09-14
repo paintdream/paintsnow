@@ -12,8 +12,8 @@ namespace PaintsNow {
 	class MultiHashLightFS : public TReflected<MultiHashLightFS, IShader> {
 	public:
 		MultiHashLightFS();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual String GetShaderText() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		String GetShaderText() override;
 
 		BindTexture depthTexture;
 		BindTexture lightDepthTexture;

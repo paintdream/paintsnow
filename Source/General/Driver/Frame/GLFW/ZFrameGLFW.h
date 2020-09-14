@@ -13,21 +13,21 @@ namespace PaintsNow {
 	class ZFrameGLFW : public IFrame {
 	public:
 		ZFrameGLFW(GLFWwindow** windowPtr, bool isVulkan = false, const Int2& size = Int2(800, 600), Callback* callback = nullptr);
-		virtual ~ZFrameGLFW();
-		virtual void SetCallback(Callback* callback);
-		virtual const Int2& GetWindowSize() const;
-		virtual void SetWindowSize(const Int2& size);
-		virtual void SetWindowTitle(const String& title);
+		~ZFrameGLFW() override;
+		void SetCallback(Callback* callback) override;
+		const Int2& GetWindowSize() const override;
+		void SetWindowSize(const Int2& size) override;
+		void SetWindowTitle(const String& title) override;
 
-		virtual bool IsRendering() const;
-		virtual void EnterMainLoop();
-		virtual void ExitMainLoop();
+		bool IsRendering() const override;
+		void EnterMainLoop() override;
+		void ExitMainLoop() override;
 
 		void OnMouse(const EventMouse& mouse);
 		void OnKeyboard(const EventKeyboard& keyboard);
 		void OnWindowSize(const EventSize& newSize);
-		void ShowCursor(CURSOR cursor);
-		void WarpCursor(const Int2& position);
+		void ShowCursor(CURSOR cursor) override;
+		void WarpCursor(const Int2& position) override;
 
 	public:
 		virtual void OnMouseButtonCallback(int button, int action, int mods);

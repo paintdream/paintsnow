@@ -15,10 +15,10 @@ namespace PaintsNow {
 	class CustomMaterialPass : public TReflected<CustomMaterialPass, PassBase>, public ICustomizeShader {
 	public:
 		CustomMaterialPass();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		void SetInput(const String& stage, const String& type, const String& name, const std::vector<std::pair<String, String> >& config);
-		void SetCode(const String& stage, const String& code, const std::vector<std::pair<String, String> >& config);
-		void SetComplete();
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		void SetInput(const String& stage, const String& type, const String& name, const std::vector<std::pair<String, String> >& config) override;
+		void SetCode(const String& stage, const String& code, const std::vector<std::pair<String, String> >& config) override;
+		void SetComplete() override;
 
 	protected:
 		// Vertex shaders

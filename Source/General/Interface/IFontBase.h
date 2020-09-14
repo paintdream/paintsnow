@@ -33,7 +33,7 @@ namespace PaintsNow {
 
 		class Font {};
 
-		virtual ~IFontBase();
+		~IFontBase() override;
 		virtual Font* Load(IStreamBase& stream, size_t length) = 0;
 		virtual void Close(Font* font) = 0;
 		virtual CHARINFO RenderTexture(Font* font, String& data, FONTCHAR character, size_t bitmapSize, float hinting) const = 0;

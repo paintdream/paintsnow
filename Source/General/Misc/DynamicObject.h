@@ -59,13 +59,13 @@ namespace PaintsNow {
 		DynamicInfo* GetDynamicInfo() const;
 		void Set(const DynamicInfo::Field& field, const void* value);
 		void* Get(const DynamicInfo::Field& field) const;
-		virtual void ReleaseObject() override;
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		void ReleaseObject() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 	protected:
 		friend class DynamicInfo;
 		DynamicObject(DynamicInfo* info);
-		virtual ~DynamicObject();
+		~DynamicObject() override;
 		DynamicObject& operator = (const DynamicObject& rhs);
 
 		DynamicInfo* dynamicInfo;
@@ -80,18 +80,18 @@ namespace PaintsNow {
 		class Iterator : public IIterator {
 		public:
 			Iterator(DynamicVector* vec);
-			virtual IIterator* New() const;
-			virtual void Attach(void* base);
-			virtual void* GetHost() const;
-			virtual void Initialize(size_t count);
-			virtual size_t GetTotalCount() const;
-			virtual void* Get();
-			virtual const IReflectObject& GetPrototype() const;
-			virtual Unique GetPrototypeUnique() const;
-			virtual Unique GetPrototypeReferenceUnique() const;
-			virtual bool IsLayoutLinear() const;
-			virtual bool IsLayoutPinned() const;
-			virtual bool Next();
+			IIterator* New() const override;
+			void Attach(void* base) override;
+			void* GetHost() const override;
+			void Initialize(size_t count) override;
+			size_t GetTotalCount() const override;
+			void* Get() override;
+			const IReflectObject& GetPrototype() const override;
+			Unique GetPrototypeUnique() const override;
+			Unique GetPrototypeReferenceUnique() const override;
+			bool IsLayoutLinear() const override;
+			bool IsLayoutPinned() const override;
+			bool Next() override;
 
 		private:
 			DynamicVector* base;
@@ -106,7 +106,7 @@ namespace PaintsNow {
 		friend class DynamicObject;
 		friend class Iterator;
 		DynamicVector(Unique unique, DynamicInfo::MemController*, size_t c, bool reflectable);
-		virtual ~DynamicVector();
+		~DynamicVector() override;
 		DynamicVector& operator = (const DynamicVector&);
 		void Init();
 		void Cleanup();
@@ -126,8 +126,8 @@ namespace PaintsNow {
 	class DynamicObjectWrapper : public TReflected<DynamicObjectWrapper, IReflectObjectComplex> {
 	public:
 		DynamicObjectWrapper(DynamicUniqueAllocator& allocator);
-		virtual ~DynamicObjectWrapper();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		~DynamicObjectWrapper() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		DynamicUniqueAllocator& uniqueAllocator;
 		DynamicObject* dynamicObject;

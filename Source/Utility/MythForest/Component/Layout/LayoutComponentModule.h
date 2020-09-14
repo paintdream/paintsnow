@@ -13,8 +13,8 @@ namespace PaintsNow {
 	class LayoutComponentModule : public TReflected<LayoutComponentModule, ModuleImpl<LayoutComponent> > {
 	public:
 		LayoutComponentModule(Engine& engine);
-		virtual ~LayoutComponentModule();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		~LayoutComponentModule() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		TShared<LayoutComponent> RequestNew(IScript::Request& request);
 		Float2 RequestGetScrollSize(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent);

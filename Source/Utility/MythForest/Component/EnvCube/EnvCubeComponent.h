@@ -12,11 +12,11 @@ namespace PaintsNow {
 	class EnvCubeComponent : public TAllocatedTiny<EnvCubeComponent, RenderableComponent> {
 	public:
 		EnvCubeComponent();
-		virtual ~EnvCubeComponent();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual FLAG GetEntityFlagMask() const override;
-		virtual void UpdateBoundingBox(Engine& engine, Float3Pair& box) override;
-		virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData);
+		~EnvCubeComponent() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		FLAG GetEntityFlagMask() const override;
+		void UpdateBoundingBox(Engine& engine, Float3Pair& box) override;
+		uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) override;
 
 		TShared<TextureResource> cubeMapTexture; // pre-filterred specular texture
 		TShared<TextureResource> skyMapTexture; // irrandiance map texture

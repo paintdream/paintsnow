@@ -13,10 +13,10 @@ namespace PaintsNow {
 	class BloomRenderStage : public TReflected<BloomRenderStage, GeneralRenderStageRect<BloomPass> > {
 	public:
 		BloomRenderStage(const String& config);
-		virtual void PrepareResources(Engine& engine, IRender::Queue* queue) override;
-		virtual void UpdatePass(Engine& engine, IRender::Queue* queue) override;
+		void PrepareResources(Engine& engine, IRender::Queue* queue) override;
+		void UpdatePass(Engine& engine, IRender::Queue* queue) override;
 
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		RenderPortTextureInput InputColor;
 		RenderPortRenderTarget OutputColor;

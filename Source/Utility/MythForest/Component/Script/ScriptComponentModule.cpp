@@ -7,7 +7,7 @@ class Reflector : public IReflect {
 public:
 	Reflector(std::unordered_map<String, size_t>& m) : mapEventNameToID(m), IReflect(false, false, false, true) {}
 
-	virtual void Enum(size_t value, Unique id, const char* name, const MetaChainBase* meta) override {
+	void Enum(size_t value, Unique id, const char* name, const MetaChainBase* meta) override {
 		mapEventNameToID[name] = value;
 	}
 

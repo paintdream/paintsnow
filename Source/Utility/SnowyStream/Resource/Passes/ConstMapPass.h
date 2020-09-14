@@ -12,7 +12,7 @@ namespace PaintsNow {
 	class ConstMapPass : public TReflected<ConstMapPass, PassBase> {
 	public:
 		ConstMapPass();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 	protected:
 		// Vertex shaders

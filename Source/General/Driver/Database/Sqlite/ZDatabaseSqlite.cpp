@@ -149,53 +149,53 @@ public:
 		dynamicObject->Set(dynamicObject->GetDynamicInfo()->fields[i], &value);
 	}
 
-	virtual ~QueryMetaData() {
+	~QueryMetaData() override {
 		if (dynamicObject != nullptr)
 			dynamicObject->ReleaseObject();
 		sqlite3_finalize(stmt);
 	}
 
-	virtual IIterator* New() const {
+	IIterator* New() const override {
 		assert(false);
 		return nullptr;
 	}
 
-	virtual void Attach(void* base) {
+	void Attach(void* base) override {
 		assert(false);
 	}
 
-	virtual void Initialize(size_t count) {
+	void Initialize(size_t count) override {
 		assert(false);
 	}
 
-	virtual Unique GetPrototypeUnique() const {
-		assert(false);
-		return Unique();
-	}
-
-	virtual Unique GetPrototypeReferenceUnique() const {
+	Unique GetPrototypeUnique() const override {
 		assert(false);
 		return Unique();
 	}
 
-	virtual size_t GetTotalCount() const {
+	Unique GetPrototypeReferenceUnique() const override {
+		assert(false);
+		return Unique();
+	}
+
+	size_t GetTotalCount() const override {
 		assert(false);
 		return 0;
 	}
 
-	virtual void* GetHost() const {
+	void* GetHost() const override {
 		return nullptr;
 	}
 
-	virtual void* Get() {
+	void* Get() override {
 		return dynamicObject;
 	}
 
-	virtual const IReflectObject& GetPrototype() const {
+	const IReflectObject& GetPrototype() const override {
 		return *dynamicObject;
 	}
 
-	virtual bool Next() {
+	bool Next() override {
 		if (count == 0 || finished) return false;
 
 		if (inited || sqlite3_step(stmt) == SQLITE_ROW) {
@@ -211,11 +211,11 @@ public:
 		}
 	}
 
-	virtual bool IsLayoutLinear() const {
+	bool IsLayoutLinear() const override {
 		return false;
 	}
 
-	virtual bool IsLayoutPinned() const {
+	bool IsLayoutPinned() const override {
 		return true;
 	}
 
@@ -240,7 +240,7 @@ private:
 class MapperSqlite : public IReflect {
 public:
 	MapperSqlite(sqlite3_stmt* s, const std::vector<String>& n) : IReflect(true, false), stmt(s), names(n), counter(0) {}
-	virtual void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) {
+	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override {
 		static Unique intType = UniqueType<int>::Get();
 		static Unique strType = UniqueType<String>::Get();
 		static Unique cstrType = UniqueType<const char*>::Get();
@@ -261,7 +261,7 @@ public:
 
 		counter++;
 	}
-	virtual void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) {}
+	void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
 
 	void SetValueString(int i, const void* base) {
 		sqlite3_bind_text(stmt, i, ((const String*)base)->c_str(), (int)((const String*)base)->length(), SQLITE_TRANSIENT);
@@ -290,12 +290,12 @@ class WriterSqlite : public IReflect {
 public:
 	WriterSqlite(MapperSqlite& r) : IReflect(true, false), reflect(r), i(0) {}
 
-	virtual void Property(IReflectObject& object, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) {
+	void Property(IReflectObject& object, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override {
 		MapperSqlite::Set s = reflect.setters[i].first;
 		(reflect.*s)(i, ptr);
 		i++;
 	}
-	virtual void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) {}
+	void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
 
 private:
 	MapperSqlite& reflect;

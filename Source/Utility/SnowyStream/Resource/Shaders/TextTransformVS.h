@@ -13,8 +13,8 @@ namespace PaintsNow {
 	public:
 		TextTransformVS();
 
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual String GetShaderText() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		String GetShaderText() override;
 
 		IShader::BindBuffer positionBuffer;
 		IShader::BindBuffer instanceBuffer;

@@ -12,7 +12,7 @@ namespace PaintsNow {
 	class TerrainComponent : public TAllocatedTiny<TerrainComponent, RenderableComponent> {
 	public:
 		TerrainComponent();
-		virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) override;
+		uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) override;
 
 		TShared<TerrainResource> terrainResource;
 	};

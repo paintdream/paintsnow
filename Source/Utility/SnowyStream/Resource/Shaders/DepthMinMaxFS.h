@@ -12,8 +12,8 @@ namespace PaintsNow {
 	class DepthMinMaxFS : public TReflected<DepthMinMaxFS, IShader> {
 	public:
 		DepthMinMaxFS();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual String GetShaderText() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		String GetShaderText() override;
 		BindTexture depthTexture;
 		BindBuffer uniformBuffer;
 		Float2 invScreenSize;

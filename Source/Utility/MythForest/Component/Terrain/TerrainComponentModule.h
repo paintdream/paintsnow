@@ -13,7 +13,7 @@ namespace PaintsNow {
 	public:
 		TerrainComponentModule(Engine& engine);
 
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		TShared<TerrainComponent> RequestNew(IScript::Request& request, IScript::Delegate<TerrainResource> terrainResource);
 		void RequestRebuild(IScript::Request& request, IScript::Delegate<TerrainComponent> terrainComponent);

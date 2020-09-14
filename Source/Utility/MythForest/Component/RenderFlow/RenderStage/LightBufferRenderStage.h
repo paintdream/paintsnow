@@ -15,11 +15,11 @@ namespace PaintsNow {
 	class LightBufferRenderStage : public TReflected<LightBufferRenderStage, GeneralRenderStageRect<LightBufferPass> > {
 	public:
 		LightBufferRenderStage(const String& config = "1");
-		virtual void PrepareResources(Engine& engine, IRender::Queue* queue) override;
-		virtual void UpdatePass(Engine& engine, IRender::Queue* queue) override;
-		virtual void Uninitialize(Engine& engine, IRender::Queue* queue) override;
+		void PrepareResources(Engine& engine, IRender::Queue* queue) override;
+		void UpdatePass(Engine& engine, IRender::Queue* queue) override;
+		void Uninitialize(Engine& engine, IRender::Queue* queue) override;
 
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		TRenderPortReference<RenderPortCameraView> CameraView;
 		RenderPortLightSource LightSource;

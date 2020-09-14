@@ -12,8 +12,8 @@ namespace PaintsNow {
 	class WorkDispatcher : public TReflected<WorkDispatcher, Looper> {
 	public:
 		WorkDispatcher(BridgeSunset& bridgeSunset, INetwork& network, ITunnel::Dispatcher* disp);
-		virtual bool Activate();
-		virtual void Deactivate();
+		bool Activate() override;
+		void Deactivate() override;
 		ITunnel::Dispatcher* GetDispatcher() const;
 
 	protected:

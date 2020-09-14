@@ -11,7 +11,7 @@ namespace PaintsNow {
 	class NavigateComponent : public TAllocatedTiny<NavigateComponent, Component> {
 	public:
 		NavigateComponent();
-		virtual ~NavigateComponent();
+		~NavigateComponent() override;
 	};
 }
 

@@ -127,7 +127,7 @@ namespace PaintsNow {
 			virtual bool IsRendering() const = 0;
 		};
 
-		virtual ~IFrame();
+		~IFrame() override;
 		virtual void SetCallback(Callback* callback) = 0;
 		virtual const Int2& GetWindowSize() const = 0;
 		virtual void SetWindowSize(const Int2& size) = 0;

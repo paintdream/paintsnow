@@ -15,12 +15,12 @@ namespace PaintsNow {
 	class EventComponentModule : public TReflected<EventComponentModule, ModuleImpl<EventComponent> > {
 	public:
 		EventComponentModule(Engine& engine);
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual void TickFrame() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		void TickFrame() override;
 		void OnSize(const Int2& size);
 		void OnMouse(const IFrame::EventMouse& mouse);
 		void OnKeyboard(const IFrame::EventKeyboard& keyboard);
-		virtual void Uninitialize() override;
+		void Uninitialize() override;
 
 		TShared<EventComponent> RequestNew(IScript::Request& request);
 		void RequestBindEventTick(IScript::Request& request, IScript::Delegate<EventComponent> eventComponent, IScript::Delegate<Clock> clock);

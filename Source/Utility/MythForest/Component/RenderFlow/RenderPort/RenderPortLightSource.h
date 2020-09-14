@@ -11,7 +11,7 @@
 namespace PaintsNow {
 	class RenderPortLightSource : public TReflected<RenderPortLightSource, RenderPort> {
 	public:
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		struct LightElement {
 			Float4 position;
@@ -33,11 +33,11 @@ namespace PaintsNow {
 
 		RenderPortLightSource();
 
-		virtual void Initialize(IRender& render, IRender::Queue* mainQueue) override;
-		virtual void Uninitialize(IRender& render, IRender::Queue* mainQueue) override;
-		virtual bool UpdateDataStream(RenderPort& source) override;
-		virtual bool BeginFrame(IRender& render) override;
-		virtual void EndFrame(IRender& render) override;
+		void Initialize(IRender& render, IRender::Queue* mainQueue) override;
+		void Uninitialize(IRender& render, IRender::Queue* mainQueue) override;
+		bool UpdateDataStream(RenderPort& source) override;
+		bool BeginFrame(IRender& render) override;
+		void EndFrame(IRender& render) override;
 
 		std::vector<LightElement> lightElements;
 		TShared<TextureResource> cubeMapTexture;

@@ -38,15 +38,15 @@ static inline Unique UniqueFromVariableType(uint32_t id) {
 class BufferMetaChain : public MetaChainBase {
 public:
 	BufferMetaChain(IShader::BindBuffer& buffer) : bindBuffer(buffer) {}
-	virtual const MetaChainBase* GetNext() const {
+	const MetaChainBase* GetNext() const override {
 		return nullptr;
 	}
 
-	virtual const MetaNodeBase* GetNode() const {
+	const MetaNodeBase* GetNode() const override {
 		return &bindBuffer;
 	}
 
-	virtual const MetaNodeBase* GetRawNode() const {
+	const MetaNodeBase* GetRawNode() const override {
 		return &bindBuffer;
 	}
 

@@ -11,11 +11,11 @@ namespace PaintsNow {
 	class SkeletonResource : public TReflected<SkeletonResource, GraphicResourceBase> {
 	public:
 		SkeletonResource(ResourceManager& manager, const String& uniqueID);
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual void Download(IRender& device, void* deviceContext) override;
-		virtual void Upload(IRender& device, void* deviceContext) override;
-		virtual void Attach(IRender& device, void* deviceContext) override;
-		virtual void Detach(IRender& device, void* deviceContext) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		void Download(IRender& device, void* deviceContext) override;
+		void Upload(IRender& device, void* deviceContext) override;
+		void Attach(IRender& device, void* deviceContext) override;
+		void Detach(IRender& device, void* deviceContext) override;
 		typedef IAsset::BoneAnimation BoneAnimation;
 		typedef IAsset::BoneAnimation::Joint Joint;
 		typedef IAsset::TransSequence TransSequence;

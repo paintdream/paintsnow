@@ -15,11 +15,11 @@ namespace PaintsNow {
 	class ZPosixTimer final : public ITimer {
 	public:
 		ZPosixTimer();
-		virtual ~ZPosixTimer();
+		~ZPosixTimer() override;
 
-		virtual Timer* StartTimer(size_t interval, const TWrapper<void, size_t>& wrapper);
-		virtual void StopTimer(Timer* timer);
-		virtual size_t GetTimerInterval(Timer* ) const;
+		Timer* StartTimer(size_t interval, const TWrapper<void, size_t>& wrapper) override;
+		void StopTimer(Timer* timer) override;
+		size_t GetTimerInterval(Timer* ) const override;
 
 	};
 }

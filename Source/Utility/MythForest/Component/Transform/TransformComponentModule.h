@@ -13,7 +13,7 @@ namespace PaintsNow {
 	public:
 		TransformComponentModule(Engine& engine);
 
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		TShared<TransformComponent> RequestNew(IScript::Request& request);
 		void RequestEditorRotate(IScript::Request& request, IScript::Delegate<TransformComponent> transformComponent, Float2& from, Float2& to);

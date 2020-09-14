@@ -10,34 +10,34 @@
 namespace PaintsNow {
 	class INetwork : public ITunnel {
 	public:
-		virtual ~INetwork();
+		~INetwork() override;
 		class Httpd {};
 		class HttpRequest {};
 
-		virtual Dispatcher* OpenDispatcher() = 0;
-		virtual bool ActivateDispatcher(Dispatcher* dispatcher) = 0;
-		virtual void DeactivateDispatcher(Dispatcher* dispatcher) = 0;
-		virtual Dispatcher* GetListenerDispatcher(Listener* listener) = 0;
-		virtual Dispatcher* GetConnectionDispatcher(Connection* connection) = 0;
-		virtual void CloseDispatcher(Dispatcher* dispatcher) = 0;
+		Dispatcher* OpenDispatcher() override = 0;
+		bool ActivateDispatcher(Dispatcher* dispatcher) override = 0;
+		void DeactivateDispatcher(Dispatcher* dispatcher) override = 0;
+		Dispatcher* GetListenerDispatcher(Listener* listener) override = 0;
+		Dispatcher* GetConnectionDispatcher(Connection* connection) override = 0;
+		void CloseDispatcher(Dispatcher* dispatcher) override = 0;
 
 		virtual void EnumerateIPAddresses(const TWrapper<void, const String&>& callback) = 0;
 
 		// derived from ITunnel
-		virtual Listener* OpenListener(Dispatcher* dispatcher, const TWrapper<void, EVENT>& eventHandler, const TWrapper<const TWrapper<void, EVENT>, Connection*>& callback, const String& address) = 0;
-		virtual bool ActivateListener(Listener* listener) = 0;
-		virtual void GetListenerInfo(Listener* listener, String& address) = 0;
-		virtual void DeactivateListener(Listener* listener) = 0;
-		virtual void CloseListener(Listener* listener) = 0;
+		Listener* OpenListener(Dispatcher* dispatcher, const TWrapper<void, EVENT>& eventHandler, const TWrapper<const TWrapper<void, EVENT>, Connection*>& callback, const String& address) override = 0;
+		bool ActivateListener(Listener* listener) override = 0;
+		void GetListenerInfo(Listener* listener, String& address) override = 0;
+		void DeactivateListener(Listener* listener) override = 0;
+		void CloseListener(Listener* listener) override = 0;
 
-		virtual Connection* OpenConnection(Dispatcher* dispatcher, const TWrapper<void, EVENT>& callback, const String& address) = 0;
-		virtual bool ActivateConnection(Connection* connection) = 0;
-		virtual void GetConnectionInfo(Connection* connection, String& from, String& to) = 0;
-		virtual void Flush(Connection* connection) = 0;
-		virtual bool ReadConnection(Connection* connection, void* data, size_t& length) = 0;
-		virtual bool WriteConnection(Connection* connection, const void* data, size_t& length) = 0;
-		virtual void DeactivateConnection(Connection* connection) = 0;
-		virtual void CloseConnection(Connection* connection) = 0;
+		Connection* OpenConnection(Dispatcher* dispatcher, const TWrapper<void, EVENT>& callback, const String& address) override = 0;
+		bool ActivateConnection(Connection* connection) override = 0;
+		void GetConnectionInfo(Connection* connection, String& from, String& to) override = 0;
+		void Flush(Connection* connection) override = 0;
+		bool ReadConnection(Connection* connection, void* data, size_t& length) override = 0;
+		bool WriteConnection(Connection* connection, const void* data, size_t& length) override = 0;
+		void DeactivateConnection(Connection* connection) override = 0;
+		void CloseConnection(Connection* connection) override = 0;
 
 		virtual Httpd* OpenHttpd(Listener* listener, const TWrapper<void, Connection*, HttpRequest*>& requestHandler) = 0;
 		virtual bool ActivateHttpd(Httpd* httpd) = 0;

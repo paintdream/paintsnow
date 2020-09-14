@@ -12,7 +12,7 @@
 namespace PaintsNow {
 	class IRandom : public IDevice {
 	public:
-		virtual ~IRandom();
+		~IRandom() override;
 		virtual void Seed(long seed) = 0;
 		virtual void SetConfig(const String& parameter, double value) = 0;
 		virtual double GetConfig(const String& parameter) const = 0;

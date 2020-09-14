@@ -20,14 +20,14 @@ namespace PaintsNow {
 	class LeavesFlute : public TReflected<LeavesFlute, IScript::Library>, public ISyncObject, public IFrame::Callback {
 	public:
 		LeavesFlute(bool nogui, Interfaces& interfaces, const TWrapper<IArchive*, IStreamBase&, size_t>& subArchiveCreator, uint32_t threadCount, uint32_t warpCount);
-		virtual ~LeavesFlute();
-		virtual bool IsRendering() const;
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		~LeavesFlute() override;
+		bool IsRendering() const override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 		Interfaces& GetInterfaces() const;
 		Kernel& GetKernel();
 
 		// Script interfaces
-		virtual void Require(IScript::Request& request);
+		void Require(IScript::Request& request) override;
 		void RequestListenConsole(IScript::Request& request, IScript::Request::Ref callback);
 		void RequestPrint(IScript::Request& request, const String& text);
 		void RequestExit(IScript::Request& request);
@@ -51,11 +51,11 @@ namespace PaintsNow {
 		virtual void Execute(const String& file, const std::vector<String>& params);
 
 	public:
-		virtual void OnInitialize(void* param);
-		virtual void OnRender();
-		virtual void OnWindowSize(const IFrame::EventSize&) override;
-		virtual void OnMouse(const IFrame::EventMouse& mouse) override;
-		virtual void OnKeyboard(const IFrame::EventKeyboard& keyboard) override;
+		void OnInitialize(void* param) override;
+		void OnRender() override;
+		void OnWindowSize(const IFrame::EventSize&) override;
+		void OnMouse(const IFrame::EventMouse& mouse) override;
+		void OnKeyboard(const IFrame::EventKeyboard& keyboard) override;
 		virtual void OnConsoleOutput(const String& text);
 		virtual void Print(const String& text);
 

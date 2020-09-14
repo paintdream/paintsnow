@@ -14,7 +14,7 @@
 namespace PaintsNow {
 	class ITimer : public IDevice {
 	public:
-		virtual ~ITimer();
+		~ITimer() override;
 		struct Timer {};
 		virtual Timer* StartTimer(size_t interval, const TWrapper<void, size_t>& wrapper) = 0;
 		virtual void StopTimer(Timer* timer) = 0;

@@ -12,8 +12,8 @@ namespace PaintsNow {
 	class MultiHashTraceFS : public TReflected<MultiHashTraceFS, IShader> {
 	public:
 		MultiHashTraceFS();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual String GetShaderText() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		String GetShaderText() override;
 
 		BindTexture srcDepthTexture;
 		BindTexture srcLitTexture;

@@ -15,7 +15,7 @@ namespace PaintsNow {
 	public:
 		class Buffer {};
 		class Source {};
-		virtual ~IAudio();
+		~IAudio() override;
 
 		virtual Buffer* CreateBuffer() = 0;
 

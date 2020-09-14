@@ -12,7 +12,7 @@ namespace PaintsNow {
 	class DepthBoundingPass : public TReflected<DepthBoundingPass, PassBase> {
 	public:
 		DepthBoundingPass();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 	public:
 		// Vertex shaders

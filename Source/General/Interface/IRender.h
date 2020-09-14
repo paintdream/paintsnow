@@ -18,7 +18,7 @@ namespace PaintsNow {
 	class IRender;
 	class IRender : public IDevice {
 	public:
-		virtual ~IRender();
+		~IRender() override;
 		class Device {};
 		class Queue {};
 		class Resource {

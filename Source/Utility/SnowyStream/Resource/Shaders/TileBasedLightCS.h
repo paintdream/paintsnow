@@ -12,8 +12,8 @@ namespace PaintsNow {
 	class TileBasedLightCS : public TReflected<TileBasedLightCS, IShader> {
 	public:
 		TileBasedLightCS();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual String GetShaderText() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		String GetShaderText() override;
 	};
 }
 

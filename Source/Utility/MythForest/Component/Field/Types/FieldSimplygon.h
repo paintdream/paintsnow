@@ -15,8 +15,8 @@ namespace PaintsNow {
 
 		FieldSimplygon(SIMPOLYGON_TYPE type);
 
-		virtual Bytes operator [] (const Float3& position) const override;
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		Bytes operator [] (const Float3& position) const override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 	protected:
 		SIMPOLYGON_TYPE type;

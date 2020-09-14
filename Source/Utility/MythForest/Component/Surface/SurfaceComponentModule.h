@@ -12,7 +12,7 @@ namespace PaintsNow {
 	class SurfaceComponentModule : public TReflected<SurfaceComponentModule, ModuleImpl<SurfaceComponent> > {
 	public:
 		SurfaceComponentModule(Engine& engine);
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		TShared<SurfaceComponent> RequestNew(IScript::Request& request);
 		void RequestRebuild(IScript::Request& request, IScript::Delegate<SurfaceComponent> surfaceComponent);

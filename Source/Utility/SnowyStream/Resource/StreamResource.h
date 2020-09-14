@@ -13,15 +13,15 @@ namespace PaintsNow {
 	public:
 		StreamResource(ResourceManager& manager, const String& uniqueID);
 
-		virtual void Download(IArchive& device, void* deviceContext);
-		virtual void Upload(IArchive& device, void* deviceContext);
-		virtual void Attach(IArchive& device, void* deviceContext);
-		virtual void Detach(IArchive& device, void* deviceContext);
+		void Download(IArchive& device, void* deviceContext) override;
+		void Upload(IArchive& device, void* deviceContext) override;
+		void Attach(IArchive& device, void* deviceContext) override;
+		void Detach(IArchive& device, void* deviceContext) override;
 
 		IStreamBase& GetStream();
-		virtual bool operator << (IStreamBase& stream) override;
-		virtual bool operator >> (IStreamBase& stream) const override;
-		virtual IReflectObject* Clone() const override;
+		bool operator << (IStreamBase& stream) override;
+		bool operator >> (IStreamBase& stream) const override;
+		IReflectObject* Clone() const override;
 
 	protected:
 		ShadowStream shadowStream;

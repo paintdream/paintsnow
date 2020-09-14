@@ -13,8 +13,8 @@ namespace PaintsNow {
 	class StreamComponentModule : public TReflected<StreamComponentModule, ModuleImpl<StreamComponent> > {
 	public:
 		StreamComponentModule(Engine& engine);
-		virtual ~StreamComponentModule();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		~StreamComponentModule() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		// static int main(int argc, char* argv[]);
 

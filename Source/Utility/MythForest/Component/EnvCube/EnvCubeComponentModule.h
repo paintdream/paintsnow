@@ -13,8 +13,8 @@ namespace PaintsNow {
 	class EnvCubeComponentModule : public TReflected<EnvCubeComponentModule, TRenderableComponentModule<EnvCubeComponent> > {
 	public:
 		EnvCubeComponentModule(Engine& engine);
-		virtual ~EnvCubeComponentModule();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		~EnvCubeComponentModule() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		TShared<EnvCubeComponent> RequestNew(IScript::Request& request);
 		void RequestSetTexture(IScript::Request& request, IScript::Delegate<EnvCubeComponent> envCubeComponent, IScript::Delegate<TextureResource> textureResource);

@@ -36,13 +36,13 @@ namespace PaintsNow {
 	public:
 		MaterialResource(ResourceManager& manager, const String& uniqueID);
 
-		virtual size_t ReportDeviceMemoryUsage() const;
-		virtual void Upload(IRender& render, void* deviceContext) override;
-		virtual void Download(IRender& render, void* deviceContext) override;
-		virtual void Attach(IRender& render, void* deviceContext) override;
-		virtual void Detach(IRender& render, void* deviceContext) override;
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) override;
+		size_t ReportDeviceMemoryUsage() const override;
+		void Upload(IRender& render, void* deviceContext) override;
+		void Download(IRender& render, void* deviceContext) override;
+		void Attach(IRender& render, void* deviceContext) override;
+		void Detach(IRender& render, void* deviceContext) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) override;
 
 		TShared<MaterialResource> CloneWithOverrideShader(TShared<ShaderResource> override);
 

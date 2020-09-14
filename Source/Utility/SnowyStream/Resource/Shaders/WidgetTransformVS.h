@@ -12,9 +12,9 @@ namespace PaintsNow {
 	class WidgetTransformVS : public TReflected<WidgetTransformVS, IShader> {
 	public:
 		WidgetTransformVS();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
-		virtual String GetShaderText() override;
+		String GetShaderText() override;
 
 	public:
 		IShader::BindBuffer instanceBuffer;

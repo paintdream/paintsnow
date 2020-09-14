@@ -11,7 +11,7 @@ namespace PaintsNow {
 	class MultiHashTracePass : public TReflected<MultiHashTracePass, PassBase> {
 	public:
 		MultiHashTracePass();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		ScreenTransformVS screenTransform;
 		MultiHashTraceFS shaderMultiHashTrace;

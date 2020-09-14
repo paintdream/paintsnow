@@ -19,7 +19,7 @@ namespace PaintsNow {
 			CONNECTION_CUSTOM_BEGIN = WARP_CUSTOM_BEGIN << 4
 		};
 
-		virtual ~Connection();
+		~Connection() override;
 		bool IsValid() const;
 
 		virtual bool Activate();
@@ -27,7 +27,7 @@ namespace PaintsNow {
 
 		void OnEvent(INetwork::EVENT event);
 		void OnEventHttp(int code);
-		virtual void ScriptUninitialize(IScript::Request& request);
+		void ScriptUninitialize(IScript::Request& request) override;
 		String Read();
 		void Write(const String& data);
 

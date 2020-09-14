@@ -13,7 +13,7 @@ namespace PaintsNow {
 	class Module : public TReflected<Module, IScript::Library> {
 	public:
 		Module(Engine& engine);
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 		virtual Unique GetTinyUnique() const;
 		virtual Component* GetEntityUniqueComponent(Entity* entity) const;
 		virtual void TickFrame();
@@ -29,11 +29,11 @@ namespace PaintsNow {
 		ModuleImpl(Engine& engine) : BaseClass(engine) {
 			allocator = TShared<typename T::Allocator>::From(new typename T::Allocator());
 		}
-		virtual Unique GetTinyUnique() const {
+		Unique GetTinyUnique() const override {
 			return UniqueType<T>::Get();
 		}
 
-		virtual Component* GetEntityUniqueComponent(Entity* entity) const {
+		Component* GetEntityUniqueComponent(Entity* entity) const override {
 			return entity->GetUniqueComponent(UniqueType<T>());
 		}
 

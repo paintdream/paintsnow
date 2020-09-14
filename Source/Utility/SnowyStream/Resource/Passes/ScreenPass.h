@@ -14,7 +14,7 @@ namespace PaintsNow {
 	class ScreenPass : public TReflected<ScreenPass, PassBase> {
 	public:
 		ScreenPass();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		// Vertex shaders
 		ScreenTransformVS screenTransform;

@@ -11,7 +11,7 @@ namespace PaintsNow {
 	class ParticleComponent : public TAllocatedTiny<ParticleComponent, Component> {
 	public:
 		ParticleComponent();
-		virtual ~ParticleComponent();
+		~ParticleComponent() override;
 	};
 }
 

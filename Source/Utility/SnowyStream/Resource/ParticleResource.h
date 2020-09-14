@@ -11,12 +11,12 @@ namespace PaintsNow {
 	class ParticleResource : public TReflected<ParticleResource, GraphicResourceBase> {
 	public:
 		ParticleResource(ResourceManager& manager, const String& uniqueID);
-		virtual bool operator << (IStreamBase& stream) override;
-		virtual bool operator >> (IStreamBase& stream) const override;
-		virtual void Upload(IRender& render, void* deviceContext) override;
-		virtual void Download(IRender& render, void* deviceContext) override;
-		virtual void Attach(IRender& render, void* deviceContext) override;
-		virtual void Detach(IRender& render, void* deviceContext) override;
+		bool operator << (IStreamBase& stream) override;
+		bool operator >> (IStreamBase& stream) const override;
+		void Upload(IRender& render, void* deviceContext) override;
+		void Download(IRender& render, void* deviceContext) override;
+		void Attach(IRender& render, void* deviceContext) override;
+		void Detach(IRender& render, void* deviceContext) override;
 
 	};
 }

@@ -22,7 +22,7 @@ namespace PaintsNow {
 	struct VisibilityComponentConfig {
 		struct WorldInstanceData : public TReflected<WorldInstanceData, PassBase::PartialData> {
 		public:
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+			TObject<IReflect>& operator () (IReflect& reflect) override;
 
 			MatrixFloat4x4 worldMatrix;
 			Float3Pair boundingBox;
@@ -79,12 +79,12 @@ namespace PaintsNow {
 
 		typedef VisibilityComponentConfig::InstanceGroup InstanceGroup;
 
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual void Initialize(Engine& engine, Entity* entity) override final;
-		virtual void Uninitialize(Engine& engine, Entity* entity) override final;
-		virtual FLAG GetEntityFlagMask() const override final;
-		virtual void DispatchEvent(Event& event, Entity* entity) override final;
-		virtual Entity* GetHostEntity() const override final;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		void Initialize(Engine& engine, Entity* entity) final;
+		void Uninitialize(Engine& engine, Entity* entity) final;
+		FLAG GetEntityFlagMask() const final;
+		void DispatchEvent(Event& event, Entity* entity) final;
+		Entity* GetHostEntity() const final;
 
 		const Bytes& QuerySample(const Float3& position);
 		static bool IsVisible(const Bytes& sample, TransformComponent* transformComponent);

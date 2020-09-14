@@ -11,7 +11,7 @@ namespace PaintsNow {
 	class FieldComponent : public TAllocatedTiny<FieldComponent, Component> {
 	public:
 		FieldComponent();
-		virtual ~FieldComponent();
+		~FieldComponent() override;
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		Bytes operator [] (const Float3& position) const;
 

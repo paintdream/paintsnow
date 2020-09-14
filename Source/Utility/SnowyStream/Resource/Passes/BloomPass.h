@@ -14,7 +14,7 @@ namespace PaintsNow {
 	class BloomPass : public TReflected<BloomPass, PassBase> {
 	public:
 		BloomPass();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		// Vertex shaders
 		ScreenTransformVS screenTransform;

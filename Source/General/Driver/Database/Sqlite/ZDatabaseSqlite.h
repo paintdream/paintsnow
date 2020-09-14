@@ -13,10 +13,10 @@ namespace PaintsNow {
 	class ZDatabaseSqlite final : public IDatabase {
 	public:
 		ZDatabaseSqlite();
-		virtual ~ZDatabaseSqlite();
-		virtual Database* Connect(IArchive& archive, const String& target, const String& username, const String& password, bool createOnNonExist);
-		virtual void Close(Database* database);
-		virtual MetaData* Execute(Database* database, const String& statementTemplate, MetaData* postData);
+		~ZDatabaseSqlite() override;
+		Database* Connect(IArchive& archive, const String& target, const String& username, const String& password, bool createOnNonExist) override;
+		void Close(Database* database) override;
+		MetaData* Execute(Database* database, const String& statementTemplate, MetaData* postData) override;
 	};
 }
 

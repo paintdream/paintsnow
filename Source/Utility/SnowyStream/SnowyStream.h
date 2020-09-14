@@ -17,25 +17,25 @@ namespace PaintsNow {
 	class SnowyStream : public TReflected<SnowyStream, IScript::Library>, public IUniformResourceManager {
 	public:
 		SnowyStream(Interfaces& interfaces, BridgeSunset& bs, const TWrapper<IArchive*, IStreamBase&, size_t>& subArchiveCreator, const TWrapper<void, const String&>& errorHandler);
-		virtual ~SnowyStream();
+		~SnowyStream() override;
 		IRender::Device* GetRenderDevice() const;
 		IRender::Queue* GetResourceQueue();
 
-		virtual void TickDevice(IDevice& device);
-		virtual void Initialize() override;
-		virtual void Uninitialize() override;
+		void TickDevice(IDevice& device) override;
+		void Initialize() override;
+		void Uninitialize() override;
 		void Reset();
 
 		virtual Interfaces& GetInterfaces() const;
-		virtual TShared<ResourceBase> CreateResource(const String& location, const String& extension = "", bool openExisting = true, Tiny::FLAG flag = 0, IStreamBase* sourceStream = nullptr) override;
-		virtual bool PersistResource(TShared<ResourceBase> resource, const String& extension = "") override;
-		virtual bool MapResource(TShared<ResourceBase> resource, const String& extension = "") override;
-		virtual void UnmapResource(TShared<ResourceBase> resource) override;
+		TShared<ResourceBase> CreateResource(const String& location, const String& extension = "", bool openExisting = true, Tiny::FLAG flag = 0, IStreamBase* sourceStream = nullptr) override;
+		bool PersistResource(TShared<ResourceBase> resource, const String& extension = "") override;
+		bool MapResource(TShared<ResourceBase> resource, const String& extension = "") override;
+		void UnmapResource(TShared<ResourceBase> resource) override;
 		virtual bool RegisterResourceManager(Unique unique, ResourceManager* resourceManager);
 		virtual bool RegisterResourceSerializer(Unique unique, const String& extension, ResourceSerializerBase* serializer);
 
 	public:
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 		TShared<ResourceBase> RequestNewResource(IScript::Request& request, const String& path, const String& expectedResType, bool createAlways);
 		void RequestNewResourcesAsync(IScript::Request& request, std::vector<String>& pathList, String& expectedResType, IScript::Request::Ref callbackStep, IScript::Request::Ref callbackComplete);
 		void RequestLoadExternalResourceData(IScript::Request& request, IScript::Delegate<ResourceBase> resource, const String& externalPath);
@@ -129,7 +129,7 @@ namespace PaintsNow {
 	class MetaResourceExternalPersist : public TReflected<MetaResourceExternalPersist, MetaStreamPersist> {
 	public:
 		MetaResourceExternalPersist();
-		virtual IReflectObject* Clone() const override;
+		IReflectObject* Clone() const override;
 
 		template <class T, class D>
 		inline const MetaResourceExternalPersist& FilterField(T* t, D* d) const {
@@ -144,9 +144,9 @@ namespace PaintsNow {
 
 		typedef MetaResourceExternalPersist Type;
 
-		virtual bool Read(IStreamBase& streamBase, void* ptr) const override;
-		virtual bool Write(IStreamBase& streamBase, const void* ptr) const override;
-		virtual const String& GetUniqueName() const override;
+		bool Read(IStreamBase& streamBase, void* ptr) const override;
+		bool Write(IStreamBase& streamBase, const void* ptr) const override;
+		const String& GetUniqueName() const override;
 
 	private:
 		String uniqueName;

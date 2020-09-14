@@ -13,7 +13,7 @@
 namespace PaintsNow {
 	class HeartVioliner : public TReflected<HeartVioliner, IScript::Library> {
 	public:
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 		// static int main(int argc, char* argv[]);
 		HeartVioliner(IThread& thread, ITimer& factory, BridgeSunset& bridgeSunset);
 

@@ -12,8 +12,8 @@ namespace PaintsNow {
 	class LightEncoderFS : public TReflected<LightEncoderFS, IShader> {
 	public:
 		LightEncoderFS();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual String GetShaderText() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		String GetShaderText() override;
 		BindTexture depthTexture;
 		BindBuffer lightBuffer;
 		enum { MAX_LIGHT_COUNT = 120 };

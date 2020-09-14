@@ -11,8 +11,8 @@ namespace PaintsNow {
 	class RemoteRoutine : public TReflected<RemoteRoutine, SharedTiny> {
 	public:
 		RemoteRoutine(IScript::RequestPool* pool, IScript::Request::Ref ref);
-		virtual ~RemoteRoutine();
-		virtual void ScriptUninitialize(IScript::Request& request) override;
+		~RemoteRoutine() override;
+		void ScriptUninitialize(IScript::Request& request) override;
 		void Clear();
 
 		IScript::RequestPool* pool;
@@ -27,8 +27,8 @@ namespace PaintsNow {
 		};
 
 		RemoteComponent(Engine& engine);
-		virtual ~RemoteComponent();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		~RemoteComponent() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		TShared<RemoteRoutine> Load(const String& code);
 		void Call(IScript::Request& fromRequest, TShared<RemoteRoutine> remoteRoutine, IScript::Request::Arguments& args);

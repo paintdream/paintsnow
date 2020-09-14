@@ -13,9 +13,9 @@
 namespace PaintsNow {
 	class Config : public LeavesApi {
 	public:
-		virtual ~Config();
-		virtual void RegisterFactory(const String& factoryEntry, const String& name, const TWrapper<IDevice*>& factoryBase);
-		virtual void UnregisterFactory(const String& factoryEntry, const String& name);
+		~Config() override;
+		void RegisterFactory(const String& factoryEntry, const String& name, const TWrapper<IDevice*>& factoryBase) override;
+		void UnregisterFactory(const String& factoryEntry, const String& name) override;
 
 		struct Entry {
 			String name;

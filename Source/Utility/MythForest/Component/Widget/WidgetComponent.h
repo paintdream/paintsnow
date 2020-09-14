@@ -16,7 +16,7 @@ namespace PaintsNow {
 		};
 
 		WidgetComponent(TShared<MeshResource> meshResource, TShared<BatchComponent> batchUniforms, TShared<BatchComponent> batchInstancedData);
-		virtual void GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTemplates, std::vector<std::pair<uint32_t, TShared<MaterialResource> > >& materialResources) override;
+		void GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTemplates, std::vector<std::pair<uint32_t, TShared<MaterialResource> > >& materialResources) override;
 
 		// Custom data
 		Float4 inTexCoordRect;

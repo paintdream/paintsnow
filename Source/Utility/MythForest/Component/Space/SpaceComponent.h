@@ -11,7 +11,7 @@ namespace PaintsNow {
 	class SpaceComponent : public TAllocatedTiny<SpaceComponent, Component> {
 	public:
 		SpaceComponent(bool sorted = true);
-		virtual ~SpaceComponent();
+		~SpaceComponent() override;
 
 		enum {
 			SPACECOMPONENT_ORDERED = COMPONENT_CUSTOM_BEGIN,
@@ -28,15 +28,15 @@ namespace PaintsNow {
 
 		Entity* GetRootEntity() const;
 		void SetRootEntity(Entity* entity);
-		virtual FLAG GetEntityFlagMask() const override;
-		virtual void DispatchEvent(Event& event, Entity* entity) override;
-		virtual void UpdateBoundingBox(Engine& engine, Float3Pair& box) override;
+		FLAG GetEntityFlagMask() const override;
+		void DispatchEvent(Event& event, Entity* entity) override;
+		void UpdateBoundingBox(Engine& engine, Float3Pair& box) override;
 		const Float3Pair& GetBoundingBox() const;
-		virtual float Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const override;
+		float Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const override;
 
 	protected:
-		virtual void Initialize(Engine& engine, Entity* entity) override;
-		virtual void Uninitialize(Engine& engine, Entity* entity) override;
+		void Initialize(Engine& engine, Entity* entity) override;
+		void Uninitialize(Engine& engine, Entity* entity) override;
 		void AttachUnsorted(Entity* parent, Entity* child, uint32_t seed);
 		Entity* DetachUnsorted(Entity* child);
 		void UpdateEntityWarpIndex(Entity* entity);

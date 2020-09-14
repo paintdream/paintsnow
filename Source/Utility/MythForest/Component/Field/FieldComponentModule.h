@@ -15,8 +15,8 @@ namespace PaintsNow {
 	class FieldComponentModule : public TReflected<FieldComponentModule, ModuleImpl<FieldComponent> > {
 	public:
 		FieldComponentModule(Engine& engine);
-		virtual ~FieldComponentModule();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		~FieldComponentModule() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		TShared<FieldComponent> RequestNew(IScript::Request& request);
 		void RequestFromSimplygon(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, const String& shapeType);

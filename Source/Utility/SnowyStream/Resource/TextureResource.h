@@ -11,16 +11,16 @@ namespace PaintsNow {
 	public:
 		TextureResource(ResourceManager& manager, const String& uniqueID);
 
-		virtual size_t ReportDeviceMemoryUsage() const;
-		virtual void Upload(IRender& render, void* deviceContext) override;
-		virtual void Download(IRender& render, void* deviceContext) override;
-		virtual void Attach(IRender& render, void* deviceContext) override;
-		virtual void Detach(IRender& render, void* deviceContext) override;
-		virtual bool Compress(const String& compressType) override;
-		virtual bool LoadExternalResource(Interfaces& interfaces, IStreamBase& streamBase, size_t length);
-		virtual void Unmap() override;
+		size_t ReportDeviceMemoryUsage() const override;
+		void Upload(IRender& render, void* deviceContext) override;
+		void Download(IRender& render, void* deviceContext) override;
+		void Attach(IRender& render, void* deviceContext) override;
+		void Detach(IRender& render, void* deviceContext) override;
+		bool Compress(const String& compressType) override;
+		bool LoadExternalResource(Interfaces& interfaces, IStreamBase& streamBase, size_t length) override;
+		void Unmap() override;
 
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 		IRender::Resource* GetTexture() const;
 		IRender::Resource::TextureDescription description;
 

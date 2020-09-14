@@ -15,7 +15,7 @@
 namespace PaintsNow {
 	class ZFilterLAME final : public IFilterBase {
 	public:
-		virtual IStreamBase* CreateFilter(IStreamBase& inputStream) override;
+		IStreamBase* CreateFilter(IStreamBase& inputStream) override;
 	};
 }
 

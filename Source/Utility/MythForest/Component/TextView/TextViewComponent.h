@@ -19,11 +19,11 @@ namespace PaintsNow {
 		};
 
 		TextViewComponent(TShared<FontResource> fontResource, TShared<MeshResource> meshResource, TShared<BatchComponent> batchComponent, TShared<MaterialResource> materialResource);
-		virtual ~TextViewComponent();
-		virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) override;
-		virtual void Initialize(Engine& engine, Entity* entity) override;
-		virtual void Uninitialize(Engine& engine, Entity* entity) override;
-		virtual void UpdateBoundingBox(Engine& engine, Float3Pair& box) override;
+		~TextViewComponent() override;
+		uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) override;
+		void Initialize(Engine& engine, Entity* entity) override;
+		void Uninitialize(Engine& engine, Entity* entity) override;
+		void UpdateBoundingBox(Engine& engine, Float3Pair& box) override;
 
 		struct Element {
 			Element(int16_t h, int16_t fs);

@@ -12,7 +12,7 @@
 namespace PaintsNow {
 	class IDebugger : public IDevice {
 	public:
-		virtual ~IDebugger();
+		~IDebugger() override;
 		virtual void SetDumpHandler(const String& path, const TWrapper<bool>& handler) = 0;
 		virtual void StartDump(const String& options) = 0;
 		virtual void EndDump() = 0;

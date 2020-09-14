@@ -15,7 +15,7 @@ namespace PaintsNow {
 	class IArchive;
 	class IImage : public IDevice {
 	public:
-		virtual ~IImage();
+		~IImage() override;
 		class Image {};
 		static int GetPixelSize(IRender::Resource::TextureDescription::Format dataType, IRender::Resource::TextureDescription::Layout layout);
 		virtual Image* Create(size_t width, size_t height, IRender::Resource::TextureDescription::Layout layout, IRender::Resource::TextureDescription::Format dataType) const = 0;

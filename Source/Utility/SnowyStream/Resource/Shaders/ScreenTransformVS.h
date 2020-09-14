@@ -12,8 +12,8 @@ namespace PaintsNow {
 	class ScreenTransformVS : public TReflected<ScreenTransformVS, IShader> {
 	public:
 		ScreenTransformVS();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual String GetShaderText() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		String GetShaderText() override;
 
 		IShader::BindBuffer vertexBuffer;
 

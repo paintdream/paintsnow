@@ -10,8 +10,8 @@
 namespace PaintsNow {
 	class ZFontFreetype final : public IFontBase {
 	public:
-		virtual Font* Load(IStreamBase& stream, size_t length);
-		virtual void Close(Font* font);
-		virtual CHARINFO RenderTexture(Font* font, String& data, FONTCHAR character, size_t bitmapSiz, float hinting) const;
+		Font* Load(IStreamBase& stream, size_t length) override;
+		void Close(Font* font) override;
+		CHARINFO RenderTexture(Font* font, String& data, FONTCHAR character, size_t bitmapSiz, float hinting) const override;
 	};
 }

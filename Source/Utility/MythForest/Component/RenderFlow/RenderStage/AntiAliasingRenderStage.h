@@ -14,10 +14,10 @@ namespace PaintsNow {
 	class AntiAliasingRenderStage : public TReflected<AntiAliasingRenderStage, GeneralRenderStageRect<AntiAliasingPass> > {
 	public:
 		AntiAliasingRenderStage(const String& options);
-		virtual void PrepareResources(Engine& engine, IRender::Queue* queue) override;
-		virtual void UpdatePass(Engine& engine, IRender::Queue* queue) override;
+		void PrepareResources(Engine& engine, IRender::Queue* queue) override;
+		void UpdatePass(Engine& engine, IRender::Queue* queue) override;
 
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		TRenderPortReference<RenderPortCameraView> CameraView;
 		RenderPortTextureInput InputColor;

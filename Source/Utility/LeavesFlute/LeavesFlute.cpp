@@ -16,13 +16,13 @@ using namespace PaintsNow;
 class ScanModules : public IReflect {
 public:
 	ScanModules() : IReflect(true, false) {}
-	virtual void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) {
+	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override {
 		if (!s.IsBasicObject() && s.QueryInterface(UniqueType<IScript::Library>()) != nullptr) {
 			modules.emplace_back(static_cast<IScript::Library*>(&s));
 		}
 	}
 
-	virtual void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) {}
+	void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
 
 	std::vector<IScript::Library*> modules;
 };
@@ -446,11 +446,11 @@ public:
 		return ret;
 	}
 
-	virtual void Abort(void* context) override {
+	void Abort(void* context) override {
 		ReleaseObject();
 	}
 
-	virtual void Execute(void* context) override {
+	void Execute(void* context) override {
 		BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 		IScript::Request& request = *bridgeSunset.AcquireSafe();
 		String text;
@@ -505,7 +505,7 @@ struct InspectCustomStructure : public IReflect {
 		request << endtable;
 	}
 
-	virtual void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) {
+	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override {
 		static Unique typedBaseType = UniqueType<IScript::MetaVariable::TypedBase>::Get();
 		for (const MetaChainBase* t = meta; t != nullptr; t = t->GetNext()) {
 			const MetaNodeBase* node = t->GetNode();
@@ -517,7 +517,7 @@ struct InspectCustomStructure : public IReflect {
 		}
 	}
 
-	virtual void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) {}
+	void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
 
 	static bool FilterType(const String& name, String& ret, String& count) {
 		// parse name
@@ -614,12 +614,12 @@ public:
 template <class T>
 class InspectPrimitiveImpl : public IInspectPrimitive {
 public:
-	virtual void Write(IScript::Request& request, const void* p) {
+	void Write(IScript::Request& request, const void* p) override {
 		const T* t = reinterpret_cast<const T*>(p);
 		request << *t;
 	}
 
-	virtual void Read(IScript::Request& request, void* p) {
+	void Read(IScript::Request& request, void* p) override {
 		T& t = *reinterpret_cast<T*>(p);
 		request >> t;
 	}
@@ -675,7 +675,7 @@ struct InspectProcs : public IReflect {
 		request << endtable;
 	}
 
-	virtual void Enum(size_t value, Unique id, const char* name, const MetaChainBase* meta) override {
+	void Enum(size_t value, Unique id, const char* name, const MetaChainBase* meta) override {
 		request << key(name) << safe_cast<int32_t>(value);
 	}
 
@@ -691,7 +691,7 @@ struct InspectProcs : public IReflect {
 		}
 	}
 
-	virtual void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override {
+	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override {
 		static InspectPrimitives inspectPrimitives;
 		if (s.IsBasicObject()) {
 			if (typeID != refTypeID) {
@@ -740,7 +740,7 @@ struct InspectProcs : public IReflect {
 		}
 	}
 
-	virtual void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {
+	void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {
 		// convert params ...
 		while (meta != nullptr) {
 			const MetaNodeBase* node = meta->GetNode();

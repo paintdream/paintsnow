@@ -289,7 +289,7 @@ class ScriptRaycastTask : public Component::RaycastTask {
 public:
 	ScriptRaycastTask(Engine& engine, uint32_t maxCount, IScript::Request::Ref ref) : RaycastTask(engine, maxCount), callback(ref) {}
 
-	virtual void Finish(rvalue<std::vector<Component::RaycastResult> > r) override {
+	void Finish(rvalue<std::vector<Component::RaycastResult> > r) override {
 		std::vector<Component::RaycastResult>& results = r;
 		engine.GetKernel().YieldCurrentWarp();
 		IScript::Request& request = *engine.bridgeSunset.AcquireSafe();

@@ -12,8 +12,8 @@ namespace PaintsNow {
 	class ScreenSpaceTraceFS : public TReflected<ScreenSpaceTraceFS, IShader> {
 	public:
 		ScreenSpaceTraceFS();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual String GetShaderText() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		String GetShaderText() override;
 
 		BindTexture Depth;
 		BindBuffer traceBuffer;

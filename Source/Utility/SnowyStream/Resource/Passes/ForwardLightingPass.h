@@ -14,7 +14,7 @@ namespace PaintsNow {
 	class ForwardLightingPass : public TReflected<ForwardLightingPass, PassBase> {
 	public:
 		ForwardLightingPass();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 		// Vertex shaders
 		StandardTransformVS standardTransform;
 		// Fragment shaders

@@ -14,7 +14,7 @@ namespace PaintsNow {
 	class BatchComponent : public TAllocatedTiny<BatchComponent, Component>, public IDataUpdater {
 	public:
 		BatchComponent(IRender::Resource::BufferDescription::Usage usage);
-		virtual ~BatchComponent();
+		~BatchComponent() override;
 
 		template <class T>
 		IRender::Resource::DrawCallDescription::BufferRange Allocate(const T& data) {
@@ -22,7 +22,7 @@ namespace PaintsNow {
 		}
 
 		IRender::Resource::DrawCallDescription::BufferRange Allocate(const void* data, uint32_t size);
-		virtual uint32_t Update(IRender& render, IRender::Queue* queue) override;
+		uint32_t Update(IRender& render, IRender::Queue* queue) override;
 		void InstanceInitialize(Engine& engine);
 		void InstanceUninitialize(Engine& engine);
 

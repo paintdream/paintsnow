@@ -13,8 +13,8 @@ namespace PaintsNow {
 	class SoundComponentModule : public TReflected<SoundComponentModule, ModuleImpl<SoundComponent> > {
 	public:
 		SoundComponentModule(Engine& engine);
-		virtual ~SoundComponentModule();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		~SoundComponentModule() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		// static int main(int argc, char* argv[]);
 

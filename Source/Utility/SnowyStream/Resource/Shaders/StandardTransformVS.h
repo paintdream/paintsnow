@@ -12,8 +12,8 @@ namespace PaintsNow {
 	class StandardTransformVS : public TReflected<StandardTransformVS, IShader> {
 	public:
 		StandardTransformVS();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual String GetShaderText() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		String GetShaderText() override;
 
 	protected:
 		IShader::BindBuffer instanceBuffer;

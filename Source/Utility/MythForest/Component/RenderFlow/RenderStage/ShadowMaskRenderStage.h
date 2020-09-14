@@ -15,10 +15,10 @@ namespace PaintsNow {
 	class ShadowMaskRenderStage : public TReflected<ShadowMaskRenderStage, GeneralRenderStageRect<ShadowMaskPass> > {
 	public:
 		ShadowMaskRenderStage(const String& config = "1");
-		virtual void PrepareResources(Engine& engine, IRender::Queue* queue) override;
-		virtual void UpdatePass(Engine& engine, IRender::Queue* queue) override;
+		void PrepareResources(Engine& engine, IRender::Queue* queue) override;
+		void UpdatePass(Engine& engine, IRender::Queue* queue) override;
 
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		TRenderPortReference<RenderPortLightSource> LightSource;
 		TRenderPortReference<RenderPortCameraView> CameraView;

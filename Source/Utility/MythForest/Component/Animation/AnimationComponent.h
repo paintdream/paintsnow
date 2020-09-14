@@ -16,11 +16,11 @@ namespace PaintsNow {
 		};
 
 		AnimationComponent(TShared<SkeletonResource> skeletonResource);
-		virtual ~AnimationComponent();
-		virtual void Initialize(Engine& engine, Entity* entity) override;
-		virtual void Uninitialize(Engine& engine, Entity* entity) override;
-		virtual void DispatchEvent(Event& event, Entity* entity) override;
-		virtual FLAG GetEntityFlagMask() const;
+		~AnimationComponent() override;
+		void Initialize(Engine& engine, Entity* entity) override;
+		void Uninitialize(Engine& engine, Entity* entity) override;
+		void DispatchEvent(Event& event, Entity* entity) override;
+		FLAG GetEntityFlagMask() const override;
 
 		IRender::Resource* AcquireBoneMatrixBuffer(IRender& render, IRender::Queue* queue);
 

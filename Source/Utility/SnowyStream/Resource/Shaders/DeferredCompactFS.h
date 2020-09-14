@@ -12,8 +12,8 @@ namespace PaintsNow {
 	class DeferredCompactEncodeFS : public TReflected<DeferredCompactEncodeFS, IShader> {
 	public:
 		DeferredCompactEncodeFS();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual String GetShaderText() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		String GetShaderText() override;
 
 	protected:
 		// imports
@@ -31,8 +31,8 @@ namespace PaintsNow {
 	class DeferredCompactDecodeFS : public TReflected<DeferredCompactDecodeFS, IShader> {
 	public:
 		DeferredCompactDecodeFS();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual String GetShaderText() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		String GetShaderText() override;
 
 		// input
 		IShader::BindTexture BaseColorOcclusionTexture;

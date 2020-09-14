@@ -29,7 +29,7 @@ namespace PaintsNow {
 			renderableComponent->renderPolicy = renderPolicy.Get();
 		}
 
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override {
+		TObject<IReflect>& operator () (IReflect& reflect) override {
 			BaseClass::operator () (reflect);
 
 			if (reflect.IsReflectMethod()) {

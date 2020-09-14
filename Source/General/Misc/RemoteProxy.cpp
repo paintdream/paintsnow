@@ -106,7 +106,7 @@ class MethodInspector : public IReflect {
 public:
 	MethodInspector(IScript::Object* o, RemoteProxy::ObjectInfo& info) : IReflect(false, true), object(o), objectInfo(info) {}
 
-	~MethodInspector() {
+	~MethodInspector() override {
 		for (size_t i = 0; i < objectInfo.collection.size(); i++) {
 			objectInfo.collection[i].method = Wrap(&objectInfo.collection[i], &RemoteProxy::ObjectInfo::Entry::CallFilter);
 			objectInfo.collection[i].index = (long)i;
@@ -115,8 +115,8 @@ public:
 		objectInfo.needQuery = false;
 	}
 
-	virtual void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) {}
-	virtual void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) {
+	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override {}
+	void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {
 		static Unique typedBaseType = UniqueType<IScript::MetaMethod::TypedBase>::Get();
 		for (const MetaChainBase* t = meta; t != nullptr; t = t->GetNext()) {
 			const MetaNodeBase* node = t->GetNode();
@@ -1125,8 +1125,8 @@ class ReflectRoutines : public IReflect {
 public:
 	// input source
 	ReflectRoutines(IScript::Request& request, const IScript::BaseDelegate& d, RemoteProxy::ObjectInfo& objInfo);
-	virtual void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta);
-	virtual void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta);
+	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override;
+	void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override;
 
 private:
 	std::map<String, TWrapper<std::pair<IScript::Request::Ref, size_t>, IScript::Request&, bool>*> mapNameToWrapper;

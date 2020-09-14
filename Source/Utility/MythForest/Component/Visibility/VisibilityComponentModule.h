@@ -12,7 +12,7 @@ namespace PaintsNow {
 	class VisibilityComponentModule : public TReflected<VisibilityComponentModule, ModuleImpl<VisibilityComponent> > {
 	public:
 		VisibilityComponentModule(Engine& engine);
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		TShared<VisibilityComponent> RequestNew(IScript::Request& request);
 		void RequestSetup(IScript::Request& request, IScript::Delegate<VisibilityComponent> visibilityComponent, float maxDistance, const Float3Pair& range, const UShort3& division, uint32_t frameTimeLimit, uint32_t taskCount, const UShort2& resolution);

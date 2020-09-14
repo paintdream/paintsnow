@@ -12,14 +12,14 @@ namespace PaintsNow {
 	class MeshResource : public TReflected<MeshResource, GraphicResourceBase> {
 	public:
 		MeshResource(ResourceManager& manager, const String& uniqueID);
-		virtual ~MeshResource();
-		virtual void Upload(IRender& render, void* deviceContext) override;
-		virtual void Download(IRender& render, void* deviceContext) override;
-		virtual void Attach(IRender& render, void* deviceContext) override;
-		virtual void Detach(IRender& render, void* deviceContext) override;
-		virtual void Unmap() override;
-		virtual size_t ReportDeviceMemoryUsage() const;
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		~MeshResource() override;
+		void Upload(IRender& render, void* deviceContext) override;
+		void Download(IRender& render, void* deviceContext) override;
+		void Attach(IRender& render, void* deviceContext) override;
+		void Detach(IRender& render, void* deviceContext) override;
+		void Unmap() override;
+		size_t ReportDeviceMemoryUsage() const override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 		const Float3Pair& GetBoundingBox() const;
 
 	public:
@@ -29,7 +29,7 @@ namespace PaintsNow {
 
 		struct BufferCollection : public TReflected<BufferCollection, IReflectObjectComplex> {
 			BufferCollection();
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+			TObject<IReflect>& operator () (IReflect& reflect) override;
 			void GetDescription(std::vector<PassBase::Parameter>& desc, std::vector<std::pair<uint32_t, uint32_t> >& offsets, PassBase::Updater& updater) const;
 			void UpdateData(std::vector<IRender::Resource*>& data) const;
 

@@ -14,13 +14,13 @@ namespace PaintsNow {
 	class MythForest : public TReflected<MythForest, IScript::Library> {
 	public:
 		MythForest(Interfaces& interfaces, SnowyStream& snowyStream, BridgeSunset& bridgeSunset);
-		virtual ~MythForest();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		~MythForest() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		// static int main(int argc, char* argv[]);
-		virtual void TickDevice(IDevice& device) override;
-		virtual void Initialize() override;
-		virtual void Uninitialize() override;
+		void TickDevice(IDevice& device) override;
+		void Initialize() override;
+		void Uninitialize() override;
 		void OnSize(const Int2& size);
 		void OnMouse(const IFrame::EventMouse& mouse);
 		void OnKeyboard(const IFrame::EventKeyboard& keyboard);

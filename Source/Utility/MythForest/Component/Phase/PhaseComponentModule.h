@@ -13,8 +13,8 @@ namespace PaintsNow {
 	class PhaseComponentModule : public TReflected<PhaseComponentModule, ModuleImpl<PhaseComponent> > {
 	public:
 		PhaseComponentModule(Engine& engine);
-		virtual ~PhaseComponentModule();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		~PhaseComponentModule() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		TShared<PhaseComponent> RequestNew(IScript::Request& request, IScript::Delegate<RenderFlowComponent> renderFlowComponent, const String& portName);
 		void RequestSetup(IScript::Request& request, IScript::Delegate<PhaseComponent> phaseComponent, uint32_t phaseCount, uint32_t taskCount, const Float3& range, const UShort2& resolution);

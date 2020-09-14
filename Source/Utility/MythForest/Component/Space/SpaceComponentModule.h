@@ -20,8 +20,8 @@ namespace PaintsNow {
 		void RequestQueryEntities(IScript::Request& request, IScript::Delegate<SpaceComponent> spaceComponent, const Float3Pair& box);
 		uint32_t RequestGetEntityCount(IScript::Request& request, IScript::Delegate<SpaceComponent> spaceComponent);
 
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual void ScriptUninitialize(IScript::Request& request);
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		void ScriptUninitialize(IScript::Request& request) override;
 	};
 }
 

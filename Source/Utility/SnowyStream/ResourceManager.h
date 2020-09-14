@@ -17,7 +17,7 @@ namespace PaintsNow {
 	class ResourceManager : public TReflected<ResourceManager, SharedTiny>, public ISyncObject {
 	public:
 		ResourceManager(IThread& threadApi, IUniformResourceManager& hostManager, const TWrapper<void, const String&>& errorHandler, void* context);
-		virtual ~ResourceManager();
+		~ResourceManager() override;
 		void Insert(TShared<ResourceBase> resource);
 		void Remove(TShared<ResourceBase> resource);
 		void RemoveAll();
@@ -47,11 +47,11 @@ namespace PaintsNow {
 	class DeviceResourceManager : public ResourceManager {
 	public:
 		DeviceResourceManager(IThread& threadApi, IUniformResourceManager& hostManager, T& dev, const TWrapper<void, const String&>& errorHandler, void* context) : ResourceManager(threadApi, hostManager, errorHandler, context), device(dev) {}
-		virtual Unique GetDeviceUnique() const {
+		Unique GetDeviceUnique() const override {
 			return UniqueType<T>::Get();
 		}
 
-		virtual void InvokeAttach(ResourceBase* resource, void* deviceContext) override {
+		void InvokeAttach(ResourceBase* resource, void* deviceContext) override {
 			assert(resource != nullptr);
 			assert(!(resource->Flag() & ResourceBase::RESOURCE_ATTACHED));
 			resource->Flag().fetch_or(ResourceBase::RESOURCE_ATTACHED, std::memory_order_acquire);
@@ -59,7 +59,7 @@ namespace PaintsNow {
 			typedResource->Attach(device, deviceContext != nullptr ? deviceContext : GetContext());
 		}
 
-		virtual void InvokeDetach(ResourceBase* resource, void* deviceContext) override {
+		void InvokeDetach(ResourceBase* resource, void* deviceContext) override {
 			assert(resource != nullptr);
 			assert(resource->Flag() & ResourceBase::RESOURCE_ATTACHED);
 			DeviceResourceBase<T>* typedResource = static_cast<DeviceResourceBase<T>*>(resource);
@@ -67,7 +67,7 @@ namespace PaintsNow {
 			resource->Flag().fetch_and(~ResourceBase::RESOURCE_ATTACHED, std::memory_order_release);
 		}
 
-		virtual void InvokeUpload(ResourceBase* resource, void* deviceContext) override {
+		void InvokeUpload(ResourceBase* resource, void* deviceContext) override {
 			assert(resource != nullptr);
 			assert(resource->Flag() & ResourceBase::TINY_MODIFIED);
 			resource->Flag().fetch_and(~ResourceBase::RESOURCE_UPLOADED, std::memory_order_release);
@@ -75,7 +75,7 @@ namespace PaintsNow {
 			typedResource->Upload(device, deviceContext != nullptr ? deviceContext : GetContext());
 		}
 
-		virtual void InvokeDownload(ResourceBase* resource, void* deviceContext) override {
+		void InvokeDownload(ResourceBase* resource, void* deviceContext) override {
 			assert(resource != nullptr);
 			resource->Flag().fetch_and(~ResourceBase::RESOURCE_DOWNLOADED, std::memory_order_release);
 			DeviceResourceBase<T>* typedResource = static_cast<DeviceResourceBase<T>*>(resource);
@@ -88,7 +88,7 @@ namespace PaintsNow {
 
 	class ResourceSerializerBase : public TReflected<ResourceSerializerBase, SharedTiny> {
 	public:
-		virtual ~ResourceSerializerBase();
+		~ResourceSerializerBase() override;
 		TShared<ResourceBase> DeserializeFromArchive(ResourceManager& manager, IArchive& archive, const String& path, IFilterBase& protocol, bool openExisting, Tiny::FLAG flag);
 		bool MapFromArchive(ResourceBase* resource, IArchive& archive, IFilterBase& protocol, const String& path);
 		bool SerializeToArchive(ResourceBase* resource, IArchive& archive, IFilterBase& protocol, const String& path);
@@ -105,12 +105,12 @@ namespace PaintsNow {
 	public:
 		ResourceReflectedSerializer(const String& ext) : extension(ext) {}
 	protected:
-		virtual const String& GetExtension() const { return extension; }
-		virtual Unique GetDeviceUnique() const {
+		const String& GetExtension() const override { return extension; }
+		Unique GetDeviceUnique() const override {
 			return UniqueType<typename T::DriverType>::Get();
 		}
 
-		virtual bool LoadData(ResourceBase* res, IFilterBase& protocol, IStreamBase& stream) {
+		bool LoadData(ResourceBase* res, IFilterBase& protocol, IStreamBase& stream) override {
 			IStreamBase* filter = protocol.CreateFilter(stream);
 			assert(filter != nullptr);
 			bool success = *filter >> *res;
@@ -118,7 +118,7 @@ namespace PaintsNow {
 			return success;
 		}
 
-		virtual TShared<ResourceBase> Deserialize(ResourceManager& manager, const String& id, IFilterBase& protocol, Tiny::FLAG flag, IStreamBase* stream) {
+		TShared<ResourceBase> Deserialize(ResourceManager& manager, const String& id, IFilterBase& protocol, Tiny::FLAG flag, IStreamBase* stream) override {
 			TShared<T> object = TShared<T>::From(new T(manager, id));
 
 			if (stream != nullptr) {
@@ -142,7 +142,7 @@ namespace PaintsNow {
 			return object();
 		}
 
-		virtual bool Serialize(ResourceBase* object, IFilterBase& protocol, IStreamBase& stream) {
+		bool Serialize(ResourceBase* object, IFilterBase& protocol, IStreamBase& stream) override {
 			IStreamBase* filter = protocol.CreateFilter(stream);
 			assert(filter != nullptr);
 			bool state = *filter << *object;

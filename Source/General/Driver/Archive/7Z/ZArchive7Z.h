@@ -21,13 +21,13 @@ namespace PaintsNow {
 	class ZArchive7Z final : public IArchive {
 	public:
 		ZArchive7Z(IStreamBase& stream, size_t len);
-		virtual ~ZArchive7Z();
-		virtual const String& GetRootPath() const;
-		virtual void SetRootPath(const String& path);
-		virtual IStreamBase* Open(const String& uri, bool write, size_t& length, uint64_t* lastModifiedTime = nullptr);
-		virtual void Query(const String& uri, const TWrapper<void, bool, const String&>& wrapper) const;
-		virtual bool IsReadOnly() const;
-		virtual bool Delete(const String& uri);
+		~ZArchive7Z() override;
+		const String& GetRootPath() const override;
+		void SetRootPath(const String& path) override;
+		IStreamBase* Open(const String& uri, bool write, size_t& length, uint64_t* lastModifiedTime = nullptr) override;
+		void Query(const String& uri, const TWrapper<void, bool, const String&>& wrapper) const override;
+		bool IsReadOnly() const override;
+		bool Delete(const String& uri) override;
 
 		static int main(int argc, char* argv[]);
 

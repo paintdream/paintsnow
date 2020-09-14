@@ -11,7 +11,7 @@ namespace PaintsNow {
 	class RenderPolicy : public TReflected<RenderPolicy, SharedTiny> {
 	public:
 		RenderPolicy();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		String renderPortName;
 		uint32_t priority;

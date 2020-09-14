@@ -11,7 +11,7 @@ namespace PaintsNow {
 	class Zipper : public TReflected<Zipper, WarpTiny> {
 	public:
 		Zipper(IArchive* archive, IStreamBase* streamBase);
-		virtual ~Zipper();
+		~Zipper() override;
 
 	protected:
 		IArchive* archive;

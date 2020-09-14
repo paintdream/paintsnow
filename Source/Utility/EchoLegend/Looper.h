@@ -8,7 +8,7 @@ namespace PaintsNow {
 	class Looper : public TReflected<Looper, WarpTiny> {
 	public:
 		Looper(BridgeSunset& bridgeSunset, INetwork& network);
-		virtual ~Looper();
+		~Looper() override;
 		virtual bool Activate() = 0;
 		virtual void Deactivate() = 0;
 		void AsyncActivate(IScript::Request& request);

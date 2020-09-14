@@ -13,7 +13,7 @@ namespace PaintsNow {
 	class Unit : public TReflected<Unit, WarpTiny> {
 	public:
 		virtual String GetDescription() const;
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		enum {
 			UNIT_CUSTOM_BEGIN = WARP_CUSTOM_BEGIN
@@ -23,7 +23,7 @@ namespace PaintsNow {
 	class MetaUnitIdentifier : public TReflected<MetaUnitIdentifier, MetaStreamPersist> {
 	public:
 		MetaUnitIdentifier();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		template <class T, class D>
 		inline const MetaUnitIdentifier& FilterField(T* t, D* d) const {
@@ -37,9 +37,9 @@ namespace PaintsNow {
 
 		typedef MetaUnitIdentifier Type;
 
-		virtual bool Read(IStreamBase& streamBase, void* ptr) const;
-		virtual bool Write(IStreamBase& streamBase, const void* ptr) const;
-		virtual const String& GetUniqueName() const;
+		bool Read(IStreamBase& streamBase, void* ptr) const override;
+		bool Write(IStreamBase& streamBase, const void* ptr) const override;
+		const String& GetUniqueName() const override;
 
 	private:
 		String uniqueName;

@@ -32,7 +32,7 @@ namespace PaintsNow {
 		};
 
 		struct WorldGlobalData : public TReflected<WorldGlobalData, PassBase::PartialData> {
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+			TObject<IReflect>& operator () (IReflect& reflect) override;
 			MatrixFloat4x4 viewProjectionMatrix;
 			MatrixFloat4x4 projectionMatrix;
 			MatrixFloat4x4 lastViewProjectionMatrix;
@@ -47,7 +47,7 @@ namespace PaintsNow {
 
 		struct WorldInstanceData : public TReflected<WorldInstanceData, PassBase::PartialData> {
 			WorldInstanceData() : viewReference(0), fadeRatio(0) {}
-			virtual TObject<IReflect>& operator () (IReflect& reflect);
+			TObject<IReflect>& operator () (IReflect& reflect) override;
 
 			MatrixFloat4x4 worldMatrix;
 			Float3Pair boundingBox;
@@ -91,11 +91,11 @@ namespace PaintsNow {
 
 		struct TaskData : public TReflected<TaskData, SharedTiny> {
 			TaskData(uint32_t warpCount);
-			virtual ~TaskData();
+			~TaskData() override;
 			void Cleanup(IRender& render);
 			void Destroy(IRender& render);
 
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+			TObject<IReflect>& operator () (IReflect& reflect) override;
 
 			struct PolicyData {
 				PolicyData();
@@ -153,10 +153,10 @@ namespace PaintsNow {
 		typedef typename CameraComponentConfig::InstanceGroup InstanceGroup;
 
 		CameraComponent(TShared<RenderFlowComponent> renderFlowComponent, const String& cameraViewPortName);
-		virtual void Initialize(Engine& engine, Entity* entity) override;
-		virtual void Uninitialize(Engine& engine, Entity* entity) override;
-		virtual Tiny::FLAG GetEntityFlagMask() const override;
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		void Initialize(Engine& engine, Entity* entity) override;
+		void Uninitialize(Engine& engine, Entity* entity) override;
+		Tiny::FLAG GetEntityFlagMask() const override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		void BindRootEntity(Engine& engine, Entity* entity);
 		uint32_t GetCollectedEntityCount() const;
@@ -169,7 +169,7 @@ namespace PaintsNow {
 		typedef CameraComponentConfig::EnvCubeElement EnvCubeElement;
 
 	protected:
-		virtual void DispatchEvent(Event& event, Entity* entity) override;
+		void DispatchEvent(Event& event, Entity* entity) override;
 		void OnTickHost(Engine& engine, Entity* entity);
 		void OnTickCameraViewPort(Engine& engine, RenderPort& renderPort, IRender::Queue* queue);
 		void UpdateTaskData(Engine& engine, Entity* hostEntity);

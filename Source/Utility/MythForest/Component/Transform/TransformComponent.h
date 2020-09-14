@@ -16,9 +16,9 @@ namespace PaintsNow {
 			TRANSFORMCOMPONENT_DYNAMIC = COMPONENT_CUSTOM_BEGIN,
 			TRANSFORMCOMPONENT_CUSTOM_BEGIN = COMPONENT_CUSTOM_BEGIN << 1
 		};
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual void UpdateBoundingBox(Engine& engine, Float3Pair& box) override;
-		virtual float Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		void UpdateBoundingBox(Engine& engine, Float3Pair& box) override;
+		float Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const override;
 
 		const Float3Pair& GetLocalBoundingBox() const;
 

@@ -12,8 +12,8 @@ namespace PaintsNow {
 	class MultiHashSetupFS : public TReflected<MultiHashSetupFS, IShader> {
 	public:
 		MultiHashSetupFS();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual String GetShaderText() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		String GetShaderText() override;
 
 		BindTexture noiseTexture;
 

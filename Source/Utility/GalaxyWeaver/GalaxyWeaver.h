@@ -12,7 +12,7 @@ namespace PaintsNow {
 	class GalaxyWeaver : public TReflected<GalaxyWeaver, IScript::Library> {
 	public:
 		GalaxyWeaver(IThread& threadApi, ITunnel& network, BridgeSunset& bridgeSunset, SnowyStream& snowyStream, MythForest& mythForest);
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 	public:
 		TShared<Weaver> RequestNewWeaver(IScript::Request& request, const String& config);

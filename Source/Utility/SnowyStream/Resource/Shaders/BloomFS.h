@@ -10,8 +10,8 @@ namespace PaintsNow {
 	class BloomFS : public TReflected<BloomFS, IShader> {
 	public:
 		BloomFS();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual String GetShaderText() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		String GetShaderText() override;
 
 		BindTexture screenTexture;
 		BindBuffer uniformBloomBuffer;

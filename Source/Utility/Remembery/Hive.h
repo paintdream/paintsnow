@@ -11,9 +11,9 @@ namespace PaintsNow {
 	class Hive : public TReflected<Hive, WarpTiny> {
 	public:
 		Hive(IDatabase& base, IDatabase::Database* database);
-		virtual ~Hive();
+		~Hive() override;
 
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 		TShared<Honey> Execute(const String& sql, HoneyData& honeyData);
 
 	private:

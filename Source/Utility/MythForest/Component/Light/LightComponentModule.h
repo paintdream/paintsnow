@@ -12,7 +12,7 @@ namespace PaintsNow {
 	class LightComponentModule : public TReflected<LightComponentModule, TRenderableComponentModule<LightComponent> > {
 	public:
 		LightComponentModule(Engine& engine);
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		TShared<LightComponent> RequestNew(IScript::Request& request);
 		void RequestSetLightDirectional(IScript::Request& request, IScript::Delegate<LightComponent> lightComponent, bool directional);

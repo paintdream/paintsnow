@@ -15,11 +15,11 @@ namespace PaintsNow {
 	class PhaseLightRenderStage : public TReflected<PhaseLightRenderStage, GeneralRenderStageRect<MultiHashTracePass> > {
 	public:
 		PhaseLightRenderStage(const String& s);
-		virtual void PrepareResources(Engine& engine, IRender::Queue* queue) override;
-		virtual void UpdatePass(Engine& engine, IRender::Queue* queue) override;
-		virtual void Tick(Engine& engine, IRender::Queue* queue) override;
+		void PrepareResources(Engine& engine, IRender::Queue* queue) override;
+		void UpdatePass(Engine& engine, IRender::Queue* queue) override;
+		void Tick(Engine& engine, IRender::Queue* queue) override;
 
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		TRenderPortReference<RenderPortCameraView> CameraView;
 		RenderPortTextureInput InputColor;

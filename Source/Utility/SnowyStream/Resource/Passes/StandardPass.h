@@ -14,7 +14,7 @@ namespace PaintsNow {
 	class StandardPass : public TReflected<StandardPass, PassBase> {
 	public:
 		StandardPass();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 	protected:
 		// Vertex shaders

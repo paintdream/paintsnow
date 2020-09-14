@@ -13,8 +13,8 @@ namespace PaintsNow {
 	class ParticleComponentModule : public TReflected<ParticleComponentModule, ModuleImpl<ParticleComponent> > {
 	public:
 		ParticleComponentModule(Engine& engine);
-		virtual ~ParticleComponentModule();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		~ParticleComponentModule() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		TShared<ParticleComponent> RequestNew(IScript::Request& request);
 		void RequestRebuild(IScript::Request& request, IScript::Delegate<ParticleComponent> particleComponent);

@@ -12,8 +12,8 @@ namespace PaintsNow {
 	class SurfaceVS : public TReflected<SurfaceVS, IShader> {
 	public:
 		SurfaceVS();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual String GetShaderText() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		String GetShaderText() override;
 	};
 }
 

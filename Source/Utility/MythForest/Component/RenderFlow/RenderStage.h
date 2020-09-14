@@ -53,7 +53,7 @@ namespace PaintsNow {
 		// gcc do not support referencing base type in template class. manunaly specified here.
 		typedef TReflected<GeneralRenderStage<T>, RenderStage> BaseClass;
 		GeneralRenderStage(uint32_t colorAttachmentCount = 1) : BaseClass(colorAttachmentCount) {}
-		virtual void PrepareResources(Engine& engine, IRender::Queue* queue) override {
+		void PrepareResources(Engine& engine, IRender::Queue* queue) override {
 			// create specified shader resource (if not exists)
 			String path = ShaderResource::GetShaderPathPrefix() + UniqueType<T>::Get()->GetBriefName();
 			sharedShader = engine.snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), path, true, 0, nullptr);
@@ -85,7 +85,7 @@ namespace PaintsNow {
 		// gcc do not support referencing base type in template class. manunaly specified here.
 		typedef TReflected<GeneralRenderStageRect<T>, GeneralRenderStage<T> > BaseClass;
 		GeneralRenderStageRect(uint32_t colorAttachmentCount = 1) : BaseClass(colorAttachmentCount) {}
-		virtual void PrepareResources(Engine& engine, IRender::Queue* queue) override {
+		void PrepareResources(Engine& engine, IRender::Queue* queue) override {
 			// create specified shader resource (if not exists)
 			const String path = "[Runtime]/MeshResource/StandardSquare";
 			quadMeshResource = engine.snowyStream.CreateReflectedResource(UniqueType<MeshResource>(), path, true, 0, nullptr);
@@ -94,7 +94,7 @@ namespace PaintsNow {
 		}
 
 		// Helper functions
-		virtual void UpdatePass(Engine& engine, IRender::Queue* queue) override {
+		void UpdatePass(Engine& engine, IRender::Queue* queue) override {
 			BaseClass::UpdatePass(engine, queue);
 
 			IRender& render = engine.interfaces.render;
@@ -120,7 +120,7 @@ namespace PaintsNow {
 			render.UploadResource(queue, BaseClass::drawCallResource, &copy);
 		}
 
-		virtual void Commit(Engine& engine, std::vector<IRender::Queue*>& queues, std::vector<IRender::Queue*>& instantQueues, std::vector<IRender::Queue*>& deletedQueues, IRender::Queue* instantQueue) override {
+		void Commit(Engine& engine, std::vector<IRender::Queue*>& queues, std::vector<IRender::Queue*>& instantQueues, std::vector<IRender::Queue*>& deletedQueues, IRender::Queue* instantQueue) override {
 			BaseClass::Commit(engine, queues, instantQueues, deletedQueues, instantQueue);
 			IRender& render = engine.interfaces.render;
 			render.ExecuteResource(instantQueue, BaseClass::drawCallResource);

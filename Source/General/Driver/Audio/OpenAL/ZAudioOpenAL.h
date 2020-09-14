@@ -10,21 +10,21 @@ namespace PaintsNow
 	class ZAudioOpenAL final : public IAudio {
 	public:
 		ZAudioOpenAL();
-		virtual ~ZAudioOpenAL();
-		virtual IAudio::Buffer* CreateBuffer();
-		virtual void SetBufferStream(Buffer* buffer, IAudio::Decoder& stream, bool online);
+		~ZAudioOpenAL() override;
+		IAudio::Buffer* CreateBuffer() override;
+		void SetBufferStream(Buffer* buffer, IAudio::Decoder& stream, bool online) override;
 		virtual void SetBufferData(Buffer* buffer, const void* data, size_t length, Decoder::FORMAT dataType, size_t sampleRate);
-		virtual void DeleteBuffer(Buffer* buffer);
-		virtual IAudio::Source* CreateSource();
-		virtual void DeleteSource(Source* sourceHandle);
-		virtual void SetSourcePosition(Source* sourceHandle, const Float3& position);
-		virtual void SetSourceVolume(Source* sourceHandle, float volume);
-		virtual TWrapper<size_t> SetSourceBuffer(Source* sourceHandle, const Buffer* buffer);
-		virtual void SetListenerPosition(const Float3& position);
-		virtual void Play(Source* sourceHandle);
-		virtual void Pause(Source* sourceHandle);
-		virtual void Rewind(Source* sourceHandle);
-		virtual void Stop(Source* sourceHandle);
+		void DeleteBuffer(Buffer* buffer) override;
+		IAudio::Source* CreateSource() override;
+		void DeleteSource(Source* sourceHandle) override;
+		void SetSourcePosition(Source* sourceHandle, const Float3& position) override;
+		void SetSourceVolume(Source* sourceHandle, float volume) override;
+		TWrapper<size_t> SetSourceBuffer(Source* sourceHandle, const Buffer* buffer) override;
+		void SetListenerPosition(const Float3& position) override;
+		void Play(Source* sourceHandle) override;
+		void Pause(Source* sourceHandle) override;
+		void Rewind(Source* sourceHandle) override;
+		void Stop(Source* sourceHandle) override;
 		void ResetBuffer(Buffer* buffer);
 		// virtual void Seek(Source* sourceHandle, IStreamBase::SEEK_OPTION option, int64_t offset);
 

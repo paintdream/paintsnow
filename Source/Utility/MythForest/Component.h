@@ -35,7 +35,7 @@ namespace PaintsNow {
 		class RaycastTask : public TReflected<RaycastTask, WarpTiny> {
 		public:
 			RaycastTask(Engine& engine, uint32_t maxCount);
-			virtual ~RaycastTask();
+			~RaycastTask() override;
 			virtual void Finish(rvalue<std::vector<RaycastResult> > finalResult) = 0;
 			bool EmplaceResult(rvalue<RaycastResult> item);
 			bool EmplaceResult(std::vector<RaycastResult>& result, rvalue<RaycastResult> item);
@@ -79,7 +79,7 @@ namespace PaintsNow {
 		static inline uint32_t StaticGetQuickUniqueID() { return quickID; }
 
 	private:
-		virtual uint32_t GetQuickUniqueID() const final { return StaticGetQuickUniqueID(); }
+		uint32_t GetQuickUniqueID() const final { return StaticGetQuickUniqueID(); }
 	};
 }
 

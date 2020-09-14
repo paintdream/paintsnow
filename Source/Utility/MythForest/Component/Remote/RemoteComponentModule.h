@@ -14,8 +14,8 @@ namespace PaintsNow {
 	class RemoteComponentModule : public TReflected<RemoteComponentModule, ModuleImpl<RemoteComponent> > {
 	public:
 		RemoteComponentModule(Engine& engine);
-		virtual ~RemoteComponentModule();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		~RemoteComponentModule() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		TShared<RemoteComponent> RequestNew(IScript::Request& request, bool transparentMode);
 		TShared<RemoteRoutine> RequestLoad(IScript::Request& request, IScript::Delegate<RemoteComponent> computeComponent, const String& code);

@@ -68,7 +68,7 @@ public:
 		token.store(0, std::memory_order_release);
 	}
 
-	virtual void Execute(void* context) override {
+	void Execute(void* context) override {
 		BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 		request.DoLock();
 		bridgeSunset.ContinueScriptDispatcher(request, nullptr, 0, continuer);
@@ -76,7 +76,7 @@ public:
 		Complete();
 	}
 
-	virtual void Abort(void* context) override {
+	void Abort(void* context) override {
 		// do not block script processing
 		Execute(context);
 		// Complete();

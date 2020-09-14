@@ -14,8 +14,8 @@ namespace PaintsNow {
 	class ScriptComponentModule : public TReflected<ScriptComponentModule, ModuleImpl<ScriptComponent> > {
 	public:
 		ScriptComponentModule(Engine& engine);
-		virtual ~ScriptComponentModule();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		~ScriptComponentModule() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		TShared<ScriptComponent> RequestNew(IScript::Request& request, const String& name);
 		void RequestSetHandler(IScript::Request& request, IScript::Delegate<ScriptComponent> scriptComponent, const String& event, IScript::Request::Ref handler);

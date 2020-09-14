@@ -13,8 +13,8 @@ namespace PaintsNow {
 	class ExplorerComponentModule : public TReflected<ExplorerComponentModule, ModuleImpl<ExplorerComponent> > {
 	public:
 		ExplorerComponentModule(Engine& engine);
-		virtual ~ExplorerComponentModule();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		~ExplorerComponentModule() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		TShared<ExplorerComponent> RequestNew(IScript::Request& request, const String& componentType);
 		void RequestSetProxyConfig(IScript::Request& request, IScript::Delegate<ExplorerComponent> explorerComponent, IScript::Delegate<Component> component, uint32_t layer, float activateThreshold, float deactivateThreshold);

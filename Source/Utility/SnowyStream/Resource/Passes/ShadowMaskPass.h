@@ -12,7 +12,7 @@ namespace PaintsNow {
 	class ShadowMaskPass : public TReflected<ShadowMaskPass, PassBase> {
 	public:
 		ShadowMaskPass();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 	public:
 		// Vertex shaders

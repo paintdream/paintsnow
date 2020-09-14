@@ -12,16 +12,16 @@ typedef struct FIBITMAP* PFIBITMAP;
 namespace PaintsNow {
 	class ZImageFreeImage final : public IImage {
 	public:
-		virtual Image* Create(size_t width, size_t height, IRender::Resource::TextureDescription::Layout layout, IRender::Resource::TextureDescription::Format dataType) const override;
-		virtual IRender::Resource::TextureDescription::Layout GetLayoutType(Image* image) const override;
-		virtual IRender::Resource::TextureDescription::Format GetDataType(Image* image) const override;
-		virtual size_t GetBPP(Image* image) const override;
-		virtual size_t GetWidth(Image* image) const override;
-		virtual size_t GetHeight(Image* image) const override;
-		virtual void* GetBuffer(Image* image) const override;
-		virtual bool Load(Image* image, IStreamBase& streamBase, size_t length) const override;
-		virtual bool Save(Image* image, IStreamBase& streamBase, const String& type) const override;
-		virtual void Delete(Image* image) const override;
+		Image* Create(size_t width, size_t height, IRender::Resource::TextureDescription::Layout layout, IRender::Resource::TextureDescription::Format dataType) const override;
+		IRender::Resource::TextureDescription::Layout GetLayoutType(Image* image) const override;
+		IRender::Resource::TextureDescription::Format GetDataType(Image* image) const override;
+		size_t GetBPP(Image* image) const override;
+		size_t GetWidth(Image* image) const override;
+		size_t GetHeight(Image* image) const override;
+		void* GetBuffer(Image* image) const override;
+		bool Load(Image* image, IStreamBase& streamBase, size_t length) const override;
+		bool Save(Image* image, IStreamBase& streamBase, const String& type) const override;
+		void Delete(Image* image) const override;
 	};
 }
 

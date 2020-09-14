@@ -24,16 +24,16 @@ namespace PaintsNow {
 		class ValueParser : public ValueParserBase {
 		public:
 			typedef T type;
-			virtual Unique GetValueType() const {
+			Unique GetValueType() const override {
 				static Unique u = UniqueType<T>::Get();
 				return u;
 			}
 
-			virtual void WriteValue(IScript::Request& request, const void* base) const {
+			void WriteValue(IScript::Request& request, const void* base) const override {
 				request << *(reinterpret_cast<const T*>(base));
 			}
 
-			virtual void ReadValue(IScript::Request& request, void* base) const {
+			void ReadValue(IScript::Request& request, void* base) const override {
 				request >> *(reinterpret_cast<T*>(base));
 			}
 		};
@@ -46,8 +46,8 @@ namespace PaintsNow {
 
 		ScriptReflect(IScript::Request& request, bool read, const std::unordered_map<Unique, Type>& reflectParserMap = ScriptReflect::GetGlobalMap());
 
-		virtual void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta);
-		virtual void Method(Unique typeID, const char* name, const TProxy<>* p, const IReflect::Param& retValue, const std::vector<IReflect::Param>& params, const MetaChainBase* meta);
+		void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override;
+		void Method(Unique typeID, const char* name, const TProxy<>* p, const IReflect::Param& retValue, const std::vector<IReflect::Param>& params, const MetaChainBase* meta) override;
 
 		const Type& GetType(Unique id) const;
 		static const std::unordered_map<Unique, Type>& GetGlobalMap();
@@ -90,7 +90,7 @@ namespace PaintsNow {
 	class Bridge : public TReflected<Bridge, IReflectObjectComplex>, public ISyncObject {
 	public:
 		Bridge(IThread& thread);
-		virtual ~Bridge();
+		~Bridge() override;
 
 		virtual IReflectObject* Create(IScript::Request& request, IArchive& archive, const String& path, const String& data) = 0;
 		virtual void Call(IReflectObject* object, const TProxy<>* p, IScript::Request& request) = 0;
@@ -101,8 +101,8 @@ namespace PaintsNow {
 	class Tunnel : public TReflected<Tunnel, WarpTiny> {
 	public:
 		Tunnel(Bridge* bridge, IReflectObject* host);
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual ~Tunnel();
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		~Tunnel() override;
 		void ForwardCall(const TProxy<>* p, IScript::Request& request);
 		Proxy& NewProxy(const TProxy<>* p);
 		IReflectObject* GetHost() const;
@@ -117,8 +117,8 @@ namespace PaintsNow {
 	class ObjectDumper : public ScriptReflect {
 	public:
 		ObjectDumper(IScript::Request& request, Tunnel& tunnel, const std::unordered_map<Unique, Type>& m);
-		virtual void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta);
-		virtual void Method(Unique typeID, const char* name, const TProxy<>* p, const IReflect::Param& retValue, const std::vector<IReflect::Param>& params, const MetaChainBase* meta);
+		void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override;
+		void Method(Unique typeID, const char* name, const TProxy<>* p, const IReflect::Param& retValue, const std::vector<IReflect::Param>& params, const MetaChainBase* meta) override;
 
 	private:
 		IScript::Request& request;

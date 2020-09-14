@@ -12,8 +12,8 @@ namespace PaintsNow {
 	class TextShadingFS : public TReflected<TextShadingFS, IShader> {
 	public:
 		TextShadingFS();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual String GetShaderText() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		String GetShaderText() override;
 
 	public:
 		IShader::BindTexture mainTexture;

@@ -13,8 +13,8 @@ namespace PaintsNow {
 	class NavigateComponentModule : public TReflected<NavigateComponentModule, ModuleImpl<NavigateComponent> > {
 	public:
 		NavigateComponentModule(Engine& engine);
-		virtual ~NavigateComponentModule();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		~NavigateComponentModule() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		TShared<NavigateComponent> RequestNew(IScript::Request& request);
 		void RequestRebuild(IScript::Request& request, IScript::Delegate<NavigateComponent> fieldComponent);

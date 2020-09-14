@@ -13,8 +13,8 @@ namespace PaintsNow {
 	class PassBase : public TReflected<PassBase, IReflectObjectComplex> {
 	public:
 		PassBase();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual ~PassBase();
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		~PassBase() override;
 		IRender::Resource* Compile(IRender& render, IRender::Queue* queue);
 		Bytes ExportHash(bool onlyConstants);
 
@@ -70,8 +70,8 @@ namespace PaintsNow {
 			void Capture(IRender::Resource::DrawCallDescription& drawCallDescription, std::vector<Bytes>& bufferData, uint32_t bufferMask);
 			void Update(IRender& render, IRender::Queue* queue, IRender::Resource::DrawCallDescription& drawCall, std::vector<IRender::Resource*>& newBuffers, std::vector<Bytes>& bufferData, uint32_t bufferMask);
 			void Flush();
-			virtual void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta);
-			virtual void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) {}
+			void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override;
+			void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
 			
 			uint32_t GetBufferCount() const;
 			uint32_t GetTextureCount() const;

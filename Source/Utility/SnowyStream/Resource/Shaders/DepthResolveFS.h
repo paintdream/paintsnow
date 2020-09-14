@@ -12,8 +12,8 @@ namespace PaintsNow {
 	class DepthResolveFS : public TReflected<DepthResolveFS, IShader> {
 	public:
 		DepthResolveFS();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual String GetShaderText() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		String GetShaderText() override;
 		BindTexture depthTexture;
 		BindBuffer uniformBuffer;
 		Float4 resolveParam;

@@ -12,8 +12,8 @@ namespace PaintsNow {
 	class Controller : public TReflected<Controller, ProxyStub>, public IScript::Remote<Weaver> {
 	public:
 		Controller(IThread& threadApi, ITunnel& tunnel, const String& entry);
-		virtual ~Controller();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		~Controller() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 	public:
 		TWrapper<void, const IScript::Request::AutoWrapperBase&, IScript::Request&> CheckVersion;

@@ -16,8 +16,8 @@ namespace PaintsNow {
 	class EchoLegend : public TReflected<EchoLegend, IScript::Library> {
 	public:
 		EchoLegend(IThread& threadApi, INetwork& network, BridgeSunset& b);
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual void ScriptUninitialize(IScript::Request& request);
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		void ScriptUninitialize(IScript::Request& request) override;
 		TShared<WorkDispatcher> RequestOpenDispatcher(IScript::Request& request);
 		void RequestActivateDispatcher(IScript::Request& request, IScript::Delegate<WorkDispatcher> dispatcher);
 		void RequestDeactivateDispatcher(IScript::Request& request, IScript::Delegate<WorkDispatcher> dispatcher);

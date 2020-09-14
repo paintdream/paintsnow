@@ -7,13 +7,13 @@ class LAMEDecoder : public IAudio::Decoder {
 public:
 	LAMEDecoder();
 	// derived from IStreamBase
-	virtual void Flush();
+	void Flush() override;
 	virtual long GetRemaining() const;
-	virtual bool Read(void* p, size_t& len);
-	virtual bool Write(const void* p, size_t& len);
-	virtual bool Transfer(IStreamBase& stream, size_t& len);
-	virtual bool WriteDummy(size_t& len);
-	virtual bool Seek(IStreamBase::SEEK_OPTION option, int64_t offset);
+	bool Read(void* p, size_t& len) override;
+	bool Write(const void* p, size_t& len) override;
+	bool Transfer(IStreamBase& stream, size_t& len) override;
+	bool WriteDummy(size_t& len) override;
+	bool Seek(IStreamBase::SEEK_OPTION option, int64_t offset) override;
 
 	// derived from IFilterBase
 	virtual void Attach(IStreamBase& inputStream);
@@ -21,9 +21,9 @@ public:
 
 	// derived from IAudio::Decoder
 	// Notice that these functions are valid only after a successful call to Read().
-	virtual size_t GetSampleRate() const;
-	virtual FORMAT GetFormat() const;
-	virtual size_t GetSampleCount() const;
+	size_t GetSampleRate() const override;
+	FORMAT GetFormat() const override;
+	size_t GetSampleCount() const override;
 	enum { SAMPLE_COUNT = 4096 };
 	enum { BUFFER_LENGTH = 4096 };
 

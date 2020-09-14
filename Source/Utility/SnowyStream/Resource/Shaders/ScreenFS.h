@@ -12,8 +12,8 @@ namespace PaintsNow {
 	class ScreenFS : public TReflected<ScreenFS, IShader> {
 	public:
 		ScreenFS();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual String GetShaderText() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		String GetShaderText() override;
 
 	public:
 		BindTexture inputColorTexture;

@@ -12,10 +12,10 @@ namespace PaintsNow {
 	class ZDebuggerRenderDoc : public IDebugger {
 	public:
 		ZDebuggerRenderDoc();
-		virtual void SetDumpHandler(const String& path, const TWrapper<bool>& handler) override;
-		virtual void StartDump(const String& options) override;
-		virtual void EndDump() override;
-		virtual void InvokeDump(const String& options) override;
+		void SetDumpHandler(const String& path, const TWrapper<bool>& handler) override;
+		void StartDump(const String& options) override;
+		void EndDump() override;
+		void InvokeDump(const String& options) override;
 
 	private:
 		String dumpPath;

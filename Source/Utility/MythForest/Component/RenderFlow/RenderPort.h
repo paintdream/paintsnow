@@ -12,7 +12,7 @@ namespace PaintsNow {
 	class Engine;
 	class RenderPort : public TReflected<RenderPort, GraphPort<SharedTiny> > {
 	public:
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 		virtual void Initialize(IRender& render, IRender::Queue* queue);
 		virtual void Uninitialize(IRender& render, IRender::Queue* queue);
 		virtual bool UpdateDataStream(RenderPort& source);
@@ -30,13 +30,13 @@ namespace PaintsNow {
 	class TRenderPortReference : public TReflected<TRenderPortReference<T>, RenderPort> {
 	public:
 		TRenderPortReference() : targetRenderPort(nullptr) {}
-		virtual void Initialize(IRender& render, IRender::Queue* mainQueue) override {}
-		virtual void Uninitialize(IRender& render, IRender::Queue* mainQueue) override {}
-		virtual void Tick(Engine& engine, IRender::Queue* queue) override {
+		void Initialize(IRender& render, IRender::Queue* mainQueue) override {}
+		void Uninitialize(IRender& render, IRender::Queue* mainQueue) override {}
+		void Tick(Engine& engine, IRender::Queue* queue) override {
 			RenderPort::Flag().store(targetRenderPort->Flag().load(std::memory_order_relaxed), std::memory_order_relaxed);
 		}
 
-		virtual bool UpdateDataStream(RenderPort& source) override {
+		bool UpdateDataStream(RenderPort& source) override {
 			T* port = source.QueryInterface(UniqueType<T>());
 			assert(port != nullptr);
 			if (port != nullptr) {
@@ -67,10 +67,10 @@ namespace PaintsNow {
 	class RenderPortShaderPass : public TReflected<RenderPortShaderPass<T>, RenderPortParameterAdapter> {
 	public:
 		RenderPortShaderPass(TShared<ShaderResourceImpl<T> >& s) : shaderResource(s) {}
-		virtual void Initialize(IRender& render, IRender::Queue* mainQueue) override {}
-		virtual void Uninitialize(IRender& render, IRender::Queue* mainQueue) override {}
-		virtual bool UpdateDataStream(RenderPort& source) override { return true; }
-		virtual PassBase::Updater& GetUpdater() override { return shaderResource->GetPassUpdater(); }
+		void Initialize(IRender& render, IRender::Queue* mainQueue) override {}
+		void Uninitialize(IRender& render, IRender::Queue* mainQueue) override {}
+		bool UpdateDataStream(RenderPort& source) override { return true; }
+		PassBase::Updater& GetUpdater() override { return shaderResource->GetPassUpdater(); }
 
 		inline T& GetPass() {
 			return static_cast<T&>(shaderResource->GetPass());

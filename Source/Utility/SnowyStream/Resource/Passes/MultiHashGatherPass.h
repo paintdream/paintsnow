@@ -11,7 +11,7 @@ namespace PaintsNow {
 	class MultiHashGatherPass : public TReflected<MultiHashGatherPass, PassBase> {
 	public:
 		MultiHashGatherPass();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		ScreenTransformVS screenTransform;
 		MultiHashGatherFS shaderMultiHashGather;

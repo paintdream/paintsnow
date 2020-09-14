@@ -12,7 +12,7 @@ namespace PaintsNow {
 	class AntiAliasingPass : public TReflected<AntiAliasingPass, PassBase> {
 	public:
 		AntiAliasingPass();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 	public:
 		// Vertex shaders

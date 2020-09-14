@@ -12,7 +12,7 @@ namespace PaintsNow {
 	class LightBufferPass : public TReflected<LightBufferPass, PassBase> {
 	public:
 		LightBufferPass();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 	public:
 		// Vertex shaders

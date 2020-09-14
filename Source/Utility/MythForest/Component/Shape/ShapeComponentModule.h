@@ -13,8 +13,8 @@ namespace PaintsNow {
 	class ShapeComponentModule : public TReflected<ShapeComponentModule, ModuleImpl<ShapeComponent> > {
 	public:
 		ShapeComponentModule(Engine& engine);
-		virtual ~ShapeComponentModule();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		~ShapeComponentModule() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		TShared<ShapeComponent> RequestNew(IScript::Request& request, IScript::Delegate<MeshResource> meshResource);
 		void RequestRebuild(IScript::Request& request, IScript::Delegate<ShapeComponent> shapeComponent, Float4& color);

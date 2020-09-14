@@ -13,7 +13,7 @@ TObject<IReflect>& PassBase::operator () (IReflect& reflect) {
 class ReflectCollectShader : public IReflect {
 public:
 	ReflectCollectShader() : IReflect(true, false) {}
-	virtual void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) {
+	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override {
 		static Unique shaderTypeUnique = UniqueType<IShader::MetaShader>::Get();
 		while (meta != nullptr) {
 			const MetaNodeBase* metaNode = meta->GetNode();
@@ -30,7 +30,7 @@ public:
 		assert(s.IsBasicObject() || s.QueryInterface(UniqueType<IShader>()) == nullptr);
 	}
 
-	virtual void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) {}
+	void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
 
 	typedef std::vector<std::pair<IRender::Resource::ShaderDescription::Stage, IShader*> > ShaderMap;
 	ShaderMap shaders;
@@ -320,7 +320,7 @@ public:
 	Bytes hashValue;
 	HashExporter() : IReflect(true, false, false, false) {}
 	
-	virtual void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) {
+	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override {
 		if (s.IsBasicObject()) {
 			for (const MetaChainBase* chain = meta; chain != nullptr; chain = chain->GetNext()) {
 				const MetaNodeBase* node = chain->GetNode();
@@ -345,7 +345,7 @@ public:
 		}
 	}
 
-	virtual void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) {}
+	void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
 };
 
 Bytes PassBase::ExportHash(bool constantOnly) {
@@ -433,7 +433,7 @@ class ReflectPartial : public IReflect {
 public:
 	ReflectPartial(PassBase::Updater& u) : IReflect(true), updater(u) {}
 
-	virtual void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) {
+	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override {
 		if (s.IsBasicObject()) {
 			PassBase::Parameter* m = nullptr;
 			for (const MetaChainBase* p = meta; p != nullptr; p = p->GetNext()) {

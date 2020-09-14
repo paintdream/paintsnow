@@ -11,6 +11,6 @@ namespace PaintsNow {
 	class SurfaceComponent : public TAllocatedTiny<SurfaceComponent, RenderableComponent> {
 	public:
 		SurfaceComponent();
-		virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) override;
+		uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) override;
 	};
 }

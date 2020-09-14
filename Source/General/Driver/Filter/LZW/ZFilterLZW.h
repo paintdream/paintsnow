@@ -9,7 +9,7 @@
 namespace PaintsNow {
 	class ZFilterLZW final : public IFilterBase {
 	public:
-		virtual IStreamBase* CreateFilter(IStreamBase& streamBase);
+		IStreamBase* CreateFilter(IStreamBase& streamBase) override;
 	};
 }
 

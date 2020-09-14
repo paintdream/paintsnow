@@ -14,10 +14,10 @@ namespace PaintsNow {
 	class BridgeSunset : public TReflected<BridgeSunset, IScript::Library>, public IScript::RequestPool, public ISyncObject {
 	public:
 		BridgeSunset(IThread& threadApi, IScript& script, uint32_t threadCount, uint32_t warpCount);
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual ~BridgeSunset();
-		virtual void ScriptInitialize(IScript::Request& request) override;
-		virtual void ScriptUninitialize(IScript::Request& request) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		~BridgeSunset() override;
+		void ScriptInitialize(IScript::Request& request) override;
+		void ScriptUninitialize(IScript::Request& request) override;
 		void Dispatch(ITask* task);
 		Kernel& GetKernel();
 		void ContinueScriptDispatcher(IScript::Request& request, IHost* host, size_t paramCount, const TWrapper<void, IScript::Request&>& continuer);
@@ -47,7 +47,7 @@ namespace PaintsNow {
 	public:
 		ScriptTaskTemplateBase(IScript::Request::Ref ref) : callback(ref) {}
 
-		virtual void Abort(void* context) override {
+		void Abort(void* context) override {
 			if (deref) {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
@@ -580,7 +580,7 @@ namespace PaintsNow {
 			void operator () (IScript::Request& request, T& arg) {}
 		};
 
-		virtual void Execute(void* context) override {
+		void Execute(void* context) override {
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 			IScript::Request& req = *bridgeSunset.AcquireSafe();
 			req.DoLock();
@@ -621,7 +621,7 @@ namespace PaintsNow {
 			callback(context, std::move(std::get<S>(arguments))...);
 		}
 
-		virtual void Execute(void* context) override {
+		void Execute(void* context) override {
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 			IScript::Request& req = *bridgeSunset.AcquireSafe();
 			Apply(req, gen_seq<sizeof...(Args)>());

@@ -77,10 +77,10 @@ namespace PaintsNow {
 		}
 
 		GraphicResourceBase(ResourceManager& manager, const String& uniqueID);
-		virtual ~GraphicResourceBase();
-		virtual void Attach(IRender& device, void* deviceContext) override;
-		virtual void Detach(IRender& device, void* deviceContext) override;
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		~GraphicResourceBase() override;
+		void Attach(IRender& device, void* deviceContext) override;
+		void Detach(IRender& device, void* deviceContext) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 	};
 }
 

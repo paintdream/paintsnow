@@ -17,12 +17,12 @@ namespace PaintsNow {
 	class Clock : public TReflected<Clock, WarpTiny>, public TaskRepeat {
 	public:
 		Clock(ITimer& base, BridgeSunset& bridgeSunset, int64_t interval, int64_t start, bool mergeTicks);
-		virtual ~Clock();
+		~Clock() override;
 		enum {
 			CLOCK_MERGE_TICKS = WARP_CUSTOM_BEGIN,
 			CLOCK_CUSTOM_BEGIN = WARP_CUSTOM_BEGIN << 1
 		};
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		int64_t Now() const;
 		void Play();
@@ -36,10 +36,10 @@ namespace PaintsNow {
 
 	private:
 		int64_t GetFullClock() const;
-		virtual void ScriptUninitialize(IScript::Request& request);
+		void ScriptUninitialize(IScript::Request& request) override;
 		void OnTimer(size_t interval);
-		virtual void Execute(void* context) override;
-		virtual void Abort(void* context) override;
+		void Execute(void* context) override;
+		void Abort(void* context) override;
 
 	private:
 		BridgeSunset& bridgeSunset;

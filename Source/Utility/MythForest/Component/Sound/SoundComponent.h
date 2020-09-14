@@ -17,11 +17,11 @@ namespace PaintsNow {
 		};
 
 		SoundComponent(TShared<StreamResource> audioResource, IScript::Request::Ref callback);
-		virtual ~SoundComponent();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		~SoundComponent() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
-		virtual void Initialize(Engine& engine, Entity* entity) override;
-		virtual void Uninitialize(Engine& engine, Entity* entity) override;
+		void Initialize(Engine& engine, Entity* entity) override;
+		void Uninitialize(Engine& engine, Entity* entity) override;
 
 		void Step(IScript::Request& request);
 		int64_t GetDuration() const;
@@ -30,7 +30,7 @@ namespace PaintsNow {
 		void Pause(Engine& engine);
 		void Stop(Engine& engine);
 		void Rewind(Engine& engine);
-		virtual void ScriptUninitialize(IScript::Request& request);
+		void ScriptUninitialize(IScript::Request& request) override;
 		bool IsOnline() const;
 		bool IsPlaying() const;
 

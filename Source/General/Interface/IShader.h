@@ -40,7 +40,7 @@ namespace PaintsNow {
 
 			typedef MetaShader Type;
 
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+			TObject<IReflect>& operator () (IReflect& reflect) override;
 			IRender::Resource::ShaderDescription::Stage shaderType;
 		};
 
@@ -62,7 +62,7 @@ namespace PaintsNow {
 
 			typedef TMetaBinding Type;
 
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override {
+			TObject<IReflect>& operator () (IReflect& reflect) override {
 				BaseClass::operator () (reflect);
 
 				if (reflect.IsReflectProperty()) {
@@ -105,7 +105,7 @@ namespace PaintsNow {
 		class BindOption : public TReflected<BindOption, TMetaBinding<const bool*> > {
 		public:
 			BindOption(bool& value) { description = &value; }
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override {
+			TObject<IReflect>& operator () (IReflect& reflect) override {
 				BaseClass::operator () (reflect);
 				return *this;
 			}
@@ -133,7 +133,7 @@ namespace PaintsNow {
 				LIGHT, UNITCOORD, MAINTEXTURE, TEXCOORD };
 
 			BindInput(uint32_t t = GENERAL, const TWrapper<UInt2>& q = TWrapper<UInt2>()) : BaseClass(t), subRangeQueryer(q) {}
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override {
+			TObject<IReflect>& operator () (IReflect& reflect) override {
 				BaseClass::operator () (reflect);
 				return *this;
 			}
@@ -156,7 +156,7 @@ namespace PaintsNow {
 		public:
 			enum SCHEMA { GENERAL, LOCAL, HPOSITION, DEPTH, COLOR, TEXCOORD };
 			BindOutput(uint32_t t = GENERAL) : BaseClass(t) {}
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override {
+			TObject<IReflect>& operator () (IReflect& reflect) override {
 				BaseClass::operator () (reflect);
 				return *this;
 			}
@@ -176,7 +176,7 @@ namespace PaintsNow {
 
 		class BindTexture : public TReflected<BindTexture, TMetaBindingResource<IRender::Resource::TextureDescription> > {
 		public:
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override {
+			TObject<IReflect>& operator () (IReflect& reflect) override {
 				BaseClass::operator () (reflect);
 				return *this;
 			}
@@ -196,7 +196,7 @@ namespace PaintsNow {
 
 		class BindBuffer : public TReflected<BindBuffer, TMetaBindingResource<IRender::Resource::BufferDescription> > {
 		public:
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override {
+			TObject<IReflect>& operator () (IReflect& reflect) override {
 				BaseClass::operator () (reflect);
 				return *this;
 			}

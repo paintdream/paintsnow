@@ -13,7 +13,7 @@ namespace PaintsNow {
 	class CameraComponentModule : public TReflected<CameraComponentModule, ModuleImpl<CameraComponent> > {
 	public:
 		CameraComponentModule(Engine& engine);
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 	public:
 		// Interfaces

@@ -10,7 +10,7 @@ namespace PaintsNow {
 	class Listener : public TReflected<Listener, WarpTiny> {
 	public:
 		Listener(BridgeSunset& bridgeSunset, INetwork& network, WorkDispatcher* disp, IScript::Request::Ref eventHandler, IScript::Request::Ref callback, IScript::Request::Ref connectCallback, const String& ip, bool http, bool packetMode);
-		virtual ~Listener();
+		~Listener() override;
 		enum {
 			LISTENER_HTTP = WARP_CUSTOM_BEGIN,
 			LISTENER_PACKET_MODE = WARP_CUSTOM_BEGIN << 1,
@@ -22,7 +22,7 @@ namespace PaintsNow {
 		void OnEvent(INetwork::EVENT event);
 		const TWrapper<void, INetwork::EVENT> OnAccept(INetwork::Connection* connection);
 		void OnAcceptHttp(INetwork::Connection* connection, INetwork::HttpRequest* request);
-		virtual void ScriptUninitialize(IScript::Request& request);
+		void ScriptUninitialize(IScript::Request& request) override;
 		String GetAddress();
 		virtual bool Activate();
 		virtual void Deactivate();

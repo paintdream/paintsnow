@@ -14,7 +14,7 @@ namespace PaintsNow {
 	class RenderFlowComponentModule : public TReflected<RenderFlowComponentModule, ModuleImpl<RenderFlowComponent> > {
 	public:
 		RenderFlowComponentModule(Engine& engine);
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 		virtual void RegisterNodeTemplate(String& key, const TWrapper<RenderStage*, const String&>& t);
 
 		TShared<RenderFlowComponent> RequestNew(IScript::Request& request);

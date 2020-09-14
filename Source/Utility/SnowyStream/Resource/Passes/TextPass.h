@@ -13,7 +13,7 @@ namespace PaintsNow {
 	public:
 		TextPass();
 
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		TextTransformVS textTransform;
 		TextShadingFS textShading;

@@ -323,7 +323,7 @@ struct ResourceBaseImplOpenGLDesc : public ResourceBaseImplOpenGL {
 		critical.store(0, std::memory_order_relaxed);
 	}
 
-	virtual void SetUploadDescription(IRender::Resource::Description* d) override {
+	void SetUploadDescription(IRender::Resource::Description* d) override {
 		SpinLock(critical);
 		MoveResource(nextDescription, *static_cast<T*>(d));
 		SpinUnLock(critical, 2u);
@@ -352,21 +352,21 @@ struct ResourceBaseImplOpenGLDesc : public ResourceBaseImplOpenGL {
 	}
 #endif
 
-	virtual void SetDownloadDescription(IRender::Resource::Description* d) override {
+	void SetDownloadDescription(IRender::Resource::Description* d) override {
 		downloadDescription = static_cast<T*>(d);
 	}
 
-	virtual void Download(QueueImplOpenGL& queue) override {
+	void Download(QueueImplOpenGL& queue) override {
 		assert(downloadDescription != nullptr);
 		*downloadDescription = currentDescription;
 	}
 	
-	virtual void SyncDownload(QueueImplOpenGL& queue) override {
+	void SyncDownload(QueueImplOpenGL& queue) override {
 		downloadDescription = nullptr;
 	}
 
-	virtual void PreSwap(QueueImplOpenGL& queue) override { assert(false); } // not implemented by default
-	virtual void PostSwap(QueueImplOpenGL& queue) override { assert(false); }
+	void PreSwap(QueueImplOpenGL& queue) override { assert(false); } // not implemented by default
+	void PostSwap(QueueImplOpenGL& queue) override { assert(false); }
 
 protected:
 	T* downloadDescription;
@@ -382,17 +382,17 @@ public:
 
 template <class T>
 struct ResourceImplOpenGL final : public ResourceBaseImplOpenGLDesc<T> {
-	virtual IRender::Resource::Type GetType() const  override { return IRender::Resource::RESOURCE_UNKNOWN; }
-	virtual void Upload(QueueImplOpenGL& queue) override { assert(false); }
-	virtual void Download(QueueImplOpenGL& queue) override { assert(false); }
-	virtual void Execute(QueueImplOpenGL& queue) override { assert(false); }
-	virtual void Delete(QueueImplOpenGL& queue) override { assert(false); }
+	IRender::Resource::Type GetType() const  override { return IRender::Resource::RESOURCE_UNKNOWN; }
+	void Upload(QueueImplOpenGL& queue) override { assert(false); }
+	void Download(QueueImplOpenGL& queue) override { assert(false); }
+	void Execute(QueueImplOpenGL& queue) override { assert(false); }
+	void Delete(QueueImplOpenGL& queue) override { assert(false); }
 };
 
 template <>
 struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public ResourceBaseImplOpenGLDesc<IRender::Resource::TextureDescription> {
 	ResourceImplOpenGL() : textureID(0), textureType(GL_TEXTURE_2D), pixelBufferObjectID(0) {}
-	virtual IRender::Resource::Type GetType() const override { return RESOURCE_TEXTURE; }
+	IRender::Resource::Type GetType() const override { return RESOURCE_TEXTURE; }
 
 	inline void CreateMips(Resource::TextureDescription& d, uint32_t bitDepth, GLuint textureType, GLuint srcLayout, GLuint srcDataType, GLuint format, const void* buffer, size_t length) {
 		GL_GUARD();
@@ -544,7 +544,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 		return bitDepth;
 	}
 	
-	virtual void Upload(QueueImplOpenGL& queue) override {
+	void Upload(QueueImplOpenGL& queue) override {
 		GL_GUARD();
 		Resource::TextureDescription& d = UpdateDescription();
 		// Convert texture format
@@ -793,7 +793,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 		d.data.Clear();
 	}
 
-	virtual void Download(QueueImplOpenGL& queue) override {
+	void Download(QueueImplOpenGL& queue) override {
 		GL_GUARD();
 		assert(downloadDescription != nullptr);
 		GLuint srcLayout, srcDataType, format;
@@ -817,7 +817,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 		glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 	}
 
-	virtual void SyncDownload(QueueImplOpenGL& queue) override {
+	void SyncDownload(QueueImplOpenGL& queue) override {
 		GL_GUARD();
 		assert(pixelBufferObjectID != 0);
 		glBindBuffer(GL_PIXEL_PACK_BUFFER, pixelBufferObjectID);
@@ -831,8 +831,8 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 		downloadDescription = nullptr;
 	}
 
-	virtual void Execute(QueueImplOpenGL& queue) override {} // Not an executable resource
-	virtual void Delete(QueueImplOpenGL& queue) override {
+	void Execute(QueueImplOpenGL& queue) override {} // Not an executable resource
+	void Delete(QueueImplOpenGL& queue) override {
 		GL_GUARD();
 
 		if (textureID != 0) {
@@ -850,11 +850,11 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 		delete this;
 	}
 
-	virtual void PreSwap(QueueImplOpenGL& queue) override {
+	void PreSwap(QueueImplOpenGL& queue) override {
 		queue.swapResource = this;
 	}
 
-	virtual void PostSwap(QueueImplOpenGL& queue) override {
+	void PostSwap(QueueImplOpenGL& queue) override {
 		ResourceImplOpenGL<TextureDescription>* t = static_cast<ResourceImplOpenGL<TextureDescription>*>(queue.swapResource);
 		std::swap(textureID, t->textureID);
 	}
@@ -872,8 +872,8 @@ template <>
 struct ResourceImplOpenGL<IRender::Resource::BufferDescription> final : public ResourceBaseImplOpenGLDesc<IRender::Resource::BufferDescription> {
 	ResourceImplOpenGL() : bufferID(0) {}
 
-	virtual IRender::Resource::Type GetType() const  override { return RESOURCE_BUFFER; }
-	virtual void Upload(QueueImplOpenGL& queue) override {
+	IRender::Resource::Type GetType() const  override { return RESOURCE_BUFFER; }
+	void Upload(QueueImplOpenGL& queue) override {
 		GL_GUARD();
 
 		if (bufferID == 0) {
@@ -913,12 +913,12 @@ struct ResourceImplOpenGL<IRender::Resource::BufferDescription> final : public R
 		d.data.Clear();
 	}
 
-	virtual void Download(QueueImplOpenGL& queue) override {
+	void Download(QueueImplOpenGL& queue) override {
 		assert(false); // not implemented
 	}
 
-	virtual void Execute(QueueImplOpenGL& queue) override {} // Not an executable resource
-	virtual void Delete(QueueImplOpenGL& queue) override {
+	void Execute(QueueImplOpenGL& queue) override {} // Not an executable resource
+	void Delete(QueueImplOpenGL& queue) override {
 		GL_GUARD();
 
 		if (bufferID != 0) {
@@ -938,7 +938,7 @@ struct ResourceImplOpenGL<IRender::Resource::BufferDescription> final : public R
 template <>
 struct ResourceImplOpenGL<IRender::Resource::ShaderDescription> final : public ResourceBaseImplOpenGLDesc<IRender::Resource::ShaderDescription> {
 	ResourceImplOpenGL() {}
-	virtual IRender::Resource::Type GetType() const  override { return RESOURCE_SHADER; }
+	IRender::Resource::Type GetType() const  override { return RESOURCE_SHADER; }
 
 	struct Program {
 		Program() : programID(0), isComputeShader(0) {}
@@ -963,7 +963,7 @@ struct ResourceImplOpenGL<IRender::Resource::ShaderDescription> final : public R
 		}
 	}
 
-	virtual void Upload(QueueImplOpenGL& queue) override {
+	void Upload(QueueImplOpenGL& queue) override {
 		GL_GUARD();
 		Cleanup();
 
@@ -1116,12 +1116,12 @@ struct ResourceImplOpenGL<IRender::Resource::ShaderDescription> final : public R
 		}
 	}
 
-	virtual void Download(QueueImplOpenGL& queue) override {
+	void Download(QueueImplOpenGL& queue) override {
 		assert(false);
 	}
 
-	virtual void Execute(QueueImplOpenGL& queue) override {} // Not an executable resource
-	virtual void Delete(QueueImplOpenGL& queue) override {
+	void Execute(QueueImplOpenGL& queue) override {} // Not an executable resource
+	void Delete(QueueImplOpenGL& queue) override {
 		Cleanup();
 		delete this;
 	}
@@ -1131,11 +1131,11 @@ struct ResourceImplOpenGL<IRender::Resource::ShaderDescription> final : public R
 
 template <>
 struct ResourceImplOpenGL<IRender::Resource::RenderStateDescription> final : public ResourceBaseImplOpenGLDesc<IRender::Resource::RenderStateDescription> {
-	virtual IRender::Resource::Type GetType() const  override { return RESOURCE_RENDERSTATE; }
-	virtual void Upload(QueueImplOpenGL& queue) override {
+	IRender::Resource::Type GetType() const  override { return RESOURCE_RENDERSTATE; }
+	void Upload(QueueImplOpenGL& queue) override {
 		UpdateDescription();
 	}
-	virtual void Download(QueueImplOpenGL& queue) override {}
+	void Download(QueueImplOpenGL& queue) override {}
 
 	static GLuint GetTestEnum(uint8_t type) {
 		switch (type) {
@@ -1158,7 +1158,7 @@ struct ResourceImplOpenGL<IRender::Resource::RenderStateDescription> final : pub
 		return GL_NONE;
 	}
 
-	virtual void Execute(QueueImplOpenGL& queue) override {
+	void Execute(QueueImplOpenGL& queue) override {
 		GL_GUARD();
 
 		IRender::Resource::RenderStateDescription& d = GetDescription();
@@ -1227,7 +1227,7 @@ struct ResourceImplOpenGL<IRender::Resource::RenderStateDescription> final : pub
 		glFlush();
 	}
 
-	virtual void Delete(QueueImplOpenGL& queue) override {
+	void Delete(QueueImplOpenGL& queue) override {
 		delete this;
 	}
 
@@ -1236,7 +1236,7 @@ struct ResourceImplOpenGL<IRender::Resource::RenderStateDescription> final : pub
 template <>
 struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> final : public ResourceBaseImplOpenGLDesc<IRender::Resource::RenderTargetDescription> {
 	ResourceImplOpenGL() : vertexArrayID(0), frameBufferID(0) {}
-	virtual IRender::Resource::Type GetType() const override { return RESOURCE_RENDERTARGET; }
+	IRender::Resource::Type GetType() const override { return RESOURCE_RENDERTARGET; }
 
 #ifdef _DEBUG
 	virtual void SetUploadDescription(IRender::Resource::Description* d) override {
@@ -1265,7 +1265,7 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> final : pu
 		}
 	}
 
-	virtual void Upload(QueueImplOpenGL& queue) override {
+	void Upload(QueueImplOpenGL& queue) override {
 		GL_GUARD();
 		Resource::RenderTargetDescription& d = UpdateDescription();
 
@@ -1349,7 +1349,7 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> final : pu
 		}
 	}
 
-	virtual void Download(QueueImplOpenGL& queue) override {
+	void Download(QueueImplOpenGL& queue) override {
 		// only supports downloading from textures.
 		assert(false);
 	}
@@ -1366,7 +1366,7 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> final : pu
 		}
 	}
 
-	virtual void Execute(QueueImplOpenGL& queue) override {
+	void Execute(QueueImplOpenGL& queue) override {
 		Resource::RenderTargetDescription& d = GetDescription();
 		GL_GUARD();
 
@@ -1495,7 +1495,7 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> final : pu
 		glViewport(range.first.x(), range.first.y(), range.second.x() - range.first.x(), range.second.y() - range.first.y());
 	}
 
-	virtual void Delete(QueueImplOpenGL& queue) override {
+	void Delete(QueueImplOpenGL& queue) override {
 		Cleanup();
 		delete this;
 	}
@@ -1508,8 +1508,8 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> final : pu
 
 template <>
 struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> final : public ResourceBaseImplOpenGLDesc<IRender::Resource::DrawCallDescription> {
-	virtual IRender::Resource::Type GetType() const override { return RESOURCE_DRAWCALL; }
-	virtual void Upload(QueueImplOpenGL& queue) override {
+	IRender::Resource::Type GetType() const override { return RESOURCE_DRAWCALL; }
+	void Upload(QueueImplOpenGL& queue) override {
 #ifdef _DEBUG
 		for (size_t i = 0; i < nextDescription.textureResources.size(); i++) {
 			assert(nextDescription.textureResources[i] != nullptr);
@@ -1522,8 +1522,8 @@ struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> final : public
 		UpdateDescription();
 	}
 
-	virtual void Download(QueueImplOpenGL& queue) override {}
-	virtual void Execute(QueueImplOpenGL& queue) override {
+	void Download(QueueImplOpenGL& queue) override {}
+	void Execute(QueueImplOpenGL& queue) override {
 		GL_GUARD();
 
 		typedef ResourceImplOpenGL<ShaderDescription> Shader;
@@ -1655,7 +1655,7 @@ struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> final : public
 		}
 	}
 
-	virtual void Delete(QueueImplOpenGL& queue) override {
+	void Delete(QueueImplOpenGL& queue) override {
 		delete this;
 	}
 };

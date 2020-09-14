@@ -15,7 +15,7 @@ namespace PaintsNow {
 	public:
 		ModelComponentModule(Engine& engine);
 
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		TShared<ModelComponent> RequestNew(IScript::Request& request, IScript::Delegate<MeshResource> modelResource, IScript::Delegate<BatchComponent> batchComponentHost);
 		void RequestAddMaterial(IScript::Request& request, IScript::Delegate<ModelComponent> modelComponent, uint32_t meshGroupIndex, IScript::Delegate<MaterialResource> materialResource);

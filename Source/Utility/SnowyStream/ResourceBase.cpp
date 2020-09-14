@@ -132,7 +132,7 @@ public:
 		}
 	}
 
-	virtual void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) {
+	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override {
 		// scan MetaResourceInternalPersist	
 		const MetaResourceInternalPersist* resourcePersist = nullptr;
 		while (meta != nullptr) {
@@ -177,7 +177,7 @@ public:
 		currentPath = savedPath;
 	}
 
-	virtual void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) {}
+	void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
 
 	String currentPath;
 	std::vector<ResourceBase::Dependency>& deps;

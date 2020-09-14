@@ -12,8 +12,8 @@ namespace PaintsNow {
 	class ShadowMaskFS : public TReflected<ShadowMaskFS, IShader> {
 	public:
 		ShadowMaskFS();
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual String GetShaderText();
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		String GetShaderText() override;
 
 		BindTexture shadowTexture;
 		BindTexture depthTexture;

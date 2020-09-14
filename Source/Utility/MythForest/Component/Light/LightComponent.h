@@ -20,7 +20,7 @@ namespace PaintsNow {
 		};
 
 		struct WorldInstanceData : public TReflected<WorldInstanceData, PassBase::PartialData> {
-			virtual TObject<IReflect>& operator () (IReflect& reflect);
+			TObject<IReflect>& operator () (IReflect& reflect) override;
 
 			MatrixFloat4x4 worldMatrix;
 			Float4 instancedColor; // currently not used.
@@ -59,7 +59,7 @@ namespace PaintsNow {
 			void Destroy(IRender& render);
 			void RenderFrame(Engine& engine);
 
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+			TObject<IReflect>& operator () (IReflect& reflect) override;
 
 			struct WarpData {
 				typedef std::unordered_map<InstanceKey, InstanceGroup, HashInstanceKey> InstanceGroupMap;
@@ -102,11 +102,11 @@ namespace PaintsNow {
 			LIGHTCOMPONENT_CUSTOM_BEGIN = COMPONENT_CUSTOM_BEGIN << 2
 		};
 
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual FLAG GetEntityFlagMask() const override;
-		virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData);
-		virtual void UpdateBoundingBox(Engine& engine, Float3Pair& box) override;
-		virtual void Uninitialize(Engine& engine, Entity* entity) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		FLAG GetEntityFlagMask() const override;
+		uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) override;
+		void UpdateBoundingBox(Engine& engine, Float3Pair& box) override;
+		void Uninitialize(Engine& engine, Entity* entity) override;
 
 		const Float3& GetColor() const;
 		void SetColor(const Float3& color);

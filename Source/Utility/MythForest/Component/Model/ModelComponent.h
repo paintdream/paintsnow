@@ -21,18 +21,18 @@ namespace PaintsNow {
 		// delayed loader
 		ModelComponent(TShared<MeshResource> meshResource, TShared<BatchComponent> batch);
 
-		virtual String GetDescription() const override;
-		virtual void UpdateBoundingBox(Engine& engine, Float3Pair& box) override;
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual void Initialize(Engine& engine, Entity* entity) override;
-		virtual void Uninitialize(Engine& engine, Entity* entity) override;
+		String GetDescription() const override;
+		void UpdateBoundingBox(Engine& engine, Float3Pair& box) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+		void Initialize(Engine& engine, Entity* entity) override;
+		void Uninitialize(Engine& engine, Entity* entity) override;
 
 		void AddMaterial(uint32_t meshGroupIndex, TShared<MaterialResource>& materialResource);
 		uint32_t CreateOverrider(TShared<ShaderResource> shaderResourceTemplate);
-		virtual size_t ReportGraphicMemoryUsage() const;
+		size_t ReportGraphicMemoryUsage() const override;
 
 	protected:
-		virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) override;
+		uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) override;
 		virtual void GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTemplates, std::vector<std::pair<uint32_t, TShared<MaterialResource> > >& materialResources);
 
 		void Collapse(Engine& engine);

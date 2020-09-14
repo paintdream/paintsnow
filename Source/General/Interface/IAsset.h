@@ -42,7 +42,7 @@ namespace PaintsNow {
 
 		class MeshGroup : public TReflected<MeshGroup, IReflectObjectComplex> {
 		public:
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+			TObject<IReflect>& operator () (IReflect& reflect) override;
 			String name;
 			uint32_t primitiveOffset;
 			uint32_t primitiveCount;
@@ -50,14 +50,14 @@ namespace PaintsNow {
 
 		class TexCoord : public TReflected<TexCoord, IReflectObjectComplex> {
 		public:
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+			TObject<IReflect>& operator () (IReflect& reflect) override;
 
 			std::vector<Float4> coords;
 		};
 
 		class MeshCollection : public TReflected<MeshCollection, IReflectObjectComplex> {
 		public:
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+			TObject<IReflect>& operator () (IReflect& reflect) override;
 
 			std::vector<UInt3> indices;
 			std::vector<Float3> vertices;
@@ -93,7 +93,7 @@ namespace PaintsNow {
 		class Sequence : public TReflected<Sequence<T>, IReflectObjectComplex> {
 		public:
 			typedef TReflected<Sequence<T>, IReflectObjectComplex> BaseClass;
-			virtual TObject<IReflect>& operator () (IReflect& reflect) {
+			TObject<IReflect>& operator () (IReflect& reflect) override {
 				BaseClass::operator () (reflect);
 				if (reflect.IsReflectProperty()) {
 					ReflectProperty(frames);
@@ -117,7 +117,7 @@ namespace PaintsNow {
 		public:
 			class Variable : public TReflected<Variable, IReflectObjectComplex> {
 			public:
-				virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+				TObject<IReflect>& operator () (IReflect& reflect) override;
 				Variable();
 				template <class T>
 				Variable(const String& k, const T& value) {
@@ -155,7 +155,7 @@ namespace PaintsNow {
 				Type type;
 			};
 
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+			TObject<IReflect>& operator () (IReflect& reflect) override;
 
 			std::vector<Variable> variables;
 			IRender::Resource::RenderStateDescription state;
@@ -167,11 +167,11 @@ namespace PaintsNow {
 
 		class BoneAnimation : public TReflected<BoneAnimation, IReflectObjectComplex> {
 		public:
-			virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+			TObject<IReflect>& operator () (IReflect& reflect) override;
 
 			class Joint : public TReflected<Joint, IReflectObjectComplex> {
 			public:
-				virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+				TObject<IReflect>& operator () (IReflect& reflect) override;
 
 				String name;
 				MatrixFloat4x4 offsetMatrix;
@@ -182,7 +182,7 @@ namespace PaintsNow {
 
 			class Channel : public TReflected<Channel, IReflectObjectComplex> {
 			public:
-				virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+				TObject<IReflect>& operator () (IReflect& reflect) override;
 				int jointIndex;
 				RotSequence rotSequence;
 				TransSequence transSequence;
@@ -191,7 +191,7 @@ namespace PaintsNow {
 
 			class Clip : public TReflected<Clip, IReflectObjectComplex> {
 			public:
-				virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+				TObject<IReflect>& operator () (IReflect& reflect) override;
 				String name;
 				float fps;
 				float duration;

@@ -12,7 +12,7 @@ namespace PaintsNow {
 	class CacheComponentModule : public TReflected<CacheComponentModule, ModuleImpl<CacheComponent> > {
 	public:
 		CacheComponentModule(Engine& engine);
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		TShared<CacheComponent> RequestNew(IScript::Request& request);
 		void RequestPushObjects(IScript::Request& request, IScript::Delegate<CacheComponent> cacheComponent, std::vector<IScript::Delegate<SharedTiny> >& objects);

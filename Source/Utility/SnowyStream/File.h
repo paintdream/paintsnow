@@ -10,9 +10,9 @@ namespace PaintsNow {
 	class File : public TReflected<File, WarpTiny> {
 	public:
 		File(IStreamBase* stream, size_t fileSize, uint64_t lastModifiedTime);
-		virtual ~File();
+		~File() override;
 
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 		IStreamBase* GetStream() const;
 		IStreamBase* Detach();
 		size_t GetLength() const;

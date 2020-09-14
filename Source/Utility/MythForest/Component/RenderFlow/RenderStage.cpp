@@ -50,7 +50,7 @@ class AutoAdaptRenderTarget : public IReflect {
 public:
 	AutoAdaptRenderTarget(IRender& r, IRender::Queue* q, uint32_t w, uint32_t h) : IReflect(true, false), render(r), queue(q), width(w), height(h) {}
 
-	virtual void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) {
+	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override {
 		static Unique unique = UniqueType<RenderPortRenderTarget>::Get();
 		if (typeID == unique) {
 			RenderPortRenderTarget& rt = static_cast<RenderPortRenderTarget&>(s);
@@ -70,7 +70,7 @@ public:
 		}
 	}
 
-	virtual void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) {}
+	void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
 
 	IRender& render;
 	IRender::Queue* queue;

@@ -13,10 +13,10 @@ namespace PaintsNow {
 	class ExplorerComponent : public TAllocatedTiny<ExplorerComponent, Component> {
 	public:
 		ExplorerComponent(Unique componentType);
-		virtual ~ExplorerComponent();
+		~ExplorerComponent() override;
 
-		virtual void Initialize(Engine& engine, Entity* entity);
-		virtual void Uninitialize(Engine& engine, Entity* entity);
+		void Initialize(Engine& engine, Entity* entity) override;
+		void Uninitialize(Engine& engine, Entity* entity) override;
 
 		struct ProxyConfig {
 			ProxyConfig();
