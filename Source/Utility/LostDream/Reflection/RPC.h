@@ -9,11 +9,10 @@
 namespace PaintsNow {
 	class RPC : public TReflected<RPC, LostDream::Qualifier> {
 	public:
-		virtual bool Initialize();
-		virtual bool Run(int randomSeed, int length);
-		virtual void Summary();
-
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		bool Initialize() override;
+		bool Run(int randomSeed, int length) override;
+		void Summary() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 	};
 }
 

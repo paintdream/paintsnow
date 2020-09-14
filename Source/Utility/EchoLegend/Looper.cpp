@@ -54,6 +54,9 @@ String Looper::EventToString(INetwork::EVENT event) {
 	case INetwork::ABORT:
 		target = "Error";
 		break;
+	case INetwork::CUSTOM:
+		target = "Custom";
+		break;
 	}
 
 	return target;

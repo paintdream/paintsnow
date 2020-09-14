@@ -98,6 +98,13 @@ static void CopyVariable(uint32_t flag, IScript::Request& request, IScript::Requ
 		case IScript::Request::NIL:
 			request << nil;
 			break;
+		case IScript::Request::BOOLEAN:
+		{
+			bool value;
+			fromRequest >> value;
+			request << value;
+			break;
+		}
 		case IScript::Request::NUMBER:
 		{
 			double value;
@@ -166,6 +173,11 @@ static void CopyVariable(uint32_t flag, IScript::Request& request, IScript::Requ
 			} else {
 				request << object;
 			}
+			break;
+		}
+		case IScript::Request::ANY:
+		{
+			// omitted.
 			break;
 		}
 	}

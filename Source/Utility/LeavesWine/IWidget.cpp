@@ -145,7 +145,7 @@ void IWidget::Property(IReflectObject& s, Unique typeID, Unique refTypeID, const
 	}
 
 	ImGui::SameLine();
-	ImGui::Text(name);
+	ImGui::Text("%s", name);
 	if (layerCount != 0)
 		ImGui::Unindent(8.0f * layerCount);
 	ImGui::NextColumn();
@@ -153,18 +153,18 @@ void IWidget::Property(IReflectObject& s, Unique typeID, Unique refTypeID, const
 	if (s.IsBasicObject() && typeID == refTypeID) {
 		printer(typeID, ptr);
 	} else {
-		ImGui::Text(RemoveNamespace(s.ToString()).c_str());
+		ImGui::Text("%s", RemoveNamespace(s.ToString()).c_str());
 	}
 
 	ImGui::NextColumn();
 	if (refTypeID == typeID) {
-		ImGui::Text(GetTypeName(typeID).c_str());
+		ImGui::Text("%s", GetTypeName(typeID).c_str());
 	} else {
 		IReflectObject* object = *reinterpret_cast<IReflectObject**>(ptr);
 		if (object == nullptr) {
-			ImGui::Text(GetTypeName(typeID).c_str());
+			ImGui::Text("%s", GetTypeName(typeID).c_str());
 		} else {
-			ImGui::Text((GetTypeName(object->GetUnique()) + " * ").c_str());
+			ImGui::Text("%s", (GetTypeName(object->GetUnique()) + " * ").c_str());
 		}
 	}
 	ImGui::NextColumn();
@@ -204,12 +204,12 @@ void IWidget::Method(Unique typeID, const char* name, const TProxy<>* p, const P
 	bool isScriptMethod = strncmp(name, "Request", 7) == 0;
 	ImGui::Text(" ");
 	ImGui::SameLine();
-	ImGui::Text(isScriptMethod ? name + 7 : name);
+	ImGui::Text("%s", isScriptMethod ? name + 7 : name);
 	ImGui::NextColumn();
 	const TMethod<false, Void, Void>& method = *static_cast<const TMethod<false, Void, Void>*>(p);
-	ImGui::Text("0x%p", method.p);
+	ImGui::Text("0x%p", *(void**)&method.p);
 	ImGui::NextColumn();
-	ImGui::Text(isScriptMethod ? "ScriptMethod" : "Method");
+	ImGui::Text("%s", isScriptMethod ? "ScriptMethod" : "Method");
 	ImGui::NextColumn();
 	// make signature
 	std::stringstream ss;
@@ -221,7 +221,7 @@ void IWidget::Method(Unique typeID, const char* name, const TProxy<>* p, const P
 	}
 
 	ss << ")";
-	ImGui::Text(ss.str().c_str());
+	ImGui::Text("%s", ss.str().c_str());
 	ImGui::NextColumn();
 
 	if (layerCount != 0)

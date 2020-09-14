@@ -160,7 +160,7 @@ public:
 				const IReflectObject& prototype = iterator.GetPrototype();
 				while (iterator.Next()) {
 					std::stringstream ss;
-					ss << savedPath << "." << name << "[" + index++ << "]";
+					ss << savedPath << "." << name << "[" << index++ << "]";
 					currentPath = ss.str();
 					if (!prototype.IsBasicObject()) {
 						IReflectObject* p = reinterpret_cast<IReflectObject*>(iterator.Get());
@@ -223,7 +223,8 @@ bool MetaResourceInternalPersist::Read(IStreamBase& streamBase, void* ptr) const
 		TShared<ResourceBase>& resource = *reinterpret_cast<TShared<ResourceBase>*>(ptr);
 		ResourceManager& manager = (const_cast<ResourceManager&>(resourceManager));
 		IUniformResourceManager& uniformResourceManager = manager.GetUniformResourceManager();
-		if (resource = uniformResourceManager.CreateResource(path)) {
+		resource = uniformResourceManager.CreateResource(path);
+		if (resource) {
 			if (!(resource->Flag() & ResourceBase::RESOURCE_UPLOADED) && !(resource->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release) & Tiny::TINY_MODIFIED)) {
 				assert(resource->Flag() & Tiny::TINY_MODIFIED);
 				resource->GetResourceManager().InvokeUpload(resource());

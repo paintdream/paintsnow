@@ -657,7 +657,7 @@ void VisibilityComponent::DispatchTasks(Engine& engine) {
 				break;
 
 			UShort3 coord = nextCoord;
-			if (coord.x() == ~(uint16_t)0)
+			if (coord.x() == (uint16_t)~0)
 				break;
 
 			Cell& center = cells[coord];

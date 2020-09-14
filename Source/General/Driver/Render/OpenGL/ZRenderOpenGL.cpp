@@ -1747,6 +1747,9 @@ void ZRenderOpenGL::DeleteQueue(Queue* queue) {
 // Resource
 IRender::Resource* ZRenderOpenGL::CreateResource(Device* device, Resource::Type resourceType) {
 	switch (resourceType) {
+	case Resource::RESOURCE_UNKNOWN:
+		assert(false);
+		break;
 	case Resource::RESOURCE_TEXTURE:
 		return new ResourceImplOpenGL<Resource::TextureDescription>();
 	case Resource::RESOURCE_BUFFER:

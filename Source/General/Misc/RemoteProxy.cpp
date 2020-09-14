@@ -505,6 +505,8 @@ void RemoteProxy::Request::OnConnection(ITunnel::EVENT event) {
 				delete this;
 			}
 			break;
+		case ITunnel::CUSTOM:
+			break;
 	}
 }
 

@@ -46,7 +46,7 @@ void Repository::RenderItem(Item& item, uint32_t depth) {
 			ImGui::TreePop();
 		}
 	} else {
-		ImGui::Text(item.name.c_str());
+		ImGui::Text("%s", item.name.c_str());
 		if (ImGui::IsItemClicked()) {
 			if (strncmp(item.name.c_str() + item.name.size() - 4, ".pod", 4) == 0) {
 				// collect path

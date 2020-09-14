@@ -248,7 +248,7 @@ void* DynamicObject::Get(const DynamicInfo::Field& field) const {
 	return (char*)this + sizeof(*this) + field.offset;
 }
 
-DynamicObjectWrapper::DynamicObjectWrapper(DynamicUniqueAllocator& allocator) : uniqueAllocator(uniqueAllocator), dynamicObject(nullptr) {}
+DynamicObjectWrapper::DynamicObjectWrapper(DynamicUniqueAllocator& allocator) : uniqueAllocator(allocator), dynamicObject(nullptr) {}
 
 DynamicObjectWrapper::~DynamicObjectWrapper() {
 	if (dynamicObject != nullptr) {

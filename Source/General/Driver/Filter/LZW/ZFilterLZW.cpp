@@ -54,7 +54,7 @@ void FilterLZWImpl::WriteString(const String& key) {
 
 inline size_t ReadBuffer(int32_t& res, const char* from, const char* to) {
 	res = 0;
-	char ch = *from;
+	uint8_t ch = *(const uint8_t*)from;
 
 	size_t count = 0;
 	if (ch >= 0xF0) {
