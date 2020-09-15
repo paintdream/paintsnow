@@ -23,7 +23,7 @@ TObject<IReflect>& SoundComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-TShared<SoundComponent> SoundComponentModule::RequestNew(IScript::Request& request, String path, IScript::Request::Ref callback) {
+TShared<SoundComponent> SoundComponentModule::RequestNew(IScript::Request& request, const String& path, IScript::Request::Ref callback) {
 	CHECK_REFERENCES_WITH_TYPE(callback, IScript::Request::FUNCTION);
 
 	TShared<StreamResource> audioResource = engine.snowyStream.CreateReflectedResource(UniqueType<StreamResource>(), path);

@@ -17,7 +17,7 @@ namespace PaintsNow {
 		void Download(IRender& render, void* deviceContext) override;
 		void Attach(IRender& render, void* deviceContext) override;
 		void Detach(IRender& render, void* deviceContext) override;
-		void FromTexture(TShared<TextureResource> textureResource);
+		void FromTexture(const TShared<TextureResource>& textureResource);
 
 	protected:
 		std::vector<float> terrainData;

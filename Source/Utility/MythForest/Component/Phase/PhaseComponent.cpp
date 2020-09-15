@@ -4,7 +4,9 @@
 #include "../Renderable/RenderableComponent.h"
 #include "../Transform/TransformComponent.h"
 #include "../Explorer/ExplorerComponent.h"
+#include <cmath>
 #include <ctime>
+#include <utility>
 
 const float PI = 3.1415926f;
 static inline float RandFloat() {
@@ -53,7 +55,7 @@ void PhaseComponentConfig::InstanceGroup::Reset() {
 	instanceCount = 0;
 }
 
-PhaseComponent::PhaseComponent(TShared<RenderFlowComponent> renderFlow, const String& portName) : hostEntity(nullptr), maxTracePerTick(8), renderQueue(nullptr), stateResource(nullptr), stateShadowResource(nullptr), range(32, 32, 32), resolution(512, 512), lightCollector(this), renderFlowComponent(renderFlow), lightPhaseViewPortName(portName), rootEntity(nullptr) {}
+PhaseComponent::PhaseComponent(TShared<RenderFlowComponent> renderFlow, const String& portName) : hostEntity(nullptr), maxTracePerTick(8), renderQueue(nullptr), stateResource(nullptr), stateShadowResource(nullptr), range(32, 32, 32), resolution(512, 512), lightCollector(this), renderFlowComponent(std::move(renderFlow)), lightPhaseViewPortName(portName), rootEntity(nullptr) {}
 
 PhaseComponent::~PhaseComponent() {}
 
@@ -327,7 +329,7 @@ void PhaseComponent::TickRender(Engine& engine) {
 	}
 }
 
-void PhaseComponent::CoTaskWriteDebugTexture(Engine& engine, uint32_t index, Bytes& data, TShared<TextureResource> texture) {
+void PhaseComponent::CoTaskWriteDebugTexture(Engine& engine, uint32_t index, Bytes& data, const TShared<TextureResource>& texture) {
 	if (!debugPath.empty()) {
 		std::stringstream ss;
 		ss << debugPath << "phase_" << index << ".png";
@@ -459,7 +461,7 @@ void PhaseComponent::TaskAssembleTaskBounce(Engine& engine, TaskData& task, cons
 	storage.resource = toPhase.irradiance->GetTexture();
 	storage.loadOp = IRender::Resource::RenderTargetDescription::DISCARD;
 	storage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
-	desc.colorStorages.emplace_back(std::move(storage));
+	desc.colorStorages.emplace_back(storage);
 	desc.depthStorage.loadOp = IRender::Resource::RenderTargetDescription::DISCARD; // TODO:
 	desc.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
 	// task.texture = toPhase.irradiance;
@@ -496,7 +498,7 @@ void PhaseComponent::CoTaskAssembleTaskShadow(Engine& engine, TaskData& task, co
 	color.resource = emptyColorAttachment->GetTexture(); // Don't care
 	color.loadOp = IRender::Resource::RenderTargetDescription::DISCARD;
 	color.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
-	desc.colorStorages.emplace_back(std::move(color));
+	desc.colorStorages.emplace_back(color);
 	desc.depthStorage.loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
 	desc.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 
@@ -539,7 +541,7 @@ void PhaseComponent::CoTaskAssembleTaskSetup(Engine& engine, TaskData& task, con
 	for (size_t k = 0; k < sizeof(rt) / sizeof(rt[0]); k++) {
 		IRender::Resource::RenderTargetDescription::Storage storage;
 		storage.resource = rt[k]->GetTexture();
-		desc.colorStorages.emplace_back(std::move(storage));
+		desc.colorStorages.emplace_back(storage);
 	}
 
 	render.UploadResource(task.renderQueue, task.renderTarget, &desc);
@@ -724,7 +726,7 @@ void PhaseComponent::CompleteUpdateLights(Engine& engine, std::vector<LightEleme
 		shadow.viewProjectionMatrix = Math::LookAt(view, dir, up) * projectionMatrix;
 		UpdatePointShadow bakePointShadow;
 		bakePointShadow.shadowIndex = safe_cast<uint32_t>(i);
-		bakePointShadows.push(std::move(bakePointShadow));
+		bakePointShadows.push(bakePointShadow);
 	}
 
 	// generate setup tasks
@@ -732,7 +734,7 @@ void PhaseComponent::CompleteUpdateLights(Engine& engine, std::vector<LightEleme
 	for (size_t j = 0; j < phases.size(); j++) {
 		UpdatePointSetup bakePoint;
 		bakePoint.phaseIndex = safe_cast<uint32_t>(j);
-		bakePointSetups.push(std::move(bakePoint));
+		bakePointSetups.push(bakePoint);
 	}
 
 	// stop all bounces
@@ -773,7 +775,7 @@ void PhaseComponent::LightCollector::CollectComponents(Engine& engine, TaskData&
 
 					const Float3& color = lightComponent->GetColor();
 					element.colorAttenuation = Float4(color.x(), color.y(), color.z(), lightComponent->GetAttenuation());
-					task.warpData[engine.GetKernel().GetCurrentWarpIndex()].lightElements.emplace_back(std::move(element));
+					task.warpData[engine.GetKernel().GetCurrentWarpIndex()].lightElements.emplace_back(element);
 				}
 			}
 		}

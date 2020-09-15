@@ -13,7 +13,7 @@ struct_aligned(64) data {
 	int32_t values[16];
 };
 
-static void TaskRoutine(TShared<TObjectAllocator<data> > trunks, std::vector<data*>& ptrs, size_t k, size_t length, std::atomic<uint32_t>& count, std::atomic<uint32_t>& total) {
+static void TaskRoutine(const TShared<TObjectAllocator<data> >& trunks, std::vector<data*>& ptrs, size_t k, size_t length, std::atomic<uint32_t>& count, std::atomic<uint32_t>& total) {
 	for (size_t i = 0; i < 77777; i++) {
 		data*& p = ptrs[(rand() * length + k) % ptrs.size()];
 		if (p == nullptr) {

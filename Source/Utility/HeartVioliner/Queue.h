@@ -16,7 +16,7 @@ namespace PaintsNow {
 	class Queue : public TReflected<Queue, WarpTiny>, public TaskRepeat {
 	public:
 		Queue();
-		void Attach(TShared<Clock> clock);
+		void Attach(const TShared<Clock>& clock);
 		void Detach();
 
 		void Listen(IScript::Request& request, const IScript::Request::Ref& listener);

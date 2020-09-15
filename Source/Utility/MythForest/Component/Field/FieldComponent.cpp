@@ -21,6 +21,6 @@ Bytes FieldComponent::operator [] (const Float3& position) const {
 	return (*fieldImpl)[position];
 }
 
-void FieldComponent::SetField(TShared<FieldBase> field) {
+void FieldComponent::SetField(const TShared<FieldBase>& field) {
 	fieldImpl = field;
 }

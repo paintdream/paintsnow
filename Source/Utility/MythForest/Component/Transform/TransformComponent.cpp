@@ -1,5 +1,7 @@
 #include "TransformComponent.h"
 
+#include <cmath>
+
 using namespace PaintsNow;
 
 TransformComponent::TransformComponent() : uniqueObjectID(0), transform(MatrixFloat4x4::Identity()) {}

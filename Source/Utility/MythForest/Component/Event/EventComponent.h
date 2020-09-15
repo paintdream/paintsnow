@@ -22,7 +22,7 @@ namespace PaintsNow {
 		void OnKeyboard(Engine& engine, const IFrame::EventKeyboard& keyboard);
 		void OnMouse(Engine& engine, const IFrame::EventMouse& mouse);
 		void OnSize(Engine& engine, const IFrame::EventSize& size);
-		void InstallTick(Engine& engine, TShared<Clock> clock);
+		void InstallTick(Engine& engine, const TShared<Clock>& clock);
 		void UninstallTick(Engine& engine);
 		void InstallFrame();
 		void UninstallFrame();

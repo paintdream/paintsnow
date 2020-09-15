@@ -31,11 +31,11 @@ namespace PaintsNow {
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		TShared<RemoteRoutine> Load(const String& code);
-		void Call(IScript::Request& fromRequest, TShared<RemoteRoutine> remoteRoutine, IScript::Request::Arguments& args);
+		void Call(IScript::Request& fromRequest, const TShared<RemoteRoutine>& remoteRoutine, IScript::Request::Arguments& args);
 		void CallAsync(IScript::Request& fromRequest, IScript::Request::Ref callback, TShared<RemoteRoutine> remoteRoutine, IScript::Request::Arguments& args);
 
 	protected:
-		void Complete(IScript::RequestPool* returnPool, IScript::Request& request, IScript::Request::Ref callback, TShared<RemoteRoutine> remoteRoutine);
+		void Complete(IScript::RequestPool* returnPool, IScript::Request& request, IScript::Request::Ref callback, const TShared<RemoteRoutine>& remoteRoutine);
 
 	protected:
 		Engine& engine;

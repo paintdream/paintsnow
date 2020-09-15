@@ -371,7 +371,7 @@ void LeavesFlute::OnConsoleOutput(const String& text) {
 
 void LeavesFlute::Print(const String& str) {
 	// convert utf8 to system encoding
-	String text = Utf8ToSystem(str);
+	const String& text = Utf8ToSystem(str);
 #if defined(_WIN32) || defined(WIN32)
 	// wprintf(L"%s\n", text.c_str());
 	static HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);

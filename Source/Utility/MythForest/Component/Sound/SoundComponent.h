@@ -16,7 +16,7 @@ namespace PaintsNow {
 			SOUNDCOMPONENT_CUSTOM_BEGIN = COMPONENT_CUSTOM_BEGIN << 1
 		};
 
-		SoundComponent(TShared<StreamResource> audioResource, IScript::Request::Ref callback);
+		SoundComponent(const TShared<StreamResource>& audioResource, IScript::Request::Ref callback);
 		~SoundComponent() override;
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 

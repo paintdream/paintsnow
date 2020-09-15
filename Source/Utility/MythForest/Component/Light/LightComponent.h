@@ -122,7 +122,7 @@ namespace PaintsNow {
 		};
 
 		std::vector<TShared<ShadowGrid> > UpdateShadow(Engine& engine, const MatrixFloat4x4& viewTransform, const MatrixFloat4x4& lightTransform, Entity* rootEntity);
-		void BindShadowStream(Engine& engine, uint32_t layer, TShared<StreamComponent> streamComponent, const UShort2& res, float gridSize, float scale);
+		void BindShadowStream(Engine& engine, uint32_t layer, const TShared<StreamComponent>& streamComponent, const UShort2& res, float gridSize, float scale);
 
 	protected:
 		class ShadowContext : public TReflected<ShadowContext, SharedTiny> {
@@ -135,12 +135,12 @@ namespace PaintsNow {
 		class ShadowLayer : public TReflected<ShadowLayer, SharedTiny>, public SpaceTraversal<ShadowLayer, ShadowLayerConfig> {
 		public:
 			ShadowLayer(Engine& engine);
-			TShared<SharedTiny> StreamLoadHandler(Engine& engine, const UShort3& coord, TShared<SharedTiny> tiny, TShared<SharedTiny> context);
-			TShared<SharedTiny> StreamUnloadHandler(Engine& engine, const UShort3& coord, TShared<SharedTiny> tiny, TShared<SharedTiny> context);
+			TShared<SharedTiny> StreamLoadHandler(Engine& engine, const UShort3& coord, const TShared<SharedTiny>& tiny, const TShared<SharedTiny>& context);
+			TShared<SharedTiny> StreamUnloadHandler(Engine& engine, const UShort3& coord, const TShared<SharedTiny>& tiny, const TShared<SharedTiny>& context);
 			void CollectRenderableComponent(Engine& engine, TaskData& taskData, RenderableComponent* renderableComponent, TaskData::WarpData& warpData, const WorldInstanceData& instanceData);
 			void CollectComponents(Engine& engine, TaskData& taskData, const WorldInstanceData& instanceData, const CaptureData& captureData, Entity* rootEntity);
 			void CompleteCollect(Engine& engine, TaskData& taskData);
-			void Initialize(Engine& engine, TShared<StreamComponent> streamComponent, const UShort2& res, float size, float scale);
+			void Initialize(Engine& engine, const TShared<StreamComponent>& streamComponent, const UShort2& res, float size, float scale);
 			void Uninitialize(Engine& engine);
 
 			TShared<ShadowGrid> UpdateShadow(Engine& engine, const MatrixFloat4x4& cameraTransform, const MatrixFloat4x4& lightTransform, Entity* rootEntity);

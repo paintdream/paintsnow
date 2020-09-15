@@ -5,7 +5,7 @@
 
 using namespace PaintsNow;
 
-AnimationComponent::AnimationComponent(TShared<SkeletonResource> resource) : skeletonResource(resource), animationTime(0), speed(1), clipIndex(0), boneMatrixBuffer(nullptr) {
+AnimationComponent::AnimationComponent(const TShared<SkeletonResource>& resource) : skeletonResource(resource), animationTime(0), speed(1), clipIndex(0), boneMatrixBuffer(nullptr) {
 	// can be shared between entities
 	Flag().fetch_or(Component::COMPONENT_SHARED, std::memory_order_acquire);
 	const IAsset::BoneAnimation& boneAnimation = resource->GetBoneAnimation();
@@ -52,7 +52,7 @@ void AnimationComponent::Play(const String& clipName, float startTime) {
 	}
 }
 
-void AnimationComponent::Detach(TShared<Entity> entity) {
+void AnimationComponent::Detach(const TShared<Entity>& entity) {
 	assert(entity->GetWarpIndex() == GetWarpIndex());
 	for (size_t i = 0; i < mountPoints.size(); i++) {
 		if (mountPoints[i].second == entity) {

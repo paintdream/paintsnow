@@ -1,10 +1,12 @@
 #include "ModelComponent.h"
+
+#include <utility>
 #include "../../../SnowyStream/SnowyStream.h"
 #include "../Transform/TransformComponent.h"
 
 using namespace PaintsNow;
 
-ModelComponent::ModelComponent(TShared<MeshResource> res, TShared<BatchComponent> batch) : batchComponent(batch), meshResource(res), hostCount(0) {
+ModelComponent::ModelComponent(TShared<MeshResource> res, TShared<BatchComponent> batch) : batchComponent(std::move(batch)), meshResource(std::move(res)), hostCount(0) {
 	Flag().fetch_or(COMPONENT_SHARED, std::memory_order_acquire); // can be shared among different entities
 }
 

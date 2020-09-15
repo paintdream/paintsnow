@@ -1,10 +1,12 @@
 #include "TapeComponent.h"
+
+#include <utility>
 #include "../../../../Core/System/StringStream.h"
 #include "../../../BridgeSunset/BridgeSunset.h"
 
 using namespace PaintsNow;
 
-TapeComponent::TapeComponent(IStreamBase& stream, TShared<SharedTiny> holder, size_t cache) : tape(stream), streamHolder(holder), cacheBytes(cache), bufferStream(cache) {}
+TapeComponent::TapeComponent(IStreamBase& stream, TShared<SharedTiny> holder, size_t cache) : tape(stream), streamHolder(std::move(holder)), cacheBytes(cache), bufferStream(cache) {}
 
 std::pair<int64_t, String> TapeComponent::Read() {
 	assert(!(Flag() & TINY_UPDATING));

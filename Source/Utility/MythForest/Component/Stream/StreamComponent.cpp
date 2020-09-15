@@ -1,4 +1,6 @@
 #include "StreamComponent.h"
+
+#include <utility>
 #include "../../../BridgeSunset/BridgeSunset.h"
 
 using namespace PaintsNow;
@@ -110,11 +112,11 @@ void StreamComponent::SetUnloadHandler(IScript::Request& request, IScript::Reque
 	unloadHandler.ReplaceScript(request, ref);
 }
 
-void StreamComponent::SetLoadHandler(const TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny>, TShared<SharedTiny> >& handler) {
+void StreamComponent::SetLoadHandler(const TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, const TShared<SharedTiny>&, const TShared<SharedTiny>& >& handler) {
 	loadHandler.native = handler;
 }
 
-void StreamComponent::SetUnloadHandler(const TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny>, TShared<SharedTiny> >& handler) {
+void StreamComponent::SetUnloadHandler(const TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, const TShared<SharedTiny>&, const TShared<SharedTiny>& >& handler) {
 	unloadHandler.native = handler;
 }
 

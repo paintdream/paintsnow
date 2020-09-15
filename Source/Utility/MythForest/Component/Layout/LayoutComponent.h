@@ -32,7 +32,7 @@ namespace PaintsNow {
 
 	protected:
 		void UpdateTransform(const MatrixFloat4x4& transform);
-		void RoutineLayoutForSpaceComponent(Engine& engine, TShared<SpaceComponent> spaceComponent, const MatrixFloat4x4& transform);
+		void RoutineLayoutForSpaceComponent(Engine& engine, const TShared<SpaceComponent>& spaceComponent, const MatrixFloat4x4& transform);
 		Entity* hostEntity;
 
 	public:

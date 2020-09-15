@@ -44,7 +44,7 @@ namespace PaintsNow {
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) override;
 
-		TShared<MaterialResource> CloneWithOverrideShader(TShared<ShaderResource> override);
+		TShared<MaterialResource> CloneWithOverrideShader(const TShared<ShaderResource>& override);
 
 		IAsset::Material materialParams;
 		TShared<ShaderResource> originalShaderResource;

@@ -13,9 +13,9 @@ namespace PaintsNow {
 		SharedTiny* Load(Engine& engine, const UShort3& coord, TShared<SharedTiny> context);
 		void Unload(Engine& engine, const UShort3& coord, TShared<SharedTiny> context);
 		void SetLoadHandler(IScript::Request& request, IScript::Request::Ref ref);
-		void SetLoadHandler(const TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny>, TShared<SharedTiny> >& handler);
+		void SetLoadHandler(const TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, const TShared<SharedTiny>&, const TShared<SharedTiny>& >& handler);
 		void SetUnloadHandler(IScript::Request& request, IScript::Request::Ref ref);
-		void SetUnloadHandler(const TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny>, TShared<SharedTiny> >& handler);
+		void SetUnloadHandler(const TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, const TShared<SharedTiny>&, const TShared<SharedTiny>& >& handler);
 		void Uninitialize(Engine& engine, Entity* entity) override;
 		const UShort3& GetDimension() const;
 
@@ -49,8 +49,8 @@ namespace PaintsNow {
 			IScript::Request::Ref script;
 		};
 
-		Handler<TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny>, TShared<SharedTiny> > > loadHandler;
-		Handler<TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny>, TShared<SharedTiny> > > unloadHandler;
+		Handler<TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, const TShared<SharedTiny>&, const TShared<SharedTiny>& > > loadHandler;
+		Handler<TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, const TShared<SharedTiny>&, const TShared<SharedTiny>& > > unloadHandler;
 	};
 }
 

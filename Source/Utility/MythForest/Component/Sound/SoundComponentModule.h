@@ -19,7 +19,7 @@ namespace PaintsNow {
 		// static int main(int argc, char* argv[]);
 
 	public:
-		TShared<SoundComponent> RequestNew(IScript::Request& request, String path, IScript::Request::Ref callback);
+		TShared<SoundComponent> RequestNew(IScript::Request& request, const String& path, IScript::Request::Ref callback);
 		int64_t RequestGetSourceDuration(IScript::Request& request, IScript::Delegate<SoundComponent> source);
 		void RequestMoveSource(IScript::Request& request, IScript::Delegate<SoundComponent> source, Float3& pos);
 		void RequestSeekSource(IScript::Request& request, IScript::Delegate<SoundComponent> source, double time);

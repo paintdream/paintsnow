@@ -306,7 +306,7 @@ void LayoutComponent::UpdateTransform(const MatrixFloat4x4& transform) {
 	// TODO: update bounding box
 }
 
-void LayoutComponent::RoutineLayoutForSpaceComponent(Engine& engine, TShared<SpaceComponent> spaceComponent, const MatrixFloat4x4& transform) {
+void LayoutComponent::RoutineLayoutForSpaceComponent(Engine& engine, const TShared<SpaceComponent>& spaceComponent, const MatrixFloat4x4& transform) {
 	// should copy 'this' content before updating?
 	std::vector<LayoutComponent*> components;
 	std::vector<Entity*> entities;

@@ -20,7 +20,7 @@ namespace PaintsNow {
 			virtual Bytes operator [] (const Float3& position) const = 0;
 		};
 
-		void SetField(TShared<FieldBase> field);
+		void SetField(const TShared<FieldBase>& field);
 
 	protected:
 		uint32_t subType;

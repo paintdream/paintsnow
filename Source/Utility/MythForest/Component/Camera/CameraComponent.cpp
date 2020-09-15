@@ -18,7 +18,9 @@
 #include "../../Engine.h"
 #include "../../../BridgeSunset/BridgeSunset.h"
 #include "../../../SnowyStream/SnowyStream.h"
+#include <cmath>
 #include <iterator>
+#include <utility>
 
 using namespace PaintsNow;
 
@@ -33,7 +35,7 @@ enum {
 CameraComponent::TaskData::WarpData::WarpData() : entityCount(0), visibleEntityCount(0), triangleCount(0) {}
 
 CameraComponent::CameraComponent(TShared<RenderFlowComponent> prenderFlowComponent, const String& name)
-: collectedEntityCount(0), collectedVisibleEntityCount(0), viewDistance(256), rootEntity(nullptr), jitterIndex(0), renderFlowComponent(prenderFlowComponent), cameraViewPortName(name) {
+: collectedEntityCount(0), collectedVisibleEntityCount(0), viewDistance(256), rootEntity(nullptr), jitterIndex(0), renderFlowComponent(std::move(prenderFlowComponent)), cameraViewPortName(name) {
 	Flag().fetch_or(CAMERACOMPONENT_PERSPECTIVE | CAMERACOMPONENT_UPDATE_COMMITTED, std::memory_order_acquire);
 }
 

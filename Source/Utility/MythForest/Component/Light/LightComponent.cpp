@@ -1,4 +1,6 @@
 #include "LightComponent.h"
+
+#include <utility>
 #include "../Explorer/ExplorerComponent.h"
 #include "../Transform/TransformComponent.h"
 #include "../Visibility/VisibilityComponent.h"
@@ -61,7 +63,7 @@ std::vector<TShared<LightComponent::ShadowGrid> > LightComponent::UpdateShadow(E
 	return grids;
 }
 
-void LightComponent::BindShadowStream(Engine& engine, uint32_t layer, TShared<StreamComponent> streamComponent, const UShort2& res, float size, float scale) {
+void LightComponent::BindShadowStream(Engine& engine, uint32_t layer, const TShared<StreamComponent>& streamComponent, const UShort2& res, float size, float scale) {
 	if (shadowLayers.size() <= layer) {
 		shadowLayers.resize(layer + 1);
 	}
@@ -77,7 +79,7 @@ void LightComponent::BindShadowStream(Engine& engine, uint32_t layer, TShared<St
 LightComponent::ShadowLayer::ShadowLayer(Engine& engine) : gridSize(1), scale(1) {
 }
 
-TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engine, const UShort3& coord, TShared<SharedTiny> tiny, TShared<SharedTiny> context) {
+TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engine, const UShort3& coord, const TShared<SharedTiny>& tiny, const TShared<SharedTiny>& context) {
 	assert(coord.z() == 0);
 	assert(context);
 
@@ -156,7 +158,7 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 	return shadowGrid();
 }
 
-TShared<SharedTiny> LightComponent::ShadowLayer::StreamUnloadHandler(Engine& engine, const UShort3& coord, TShared<SharedTiny> tiny, TShared<SharedTiny> context) {
+TShared<SharedTiny> LightComponent::ShadowLayer::StreamUnloadHandler(Engine& engine, const UShort3& coord, const TShared<SharedTiny>& tiny, const TShared<SharedTiny>& context) {
 	return tiny;
 }
 
@@ -482,7 +484,7 @@ TObject<IReflect>& ShadowLayerConfig::WorldInstanceData::operator () (IReflect& 
 
 	return *this;
 }
-void LightComponent::ShadowLayer::Initialize(Engine& engine, TShared<StreamComponent> component, const UShort2& res, float size, float s) {
+void LightComponent::ShadowLayer::Initialize(Engine& engine, const TShared<StreamComponent>& component, const UShort2& res, float size, float s) {
 	Uninitialize(engine);
 
 	streamComponent = component;
@@ -517,8 +519,8 @@ void LightComponent::ShadowLayer::Initialize(Engine& engine, TShared<StreamCompo
 
 void LightComponent::ShadowLayer::Uninitialize(Engine& engine) {
 	if (streamComponent) {
-		streamComponent->SetLoadHandler(TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny>, TShared<SharedTiny> >());
-		streamComponent->SetUnloadHandler(TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, TShared<SharedTiny>, TShared<SharedTiny> >());
+		streamComponent->SetLoadHandler(TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, const TShared<SharedTiny>&, const TShared<SharedTiny>& >());
+		streamComponent->SetUnloadHandler(TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, const TShared<SharedTiny>&, const TShared<SharedTiny>& >());
 	}
 
 	if (currentTask) {

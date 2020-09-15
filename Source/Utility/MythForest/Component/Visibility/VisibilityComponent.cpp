@@ -1,4 +1,6 @@
 #include "VisibilityComponent.h"
+
+#include <cmath>
 #include "../../../SnowyStream/SnowyStream.h"
 #include "../Space/SpaceComponent.h"
 #include "../Renderable/RenderableComponent.h"

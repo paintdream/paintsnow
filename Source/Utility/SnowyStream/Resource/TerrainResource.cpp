@@ -1,5 +1,7 @@
 #include "TerrainResource.h"
 
+#include <cmath>
+
 using namespace PaintsNow;
 
 TerrainResource::TerrainResource(ResourceManager& manager, const String& uniqueID) : BaseClass(manager, uniqueID), width(0), height(0), deltaHeight(0.05f) {}
@@ -19,7 +21,7 @@ void TerrainResource::Download(IRender& render, void* deviceContext) {
 
 }
 
-void TerrainResource::FromTexture(TShared<TextureResource> textureResource) {
+void TerrainResource::FromTexture(const TShared<TextureResource>& textureResource) {
 	textureResource->Map();
 
 	IRender::Resource::TextureDescription& description = textureResource->description;

@@ -2,7 +2,7 @@
 
 using namespace PaintsNow;
 
-SoundComponent::SoundComponent(TShared<StreamResource> resource, IScript::Request::Ref r) : callback(r), audioStream(nullptr), audioSource(nullptr), audioBuffer(nullptr) {
+SoundComponent::SoundComponent(const TShared<StreamResource>& resource, IScript::Request::Ref r) : callback(r), audioStream(nullptr), audioSource(nullptr), audioBuffer(nullptr) {
 	Flag().fetch_or(SOUNDCOMPONENT_ONLINE, std::memory_order_acquire);
 
 	audioResource.Reset(static_cast<StreamResource*>(resource->Clone()));

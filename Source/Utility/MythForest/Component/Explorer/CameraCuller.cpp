@@ -1,4 +1,6 @@
 #include "CameraCuller.h"
+
+#include <cmath>
 using namespace PaintsNow;
 
 const double PI = 3.14159265358979323846;

@@ -1,4 +1,6 @@
 #include "TextViewComponent.h"
+
+#include <utility>
 #include "../../MythForest.h"
 
 using namespace PaintsNow;
@@ -126,7 +128,7 @@ void TextViewComponent::TagParser::Clear() {
 	nodes.clear();
 }
 
-TextViewComponent::TextViewComponent(TShared<FontResource> font, TShared<MeshResource> mesh, TShared<BatchComponent> batch, TShared<MaterialResource> material) : BaseClass(mesh, batch), fontResource(font), passwordChar(0), cursorChar(0), cursorPos(0), fontSize(12), size(32, 32), scroll(0, 0), padding(0, 0), fullSize(0, 0), selectRange(0, 0), cursorColor(255, 255, 255, 255), selectColor(0, 0, 0, 0) {
+TextViewComponent::TextViewComponent(TShared<FontResource> font, TShared<MeshResource> mesh, TShared<BatchComponent> batch, const TShared<MaterialResource>& material) : BaseClass(mesh, batch), fontResource(std::move(font)), passwordChar(0), cursorChar(0), cursorPos(0), fontSize(12), size(32, 32), scroll(0, 0), padding(0, 0), fullSize(0, 0), selectRange(0, 0), cursorColor(255, 255, 255, 255), selectColor(0, 0, 0, 0) {
 	Flag().fetch_or((TEXTVIEWCOMPONENT_CURSOR_REV_COLOR | TEXTVIEWCOMPONENT_SELECT_REV_COLOR), std::memory_order_acquire);
 }
 

@@ -3,7 +3,7 @@
 
 using namespace PaintsNow;
 
-WidgetComponent::WidgetComponent(TShared<MeshResource> mesh, TShared<BatchComponent> batch, TShared<BatchComponent> batchInstanced) : BaseClass(mesh, batch) {
+WidgetComponent::WidgetComponent(TShared<MeshResource> mesh, TShared<BatchComponent> batch, const TShared<BatchComponent>& batchInstanced) : BaseClass(mesh, batch) {
 	batchInstancedDataComponent = batchInstanced;
 }
 

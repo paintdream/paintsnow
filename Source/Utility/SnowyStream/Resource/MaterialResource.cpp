@@ -93,7 +93,7 @@ size_t MaterialResource::ReportDeviceMemoryUsage() const {
 	return size;
 }
 
-TShared<MaterialResource> MaterialResource::CloneWithOverrideShader(TShared<ShaderResource> overrideShaderResource) {
+TShared<MaterialResource> MaterialResource::CloneWithOverrideShader(const TShared<ShaderResource>& overrideShaderResource) {
 	if (overrideShaderResource == originalShaderResource) {
 		return this;
 	} else {

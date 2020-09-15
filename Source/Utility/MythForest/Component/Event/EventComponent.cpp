@@ -61,7 +61,7 @@ void EventComponent::UninstallFrame() {
 	frameTickerCollection.clear();
 	SpinUnLock(critical);}
 
-void EventComponent::InstallTick(Engine& engine, TShared<Clock> c) {
+void EventComponent::InstallTick(Engine& engine, const TShared<Clock>& c) {
 	assert(c->GetWarpIndex() == GetWarpIndex());
 	if (clock) {
 		UninstallTick(engine);

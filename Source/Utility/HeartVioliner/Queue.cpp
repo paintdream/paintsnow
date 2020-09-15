@@ -4,7 +4,7 @@ using namespace PaintsNow;
 
 Queue::Queue() {}
 
-void Queue::Attach(TShared<Clock> c) {
+void Queue::Attach(const TShared<Clock>& c) {
 	Detach();
 	clock = c;
 	clock->AddTicker(this, nullptr);

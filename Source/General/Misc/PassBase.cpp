@@ -451,7 +451,7 @@ public:
 
 			if (parameter) {
 				parameter.internalAddress = (void*)((size_t)ptr - (size_t)base);
-				outputs.emplace_back(std::move(parameter));
+				outputs.emplace_back(parameter);
 			}
 		}
 	}

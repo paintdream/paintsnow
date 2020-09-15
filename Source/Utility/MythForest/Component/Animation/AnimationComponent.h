@@ -15,7 +15,7 @@ namespace PaintsNow {
 			ANIMATIONCOMPONENT_REPEAT = COMPONENT_CUSTOM_BEGIN,
 		};
 
-		AnimationComponent(TShared<SkeletonResource> skeletonResource);
+		AnimationComponent(const TShared<SkeletonResource>& skeletonResource);
 		~AnimationComponent() override;
 		void Initialize(Engine& engine, Entity* entity) override;
 		void Uninitialize(Engine& engine, Entity* entity) override;
@@ -25,7 +25,7 @@ namespace PaintsNow {
 		IRender::Resource* AcquireBoneMatrixBuffer(IRender& render, IRender::Queue* queue);
 
 		void Attach(const String& name, TShared<Entity> entity);
-		void Detach(TShared<Entity> entity);
+		void Detach(const TShared<Entity>& entity);
 		void Play(const String& clipName, float startTime);
 		void RegisterEvent(const String& identifier, const String& clipName, float timeStamp);
 		void SetSpeed(float speed);

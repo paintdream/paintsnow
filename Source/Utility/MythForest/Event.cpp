@@ -1,9 +1,11 @@
 #include "Event.h"
 
+#include <utility>
+
 using namespace PaintsNow;
 
 #if defined(_MSC_VER) && _MSC_VER <= 1200
 Event::Event() : eventID(EVENT_PRETICK) {}
 #endif
 
-Event::Event(Engine& e, EVENT_ID id, TShared<SharedTiny> sender, TShared<SharedTiny> d) : engine(e), eventID(id), sender(sender), detail(d) {}
+Event::Event(Engine& e, EVENT_ID id, TShared<SharedTiny> sender, TShared<SharedTiny> d) : engine(e), eventID(id), sender(std::move(sender)), detail(std::move(d)) {}

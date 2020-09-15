@@ -1,5 +1,7 @@
 #include "RemoteComponent.h"
 
+#include <utility>
+
 using namespace PaintsNow;
 
 static void ErrorHandler(IScript::Request& request, const String& err) {
@@ -65,7 +67,7 @@ TObject<IReflect>& RemoteComponent::operator () (IReflect& reflect) {
 }
 
 struct RoutineWrapper {
-	RoutineWrapper(TShared<RemoteRoutine> r) : routine(r) {}
+	RoutineWrapper(TShared<RemoteRoutine> r) : routine(std::move(r)) {}
 	~RoutineWrapper() {}
 	void operator () (IScript::Request& request, IScript::Request::Arguments& args) {
 		// always use sync call
@@ -225,7 +227,7 @@ static void CopyTable(uint32_t flag, IScript::Request& request, IScript::Request
 	fromRequest >> endtable;
 }
 
-void RemoteComponent::Call(IScript::Request& fromRequest, TShared<RemoteRoutine> remoteRoutine, IScript::Request::Arguments& args) {
+void RemoteComponent::Call(IScript::Request& fromRequest, const TShared<RemoteRoutine>& remoteRoutine, IScript::Request::Arguments& args) {
 	if (remoteRoutine->pool == this && remoteRoutine->ref) {
 		IScript::Request& toRequest = *AcquireSafe();
 		toRequest.DoLock();
@@ -255,7 +257,7 @@ void RemoteComponent::Call(IScript::Request& fromRequest, TShared<RemoteRoutine>
 	}
 }
 
-void RemoteComponent::Complete(IScript::RequestPool* returnPool, IScript::Request& toRequest, IScript::Request::Ref callback, TShared<RemoteRoutine> remoteRoutine) {
+void RemoteComponent::Complete(IScript::RequestPool* returnPool, IScript::Request& toRequest, IScript::Request::Ref callback, const TShared<RemoteRoutine>& remoteRoutine) {
 	toRequest.Call(sync, remoteRoutine->ref);
 
 	IScript::Request& returnRequest = *returnPool->AcquireSafe();

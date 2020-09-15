@@ -1,6 +1,7 @@
 #include "SkeletonResource.h"
 #include "../../../Core/Template/TAlgorithm.h"
 #include <cassert>
+#include <cmath>
 
 using namespace PaintsNow;
 
