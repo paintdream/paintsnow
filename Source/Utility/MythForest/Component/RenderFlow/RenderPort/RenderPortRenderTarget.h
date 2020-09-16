@@ -37,7 +37,7 @@ namespace PaintsNow {
 
 		void Initialize(IRender& render, IRender::Queue* mainQueue) override;
 		void Uninitialize(IRender& render, IRender::Queue* mainQueue) override;
-		bool UpdateDataStream(RenderPort& source) override;
+		void Tick(Engine& engine, IRender::Queue* queue) override;
 
 		IRender::Resource::RenderTargetDescription::Storage& bindingStorage;
 	};
@@ -49,10 +49,11 @@ namespace PaintsNow {
 
 		void Initialize(IRender& render, IRender::Queue* mainQueue) override;
 		void Uninitialize(IRender& render, IRender::Queue* mainQueue) override;
-		bool UpdateDataStream(RenderPort& source) override;
+		void Tick(Engine& engine, IRender::Queue* queue) override;
 
-		TShared<TextureResource> renderTargetTextureResource;
 		IRender::Resource::RenderTargetDescription::Storage& bindingStorage;
+		TShared<TextureResource> attachedTexture;
+		IRender::Resource::TextureDescription renderTargetDescription;
 	};
 }
 

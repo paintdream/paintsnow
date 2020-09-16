@@ -67,7 +67,6 @@ public:
 	void RequestDownloadResource(Queue* queue, Resource* resource, Resource::Description* description) override {}
 	void CompleteDownloadResource(Queue* queue, Resource* resource) override {}
 	void ExecuteResource(Queue* queue, Resource* resource) override {}
-	void SwapResource(Queue* queue, Resource* lhs, Resource* rhs) override {}
 	void DeleteResource(Queue* queue, Resource* resource) override {}
 	void SetResourceNotation(Resource* lhs, const String& note) override {}
 };

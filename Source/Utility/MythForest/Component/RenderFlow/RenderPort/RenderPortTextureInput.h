@@ -13,11 +13,9 @@ namespace PaintsNow {
 		RenderPortTextureInput();
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		TShared<TextureResource> textureResource;
-		RenderStage* linkedRenderStage;
 
 		void Initialize(IRender& render, IRender::Queue* mainQueue) override;
 		void Uninitialize(IRender& render, IRender::Queue* mainQueue) override;
-		bool UpdateDataStream(RenderPort& source) override;
 	};
 }
 

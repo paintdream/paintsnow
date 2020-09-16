@@ -21,11 +21,10 @@ TObject<IReflect>& AntiAliasingRenderStage::operator () (IReflect& reflect) {
 
 void AntiAliasingRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	SnowyStream& snowyStream = engine.snowyStream;
-	OutputColor.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("RT", &OutputColor), false, 0, nullptr);
-	OutputColor.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::HALF;
-	OutputColor.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::RGBA;
-	OutputColor.renderTargetTextureResource->description.state.immutable = false;
-	OutputColor.renderTargetTextureResource->description.state.attachment = true;
+	OutputColor.renderTargetDescription.state.format = IRender::Resource::TextureDescription::HALF;
+	OutputColor.renderTargetDescription.state.layout = IRender::Resource::TextureDescription::RGBA;
+	OutputColor.renderTargetDescription.state.immutable = false;
+	OutputColor.renderTargetDescription.state.attachment = true;
 
 	BaseClass::PrepareResources(engine, queue);
 }
@@ -37,11 +36,11 @@ void AntiAliasingRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) 
 	screenTransform.vertexBuffer.resource = quadMeshResource->bufferCollection.positionBuffer;
 	
 	AntiAliasingFS& antiAliasing = Pass.antiAliasing;
-	antiAliasing.inputTexture.resource = InputColor.textureResource->GetTexture();
-	antiAliasing.lastInputTexture.resource = LastInputColor.textureResource->GetTexture();
+	antiAliasing.inputTexture.resource = InputColor.textureResource->GetRenderResource();
+	antiAliasing.lastInputTexture.resource = LastInputColor.textureResource->GetRenderResource();
 	assert(antiAliasing.inputTexture.resource != antiAliasing.lastInputTexture.resource);
 	// assert(OutputColor.renderTargetTextureResource->GetTexture() != antiAliasing.lastInputTexture.resource);
-	antiAliasing.depthTexture.resource = Depth.textureResource->GetTexture();
+	antiAliasing.depthTexture.resource = Depth.textureResource->GetRenderResource();
 	antiAliasing.reprojectionMatrix = CameraView->reprojectionMatrix;
 	antiAliasing.unjitter = -CameraView->jitterOffset;
 

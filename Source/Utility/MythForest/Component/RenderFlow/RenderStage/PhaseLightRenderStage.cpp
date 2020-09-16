@@ -41,9 +41,9 @@ void PhaseLightRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 	const std::vector<RenderPortPhaseLightView::PhaseInfo>& phases = PhaseLightView.phases;
 	MultiHashTracePass& pass = GetPass();
 	MultiHashTraceFS& fs = pass.shaderMultiHashTrace;
-	fs.dstDepthTexture.resource = Depth.textureResource->GetTexture();
-	fs.dstBaseColorOcclusionTexture.resource = BaseColorOcclusion.textureResource->GetTexture();
-	fs.dstNormalRoughnessMetallicTexture.resource = NormalRoughnessMetallic.textureResource->GetTexture();
+	fs.dstDepthTexture.resource = Depth.textureResource->GetRenderResource();
+	fs.dstBaseColorOcclusionTexture.resource = BaseColorOcclusion.textureResource->GetRenderResource();
+	fs.dstNormalRoughnessMetallicTexture.resource = NormalRoughnessMetallic.textureResource->GetRenderResource();
 	fs.dstInverseProjection = CameraView->inverseProjectionMatrix;
 
 	for (size_t i = 0; i < phases.size(); i++) {

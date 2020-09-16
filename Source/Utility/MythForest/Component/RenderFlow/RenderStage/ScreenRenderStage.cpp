@@ -28,11 +28,10 @@ TObject<IReflect>& ScreenRenderStage::operator () (IReflect& reflect) {
 void ScreenRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	IRender& render = engine.interfaces.render;
 	SnowyStream& snowyStream = engine.snowyStream;
-	OutputColor.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("RT", &OutputColor), false, 0, nullptr);
-	OutputColor.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
-	OutputColor.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::RGBA;
-	OutputColor.renderTargetTextureResource->description.state.immutable = false;
-	OutputColor.renderTargetTextureResource->description.state.attachment = true;
+	OutputColor.renderTargetDescription.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
+	OutputColor.renderTargetDescription.state.layout = IRender::Resource::TextureDescription::RGBA;
+	OutputColor.renderTargetDescription.state.immutable = false;
+	OutputColor.renderTargetDescription.state.attachment = true;
 
 	BaseClass::PrepareResources(engine, queue);
 }
@@ -42,12 +41,12 @@ void ScreenRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 	ScreenTransformVS& screenTransform = Pass.screenTransform;
 	screenTransform.vertexBuffer.resource = quadMeshResource->bufferCollection.positionBuffer;
 	ScreenFS& ScreenFS = Pass.shaderScreen;
-	ScreenFS.inputColorTexture.resource = InputColor.textureResource->GetTexture();
+	ScreenFS.inputColorTexture.resource = InputColor.textureResource->GetRenderResource();
 	assert(BloomLayers.size() > 0);
 	
-	ScreenFS.inputBloomTexture0.resource = BloomLayers[0]->textureResource->GetTexture();
-	ScreenFS.inputBloomTexture1.resource = BloomLayers.size() > 1 ? BloomLayers[1]->textureResource->GetTexture() : ScreenFS.inputBloomTexture0.resource;
-	ScreenFS.inputBloomTexture2.resource = BloomLayers.size() > 2 ? BloomLayers[2]->textureResource->GetTexture() : ScreenFS.inputBloomTexture1.resource;
+	ScreenFS.inputBloomTexture0.resource = BloomLayers[0]->textureResource->GetRenderResource();
+	ScreenFS.inputBloomTexture1.resource = BloomLayers.size() > 1 ? BloomLayers[1]->textureResource->GetRenderResource() : ScreenFS.inputBloomTexture0.resource;
+	ScreenFS.inputBloomTexture2.resource = BloomLayers.size() > 2 ? BloomLayers[2]->textureResource->GetRenderResource() : ScreenFS.inputBloomTexture1.resource;
 
 	BaseClass::UpdatePass(engine, queue);
 }

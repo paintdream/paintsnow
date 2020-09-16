@@ -19,11 +19,10 @@ TObject<IReflect>& BloomRenderStage::operator () (IReflect& reflect) {
 
 void BloomRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	SnowyStream& snowyStream = engine.snowyStream;
-	OutputColor.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("RT", &OutputColor), false, 0, nullptr);
-	OutputColor.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::HALF;
-	OutputColor.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::RGB;
-	OutputColor.renderTargetTextureResource->description.state.immutable = false;
-	OutputColor.renderTargetTextureResource->description.state.attachment = true;
+	OutputColor.renderTargetDescription.state.format = IRender::Resource::TextureDescription::HALF;
+	OutputColor.renderTargetDescription.state.layout = IRender::Resource::TextureDescription::RGB;
+	OutputColor.renderTargetDescription.state.immutable = false;
+	OutputColor.renderTargetDescription.state.attachment = true;
 
 	BaseClass::PrepareResources(engine, queue);
 }
@@ -34,8 +33,8 @@ void BloomRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 	screenTransform.vertexBuffer.resource = quadMeshResource->bufferCollection.positionBuffer;
 	
 	BloomFS& bloom = Pass.screenBloom;
-	bloom.screenTexture.resource = InputColor.textureResource->GetTexture();
-	const UShort3& dim = OutputColor.renderTargetTextureResource->description.dimension;
+	bloom.screenTexture.resource = InputColor.textureResource->GetRenderResource();
+	const UShort3& dim = OutputColor.renderTargetDescription.dimension;
 	bloom.invScreenSize = Float2(dim.x() == 0 ? 0 : 1.0f / dim.x(), dim.y() == 0 ? 0 : 1.0f / dim.y());
 
 	BaseClass::UpdatePass(engine, queue);

@@ -20,7 +20,7 @@ void WidgetComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallT
 		// texture
 		PassBase::Parameter& mainTextureParam = updater[IShader::BindInput::MAINTEXTURE];
 		if (mainTextureParam) {
-			drawCall.textureResources[mainTextureParam.slot] = mainTexture()->GetTexture();
+			drawCall.textureResources[mainTextureParam.slot] = mainTexture()->GetRenderResource();
 		}
 
 		// instanced data

@@ -100,7 +100,7 @@ void VisibilityComponent::Initialize(Engine& engine, Entity* entity) {
 		IRender::Resource::RenderTargetDescription desc;
 		desc.colorStorages.resize(1);
 		IRender::Resource::RenderTargetDescription::Storage& s = desc.colorStorages[0];
-		s.resource = texture->GetTexture();
+		s.resource = texture->GetRenderResource();
 		s.loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
 		s.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 		desc.depthStorage.resource = depthStencilResource;
@@ -297,12 +297,12 @@ void VisibilityComponent::TickRender(Engine& engine) {
 		if (task.status == TaskData::STATUS_IDLE) {
 			finalStatus.store(TaskData::STATUS_START, std::memory_order_release);
 		} else if (task.status == TaskData::STATUS_ASSEMBLED) {
-			render.RequestDownloadResource(task.renderQueue, texture->GetTexture(), &texture->description);
+			render.RequestDownloadResource(task.renderQueue, texture->GetRenderResource(), &texture->description);
 			render.FlushQueue(task.renderQueue);
 			bakeQueues.emplace_back(task.renderQueue);
 			finalStatus.store(TaskData::STATUS_BAKING, std::memory_order_release);
 		} else if (task.status == TaskData::STATUS_BAKING) {
-			render.CompleteDownloadResource(task.renderQueue, texture->GetTexture());
+			render.CompleteDownloadResource(task.renderQueue, texture->GetRenderResource());
 			bakeQueues.emplace_back(task.renderQueue);
 			task.data = std::move(texture->description.data);
 			finalStatus.store(TaskData::STATUS_BAKED, std::memory_order_release);

@@ -22,11 +22,10 @@ TObject<IReflect>& ShadowMaskRenderStage::operator () (IReflect& reflect) {
 
 void ShadowMaskRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	SnowyStream& snowyStream = engine.snowyStream;
-	OutputMask.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("RT", &OutputMask), false, 0, nullptr);
-	OutputMask.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
-	OutputMask.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::R;
-	OutputMask.renderTargetTextureResource->description.state.immutable = false;
-	OutputMask.renderTargetTextureResource->description.state.attachment = true;
+	OutputMask.renderTargetDescription.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
+	OutputMask.renderTargetDescription.state.layout = IRender::Resource::TextureDescription::R;
+	OutputMask.renderTargetDescription.state.immutable = false;
+	OutputMask.renderTargetDescription.state.attachment = true;
 
 	emptyShadowMask = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), "[Runtime]/TextureResource/Black", true, 0, nullptr);
 
@@ -38,8 +37,8 @@ void ShadowMaskRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 	ScreenTransformVS& screenTransform = Pass.transform;
 	screenTransform.vertexBuffer.resource = quadMeshResource->bufferCollection.positionBuffer;
 	ShadowMaskFS& mask = Pass.mask;
-	mask.depthTexture.resource = InputDepth.textureResource->GetTexture();
-	mask.shadowTexture.resource = emptyShadowMask->GetTexture();
+	mask.depthTexture.resource = InputDepth.textureResource->GetRenderResource();
+	mask.shadowTexture.resource = emptyShadowMask->GetRenderResource();
 
 	MatrixFloat4x4 inverseMatrix = CameraView->inverseProjectionMatrix * CameraView->inverseViewMatrix;
 
@@ -50,7 +49,7 @@ void ShadowMaskRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 			RenderPortLightSource::LightElement::Shadow& shadow = element.shadows[j];
 			if (shadow.shadowTexture) {
 				mask.reprojectionMatrix = inverseMatrix * shadow.shadowMatrix;
-				mask.shadowTexture.resource = shadow.shadowTexture->GetTexture();
+				mask.shadowTexture.resource = shadow.shadowTexture->GetRenderResource();
 				break;
 			}
 		}

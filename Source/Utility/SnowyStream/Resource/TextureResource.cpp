@@ -80,7 +80,7 @@ void TextureResource::Download(IRender& render, void* deviceContext) {
 	render.RequestDownloadResource(queue, instance, this);*/
 }
 
-IRender::Resource* TextureResource::GetTexture() const {
+IRender::Resource* TextureResource::GetRenderResource() const {
 	return instance;
 }
 

@@ -28,9 +28,12 @@ void DeviceRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) 
 	assert(renderPort->QueryInterface(UniqueType<RenderPortRenderTargetStore>()) != nullptr);
 	RenderPortRenderTargetStore* input = renderPort->QueryInterface(UniqueType<RenderPortRenderTargetStore>());
 
+	assert(false);
+	// TODO
 	// Clear source node renderTarget
-	input->renderTargetTextureResource = nullptr;
+	/*
+	input->renderTargetDescription = nullptr;
 	(static_cast<RenderStage*>(input->GetNode()))->renderTargetDescription.colorStorages.clear();
-
+*/
 	// BaseClass::PrepareResources(engine, queue);
 }

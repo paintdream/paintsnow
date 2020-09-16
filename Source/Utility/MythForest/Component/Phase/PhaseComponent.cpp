@@ -302,7 +302,7 @@ void PhaseComponent::TickRender(Engine& engine) {
 		} else if (task.status == TaskData::STATUS_ASSEMBLED) {
 			uint32_t status = TaskData::STATUS_BAKED;
 			if (!debugPath.empty() && task.texture) {
-				render.RequestDownloadResource(task.renderQueue, task.texture->GetTexture(), &task.texture->description);
+				render.RequestDownloadResource(task.renderQueue, task.texture->GetRenderResource(), &task.texture->description);
 				status = TaskData::STATUS_DOWNLOADED;
 			}
 
@@ -313,7 +313,7 @@ void PhaseComponent::TickRender(Engine& engine) {
 			// render.PresentQueues(&task.renderQueue, 1, IRender::PRESENT_EXECUTE_ALL);
 			// engine.mythForest.EndCaptureFrame();
 		} else if (task.status == TaskData::STATUS_DOWNLOADED) {
-			render.CompleteDownloadResource(task.renderQueue, task.texture->GetTexture());
+			render.CompleteDownloadResource(task.renderQueue, task.texture->GetRenderResource());
 			bakeQueues.emplace_back(task.renderQueue);
 
 			// Save data asynchronized
@@ -458,7 +458,7 @@ void PhaseComponent::TaskAssembleTaskBounce(Engine& engine, TaskData& task, cons
 	IRender::Resource::RenderTargetDescription::Storage storage;
 	const Phase& fromPhase = phases[bakePoint.fromPhaseIndex];
 	Phase& toPhase = phases[bakePoint.toPhaseIndex];
-	storage.resource = toPhase.irradiance->GetTexture();
+	storage.resource = toPhase.irradiance->GetRenderResource();
 	storage.loadOp = IRender::Resource::RenderTargetDescription::DISCARD;
 	storage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 	desc.colorStorages.emplace_back(storage);
@@ -493,9 +493,9 @@ void PhaseComponent::CoTaskAssembleTaskShadow(Engine& engine, TaskData& task, co
 	IRender::Resource::RenderTargetDescription desc;
 
 	const Shadow& shadow = shadows[bakePoint.shadowIndex];
-	desc.depthStorage.resource = shadow.shadow->GetTexture();
+	desc.depthStorage.resource = shadow.shadow->GetRenderResource();
 	IRender::Resource::RenderTargetDescription::Storage color;
-	color.resource = emptyColorAttachment->GetTexture(); // Don't care
+	color.resource = emptyColorAttachment->GetRenderResource(); // Don't care
 	color.loadOp = IRender::Resource::RenderTargetDescription::DISCARD;
 	color.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
 	desc.colorStorages.emplace_back(color);
@@ -540,7 +540,7 @@ void PhaseComponent::CoTaskAssembleTaskSetup(Engine& engine, TaskData& task, con
 
 	for (size_t k = 0; k < sizeof(rt) / sizeof(rt[0]); k++) {
 		IRender::Resource::RenderTargetDescription::Storage storage;
-		storage.resource = rt[k]->GetTexture();
+		storage.resource = rt[k]->GetRenderResource();
 		desc.colorStorages.emplace_back(storage);
 	}
 

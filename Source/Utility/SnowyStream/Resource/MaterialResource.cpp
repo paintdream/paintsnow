@@ -26,7 +26,7 @@ void MaterialResource::Attach(IRender& render, void* deviceContext) {
 					TShared<TextureResource>& res = textureResources[textureIndex.index];
 					assert(res);
 					if (res) {
-						texture = res->GetTexture();
+						texture = res->GetRenderResource();
 					}
 				}
 

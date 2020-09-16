@@ -160,6 +160,7 @@ void RenderFlowComponent::Render(Engine& engine) {
 	}
 }
 
+/*
 struct TextureKey {
 	TextureKey(TShared<TextureResource>& res) {
 		state = res->description.state;
@@ -182,7 +183,7 @@ public:
 		static Unique unique = UniqueType<RenderPortRenderTargetStore>::Get();
 		if (typeID == unique) {
 			RenderPortRenderTargetStore& rt = static_cast<RenderPortRenderTargetStore&>(s);
-			TShared<TextureResource>& texture = rt.renderTargetTextureResource;
+			TShared<TextureResource>& texture = rt.renderTargetDescription;
 			if (texture) {
 				std::vector<RenderPortRenderTargetStore*>& s = reusableTextures[texture];
 				for (size_t k = 0; k < s.size(); k++) {
@@ -197,7 +198,7 @@ public:
 					}
 
 					if (i == target->GetLinks().size()) {
-						texture = target->renderTargetTextureResource;
+						texture = target->renderTargetDescription;
 						target = &rt; // update reusable info
 						return;
 					}
@@ -218,11 +219,13 @@ private:
 	std::map<TextureKey, std::vector<RenderPortRenderTargetStore*> > reusableTextures;
 	std::set<RenderStage*> unlockedRenderStages;
 };
+*/
 
 void RenderFlowComponent::Optimize(bool enableParallelPresent) {
 	// Optimize render stage texture storages
 	// Tint by order
 
+	/*
 	RenderTargetTextureCombiner combine;
 	for (size_t i = 0; i < cachedRenderStages.size(); i++) {
 		RenderStage* renderStage = cachedRenderStages[i];
@@ -244,6 +247,7 @@ void RenderFlowComponent::Optimize(bool enableParallelPresent) {
 			}
 		}
 	}
+	*/
 }
 
 void RenderFlowComponent::Initialize(Engine& engine, Entity* entity) {

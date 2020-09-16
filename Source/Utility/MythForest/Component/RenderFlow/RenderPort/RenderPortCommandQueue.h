@@ -17,7 +17,6 @@ namespace PaintsNow {
 		void Initialize(IRender& render, IRender::Queue* mainQueue) override;
 		void Uninitialize(IRender& render, IRender::Queue* mainQueue) override;
 		void Commit(std::vector<IRender::Queue*>& fencedQueues, std::vector<IRender::Queue*>& instanceQueues, std::vector<IRender::Queue*>& deletedQueues) override;
-		bool UpdateDataStream(RenderPort& source) override;
 
 		bool BeginFrame(IRender& render) override;
 		void EndFrame(IRender& render) override;

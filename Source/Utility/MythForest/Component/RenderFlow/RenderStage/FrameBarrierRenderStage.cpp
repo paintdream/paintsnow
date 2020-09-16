@@ -23,9 +23,8 @@ void FrameBarrierRenderStage::PrepareResources(Engine& engine, IRender::Queue* q
 	SnowyStream& snowyStream = engine.snowyStream;
 
 	// Inititalize 
-	Next.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("RT", &Next), false, 0, nullptr);
-	Next.renderTargetTextureResource->description.state.immutable = false;
-	Next.renderTargetTextureResource->description.state.attachment = true;
+	Next.renderTargetDescription.state.immutable = false;
+	Next.renderTargetDescription.state.attachment = true;
 	/*
 	Next.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 	Next.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::RGBA;
@@ -40,28 +39,23 @@ void FrameBarrierRenderStage::Commit(Engine& engine, std::vector<IRender::Queue*
 
 void FrameBarrierRenderStage::Tick(Engine& engine, IRender::Queue* queue) {
 	// Force update source 
-	RenderStage* renderStage = Front.linkedRenderStage;
+	RenderStage* renderStage = Front.Get;
 	if (renderStage != nullptr) {
 		IRender& render = engine.interfaces.render;
-		IRender::Resource* next = Next.renderTargetTextureResource->GetTexture();
-		IRender::Resource* front = Front.textureResource->GetTexture();
+		IRender::Resource* next = Next.renderTargetDescription->GetRenderResource();
+		IRender::Resource* front = Front.textureResource->GetRenderResource();
 
-		if (Front.textureResource->description.state != Next.renderTargetTextureResource->description.state
-			|| Front.textureResource->description.dimension.x() != Next.renderTargetTextureResource->description.dimension.x()
-			|| Front.textureResource->description.dimension.y() != Next.renderTargetTextureResource->description.dimension.y()) {
+		if (Front.textureResource->description.state != Next.renderTargetDescription.state
+			|| Front.textureResource->description.dimension.x() != Next.renderTargetDescription.dimension.x()
+			|| Front.textureResource->description.dimension.y() != Next.renderTargetDescription.dimension.y()) {
 
-			Next.renderTargetTextureResource->description.state = Front.textureResource->description.state;
-			Next.renderTargetTextureResource->description.dimension.x() = Front.textureResource->description.dimension.x();
-			Next.renderTargetTextureResource->description.dimension.y() = Front.textureResource->description.dimension.y();
-			Next.renderTargetTextureResource->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
-			Next.renderTargetTextureResource->GetResourceManager().InvokeUpload(Next.renderTargetTextureResource(), queue);
+			Next.renderTargetDescription.state = Front.textureResource->description.state;
+			Next.renderTargetDescription.dimension.x() = Front.textureResource->description.dimension.x();
+			Next.renderTargetDescription.dimension.y() = Front.textureResource->description.dimension.y();
+			Next.renderTargetDescription->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
+			Next.renderTargetDescription->GetResourceManager().InvokeUpload(Next.renderTargetDescription(), queue);
 			// Front.textureResource->GetResourceManager().InvokeUpload(Front.textureResource(), queue);
 		}
-
-		render.SwapResource(queue, next, front);
-
-		IRender::Resource::RenderTargetDescription copy = renderStage->renderTargetDescription;
-		render.UploadResource(queue, renderStage->renderTarget, &copy);
 	}
 }
 

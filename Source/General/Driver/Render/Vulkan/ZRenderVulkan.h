@@ -45,7 +45,6 @@ namespace PaintsNow {
 		virtual void RequestDownloadResource(Queue* queue, Resource* resource, Resource::Description* description) override;
 		virtual void CompleteDownloadResource(Queue* queue, Resource* resource) override;
 		virtual void ExecuteResource(Queue* queue, Resource* resource) override;
-		virtual void SwapResource(Queue* queue, Resource* lhs, Resource* rhs) override;
 		virtual void DeleteResource(Queue* queue, Resource* resource) override;
 		virtual void SetResourceNotation(Resource* lhs, const String& note) override;
 

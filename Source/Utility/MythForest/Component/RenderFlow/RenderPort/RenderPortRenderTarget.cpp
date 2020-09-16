@@ -20,13 +20,15 @@ TObject<IReflect>& RenderPortRenderTargetLoad::operator () (IReflect& reflect) {
 }
 
 void RenderPortRenderTargetLoad::Initialize(IRender& render, IRender::Queue* mainQueue) {}
-
 void RenderPortRenderTargetLoad::Uninitialize(IRender& render, IRender::Queue* mainQueue) {}
 
-bool RenderPortRenderTargetLoad::UpdateDataStream(RenderPort& source) {
-	RenderStage* renderStage = static_cast<RenderStage*>(source.GetNode());
-	RenderPortRenderTargetStore* target = source.QueryInterface(UniqueType<RenderPortRenderTargetStore>());
+void RenderPortRenderTargetLoad::Tick(Engine& engine, IRender::Queue* queue) {
+	if (GetLinks().empty()) return;
+
+	RenderPort* port = static_cast<RenderPort*>(GetLinks().back().port);
+	RenderPortRenderTargetStore* target = port->QueryInterface(UniqueType<RenderPortRenderTargetStore>());
 	if (target != nullptr) {
+		RenderStage* renderStage = static_cast<RenderStage*>(port->GetNode());
 		RenderStage* hostRenderStage = static_cast<RenderStage*>(GetNode());
 		const IRender::Resource::RenderTargetDescription& desc = renderStage->GetRenderTargetDescription();
 		const IRender::Resource::RenderTargetDescription& hostDesc = hostRenderStage->GetRenderTargetDescription();
@@ -39,9 +41,20 @@ bool RenderPortRenderTargetLoad::UpdateDataStream(RenderPort& source) {
 			bindingStorage.resource = desc.colorStorages[index].resource;
 			bindingStorage.mipLevel = desc.colorStorages[index].mipLevel;
 		}
-	}
 
-	return true;
+		// Link to correspond RenderTargetStore
+		const std::vector<RenderStage::PortInfo>& ports = hostRenderStage->GetPorts();
+		for (size_t i = 0; i < ports.size(); i++) {
+			const RenderStage::PortInfo& port = ports[i];
+			RenderPortRenderTargetStore* t = port.port->QueryInterface(UniqueType<RenderPortRenderTargetStore>());
+			if (t != nullptr && &t->bindingStorage == &bindingStorage) {
+				t->attachedTexture = target->attachedTexture;
+				break;
+			}
+		}
+
+		Flag().fetch_or(TINY_MODIFIED, std::memory_order_relaxed);
+	}
 }
 
 // RenderPortRenderTargetStore
@@ -52,25 +65,21 @@ TObject<IReflect>& RenderPortRenderTargetStore::operator () (IReflect& reflect) 
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectProperty()) {
-		ReflectProperty(renderTargetTextureResource);
+		ReflectProperty(renderTargetDescription);
 	}
 
 	return *this;
 }
 
-void RenderPortRenderTargetStore::Initialize(IRender& render, IRender::Queue* mainQueue) {
-}
+void RenderPortRenderTargetStore::Initialize(IRender& render, IRender::Queue* mainQueue) {}
 
 void RenderPortRenderTargetStore::Uninitialize(IRender& render, IRender::Queue* mainQueue) {
 }
 
-bool RenderPortRenderTargetStore::UpdateDataStream(RenderPort& source) {
-	// Sync texture
-	RenderPortRenderTargetStore* target = source.QueryInterface(UniqueType<RenderPortRenderTargetStore>());
-	if (target != nullptr) {
-		renderTargetTextureResource = target->renderTargetTextureResource;
-		return true;
-	} else {
-		return false;
+void RenderPortRenderTargetStore::Tick(Engine& engine, IRender::Queue* queue) {
+	assert(attachedTexture);
+	if (attachedTexture) {
+		bindingStorage.resource = attachedTexture->GetRenderResource();
+		GetNode()->Flag().fetch_or(TINY_MODIFIED, std::memory_order_relaxed);
 	}
 }

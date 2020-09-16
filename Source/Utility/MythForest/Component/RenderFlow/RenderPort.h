@@ -15,7 +15,6 @@ namespace PaintsNow {
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		virtual void Initialize(IRender& render, IRender::Queue* queue);
 		virtual void Uninitialize(IRender& render, IRender::Queue* queue);
-		virtual bool UpdateDataStream(RenderPort& source);
 		virtual void Commit(std::vector<IRender::Queue*>& fencedQueues, std::vector<IRender::Queue*>& instanceQueues, std::vector<IRender::Queue*>& deletedQueues);
 		virtual bool BeginFrame(IRender& render);
 		virtual void EndFrame(IRender& render);
@@ -32,19 +31,18 @@ namespace PaintsNow {
 		TRenderPortReference() : targetRenderPort(nullptr) {}
 		void Initialize(IRender& render, IRender::Queue* mainQueue) override {}
 		void Uninitialize(IRender& render, IRender::Queue* mainQueue) override {}
-		void Tick(Engine& engine, IRender::Queue* queue) override {
-			RenderPort::Flag().store(targetRenderPort->Flag().load(std::memory_order_relaxed), std::memory_order_relaxed);
-		}
 
-		bool UpdateDataStream(RenderPort& source) override {
-			T* port = source.QueryInterface(UniqueType<T>());
-			assert(port != nullptr);
-			if (port != nullptr) {
-				targetRenderPort = port;
-				return true;
-			} else {
-				return false;
+		void Tick(Engine& engine, IRender::Queue* queue) override {
+			if (!RenderPort::GetLinks().empty()) {
+				RenderStage::Port* p = static_cast<RenderStage::Port*>(RenderPort::GetLinks().back().port);
+				T* port = p->QueryInterface(UniqueType<T>());
+				assert(port != nullptr);
+				if (port != nullptr) {
+					targetRenderPort = port;
+				}
 			}
+
+			RenderPort::Flag().store(targetRenderPort->Flag().load(std::memory_order_relaxed), std::memory_order_relaxed);
 		}
 
 		T* operator -> () {
@@ -69,7 +67,6 @@ namespace PaintsNow {
 		RenderPortShaderPass(TShared<ShaderResourceImpl<T> >& s) : shaderResource(s) {}
 		void Initialize(IRender& render, IRender::Queue* mainQueue) override {}
 		void Uninitialize(IRender& render, IRender::Queue* mainQueue) override {}
-		bool UpdateDataStream(RenderPort& source) override { return true; }
 		PassBase::Updater& GetUpdater() override { return shaderResource->GetPassUpdater(); }
 
 		inline T& GetPass() {

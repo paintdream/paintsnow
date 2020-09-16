@@ -45,27 +45,17 @@ void RenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	renderTarget = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_RENDERTARGET);
 }
 
-class AutoAdaptRenderTarget : public IReflect {
+class ResizeRenderTarget : public IReflect {
 public:
-	AutoAdaptRenderTarget(IRender& r, IRender::Queue* q, uint32_t w, uint32_t h) : IReflect(true, false), render(r), queue(q), width(w), height(h) {}
+	ResizeRenderTarget(IRender& r, IRender::Queue* q, uint32_t w, uint32_t h) : IReflect(true, false), render(r), queue(q), width(w), height(h) {}
 
 	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override {
 		static Unique unique = UniqueType<RenderPortRenderTargetStore>::Get();
 		if (typeID == unique) {
 			RenderPortRenderTargetStore& rt = static_cast<RenderPortRenderTargetStore&>(s);
-			if (rt.renderTargetTextureResource) {
-				UShort3& dimension = rt.renderTargetTextureResource->description.dimension;
-				if (dimension.x() != width || dimension.y() != height || rt.bindingStorage.resource == nullptr) {
-					dimension.x() = width;
-					dimension.y() = height;
-
-					rt.bindingStorage.resource = rt.renderTargetTextureResource->GetTexture();
-
-					// Update texture
-					rt.renderTargetTextureResource->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
-					rt.renderTargetTextureResource->GetResourceManager().InvokeUpload(rt.renderTargetTextureResource(), queue);
-				}
-			}
+			UShort3& dimension = rt.renderTargetDescription.dimension;
+			dimension.x() = width;
+			dimension.y() = height;
 		}
 	}
 
@@ -78,19 +68,14 @@ public:
 };
 
 void RenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
+	IRender::Resource::RenderTargetDescription desc = renderTargetDescription;
+	engine.interfaces.render.UploadResource(queue, renderTarget, &desc);
 }
 
 void RenderStage::Initialize(Engine& engine, IRender::Queue* queue) {
 	IRender& render = engine.interfaces.render;
 	for (size_t i = 0; i < nodePorts.size(); i++) {
-		Port* port = nodePorts[i].port;
-		for (size_t j = 0; j < port->GetLinks().size(); j++) {
-			if (!(port->GetLinks()[j].flag & Tiny::TINY_PINNED)) {
-				port->UpdateDataStream(*static_cast<Port*>(port->GetLinks()[j].port));
-			}
-		}
-
-		port->Initialize(render, queue);
+		nodePorts[i].port->Initialize(render, queue);
 	}
 
 	UpdatePass(engine, queue);
@@ -172,8 +157,8 @@ void RenderStage::SetMainResolution(Engine& engine, IRender::Queue* resourceQueu
 	width = resolutionShift.x() > 0 ? Math::Max(width >> resolutionShift.x(), 2u) : width << resolutionShift.x();
 	height = resolutionShift.y() > 0 ? Math::Max(height >> resolutionShift.y(), 2u) : height << resolutionShift.y();
 
-	AutoAdaptRenderTarget adapt(render, resourceQueue, width, height);
+	ResizeRenderTarget adapt(render, resourceQueue, width, height);
 	(*this)(adapt);
 
-	Flag().fetch_or(TINY_MODIFIED, std::memory_order_acquire);
+	Flag().fetch_or(TINY_MODIFIED, std::memory_order_relaxed);
 }

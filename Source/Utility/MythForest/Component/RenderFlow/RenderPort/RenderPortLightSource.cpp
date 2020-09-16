@@ -17,10 +17,6 @@ void RenderPortLightSource::Initialize(IRender& render, IRender::Queue* mainQueu
 void RenderPortLightSource::Uninitialize(IRender& render, IRender::Queue* mainQueue) {
 }
 
-bool RenderPortLightSource::UpdateDataStream(RenderPort& source) {
-	return true;
-}
-
 bool RenderPortLightSource::BeginFrame(IRender& render) {
 	lightElements.clear();
 	return true;

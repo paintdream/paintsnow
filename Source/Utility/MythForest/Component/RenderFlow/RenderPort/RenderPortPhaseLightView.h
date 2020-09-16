@@ -24,7 +24,6 @@ namespace PaintsNow {
 
 		void Initialize(IRender& render, IRender::Queue* mainQueue) override;
 		void Uninitialize(IRender& render, IRender::Queue* mainQueue) override;
-		bool UpdateDataStream(RenderPort& source) override;
 		bool BeginFrame(IRender& render) override;
 		void EndFrame(IRender& render) override;
 

@@ -75,10 +75,6 @@ void RenderPortCommandQueue::Commit(std::vector<IRender::Queue*>& fencedQueues, 
 	fencedQueues.emplace_back(renderQueue);
 }
 
-bool RenderPortCommandQueue::UpdateDataStream(RenderPort& source) {
-	return true;
-}
-
 void RenderPortCommandQueue::MergeQueue(IRender& render, IRender::Queue* queue) {
 	mergedQueues.Push(queue);
 }

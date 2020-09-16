@@ -20,11 +20,10 @@ TObject<IReflect>& DepthResolveRenderStage::operator () (IReflect& reflect) {
 
 void DepthResolveRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	SnowyStream& snowyStream = engine.snowyStream;
-	OutputDepth.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("RT", &OutputDepth), false, 0, nullptr);
-	OutputDepth.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::FLOAT;
-	OutputDepth.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::R;
-	OutputDepth.renderTargetTextureResource->description.state.immutable = false;
-	OutputDepth.renderTargetTextureResource->description.state.attachment = true;
+	OutputDepth.renderTargetDescription.state.format = IRender::Resource::TextureDescription::FLOAT;
+	OutputDepth.renderTargetDescription.state.layout = IRender::Resource::TextureDescription::R;
+	OutputDepth.renderTargetDescription.state.immutable = false;
+	OutputDepth.renderTargetDescription.state.attachment = true;
 
 	BaseClass::PrepareResources(engine, queue);
 }
@@ -34,7 +33,7 @@ void DepthResolveRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) 
 	ScreenTransformVS& screenTransform = Pass.transform;
 	screenTransform.vertexBuffer.resource = quadMeshResource->bufferCollection.positionBuffer;
 	DepthResolveFS& resolve = Pass.resolve;
-	resolve.depthTexture.resource = InputDepth.textureResource->GetTexture();
+	resolve.depthTexture.resource = InputDepth.textureResource->GetRenderResource();
 
 	BaseClass::UpdatePass(engine, queue);
 }

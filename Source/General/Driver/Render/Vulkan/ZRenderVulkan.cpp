@@ -1632,7 +1632,6 @@ void ZRenderVulkan::ReleaseResource(Queue* queue, Resource* resource) {}
 void ZRenderVulkan::RequestDownloadResource(Queue* queue, Resource* resource, Resource::Description* description) {}
 void ZRenderVulkan::CompleteDownloadResource(Queue* queue, Resource* resource) {}
 void ZRenderVulkan::ExecuteResource(Queue* queue, Resource* resource) {}
-void ZRenderVulkan::SwapResource(Queue* queue, Resource* lhs, Resource* rhs) {}
 void ZRenderVulkan::SetResourceNotation(Resource* lhs, const String& note) {
 
 }

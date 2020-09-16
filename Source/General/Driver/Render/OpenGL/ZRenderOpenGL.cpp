@@ -74,7 +74,7 @@ public:
 	std::vector<GLuint> storeInvalidates;
 };
 
-struct_aligned(8) ResourceAligned : public IRender::Resource {};
+class ResourceAligned : public IRender::Resource {};
 struct QueueImplOpenGL;
 struct ResourceBaseImplOpenGL : public ResourceAligned {
 	virtual ~ResourceBaseImplOpenGL() {}
@@ -87,8 +87,6 @@ struct ResourceBaseImplOpenGL : public ResourceAligned {
 	virtual void Execute(QueueImplOpenGL& queue) = 0;
 	virtual void Upload(QueueImplOpenGL& queue) = 0;
 	virtual void Download(QueueImplOpenGL& queue) = 0;
-	virtual void PreSwap(QueueImplOpenGL& queue) = 0;
-	virtual void PostSwap(QueueImplOpenGL& queue) = 0;
 	virtual void SyncDownload(QueueImplOpenGL& queue) = 0;
 	virtual void Delete(QueueImplOpenGL& queue) = 0;
 
@@ -104,10 +102,7 @@ struct ResourceCommandImplOpenGL {
 		OP_UPLOAD = 1,
 		OP_DOWNLOAD = 2,
 		OP_DELETE = 3,
-		OP_PRESWAP = 4,
-		OP_POSTSWAP = 5,
-		OP_MAX = 5,
-		OP_MASK = 7
+		OP_MASK = 3
 	};
 
 	ResourceCommandImplOpenGL(Operation a = OP_EXECUTE, IRender::Resource* r = nullptr) {
@@ -130,8 +125,6 @@ struct ResourceCommandImplOpenGL {
 			&ResourceBaseImplOpenGL::Upload,
 			&ResourceBaseImplOpenGL::Download,
 			&ResourceBaseImplOpenGL::Delete,
-			&ResourceBaseImplOpenGL::PreSwap,
-			&ResourceBaseImplOpenGL::PostSwap
 		};
 
 		if (GetResource() == nullptr) {
@@ -144,7 +137,7 @@ struct ResourceCommandImplOpenGL {
 		Action action = actionTable[index];
 #ifdef _DEBUG
 		const char* opnames[] = {
-			"Execute", "Upload", "Download", "Delete", "PreSwap", "PostSwap"
+			"Execute", "Upload", "Download", "Delete"
 		};
 
 		const char* types[] = {
@@ -284,7 +277,6 @@ struct QueueImplOpenGL final : public IRender::Queue {
 	DeviceImplOpenGL* device;
 	std::atomic<int32_t> critical;
 	std::atomic<uint32_t> flushCount;
-	ResourceBaseImplOpenGL* swapResource;
 	TQueueList<ResourceCommandImplOpenGL> queuedCommands;
 };
 
@@ -364,9 +356,6 @@ struct ResourceBaseImplOpenGLDesc : public ResourceBaseImplOpenGL {
 	void SyncDownload(QueueImplOpenGL& queue) override {
 		downloadDescription = nullptr;
 	}
-
-	void PreSwap(QueueImplOpenGL& queue) override { assert(false); } // not implemented by default
-	void PostSwap(QueueImplOpenGL& queue) override { assert(false); }
 
 protected:
 	T* downloadDescription;
@@ -848,15 +837,6 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 		}
 
 		delete this;
-	}
-
-	void PreSwap(QueueImplOpenGL& queue) override {
-		queue.swapResource = this;
-	}
-
-	void PostSwap(QueueImplOpenGL& queue) override {
-		ResourceImplOpenGL<TextureDescription>* t = static_cast<ResourceImplOpenGL<TextureDescription>*>(queue.swapResource);
-		std::swap(textureID, t->textureID);
 	}
 
 	union {
@@ -1808,15 +1788,6 @@ void ZRenderOpenGL::AcquireResource(Queue* queue, Resource* resource) {
 
 void ZRenderOpenGL::ReleaseResource(Queue* queue, Resource* resource) {
 	// OpenGL does not support multi-thread committing and reordering
-}
-
-void ZRenderOpenGL::SwapResource(Queue* queue, Resource* lhs, Resource* rhs) {
-	assert(queue != nullptr);
-	assert(lhs != nullptr);
-	assert(rhs != nullptr);
-	QueueImplOpenGL* q = static_cast<QueueImplOpenGL*>(queue);
-	q->QueueCommand(ResourceCommandImplOpenGL(ResourceCommandImplOpenGL::OP_PRESWAP, lhs));
-	q->QueueCommand(ResourceCommandImplOpenGL(ResourceCommandImplOpenGL::OP_POSTSWAP, rhs));
 }
 
 void ZRenderOpenGL::SetResourceNotation(Resource* resource, const String& note) {

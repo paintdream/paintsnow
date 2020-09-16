@@ -177,6 +177,7 @@ namespace PaintsNow {
 					DEFAULT,
 					DISCARD,
 					CLEAR,
+					AUTO
 				};
 
 				struct Storage {
@@ -254,7 +255,6 @@ namespace PaintsNow {
 		virtual void RequestDownloadResource(Queue* queue, Resource* resource, Resource::Description* description) = 0;
 		virtual void CompleteDownloadResource(Queue* queue, Resource* resource) = 0;
 		virtual void ExecuteResource(Queue* queue, Resource* resource) = 0;
-		virtual void SwapResource(Queue* queue, Resource* lhs, Resource* rhs) = 0;
 		virtual void SetResourceNotation(Resource* lhs, const String& note) = 0;
 	};
 }

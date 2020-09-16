@@ -25,12 +25,11 @@ TObject<IReflect>& LightBufferRenderStage::operator () (IReflect& reflect) {
 
 void LightBufferRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	SnowyStream& snowyStream = engine.snowyStream;
-	LightTexture.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("RT", &LightTexture), false, 0, nullptr);
-	LightTexture.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_SHORT;
-	LightTexture.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::RGBA;
-	LightTexture.renderTargetTextureResource->description.state.sample = IRender::Resource::TextureDescription::POINT;
-	LightTexture.renderTargetTextureResource->description.state.immutable = false;
-	LightTexture.renderTargetTextureResource->description.state.attachment = true;
+	LightTexture.renderTargetDescription.state.format = IRender::Resource::TextureDescription::UNSIGNED_SHORT;
+	LightTexture.renderTargetDescription.state.layout = IRender::Resource::TextureDescription::RGBA;
+	LightTexture.renderTargetDescription.state.sample = IRender::Resource::TextureDescription::POINT;
+	LightTexture.renderTargetDescription.state.immutable = false;
+	LightTexture.renderTargetDescription.state.attachment = true;
 
 	BaseClass::PrepareResources(engine, queue);
 }
@@ -45,7 +44,7 @@ void LightBufferRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 	ScreenTransformVS& screenTransform = Pass.transform;
 	screenTransform.vertexBuffer.resource = quadMeshResource->bufferCollection.positionBuffer;
 	LightEncoderFS& encoder = Pass.encoder;
-	encoder.depthTexture.resource = InputDepth.textureResource->GetTexture();
+	encoder.depthTexture.resource = InputDepth.textureResource->GetRenderResource();
 	encoder.inverseProjectionMatrix = CameraView->inverseProjectionMatrix;
 
 	// Prepare lights

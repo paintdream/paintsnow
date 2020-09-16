@@ -23,12 +23,11 @@ TObject<IReflect>& DepthBoundingSetupRenderStage::operator () (IReflect& reflect
 
 void DepthBoundingSetupRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	SnowyStream& snowyStream = engine.snowyStream;
-	OutputDepth.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("RT", &OutputDepth), false, 0, nullptr);
-	OutputDepth.renderTargetTextureResource->description.state.format = IRender::Resource::TextureDescription::HALF;
-	OutputDepth.renderTargetTextureResource->description.state.layout = IRender::Resource::TextureDescription::RG;
-	OutputDepth.renderTargetTextureResource->description.state.sample = IRender::Resource::TextureDescription::POINT;
-	OutputDepth.renderTargetTextureResource->description.state.immutable = false;
-	OutputDepth.renderTargetTextureResource->description.state.attachment = true;
+	OutputDepth.renderTargetDescription.state.format = IRender::Resource::TextureDescription::HALF;
+	OutputDepth.renderTargetDescription.state.layout = IRender::Resource::TextureDescription::RG;
+	OutputDepth.renderTargetDescription.state.sample = IRender::Resource::TextureDescription::POINT;
+	OutputDepth.renderTargetDescription.state.immutable = false;
+	OutputDepth.renderTargetDescription.state.attachment = true;
 
 	BaseClass::PrepareResources(engine, queue);
 }
@@ -38,8 +37,8 @@ void DepthBoundingSetupRenderStage::UpdatePass(Engine& engine, IRender::Queue* q
 	ScreenTransformVS& screenTransform = Pass.transform;
 	screenTransform.vertexBuffer.resource = quadMeshResource->bufferCollection.positionBuffer;
 	DepthMinMaxSetupFS& minmax = Pass.minmax;
-	minmax.depthTexture.resource = InputDepth.textureResource->GetTexture();
-	const UShort3& dim = OutputDepth.renderTargetTextureResource->description.dimension;
+	minmax.depthTexture.resource = InputDepth.textureResource->GetRenderResource();
+	const UShort3& dim = OutputDepth.renderTargetDescription.dimension;
 	minmax.invScreenSize = Float2(dim.x() == 0 ? 0 : 1.0f / dim.x(), dim.y() == 0 ? 0 : 1.0f / dim.y());
 	BaseClass::UpdatePass(engine, queue);
 }

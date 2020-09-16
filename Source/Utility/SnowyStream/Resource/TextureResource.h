@@ -21,7 +21,7 @@ namespace PaintsNow {
 		void Unmap() override;
 
 		TObject<IReflect>& operator () (IReflect& reflect) override;
-		IRender::Resource* GetTexture() const;
+		IRender::Resource* GetRenderResource() const;
 		IRender::Resource::TextureDescription description;
 
 	public:
