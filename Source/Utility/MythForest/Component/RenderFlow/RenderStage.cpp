@@ -1,6 +1,5 @@
 #include "RenderStage.h"
 #include "RenderPort/RenderPortRenderTarget.h"
-#include "RenderPort/RenderPortLoadTarget.h"
 
 using namespace PaintsNow;
 
@@ -51,9 +50,9 @@ public:
 	AutoAdaptRenderTarget(IRender& r, IRender::Queue* q, uint32_t w, uint32_t h) : IReflect(true, false), render(r), queue(q), width(w), height(h) {}
 
 	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override {
-		static Unique unique = UniqueType<RenderPortRenderTarget>::Get();
+		static Unique unique = UniqueType<RenderPortRenderTargetStore>::Get();
 		if (typeID == unique) {
-			RenderPortRenderTarget& rt = static_cast<RenderPortRenderTarget&>(s);
+			RenderPortRenderTargetStore& rt = static_cast<RenderPortRenderTargetStore&>(s);
 			if (rt.renderTargetTextureResource) {
 				UShort3& dimension = rt.renderTargetTextureResource->description.dimension;
 				if (dimension.x() != width || dimension.y() != height || rt.bindingStorage.resource == nullptr) {

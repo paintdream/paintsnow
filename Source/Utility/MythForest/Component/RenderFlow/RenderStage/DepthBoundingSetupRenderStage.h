@@ -19,7 +19,7 @@ namespace PaintsNow {
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		RenderPortTextureInput InputDepth;
-		RenderPortRenderTarget OutputDepth;
+		RenderPortRenderTargetStore OutputDepth;
 	};
 }
 

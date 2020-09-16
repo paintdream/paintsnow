@@ -27,7 +27,7 @@ namespace PaintsNow {
 		RenderPortTextureInput BaseColorOcclusion;
 		RenderPortTextureInput NormalRoughnessMetallic;
 		RenderPortPhaseLightView PhaseLightView;
-		RenderPortRenderTarget OutputColor;
+		RenderPortRenderTargetStore OutputColor;
 	};
 }
 

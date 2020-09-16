@@ -24,7 +24,7 @@ namespace PaintsNow {
 		TRenderPortReference<RenderPortCameraView> CameraView;
 		RenderPortLightSource LightSource;
 		RenderPortTextureInput InputDepth;
-		RenderPortRenderTarget LightTexture;
+		RenderPortRenderTargetStore LightTexture;
 	};
 }
 

@@ -23,7 +23,7 @@ namespace PaintsNow {
 		TRenderPortReference<RenderPortLightSource> LightSource;
 		TRenderPortReference<RenderPortCameraView> CameraView;
 		RenderPortTextureInput InputDepth;
-		RenderPortRenderTarget OutputMask;
+		RenderPortRenderTargetStore OutputMask;
 
 		TShared<TextureResource> emptyShadowMask;
 	};

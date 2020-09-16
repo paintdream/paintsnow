@@ -23,7 +23,7 @@ namespace PaintsNow {
 		RenderPortTextureInput InputColor;
 		RenderPortTextureInput LastInputColor;
 		RenderPortTextureInput Depth;
-		RenderPortRenderTarget OutputColor;
+		RenderPortRenderTargetStore OutputColor;
 	};
 }
 

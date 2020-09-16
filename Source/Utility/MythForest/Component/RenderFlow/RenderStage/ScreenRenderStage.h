@@ -19,7 +19,7 @@ namespace PaintsNow {
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		RenderPortTextureInput InputColor;
-		RenderPortRenderTarget OutputColor;
+		RenderPortRenderTargetStore OutputColor;
 
 		std::vector<TShared<RenderPortTextureInput> > BloomLayers;
 	};

@@ -30,9 +30,21 @@ namespace PaintsNow {
 
 	extern MetaAdaptMainResolution AdaptMainResolution;
 
-	class RenderPortRenderTarget : public TReflected<RenderPortRenderTarget, RenderPort> {
+	class RenderPortRenderTargetLoad : public TReflected<RenderPortRenderTargetLoad, RenderPort> {
 	public:
-		RenderPortRenderTarget(IRender::Resource::RenderTargetDescription::Storage& storage);
+		RenderPortRenderTargetLoad(IRender::Resource::RenderTargetDescription::Storage& storage, bool save = false);
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+
+		void Initialize(IRender& render, IRender::Queue* mainQueue) override;
+		void Uninitialize(IRender& render, IRender::Queue* mainQueue) override;
+		bool UpdateDataStream(RenderPort& source) override;
+
+		IRender::Resource::RenderTargetDescription::Storage& bindingStorage;
+	};
+
+	class RenderPortRenderTargetStore : public TReflected<RenderPortRenderTargetStore, RenderPort> {
+	public:
+		RenderPortRenderTargetStore(IRender::Resource::RenderTargetDescription::Storage& storage);
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		void Initialize(IRender& render, IRender::Queue* mainQueue) override;

@@ -21,7 +21,7 @@ namespace PaintsNow {
 		RenderPortLightSource LightSource;
 		RenderPortCommandQueue Primitives; // input primitives
 
-		RenderPortRenderTarget OutputColor;
+		RenderPortRenderTargetStore OutputColor;
 	};
 }
 

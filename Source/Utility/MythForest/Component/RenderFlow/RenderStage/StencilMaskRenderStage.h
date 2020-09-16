@@ -7,7 +7,6 @@
 #include "../RenderStage.h"
 #include "../RenderPort/RenderPortRenderTarget.h"
 #include "../RenderPort/RenderPortTextureInput.h"
-#include "../RenderPort/RenderPortLoadTarget.h"
 #include "../RenderPort/RenderPortCameraView.h"
 #include "../../../../SnowyStream/Resource/Passes/ConstMapPass.h"
 
@@ -20,9 +19,9 @@ namespace PaintsNow {
 
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 
-		RenderPortLoadTarget InputDepth;
-		RenderPortLoadTarget InputColorPlaceHolder;
-		RenderPortRenderTarget OutputDepth;
+		RenderPortRenderTargetLoad InputDepth;
+		RenderPortRenderTargetLoad InputColorPlaceHolder;
+		RenderPortRenderTargetStore OutputDepth;
 	};
 }
 

@@ -8,7 +8,6 @@
 #include "../RenderPort/RenderPortRenderTarget.h"
 #include "../RenderPort/RenderPortTextureInput.h"
 #include "../RenderPort/RenderPortLightSource.h"
-#include "../RenderPort/RenderPortLoadTarget.h"
 #include "../RenderPort/RenderPortCameraView.h"
 #include "../../../../SnowyStream/Resource/Passes/DeferredLightingPass.h"
 
@@ -29,8 +28,8 @@ namespace PaintsNow {
 		RenderPortTextureInput LightTexture;
 		RenderPortTextureInput ShadowTexture;
 
-		RenderPortLoadTarget LoadDepth;
-		RenderPortRenderTarget OutputColor;
+		RenderPortRenderTargetLoad LoadDepth;
+		RenderPortRenderTargetStore OutputColor;
 	};
 }
 

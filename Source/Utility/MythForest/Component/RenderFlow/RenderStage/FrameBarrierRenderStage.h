@@ -21,7 +21,7 @@ namespace PaintsNow {
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		RenderPortTextureInput Front;
-		RenderPortRenderTarget Next;
+		RenderPortRenderTargetStore Next;
 	};
 }
 

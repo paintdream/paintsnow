@@ -26,7 +26,7 @@ void RenderPortTextureInput::Uninitialize(IRender& render, IRender::Queue* mainQ
 
 bool RenderPortTextureInput::UpdateDataStream(RenderPort& source) {
 	// Sync texture, now supports fetch textue from RenderTarget only.
-	RenderPortRenderTarget* target = source.QueryInterface(UniqueType<RenderPortRenderTarget>());
+	RenderPortRenderTargetStore* target = source.QueryInterface(UniqueType<RenderPortRenderTargetStore>());
 	if (target != nullptr) {
 		textureResource = target->renderTargetTextureResource;
 		linkedRenderStage = static_cast<RenderStage*>(source.GetNode());

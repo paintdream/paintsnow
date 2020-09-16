@@ -179,14 +179,14 @@ public:
 	RenderTargetTextureCombiner() {}
 
 	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override {
-		static Unique unique = UniqueType<RenderPortRenderTarget>::Get();
+		static Unique unique = UniqueType<RenderPortRenderTargetStore>::Get();
 		if (typeID == unique) {
-			RenderPortRenderTarget& rt = static_cast<RenderPortRenderTarget&>(s);
+			RenderPortRenderTargetStore& rt = static_cast<RenderPortRenderTargetStore&>(s);
 			TShared<TextureResource>& texture = rt.renderTargetTextureResource;
 			if (texture) {
-				std::vector<RenderPortRenderTarget*>& s = reusableTextures[texture];
+				std::vector<RenderPortRenderTargetStore*>& s = reusableTextures[texture];
 				for (size_t k = 0; k < s.size(); k++) {
-					RenderPortRenderTarget*& target = s[k];
+					RenderPortRenderTargetStore*& target = s[k];
 					size_t i;
 					for (i = 0; i < target->GetLinks().size(); i++) {
 						RenderStage* renderStage = static_cast<RenderStage*>(target->GetLinks()[i].port->GetNode());
@@ -215,7 +215,7 @@ public:
 	}
 
 private:
-	std::map<TextureKey, std::vector<RenderPortRenderTarget*> > reusableTextures;
+	std::map<TextureKey, std::vector<RenderPortRenderTargetStore*> > reusableTextures;
 	std::set<RenderStage*> unlockedRenderStages;
 };
 

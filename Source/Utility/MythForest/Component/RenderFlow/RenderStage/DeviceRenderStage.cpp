@@ -25,8 +25,8 @@ void DeviceRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) 
 	assert(InputColor.GetLinks().size() == 1);
 	RenderPort* renderPort = static_cast<RenderPort*>(InputColor.GetLinks()[0].port);
 	assert(renderPort != nullptr);
-	assert(renderPort->QueryInterface(UniqueType<RenderPortRenderTarget>()) != nullptr);
-	RenderPortRenderTarget* input = renderPort->QueryInterface(UniqueType<RenderPortRenderTarget>());
+	assert(renderPort->QueryInterface(UniqueType<RenderPortRenderTargetStore>()) != nullptr);
+	RenderPortRenderTargetStore* input = renderPort->QueryInterface(UniqueType<RenderPortRenderTargetStore>());
 
 	// Clear source node renderTarget
 	input->renderTargetTextureResource = nullptr;

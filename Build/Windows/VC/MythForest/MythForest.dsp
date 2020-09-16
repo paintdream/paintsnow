@@ -345,10 +345,6 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderPort\Ren
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderPort\RenderPortLoadTarget.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderPort\RenderPortPhaseLightView.cpp
 # End Source File
 # Begin Source File
@@ -746,10 +742,6 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderPort\Ren
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderPort\RenderPortLightSource.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderPort\RenderPortLoadTarget.h
 # End Source File
 # Begin Source File
 

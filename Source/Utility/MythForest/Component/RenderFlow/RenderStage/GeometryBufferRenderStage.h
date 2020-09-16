@@ -20,9 +20,9 @@ namespace PaintsNow {
 		RenderPortCameraView CameraView;
 		RenderPortCommandQueue Primitives;		// input primitives
 
-		RenderPortRenderTarget BaseColorOcclusion;
-		RenderPortRenderTarget NormalRoughnessMetallic;
-		RenderPortRenderTarget Depth;
+		RenderPortRenderTargetStore BaseColorOcclusion;
+		RenderPortRenderTargetStore NormalRoughnessMetallic;
+		RenderPortRenderTargetStore Depth;
 	};
 }
 

@@ -18,7 +18,7 @@ namespace PaintsNow {
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		RenderPortCommandQueue Widgets;
-		RenderPortRenderTarget OutputColor;
+		RenderPortRenderTargetStore OutputColor;
 	};
 }
 
