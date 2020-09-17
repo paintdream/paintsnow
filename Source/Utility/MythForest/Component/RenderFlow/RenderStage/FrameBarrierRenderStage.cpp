@@ -26,20 +26,49 @@ void FrameBarrierRenderStage::PrepareResources(Engine& engine, IRender::Queue* q
 	// RenderStage::PrepareResources(engine);
 }
 
-void FrameBarrierRenderStage::SetMainResolution(Engine& engine, IRender::Queue* queue, uint32_t width, uint32_t height) {}
+void FrameBarrierRenderStage::SetMainResolution(Engine& engine, IRender::Queue* queue, uint32_t width, uint32_t height) {
+	if (Next.GetLinks().empty()) return;
+
+	RenderStage* stage = static_cast<RenderStage*>(Next.GetLinks().back().port->GetNode());
+	if (stage->Flag() & RENDERSTAGE_ADAPT_MAIN_RESOLUTION) {
+		Flag().fetch_or(RENDERSTAGE_ADAPT_MAIN_RESOLUTION, std::memory_order_relaxed);
+		resolutionShift = stage->resolutionShift;
+
+		BaseClass::SetMainResolution(engine, queue, width, height);
+	} else {
+		Flag().fetch_and(~RENDERSTAGE_ADAPT_MAIN_RESOLUTION, std::memory_order_relaxed);
+	}
+}
+
 void FrameBarrierRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {}
 void FrameBarrierRenderStage::Commit(Engine& engine, std::vector<IRender::Queue*>& queues, std::vector<IRender::Queue*>& instantQueues, std::vector<IRender::Queue*>& deletedQueues, IRender::Queue* instantQueue) {}
 
 void FrameBarrierRenderStage::Tick(Engine& engine, IRender::Queue* queue) {
-	if (Front.textureResource->description.state != Next.renderTargetDescription.state
+	BaseClass::Tick(engine, queue);
+	if (Front.GetLinks().empty()) return;
+
+	if (!Next.attachedTexture ||
+		Front.textureResource->description.state != Next.renderTargetDescription.state
 		|| Front.textureResource->description.dimension.x() != Next.renderTargetDescription.dimension.x()
 		|| Front.textureResource->description.dimension.y() != Next.renderTargetDescription.dimension.y()) {
 		Next.renderTargetDescription.state = Front.textureResource->description.state;
 		Next.renderTargetDescription.dimension.x() = Front.textureResource->description.dimension.x();
 		Next.renderTargetDescription.dimension.y() = Front.textureResource->description.dimension.y();
-		Next.attachedTexture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("RT", this), false, 0, nullptr);
+		if (!Next.attachedTexture) {
+			Next.attachedTexture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("RT", this), false, 0, nullptr);
+		}
+
+		Next.attachedTexture->description.state = Next.renderTargetDescription.state;
+		Next.attachedTexture->description.dimension = Next.renderTargetDescription.dimension;
+		Next.attachedTexture->Flag().fetch_or(TINY_MODIFIED, std::memory_order_relaxed);
+		Next.attachedTexture->GetResourceManager().InvokeUpload(Next.attachedTexture(), queue);
 	}
 
-	std::swap(Front.textureResource, Next.attachedTexture);
+	RenderPortRenderTargetStore* rt = Front.GetLinks().back().port->QueryInterface(UniqueType<RenderPortRenderTargetStore>());
+
+	rt->attachedTexture = Next.attachedTexture;
+	Next.attachedTexture = Front.textureResource;
+
+	rt->Flag().fetch_or(TINY_MODIFIED, std::memory_order_relaxed);
 }
 

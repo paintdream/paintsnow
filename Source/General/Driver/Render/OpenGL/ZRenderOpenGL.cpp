@@ -713,7 +713,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 					}
 
 					if (data != nullptr) {
-						CreateMipsArray(d, bitDepth, textureType, srcLayout, srcDataType, format, d.data.GetData(), d.data.GetSize());
+						CreateMipsArray(d, bitDepth, textureType, srcLayout, srcDataType, format, data, d.data.GetSize());
 					}
 					break;
 				}
@@ -887,7 +887,9 @@ struct ResourceImplOpenGL<IRender::Resource::BufferDescription> final : public R
 		}
 	
 		glBindBuffer(bufferType, bufferID);
-		glBufferData(bufferType, d.data.GetSize(), d.data.GetData(), d.dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
+		if (!d.data.Empty()) {
+			glBufferData(bufferType, d.data.GetSize(), d.data.GetData(), d.dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
+		}
 
 		length = safe_cast<uint32_t>(d.data.GetSize());
 		d.data.Clear();

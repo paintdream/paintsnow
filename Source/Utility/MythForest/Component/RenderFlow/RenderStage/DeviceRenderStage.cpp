@@ -19,7 +19,9 @@ void DeviceRenderStage::SetMainResolution(Engine& engine, IRender::Queue* queue,
 void DeviceRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {}
 void DeviceRenderStage::Commit(Engine& engine, std::vector<IRender::Queue*>& queues, std::vector<IRender::Queue*>& instantQueues, std::vector<IRender::Queue*>& deletedQueues, IRender::Queue* instantQueue) {}
 
-void DeviceRenderStage::Tick(Engine& engine, IRender::Queue* queue) {}
+void DeviceRenderStage::Tick(Engine& engine, IRender::Queue* queue) {
+	BaseClass::Tick(engine, queue);
+}
 
 void DeviceRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	assert(InputColor.GetLinks().size() == 1);
@@ -28,12 +30,9 @@ void DeviceRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) 
 	assert(renderPort->QueryInterface(UniqueType<RenderPortRenderTargetStore>()) != nullptr);
 	RenderPortRenderTargetStore* input = renderPort->QueryInterface(UniqueType<RenderPortRenderTargetStore>());
 
-	assert(false);
 	// TODO
 	// Clear source node renderTarget
-	/*
-	input->renderTargetDescription = nullptr;
+	// input->renderTargetDescription = nullptr;
 	(static_cast<RenderStage*>(input->GetNode()))->renderTargetDescription.colorStorages.clear();
-*/
 	// BaseClass::PrepareResources(engine, queue);
 }

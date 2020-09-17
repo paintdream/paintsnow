@@ -23,6 +23,7 @@ void RenderPortRenderTargetLoad::Initialize(IRender& render, IRender::Queue* mai
 void RenderPortRenderTargetLoad::Uninitialize(IRender& render, IRender::Queue* mainQueue) {}
 
 void RenderPortRenderTargetLoad::Tick(Engine& engine, IRender::Queue* queue) {
+	BaseClass::Tick(engine, queue);
 	if (GetLinks().empty()) return;
 
 	RenderPort* port = static_cast<RenderPort*>(GetLinks().back().port);
@@ -77,7 +78,9 @@ void RenderPortRenderTargetStore::Uninitialize(IRender& render, IRender::Queue* 
 }
 
 void RenderPortRenderTargetStore::Tick(Engine& engine, IRender::Queue* queue) {
+	BaseClass::Tick(engine, queue);
 	assert(attachedTexture);
+
 	if (attachedTexture) {
 		bindingStorage.resource = attachedTexture->GetRenderResource();
 		GetNode()->Flag().fetch_or(TINY_MODIFIED, std::memory_order_relaxed);

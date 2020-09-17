@@ -214,6 +214,10 @@ void RenderFlowComponent::SetupTextures(Engine& engine) {
 
 					if (!texture) {
 						texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("RT", rt), false, 0, nullptr);
+						texture->description.state = textureKey.state;
+						texture->description.dimension = textureKey.dimension;
+						texture->Flag().fetch_or(TINY_MODIFIED, std::memory_order_relaxed);
+						texture->GetResourceManager().InvokeUpload(texture(), resourceQueue);
 
 						TextureList& textureList = textureMap[textureKey];
 						textureList.emplace_back(texture);
@@ -234,8 +238,7 @@ void RenderFlowComponent::SetupTextures(Engine& engine) {
 				const std::vector<RenderPort::LinkInfo>& links = portInfo.port->GetLinks();
 				for (size_t j = 0; j < links.size(); j++) {
 					RenderPortRenderTargetStore* rt = links[j].port->QueryInterface(UniqueType<RenderPortRenderTargetStore>());
-					if (rt != nullptr) {
-						assert(rt->attachedTexture);
+					if (rt != nullptr && rt->attachedTexture) {
 						textureRefMap[rt->attachedTexture]--;
 					}
 				}

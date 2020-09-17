@@ -45,28 +45,6 @@ void RenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	renderTarget = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_RENDERTARGET);
 }
 
-class ResizeRenderTarget : public IReflect {
-public:
-	ResizeRenderTarget(IRender& r, IRender::Queue* q, uint32_t w, uint32_t h) : IReflect(true, false), render(r), queue(q), width(w), height(h) {}
-
-	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override {
-		static Unique unique = UniqueType<RenderPortRenderTargetStore>::Get();
-		if (typeID == unique) {
-			RenderPortRenderTargetStore& rt = static_cast<RenderPortRenderTargetStore&>(s);
-			UShort3& dimension = rt.renderTargetDescription.dimension;
-			dimension.x() = width;
-			dimension.y() = height;
-		}
-	}
-
-	void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
-
-	IRender& render;
-	IRender::Queue* queue;
-	uint32_t width;
-	uint32_t height;
-};
-
 void RenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 	IRender::Resource::RenderTargetDescription desc = renderTargetDescription;
 	engine.interfaces.render.UploadResource(queue, renderTarget, &desc);
@@ -76,13 +54,6 @@ void RenderStage::Initialize(Engine& engine, IRender::Queue* queue) {
 	IRender& render = engine.interfaces.render;
 	for (size_t i = 0; i < nodePorts.size(); i++) {
 		nodePorts[i].port->Initialize(render, queue);
-	}
-
-	UpdatePass(engine, queue);
-
-	if (renderTarget != nullptr) {
-		IRender::Resource::RenderTargetDescription copy = renderTargetDescription;
-		render.UploadResource(queue, renderTarget, &copy);
 	}
 
 	Flag().fetch_or(TINY_ACTIVATED, std::memory_order_acquire);
@@ -157,8 +128,19 @@ void RenderStage::SetMainResolution(Engine& engine, IRender::Queue* resourceQueu
 	width = resolutionShift.x() > 0 ? Math::Max(width >> resolutionShift.x(), 2u) : width << resolutionShift.x();
 	height = resolutionShift.y() > 0 ? Math::Max(height >> resolutionShift.y(), 2u) : height << resolutionShift.y();
 
-	ResizeRenderTarget adapt(render, resourceQueue, width, height);
-	(*this)(adapt);
+	const std::vector<PortInfo>& portInfos = GetPorts();
+	for (size_t i = 0; i < portInfos.size(); i++) {
+		RenderPortRenderTargetStore* rt = portInfos[i].port->QueryInterface(UniqueType<RenderPortRenderTargetStore>());
+		if (rt != nullptr) {
+			rt->renderTargetDescription.dimension.x() = width;
+			rt->renderTargetDescription.dimension.y() = height;
+
+			if (rt->attachedTexture) {
+				rt->attachedTexture->description.dimension = rt->renderTargetDescription.dimension;
+				render.UploadResource(resourceQueue, rt->attachedTexture->GetRenderResource(), &rt->attachedTexture->description);
+			}
+		}
+	}
 
 	Flag().fetch_or(TINY_MODIFIED, std::memory_order_relaxed);
 }

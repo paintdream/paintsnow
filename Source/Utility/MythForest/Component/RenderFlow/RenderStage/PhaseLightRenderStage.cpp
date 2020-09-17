@@ -34,7 +34,7 @@ void PhaseLightRenderStage::PrepareResources(Engine& engine, IRender::Queue* que
 
 void PhaseLightRenderStage::Tick(Engine& engine, IRender::Queue* queue) {
 	Flag().fetch_or(TINY_MODIFIED, std::memory_order_acquire);
-	RenderStage::Tick(engine, queue);
+	BaseClass::Tick(engine, queue);
 }
 
 void PhaseLightRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
