@@ -22,7 +22,6 @@ TObject<IReflect>& ForwardLightingRenderStage::operator () (IReflect& reflect) {
 void ForwardLightingRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	IRender& render = engine.interfaces.render;
 	SnowyStream& snowyStream = engine.snowyStream;
-	OutputColor.renderTargetDescription = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("RT", &OutputColor), false, 0, nullptr);
 	OutputColor.renderTargetDescription.state.format = IRender::Resource::TextureDescription::HALF;
 	OutputColor.renderTargetDescription.state.layout = IRender::Resource::TextureDescription::RGBA;
 	OutputColor.renderTargetDescription.state.immutable = false;
