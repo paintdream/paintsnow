@@ -31,17 +31,9 @@ void RenderPortRenderTargetLoad::Tick(Engine& engine, IRender::Queue* queue) {
 	if (target != nullptr) {
 		RenderStage* renderStage = static_cast<RenderStage*>(port->GetNode());
 		RenderStage* hostRenderStage = static_cast<RenderStage*>(GetNode());
-		const IRender::Resource::RenderTargetDescription& desc = renderStage->GetRenderTargetDescription();
-		const IRender::Resource::RenderTargetDescription& hostDesc = hostRenderStage->GetRenderTargetDescription();
 
-		if (&bindingStorage == &hostDesc.depthStorage) {
-			bindingStorage.resource = target->bindingStorage.resource;
-			bindingStorage.mipLevel = target->bindingStorage.mipLevel;
-		} else {
-			size_t index = &target->bindingStorage - &desc.colorStorages[0];
-			bindingStorage.resource = desc.colorStorages[index].resource;
-			bindingStorage.mipLevel = desc.colorStorages[index].mipLevel;
-		}
+		bindingStorage.resource = target->bindingStorage.resource;
+		bindingStorage.mipLevel = target->bindingStorage.mipLevel;
 
 		// Link to correspond RenderTargetStore
 		const std::vector<RenderStage::PortInfo>& ports = hostRenderStage->GetPorts();

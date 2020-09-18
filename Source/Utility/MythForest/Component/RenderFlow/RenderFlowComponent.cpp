@@ -175,7 +175,7 @@ void RenderFlowComponent::SetupTextures(Engine& engine) {
 	// Tint by order
 	typedef std::vector<TShared<TextureResource> > TextureList;
 	typedef std::map<TextureKey, TextureList> TextureMap;
-	typedef std::map<TShared<TextureResource>, size_t> TextureRefMap;
+	typedef std::map<TextureResource*, size_t> TextureRefMap;
 
 	TextureMap textureMap;
 	TextureRefMap textureRefMap;
@@ -202,7 +202,7 @@ void RenderFlowComponent::SetupTextures(Engine& engine) {
 					if (it != textureMap.end()) {
 						for (size_t n = 0; n < (*it).second.size(); n++) {
 							TShared<TextureResource>& res = (*it).second[n];
-							size_t& v = textureRefMap[res];
+							size_t& v = textureRefMap[res()];
 							if (v == 0) { // reuseable
 								texture = res;
 								v = rt->GetLinks().size() + 1;
@@ -222,7 +222,7 @@ void RenderFlowComponent::SetupTextures(Engine& engine) {
 						TextureList& textureList = textureMap[textureKey];
 						textureList.emplace_back(texture);
 
-						textureRefMap[texture] = rt->GetLinks().size() + 1;
+						textureRefMap[texture()] = rt->GetLinks().size() + 1;
 					}
 
 					rt->attachedTexture = texture;
@@ -239,7 +239,7 @@ void RenderFlowComponent::SetupTextures(Engine& engine) {
 				for (size_t j = 0; j < links.size(); j++) {
 					RenderPortRenderTargetStore* rt = links[j].port->QueryInterface(UniqueType<RenderPortRenderTargetStore>());
 					if (rt != nullptr && rt->attachedTexture) {
-						textureRefMap[rt->attachedTexture]--;
+						textureRefMap[rt->attachedTexture()]--;
 					}
 				}
 			}
