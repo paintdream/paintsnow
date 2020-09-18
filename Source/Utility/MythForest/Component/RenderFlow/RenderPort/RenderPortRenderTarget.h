@@ -30,6 +30,7 @@ namespace PaintsNow {
 
 	extern MetaAdaptMainResolution AdaptMainResolution;
 
+	class RenderPortRenderTargetStore;
 	class RenderPortRenderTargetLoad : public TReflected<RenderPortRenderTargetLoad, RenderPort> {
 	public:
 		RenderPortRenderTargetLoad(IRender::Resource::RenderTargetDescription::Storage& storage, bool save = false);
@@ -39,6 +40,7 @@ namespace PaintsNow {
 		void Uninitialize(IRender& render, IRender::Queue* mainQueue) override;
 		void Tick(Engine& engine, IRender::Queue* queue) override;
 
+		RenderPortRenderTargetStore* QueryStore() const;
 		IRender::Resource::RenderTargetDescription::Storage& bindingStorage;
 	};
 
@@ -50,6 +52,7 @@ namespace PaintsNow {
 		void Initialize(IRender& render, IRender::Queue* mainQueue) override;
 		void Uninitialize(IRender& render, IRender::Queue* mainQueue) override;
 		void Tick(Engine& engine, IRender::Queue* queue) override;
+		RenderPortRenderTargetLoad* QueryLoad() const;
 
 		IRender::Resource::RenderTargetDescription::Storage& bindingStorage;
 		TShared<TextureResource> attachedTexture;

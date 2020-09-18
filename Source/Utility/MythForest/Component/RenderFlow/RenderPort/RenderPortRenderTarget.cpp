@@ -50,6 +50,17 @@ void RenderPortRenderTargetLoad::Tick(Engine& engine, IRender::Queue* queue) {
 	}
 }
 
+RenderPortRenderTargetStore* RenderPortRenderTargetLoad::QueryStore() const {
+	const std::vector<RenderStage::PortInfo>& portInfos = static_cast<RenderStage*>(GetNode())->GetPorts();
+	for (size_t i = 0; i < portInfos.size(); i++) {
+		RenderPortRenderTargetStore* rt = portInfos[i].port->QueryInterface(UniqueType<RenderPortRenderTargetStore>());
+		if (rt != nullptr && &rt->bindingStorage == &bindingStorage)
+			return rt;
+	}
+
+	return nullptr;
+}
+
 // RenderPortRenderTargetStore
 
 RenderPortRenderTargetStore::RenderPortRenderTargetStore(IRender::Resource::RenderTargetDescription::Storage& storage) : bindingStorage(storage) {}
@@ -77,4 +88,16 @@ void RenderPortRenderTargetStore::Tick(Engine& engine, IRender::Queue* queue) {
 		bindingStorage.resource = attachedTexture->GetRenderResource();
 		GetNode()->Flag().fetch_or(TINY_MODIFIED, std::memory_order_relaxed);
 	}
+}
+
+
+RenderPortRenderTargetLoad* RenderPortRenderTargetStore::QueryLoad() const {
+	const std::vector<RenderStage::PortInfo>& portInfos = static_cast<RenderStage*>(GetNode())->GetPorts();
+	for (size_t i = 0; i < portInfos.size(); i++) {
+		RenderPortRenderTargetLoad* rt = portInfos[i].port->QueryInterface(UniqueType<RenderPortRenderTargetLoad>());
+		if (rt != nullptr && &rt->bindingStorage == &bindingStorage)
+			return rt;
+	}
+
+	return nullptr;
 }

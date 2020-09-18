@@ -33,6 +33,7 @@ namespace PaintsNow {
 		// set 0 for screen size
 		const Int2& GetMainResolution() const;
 		void SetMainResolution(const Int2& res);
+		void ResolveSamplessAttachments();
 		void SetupTextures(Engine& engine);
 
 		RenderStage::Port* BeginPort(const String& symbol);

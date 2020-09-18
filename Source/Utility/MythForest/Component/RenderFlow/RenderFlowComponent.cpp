@@ -170,8 +170,50 @@ struct TextureKey {
 	UShort3 dimension;
 };
 
+void RenderFlowComponent::ResolveSamplessAttachments() {
+	std::map<RenderPortRenderTargetStore*, RenderPortRenderTargetStore*> targetUnions;
+
+	for (size_t i = 0; i < cachedRenderStages.size(); i++) {
+		RenderStage* renderStage = cachedRenderStages[i];
+
+		if (renderStage != nullptr) {
+			const std::vector<RenderStage::PortInfo>& portInfos = renderStage->GetPorts();
+			std::vector<size_t*> stageHolders;
+
+			for (size_t k = 0; k < portInfos.size(); k++) {
+				const RenderStage::PortInfo& portInfo = portInfos[k];
+				RenderPortRenderTargetStore* rt = portInfo.port->QueryInterface(UniqueType<RenderPortRenderTargetStore>());
+				if (rt != nullptr) {
+					RenderPortRenderTargetLoad* loader = rt->QueryLoad();
+					if (loader == nullptr) {
+						targetUnions[rt] = rt;
+						// set sampless as default.
+						rt->renderTargetDescription.state.media = IRender::Resource::TextureDescription::RENDERBUFFER;
+					} else {
+						assert(!loader->GetLinks().empty());
+						RenderPortRenderTargetStore* parent = loader->GetLinks().back().port->QueryInterface(UniqueType<RenderPortRenderTargetStore>());
+						assert(parent != nullptr);
+						targetUnions[rt] = targetUnions[parent];
+						assert(targetUnions.find(targetUnions[rt]) == targetUnions.end());
+					}
+
+					// check sampless
+					for (size_t n = 0; n < rt->GetLinks().size(); n++) {
+						if (!rt->GetLinks()[n].port->QueryInterface(UniqueType<RenderPortRenderTargetLoad>())) {
+							targetUnions[rt]->renderTargetDescription.state.media = IRender::Resource::TextureDescription::TEXTURE_RESOURCE;
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
 void RenderFlowComponent::SetupTextures(Engine& engine) {
 	// SetupTextures render stage texture storages
+	// Scan for sampless attachments
+
 	// Tint by order
 	typedef std::vector<TShared<TextureResource> > TextureList;
 	typedef std::map<TextureKey, TextureList> TextureMap;
@@ -191,7 +233,7 @@ void RenderFlowComponent::SetupTextures(Engine& engine) {
 				const RenderStage::PortInfo& portInfo = portInfos[k];
 				RenderPortRenderTargetStore* rt = portInfo.port->QueryInterface(UniqueType<RenderPortRenderTargetStore>());
 
-				if (rt != nullptr) {
+				if (rt != nullptr && rt->QueryLoad() == nullptr) {
 					// trying to allocate from cache
 					TextureKey textureKey;
 					textureKey.state = rt->renderTargetDescription.state;
@@ -262,6 +304,7 @@ void RenderFlowComponent::Initialize(Engine& engine, Entity* entity) {
 	}
 
 	SetMainResolution(engine);
+	ResolveSamplessAttachments();
 	SetupTextures(engine);
 
 	for (size_t i = 0; i < cachedRenderStages.size(); i++) {
