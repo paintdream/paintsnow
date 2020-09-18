@@ -30,9 +30,18 @@ void DeviceRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) 
 	assert(renderPort->QueryInterface(UniqueType<RenderPortRenderTargetStore>()) != nullptr);
 	RenderPortRenderTargetStore* input = renderPort->QueryInterface(UniqueType<RenderPortRenderTargetStore>());
 
-	// TODO
-	// Clear source node renderTarget
-	// input->renderTargetDescription = nullptr;
+	// Hack
 	(static_cast<RenderStage*>(input->GetNode()))->renderTargetDescription.colorStorages.clear();
+
+	for (RenderPortRenderTargetLoad* loader = input->QueryLoad(); loader != nullptr; loader = input->QueryLoad()) {
+		if (loader->GetLinks().empty()) break;
+
+		input = loader->GetLinks().back().port->QueryInterface(UniqueType<RenderPortRenderTargetStore>());
+
+		if (input == nullptr) break;
+
+		(static_cast<RenderStage*>(input->GetNode()))->renderTargetDescription.colorStorages.clear();
+	}
+
 	// BaseClass::PrepareResources(engine, queue);
 }

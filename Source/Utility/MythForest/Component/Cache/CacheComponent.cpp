@@ -10,7 +10,7 @@ void CacheComponent::PushObjects(rvalue<std::vector<TShared<SharedTiny> > > obje
 	} else {
 		std::vector<TShared<SharedTiny> >& objs = objects;
 		for (size_t i = 0; i < objs.size(); i++) {
-			cachedObjects.push_back(objs[i]);
+			cachedObjects.emplace_back(objs[i]);
 		}
 	}
 }

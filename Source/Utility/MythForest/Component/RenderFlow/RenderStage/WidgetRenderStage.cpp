@@ -2,13 +2,17 @@
 
 using namespace PaintsNow;
 
-WidgetRenderStage::WidgetRenderStage(const String& s) : OutputColor(renderTargetDescription.colorStorages[0]) {}
+WidgetRenderStage::WidgetRenderStage(const String& s) : OutputColor(renderTargetDescription.colorStorages[0]), InputColor(renderTargetDescription.colorStorages[0]) {
+	renderTargetDescription.colorStorages[0].loadOp = IRender::Resource::RenderTargetDescription::DEFAULT;
+	renderTargetDescription.colorStorages[0].storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
+}
 
 TObject<IReflect>& WidgetRenderStage::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectProperty()) {
 		ReflectProperty(Widgets);
+		ReflectProperty(InputColor);
 		ReflectProperty(OutputColor);
 	}
 
@@ -16,10 +20,9 @@ TObject<IReflect>& WidgetRenderStage::operator () (IReflect& reflect) {
 }
 
 void WidgetRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
-	// prepare color buffers
-	// OutputColor.renderTargetTextureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateRandomLocation("RT", &OutputColor), false, 0, nullptr);
-	// OutputColor.renderTargetTextureResource->state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
-	// OutputColor.renderTargetTextureResource->state.layout = IRender::Resource::TextureDescription::RGBA;
+	OutputColor.renderTargetDescription.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
+	OutputColor.renderTargetDescription.state.layout = IRender::Resource::TextureDescription::RGBA;
+
 	BaseClass::PrepareResources(engine, queue);
 }
 

@@ -68,11 +68,15 @@ function StandardRenderFlow.New(bloomLayerCount : number) : RenderFlowComponent
 		lastStage = stageBloom
 	end
 
-	-- Step 6: Write to output device
-	local stageDevice : RenderStage = renderFlowComponent:NewRenderStage("DeviceRenderStage", "")
-	renderFlowComponent:LinkRenderStagePort(stageScreen, "OutputColor", stageDevice, "InputColor")
+	-- Step 6: Adding UIs
+	local stageWidget : RenderStage = renderFlowComponent:NewRenderStage("WidgetRenderStage", "")
+	renderFlowComponent:LinkRenderStagePort(stageScreen, "OutputColor", stageWidget, "InputColor")
 
-	-- Step 7: Export symbols, notice that we only care abount scenes
+	-- Step 7: Write to output device
+	local stageDevice : RenderStage = renderFlowComponent:NewRenderStage("DeviceRenderStage", "")
+	renderFlowComponent:LinkRenderStagePort(stageWidget, "OutputColor", stageDevice, "InputColor")
+
+	-- Step 8: Export symbols, notice that we only care abount scenes
 	renderFlowComponent:ExportRenderStagePort(stageLightBuffer, "LightSource", "LightSource")
 	renderFlowComponent:ExportRenderStagePort(stageGeometryBuffer, "Primitives", "Primitives")
 	renderFlowComponent:ExportRenderStagePort(stageGeometryBuffer, "CameraView", "CameraView")

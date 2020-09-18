@@ -194,7 +194,6 @@ void RenderFlowComponent::ResolveSamplessAttachments() {
 						RenderPortRenderTargetStore* parent = loader->GetLinks().back().port->QueryInterface(UniqueType<RenderPortRenderTargetStore>());
 						assert(parent != nullptr);
 						targetUnions[rt] = targetUnions[parent];
-						assert(targetUnions.find(targetUnions[rt]) == targetUnions.end());
 					}
 
 					// check sampless
