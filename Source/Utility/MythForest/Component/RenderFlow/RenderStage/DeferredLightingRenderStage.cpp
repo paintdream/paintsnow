@@ -5,7 +5,7 @@
 using namespace PaintsNow;
 
 DeferredLightingRenderStage::DeferredLightingRenderStage(const String& s) : OutputColor(renderTargetDescription.colorStorages[0]), LoadDepth(renderTargetDescription.depthStorage) {
-	renderStateDescription.stencilReplacePass = 1;
+	renderStateDescription.stencilTest = IRender::Resource::RenderStateDescription::NEVER;
 	renderTargetDescription.colorStorages[0].loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
 	renderTargetDescription.colorStorages[0].storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 	renderTargetDescription.depthStorage.loadOp = IRender::Resource::RenderTargetDescription::DEFAULT;
@@ -59,7 +59,7 @@ void DeferredLightingRenderStage::UpdatePass(Engine& engine, IRender::Queue* que
 	if (renderStateDescription.stencilMask != LightSource->stencilMask) {
 		renderStateDescription.stencilMask = LightSource->stencilMask;
 		renderStateDescription.stencilValue = LightSource->stencilMask;
-		renderStateDescription.stencilTest = LightSource->stencilMask != 0 ? IRender::Resource::RenderStateDescription::EQUAL : IRender::Resource::RenderStateDescription::DISABLED;
+		renderStateDescription.stencilTest = LightSource->stencilMask != 0 ? IRender::Resource::RenderStateDescription::EQUAL : IRender::Resource::RenderStateDescription::NEVER;
 		renderStateDescription.stencilWrite = 0;
 		IRender& render = engine.interfaces.render;
 		render.UploadResource(queue, renderState, &renderStateDescription);

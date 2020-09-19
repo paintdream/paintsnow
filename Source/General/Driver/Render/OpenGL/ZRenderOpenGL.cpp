@@ -1123,18 +1123,20 @@ struct ResourceImplOpenGL<IRender::Resource::RenderStateDescription> final : pub
 		switch (type) {
 			case Resource::RenderStateDescription::DISABLED:
 				return GL_NONE;
-			case Resource::RenderStateDescription::ALWAYS:
-				return GL_ALWAYS;
+			case Resource::RenderStateDescription::NEVER:
+				return GL_NEVER;
 			case Resource::RenderStateDescription::LESS:
 				return GL_LESS;
+			case Resource::RenderStateDescription::EQUAL:
+				return GL_EQUAL;
 			case Resource::RenderStateDescription::LESS_EQUAL:
 				return GL_LEQUAL;
 			case Resource::RenderStateDescription::GREATER:
 				return GL_GREATER;
 			case Resource::RenderStateDescription::GREATER_EQUAL:
 				return GL_GEQUAL;
-			case Resource::RenderStateDescription::EQUAL:
-				return GL_EQUAL;
+			case Resource::RenderStateDescription::ALWAYS:
+				return GL_ALWAYS;
 		}
 
 		return GL_NONE;

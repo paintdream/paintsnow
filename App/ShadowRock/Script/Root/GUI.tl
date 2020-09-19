@@ -14,10 +14,13 @@ function GUI.New() : GUI
 	meta.spaceComponent = spaceComponent
 	meta.rootEntity = rootEntity
 
+	local renderPolicy = RenderFlowComponentModule.NewRenderPolicy("Widgets", 0)
+
 	local widgetEntity = MythForest.NewEntity(-1)
 	local fontBatchComponent = BatchComponentModule.New()
 	local fontResource = SnowyStream.NewResource("Packed/Font/Cantarell-Regular", "FontResource", false)
 	local textViewComponent = TextViewComponentModule.New(fontResource as FontResource, fontBatchComponent)
+	textViewComponent:SetRenderPolicy(renderPolicy)
 	textViewComponent:SetText("Hello, world!")
 	widgetEntity:AddEntityComponent(textViewComponent as Component)
 	spaceComponent:InsertEntity(widgetEntity)

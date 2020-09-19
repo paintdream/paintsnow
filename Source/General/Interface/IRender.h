@@ -135,7 +135,7 @@ namespace PaintsNow {
 			struct RenderStateDescription : public Description {
 				RenderStateDescription() { memset(this, 0, sizeof(*this)); }
 				enum Test {
-					DISABLED, ALWAYS, LESS, LESS_EQUAL, GREATER, GREATER_EQUAL, EQUAL
+					DISABLED, NEVER, LESS, EQUAL, LESS_EQUAL, GREATER, GREATER_EQUAL, ALWAYS
 				};
 
 				inline bool operator < (const RenderStateDescription& rhs) const {

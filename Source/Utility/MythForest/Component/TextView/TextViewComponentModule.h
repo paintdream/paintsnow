@@ -6,12 +6,13 @@
 #pragma once
 #include "TextViewComponent.h"
 #include "../Batch/BatchComponentModule.h"
+#include "../Renderable/RenderableComponentModule.h"
 #include "../../Module.h"
 
 namespace PaintsNow {
 	class Entity;
 	class TextViewComponent;
-	class TextViewComponentModule : public TReflected<TextViewComponentModule, ModuleImpl<TextViewComponent> > {
+	class TextViewComponentModule : public TReflected<TextViewComponentModule, TRenderableComponentModule<TextViewComponent> > {
 	public:
 		TextViewComponentModule(Engine& engine);
 		~TextViewComponentModule() override;
