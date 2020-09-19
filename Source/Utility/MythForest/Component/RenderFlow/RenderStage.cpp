@@ -48,19 +48,23 @@ void RenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 void RenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 	IRender::Resource::RenderTargetDescription desc = renderTargetDescription;
 
-	// optimize for Don't Care (DISCARD)
-	const std::vector<PortInfo>& ports = GetPorts();
-	for (size_t i = 0; i < ports.size(); i++) {
-		RenderPortRenderTargetStore* rt = ports[i].port->QueryInterface(UniqueType<RenderPortRenderTargetStore>());
-		// Not referenced by any other nodes
-		if (rt != nullptr && rt->GetLinks().empty()) {
-			if (&renderTargetDescription.depthStorage == &rt->bindingStorage) {
-				desc.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
-			} else if (&renderTargetDescription.stencilStorage == &rt->bindingStorage) {
-				desc.stencilStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
-			} else {
-				size_t index = &rt->bindingStorage - &renderTargetDescription.colorStorages[0];
-				desc.colorStorages[index].storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
+	if (Flag() & RENDERSTAGE_OUTPUT_TO_BACK_BUFFER) {
+		desc.colorStorages.clear();
+	} else {
+		// optimize for Don't Care (DISCARD)
+		const std::vector<PortInfo>& ports = GetPorts();
+		for (size_t i = 0; i < ports.size(); i++) {
+			RenderPortRenderTargetStore* rt = ports[i].port->QueryInterface(UniqueType<RenderPortRenderTargetStore>());
+			// Not referenced by any other nodes
+			if (rt != nullptr && rt->GetLinks().empty()) {
+				if (&renderTargetDescription.depthStorage == &rt->bindingStorage) {
+					desc.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
+				} else if (&renderTargetDescription.stencilStorage == &rt->bindingStorage) {
+					desc.stencilStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
+				} else {
+					size_t index = &rt->bindingStorage - &renderTargetDescription.colorStorages[0];
+					desc.colorStorages[index].storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
+				}
 			}
 		}
 	}

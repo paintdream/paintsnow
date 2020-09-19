@@ -31,7 +31,7 @@ void DeviceRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) 
 	RenderPortRenderTargetStore* input = renderPort->QueryInterface(UniqueType<RenderPortRenderTargetStore>());
 
 	// Hack
-	(static_cast<RenderStage*>(input->GetNode()))->renderTargetDescription.colorStorages.clear();
+	(static_cast<RenderStage*>(input->GetNode()))->Flag().fetch_or(RenderStage::RENDERSTAGE_OUTPUT_TO_BACK_BUFFER, std::memory_order_relaxed);
 
 	for (RenderPortRenderTargetLoad* loader = input->QueryLoad(); loader != nullptr; loader = input->QueryLoad()) {
 		if (loader->GetLinks().empty()) break;
@@ -40,7 +40,7 @@ void DeviceRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) 
 
 		if (input == nullptr) break;
 
-		(static_cast<RenderStage*>(input->GetNode()))->renderTargetDescription.colorStorages.clear();
+		(static_cast<RenderStage*>(input->GetNode()))->Flag().fetch_or(RenderStage::RENDERSTAGE_OUTPUT_TO_BACK_BUFFER, std::memory_order_relaxed);
 	}
 
 	// BaseClass::PrepareResources(engine, queue);

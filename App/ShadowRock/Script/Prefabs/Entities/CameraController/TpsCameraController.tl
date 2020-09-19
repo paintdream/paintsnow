@@ -3,6 +3,7 @@ local TpsCameraController = record
 	transformComponent : TransformComponent
 	renderFlowComponent : RenderFlowComponent
 	phaseComponent : PhaseComponent
+	spaceComponent : SpaceComponent
 	entity : Entity
 	__index : any
 	speed : number
@@ -25,12 +26,14 @@ function TpsCameraController.New(eventComponent : EventComponent) : TpsCameraCon
 	local cameraComponent = StandardCamera.New(renderFlowComponent)
 	local transformComponent = TransformComponentModule.New()
 	local phaseComponent = Phase.New(renderFlowComponent)
+	local spaceComponent = SpaceComponentModule.New()
 
 	entity:AddEntityComponent(transformComponent as Component)
 	entity:AddEntityComponent(renderFlowComponent as Component)
 	entity:AddEntityComponent(cameraComponent as Component)
 	entity:AddEntityComponent(phaseComponent as Component)
 	entity:AddEntityComponent(eventComponent as Component)
+	entity:AddEntityComponent(spaceComponent as Component)
 
 	-- setup phase
 	phaseComponent:Setup(16, 8, { 10, 10, 10 }, { 256, 256 })
@@ -40,6 +43,7 @@ function TpsCameraController.New(eventComponent : EventComponent) : TpsCameraCon
 	meta.transformComponent = transformComponent
 	meta.renderFlowComponent = renderFlowComponent
 	meta.phaseComponent = phaseComponent
+	meta.spaceComponent = spaceComponent
 	meta.entity = entity
 	meta.speed = 0.02
 	meta.fov = math.pi / 2

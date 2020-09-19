@@ -81,6 +81,7 @@ function StandardRenderFlow.New(bloomLayerCount : number) : RenderFlowComponent
 	renderFlowComponent:ExportRenderStagePort(stageGeometryBuffer, "Primitives", "Primitives")
 	renderFlowComponent:ExportRenderStagePort(stageGeometryBuffer, "CameraView", "CameraView")
 	renderFlowComponent:ExportRenderStagePort(stageScreen, "OutputColor", "SceneColor")
+	renderFlowComponent:ExportRenderStagePort(stageWidget, "Widgets", "Widgets")
 	return renderFlowComponent
 end
 
