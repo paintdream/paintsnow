@@ -182,13 +182,9 @@ void CameraComponent::Instancing(Engine& engine, TaskData& taskData) {
 			for (size_t k = 0; k < group.instancedData.size(); k++) {
 				Bytes& data = group.instancedData[k];
 				if (!data.Empty()) {
-					PassBase::Parameter& output = group.instanceUpdater->parameters[k];
-					// instanceable.
-					assert(output.slot < group.drawCallDescription.bufferResources.size());
-
 					// assign instanced buffer	
-					assert(group.drawCallDescription.bufferResources[output.slot].buffer == nullptr);
-					IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[output.slot];
+					assert(group.drawCallDescription.bufferResources[k].buffer == nullptr);
+					IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[k];
 					bufferRange.buffer = policyData.instanceBuffer;
 					bufferRange.offset = safe_cast<uint32_t>(policyData.instanceData.GetSize()); // TODO: alignment
 					bufferRange.component = safe_cast<uint32_t>(data.GetSize()) / (group.instanceCount * sizeof(float));

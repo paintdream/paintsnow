@@ -505,12 +505,8 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 							Bytes& data = group.instancedData[k];
 							assert(!data.Empty());
 							if (!data.Empty()) {
-								PassBase::Parameter& output = group.instanceUpdater.parameters[k];
-								// instanceable.
-								assert(output.slot < group.drawCallDescription.bufferResources.size());
-
 								// assign instanced buffer	
-								IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[output.slot];
+								IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[k];
 								bufferRange.buffer = buffer;
 								bufferRange.offset = safe_cast<uint32_t>(bufferData.GetSize());
 								bufferRange.component = safe_cast<uint32_t>(data.GetSize()) / (group.instanceCount * sizeof(float));

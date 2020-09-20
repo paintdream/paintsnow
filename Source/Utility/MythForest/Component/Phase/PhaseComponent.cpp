@@ -400,9 +400,6 @@ void PhaseComponent::ResolveTasks(Engine& engine) {
 							Bytes& data = group.instancedData[k];
 							assert(!data.Empty());
 							if (!data.Empty()) {
-								const PassBase::Parameter& output = group.instanceUpdater->parameters[k];
-								// instanceable.
-								assert(output.slot < group.drawCallDescription.bufferResources.size());
 								IRender::Resource* buffer = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_BUFFER);
 								IRender::Resource::BufferDescription desc;
 								desc.format = IRender::Resource::BufferDescription::FLOAT;
@@ -413,7 +410,7 @@ void PhaseComponent::ResolveTasks(Engine& engine) {
 
 								// assign instanced buffer	
 								// assert(group.drawCallDescription.bufferResources[output.slot].buffer == nullptr);
-								group.drawCallDescription.bufferResources[output.slot].buffer = buffer;
+								group.drawCallDescription.bufferResources[k].buffer = buffer;
 								buffers.emplace_back(buffer);
 							}
 						}

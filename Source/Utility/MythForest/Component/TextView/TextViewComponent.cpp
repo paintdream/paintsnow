@@ -344,15 +344,7 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 	fullSize.y() = currentHeight + start.y();
 
 	// do update
-	/*
-	IRender::Resource::BufferDescription bufferDescription;
-	bufferDescription.usage = IRender::Resource::BufferDescription::VERTEX;
-	bufferDescription.component = 4;
-	bufferDescription.format = IRender::Resource::BufferDescription::UNSIGNED_SHORT;
-	bufferDescription.dynamic = 1;
-
-	bufferDescription.data.Assign((const uint8_t*)str.data(), safe_cast<uint32_t>(str.size()));
-	render.UploadResource(queue, unitCoordBuffer, &bufferDescription);*/
+	fontResource->Update(render, queue);
 }
 
 void TextViewComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box) {
@@ -361,7 +353,6 @@ void TextViewComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box) {
 }
 
 uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) {
-	return 0;
 	if (renderInfos.empty()) return 0;
 
 	uint32_t start = safe_cast<uint32_t>(outputDrawCalls.size());
@@ -384,6 +375,7 @@ uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData>& outp
 			assert(renderData.localInstancedData[k].first != paramTexCoordRect.slot); // must not overlapped
 		}
 		renderData.localInstancedData.emplace_back(std::make_pair(paramTexCoordRect.slot, Bytes::Null()));
+		renderData.drawCallDescription.instanceCounts.x() = safe_cast<uint32_t>(renderInfos.size());
 
 		for (size_t j = 0; j < renderInfos.size(); j++) {
 			RenderInfo& renderInfo = renderInfos[j];
