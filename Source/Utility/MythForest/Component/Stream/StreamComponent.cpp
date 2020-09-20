@@ -14,14 +14,14 @@ StreamComponent::StreamComponent(const UShort3& dim, uint16_t cacheCount) : dime
 	}
 }
 
-void StreamComponent::Unload(Engine& engine, const UShort3& coord, TShared<SharedTiny> context) {
+void StreamComponent::Unload(Engine& engine, const UShort3& coord, const TShared<SharedTiny>&context) {
 	uint16_t id = idGrids[(coord.z() * dimension.y() + coord.y()) * dimension.x() + coord.x()];
 	if (id == (uint16_t)~0) return;
 
 	UnloadInternal(engine, grids[id], context);
 }
 
-void StreamComponent::UnloadInternal(Engine& engine, Grid& grid, TShared<SharedTiny> context) {
+void StreamComponent::UnloadInternal(Engine& engine, Grid& grid, const TShared<SharedTiny>&context) {
 	if (unloadHandler.script) {
 		IScript::Request& request = *engine.bridgeSunset.AcquireSafe();
 		IScript::Delegate<SharedTiny> w;
@@ -40,7 +40,7 @@ void StreamComponent::UnloadInternal(Engine& engine, Grid& grid, TShared<SharedT
 	}
 }
 
-SharedTiny* StreamComponent::Load(Engine& engine, const UShort3& coord, TShared<SharedTiny> context) {
+SharedTiny* StreamComponent::Load(Engine& engine, const UShort3& coord, const TShared<SharedTiny>&context) {
 	size_t offset = (coord.z() * dimension.y() + coord.y()) * dimension.x() + coord.x();
 	uint16_t id = idGrids[offset];
 	SharedTiny* object = nullptr;

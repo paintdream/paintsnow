@@ -10,8 +10,8 @@ namespace PaintsNow {
 	class StreamComponent : public TAllocatedTiny<StreamComponent, Component> {
 	public:
 		StreamComponent(const UShort3& dimension, uint16_t cacheCount);
-		SharedTiny* Load(Engine& engine, const UShort3& coord, TShared<SharedTiny> context);
-		void Unload(Engine& engine, const UShort3& coord, TShared<SharedTiny> context);
+		SharedTiny* Load(Engine& engine, const UShort3& coord, const TShared<SharedTiny>&context);
+		void Unload(Engine& engine, const UShort3& coord, const TShared<SharedTiny>&context);
 		void SetLoadHandler(IScript::Request& request, IScript::Request::Ref ref);
 		void SetLoadHandler(const TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, const TShared<SharedTiny>&, const TShared<SharedTiny>& >& handler);
 		void SetUnloadHandler(IScript::Request& request, IScript::Request::Ref ref);
@@ -26,7 +26,7 @@ namespace PaintsNow {
 			uint16_t recycleIndex;
 		};
 
-		void UnloadInternal(Engine& engine, Grid& grid, TShared<SharedTiny> context);
+		void UnloadInternal(Engine& engine, Grid& grid, const TShared<SharedTiny>&context);
 
 		UShort3 dimension;
 		uint16_t recycleStart;

@@ -18,7 +18,7 @@ namespace PaintsNow {
 			TEXTVIEWCOMPONENT_CURSOR_REV_COLOR = COMPONENT_CUSTOM_BEGIN << 1,
 		};
 
-		TextViewComponent(TShared<FontResource> fontResource, TShared<MeshResource> meshResource, TShared<BatchComponent> batchComponent);
+		TextViewComponent(const TShared<FontResource>& fontResource, const TShared<MeshResource>& meshResource, const TShared<BatchComponent>& batchComponent);
 		~TextViewComponent() override;
 		uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) override;
 		void Initialize(Engine& engine, Entity* entity) override;

@@ -8,4 +8,4 @@ using namespace PaintsNow;
 Event::Event() : eventID(EVENT_PRETICK) {}
 #endif
 
-Event::Event(Engine& e, EVENT_ID id, TShared<SharedTiny> sender, TShared<SharedTiny> d) : engine(e), eventID(id), sender(std::move(sender)), detail(std::move(d)) {}
+Event::Event(Engine& e, EVENT_ID id, const TShared<SharedTiny> sender, const TShared<SharedTiny>& d) : engine(e), eventID(id), sender(std::move(sender)), detail(std::move(d)) {}

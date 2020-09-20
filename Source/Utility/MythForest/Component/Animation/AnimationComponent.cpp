@@ -62,7 +62,7 @@ void AnimationComponent::Detach(const TShared<Entity>& entity) {
 	}
 }
 
-void AnimationComponent::Attach(const String& name, TShared<Entity> entity) {
+void AnimationComponent::Attach(const String& name, const TShared<Entity>&entity) {
 	assert(entity->GetWarpIndex() == GetWarpIndex());
 	const IAsset::BoneAnimation& boneAnimation = skeletonResource->GetBoneAnimation();
 	for (size_t i = 0; i < boneAnimation.joints.size(); i++) {

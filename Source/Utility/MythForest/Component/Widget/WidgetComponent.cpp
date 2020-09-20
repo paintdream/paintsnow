@@ -3,7 +3,7 @@
 
 using namespace PaintsNow;
 
-WidgetComponent::WidgetComponent(TShared<MeshResource> mesh, TShared<BatchComponent> batch, const TShared<BatchComponent>& batchInstanced) : BaseClass(mesh, batch) {
+WidgetComponent::WidgetComponent(const TShared<MeshResource>& mesh, const TShared<BatchComponent>& batch, const TShared<BatchComponent>& batchInstanced) : BaseClass(mesh, batch) {
 	batchInstancedDataComponent = batchInstanced;
 	Flag().fetch_or(RENDERABLECOMPONENT_CAMERAVIEW, std::memory_order_acquire);
 }

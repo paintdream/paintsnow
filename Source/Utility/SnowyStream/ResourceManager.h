@@ -18,8 +18,8 @@ namespace PaintsNow {
 	public:
 		ResourceManager(IThread& threadApi, IUniformResourceManager& hostManager, const TWrapper<void, const String&>& errorHandler, void* context);
 		~ResourceManager() override;
-		void Insert(TShared<ResourceBase> resource);
-		void Remove(TShared<ResourceBase> resource);
+		void Insert(const TShared<ResourceBase>& resource);
+		void Remove(const TShared<ResourceBase>& resource);
 		void RemoveAll();
 		virtual Unique GetDeviceUnique() const = 0;
 		void Report(const String& err);

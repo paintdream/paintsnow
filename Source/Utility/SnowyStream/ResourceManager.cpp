@@ -41,7 +41,7 @@ void ResourceManager::RemoveAll() {
 	}
 }
 
-void ResourceManager::Insert(TShared<ResourceBase> resource) {
+void ResourceManager::Insert(const TShared<ResourceBase>& resource) {
 	assert(GetLockCount() != 0);
 	assert(resource);
 	assert(resource->Flag() & ResourceBase::RESOURCE_ORPHAN);
@@ -93,7 +93,7 @@ void* ResourceManager::GetContext() const {
 	return context;
 }
 
-void ResourceManager::Remove(TShared<ResourceBase> resource) {
+void ResourceManager::Remove(const TShared<ResourceBase>& resource) {
 	assert(GetLockCount() != 0);
 	assert(resource);
 	if (resource->Flag() & (ResourceBase::RESOURCE_ORPHAN | ResourceBase::RESOURCE_ETERNAL))

@@ -55,7 +55,7 @@ void PhaseComponentConfig::InstanceGroup::Reset() {
 	instanceCount = 0;
 }
 
-PhaseComponent::PhaseComponent(TShared<RenderFlowComponent> renderFlow, const String& portName) : hostEntity(nullptr), maxTracePerTick(8), renderQueue(nullptr), stateResource(nullptr), stateShadowResource(nullptr), range(32, 32, 32), resolution(512, 512), lightCollector(this), renderFlowComponent(std::move(renderFlow)), lightPhaseViewPortName(portName), rootEntity(nullptr) {}
+PhaseComponent::PhaseComponent(const TShared<RenderFlowComponent>& renderFlow, const String& portName) : hostEntity(nullptr), maxTracePerTick(8), renderQueue(nullptr), stateResource(nullptr), stateShadowResource(nullptr), range(32, 32, 32), resolution(512, 512), lightCollector(this), renderFlowComponent(std::move(renderFlow)), lightPhaseViewPortName(portName), rootEntity(nullptr) {}
 
 PhaseComponent::~PhaseComponent() {}
 

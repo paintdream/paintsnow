@@ -93,7 +93,7 @@ void ShapeComponent::Cleanup() {
 	}
 }
 
-void ShapeComponent::Update(Engine& engine, TShared<MeshResource> resource) {
+void ShapeComponent::Update(Engine& engine, const TShared<MeshResource>&resource) {
 	static_assert(sizeof(Patch) == 64, "Patch size must be 64.");
 	if (resource == meshResource) return;
 

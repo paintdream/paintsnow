@@ -19,7 +19,7 @@ namespace PaintsNow {
 		};
 
 		// delayed loader
-		ModelComponent(TShared<MeshResource> meshResource, TShared<BatchComponent> batch);
+		ModelComponent(const TShared<MeshResource>& meshResource, const TShared<BatchComponent>& batch);
 
 		String GetDescription() const override;
 		void UpdateBoundingBox(Engine& engine, Float3Pair& box) override;
@@ -27,8 +27,8 @@ namespace PaintsNow {
 		void Initialize(Engine& engine, Entity* entity) override;
 		void Uninitialize(Engine& engine, Entity* entity) override;
 
-		void SetMaterial(uint32_t meshGroupIndex, TShared<MaterialResource>& materialResource);
-		uint32_t CreateOverrider(TShared<ShaderResource> shaderResourceTemplate);
+		void SetMaterial(uint32_t meshGroupIndex, const TShared<MaterialResource>& materialResource);
+		uint32_t CreateOverrider(const TShared<ShaderResource>& shaderResourceTemplate);
 		size_t ReportGraphicMemoryUsage() const override;
 
 	protected:

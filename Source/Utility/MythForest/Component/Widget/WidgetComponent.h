@@ -15,7 +15,7 @@ namespace PaintsNow {
 			WIDGETCOMPONENT_CUSTOM_BEGIN = MODELCOMPONENT_CUSTOM_BEGIN << 1
 		};
 
-		WidgetComponent(TShared<MeshResource> meshResource, TShared<BatchComponent> batchUniforms, const TShared<BatchComponent>& batchInstancedData);
+		WidgetComponent(const TShared<MeshResource>& meshResource, const TShared<BatchComponent>& batchUniforms, const TShared<BatchComponent>& batchInstancedData);
 		void GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTemplates, std::vector<std::pair<uint32_t, TShared<MaterialResource> > >& materialResources) override;
 
 		// Custom data

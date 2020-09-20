@@ -6,16 +6,16 @@
 
 using namespace PaintsNow;
 
-ModelComponent::ModelComponent(TShared<MeshResource> res, TShared<BatchComponent> batch) : batchComponent(std::move(batch)), meshResource(std::move(res)), hostCount(0) {
+ModelComponent::ModelComponent(const TShared<MeshResource>& res, const TShared<BatchComponent>& batch) : batchComponent(std::move(batch)), meshResource(std::move(res)), hostCount(0) {
 	Flag().fetch_or(COMPONENT_SHARED, std::memory_order_acquire); // can be shared among different entities
 }
 
-void ModelComponent::SetMaterial(uint32_t meshGroupIndex, TShared<MaterialResource>& materialResource) {
+void ModelComponent::SetMaterial(uint32_t meshGroupIndex, const TShared<MaterialResource>& materialResource) {
 	assert(shaderOverriders.empty());
 	materialResources.emplace_back(std::make_pair(meshGroupIndex, materialResource));
 }
 
-uint32_t ModelComponent::CreateOverrider(TShared<ShaderResource> shaderResourceTemplate) {
+uint32_t ModelComponent::CreateOverrider(const TShared<ShaderResource>& shaderResourceTemplate) {
 	std::vector<TShared<ShaderResource> >::iterator it = std::binary_find(shaderOverriders.begin(), shaderOverriders.end(), shaderResourceTemplate);
 	if (it == shaderOverriders.end()) {
 		it = std::binary_insert(shaderOverriders, shaderResourceTemplate);

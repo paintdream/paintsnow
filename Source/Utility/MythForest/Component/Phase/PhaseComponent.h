@@ -116,7 +116,7 @@ namespace PaintsNow {
 		typedef PhaseComponentConfig::InstanceKey InstanceKey;
 		typedef PhaseComponentConfig::WarpData WarpData;
 
-		PhaseComponent(TShared<RenderFlowComponent> renderFlowComponent, const String& lightPhaseViewName);
+		PhaseComponent(const TShared<RenderFlowComponent>& renderFlowComponent, const String& lightPhaseViewName);
 		~PhaseComponent() override;
 
 		void Initialize(Engine& engine, Entity* entity) override;

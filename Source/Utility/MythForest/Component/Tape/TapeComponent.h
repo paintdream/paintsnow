@@ -12,7 +12,7 @@
 namespace PaintsNow {
 	class TapeComponent : public TAllocatedTiny<TapeComponent, Component> {
 	public:
-		TapeComponent(IStreamBase& streamBase, TShared<SharedTiny> streamHolder, size_t cacheBytes);
+		TapeComponent(IStreamBase& streamBase, const TShared<SharedTiny>&streamHolder, size_t cacheBytes);
 
 		std::pair<int64_t, String> Read();
 		bool Write(int64_t seq, const String& data);

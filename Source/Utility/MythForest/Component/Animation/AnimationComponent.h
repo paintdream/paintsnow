@@ -24,7 +24,7 @@ namespace PaintsNow {
 
 		IRender::Resource* AcquireBoneMatrixBuffer(IRender& render, IRender::Queue* queue);
 
-		void Attach(const String& name, TShared<Entity> entity);
+		void Attach(const String& name, const TShared<Entity>&entity);
 		void Detach(const TShared<Entity>& entity);
 		void Play(const String& clipName, float startTime);
 		void RegisterEvent(const String& identifier, const String& clipName, float timeStamp);

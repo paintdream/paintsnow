@@ -122,7 +122,7 @@ class SearchDependencies : public IReflect {
 public:
 	SearchDependencies(std::vector<ResourceBase::Dependency>& d) : deps(d), IReflect(true, false) {}
 
-	void AddDependency(TShared<ResourceBase>& resource) {
+	void AddDependency(const TShared<ResourceBase>& resource) {
 		if (resource) {
 			ResourceBase::Dependency dep;
 			dep.key = currentPath;

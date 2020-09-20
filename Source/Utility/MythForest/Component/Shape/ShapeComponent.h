@@ -14,7 +14,7 @@ namespace PaintsNow {
 	public:
 		ShapeComponent();
 		~ShapeComponent() override;
-		void Update(Engine& engine, TShared<MeshResource> resource);
+		void Update(Engine& engine, const TShared<MeshResource>&resource);
 		float Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio = 1) const override;
 		enum {
 			MAX_PATCH_COUNT = (64 - sizeof(TKdTree<Float3Pair>)) / sizeof(uint32_t)

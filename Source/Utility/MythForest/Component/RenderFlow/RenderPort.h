@@ -34,8 +34,7 @@ namespace PaintsNow {
 
 		void Tick(Engine& engine, IRender::Queue* queue) override {
 			if (!RenderPort::GetLinks().empty()) {
-				RenderStage::Port* p = static_cast<RenderStage::Port*>(RenderPort::GetLinks().back().port);
-				T* port = p->QueryInterface(UniqueType<T>());
+				T* port = RenderPort::GetLinks().back().port->QueryInterface(UniqueType<T>());
 				assert(port != nullptr);
 				if (port != nullptr) {
 					targetRenderPort = port;
@@ -64,7 +63,7 @@ namespace PaintsNow {
 	template <class T>
 	class RenderPortShaderPass : public TReflected<RenderPortShaderPass<T>, RenderPortParameterAdapter> {
 	public:
-		RenderPortShaderPass(TShared<ShaderResourceImpl<T> >& s) : shaderResource(s) {}
+		RenderPortShaderPass(const TShared<ShaderResourceImpl<T> >& s) : shaderResource(s) {}
 		void Initialize(IRender& render, IRender::Queue* mainQueue) override {}
 		void Uninitialize(IRender& render, IRender::Queue* mainQueue) override {}
 		PassBase::Updater& GetUpdater() override { return shaderResource->GetPassUpdater(); }

@@ -152,7 +152,7 @@ namespace PaintsNow {
 		typedef typename CameraComponentConfig::HashInstanceKey HashInstanceKey;
 		typedef typename CameraComponentConfig::InstanceGroup InstanceGroup;
 
-		CameraComponent(TShared<RenderFlowComponent> renderFlowComponent, const String& cameraViewPortName);
+		CameraComponent(const TShared<RenderFlowComponent>& renderFlowComponent, const String& cameraViewPortName);
 		void Initialize(Engine& engine, Entity* entity) override;
 		void Uninitialize(Engine& engine, Entity* entity) override;
 		Tiny::FLAG GetEntityFlagMask() const override;

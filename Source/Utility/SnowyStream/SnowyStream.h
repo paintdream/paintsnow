@@ -28,9 +28,9 @@ namespace PaintsNow {
 
 		virtual Interfaces& GetInterfaces() const;
 		TShared<ResourceBase> CreateResource(const String& location, const String& extension = "", bool openExisting = true, Tiny::FLAG flag = 0, IStreamBase* sourceStream = nullptr) override;
-		bool PersistResource(TShared<ResourceBase> resource, const String& extension = "") override;
-		bool MapResource(TShared<ResourceBase> resource, const String& extension = "") override;
-		void UnmapResource(TShared<ResourceBase> resource) override;
+		bool PersistResource(const TShared<ResourceBase>& resource, const String& extension = "") override;
+		bool MapResource(const TShared<ResourceBase>& resource, const String& extension = "") override;
+		void UnmapResource(const TShared<ResourceBase>& resource) override;
 		virtual bool RegisterResourceManager(Unique unique, ResourceManager* resourceManager);
 		virtual bool RegisterResourceSerializer(Unique unique, const String& extension, ResourceSerializerBase* serializer);
 

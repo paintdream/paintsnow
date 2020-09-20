@@ -67,7 +67,7 @@ TObject<IReflect>& RemoteComponent::operator () (IReflect& reflect) {
 }
 
 struct RoutineWrapper {
-	RoutineWrapper(TShared<RemoteRoutine> r) : routine(std::move(r)) {}
+	RoutineWrapper(const TShared<RemoteRoutine>& r) : routine(std::move(r)) {}
 	~RoutineWrapper() {}
 	void operator () (IScript::Request& request, IScript::Request::Arguments& args) {
 		// always use sync call
@@ -281,7 +281,7 @@ void RemoteComponent::Complete(IScript::RequestPool* returnPool, IScript::Reques
 	returnPool->ReleaseSafe(&returnRequest);
 }
 
-void RemoteComponent::CallAsync(IScript::Request& fromRequest, IScript::Request::Ref callback, TShared<RemoteRoutine> remoteRoutine, IScript::Request::Arguments& args) {
+void RemoteComponent::CallAsync(IScript::Request& fromRequest, IScript::Request::Ref callback, const TShared<RemoteRoutine>&remoteRoutine, IScript::Request::Arguments& args) {
 	if (remoteRoutine->pool == this && remoteRoutine->ref) {
 		IScript::Request& toRequest = *AcquireSafe();
 		fromRequest.DoLock();

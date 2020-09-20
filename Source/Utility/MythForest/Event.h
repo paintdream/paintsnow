@@ -58,7 +58,7 @@ namespace PaintsNow {
 			T data;
 		};
 
-		Event(Engine& engine, EVENT_ID id, TShared<SharedTiny> sender, TShared<SharedTiny> detail = nullptr);
+		Event(Engine& engine, EVENT_ID id, const TShared<SharedTiny> sender, const TShared<SharedTiny>& detail = nullptr);
 
 #if defined(_MSC_VER) && _MSC_VER <= 1200
 		Event();

@@ -803,13 +803,13 @@ String SnowyStream::GetReflectedExtension(Unique unique) {
 	return unique->GetBriefName();
 }
 
-void SnowyStream::UnmapResource(TShared<ResourceBase> resource) {
+void SnowyStream::UnmapResource(const TShared<ResourceBase>& resource) {
 	// Find resource serializer
 	assert(resource);
 	resource->Unmap();
 }
 
-bool SnowyStream::MapResource(TShared<ResourceBase> resource, const String& extension) {
+bool SnowyStream::MapResource(const TShared<ResourceBase>& resource, const String& extension) {
 	// Find resource serializer
 	assert(resource);
 	String typeExtension = extension.empty() ? GetReflectedExtension(resource->GetUnique()) : extension;
@@ -827,7 +827,7 @@ bool SnowyStream::MapResource(TShared<ResourceBase> resource, const String& exte
 	}
 }
 
-bool SnowyStream::PersistResource(TShared<ResourceBase> resource, const String& extension) {
+bool SnowyStream::PersistResource(const TShared<ResourceBase>& resource, const String& extension) {
 	// Find resource serializer
 	assert(resource);
 	String typeExtension = extension.empty() ? GetReflectedExtension(resource->GetUnique()) : extension;

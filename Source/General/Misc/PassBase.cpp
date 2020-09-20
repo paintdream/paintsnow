@@ -372,7 +372,7 @@ void PassBase::PartialUpdater::Snapshot(std::vector<Bytes>& bufferData, std::vec
 	for (uint32_t i = 0; i < parameters.size(); i++) {
 		const Parameter& parameter = parameters[i];
 		if (parameter.type == uniqueBindBuffer) {
-			const IShader::BindBuffer* buffer = reinterpret_cast<const IShader::BindBuffer*>((const char*)&partialData + (uint32_t)parameter.internalAddress);
+			const IShader::BindBuffer* buffer = reinterpret_cast<const IShader::BindBuffer*>((const char*)&partialData + (size_t)parameter.internalAddress);
 			if (bufferResources.size() <= parameter.slot) {
 				bufferResources.resize(parameter.slot + 1);
 			}
@@ -382,7 +382,7 @@ void PassBase::PartialUpdater::Snapshot(std::vector<Bytes>& bufferData, std::vec
 			range.offset = 0;
 			range.length = 0;
 		} else if (parameter.type == uniqueBindTexture) {
-			const IShader::BindTexture* texture = reinterpret_cast<const IShader::BindTexture*>((const char*)&partialData + (uint32_t)parameter.internalAddress);
+			const IShader::BindTexture* texture = reinterpret_cast<const IShader::BindTexture*>((const char*)&partialData + (size_t)parameter.internalAddress);
 			if (textureResources.size() <= parameter.slot) {
 				textureResources.resize(parameter.slot + 1);
 			}
@@ -403,7 +403,7 @@ void PassBase::PartialUpdater::Snapshot(std::vector<Bytes>& bufferData, std::vec
 				buffer.Resize(start + p.stride);
 			}
 
-			memcpy(buffer.GetData() + start + p.offset, (const char*)&partialData + (uint32_t)p.internalAddress, p.type->GetSize());
+			memcpy(buffer.GetData() + start + p.offset, (const char*)&partialData + (size_t)p.internalAddress, p.type->GetSize());
 		}
 	}
 }
@@ -443,7 +443,7 @@ public:
 			const PassBase::Parameter& parameter = m != nullptr && *m ? *m : updater[byteName];
 
 			if (parameter) {
-				const_cast<PassBase::Parameter&>(parameter).internalAddress = (void*)((uint32_t)ptr - (uint32_t)base);
+				const_cast<PassBase::Parameter&>(parameter).internalAddress = (void*)((size_t)ptr - (size_t)base);
 				outputs.emplace_back(parameter);
 			}
 		}

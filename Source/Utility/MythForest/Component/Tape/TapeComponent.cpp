@@ -6,7 +6,7 @@
 
 using namespace PaintsNow;
 
-TapeComponent::TapeComponent(IStreamBase& stream, TShared<SharedTiny> holder, size_t cache) : tape(stream), streamHolder(std::move(holder)), cacheBytes(cache), bufferStream(cache) {}
+TapeComponent::TapeComponent(IStreamBase& stream, const TShared<SharedTiny>&holder, size_t cache) : tape(stream), streamHolder(std::move(holder)), cacheBytes(cache), bufferStream(cache) {}
 
 std::pair<int64_t, String> TapeComponent::Read() {
 	assert(!(Flag() & TINY_UPDATING));
