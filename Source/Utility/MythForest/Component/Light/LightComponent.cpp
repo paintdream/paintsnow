@@ -231,7 +231,7 @@ void LightComponent::ShadowLayer::CollectRenderableComponent(Engine& engine, Tas
 			// skinning
 			if (animationComponent) {
 				assert(animationComponent->GetWarpIndex() == renderableComponent->GetWarpIndex());
-				PassBase::Parameter& parameter = updater[IShader::BindInput::BONE_TRANSFORMS];
+				const PassBase::Parameter& parameter = updater[IShader::BindInput::BONE_TRANSFORMS];
 				if (parameter) {
 					group.animationComponent = animationComponent; // hold reference
 					group.drawCallDescription.bufferResources[parameter.slot].buffer = animationComponent->AcquireBoneMatrixBuffer(render, warpData.renderQueue);

@@ -519,7 +519,7 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 						}
 
 						group.drawCallDescription.instanceCounts.x() = group.instanceCount;
-						PassBase::ValidateDrawCall(group.drawCallDescription);
+						assert(PassBase::ValidateDrawCall(group.drawCallDescription));
 
 						IRender::Resource* drawCall = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_DRAWCALL);
 						IRender::Resource::DrawCallDescription dc = group.drawCallDescription; // make copy

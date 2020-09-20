@@ -121,7 +121,7 @@ namespace PaintsNow {
 				Variable();
 				template <class T>
 				Variable(const String& k, const T& value) {
-					key.Assign((uint8_t*)k.data(), k.size());
+					key.Assign((uint8_t*)k.data(), k.length());
 					*this = value;
 				}
 

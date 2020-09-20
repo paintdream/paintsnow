@@ -72,29 +72,22 @@ uint32_t PassBase::Updater::GetTextureCount() const {
 
 PassBase::Parameter::Parameter() : internalAddress(nullptr), linearLayout(0) {}
 
-PassBase::Parameter& PassBase::Updater::operator [] (const Bytes& key) {
+const PassBase::Parameter& PassBase::Updater::operator [] (const Bytes& key) {
 	static Parameter defOutput;
-	Name input;
-	input.schema = IShader::BindInput::GENERAL;
-	input.key = key;
-	std::map<Name, size_t>::iterator it = mapParameters.find(input);
-	return it != mapParameters.end() ? parameters[it->second] : defOutput;
+	std::vector<std::key_value<Bytes, uint32_t> >::iterator it = std::binary_find(mapParametersKey.begin(), mapParametersKey.end(), key);
+	return it != mapParametersKey.end() ? parameters[it->second] : defOutput;
 }
 
-PassBase::Parameter& PassBase::Updater::operator [] (IShader::BindInput::SCHEMA schema) {
+const PassBase::Parameter& PassBase::Updater::operator [] (IShader::BindInput::SCHEMA schema) {
 	static Parameter defOutput;
-	Name input;
-	input.schema = schema;
-	std::map<Name, size_t>::iterator it = mapParameters.find(input);
-	return it != mapParameters.end() ? parameters[it->second] : defOutput;
+	std::vector<std::key_value<uint32_t, uint32_t> >::iterator it = std::binary_find(mapParametersSchema.begin(), mapParametersSchema.end(), schema);
+	return it != mapParametersSchema.end() ? parameters[it->second] : defOutput;
 }
 	
 void PassBase::Updater::Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) {
-	Name input;
 	Bytes byteName;
 	byteName.Assign((const uint8_t*)name, safe_cast<uint32_t>(strlen(name)));
-	input.key = byteName;
-	input.schema = IShader::BindInput::GENERAL;
+	uint32_t schema = IShader::BindInput::GENERAL;
 
 	Parameter output;
 	output.resourceType = IRender::Resource::RESOURCE_UNKNOWN;
@@ -112,7 +105,7 @@ void PassBase::Updater::Property(IReflectObject& s, Unique typeID, Unique refTyp
 				if (!*bindOption->description) break;
 			} else if (node->GetUnique() == UniqueType<IShader::BindInput>::Get()) {
 				const IShader::BindInput* bindInput = static_cast<const IShader::BindInput*>(node);
-				input.schema = safe_cast<IShader::BindInput::SCHEMA>(bindInput->description);
+				schema = safe_cast<IShader::BindInput::SCHEMA>(bindInput->description);
 				if (bindInput->subRangeQueryer) {
 					assert(output.resourceType == IRender::Resource::RESOURCE_UNKNOWN); // BindInput must executed before BindBuffer in this case. i.e. place BindInput AFTER BindBuffer in your reflection handler.
 					subRange = bindInput->subRangeQueryer();
@@ -120,9 +113,12 @@ void PassBase::Updater::Property(IReflectObject& s, Unique typeID, Unique refTyp
 			} else if (node->GetUnique() == UniqueType<IShader::BindBuffer>::Get()) {
 				const IShader::BindBuffer* bindBuffer = static_cast<const IShader::BindBuffer*>(chain->GetRawNode());
 				output.resourceType = safe_cast<uint8_t>(IRender::Resource::RESOURCE_BUFFER);
-				if (bufferID.find(bindBuffer) != bufferID.end()) {
-					output.slot = safe_cast<uint8_t>(bufferID[bindBuffer]);
-					output.offset = safe_cast<uint16_t>(bufferSize[bindBuffer]);
+
+				std::vector<std::key_value<const IShader::BindBuffer*, std::pair<uint16_t, uint16_t> > >::iterator it = std::binary_find(bufferIDSize.begin(), bufferIDSize.end(), bindBuffer);
+
+				if (it != bufferIDSize.end()) {
+					output.slot = safe_cast<uint8_t>(it->second.first);
+					output.offset = safe_cast<uint16_t>(it->second.second);
 					uint32_t size;
 					if (s.IsIterator()) {
 						IIterator& iterator = static_cast<IIterator&>(s);
@@ -144,7 +140,7 @@ void PassBase::Updater::Property(IReflectObject& s, Unique typeID, Unique refTyp
 					}
 
 					output.length = size;
-					bufferSize[bindBuffer] += size;
+					it->second.second += size;
 				} else {
 #ifdef _DEBUG
 					assert(disabled.count(bindBuffer) != 0);
@@ -170,7 +166,8 @@ void PassBase::Updater::Property(IReflectObject& s, Unique typeID, Unique refTyp
 		}
 
 		if (output.resourceType != IRender::Resource::RESOURCE_UNKNOWN) {
-			mapParameters[input] = parameters.size();
+			std::binary_insert(mapParametersSchema, std::make_key_value(schema, (uint32_t)safe_cast<uint32_t>(parameters.size())));
+			std::binary_insert(mapParametersKey, std::make_key_value(byteName, (uint32_t)safe_cast<uint32_t>(parameters.size())));
 			parameters.emplace_back(output);
 		}
 	} else {
@@ -180,6 +177,9 @@ void PassBase::Updater::Property(IReflectObject& s, Unique typeID, Unique refTyp
 			if (node->GetUnique() == UniqueType<IShader::MetaShader>::Get()) {
 				const IShader::MetaShader* metaShader = static_cast<const IShader::MetaShader*>(node);
 				s(*this);
+			} else if (node->GetUnique() == UniqueType<IShader::BindInput>::Get()) {
+				const IShader::BindInput* bindInput = static_cast<const IShader::BindInput*>(node);
+				schema = safe_cast<IShader::BindInput::SCHEMA>(bindInput->description);
 			} else if (node->GetUnique() == UniqueType<IShader::BindOption>::Get()) {
 				const IShader::BindOption* bind = static_cast<const IShader::BindOption*>(node);
 				if (!*bind->description) {
@@ -193,10 +193,9 @@ void PassBase::Updater::Property(IReflectObject& s, Unique typeID, Unique refTyp
 		}
 
 		if (typeID == UniqueType<IShader::BindBuffer>::Get()) {
-			IShader::BindBuffer* buffer = static_cast<IShader::BindBuffer*>(&s);
-			uint32_t id = safe_cast<uint32_t>(bufferID.size());
-			bufferID[buffer] = id;
-			bufferSize[buffer] = 0;
+			const IShader::BindBuffer* buffer = static_cast<IShader::BindBuffer*>(&s);
+			uint32_t id = safe_cast<uint32_t>(bufferIDSize.size());
+			std::binary_insert(bufferIDSize, std::make_key_value(buffer, std::make_pair((uint16_t)id, (uint16_t)0)));
 			buffers.emplace_back(buffer);
 		} else if (typeID == UniqueType<IShader::BindTexture>::Get()) {
 			IShader::BindTexture* texture = static_cast<IShader::BindTexture*>(&s);
@@ -206,7 +205,8 @@ void PassBase::Updater::Property(IReflectObject& s, Unique typeID, Unique refTyp
 			output.internalAddress = &texture->resource;
 			output.type = UniqueType<IRender::Resource*>::Get();
 
-			mapParameters[input] = parameters.size();
+			std::binary_insert(mapParametersSchema, std::make_key_value(schema, (uint32_t)safe_cast<uint32_t>(parameters.size())));
+			std::binary_insert(mapParametersKey, std::make_key_value(byteName, (uint32_t)safe_cast<uint32_t>(parameters.size())));
 			parameters.emplace_back(output);
 		}
 	}
@@ -216,10 +216,11 @@ void PassBase::Updater::Flush() {
 	std::vector<uint8_t> fixBufferSlots(buffers.size());
 
 	std::vector<const IShader::BindBuffer*> fixedBuffers;
-	for (size_t i = 0; i < buffers.size(); i++) {
+	for (uint32_t i = 0; i < buffers.size(); i++) {
 		// Empty buffer?
 		fixBufferSlots[i] = safe_cast<uint32_t>(fixedBuffers.size());
-		if (bufferSize[buffers[i]] != 0) {
+		std::vector<std::key_value<const IShader::BindBuffer*, std::pair<uint16_t, uint16_t> > >::iterator it = std::binary_find(bufferIDSize.begin(), bufferIDSize.end(), buffers[i]);
+		if (it->second.second != 0) {
 			fixedBuffers.push_back(buffers[i]);
 		}
 	}
@@ -231,10 +232,11 @@ void PassBase::Updater::Flush() {
 	std::vector<bool> bufferLinearness(buffers.size(), true);
 	std::vector<const char*> bufferAddresses(buffers.size(), nullptr);
 
-	for (size_t k = 0; k < parameters.size(); k++) {
+	for (uint32_t k = 0; k < parameters.size(); k++) {
 		Parameter& param = parameters[k];
 		if (param.resourceType == IRender::Resource::RESOURCE_BUFFER) {
-			param.stride = safe_cast<uint16_t>(bufferSize[buffers[param.slot]]);
+			std::vector<std::key_value<const IShader::BindBuffer*, std::pair<uint16_t, uint16_t> > >::iterator it = std::binary_find(bufferIDSize.begin(), bufferIDSize.end(), buffers[param.slot]);
+			param.stride = it->second.second;
 			const char* baseAddress = (const char*)param.internalAddress - param.offset;
 			if (bufferAddresses[param.slot] == nullptr) {
 				bufferAddresses[param.slot] = baseAddress;
@@ -244,7 +246,7 @@ void PassBase::Updater::Flush() {
 		}
 	}
 
-	for (size_t j = 0; j < parameters.size(); j++) {
+	for (uint32_t j = 0; j < parameters.size(); j++) {
 		Parameter& param = parameters[j];
 		if (param.resourceType == IRender::Resource::RESOURCE_BUFFER) {
 			if (bufferLinearness[param.slot]) {
@@ -261,14 +263,13 @@ void PassBase::Updater::Flush() {
 	}
 
 	std::swap(buffers, fixedBuffers);
-	bufferSize.clear();
-	bufferID.clear();
+	bufferIDSize.clear();
 }
 
 void PassBase::Updater::Capture(IRender::Resource::DrawCallDescription& drawCallDescription, std::vector<Bytes>& bufferData, uint32_t bufferMask) {
 	drawCallDescription.bufferResources.resize(buffers.size());
 
-	for (size_t k = 0; k < quickUpdaters.size(); k++) {
+	for (uint32_t k = 0; k < quickUpdaters.size(); k++) {
 		const Parameter& parameter = parameters[quickUpdaters[k]];
 		if (parameter.resourceType == IRender::Resource::RESOURCE_TEXTURE) {
 			if (drawCallDescription.textureResources.size() <= parameter.slot) {
@@ -292,7 +293,7 @@ void PassBase::Updater::Capture(IRender::Resource::DrawCallDescription& drawCall
 }
 
 void PassBase::Updater::Update(IRender& render, IRender::Queue* queue, IRender::Resource::DrawCallDescription& drawCallDescription, std::vector<IRender::Resource*>& newBuffers, std::vector<Bytes>& bufferData, uint32_t bufferMask) {
-	for (size_t i = 0; i < buffers.size(); i++) {
+	for (uint32_t i = 0; i < buffers.size(); i++) {
 		const IShader::BindBuffer* bindBuffer = buffers[i];
 		if ((bufferMask & (1 << bindBuffer->description.usage))) {
 			assert(i < drawCallDescription.bufferResources.size());
@@ -360,14 +361,6 @@ Bytes PassBase::ExportHash(bool constantOnly) {
 	}
 }
 
-bool PassBase::Name::operator < (const Name& rhs) const {
-	if (schema == IShader::BindInput::GENERAL && rhs.schema == IShader::BindInput::GENERAL) {
-		return key < rhs.key;
-	}
-
-	return schema < rhs.schema;
-}
-
 PassBase::~PassBase() {}
 
 void PassBase::PartialUpdater::Snapshot(std::vector<Bytes>& bufferData, std::vector<IRender::Resource::DrawCallDescription::BufferRange>& bufferResources, std::vector<IRender::Resource*>& textureResources, const PassBase::PartialData& partialData) const {
@@ -376,10 +369,10 @@ void PassBase::PartialUpdater::Snapshot(std::vector<Bytes>& bufferData, std::vec
 
 	std::vector<uint32_t> starts(bufferData.size(), ~(uint32_t)0);
 
-	for (size_t i = 0; i < parameters.size(); i++) {
+	for (uint32_t i = 0; i < parameters.size(); i++) {
 		const Parameter& parameter = parameters[i];
 		if (parameter.type == uniqueBindBuffer) {
-			const IShader::BindBuffer* buffer = reinterpret_cast<const IShader::BindBuffer*>((const char*)&partialData + (size_t)parameter.internalAddress);
+			const IShader::BindBuffer* buffer = reinterpret_cast<const IShader::BindBuffer*>((const char*)&partialData + (uint32_t)parameter.internalAddress);
 			if (bufferResources.size() <= parameter.slot) {
 				bufferResources.resize(parameter.slot + 1);
 			}
@@ -389,7 +382,7 @@ void PassBase::PartialUpdater::Snapshot(std::vector<Bytes>& bufferData, std::vec
 			range.offset = 0;
 			range.length = 0;
 		} else if (parameter.type == uniqueBindTexture) {
-			const IShader::BindTexture* texture = reinterpret_cast<const IShader::BindTexture*>((const char*)&partialData + (size_t)parameter.internalAddress);
+			const IShader::BindTexture* texture = reinterpret_cast<const IShader::BindTexture*>((const char*)&partialData + (uint32_t)parameter.internalAddress);
 			if (textureResources.size() <= parameter.slot) {
 				textureResources.resize(parameter.slot + 1);
 			}
@@ -410,7 +403,7 @@ void PassBase::PartialUpdater::Snapshot(std::vector<Bytes>& bufferData, std::vec
 				buffer.Resize(start + p.stride);
 			}
 
-			memcpy(buffer.GetData() + start + p.offset, (const char*)&partialData + (size_t)p.internalAddress, p.type->GetSize());
+			memcpy(buffer.GetData() + start + p.offset, (const char*)&partialData + (uint32_t)p.internalAddress, p.type->GetSize());
 		}
 	}
 }
@@ -420,7 +413,7 @@ Bytes PassBase::PartialUpdater::ComputeHash() const {
 
 	Bytes buffer(safe_cast<uint32_t>(parameters.size() * sizeof(uint16_t)));
 	uint16_t* p = (uint16_t*)buffer.GetData();
-	for (size_t i = 0; i < parameters.size(); i++) {
+	for (uint32_t i = 0; i < parameters.size(); i++) {
 		const PassBase::Parameter& output = parameters[i];
 		static_assert(sizeof(output.offset) == sizeof(uint16_t), "Size check");
 		p[i] = output.offset;
@@ -435,7 +428,7 @@ public:
 
 	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override {
 		if (s.IsBasicObject()) {
-			PassBase::Parameter* m = nullptr;
+			const PassBase::Parameter* m = nullptr;
 			for (const MetaChainBase* p = meta; p != nullptr; p = p->GetNext()) {
 				const MetaNodeBase* node = p->GetNode();
 				if (node->GetUnique() == UniqueType<IShader::BindInput>::Get()) {
@@ -447,10 +440,10 @@ public:
 			// search for same 
 			Bytes byteName;
 			byteName.Assign((const uint8_t*)name, safe_cast<uint32_t>(strlen(name)));
-			PassBase::Parameter& parameter = m != nullptr && *m ? *m : updater[byteName];
+			const PassBase::Parameter& parameter = m != nullptr && *m ? *m : updater[byteName];
 
 			if (parameter) {
-				parameter.internalAddress = (void*)((size_t)ptr - (size_t)base);
+				const_cast<PassBase::Parameter&>(parameter).internalAddress = (void*)((uint32_t)ptr - (uint32_t)base);
 				outputs.emplace_back(parameter);
 			}
 		}
@@ -466,7 +459,7 @@ void PassBase::PartialData::Export(PartialUpdater& particalUpdater, PassBase::Up
 
 	if (!reflector.outputs.empty()) {
 		uint32_t sum = 0;
-		for (size_t i = 0; i < reflector.outputs.size(); i++) {
+		for (uint32_t i = 0; i < reflector.outputs.size(); i++) {
 			Parameter& parameter = reflector.outputs[i];
 			sum += (uint32_t)safe_cast<uint32_t>(parameter.type->GetSize());
 		}

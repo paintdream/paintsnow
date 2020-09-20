@@ -17,22 +17,25 @@ void MaterialResource::Attach(IRender& render, void* deviceContext) {
 		// Apply material
 		for (size_t i = 0; i < materialParams.variables.size(); i++) {
 			const IAsset::Material::Variable& var = materialParams.variables[i];
-			if (var.type == IAsset::TYPE_TEXTURE) {
-				// Lookup texture 
-				IAsset::TextureIndex textureIndex = var.Parse(UniqueType<IAsset::TextureIndex>());
-				IRender::Resource* texture = nullptr;
-				assert(textureIndex.index < textureResources.size());
-				if (textureIndex.index < textureResources.size()) {
-					TShared<TextureResource>& res = textureResources[textureIndex.index];
-					assert(res);
-					if (res) {
-						texture = res->GetRenderResource();
+			PassBase::Parameter& parameter = const_cast<PassBase::Parameter&>(updater[var.key]);
+			if (parameter) {
+				if (var.type == IAsset::TYPE_TEXTURE) {
+					// Lookup texture 
+					IAsset::TextureIndex textureIndex = var.Parse(UniqueType<IAsset::TextureIndex>());
+					IRender::Resource* texture = nullptr;
+					assert(textureIndex.index < textureResources.size());
+					if (textureIndex.index < textureResources.size()) {
+						TShared<TextureResource>& res = textureResources[textureIndex.index];
+						assert(res);
+						if (res) {
+							texture = res->GetRenderResource();
+						}
 					}
-				}
 
-				updater[var.key] = texture;
-			} else {
-				updater[var.key] = var.value;
+					parameter = texture;
+				} else {
+					parameter = var.value;
+				}
 			}
 		}
 

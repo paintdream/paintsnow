@@ -90,7 +90,10 @@ void MeshResource::Upload(IRender& render, void* deviceContext) {
 		}
 
 		if (mapCount.load(std::memory_order_relaxed) == 0) {
+			std::vector<IAsset::MeshGroup> groups;
+			std::swap(meshCollection.groups, groups);
 			meshCollection = IAsset::MeshCollection();
+			std::swap(meshCollection.groups, groups);
 		}
 
 		SpinUnLock(critical);

@@ -128,7 +128,7 @@ void TextViewComponent::TagParser::Clear() {
 	nodes.clear();
 }
 
-TextViewComponent::TextViewComponent(TShared<FontResource> font, TShared<MeshResource> mesh, TShared<BatchComponent> batch, const TShared<MaterialResource>& material) : BaseClass(mesh, batch), fontResource(std::move(font)), passwordChar(0), cursorChar(0), cursorPos(0), fontSize(12), size(32, 32), scroll(0, 0), padding(0, 0), fullSize(0, 0), selectRange(0, 0), cursorColor(255, 255, 255, 255), selectColor(0, 0, 0, 0) {
+TextViewComponent::TextViewComponent(TShared<FontResource> font, TShared<MeshResource> mesh, TShared<BatchComponent> batch) : BaseClass(mesh, batch), fontResource(std::move(font)), passwordChar(0), cursorChar(0), cursorPos(0), fontSize(12), size(32, 32), scroll(0, 0), padding(0, 0), fullSize(0, 0), selectRange(0, 0), cursorColor(255, 255, 255, 255), selectColor(0, 0, 0, 0) {
 	Flag().fetch_or((TEXTVIEWCOMPONENT_CURSOR_REV_COLOR | TEXTVIEWCOMPONENT_SELECT_REV_COLOR), std::memory_order_acquire);
 }
 
@@ -361,6 +361,7 @@ void TextViewComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box) {
 }
 
 uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) {
+	return 0;
 	if (renderInfos.empty()) return 0;
 
 	uint32_t start = safe_cast<uint32_t>(outputDrawCalls.size());
@@ -372,10 +373,10 @@ uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData>& outp
 		OutputRenderData& renderData = outputDrawCalls[i];
 		PassBase::Updater& updater = renderData.shaderResource->GetPassUpdater();
 		IRender::Resource::DrawCallDescription& drawCall = renderData.drawCallDescription;
-		PassBase::Parameter& paramMainTexture = updater[IShader::BindInput::MAINTEXTURE];
+		const PassBase::Parameter& paramMainTexture = updater[IShader::BindInput::MAINTEXTURE];
 		assert(paramMainTexture);
 
-		PassBase::Parameter& paramTexCoordRect = updater[texCoordRectKey];
+		const PassBase::Parameter& paramTexCoordRect = updater[texCoordRectKey];
 		assert(paramTexCoordRect);
 
 		IRender::Resource* lastMainTexture = renderInfos[0].texture;

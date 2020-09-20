@@ -420,15 +420,14 @@ void PhaseComponent::ResolveTasks(Engine& engine) {
 
 						group.drawCallDescription.instanceCounts.x() = group.instanceCount;
 
-						if (PassBase::ValidateDrawCall(group.drawCallDescription)) {
-							IRender::Resource* drawCall = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_DRAWCALL);
-							IRender::Resource::DrawCallDescription dc = group.drawCallDescription; // make copy
-							render.UploadResource(queue, drawCall, &dc);
-							render.ExecuteResource(queue, drawCall);
+						assert(PassBase::ValidateDrawCall(group.drawCallDescription));
+						IRender::Resource* drawCall = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_DRAWCALL);
+						IRender::Resource::DrawCallDescription dc = group.drawCallDescription; // make copy
+						render.UploadResource(queue, drawCall, &dc);
+						render.ExecuteResource(queue, drawCall);
 
-							// cleanup at current frame
-							render.DeleteResource(queue, drawCall);
-						}
+						// cleanup at current frame
+						render.DeleteResource(queue, drawCall);
 
 						for (size_t n = 0; n < buffers.size(); n++) {
 							render.DeleteResource(queue, buffers[n]);

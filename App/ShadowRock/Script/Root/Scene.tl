@@ -114,7 +114,7 @@ function Scene.New(database : Database, clock : Clock) : Scene
 						local modelComponent = components[componentID as number] as ModelComponent
 						if modelComponent then
 							modelComponent:SetRenderPolicy(renderPolicy)
-							modelComponent:AddMaterial(meshGroupID as number, materialResource)
+							modelComponent:SetMaterial(meshGroupID as number, materialResource)
 						end
 					end
 

@@ -10,7 +10,7 @@ ModelComponent::ModelComponent(TShared<MeshResource> res, TShared<BatchComponent
 	Flag().fetch_or(COMPONENT_SHARED, std::memory_order_acquire); // can be shared among different entities
 }
 
-void ModelComponent::AddMaterial(uint32_t meshGroupIndex, TShared<MaterialResource>& materialResource) {
+void ModelComponent::SetMaterial(uint32_t meshGroupIndex, TShared<MaterialResource>& materialResource) {
 	assert(shaderOverriders.empty());
 	materialResources.emplace_back(std::make_pair(meshGroupIndex, materialResource));
 }
@@ -160,7 +160,6 @@ void ModelComponent::Initialize(Engine& engine, Entity* entity) {
 		Expand(engine);
 
 		// inspect vertex format
-		std::vector<PassBase::Name> inputs;
 		assert(drawCallTemplates.empty());
 		drawCallTemplates.reserve(materialResources.size());
 		GenerateDrawCalls(drawCallTemplates, materialResources);

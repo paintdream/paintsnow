@@ -18,12 +18,6 @@ namespace PaintsNow {
 		IRender::Resource* Compile(IRender& render, IRender::Queue* queue);
 		Bytes ExportHash(bool onlyConstants);
 
-		struct Name {
-			bool operator < (const Name& rhs) const;
-			Bytes key;
-			IShader::BindInput::SCHEMA schema;
-		};
-
 		struct Parameter {
 			Parameter();
 			template <class T>
@@ -64,8 +58,8 @@ namespace PaintsNow {
 		public:
 			Updater(PassBase& pass);
 
-			Parameter& operator [] (const Bytes& key);
-			Parameter& operator [] (IShader::BindInput::SCHEMA schema);
+			const Parameter& operator [] (const Bytes& key);
+			const Parameter& operator [] (IShader::BindInput::SCHEMA schema);
 
 			void Capture(IRender::Resource::DrawCallDescription& drawCallDescription, std::vector<Bytes>& bufferData, uint32_t bufferMask);
 			void Update(IRender& render, IRender::Queue* queue, IRender::Resource::DrawCallDescription& drawCall, std::vector<IRender::Resource*>& newBuffers, std::vector<Bytes>& bufferData, uint32_t bufferMask);
@@ -78,12 +72,12 @@ namespace PaintsNow {
 
 		private:
 			std::vector<const IShader::BindBuffer*> buffers;
-			std::map<const IShader::BindBuffer*, uint32_t> bufferSize;
-			std::map<const IShader::BindBuffer*, uint32_t> bufferID;
-			uint32_t textureCount;
-			std::map<Name, size_t> mapParameters;
-			std::vector<size_t> quickUpdaters;
+			std::vector<std::key_value<const IShader::BindBuffer*, std::pair<uint16_t, uint16_t> > > bufferIDSize;
+			std::vector<std::key_value<Bytes, uint32_t> > mapParametersKey;
+			std::vector<std::key_value<uint32_t, uint32_t> > mapParametersSchema;
+			std::vector<uint32_t> quickUpdaters;
 			std::vector<Parameter> parameters;
+			uint32_t textureCount;
 
 #ifdef _DEBUG
 			std::set<const void*> disabled;
@@ -109,11 +103,11 @@ namespace PaintsNow {
 			if (drawCall.indexBufferResource.buffer == nullptr) return false;
 			if (drawCall.shaderResource == nullptr) return false;
 
-			for (size_t i = 0; i < drawCall.textureResources.size(); i++) {
+			for (uint32_t i = 0; i < drawCall.textureResources.size(); i++) {
 				if (drawCall.textureResources[i] == nullptr) return false;
 			}
 
-			for (size_t k = 0; k < drawCall.bufferResources.size(); k++) {
+			for (uint32_t k = 0; k < drawCall.bufferResources.size(); k++) {
 				if (drawCall.bufferResources[k].buffer == nullptr) return false;
 			}
 

@@ -198,16 +198,15 @@ void CameraComponent::Instancing(Engine& engine, TaskData& taskData) {
 
 			group.drawCallDescription.instanceCounts.x() = group.instanceCount;
 
-			if (PassBase::ValidateDrawCall(group.drawCallDescription)) {
-				IRender::Resource*& drawCall = group.drawCallResource;
-				if (drawCall == nullptr) {
-					drawCall = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_DRAWCALL);
-					policyData.runtimeResources.emplace_back(drawCall);
-				}
-
-				assert(group.drawCallDescription.shaderResource != nullptr);
-				render.UploadResource(queue, drawCall, &group.drawCallDescription);
+			assert(PassBase::ValidateDrawCall(group.drawCallDescription));
+			IRender::Resource*& drawCall = group.drawCallResource;
+			if (drawCall == nullptr) {
+				drawCall = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_DRAWCALL);
+				policyData.runtimeResources.emplace_back(drawCall);
 			}
+
+			assert(group.drawCallDescription.shaderResource != nullptr);
+			render.UploadResource(queue, drawCall, &group.drawCallDescription);
 		}
 
 		for (size_t n = 0; n < warpData.renderPolicyMap.size(); n++) {
@@ -653,7 +652,7 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 			// skinning
 			if (animationComponent) {
 				assert(animationComponent->GetWarpIndex() == renderableComponent->GetWarpIndex());
-				PassBase::Parameter& parameter = updater[IShader::BindInput::BONE_TRANSFORMS];
+				const PassBase::Parameter& parameter = updater[IShader::BindInput::BONE_TRANSFORMS];
 				if (parameter) {
 					group.animationComponent = animationComponent; // hold reference
 					group.drawCallDescription.bufferResources[parameter.slot].buffer = animationComponent->AcquireBoneMatrixBuffer(render, queue);

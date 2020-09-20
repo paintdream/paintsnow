@@ -5,26 +5,27 @@
 
 #pragma once
 #include "../Batch/BatchComponentModule.h"
+#include "../Renderable/RenderableComponentModule.h"
 #include "WidgetComponent.h"
 #include "../../Module.h"
 
 namespace PaintsNow {
 	class WidgetComponent;
-	class WidgetComponentModule : public TReflected<WidgetComponentModule, ModuleImpl<WidgetComponent> > {
+	class WidgetComponentModule : public TReflected<WidgetComponentModule, TRenderableComponentModule<WidgetComponent> > {
 	public:
 		WidgetComponentModule(Engine& engine);
 		void Initialize() override;
 		void Uninitialize() override;
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 
-		TShared<WidgetComponent> RequestNew(IScript::Request& request, IScript::Delegate<BatchComponent> batchComponent, IScript::Delegate<BatchComponent> batchInstancedDataComponent);
+		TShared<WidgetComponent> RequestNew(IScript::Request& request, IScript::Delegate<BatchComponent> batchComponent, IScript::Delegate<BatchComponent> batchInstancedDataComponent, IScript::Delegate<MaterialResource> material);
 		void RequestSetWidgetTexture(IScript::Request& request, IScript::Delegate<WidgetComponent> widgetComponent, IScript::Delegate<TextureResource> texture);
 		void RequestSetWidgetCoord(IScript::Request& request, IScript::Delegate<WidgetComponent> widgetComponent, Float4& inCoord, Float4& outCoord);
 		void RequestSetWidgetRepeatMode(IScript::Request& request, IScript::Delegate<WidgetComponent> widgetComponent, bool repeatable);
 
 	protected:
 		TShared<MeshResource> widgetMesh;
-		TShared<MaterialResource> widgetMaterial;
+		TShared<MaterialResource> defaultWidgetMaterial;
 		BatchComponentModule* batchComponentModule;
 	};
 }

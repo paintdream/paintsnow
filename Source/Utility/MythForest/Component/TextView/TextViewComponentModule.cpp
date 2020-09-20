@@ -39,7 +39,8 @@ TShared<TextViewComponent> TextViewComponentModule::RequestNew(IScript::Request&
 	}
 
 	TShared<FontResource> res = fontResource.Get();
-	TShared<TextViewComponent> textViewComponent = TShared<TextViewComponent>::From(allocator->New(res, meshResource ? TShared<MeshResource>(meshResource.Get()) : defaultTextMesh, batchComponent, materialResource ? TShared<MaterialResource>(materialResource.Get()) : defaultTextMaterial));
+	TShared<TextViewComponent> textViewComponent = TShared<TextViewComponent>::From(allocator->New(res, meshResource ? TShared<MeshResource>(meshResource.Get()) : defaultTextMesh, batchComponent));
+	textViewComponent->SetMaterial(0, materialResource ? TShared<MaterialResource>(materialResource.Get()) : defaultTextMaterial);
 	textViewComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
 	return textViewComponent;
 }

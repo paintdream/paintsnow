@@ -686,6 +686,7 @@ void RegisterPass(ResourceManager& resourceManager, UniqueType<T> type, const St
 
 	if (!matName.empty()) {
 		TShared<MaterialResource> materialResource = TShared<MaterialResource>::From(new MaterialResource(resourceManager, String("[Runtime]/MaterialResource/") + matName));
+		materialResource->originalShaderResource = shaderResource;
 		materialResource->Flag().fetch_or(ResourceBase::RESOURCE_ETERNAL, std::memory_order_acquire);
 		resourceManager.Insert(materialResource());
 	}
@@ -909,12 +910,6 @@ void SnowyStream::CreateBuiltinResources() {
 	CreateBuiltinSolidTexture("[Runtime]/TextureResource/MissingBaseColor", UChar4(255, 0, 255, 255));
 	CreateBuiltinSolidTexture("[Runtime]/TextureResource/MissingNormal", UChar4(127, 127, 255, 255));
 	CreateBuiltinSolidTexture("[Runtime]/TextureResource/MissingMaterial", UChar4(255, 255, 0, 0));
-
-	TShared<MaterialResource> widgetMaterial = CreateReflectedResource(UniqueType<MaterialResource>(), "[Runtime]/MaterialResource/Widget", false, ResourceBase::RESOURCE_ETERNAL);
-	TShared<ShaderResource> shaderResource = CreateReflectedResource(UniqueType<ShaderResource>(), ShaderResource::GetShaderPathPrefix() + "WidgetPass");
-	widgetMaterial->originalShaderResource = shaderResource;
-	widgetMaterial->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
-	widgetMaterial->GetResourceManager().InvokeUpload(widgetMaterial());
 }
 
 void SnowyStream::RequestSetShaderResourceCode(IScript::Request& request, IScript::Delegate<ShaderResource> shaderResource, const String& stage, const String& text, const std::vector<std::pair<String, String> >& config) {

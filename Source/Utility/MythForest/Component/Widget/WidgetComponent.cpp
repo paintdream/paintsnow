@@ -18,18 +18,18 @@ void WidgetComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallT
 		PassBase::Updater& updater = renderData.shaderResource->GetPassUpdater();
 
 		// texture
-		PassBase::Parameter& mainTextureParam = updater[IShader::BindInput::MAINTEXTURE];
+		const PassBase::Parameter& mainTextureParam = updater[IShader::BindInput::MAINTEXTURE];
 		if (mainTextureParam) {
 			drawCall.textureResources[mainTextureParam.slot] = mainTexture()->GetRenderResource();
 		}
 
 		// instanced data
-		PassBase::Parameter& inTexCoordRectParam = updater[StaticBytes(subTexMark)];
+		const PassBase::Parameter& inTexCoordRectParam = updater[StaticBytes(subTexMark)];
 		if (inTexCoordRectParam) {
 			drawCall.bufferResources[inTexCoordRectParam.slot] = batchInstancedDataComponent->Allocate(inTexCoordRect);
 		}
 
-		PassBase::Parameter& outTexCoordRectParam = updater[StaticBytes(mainCoordRect)];
+		const PassBase::Parameter& outTexCoordRectParam = updater[StaticBytes(mainCoordRect)];
 		if (outTexCoordRectParam) {
 			drawCall.bufferResources[outTexCoordRectParam.slot] = batchInstancedDataComponent->Allocate(outTexCoordRect);
 		}

@@ -12,7 +12,7 @@ TObject<IReflect>& ModelComponentModule::operator () (IReflect& reflect) {
 
 	if (reflect.IsReflectMethod()) {
 		ReflectMethod(RequestNew)[ScriptMethod = "New"];
-		ReflectMethod(RequestAddMaterial)[ScriptMethod = "AddMaterial"];
+		ReflectMethod(RequestSetMaterial)[ScriptMethod = "SetMaterial"];
 	}
 
 	return *this;
@@ -37,11 +37,11 @@ TShared<ModelComponent> ModelComponentModule::RequestNew(IScript::Request& reque
 	return modelComponent;
 }
 
-void ModelComponentModule::RequestAddMaterial(IScript::Request& request, IScript::Delegate<ModelComponent> modelComponent, uint32_t meshGroupIndex, IScript::Delegate<MaterialResource> materialResource) {
+void ModelComponentModule::RequestSetMaterial(IScript::Request& request, IScript::Delegate<ModelComponent> modelComponent, uint32_t meshGroupIndex, IScript::Delegate<MaterialResource> materialResource) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(modelComponent);
 	CHECK_DELEGATE(materialResource);
 
 	TShared<MaterialResource> mat = materialResource.Get();
-	modelComponent->AddMaterial(meshGroupIndex, mat);
+	modelComponent->SetMaterial(meshGroupIndex, mat);
 }
