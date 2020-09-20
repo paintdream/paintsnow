@@ -28,8 +28,8 @@ namespace PaintsNow {
 		Float4 unitTexCoord;
 
 		// Output
-		Float2 rasterCoord;
 		Float4 rasterPosition;
+		Float2 texCoord;
 	};
 }
 

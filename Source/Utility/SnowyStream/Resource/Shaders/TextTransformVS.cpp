@@ -13,7 +13,7 @@ TextTransformVS::TextTransformVS() {
 String TextTransformVS::GetShaderText() {
 	return UnifyShaderCode(
 		rasterPosition = mult_vec(worldMatrix, float4(unitTexCoord.x, unitTexCoord.y, 0, 1));
-		rasterCoord = unitTexCoord.zw;
+		texCoord = lerp(texCoordRect.xy, texCoordRect.zw, unitTexCoord.xy * float(0.5) + float2(0.5, 0.5));
 	);
 }
 
@@ -21,15 +21,15 @@ TObject<IReflect>& TextTransformVS::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectProperty()) {
-		ReflectProperty(positionBuffer);
 		ReflectProperty(instanceBuffer);
 		ReflectProperty(texCoordRectBuffer);
+		ReflectProperty(positionBuffer);
 
 		ReflectProperty(worldMatrix)[instanceBuffer][BindInput(BindInput::TRANSFORM_WORLD)];
-		ReflectProperty(texCoordRect)[texCoordRectBuffer][BindInput(BindInput::TEXCOORD)];
+		ReflectProperty(texCoordRect)[texCoordRectBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(unitTexCoord)[positionBuffer][BindInput(BindInput::POSITION)];
 
-		ReflectProperty(rasterCoord)[BindOutput(BindOutput::TEXCOORD)];
+		ReflectProperty(texCoord)[BindOutput(BindOutput::TEXCOORD)];
 		ReflectProperty(rasterPosition)[BindOutput(BindOutput::HPOSITION)];
 	}
 

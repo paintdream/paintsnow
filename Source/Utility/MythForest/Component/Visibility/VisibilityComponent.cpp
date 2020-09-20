@@ -419,7 +419,9 @@ void VisibilityComponent::CollectComponents(Engine& engine, TaskData& task, cons
 		if (component->GetEntityFlagMask() & Entity::ENTITY_HAS_RENDERABLE) {
 			if (transformComponent != nullptr) {
 				RenderableComponent* renderableComponent = static_cast<RenderableComponent*>(component);
-				CollectRenderableComponent(engine, task, renderableComponent, instanceData, transformComponent->GetObjectID());
+				if (!(renderableComponent->Flag() & RenderableComponent::RENDERABLECOMPONENT_CAMERAVIEW)) {
+					CollectRenderableComponent(engine, task, renderableComponent, instanceData, transformComponent->GetObjectID());
+				}
 			}
 		} else if (component->GetEntityFlagMask() & Entity::ENTITY_HAS_SPACE) {
 			std::atomic<uint32_t>& counter = reinterpret_cast<std::atomic<uint32_t>&>(task.pendingCount);

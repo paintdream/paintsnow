@@ -129,7 +129,7 @@ void TextViewComponent::TagParser::Clear() {
 }
 
 TextViewComponent::TextViewComponent(TShared<FontResource> font, TShared<MeshResource> mesh, TShared<BatchComponent> batch) : BaseClass(mesh, batch), fontResource(std::move(font)), passwordChar(0), cursorChar('|'), cursorPos(0), fontSize(14), size(32, 32), scroll(0, 0), padding(0, 0), fullSize(0, 0), selectRange(0, 0), cursorColor(255, 255, 255, 255), selectColor(0, 0, 0, 0) {
-	Flag().fetch_or((TEXTVIEWCOMPONENT_CURSOR_REV_COLOR | TEXTVIEWCOMPONENT_SELECT_REV_COLOR), std::memory_order_acquire);
+	Flag().fetch_or(RENDERABLECOMPONENT_CAMERAVIEW | TEXTVIEWCOMPONENT_CURSOR_REV_COLOR | TEXTVIEWCOMPONENT_SELECT_REV_COLOR, std::memory_order_acquire);
 }
 
 void TextViewComponent::Initialize(Engine& engine, Entity* entity) {
@@ -354,6 +354,7 @@ void TextViewComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box) {
 }
 
 uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) {
+	// return 0;
 	if (renderInfos.empty()) return 0;
 
 	uint32_t start = safe_cast<uint32_t>(outputDrawCalls.size());
@@ -366,15 +367,14 @@ uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData>& outp
 		PassBase::Updater& updater = renderData.shaderResource->GetPassUpdater();
 		IRender::Resource::DrawCallDescription& drawCall = renderData.drawCallDescription;
 		const PassBase::Parameter& paramMainTexture = updater[IShader::BindInput::MAINTEXTURE];
-		assert(paramMainTexture);
-
 		const PassBase::Parameter& paramTexCoordRect = updater[texCoordRectKey];
-		assert(paramTexCoordRect);
+		assert(paramMainTexture && paramTexCoordRect);
 
 		IRender::Resource* lastMainTexture = renderInfos[0].texture;
 		for (size_t k = 0; k < renderData.localInstancedData.size(); k++) {
 			assert(renderData.localInstancedData[k].first != paramTexCoordRect.slot); // must not overlapped
 		}
+
 		renderData.localInstancedData.emplace_back(std::make_pair(paramTexCoordRect.slot, Bytes::Null()));
 		renderData.drawCallDescription.instanceCounts.x() = safe_cast<uint32_t>(renderInfos.size());
 

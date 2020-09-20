@@ -22,6 +22,7 @@ namespace PaintsNow {
 		String initialization;
 		String finalization;
 
+		uint32_t debugVertexBufferIndex;
 		uint32_t& inputIndex;
 		uint32_t& outputIndex;
 		uint32_t& textureIndex;

@@ -10,7 +10,7 @@ TextShadingFS::TextShadingFS() {
 
 String TextShadingFS::GetShaderText() {
 	return UnifyShaderCode(
-		target = texture(mainTexture, rasterCoord.xy);
+		target = texture(mainTexture, texCoord.xy);
 	);
 }
 
@@ -20,7 +20,7 @@ TObject<IReflect>& TextShadingFS::operator () (IReflect& reflect) {
 	if (reflect.IsReflectProperty()) {
 		ReflectProperty(mainTexture)[BindInput(BindInput::MAINTEXTURE)];
 
-		ReflectProperty(rasterCoord)[BindInput(BindInput::TEXCOORD)];
+		ReflectProperty(texCoord)[BindInput(BindInput::TEXCOORD)];
 		ReflectProperty(target)[BindOutput(BindOutput::COLOR)];
 	}
 

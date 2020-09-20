@@ -17,7 +17,7 @@ namespace PaintsNow {
 
 	public:
 		IShader::BindTexture mainTexture;
-		Float2 rasterCoord;
+		Float2 texCoord;
 
 		// targets
 		Float4 target;

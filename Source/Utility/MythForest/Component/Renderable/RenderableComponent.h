@@ -16,7 +16,8 @@ namespace PaintsNow {
 	class RenderableComponent : public TAllocatedTiny<RenderableComponent, Component>, public IDrawCallProvider {
 	public:
 		enum {
-			RENDERABLECOMPONENT_CUSTOM_BEGIN = COMPONENT_CUSTOM_BEGIN
+			RENDERABLECOMPONENT_CAMERAVIEW = COMPONENT_CUSTOM_BEGIN,
+			RENDERABLECOMPONENT_CUSTOM_BEGIN = COMPONENT_CUSTOM_BEGIN << 1
 		};
 
 		RenderableComponent();

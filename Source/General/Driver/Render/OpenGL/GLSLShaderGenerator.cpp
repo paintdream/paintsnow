@@ -34,7 +34,7 @@ static const String computeFrameCode = "\n\
 #define LocalInvocationIndex gl_LocalInvocationIndex \n\
 \n";
 
-GLSLShaderGenerator::GLSLShaderGenerator(IRender::Resource::ShaderDescription::Stage s, uint32_t& pinputIndex, uint32_t& poutputIndex, uint32_t& ptextureIndex) : IReflect(true, false), stage(s), inputIndex(pinputIndex), outputIndex(poutputIndex), textureIndex(ptextureIndex) {}
+GLSLShaderGenerator::GLSLShaderGenerator(IRender::Resource::ShaderDescription::Stage s, uint32_t& pinputIndex, uint32_t& poutputIndex, uint32_t& ptextureIndex) : IReflect(true, false), stage(s), debugVertexBufferIndex(0), inputIndex(pinputIndex), outputIndex(poutputIndex), textureIndex(ptextureIndex) {}
 
 const String& GLSLShaderGenerator::GetFrameCode() {
 	return frameCode;
@@ -167,6 +167,21 @@ void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refT
 					if (bindBuffer == nullptr || mapBufferEnabled[bindBuffer]) {
 						if (stage == IRender::Resource::ShaderDescription::VERTEX) {
 							assert(bindBuffer != nullptr);
+#ifdef _DEBUG
+							if (bindBuffer->description.usage) {
+								while (debugVertexBufferIndex < bufferBindings.size()) {
+									if (bufferBindings[debugVertexBufferIndex].first == bindBuffer) {
+										break;
+									}
+
+									debugVertexBufferIndex++;
+								}
+
+								// IShader::BindBuffer* must be with the same order as input varyings
+								assert(debugVertexBufferIndex < bufferBindings.size());
+							}
+#endif
+
 							switch (bindBuffer->description.usage) {
 							case IRender::Resource::BufferDescription::VERTEX:
 								assert(typeID->GetSize() <= 4 * sizeof(float));

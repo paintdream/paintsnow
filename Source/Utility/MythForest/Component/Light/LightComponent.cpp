@@ -386,7 +386,9 @@ void LightComponent::ShadowLayer::CollectComponents(Engine& engine, TaskData& ta
 			if (entityMask & Entity::ENTITY_HAS_RENDERABLE) {
 				if (visible) {
 					assert(component->QueryInterface(UniqueType<RenderableComponent>()) != nullptr);
-					CollectRenderableComponent(engine, taskData, static_cast<RenderableComponent*>(component), warpData, subWorldInstancedData);
+					if (!(component->Flag() & RenderableComponent::RENDERABLECOMPONENT_CAMERAVIEW)) {
+						CollectRenderableComponent(engine, taskData, static_cast<RenderableComponent*>(component), warpData, subWorldInstancedData);
+					}
 				}
 			} else if (entityMask & Entity::ENTITY_HAS_SPACE) {
 				assert(component->QueryInterface(UniqueType<SpaceComponent>()) != nullptr);

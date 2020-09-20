@@ -5,6 +5,7 @@ using namespace PaintsNow;
 
 WidgetComponent::WidgetComponent(TShared<MeshResource> mesh, TShared<BatchComponent> batch, const TShared<BatchComponent>& batchInstanced) : BaseClass(mesh, batch) {
 	batchInstancedDataComponent = batchInstanced;
+	Flag().fetch_or(RENDERABLECOMPONENT_CAMERAVIEW, std::memory_order_acquire);
 }
 
 void WidgetComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTemplates, std::vector<std::pair<uint32_t, TShared<MaterialResource> > >& materialResources) {

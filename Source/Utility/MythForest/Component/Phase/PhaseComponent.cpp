@@ -853,7 +853,9 @@ void PhaseComponent::CollectComponents(Engine& engine, TaskData& task, const Wor
 			if (component->GetEntityFlagMask() & Entity::ENTITY_HAS_RENDERABLE) {
 				if (transformComponent != nullptr) {
 					RenderableComponent* renderableComponent = static_cast<RenderableComponent*>(component);
-					CollectRenderableComponent(engine, task, renderableComponent, instanceData);
+					if (!(renderableComponent->Flag() & RenderableComponent::RENDERABLECOMPONENT_CAMERAVIEW)) {
+						CollectRenderableComponent(engine, task, renderableComponent, instanceData);
+					}
 				}
 			} else if (component->GetEntityFlagMask() & Entity::ENTITY_HAS_SPACE) {
 				std::atomic<uint32_t>& counter = reinterpret_cast<std::atomic<uint32_t>&>(task.pendingCount);
