@@ -71,7 +71,7 @@ TObject<IReflect>& FontResource::operator () (IReflect& reflect) {
 }
 
 const FontResource::Char& FontResource::Get(IRender& render, IRender::Queue* queue, IFontBase& fontBase, IFontBase::FONTCHAR ch, int32_t size) {
-	size = size == 0 ? 12 : size;
+	size = size == 0 ? 14 : size;
 
 	SpinLock(critical);
 	Slice& slice = sliceMap[size];
@@ -128,7 +128,10 @@ Short2Pair FontResource::Slice::AllocRect(IRender& render, IRender::Queue* queue
 	w.second.x() = w.first.x() + size.x();
 	w.second.y() = lastRect.first.y() + height;
 	w.first.y() = w.second.y() - size.y();
-	lastRect = w;
+
+	lastRect.first.x() = w.first.x();
+	lastRect.second.x() = w.second.x();
+	lastRect.second.y() = Math::Max(w.second.y(), lastRect.second.y());
 
 	assert(!cacheTextures.empty());
 	cacheTextures.back().Tag(1); // set dirty
@@ -198,7 +201,7 @@ const FontResource::Char& FontResource::Slice::Get(IRender& render, IRender::Que
 	} else {
 		assert(font != nullptr);
 		if (buffer.Empty()) {
-			buffer.Resize(dim * dim * sizeof(uint8_t));
+			buffer.Resize(dim * dim * sizeof(uint8_t), 0);
 		}
 
 		Char c;
@@ -212,7 +215,7 @@ const FontResource::Char& FontResource::Slice::Get(IRender& render, IRender::Que
 		assert(r.second.x() <= dim && r.second.y() <= dim);
 		uint8_t* target = buffer.GetData();
 
-		const uint32_t* p = (const uint32_t*)data.data();
+		const uint8_t* p = (const uint8_t*)data.data();
 		for (int j = r.first.y(); j < r.second.y(); j++) {
 			for (int i = r.first.x(); i < r.second.x(); i++) {
 				target[j * dim + i] = *p++;

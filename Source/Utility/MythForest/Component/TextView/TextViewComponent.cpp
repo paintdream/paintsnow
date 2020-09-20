@@ -128,7 +128,7 @@ void TextViewComponent::TagParser::Clear() {
 	nodes.clear();
 }
 
-TextViewComponent::TextViewComponent(TShared<FontResource> font, TShared<MeshResource> mesh, TShared<BatchComponent> batch) : BaseClass(mesh, batch), fontResource(std::move(font)), passwordChar(0), cursorChar(0), cursorPos(0), fontSize(12), size(32, 32), scroll(0, 0), padding(0, 0), fullSize(0, 0), selectRange(0, 0), cursorColor(255, 255, 255, 255), selectColor(0, 0, 0, 0) {
+TextViewComponent::TextViewComponent(TShared<FontResource> font, TShared<MeshResource> mesh, TShared<BatchComponent> batch) : BaseClass(mesh, batch), fontResource(std::move(font)), passwordChar(0), cursorChar('|'), cursorPos(0), fontSize(14), size(32, 32), scroll(0, 0), padding(0, 0), fullSize(0, 0), selectRange(0, 0), cursorColor(255, 255, 255, 255), selectColor(0, 0, 0, 0) {
 	Flag().fetch_or((TEXTVIEWCOMPONENT_CURSOR_REV_COLOR | TEXTVIEWCOMPONENT_SELECT_REV_COLOR), std::memory_order_acquire);
 }
 
@@ -348,6 +348,7 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 }
 
 void TextViewComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box) {
+	// TODO: remove this
 	Union(box, Float3(-100, -100, -100));
 	Union(box, Float3(100, 100, 100));
 }
