@@ -14,8 +14,9 @@ namespace PaintsNow {
 	class IDrawCallProvider {
 	public:
 		struct InputRenderData {
-			InputRenderData(float ref = 0.0f, ShaderResource* res = nullptr) : overrideShaderTemplate(res), viewReference(ref) {}
+			InputRenderData(float ref = 0.0f, ShaderResource* res = nullptr, const UShort2 resolution = UShort2(0, 0)) : overrideShaderTemplate(res), viewResolution(resolution), viewReference(ref) {}
 			ShaderResource* overrideShaderTemplate;
+			UShort2 viewResolution;
 			float viewReference;
 		};
 

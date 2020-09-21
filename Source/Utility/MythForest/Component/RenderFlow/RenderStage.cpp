@@ -140,15 +140,16 @@ void RenderStage::Commit(Engine& engine, std::vector<IRender::Queue*>& queues, s
 	render.ExecuteResource(instantQueue, renderTarget);
 }
 
-void RenderStage::SetMainResolution(Engine& engine, IRender::Queue* resourceQueue, uint32_t width, uint32_t height) {
+void RenderStage::SetMainResolution(Engine& engine, IRender::Queue* resourceQueue, UShort2 res) {
 	if (!(Flag() & RENDERSTAGE_ADAPT_MAIN_RESOLUTION)) return;	
 	// By default, create render buffer with resolution provided
 	// For some stages(e.g. cascaded bloom generator), we must override this function to adapt the new value
 	// by now we have no color-free render buffers
+	uint16_t width = res.x(), height = res.y();
 	IRender& render = engine.interfaces.render;
 	assert(width != 0 && height != 0);
-	width = resolutionShift.x() > 0 ? Math::Max(width >> resolutionShift.x(), 2u) : width << resolutionShift.x();
-	height = resolutionShift.y() > 0 ? Math::Max(height >> resolutionShift.y(), 2u) : height << resolutionShift.y();
+	width = safe_cast<uint16_t>(resolutionShift.x() > 0 ? Math::Max(width >> resolutionShift.x(), 2) : width << resolutionShift.x());
+	height = safe_cast<uint16_t>(resolutionShift.y() > 0 ? Math::Max(height >> resolutionShift.y(), 2) : height << resolutionShift.y());
 
 	const std::vector<PortInfo>& portInfos = GetPorts();
 	for (size_t i = 0; i < portInfos.size(); i++) {

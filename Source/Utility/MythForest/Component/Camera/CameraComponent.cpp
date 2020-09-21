@@ -44,10 +44,10 @@ void CameraComponent::UpdateJitterMatrices(CameraComponentConfig::WorldGlobalDat
 		jitterIndex = (jitterIndex + 1) % 9;
 
 		MatrixFloat4x4 jitterMatrix = MatrixFloat4x4::Identity();
-		Int2 resolution = renderFlowComponent->GetMainResolution();
+		UShort2 resolution = renderFlowComponent->GetMainResolution();
 		static float jitterX[9] = { 1.0f / 2.0f, 1.0f / 4.0f, 3.0f / 4.0f, 1.0f / 8.0f, 5.0f / 8.0f, 3.0f / 8.0f, 7.0f / 8.0f, 1.0f / 16.0f, 9.0f / 16.0f };
 		static float jitterY[9] = { 1.0f / 3.0f, 2.0f / 3.0f, 1.0f / 9.0f, 4.0f / 9.0f, 7.0f / 9.0f, 2.0f / 9.0f, 5.0f / 9.0f, 8.0f / 9.0f, 1.0f / 27.0f };
-		Float2 jitterOffset((jitterX[jitterIndex] - 0.5f) / Math::Max(resolution.x(), 1), (jitterY[jitterIndex] - 0.5f) / Math::Max(resolution.y(), 1));
+		Float2 jitterOffset((jitterX[jitterIndex] - 0.5f) / Math::Max((int)resolution.x(), 1), (jitterY[jitterIndex] - 0.5f) / Math::Max((int)resolution.y(), 1));
 		// jitterOffset *= 0.25f;
 		jitterMatrix(3, 0) += jitterOffset.x();
 		jitterMatrix(3, 1) += jitterOffset.y();
@@ -534,7 +534,7 @@ void CameraComponent::OnTickHost(Engine& engine, Entity* hostEntity) {
 void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskData, RenderableComponent* renderableComponent, TaskData::WarpData& warpData, const WorldInstanceData& instanceData) {
 	IRender& render = engine.interfaces.render;
 	IRender::Device* device = engine.snowyStream.GetRenderDevice();
-	IDrawCallProvider::InputRenderData inputRenderData(instanceData.viewReference);
+	IDrawCallProvider::InputRenderData inputRenderData(instanceData.viewReference, nullptr, renderFlowComponent->GetMainResolution());
 	std::vector<IDrawCallProvider::OutputRenderData> drawCalls;
 	renderableComponent->CollectDrawCalls(drawCalls, inputRenderData);
 	TaskData::WarpData::InstanceGroupMap& instanceGroups = warpData.instanceGroups;
@@ -542,7 +542,7 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 	for (size_t k = 0; k < drawCalls.size(); k++) {
 		// PassBase& Pass = provider->GetPass(k);
 		IDrawCallProvider::OutputRenderData& drawCall = drawCalls[k];
-		warpData.triangleCount += drawCall.drawCallDescription.indexBufferResource.length / sizeof(Int3);
+		warpData.triangleCount += drawCall.drawCallDescription.indexBufferResource.length / sizeof(Int3) * drawCall.drawCallDescription.instanceCounts.x();
 
 		const IRender::Resource::DrawCallDescription& drawCallTemplate = drawCall.drawCallDescription;
 		AnimationComponent* animationComponent = instanceData.animationComponent();
@@ -686,8 +686,8 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 				assert(drawCall.drawCallDescription.instanceCounts.x() == drawCall.localTransforms.size());
 				for (size_t n = 0; n < drawCall.drawCallDescription.instanceCounts.x(); n++) {
 					WorldInstanceData subInstanceData = instanceData;
-					subInstanceData.worldMatrix = drawCall.localTransforms[n] * subInstanceData.worldMatrix;
-					group.instanceUpdater->Snapshot(group.instancedData, bufferResources, textureResources, instanceData);
+					subInstanceData.worldMatrix = drawCall.localTransforms[n] * instanceData.worldMatrix;
+					group.instanceUpdater->Snapshot(group.instancedData, bufferResources, textureResources, subInstanceData);
 				}
 			}
 

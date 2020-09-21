@@ -31,8 +31,8 @@ namespace PaintsNow {
 		void AddNode(RenderStage* renderStage);
 		void RemoveNode(RenderStage* renderStage);
 		// set 0 for screen size
-		const Int2& GetMainResolution() const;
-		void SetMainResolution(const Int2& res);
+		UShort2 GetMainResolution() const;
+		void SetMainResolution(const UShort2 res);
 		void ResolveSamplessAttachments();
 		void SetupTextures(Engine& engine);
 
@@ -47,7 +47,7 @@ namespace PaintsNow {
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		void SetMainResolution(Engine& engine);
 
-		Int2 mainResolution;
+		UShort2 mainResolution;
 		std::map<String, std::pair<RenderStage*, String> > symbolMap;
 		std::vector<RenderStage*> cachedRenderStages;
 		IRender::Queue* resourceQueue;

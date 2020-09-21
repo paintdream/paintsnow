@@ -13,7 +13,7 @@ namespace PaintsNow {
 	public:
 		FrameBarrierRenderStage(const String& s);
 
-		void SetMainResolution(Engine& engine, IRender::Queue* queue, uint32_t width, uint32_t height) override;
+		void SetMainResolution(Engine& engine, IRender::Queue* queue, UShort2 res) override;
 		void PrepareResources(Engine& engine, IRender::Queue* queue) override;
 		void UpdatePass(Engine& engine, IRender::Queue* queue) override;
 		void Tick(Engine& engine, IRender::Queue* queue) override;

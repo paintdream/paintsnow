@@ -26,8 +26,7 @@ namespace PaintsNow {
 		virtual void PrepareResources(Engine& engine, IRender::Queue* resourceQueue);
 		virtual void Initialize(Engine& engine, IRender::Queue* resourceQueue);
 		virtual void Uninitialize(Engine& engine, IRender::Queue* resourceQueue);
-
-		virtual void SetMainResolution(Engine& engine, IRender::Queue* resourceQueue, uint32_t width, uint32_t height);
+		virtual void SetMainResolution(Engine& engine, IRender::Queue* resourceQueue, UShort2 res);
 		virtual void UpdatePass(Engine& engine, IRender::Queue* resourceQueue);
 		virtual void Tick(Engine& engine, IRender::Queue* resourceQueue);
 		virtual void Commit(Engine& engine, std::vector<IRender::Queue*>& queues, std::vector<IRender::Queue*>& instantQueues, std::vector<IRender::Queue*>& deletedQueues, IRender::Queue* instantQueue);

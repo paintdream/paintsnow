@@ -28,11 +28,11 @@ void RenderFlowComponent::AddNode(RenderStage* stage) {
 	Graph<RenderStage>::AddNode(stage);
 }
 
-const Int2& RenderFlowComponent::GetMainResolution() const {
+UShort2 RenderFlowComponent::GetMainResolution() const {
 	return mainResolution;
 }
 
-void RenderFlowComponent::SetMainResolution(const Int2& res) {
+void RenderFlowComponent::SetMainResolution(const UShort2 res) {
 	mainResolution = res;
 	Flag().fetch_or(RENDERFLOWCOMPONENT_RESOLUTION_MODIFIED, std::memory_order_acquire);
 }
@@ -351,19 +351,18 @@ void RenderFlowComponent::SetMainResolution(Engine& engine) {
 		if (size.x() == 0 || size.y() == 0) return;
 
 		if (mainResolution.x() != size.x() || mainResolution.y() != size.y()) {
-			mainResolution = size;
+			mainResolution = UShort2(safe_cast<uint16_t>(size.x()), safe_cast<uint16_t>(size.y()));
 			updateResolution = true;
 		}
 	} else if (!!(Flag() & RENDERFLOWCOMPONENT_RESOLUTION_MODIFIED)) {
 		updateResolution = true;
 	}
 
-	uint32_t width = mainResolution.x(), height = mainResolution.y();
 	if (updateResolution) {
 		for (size_t i = 0; i < cachedRenderStages.size(); i++) {
 			RenderStage* renderStage = cachedRenderStages[i];
 			if (renderStage != nullptr) {
-				renderStage->SetMainResolution(engine, resourceQueue, width, height);
+				renderStage->SetMainResolution(engine, resourceQueue, mainResolution);
 			}
 		}
 

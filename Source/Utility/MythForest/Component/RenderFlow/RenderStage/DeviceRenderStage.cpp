@@ -15,7 +15,7 @@ TObject<IReflect>& DeviceRenderStage::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void DeviceRenderStage::SetMainResolution(Engine& engine, IRender::Queue* queue, uint32_t width, uint32_t height) {}
+void DeviceRenderStage::SetMainResolution(Engine& engine, IRender::Queue* queue, UShort2 res) {}
 void DeviceRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {}
 void DeviceRenderStage::Commit(Engine& engine, std::vector<IRender::Queue*>& queues, std::vector<IRender::Queue*>& instantQueues, std::vector<IRender::Queue*>& deletedQueues, IRender::Queue* instantQueue) {}
 

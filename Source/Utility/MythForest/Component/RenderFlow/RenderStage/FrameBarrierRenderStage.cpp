@@ -26,7 +26,7 @@ void FrameBarrierRenderStage::PrepareResources(Engine& engine, IRender::Queue* q
 	// RenderStage::PrepareResources(engine);
 }
 
-void FrameBarrierRenderStage::SetMainResolution(Engine& engine, IRender::Queue* queue, uint32_t width, uint32_t height) {
+void FrameBarrierRenderStage::SetMainResolution(Engine& engine, IRender::Queue* queue, UShort2 res) {
 	if (Next.GetLinks().empty()) return;
 
 	RenderStage* stage = static_cast<RenderStage*>(Next.GetLinks().back().port->GetNode());
@@ -34,7 +34,7 @@ void FrameBarrierRenderStage::SetMainResolution(Engine& engine, IRender::Queue* 
 		Flag().fetch_or(RENDERSTAGE_ADAPT_MAIN_RESOLUTION, std::memory_order_relaxed);
 		resolutionShift = stage->resolutionShift;
 
-		BaseClass::SetMainResolution(engine, queue, width, height);
+		BaseClass::SetMainResolution(engine, queue, res);
 	} else {
 		Flag().fetch_and(~RENDERSTAGE_ADAPT_MAIN_RESOLUTION, std::memory_order_relaxed);
 	}

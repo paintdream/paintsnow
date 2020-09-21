@@ -362,6 +362,9 @@ uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData>& outp
 	static Bytes texCoordRectKey = StaticBytes(texCoordRect);
 	float invTexSize = 1.0f / fontResource->GetFontTextureSize();
 
+	assert(inputRenderData.viewResolution.x() != 0 && inputRenderData.viewResolution.y() != 0);
+	float invX = 1.0f / inputRenderData.viewResolution.x(), invY = 1.0f / inputRenderData.viewResolution.y();
+
 	for (uint32_t i = start; i < count; i++) {
 		OutputRenderData& renderData = outputDrawCalls[i];
 		PassBase::Updater& updater = renderData.shaderResource->GetPassUpdater();
@@ -396,10 +399,10 @@ uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData>& outp
 
 			renderData.localInstancedData[0].second.Append(reinterpret_cast<const uint8_t*>(&texRect), sizeof(Float4));
 			float mat[16] = {
-				(float)(renderInfo.posRect.second.x() - renderInfo.posRect.first.x()), 0, 0, 0,
-				0, (float)(renderInfo.posRect.second.x() - renderInfo.posRect.first.x()), 0, 0,
+				(float)(renderInfo.posRect.second.x() - renderInfo.posRect.first.x()) * invX, 0, 0, 0,
+				0, (float)(renderInfo.posRect.second.x() - renderInfo.posRect.first.x()) * invY, 0, 0,
 				0, 0, 1, 0,
-				(renderInfo.posRect.second.x() + renderInfo.posRect.first.x()) / 2.0f, (renderInfo.posRect.second.y() + renderInfo.posRect.first.y()) / 2.0f, 0.0f, 1.0f
+				(renderInfo.posRect.second.x() + renderInfo.posRect.first.x()) * 0.5f * invX, (renderInfo.posRect.second.y() + renderInfo.posRect.first.y()) * 0.5f * invY, 0.0f, 1.0f
 			};
 
 			renderData.localTransforms.emplace_back(MatrixFloat4x4(mat));
