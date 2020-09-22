@@ -10,7 +10,7 @@
 
 using namespace PaintsNow;
 
-VisibilityComponent::VisibilityComponent() : nextCoord(~(uint16_t)0, ~(uint16_t)0, ~(uint16_t)0), subDivision(1, 1, 1), taskCount(32), resolution(256, 256), maxFrameExecutionTime(5), viewDistance(512.0f), activeCellCacheIndex(0), hostEntity(nullptr), renderQueue(nullptr), depthStencilResource(nullptr), stateResource(nullptr) {
+VisibilityComponent::VisibilityComponent() : nextCoord(~(uint16_t)0, ~(uint16_t)0, ~(uint16_t)0), subDivision(1, 1, 1), taskCount(32), resolution(128, 128), maxFrameExecutionTime(5), viewDistance(512.0f), activeCellCacheIndex(0), hostEntity(nullptr), renderQueue(nullptr), depthStencilResource(nullptr), stateResource(nullptr) {
 	maxVisIdentity.store(0, std::memory_order_relaxed);
 	collectCritical.store(0, std::memory_order_relaxed);
 }

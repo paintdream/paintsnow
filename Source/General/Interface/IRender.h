@@ -202,12 +202,13 @@ namespace PaintsNow {
 				UInt3 instanceCounts; // y/z for compute shaders
 				
 				struct BufferRange {
-					BufferRange() : buffer(nullptr), offset(0), length(0), component(0) {}
+					BufferRange() : buffer(nullptr), offset(0), length(0), component(0), type(0) {}
 
 					Resource* buffer;
 					uint32_t offset;
 					uint32_t length;
-					uint32_t component;
+					uint16_t component;
+					uint16_t type;
 				};
 
 				BufferRange indexBufferResource;

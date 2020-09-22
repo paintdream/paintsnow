@@ -3,7 +3,7 @@
 
 using namespace PaintsNow;
 
-MeshResource::MeshResource(ResourceManager& manager, const String& uniqueID) : BaseClass(manager, uniqueID), deviceMemoryUsage(0) {}
+MeshResource::MeshResource(ResourceManager& manager, const String& uniqueID) : BaseClass(manager, uniqueID), deviceMemoryUsage(0), deviceElementSize(0) {}
 
 MeshResource::~MeshResource() {}
 
@@ -28,6 +28,14 @@ void MeshResource::Attach(IRender& render, void* deviceContext) {
 		}
 
 		boundingBox = std::move(bound);
+	}
+
+	if (meshCollection.vertices.size() <= 0xFF) {
+		deviceElementSize = sizeof(UChar3);
+	} else if (meshCollection.vertices.size() <= 0xFFFF) {
+		deviceElementSize = sizeof(UShort3);
+	} else {
+		deviceElementSize = sizeof(UInt3);
 	}
 
 	GraphicResourceBase::Attach(render, deviceContext);
@@ -78,7 +86,31 @@ void MeshResource::Upload(IRender& render, void* deviceContext) {
 			boneData[i * 2 + 1] = meshCollection.boneWeights[i];
 		}
 
-		deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.indexBuffer, meshCollection.indices, Description::INDEX, "Index");
+		if (meshCollection.vertices.size() <= 0xFF) {
+			std::vector<UChar3> indices;
+			indices.reserve(meshCollection.indices.size());
+			for (size_t i = 0; i < meshCollection.indices.size(); i++) {
+				const UInt3& v = meshCollection.indices[i];
+				indices.emplace_back(UChar3(safe_cast<uint8_t>(v.x()), safe_cast<uint8_t>(v.y()), safe_cast<uint8_t>(v.z())));
+			}
+			
+			deviceElementSize = sizeof(UChar3);
+			deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.indexBuffer, indices, Description::INDEX, "Index");
+		} else if (meshCollection.vertices.size() <= 0xFFFF) {
+			std::vector<UShort3> indices;
+			indices.reserve(meshCollection.indices.size());
+			for (size_t i = 0; i < meshCollection.indices.size(); i++) {
+				const UInt3& v = meshCollection.indices[i];
+				indices.emplace_back(UShort3(safe_cast<uint16_t>(v.x()), safe_cast<uint16_t>(v.y()), safe_cast<uint16_t>(v.z())));
+			}
+
+			deviceElementSize = sizeof(UShort3);
+			deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.indexBuffer, indices, Description::INDEX, "Index");
+		} else {
+			deviceElementSize = sizeof(UInt3);
+			deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.indexBuffer, meshCollection.indices, Description::INDEX, "Index");
+		}
+
 		deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.positionBuffer, meshCollection.vertices, Description::VERTEX, "Position");
 		deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.normalTangentColorBuffer, normalTangentColorData, Description::VERTEX, "NormalColor", cnt);
 		deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.boneIndexWeightBuffer, boneData, Description::VERTEX, "BoneIndexWeight", 2);

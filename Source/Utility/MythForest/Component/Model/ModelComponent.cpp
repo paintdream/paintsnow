@@ -24,7 +24,8 @@ uint32_t ModelComponent::CreateOverrider(const TShared<ShaderResource>& shaderRe
 	return safe_cast<uint32_t>((it - shaderOverriders.begin() + 1) * materialResources.size());
 }
 
-static void GenerateDrawCall(IDrawCallProvider::OutputRenderData& renderData, ShaderResource* shaderResource, std::vector<IRender::Resource*>& meshBuffers, const IAsset::MeshGroup& slice, const MeshResource::BufferCollection& bufferCollection) {
+static void GenerateDrawCall(IDrawCallProvider::OutputRenderData& renderData, ShaderResource* shaderResource, std::vector<IRender::Resource*>& meshBuffers, const IAsset::MeshGroup& slice, const MeshResource::BufferCollection& bufferCollection, uint32_t deviceElementSize) {
+	assert(deviceElementSize != 0);
 	IRender::Resource::DrawCallDescription& drawCall = renderData.drawCallDescription;
 	PassBase::Updater& updater = shaderResource->GetPassUpdater();
 	drawCall.shaderResource = shaderResource->GetShaderResource();
@@ -48,8 +49,9 @@ static void GenerateDrawCall(IDrawCallProvider::OutputRenderData& renderData, Sh
 	}
 
 	drawCall.indexBufferResource.buffer = bufferCollection.indexBuffer;
-	drawCall.indexBufferResource.length = slice.primitiveCount * sizeof(Int3);
-	drawCall.indexBufferResource.offset = slice.primitiveOffset * sizeof(Int3);
+	drawCall.indexBufferResource.length = slice.primitiveCount * deviceElementSize;
+	drawCall.indexBufferResource.offset = slice.primitiveOffset * deviceElementSize;
+	drawCall.indexBufferResource.type = deviceElementSize == 3 ? IRender::Resource::BufferDescription::UNSIGNED_BYTE : deviceElementSize == 6 ? IRender::Resource::BufferDescription::UNSIGNED_SHORT : IRender::Resource::BufferDescription::UNSIGNED_INT;
 
 	IRender::Resource::RenderStateDescription& renderState = renderData.renderStateDescription;
 	renderState.stencilReplacePass = 1;
@@ -95,7 +97,7 @@ void ModelComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTe
 					OutputRenderData& renderData = drawCallTemplates[k + orgSize];
 					renderData.dataUpdater = batchComponent();
 
-					GenerateDrawCall(renderData, materialResource->mutationShaderResource(), meshBuffers, slice, meshResource->bufferCollection);
+					GenerateDrawCall(renderData, materialResource->mutationShaderResource(), meshBuffers, slice, meshResource->bufferCollection, meshResource->deviceElementSize);
 					std::vector<IRender::Resource::DrawCallDescription::BufferRange>& targetBufferRanges = renderData.drawCallDescription.bufferResources;
 					for (size_t m = 0; m < Math::Min(bufferRanges.size(), targetBufferRanges.size()); m++) {
 						const IRender::Resource::DrawCallDescription::BufferRange& targetBufferRange = targetBufferRanges[m];

@@ -542,7 +542,20 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 	for (size_t k = 0; k < drawCalls.size(); k++) {
 		// PassBase& Pass = provider->GetPass(k);
 		IDrawCallProvider::OutputRenderData& drawCall = drawCalls[k];
-		warpData.triangleCount += drawCall.drawCallDescription.indexBufferResource.length / sizeof(Int3) * drawCall.drawCallDescription.instanceCounts.x();
+		uint32_t div;
+		switch (drawCall.drawCallDescription.indexBufferResource.type) {
+		case IRender::Resource::BufferDescription::Format::UNSIGNED_BYTE:
+			div = 3;
+			break;
+		case IRender::Resource::BufferDescription::Format::UNSIGNED_SHORT:
+			div = 6;
+			break;
+		default:
+			div = 12;
+			break;
+		}
+
+		warpData.triangleCount += drawCall.drawCallDescription.indexBufferResource.length / div * drawCall.drawCallDescription.instanceCounts.x();
 
 		const IRender::Resource::DrawCallDescription& drawCallTemplate = drawCall.drawCallDescription;
 		AnimationComponent* animationComponent = instanceData.animationComponent();

@@ -25,7 +25,8 @@ namespace PaintsNow {
 	public:
 		IAsset::MeshCollection meshCollection;
 		Float3Pair boundingBox;
-		size_t deviceMemoryUsage;
+		uint32_t deviceMemoryUsage;
+		uint32_t deviceElementSize;
 
 		struct BufferCollection : public TReflected<BufferCollection, IReflectObjectComplex> {
 			BufferCollection();

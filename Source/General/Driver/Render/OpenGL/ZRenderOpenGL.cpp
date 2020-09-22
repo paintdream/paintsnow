@@ -1624,10 +1624,26 @@ struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> final : public
 			if (indexBuffer != nullptr) {
 				uint32_t indexBufferLength = d.indexBufferResource.length == 0 ? indexBuffer->length : d.indexBufferResource.length;
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer->bufferID);
+				GLuint type;
+				uint32_t div;
+				switch (d.indexBufferResource.type) {
+				case IRender::Resource::BufferDescription::UNSIGNED_BYTE:
+					type = GL_UNSIGNED_BYTE;
+					div = 1;
+					break;
+				case IRender::Resource::BufferDescription::UNSIGNED_SHORT:
+					type = GL_UNSIGNED_SHORT;
+					div = 2;
+					break;
+				default:
+					type = GL_UNSIGNED_INT;
+					div = 4;
+					break;
+				}
 				if (d.instanceCounts.x() == 0) {
-					glDrawElements(GL_TRIANGLES, (GLsizei)indexBufferLength / sizeof(GLuint), GL_UNSIGNED_INT, (const void*)((size_t)d.indexBufferResource.offset));
+					glDrawElements(GL_TRIANGLES, (GLsizei)indexBufferLength / div, type, (const void*)((size_t)d.indexBufferResource.offset));
 				} else {
-					glDrawElementsInstanced(GL_TRIANGLES, (GLsizei)indexBufferLength / sizeof(GLuint), GL_UNSIGNED_INT, (const void*)((size_t)d.indexBufferResource.offset), (GLsizei)d.instanceCounts.x());
+					glDrawElementsInstanced(GL_TRIANGLES, (GLsizei)indexBufferLength / div, type, (const void*)((size_t)d.indexBufferResource.offset), (GLsizei)d.instanceCounts.x());
 				}
 			} else {
 				if (d.instanceCounts.x() == 0) {
