@@ -1019,18 +1019,6 @@ SOURCE=..\..\..\..\Source\General\Driver\Filter\Json\ZFilterJson.cpp
 SOURCE=..\..\..\..\Source\General\Driver\Filter\Json\ZFilterJson.h
 # End Source File
 # End Group
-# Begin Group "LZW"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\General\Driver\Filter\LZW\ZFilterLZW.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\General\Driver\Filter\LZW\ZFilterLZW.h
-# End Source File
-# End Group
 # Begin Group "BPTC"
 
 # PROP Default_Filter ""
