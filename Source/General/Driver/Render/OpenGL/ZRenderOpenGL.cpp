@@ -158,7 +158,7 @@ private:
 };
 
 struct QueueImplOpenGL final : public IRender::Queue {
-	QueueImplOpenGL(DeviceImplOpenGL* d, bool shared) : device(d) {
+	QueueImplOpenGL(DeviceImplOpenGL* d, bool shared) : device(d), next(nullptr) {
 		critical.store(shared ? 0u : ~(uint32_t)0u, std::memory_order_relaxed);
 		flushCount.store(0u, std::memory_order_release);
 	}
@@ -275,6 +275,7 @@ struct QueueImplOpenGL final : public IRender::Queue {
 	}
 
 	DeviceImplOpenGL* device;
+	QueueImplOpenGL* next;
 	std::atomic<int32_t> critical;
 	std::atomic<uint32_t> flushCount;
 	TQueueList<ResourceCommandImplOpenGL> queuedCommands;
@@ -1737,11 +1738,14 @@ void ZRenderOpenGL::FlushQueue(Queue* queue) {
 }
 
 void ZRenderOpenGL::DeleteQueue(Queue* queue) {
-	QueueImplOpenGL* q = static_cast<QueueImplOpenGL*>(queue);
 	assert(queue != nullptr);
-	SpinLock(critical);
-	deletedQueues.Push(q);
-	SpinUnLock(critical);
+	QueueImplOpenGL* q = static_cast<QueueImplOpenGL*>(queue);
+	assert(q->next == nullptr);
+
+	q->next = (QueueImplOpenGL*)deletedQueueHead.load(std::memory_order_acquire);
+	while (!(QueueImplOpenGL*)deletedQueueHead.compare_exchange_weak((Queue*&)q->next, q, std::memory_order_release)) {
+		YieldThreadFast();
+	}
 }
 
 // Resource
@@ -1842,17 +1846,17 @@ public:
 
 ZRenderOpenGL::ZRenderOpenGL() {
 	static GlewInit init;
-	critical.store(0, std::memory_order_release);
+	deletedQueueHead.store(nullptr, std::memory_order_relaxed);
 }
 
 void ZRenderOpenGL::ClearDeletedQueues() {
 	// free all deleted resources
-	while (!deletedQueues.Empty()) {
-		Queue* q = deletedQueues.Top();
-		deletedQueues.Pop();
-		QueueImplOpenGL* queue = static_cast<QueueImplOpenGL*>(q);
-		queue->ClearAll();
-		delete queue;
+	QueueImplOpenGL* q = (QueueImplOpenGL*)deletedQueueHead.exchange(nullptr, std::memory_order_relaxed);
+	while (q != nullptr) {
+		QueueImplOpenGL* t = q;
+		q = q->next;
+		t->ClearAll();
+		delete t;
 	}
 }
 

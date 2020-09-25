@@ -2,7 +2,6 @@
 #include <ctime>
 #include "../../Core/Driver/Filter/Pod/ZFilterPod.h"
 #include "../../General/Driver/Filter/Json/ZFilterJson.h"
-#include "../../General/Driver/Filter/LZW/ZFilterLZW.h"
 #include "../../General/Driver/Filter/LZMA/ZFilterLZMA.h"
 
 #ifdef _WIN32

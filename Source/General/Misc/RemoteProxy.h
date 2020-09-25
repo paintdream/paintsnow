@@ -369,8 +369,8 @@ namespace PaintsNow {
 			void RequestQueryObject(IScript::Request& request, IScript::BaseDelegate base);
 
 			TObject<IReflect>& operator () (IReflect& reflect) override;
-		public:
 
+		public:
 			void DoLock() override;
 			void UnLock() override;
 			RemoteProxy& host;

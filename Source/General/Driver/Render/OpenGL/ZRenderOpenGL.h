@@ -47,7 +47,6 @@ namespace PaintsNow {
 		void ClearDeletedQueues();
 
 	protected:
-		TQueueList<Queue*, 4> deletedQueues;
-		std::atomic<uint32_t> critical;
+		std::atomic<Queue*> deletedQueueHead;
 	};
 }
