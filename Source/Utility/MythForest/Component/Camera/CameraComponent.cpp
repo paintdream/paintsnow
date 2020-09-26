@@ -539,6 +539,8 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 	renderableComponent->CollectDrawCalls(drawCalls, inputRenderData);
 	TaskData::WarpData::InstanceGroupMap& instanceGroups = warpData.instanceGroups;
 
+	bool isCameraViewSpace = !!(renderableComponent->Flag() & RenderableComponent::RENDERABLECOMPONENT_CAMERAVIEW);
+
 	for (size_t k = 0; k < drawCalls.size(); k++) {
 		// PassBase& Pass = provider->GetPass(k);
 		IDrawCallProvider::OutputRenderData& drawCall = drawCalls[k];
@@ -700,6 +702,9 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 				for (size_t n = 0; n < drawCall.drawCallDescription.instanceCounts.x(); n++) {
 					WorldInstanceData subInstanceData = instanceData;
 					subInstanceData.worldMatrix = drawCall.localTransforms[n] * instanceData.worldMatrix;
+					if (isCameraViewSpace) {
+						subInstanceData.worldMatrix = subInstanceData.worldMatrix * nextTaskData->worldGlobalData.viewMatrix;
+					}
 					group.instanceUpdater->Snapshot(group.instancedData, bufferResources, textureResources, subInstanceData);
 				}
 			}

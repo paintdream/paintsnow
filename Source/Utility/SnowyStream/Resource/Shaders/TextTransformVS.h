@@ -23,12 +23,14 @@ namespace PaintsNow {
 		// Instanced
 		MatrixFloat4x4 worldMatrix;
 		Float4 texCoordRect;
+		Float4 instanceColor;
 
 		// Input
 		Float4 unitTexCoord;
 
 		// Output
 		Float4 rasterPosition;
+		Float4 color;
 		Float2 texCoord;
 	};
 }

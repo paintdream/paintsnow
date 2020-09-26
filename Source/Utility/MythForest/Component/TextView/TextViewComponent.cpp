@@ -128,7 +128,7 @@ void TextViewComponent::TagParser::Clear() {
 	nodes.clear();
 }
 
-TextViewComponent::TextViewComponent(const TShared<FontResource>& font, const TShared<MeshResource>& mesh, const TShared<BatchComponent>& batch) : BaseClass(mesh, batch), fontResource(std::move(font)), passwordChar(0), cursorChar('|'), cursorPos(0), fontSize(14), size(32, 32), scroll(0, 0), padding(0, 0), fullSize(0, 0), selectRange(0, 0), cursorColor(255, 255, 255, 255), selectColor(0, 0, 0, 0) {
+TextViewComponent::TextViewComponent(const TShared<FontResource>& font, const TShared<MeshResource>& mesh, const TShared<BatchComponent>& batch) : BaseClass(mesh, batch), fontResource(std::move(font)), passwordChar(0), cursorChar('|'), cursorPos(0), fontSize(24), size(256, 32), scroll(0, 0), padding(0, 0), fullSize(0, 0), selectRange(0, 0), cursorColor(255, 255, 255, 255), selectColor(0, 0, 0, 0) {
 	Flag().fetch_or(RENDERABLECOMPONENT_CAMERAVIEW | TEXTVIEWCOMPONENT_CURSOR_REV_COLOR | TEXTVIEWCOMPONENT_SELECT_REV_COLOR, std::memory_order_acquire);
 }
 
@@ -360,6 +360,7 @@ uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData>& outp
 	uint32_t start = safe_cast<uint32_t>(outputDrawCalls.size());
 	uint32_t count = BaseClass::CollectDrawCalls(outputDrawCalls, inputRenderData);
 	static Bytes texCoordRectKey = StaticBytes(texCoordRect);
+	static Bytes instanceColorKey = StaticBytes(instanceColor);
 	float invTexSize = 1.0f / fontResource->GetFontTextureSize();
 
 	assert(inputRenderData.viewResolution.x() != 0 && inputRenderData.viewResolution.y() != 0);
@@ -369,9 +370,23 @@ uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData>& outp
 		OutputRenderData& renderData = outputDrawCalls[i];
 		PassBase::Updater& updater = renderData.shaderResource->GetPassUpdater();
 		IRender::Resource::DrawCallDescription& drawCall = renderData.drawCallDescription;
+		IRender::Resource::RenderStateDescription& renderState = renderData.renderStateDescription;
+		renderState.stencilReplacePass = 0;
+		renderState.cull = 1;
+		renderState.fill = 1;
+		renderState.colorWrite = 1;
+		renderState.blend = 1;
+		renderState.depthTest = IRender::Resource::RenderStateDescription::DISABLED;
+		renderState.depthWrite = 0;
+		renderState.stencilTest = IRender::Resource::RenderStateDescription::DISABLED;
+		renderState.stencilWrite = 0;
+		renderState.stencilMask = 0;
+		renderState.stencilValue = 0;
+
 		const PassBase::Parameter& paramMainTexture = updater[IShader::BindInput::MAINTEXTURE];
 		const PassBase::Parameter& paramTexCoordRect = updater[texCoordRectKey];
-		assert(paramMainTexture && paramTexCoordRect);
+		const PassBase::Parameter& paramInstanceColor = updater[instanceColorKey];
+		assert(paramMainTexture && paramTexCoordRect && paramInstanceColor);
 
 		IRender::Resource* lastMainTexture = renderInfos[0].texture;
 		for (size_t k = 0; k < renderData.localInstancedData.size(); k++) {
@@ -379,7 +394,11 @@ uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData>& outp
 		}
 
 		renderData.localInstancedData.emplace_back(std::make_pair(paramTexCoordRect.slot, Bytes::Null()));
-		renderData.drawCallDescription.instanceCounts.x() = safe_cast<uint32_t>(renderInfos.size());
+		if (paramInstanceColor.slot != paramTexCoordRect.slot) {
+			renderData.localInstancedData.emplace_back(std::make_pair(paramInstanceColor.slot, Bytes::Null()));
+		}
+
+		drawCall.instanceCounts.x() = safe_cast<uint32_t>(renderInfos.size());
 
 		for (size_t j = 0; j < renderInfos.size(); j++) {
 			RenderInfo& renderInfo = renderInfos[j];
@@ -392,17 +411,21 @@ uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData>& outp
 			drawCall.textureResources[paramMainTexture.slot] = renderInfo.texture;
 			Float4 texRect = Float4(
 				renderInfo.texRect.first.x() * invTexSize,
-				renderInfo.texRect.first.y() * invTexSize,
+				renderInfo.texRect.second.y() * invTexSize,
 				renderInfo.texRect.second.x() * invTexSize,
-				renderInfo.texRect.second.y() * invTexSize
+				renderInfo.texRect.first.y() * invTexSize
 			);
 
 			renderData.localInstancedData[0].second.Append(reinterpret_cast<const uint8_t*>(&texRect), sizeof(Float4));
+			UChar4 color = renderInfo.color;
+			Float4 fcolor = Float4(color.r() / 255.0f, color.g() / 255.0f, color.b() / 255.0f, color.a() / 255.0f);
+			renderData.localInstancedData[paramInstanceColor.slot == paramTexCoordRect.slot ? 0 : 1].second.Append(reinterpret_cast<const uint8_t*>(&fcolor), sizeof(Float4));
+
 			float mat[16] = {
 				(float)(renderInfo.posRect.second.x() - renderInfo.posRect.first.x()) * invX, 0, 0, 0,
-				0, (float)(renderInfo.posRect.second.x() - renderInfo.posRect.first.x()) * invY, 0, 0,
+				0, (float)(renderInfo.posRect.second.y() - renderInfo.posRect.first.y()) * invY, 0, 0,
 				0, 0, 1, 0,
-				(renderInfo.posRect.second.x() + renderInfo.posRect.first.x()) * 0.5f * invX, (renderInfo.posRect.second.y() + renderInfo.posRect.first.y()) * 0.5f * invY, 0.0f, 1.0f
+				(renderInfo.posRect.second.x() + renderInfo.posRect.first.x()) * invX, -(renderInfo.posRect.second.y() + renderInfo.posRect.first.y()) * invY, 0.0f, 1.0f
 			};
 
 			renderData.localTransforms.emplace_back(MatrixFloat4x4(mat));

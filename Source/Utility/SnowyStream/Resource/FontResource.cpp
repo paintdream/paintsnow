@@ -119,7 +119,7 @@ Short2Pair FontResource::Slice::AllocRect(IRender& render, IRender::Queue* queue
 	if (lastRect.second.x() + size.x() > dim) {
 		// new line
 		lastRect.second.x() = 0;
-		lastRect.first.y() = lastRect.second.y();
+		lastRect.first.y() = lastRect.second.y() + 1;
 	}
 
 	uint16_t height = Math::Max((int16_t)(lastRect.second.y() - lastRect.first.y()), size.y());
@@ -130,7 +130,7 @@ Short2Pair FontResource::Slice::AllocRect(IRender& render, IRender::Queue* queue
 	w.first.y() = w.second.y() - size.y();
 
 	lastRect.first.x() = w.first.x();
-	lastRect.second.x() = w.second.x();
+	lastRect.second.x() = w.second.x() + 1;
 	lastRect.second.y() = Math::Max(w.second.y(), lastRect.second.y());
 
 	assert(!cacheTextures.empty());
