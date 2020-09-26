@@ -113,10 +113,6 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\ConstMapPass.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\CustomizeShader.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\CustomMaterialParameterFS.cpp
 # End Source File
 # Begin Source File
@@ -382,10 +378,6 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\ConstMapFS.h
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\ConstMapPass.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\CustomizeShader.h
 # End Source File
 # Begin Source File
 

@@ -703,7 +703,7 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 					WorldInstanceData subInstanceData = instanceData;
 					subInstanceData.worldMatrix = drawCall.localTransforms[n] * instanceData.worldMatrix;
 					if (isCameraViewSpace) {
-						subInstanceData.worldMatrix = subInstanceData.worldMatrix * nextTaskData->worldGlobalData.viewMatrix;
+						subInstanceData.worldMatrix = subInstanceData.worldMatrix * taskData.worldGlobalData.viewMatrix;
 					}
 					group.instanceUpdater->Snapshot(group.instancedData, bufferResources, textureResources, subInstanceData);
 				}

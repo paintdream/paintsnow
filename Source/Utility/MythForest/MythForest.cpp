@@ -18,6 +18,7 @@
 #include "Component/Remote/RemoteComponentModule.h"
 #include "Component/RenderFlow/RenderFlowComponentModule.h"
 #include "Component/Script/ScriptComponentModule.h"
+#include "Component/Shader/ShaderComponentModule.h"
 #include "Component/Shape/ShapeComponentModule.h"
 #include "Component/Sound/SoundComponentModule.h"
 #include "Component/Space/SpaceComponentModule.h"
@@ -68,6 +69,7 @@ void MythForest::Initialize() {
 	engine.InstallModule(new RemoteComponentModule(engine));
 	engine.InstallModule(new RenderFlowComponentModule(engine));
 	engine.InstallModule(new ScriptComponentModule(engine));
+	engine.InstallModule(new ShaderComponentModule(engine));
 	engine.InstallModule(new ShapeComponentModule(engine));
 	engine.InstallModule(new SoundComponentModule(engine));
 	engine.InstallModule(new SpaceComponentModule(engine));

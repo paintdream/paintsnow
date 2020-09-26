@@ -7,11 +7,9 @@
 #include "GraphicResourceBase.h"
 #include "../../../General/Interface/IAsset.h"
 #include "../../../General/Misc/PassBase.h"
-#include "Passes/CustomizeShader.h"
 
 namespace PaintsNow {
-
-	class ShaderResource : public TReflected<ShaderResource, GraphicResourceBase>, public ICustomizeShader {
+	class ShaderResource : public TReflected<ShaderResource, GraphicResourceBase> {
 	public:
 		ShaderResource(ResourceManager& manager, const String& uniqueID);
 		~ShaderResource() override;
@@ -31,10 +29,6 @@ namespace PaintsNow {
 
 		IRender::Resource* GetShaderResource() const;
 		const Bytes& GetHashValue() const;
-
-		void SetCode(const String& stage, const String& text, const std::vector<std::pair<String, String> >& config) final;
-		void SetInput(const String& stage, const String& type, const String& name, const std::vector<std::pair<String, String> >& config) final;
-		void SetComplete() final;
 
 	protected:
 		Bytes hashValue;

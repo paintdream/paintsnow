@@ -377,6 +377,14 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Script\ScriptComponentMod
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Shader\ShaderComponent.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Shader\ShaderComponentModule.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\ShadowMaskRenderStage.cpp
 # End Source File
 # Begin Source File
@@ -778,6 +786,14 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Script\ScriptComponent.h
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Script\ScriptComponentModule.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Shader\ShaderComponent.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Shader\ShaderComponentModule.h
 # End Source File
 # Begin Source File
 

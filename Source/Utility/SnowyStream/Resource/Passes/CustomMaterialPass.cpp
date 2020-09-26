@@ -5,9 +5,7 @@ using namespace PaintsNow;
 CustomMaterialPass::CustomMaterialPass() {}
 
 TObject<IReflect>& CustomMaterialPass::operator () (IReflect& reflect) {
-	// BaseClass::operator () (reflect);
-	// Rewrite operator () for adding interface ICustomizeShader
-	ReflectClass(Class)[ReflectInterface(BaseClass)][ReflectInterface(ICustomizeShader)];
+	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectProperty()) {
 		ReflectProperty(screenTransform)[IShader::MetaShader(IRender::Resource::ShaderDescription::VERTEX)];

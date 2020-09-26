@@ -95,26 +95,3 @@ TObject<IReflect>& ShaderResource::operator () (IReflect& reflect) {
 
 	return *this;
 }
-
-void ShaderResource::SetCode(const String& stage, const String& text, const std::vector<std::pair<String, String> >& config) {
-	ICustomizeShader* customize = GetPass().QueryInterface(UniqueType<ICustomizeShader>());
-	if (customize != nullptr) {
-		customize->SetCode(stage, text, config);
-	}
-}
-
-void ShaderResource::SetInput(const String& stage, const String& type, const String& name, const std::vector<std::pair<String, String> >& config) {
-	ICustomizeShader* customize = GetPass().QueryInterface(UniqueType<ICustomizeShader>());
-	if (customize != nullptr) {
-		customize->SetInput(stage, type, name, config);
-	}
-}
-
-void ShaderResource::SetComplete() {
-	ICustomizeShader* customize = GetPass().QueryInterface(UniqueType<ICustomizeShader>());
-	if (customize != nullptr) {
-		customize->SetComplete();
-		Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
-		GetResourceManager().InvokeUpload(this);
-	}
-}

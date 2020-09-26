@@ -102,10 +102,6 @@ TObject<IReflect>& SnowyStream::operator () (IReflect& reflect) {
 		ReflectMethod(RequestNewZipper)[ScriptMethod = "NewZipper"];
 		ReflectMethod(RequestPostZipperData)[ScriptMethod = "PostZipperData"];
 		ReflectMethod(RequestWriteZipper)[ScriptMethod = "WriteZipper"];
-
-		ReflectMethod(RequestSetShaderResourceCode)[ScriptMethod = "SetShaderResourceCode"];
-		ReflectMethod(RequestSetShaderResourceInput)[ScriptMethod = "SetShaderResourceInput"];
-		ReflectMethod(RequestSetShaderResourceComplete)[ScriptMethod = "SetShaderResourceComplete"];
 	}
 
 	return *this;
@@ -701,6 +697,7 @@ void SnowyStream::RegisterBuiltinPasses() {
 	RegisterPass(*resourceManager(), UniqueType<AntiAliasingPass>());
 	RegisterPass(*resourceManager(), UniqueType<BloomPass>());
 	RegisterPass(*resourceManager(), UniqueType<ConstMapPass>());
+	RegisterPass(*resourceManager(), UniqueType<CustomMaterialPass>());
 	RegisterPass(*resourceManager(), UniqueType<DeferredLightingPass>());
 	RegisterPass(*resourceManager(), UniqueType<DepthResolvePass>());
 	RegisterPass(*resourceManager(), UniqueType<DepthBoundingPass>());
@@ -711,10 +708,9 @@ void SnowyStream::RegisterBuiltinPasses() {
 	RegisterPass(*resourceManager(), UniqueType<ScreenPass>());
 	RegisterPass(*resourceManager(), UniqueType<ShadowMaskPass>());
 	RegisterPass(*resourceManager(), UniqueType<StandardPass>());
-	RegisterPass(*resourceManager(), UniqueType<WidgetPass>(), "Widget");
 	RegisterPass(*resourceManager(), UniqueType<TextPass>(), "Text");
+	RegisterPass(*resourceManager(), UniqueType<WidgetPass>(), "Widget");
 
-	// RegisterPass(*resourceManager(), UniqueType<CustomMaterialPass>());
 	/*
 	RegisterPass(*resourceManager(), UniqueType<ForwardLightingPass>());
 	RegisterPass(*resourceManager(), UniqueType<ParticlePass>());
@@ -910,27 +906,6 @@ void SnowyStream::CreateBuiltinResources() {
 	CreateBuiltinSolidTexture("[Runtime]/TextureResource/MissingBaseColor", UChar4(255, 0, 255, 255));
 	CreateBuiltinSolidTexture("[Runtime]/TextureResource/MissingNormal", UChar4(127, 127, 255, 255));
 	CreateBuiltinSolidTexture("[Runtime]/TextureResource/MissingMaterial", UChar4(255, 255, 0, 0));
-}
-
-void SnowyStream::RequestSetShaderResourceCode(IScript::Request& request, IScript::Delegate<ShaderResource> shaderResource, const String& stage, const String& text, const std::vector<std::pair<String, String> >& config) {
-	CHECK_REFERENCES_NONE();
-	CHECK_DELEGATE(shaderResource);
-
-	shaderResource->SetCode(stage, text, config);
-}
-
-void SnowyStream::RequestSetShaderResourceInput(IScript::Request& request, IScript::Delegate<ShaderResource> shaderResource, const String& stage, const String& type, const String& name, const std::vector<std::pair<String, String> >& config) {
-	CHECK_REFERENCES_NONE();
-	CHECK_DELEGATE(shaderResource);
-
-	shaderResource->SetInput(stage, type, name, config);
-}
-
-void SnowyStream::RequestSetShaderResourceComplete(IScript::Request& request, IScript::Delegate<ShaderResource> shaderResource) {
-	CHECK_REFERENCES_NONE();
-	CHECK_DELEGATE(shaderResource);
-
-	shaderResource->SetComplete();
 }
 
 IRender::Device* SnowyStream::GetRenderDevice() const {
