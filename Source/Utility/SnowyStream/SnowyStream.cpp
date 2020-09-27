@@ -697,7 +697,7 @@ void SnowyStream::RegisterBuiltinPasses() {
 	RegisterPass(*resourceManager(), UniqueType<AntiAliasingPass>());
 	RegisterPass(*resourceManager(), UniqueType<BloomPass>());
 	RegisterPass(*resourceManager(), UniqueType<ConstMapPass>());
-	RegisterPass(*resourceManager(), UniqueType<CustomMaterialPass>());
+	// RegisterPass(*resourceManager(), UniqueType<CustomMaterialPass>());
 	RegisterPass(*resourceManager(), UniqueType<DeferredLightingPass>());
 	RegisterPass(*resourceManager(), UniqueType<DepthResolvePass>());
 	RegisterPass(*resourceManager(), UniqueType<DepthBoundingPass>());

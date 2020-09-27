@@ -348,9 +348,7 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 }
 
 void TextViewComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box) {
-	// TODO: remove this
-	Union(box, Float3(-100, -100, -100));
-	Union(box, Float3(100, 100, 100));
+	Union(box, Float3(0, 0, -1.0f)); // must be captured
 }
 
 uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) {
