@@ -96,7 +96,7 @@ template <class T>
 struct DelayedReference {
 	DelayedReference(T*& p) : ptr(p) {}
 
-	operator T& () {
+	operator T& () const {
 		return *ptr;
 	}
 
@@ -107,8 +107,8 @@ template <class T>
 struct DelayedValue {
 	DelayedValue(T& p) : value(p) {}
 
-	operator T& () {
-		return value;
+	operator T& () const {
+		return const_cast<T&>(value);
 	}
 
 	T& value;
@@ -130,6 +130,7 @@ void Loader::Load(const CmdLine& cmdLine) {
 	uint32_t warpCount = 0; // let mythforest decide
 	const uint32_t maxWarpCount = 1 << WarpTiny::WARP_BITS;
 	const uint32_t maxThreadCount = maxWarpCount >> 1;
+	DelayedReference<IThread> delayThread(thread);
 
 	for (std::map<String, CmdLine::Option>::const_iterator p = configMap.begin(); p != configMap.end(); ++p) {
 		if ((*p).first == "Graphic") {
@@ -189,8 +190,9 @@ void Loader::Load(const CmdLine& cmdLine) {
 
 #if (!defined(CMAKE_PAINTSNOW) || ADD_RENDER_VULKAN) && (!defined(_MSC_VER) || _MSC_VER > 1200)
 	GLFWwindow* window = nullptr;
+	DelayedValue<GLFWwindow*> delayWindow(window);
 	if (!nogui) {
-		renderFactory = WrapFactory(UniqueType<ZRenderVulkan>(), DelayedValue<GLFWwindow*>(window));
+		renderFactory = WrapFactory(UniqueType<ZRenderVulkan>(), delayWindow);
 		config.RegisterFactory("IRender", "ZRenderVulkan", renderFactory);
 	}
 #endif
@@ -204,13 +206,15 @@ void Loader::Load(const CmdLine& cmdLine) {
 #endif
 
 #if !defined(CMAKE_PAINTSNOW) || ADD_FRAME_GLFW
-	if (!nogui) {
+	DelayedValue<bool> delayIsVulkan(isVulkan);
 #if (!defined(CMAKE_PAINTSNOW) || ADD_RENDER_VULKAN) && (!defined(_MSC_VER) || _MSC_VER > 1200)
 		GLFWwindow** ptr = &window;
 #else
 		GLFWwindow** ptr = nullptr;
 #endif
-		frameFactory = WrapFactory(UniqueType<ZFrameGLFW>(), DelayedValue<GLFWwindow**>(ptr), DelayedValue<bool>(isVulkan));
+	DelayedValue<GLFWwindow**> delayWindowPtr(ptr);
+	if (!nogui) {
+		frameFactory = WrapFactory(UniqueType<ZFrameGLFW>(), delayWindowPtr, delayIsVulkan);
 		config.RegisterFactory("IFrame", "ZFrameGLFW", frameFactory);
 	}
 #endif
@@ -223,13 +227,13 @@ void Loader::Load(const CmdLine& cmdLine) {
 
 	TWrapper<IScript*> scriptFactory;
 #if !defined(CMAKE_PAINTSNOW) || ADD_SCRIPT_LUA_BUILTIN
-	scriptFactory = WrapFactory(UniqueType<ZScriptLua>(), DelayedReference<IThread>(thread));
+	scriptFactory = WrapFactory(UniqueType<ZScriptLua>(), delayThread);
 	config.RegisterFactory("IScript", "ZScriptLua", scriptFactory);
 #endif
 
 	TWrapper<INetwork*> networkFactory;
 #if !defined(CMAKE_PAINTSNOW) || ADD_NETWORK_LIBEVENT
-	networkFactory = WrapFactory(UniqueType<ZNetworkLibEvent>(), DelayedReference<IThread>(thread));
+	networkFactory = WrapFactory(UniqueType<ZNetworkLibEvent>(), delayThread);
 	config.RegisterFactory("INetwork", "ZNetworkLibEvent", networkFactory);
 #endif
 
@@ -332,7 +336,6 @@ void Loader::Load(const CmdLine& cmdLine) {
 	mainThread = thread->OpenCurrentThread();
 	{
 		frame = frameFactory();
-
 		IScript* script = scriptFactory();
 		IRender* render = renderFactory();
 		ITimer* timer = timerFactory();

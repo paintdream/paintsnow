@@ -59,7 +59,8 @@ void EventComponent::UninstallFrame() {
 	Flag().fetch_and(~EVENTCOMPONENT_INSTALLED_FRAME, std::memory_order_release);
 	SpinLock(critical);
 	frameTickerCollection.clear();
-	SpinUnLock(critical);}
+	SpinUnLock(critical);
+}
 
 void EventComponent::InstallTick(Engine& engine, const TShared<Clock>& c) {
 	assert(c->GetWarpIndex() == GetWarpIndex());
