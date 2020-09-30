@@ -3,9 +3,7 @@
 // 2018-4-13
 //
 
-#ifndef __WIDGETTRANSFORM_VS_H
-#define __WIDGETTRANSFORM_VS_H
-
+#pragma once
 #include "../../../../General/Interface/IShader.h"
 
 namespace PaintsNow {
@@ -40,4 +38,3 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __WIDGETTRANSFORM_VS_H

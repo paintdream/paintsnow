@@ -3,9 +3,7 @@
 // 2018-4-13
 //
 
-#ifndef __TILEBASEDLIGHT_CS_H
-#define __TILEBASEDLIGHT_CS_H
-
+#pragma once
 #include "../../../../General/Interface/IShader.h"
 
 namespace PaintsNow {
@@ -17,4 +15,4 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __TILEBASEDLIGHT_CS_H
+

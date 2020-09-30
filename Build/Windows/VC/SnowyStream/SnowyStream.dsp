@@ -113,11 +113,19 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\ConstMapPass.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\CustomMaterialDescription.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\CustomMaterialParameterFS.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\CustomMaterialPass.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\CustomMaterialTransformVS.cpp
 # End Source File
 # Begin Source File
 
@@ -381,11 +389,19 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\ConstMapPass.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\CustomMaterialDescription.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\CustomMaterialParameterFS.h
 # End Source File
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\CustomMaterialPass.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\CustomMaterialTransformVS.h
 # End Source File
 # Begin Source File
 

@@ -3,9 +3,7 @@
 // 2018-4-13
 //
 
-#ifndef __SHADOWMASK_FS_H
-#define __SHADOWMASK_FS_H
-
+#pragma once
 #include "../../../../General/Interface/IShader.h"
 
 namespace PaintsNow {
@@ -30,4 +28,4 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __SHADOWMASK_FS_H
+

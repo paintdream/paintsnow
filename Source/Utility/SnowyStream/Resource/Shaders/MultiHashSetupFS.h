@@ -3,9 +3,7 @@
 // 2018-4-13
 //
 
-#ifndef __MULTIHASHSETUP_FS_H
-#define __MULTIHASHSETUP_FS_H
-
+#pragma once
 #include "../../../../General/Interface/IShader.h"
 
 namespace PaintsNow {
@@ -22,4 +20,4 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __MULTIHASHSETUP_FS_H
+

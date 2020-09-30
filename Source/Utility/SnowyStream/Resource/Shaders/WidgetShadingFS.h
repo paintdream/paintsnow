@@ -3,9 +3,7 @@
 // 2018-4-13
 //
 
-#ifndef __WIDGETSHADING_FS_H
-#define __WIDGETSHADING_FS_H
-
+#pragma once
 #include "../../../../General/Interface/IShader.h"
 
 namespace PaintsNow {
@@ -31,4 +29,3 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __WIDGETSHADING_FS_H

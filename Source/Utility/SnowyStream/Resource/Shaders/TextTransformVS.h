@@ -3,9 +3,7 @@
 // 2018-4-13
 //
 
-#ifndef __TEXTTRANSFORM_VS_H
-#define __TEXTTRANSFORM_VS_H
-
+#pragma once
 #include "../../../../General/Interface/IShader.h"
 
 namespace PaintsNow {
@@ -35,4 +33,4 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __TEXTTRANSFORM_VS_H
+

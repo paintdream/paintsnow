@@ -3,9 +3,7 @@
 // 2018-4-13
 //
 
-#ifndef __SCREENSPACETRACE_FS_H
-#define __SCREENSPACETRACE_FS_H
-
+#pragma once
 #include "../../../../General/Interface/IShader.h"
 
 namespace PaintsNow {
@@ -28,4 +26,4 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __SCREENSPACETRACE_FS_H
+

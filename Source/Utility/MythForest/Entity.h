@@ -17,7 +17,7 @@ namespace PaintsNow {
 	// The entity object is exactly 64 bytes on 32-bit platforms (MSVC Release).
 	class_aligned(64) Entity final : public TAllocatedTiny<Entity, TKdTree<Float3Pair, Unit> >{
 	public:
-		Entity(Engine & engine);
+		Entity(Engine& engine);
 		~Entity() override;
 
 		enum {

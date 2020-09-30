@@ -3,9 +3,7 @@
 // 2018-4-13
 //
 
-#ifndef __ANTIALISING_FS_H
-#define __ANTIALISING_FS_H
-
+#pragma once
 #include "../../../../General/Interface/IShader.h"
 
 namespace PaintsNow {
@@ -33,4 +31,4 @@ namespace PaintsNow {
 	};
 }
 
-#endif // __ANTIALISING_FS_H
+

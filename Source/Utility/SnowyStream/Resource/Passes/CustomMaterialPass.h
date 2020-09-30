@@ -5,7 +5,7 @@
 
 #pragma once
 #include "../../../../General/Misc/PassBase.h"
-#include "../Shaders/StandardTransformVS.h"
+#include "../Shaders/CustomMaterialTransformVS.h"
 #include "../Shaders/CustomMaterialParameterFS.h"
 #include "../Shaders/DeferredCompactFS.h"
 
@@ -21,7 +21,7 @@ namespace PaintsNow {
 
 	protected:
 		// Vertex shaders
-		StandardTransformVS screenTransform;
+		CustomMaterialTransformVS shaderTransform;
 		// Fragment shaders
 		CustomMaterialParameterFS shaderParameter;
 		DeferredCompactEncodeFS shaderCompactEncode;
