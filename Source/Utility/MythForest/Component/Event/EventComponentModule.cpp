@@ -63,7 +63,7 @@ void EventComponentModule::RequestFilterEvent(IScript::Request& request, IScript
 	do {
 		flag = old = eventComponent->Flag().load(std::memory_order_acquire);
 		flag = (flag & ~(EventComponent::EVENTCOMPONENT_ALL)) | (mask * EventComponent::EVENTCOMPONENT_BASE & EventComponent::EVENTCOMPONENT_ALL);
-	} while (eventComponent->Flag().compare_exchange_weak(old, flag, std::memory_order_release));
+	} while (!eventComponent->Flag().compare_exchange_weak(old, flag, std::memory_order_release));
 }
 
 void EventComponentModule::RequestBindEventFrame(IScript::Request& request, IScript::Delegate<EventComponent> eventComponent, bool add) {

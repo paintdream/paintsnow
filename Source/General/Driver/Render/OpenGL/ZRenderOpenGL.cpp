@@ -1743,7 +1743,7 @@ void ZRenderOpenGL::DeleteQueue(Queue* queue) {
 	assert(q->next == nullptr);
 
 	q->next = (QueueImplOpenGL*)deletedQueueHead.load(std::memory_order_acquire);
-	while (!(QueueImplOpenGL*)deletedQueueHead.compare_exchange_weak((Queue*&)q->next, q, std::memory_order_release)) {
+	while (!deletedQueueHead.compare_exchange_weak((Queue*&)q->next, q, std::memory_order_release)) {
 		YieldThreadFast();
 	}
 }
