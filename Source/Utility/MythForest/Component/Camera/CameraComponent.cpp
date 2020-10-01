@@ -557,7 +557,7 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 			break;
 		}
 
-		warpData.triangleCount += drawCall.drawCallDescription.indexBufferResource.length / div * drawCall.drawCallDescription.instanceCounts.x();
+		warpData.triangleCount += drawCall.drawCallDescription.indexBufferResource.length / div * Math::Max(1u, drawCall.drawCallDescription.instanceCounts.x());
 
 		const IRender::Resource::DrawCallDescription& drawCallTemplate = drawCall.drawCallDescription;
 		AnimationComponent* animationComponent = instanceData.animationComponent();
