@@ -338,4 +338,3 @@ void Entity::Deactivate(Engine& engine) {
 		}
 	}
 }
-

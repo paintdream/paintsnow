@@ -10,7 +10,7 @@ namespace PaintsNow {
 	class StreamComponent : public TAllocatedTiny<StreamComponent, Component> {
 	public:
 		StreamComponent(const UShort3& dimension, uint16_t cacheCount);
-		SharedTiny* Load(Engine& engine, const UShort3& coord, const TShared<SharedTiny>&context);
+		SharedTiny* Load(Engine& engine, const UShort3& coord, const TShared<SharedTiny>& context);
 		void Unload(Engine& engine, const UShort3& coord, const TShared<SharedTiny>&context);
 		void SetLoadHandler(IScript::Request& request, IScript::Request::Ref ref);
 		void SetLoadHandler(const TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, const TShared<SharedTiny>&, const TShared<SharedTiny>& >& handler);
@@ -30,8 +30,8 @@ namespace PaintsNow {
 
 		UShort3 dimension;
 		uint16_t recycleStart;
-		std::vector<uint16_t> idGrids;
 		std::vector<Grid> grids;
+		std::vector<uint16_t> idGrids;
 		std::vector<uint16_t> recycleQueue;
 
 		template <class T>

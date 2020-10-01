@@ -155,7 +155,7 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 		CollectComponentsFromEntity(engine, *taskData, instanceData, captureData, shadowContext->rootEntity());
 	}
 
-	return shadowGrid();
+	return shadowGrid;
 }
 
 TShared<SharedTiny> LightComponent::ShadowLayer::StreamUnloadHandler(Engine& engine, const UShort3& coord, const TShared<SharedTiny>& tiny, const TShared<SharedTiny>& context) {
@@ -546,7 +546,12 @@ TShared<LightComponent::ShadowGrid> LightComponent::ShadowLayer::UpdateShadow(En
 	shadowContext->lightTransformMatrix = Math::Scale(lightTransform, Float4(scale, scale, scale, 1));
 	TShared<ShadowGrid> grid = streamComponent->Load(engine, coord, shadowContext())->QueryInterface(UniqueType<ShadowGrid>());
 	assert(grid);
+
+	if (!(grid->Flag() & TINY_MODIFIED) || !fallbackGrid) {
+		fallbackGrid = grid;
+	}
+
 	// printf("COORD: %d, %d, %d\n", coord.x(), coord.y(), coord.z());
-	return grid;
+	return fallbackGrid;
 }
 

@@ -679,14 +679,16 @@ void RegisterPass(ResourceManager& resourceManager, UniqueType<T> type, const St
 	resourceManager.DoLock();
 	shaderResource->SetLocation(ShaderResource::GetShaderPathPrefix() + name);
 	resourceManager.Insert(shaderResource);
+	resourceManager.UnLock();
 
 	if (!matName.empty()) {
 		TShared<MaterialResource> materialResource = TShared<MaterialResource>::From(new MaterialResource(resourceManager, String("[Runtime]/MaterialResource/") + matName));
 		materialResource->originalShaderResource = shaderResource;
 		materialResource->Flag().fetch_or(ResourceBase::RESOURCE_ETERNAL, std::memory_order_acquire);
+		resourceManager.DoLock();
 		resourceManager.Insert(materialResource());
+		resourceManager.UnLock();
 	}
-	resourceManager.UnLock();
 	shaderResource->ReleaseObject();
 }
 
@@ -697,7 +699,7 @@ void SnowyStream::RegisterBuiltinPasses() {
 	RegisterPass(*resourceManager(), UniqueType<AntiAliasingPass>());
 	RegisterPass(*resourceManager(), UniqueType<BloomPass>());
 	RegisterPass(*resourceManager(), UniqueType<ConstMapPass>());
-	// RegisterPass(*resourceManager(), UniqueType<CustomMaterialPass>());
+	RegisterPass(*resourceManager(), UniqueType<CustomMaterialPass>());
 	RegisterPass(*resourceManager(), UniqueType<DeferredLightingPass>());
 	RegisterPass(*resourceManager(), UniqueType<DepthResolvePass>());
 	RegisterPass(*resourceManager(), UniqueType<DepthBoundingPass>());
