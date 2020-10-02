@@ -155,7 +155,7 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 		CollectComponentsFromEntity(engine, *taskData, instanceData, captureData, shadowContext->rootEntity());
 	}
 
-	return shadowGrid;
+	return shadowGrid();
 }
 
 TShared<SharedTiny> LightComponent::ShadowLayer::StreamUnloadHandler(Engine& engine, const UShort3& coord, const TShared<SharedTiny>& tiny, const TShared<SharedTiny>& context) {
