@@ -266,6 +266,7 @@ namespace PaintsNow {
 				}
 
 				Entry();
+				~Entry();
 				Entry(const Entry& rhs);
 				Entry& operator = (const Entry& rhs);
 

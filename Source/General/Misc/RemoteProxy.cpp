@@ -167,6 +167,7 @@ const TWrapper<IScript::Object*, const String&>& RemoteProxy::GetObjectCreator()
 }
 
 bool RemoteProxy::ThreadProc(IThread::Thread* thread, size_t context) {
+	return false;
 	ITunnel::Dispatcher* disp = dispatcher;
 	assert(!entry.empty());
 	ITunnel::Listener* listener = tunnel.OpenListener(disp, Wrap(this, &RemoteProxy::HandleEvent), Wrap(this, &RemoteProxy::OnConnection), entry);
@@ -260,6 +261,12 @@ RemoteProxy::ObjectInfo::Entry::Entry() : wrapper(nullptr), index(0) {
 	
 }
 
+RemoteProxy::ObjectInfo::Entry::~Entry() {
+	if (wrapper != nullptr) {
+		delete wrapper;
+	}
+}
+
 RemoteProxy::ObjectInfo::Entry& RemoteProxy::ObjectInfo::Entry::operator = (const Entry& rhs) {
 	name = rhs.name;
 	retValue = rhs.retValue;
@@ -273,14 +280,7 @@ RemoteProxy::ObjectInfo::Entry& RemoteProxy::ObjectInfo::Entry::operator = (cons
 }
 
 RemoteProxy::ObjectInfo::ObjectInfo() : refCount(0), needQuery(true) {}
-
-RemoteProxy::ObjectInfo::~ObjectInfo() {
-	for (size_t i = 0; i < collection.size(); i++) {
-		if (collection[i].wrapper != nullptr) {
-			delete collection[i].wrapper;
-		}
-	}
-}
+RemoteProxy::ObjectInfo::~ObjectInfo() {}
 
 void RemoteProxy::Request::Attach(ITunnel::Connection* c) {
 	connection = c;

@@ -38,6 +38,7 @@
 #else
 #pragma comment(lib, "OpenAL32.lib")
 #endif
+#pragma comment(lib, "WinMM.lib")
 #endif
 
 #if !defined(CMAKE_PAINTSNOW) || ADD_FONT_FREETYPE
