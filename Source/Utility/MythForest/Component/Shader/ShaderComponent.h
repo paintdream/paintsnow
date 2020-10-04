@@ -18,7 +18,7 @@ namespace PaintsNow {
 		void Initialize(Engine& engine, Entity* entity) override;
 		void Uninitialize(Engine& engine, Entity* entity) override;
 
-		void SetInput(Engine& engine, const String& stage, const String& type, const String& name, const std::vector<std::pair<String, String> >& config);
+		void SetInput(Engine& engine, const String& stage, const String& type, const String& name, const String& value, const std::vector<std::pair<String, String> >& config);
 		void SetCode(Engine& engine, const String& stage, const String& code, const std::vector<std::pair<String, String> >& config);
 		void SetComplete(Engine& engine);
 

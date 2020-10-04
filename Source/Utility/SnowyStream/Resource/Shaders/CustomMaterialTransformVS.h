@@ -5,9 +5,10 @@
 
 #pragma once
 #include "CustomMaterialDescription.h"
+#include "StandardTransformVS.h"
 
 namespace PaintsNow {
-	class CustomMaterialTransformVS : public TReflected<CustomMaterialTransformVS, IShader> {
+	class CustomMaterialTransformVS : public TReflected<CustomMaterialTransformVS, StandardTransformVS> {
 	public:
 		CustomMaterialTransformVS();
 		TObject<IReflect>& operator () (IReflect& reflect) override;

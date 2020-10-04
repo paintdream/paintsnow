@@ -33,11 +33,11 @@ void ShaderComponentModule::RequestSetCode(IScript::Request& request, IScript::D
 	shaderComponent->SetCode(engine, stage, text, config);
 }
 
-void ShaderComponentModule::RequestSetInput(IScript::Request& request, IScript::Delegate<ShaderComponent> shaderComponent, const String& stage, const String& type, const String& name, const std::vector<std::pair<String, String> >& config) {
+void ShaderComponentModule::RequestSetInput(IScript::Request& request, IScript::Delegate<ShaderComponent> shaderComponent, const String& stage, const String& type, const String& name, const String& value, const std::vector<std::pair<String, String> >& config) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(shaderComponent);
 
-	shaderComponent->SetInput(engine, stage, type, name, config);
+	shaderComponent->SetInput(engine, stage, type, name, value, config);
 }
 
 void ShaderComponentModule::RequestSetComplete(IScript::Request& request, IScript::Delegate<ShaderComponent> shaderComponent) {
