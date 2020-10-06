@@ -4,6 +4,12 @@ using namespace PaintsNow;
 
 RoutineGraph::RoutineGraph() : taskGraph(nullptr) {}
 
+RoutineGraph::~RoutineGraph() {
+	if (taskGraph != nullptr) {
+		taskGraph->ReleaseObject();
+	}
+}
+
 uint32_t RoutineGraph::Insert(Kernel& kernel, WarpTiny* host, ITask* task) {
 	assert(!(Flag() & TINY_ACTIVATED));
 	if (taskGraph == nullptr) {

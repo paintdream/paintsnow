@@ -28,6 +28,7 @@ namespace PaintsNow {
 		virtual PassBase::Updater& GetPassUpdater();
 
 		IRender::Resource* GetShaderResource() const;
+		void SetShaderResource(IRender::Resource* resource);
 		const Bytes& GetHashValue() const;
 
 	protected:

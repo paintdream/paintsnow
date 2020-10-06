@@ -47,6 +47,10 @@ IRender::Resource* ShaderResource::GetShaderResource() const {
 	return shaderResource;
 }
 
+void ShaderResource::SetShaderResource(IRender::Resource* res) {
+	shaderResource = res;
+}
+
 void ShaderResource::Detach(IRender& render, void* deviceContext) {
 	if (shaderResource != nullptr) {
 		IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(deviceContext);

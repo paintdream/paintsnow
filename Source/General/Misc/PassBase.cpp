@@ -36,7 +36,7 @@ public:
 	ShaderMap shaders;
 };
 
-IRender::Resource* PassBase::Compile(IRender& render, IRender::Queue* queue) {
+IRender::Resource* PassBase::Compile(IRender& render, IRender::Queue* queue, const TWrapper<void, IRender::Resource::ShaderDescription&, IRender::Resource::ShaderDescription::Stage, const String&, const String&>& callback) {
 	IRender::Resource* shader = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_SHADER);
 
 	if (shader == nullptr) {
@@ -49,6 +49,7 @@ IRender::Resource* PassBase::Compile(IRender& render, IRender::Queue* queue) {
 
 	// concat shader text
 	shaderDescription.entries = std::move(allShaders.shaders);
+	shaderDescription.compileCallback = callback;
 	shaderDescription.name = ToString();
 
 	// commit

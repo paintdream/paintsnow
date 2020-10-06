@@ -511,7 +511,7 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 								IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[k];
 								bufferRange.buffer = buffer;
 								bufferRange.offset = safe_cast<uint32_t>(bufferData.GetSize());
-								bufferRange.component = safe_cast<uint16_t>(data.GetSize()) / (group.instanceCount * sizeof(float));
+								bufferRange.component = safe_cast<uint16_t>(data.GetSize() / (group.instanceCount * sizeof(float)));
 								bufferData.Append(data);
 							}
 						}

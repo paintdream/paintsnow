@@ -27,22 +27,23 @@ static inline Unique UniqueFromVariableType(uint32_t id) {
 	return UniqueType<Void>::Get();
 }
 
-class BufferMetaChain : public MetaChainBase {
+template <class T>
+class DummyMetaChain : public MetaChainBase {
 public:
-	BufferMetaChain(IShader::BindBuffer& buffer) : bindBuffer(buffer) {}
+	DummyMetaChain(T& meta) : binder(meta) {}
 	const MetaChainBase* GetNext() const override {
 		return nullptr;
 	}
 
 	const MetaNodeBase* GetNode() const override {
-		return &bindBuffer;
+		return &binder;
 	}
 
 	const MetaNodeBase* GetRawNode() const override {
-		return &bindBuffer;
+		return &binder;
 	}
 
-	IShader::BindBuffer& bindBuffer;
+	T& binder;
 };
 
 void CustomShaderDescription::ReflectUniformTemplate(IReflect& reflect) {
@@ -64,7 +65,7 @@ void CustomShaderDescription::ReflectUniformTemplate(IReflect& reflect) {
 		} else {
 			Unique type = UniqueFromVariableType(var.type);
 			static IReflectObject dummy;
-			BufferMetaChain chain(uniformBuffer);
+			DummyMetaChain<IShader::BindBuffer> chain(uniformBuffer);
 			// Make alignment
 			uint32_t size = safe_cast<uint32_t>(type->GetSize());
 			offset = (offset + size - 1) & (size - 1); // make alignment for variable
@@ -79,6 +80,7 @@ void CustomShaderDescription::ReflectVertexTemplate(IReflect& reflect) {
 	uint32_t offset = 0;
 	uint8_t* bufferBase = uniformBlock.GetData();
 
+	assert(variables.size() == vertexBufferBindings.size());
 	for (size_t i = 0; i < variables.size(); i++) {
 		IAsset::Material::Variable& var = variables[i];
 		String name;
@@ -86,10 +88,12 @@ void CustomShaderDescription::ReflectVertexTemplate(IReflect& reflect) {
 
 		Unique type = UniqueFromVariableType(var.type);
 		static IReflectObject dummy;
-		BufferMetaChain chain(uniformBuffer);
+		DummyMetaChain<IShader::BindBuffer> chain(vertexBufferBindings[i]);
 		// Make alignment
 		uint32_t size = safe_cast<uint32_t>(type->GetSize());
+		assert((size & (size - 1)) == 0);
 		offset = (offset + size - 1) & (size - 1); // make alignment for variable
+		reflect.Property(vertexBufferBindings[i], UniqueType<IShader::BindBuffer>::Get(), UniqueType<IShader::BindBuffer>::Get(), name.c_str(), &vertexBufferBindings[0], &vertexBufferBindings[i], nullptr);
 		reflect.Property(dummy, type, type, name.c_str(), bufferBase, bufferBase + offset, &chain);
 		offset += safe_cast<uint32_t>(type->GetSize());
 	}
@@ -98,7 +102,6 @@ void CustomShaderDescription::ReflectVertexTemplate(IReflect& reflect) {
 void CustomShaderDescription::ReflectInputTemplate(IReflect& reflect) {
 	std::vector<IAsset::Material::Variable>& variables = inputTemplate.variables;
 	uint32_t offset = 0;
-	uint8_t* bufferBase = uniformBlock.GetData();
 
 	for (size_t i = 0; i < variables.size(); i++) {
 		IAsset::Material::Variable& var = variables[i];
@@ -107,11 +110,11 @@ void CustomShaderDescription::ReflectInputTemplate(IReflect& reflect) {
 
 		Unique type = UniqueFromVariableType(var.type);
 		static IReflectObject dummy;
-		BufferMetaChain chain(uniformBuffer);
+		DummyMetaChain<IShader::BindInput> bindInput(IShader::BindInput(IShader::BindInput::TEXCOORD + safe_cast<uint32_t>(i)));
 		// Make alignment
 		uint32_t size = safe_cast<uint32_t>(type->GetSize());
 		offset = (offset + size - 1) & (size - 1); // make alignment for variable
-		reflect.Property(dummy, type, type, name.c_str(), bufferBase, bufferBase + offset, &chain);
+		reflect.Property(dummy, type, type, name.c_str(), nullptr, nullptr, &bindInput);
 		offset += safe_cast<uint32_t>(type->GetSize());
 	}
 }
@@ -119,7 +122,6 @@ void CustomShaderDescription::ReflectInputTemplate(IReflect& reflect) {
 void CustomShaderDescription::ReflectOutputTemplate(IReflect& reflect) {
 	std::vector<IAsset::Material::Variable>& variables = inputTemplate.variables;
 	uint32_t offset = 0;
-	uint8_t* bufferBase = uniformBlock.GetData();
 
 	for (size_t i = 0; i < variables.size(); i++) {
 		IAsset::Material::Variable& var = variables[i];
@@ -128,11 +130,11 @@ void CustomShaderDescription::ReflectOutputTemplate(IReflect& reflect) {
 
 		Unique type = UniqueFromVariableType(var.type);
 		static IReflectObject dummy;
-		BufferMetaChain chain(uniformBuffer);
+		DummyMetaChain<IShader::BindOutput> bindOutput(IShader::BindOutput(IShader::BindOutput::TEXCOORD + safe_cast<uint32_t>(i)));
 		// Make alignment
 		uint32_t size = safe_cast<uint32_t>(type->GetSize());
 		offset = (offset + size - 1) & (size - 1); // make alignment for variable
-		reflect.Property(dummy, type, type, name.c_str(), bufferBase, bufferBase + offset, &chain);
+		reflect.Property(dummy, type, type, name.c_str(), nullptr, nullptr, &bindOutput);
 		offset += safe_cast<uint32_t>(type->GetSize());
 	}
 }
@@ -142,6 +144,7 @@ TObject<IReflect>& CustomShaderDescription::operator () (IReflect& reflect) {
 
 	if (reflect.IsReflectProperty()) {
 		ReflectUniformTemplate(reflect);
+		ReflectVertexTemplate(reflect);
 		ReflectInputTemplate(reflect);
 		ReflectOutputTemplate(reflect);
 	}

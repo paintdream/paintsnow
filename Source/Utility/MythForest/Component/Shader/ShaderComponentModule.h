@@ -19,7 +19,7 @@ namespace PaintsNow {
 
 		void RequestSetCode(IScript::Request& request, IScript::Delegate<ShaderComponent> shaderComponent, const String& stage, const String& text, const std::vector<std::pair<String, String> >& config);
 		void RequestSetInput(IScript::Request& request, IScript::Delegate<ShaderComponent> shaderComponent, const String& stage, const String& type, const String& name, const String& value, const std::vector<std::pair<String, String> >& config);
-		void RequestSetComplete(IScript::Request& request, IScript::Delegate<ShaderComponent> shaderResource);
-
+		void RequestSetComplete(IScript::Request& request, IScript::Delegate<ShaderComponent> shaderComponent);
+		void RequestSetCallback(IScript::Request& request, IScript::Delegate<ShaderComponent> shaderComponent, IScript::Request::Ref callback);
 	};
 }

@@ -10,6 +10,7 @@ namespace PaintsNow {
 	class RoutineGraph : public TReflected<RoutineGraph, WarpTiny> {
 	public:
 		RoutineGraph();
+		~RoutineGraph() override;
 		uint32_t Insert(Kernel& kernel, WarpTiny* host, ITask* task);
 		void Next(uint32_t from, uint32_t to);
 		void Commit();

@@ -51,6 +51,10 @@ namespace PaintsNow {
 			return UniqueType<T>::Get();
 		}
 
+		T& GetDevice() const {
+			return device;
+		}
+
 		void InvokeAttach(ResourceBase* resource, void* deviceContext) override {
 			assert(resource != nullptr);
 			assert(!(resource->Flag() & ResourceBase::RESOURCE_ATTACHED));

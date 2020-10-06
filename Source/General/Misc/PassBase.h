@@ -15,7 +15,7 @@ namespace PaintsNow {
 		PassBase();
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		~PassBase() override;
-		IRender::Resource* Compile(IRender& render, IRender::Queue* queue);
+		IRender::Resource* Compile(IRender& render, IRender::Queue* queue, const TWrapper<void, IRender::Resource::ShaderDescription&, IRender::Resource::ShaderDescription::Stage, const String&, const String&>& callback = TWrapper<void, IRender::Resource::ShaderDescription&, IRender::Resource::ShaderDescription::Stage, const String&, const String&>());
 		Bytes ExportHash(bool onlyConstants);
 
 		struct Parameter {

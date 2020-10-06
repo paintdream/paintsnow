@@ -47,3 +47,9 @@ void ShaderComponentModule::RequestSetComplete(IScript::Request& request, IScrip
 	shaderComponent->SetComplete(engine);
 }
 
+void ShaderComponentModule::RequestSetCallback(IScript::Request& request, IScript::Delegate<ShaderComponent> shaderComponent, IScript::Request::Ref callback) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(shaderComponent);
+
+	shaderComponent->SetCallback(request, callback);
+}

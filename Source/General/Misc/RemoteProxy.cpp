@@ -1117,6 +1117,7 @@ IScript::Request::TYPE RemoteProxy::Request::GetReferenceType(const Ref& d) {
 void RemoteProxy::Request::Dereference(Ref& ref) {
 	assert(lockCount != 0);
 	DereferenceEx(reinterpret_cast<IScript::BaseDelegate*>(ref.value));
+	ref.value = 0;
 }
 
 const char* RemoteProxy::GetFileExt() const {
