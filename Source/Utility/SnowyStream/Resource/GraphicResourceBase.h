@@ -47,8 +47,8 @@ namespace PaintsNow {
 		}
 
 		template <class T>
-		inline size_t UpdateBuffer(IRender& render, IRender::Queue* queue, IRender::Resource*& buffer, std::vector<T>& data, IRender::Resource::BufferDescription::Usage usage, const char* note, uint32_t groupSize = 1) {
-			size_t size = data.size();
+		inline uint32_t UpdateBuffer(IRender& render, IRender::Queue* queue, IRender::Resource*& buffer, std::vector<T>& data, IRender::Resource::BufferDescription::Usage usage, const char* note, uint32_t groupSize = 1) {
+			uint32_t size = safe_cast<uint32_t>(data.size());
 			if (!data.empty()) {
 				IRender::Resource::BufferDescription description;
 				description.data.Resize(safe_cast<uint32_t>(data.size() * sizeof(T)));

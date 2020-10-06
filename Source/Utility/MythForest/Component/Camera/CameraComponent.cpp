@@ -191,7 +191,7 @@ void CameraComponent::Instancing(Engine& engine, TaskData& taskData) {
 					IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[k];
 					bufferRange.buffer = policyData.instanceBuffer;
 					bufferRange.offset = safe_cast<uint32_t>(policyData.instanceData.GetSize()); // TODO: alignment
-					bufferRange.component = safe_cast<uint32_t>(data.GetSize()) / (group.instanceCount * sizeof(float));
+					bufferRange.component = safe_cast<uint16_t>(data.GetSize()) / (group.instanceCount * sizeof(float));
 					policyData.instanceData.Append(data);
 				}
 			}

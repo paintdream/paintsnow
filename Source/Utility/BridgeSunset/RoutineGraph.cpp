@@ -10,7 +10,7 @@ uint32_t RoutineGraph::Insert(Kernel& kernel, WarpTiny* host, ITask* task) {
 		taskGraph = new TaskGraph(kernel);
 	}
 
-	return taskGraph->Insert(host, task);
+	return safe_cast<uint32_t>(taskGraph->Insert(host, task));
 }
 
 void RoutineGraph::Next(uint32_t from, uint32_t to) {
