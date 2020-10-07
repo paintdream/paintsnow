@@ -1,9 +1,10 @@
 #include "ShaderComponent.h"
 #include "../../../SnowyStream/SnowyStream.h"
+#include <sstream>
 
 using namespace PaintsNow;
 
-ShaderComponent::ShaderComponent() : compilingShaderResource(nullptr) {}
+ShaderComponent::ShaderComponent(const String& n) : name(n) {}
 
 void ShaderComponent::SetCallback(IScript::Request& request, IScript::Request::Ref callback) {
 	assert(Flag() & TINY_ACTIVATED);
@@ -22,6 +23,10 @@ void ShaderComponent::Initialize(Engine& engine, Entity* entity) {
 	customMaterialShader = shaderResource->QueryInterface(UniqueType<ShaderResourceImpl<CustomMaterialPass> >());
 	assert(customMaterialShader);
 	customMaterialShader = static_cast<ShaderResourceImpl<CustomMaterialPass>*>(customMaterialShader->Clone());
+	std::stringstream ss;
+	ss << std::hex << (void*)this;
+
+	customMaterialShader->SetLocation(shaderResource->GetLocation() + "/" + name + "/" + ss.str());
 
 	BaseClass::Initialize(engine, entity);
 }
@@ -53,9 +58,6 @@ void ShaderComponent::SetCode(Engine& engine, const String& stage, const String&
 
 void ShaderComponent::SetComplete(Engine& engine) {
 	assert(customMaterialShader);
-	std::atomic_thread_fence(std::memory_order_acquire);
-	if (compilingShaderResource != nullptr)
-		return;
 
 	CustomMaterialPass& pass = static_cast<CustomMaterialPass&>(customMaterialShader->GetPass());
 	pass.SetComplete();
@@ -65,24 +67,27 @@ void ShaderComponent::SetComplete(Engine& engine) {
 	IRender::Queue* queue = engine.snowyStream.GetResourceQueue();
 
 	ReferenceObject();
-	compilingShaderResource = pass.Compile(render, queue, Wrap(this, &ShaderComponent::OnShaderCompiled));
+	pass.Compile(render, queue, Wrap(this, &ShaderComponent::OnShaderCompiled), &engine, customMaterialShader->GetShaderResource());
 }
 
-void ShaderComponent::OnShaderCompiled(IRender::Resource::ShaderDescription&, IRender::Resource::ShaderDescription::Stage stage, const String& info, const String& shaderCode) {
-	if (compileCallbackRef) {
-		// TODO:
-	}
-
+void ShaderComponent::OnShaderCompiled(IRender::Resource* resource, IRender::Resource::ShaderDescription& desc, IRender::Resource::ShaderDescription::Stage stage, const String& info, const String& shaderCode) {
 	if (stage == IRender::Resource::ShaderDescription::END) {
-		if (info.empty()) { // success?
-			customMaterialShader->SetShaderResource(compilingShaderResource);
-		} else {
-			DeviceResourceManager<IRender>& manager = static_cast<DeviceResourceManager<IRender>&>(customMaterialShader->GetResourceManager());
-			manager.GetDevice().DeleteResource(static_cast<IRender::Queue*>(manager.GetContext()), compilingShaderResource);
+		Engine* engine = reinterpret_cast<Engine*>(desc.context);
+		assert(engine != nullptr);
+
+		if (compileCallbackRef) {
+			engine->bridgeSunset.GetKernel().QueueRoutine(this, CreateTaskScript(compileCallbackRef, info, shaderCode));
 		}
 
-		compilingShaderResource = nullptr;
-		std::atomic_thread_fence(std::memory_order_release);
+#ifdef _DEBUG
+		engine->interfaces.render.SetResourceNotation(resource, customMaterialShader->GetLocation());
+#endif
+
+		customMaterialShader->SetShaderResource(resource);
+		if (customMaterialShader->Flag() & ResourceBase::RESOURCE_ORPHAN) {
+			customMaterialShader->GetResourceManager().Insert(customMaterialShader());
+		}
+
 		ReleaseObject();
 	}
 }

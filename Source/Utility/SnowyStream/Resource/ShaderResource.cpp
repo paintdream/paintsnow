@@ -27,20 +27,19 @@ const Bytes& ShaderResource::GetHashValue() const {
 }
 
 void ShaderResource::Attach(IRender& render, void* deviceContext) {
-	IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(deviceContext);
+	// compute hash value
 	PassBase& pass = GetPass();
-	std::vector<IRender::Resource*> newResources;
-	assert(newResources.empty());
+	hashValue = pass.ExportHash(true);
+
+	if (shaderResource != nullptr) return; // already attached.
+
+	IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(deviceContext);
 	// compile default shader
-	assert(shaderResource == nullptr);
 	shaderResource = pass.Compile(render, queue);
 
 #ifdef _DEBUG
 	render.SetResourceNotation(shaderResource, GetLocation());
 #endif
-
-	// compute hash value
-	hashValue = pass.ExportHash(true);
 }
 
 IRender::Resource* ShaderResource::GetShaderResource() const {

@@ -13,7 +13,7 @@
 namespace PaintsNow {
 	class ShaderComponent : public TAllocatedTiny<ShaderComponent, Component> {
 	public:
-		ShaderComponent();
+		ShaderComponent(const String& name);
 
 		void Initialize(Engine& engine, Entity* entity) override;
 		void Uninitialize(Engine& engine, Entity* entity) override;
@@ -24,11 +24,11 @@ namespace PaintsNow {
 		void SetCallback(IScript::Request& request, IScript::Request::Ref callback);
 
 	protected:
-		void OnShaderCompiled(IRender::Resource::ShaderDescription&, IRender::Resource::ShaderDescription::Stage, const String&, const String&);
+		void OnShaderCompiled(IRender::Resource* resource, IRender::Resource::ShaderDescription&, IRender::Resource::ShaderDescription::Stage, const String&, const String&);
 
 	protected:
 		TShared<ShaderResourceImpl<CustomMaterialPass> > customMaterialShader;
+		String name;
 		IScript::Request::Ref compileCallbackRef;
-		IRender::Resource* compilingShaderResource;
 	};
 }

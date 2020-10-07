@@ -36,12 +36,8 @@ public:
 	ShaderMap shaders;
 };
 
-IRender::Resource* PassBase::Compile(IRender& render, IRender::Queue* queue, const TWrapper<void, IRender::Resource::ShaderDescription&, IRender::Resource::ShaderDescription::Stage, const String&, const String&>& callback) {
-	IRender::Resource* shader = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_SHADER);
-
-	if (shader == nullptr) {
-		return nullptr;
-	}
+IRender::Resource* PassBase::Compile(IRender& render, IRender::Queue* queue, const TWrapper<void, IRender::Resource*, IRender::Resource::ShaderDescription&, IRender::Resource::ShaderDescription::Stage, const String&, const String&>& callback, void* context, IRender::Resource* existedShaderResource) {
+	IRender::Resource* shader = existedShaderResource != nullptr ? existedShaderResource : render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_SHADER);
 
 	IRender::Resource::ShaderDescription shaderDescription;
 	ReflectCollectShader allShaders;
@@ -50,11 +46,11 @@ IRender::Resource* PassBase::Compile(IRender& render, IRender::Queue* queue, con
 	// concat shader text
 	shaderDescription.entries = std::move(allShaders.shaders);
 	shaderDescription.compileCallback = callback;
+	shaderDescription.context = context;
 	shaderDescription.name = ToString();
 
 	// commit
 	render.UploadResource(queue, shader, &shaderDescription);
-
 	return shader;
 }
 

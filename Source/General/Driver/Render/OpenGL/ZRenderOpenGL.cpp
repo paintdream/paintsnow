@@ -1046,12 +1046,12 @@ struct ResourceImplOpenGL<IRender::Resource::ShaderDescription> final : public R
 				fprintf(stderr, "ZRenderOpenGL::CompileShader(): %s\n", fullShader.c_str());
 				// assert(false);
 				if (pass.compileCallback) {
-					pass.compileCallback(pass, (IRender::Resource::ShaderDescription::Stage)k, info, fullShader);
+					pass.compileCallback(this, pass, (IRender::Resource::ShaderDescription::Stage)k, info, fullShader);
 				}
 				Cleanup();
 				return;
 			} else if (pass.compileCallback) {
-				pass.compileCallback(pass, (IRender::Resource::ShaderDescription::Stage)k, "", fullShader);
+				pass.compileCallback(this, pass, (IRender::Resource::ShaderDescription::Stage)k, "", fullShader);
 			}
 
 			glAttachShader(programID, shaderID);
@@ -1067,13 +1067,13 @@ struct ResourceImplOpenGL<IRender::Resource::ShaderDescription> final : public R
 			glGetProgramInfoLog(programID, MAX_INFO_LOG_SIZE - 1, nullptr, info);
 			fprintf(stderr, "ZRenderOpenGL::LinkProgram(): %s\n", info);
 			if (pass.compileCallback) {
-				pass.compileCallback(pass, IRender::Resource::ShaderDescription::END, info, "<Link>");
+				pass.compileCallback(this, pass, IRender::Resource::ShaderDescription::END, info, "<Link>");
 			}
 			// assert(false);
 			Cleanup();
 			return;
 		} else if (pass.compileCallback) {
-			pass.compileCallback(pass, IRender::Resource::ShaderDescription::END, "", "<Link>");
+			pass.compileCallback(this, pass, IRender::Resource::ShaderDescription::END, "", "<Link>");
 		}
 
 		// Query texture locations.

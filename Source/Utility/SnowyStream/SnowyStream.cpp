@@ -533,6 +533,7 @@ void SnowyStream::RequestInspectResource(IScript::Request& request, IScript::Del
 	request.DoLock();
 	request << begintable
 		<< key("Flag") << flag
+		<< key("Path") << resource->GetLocation()
 		<< key("Depends") << begintable;
 
 	for (size_t k = 0; k < dependencies.size(); k++) {

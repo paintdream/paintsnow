@@ -17,11 +17,11 @@ TObject<IReflect>& ShaderComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-TShared<ShaderComponent> ShaderComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<ShaderResource> resourceTemplate) {
+TShared<ShaderComponent> ShaderComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<ShaderResource> resourceTemplate, const String& name) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(resourceTemplate);
 
-	TShared<ShaderComponent> terrainComponent = TShared<ShaderComponent>::From(allocator->New());
+	TShared<ShaderComponent> terrainComponent = TShared<ShaderComponent>::From(allocator->New(std::ref(name)));
 	terrainComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
 	return terrainComponent;
 }

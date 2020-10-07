@@ -38,7 +38,6 @@ namespace PaintsNow {
 	private:
 		std::unordered_map<String, ResourceBase*> resourceMap;
 		IUniformResourceManager& uniformResourceManager;
-		Interfaces* interfaces;
 		TWrapper<void, const String&> errorHandler;
 		void* context;
 	};

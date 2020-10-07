@@ -127,7 +127,8 @@ namespace PaintsNow {
 				};
 
 				String name;
-				TWrapper<void, ShaderDescription&, Stage, const String&, const String&> compileCallback;
+				void* context;
+				TWrapper<void, Resource*, ShaderDescription&, Stage, const String&, const String&> compileCallback;
 				std::vector<std::pair<Stage, IShader* > > entries;
 			};
 
