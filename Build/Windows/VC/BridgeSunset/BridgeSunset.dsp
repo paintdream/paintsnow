@@ -87,10 +87,6 @@ LIB32=link.exe -lib
 
 SOURCE=..\..\..\..\Source\Utility\BridgeSunset\BridgeSunset.cpp
 # End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Utility\BridgeSunset\RoutineGraph.cpp
-# End Source File
 # End Group
 # Begin Group "Header Files"
 
@@ -98,10 +94,6 @@ SOURCE=..\..\..\..\Source\Utility\BridgeSunset\RoutineGraph.cpp
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\BridgeSunset\BridgeSunset.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Utility\BridgeSunset\RoutineGraph.h
 # End Source File
 # End Group
 # End Target

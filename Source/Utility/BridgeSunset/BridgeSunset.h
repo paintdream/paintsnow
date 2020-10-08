@@ -7,8 +7,7 @@
 #pragma once
 #include "../../Core/Interface/IScript.h"
 #include "../../Core/System/Kernel.h"
-#include "RoutineGraph.h"
-#include <stack>
+#include "../../Core/System/TaskGraph.h"
 
 namespace PaintsNow {
 	class BridgeSunset : public TReflected<BridgeSunset, IScript::Library>, public IScript::RequestPool, public ISyncObject {
@@ -23,10 +22,10 @@ namespace PaintsNow {
 		void ContinueScriptDispatcher(IScript::Request& request, IHost* host, size_t paramCount, const TWrapper<void, IScript::Request&>& continuer);
 
 	protected:
-		TShared<RoutineGraph> RequestNewGraph(IScript::Request& request, int32_t startupWarp);
-		void RequestQueueGraphRoutine(IScript::Request& request, IScript::Delegate<RoutineGraph> graph, IScript::Delegate<WarpTiny> unit, IScript::Request::Ref callback);
-		void RequestConnectGraphRoutine(IScript::Request& request, IScript::Delegate<RoutineGraph> graph, int32_t prev, int32_t next);
-		void RequestExecuteGraph(IScript::Request& request, IScript::Delegate<RoutineGraph> graph);
+		TShared<TaskGraph> RequestNewGraph(IScript::Request& request, int32_t startupWarp);
+		void RequestQueueGraphRoutine(IScript::Request& request, IScript::Delegate<TaskGraph> graph, IScript::Delegate<WarpTiny> unit, IScript::Request::Ref callback);
+		void RequestConnectGraphRoutine(IScript::Request& request, IScript::Delegate<TaskGraph> graph, int32_t prev, int32_t next);
+		void RequestExecuteGraph(IScript::Request& request, IScript::Delegate<TaskGraph> graph);
 		void RequestQueueRoutine(IScript::Request& request, IScript::Delegate<WarpTiny> unit, IScript::Request::Ref callback);
 		uint32_t RequestGetWarpCount(IScript::Request& request);
 
