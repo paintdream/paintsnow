@@ -151,7 +151,7 @@ void BridgeSunset::RequestQueueGraphRoutine(IScript::Request& request, IScript::
 	CHECK_DELEGATE(graph);
 	CHECK_DELEGATE(unit);
 
-	size_t id = graph->Insert(unit.Get(), CreateTaskScript(callback));
+	size_t id = graph->Insert(unit.Get(), CreateTaskScriptOnce(callback));
 	request.DoLock();
 	request << id;
 	request.UnLock();

@@ -22,13 +22,53 @@ namespace PaintsNow {
 		void ContinueScriptDispatcher(IScript::Request& request, IHost* host, size_t paramCount, const TWrapper<void, IScript::Request&>& continuer);
 
 	protected:
+		/// <summary>
+		/// Create a new task graph
+		/// </summary>
+		/// <param name = "statupWarp"> startup warp index of graph </param>
+		/// <returns> TaskGraph object </returns>
 		TShared<TaskGraph> RequestNewGraph(IScript::Request& request, int32_t startupWarp);
-		void RequestQueueGraphRoutine(IScript::Request& request, IScript::Delegate<TaskGraph> graph, IScript::Delegate<WarpTiny> unit, IScript::Request::Ref callback);
+
+		/// <summary>
+		/// Queue a new task to an existing task graph
+		/// </summary>
+		/// <param name = "graph"> TaskGraph object </param>
+		/// <param name = "tiny"> task tiny object </param>
+		/// <param name = "callback"> task callback </param>
+		/// <returns> Queued task id </returns>
+		void RequestQueueGraphRoutine(IScript::Request& request, IScript::Delegate<TaskGraph> graph, IScript::Delegate<WarpTiny> tiny, IScript::Request::Ref callback);
+
+		/// <summary>
+		/// Set execution dependency between two tasks.
+		/// </summary>
+		/// <param name = "graph"> TaskGraph object </param>
+		/// <param name = "prev"> pre task </param>
+		/// <param name = "next"> post task </param>
+		/// <returns></returns>
 		void RequestConnectGraphRoutine(IScript::Request& request, IScript::Delegate<TaskGraph> graph, int32_t prev, int32_t next);
+
+		/// <summary>
+		/// Execute TaskGraph at once
+		/// </summary>
+		/// <param name = "graph"> Execute TaskGraph at once </param>
+		/// <returns></returns>
 		void RequestExecuteGraph(IScript::Request& request, IScript::Delegate<TaskGraph> graph);
-		void RequestQueueRoutine(IScript::Request& request, IScript::Delegate<WarpTiny> unit, IScript::Request::Ref callback);
+
+		/// <summary>
+		/// Queue a routine based on a tiny
+		/// </summary>
+		/// <param name = "tiny"> the tiny object </param>
+		/// <param name = "callback"> callback </param>
+		/// <returns></returns>
+		void RequestQueueRoutine(IScript::Request& request, IScript::Delegate<WarpTiny> tiny, IScript::Request::Ref callback);
+
+		/// <summary>
+		/// Get count of warps
+		/// </summary>
+		/// <returns> The count of warps </returns>
 		uint32_t RequestGetWarpCount(IScript::Request& request);
 
+	public:
 		ThreadPool threadPool;
 		Kernel kernel;
 		TWrapper<void, IScript::Request&, IHost*, size_t, const TWrapper<void, IScript::Request&>&> origDispatcher;

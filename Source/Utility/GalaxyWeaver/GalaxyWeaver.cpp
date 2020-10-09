@@ -9,12 +9,10 @@ TObject<IReflect>& GalaxyWeaver::operator () (IReflect& reflect) {
 
 	if (reflect.IsReflectMethod()) {
 		ReflectMethod(RequestNewWeaver)[ScriptMethod = "NewWeaver"];
-		ReflectMethod(RequestConnectEntity)[ScriptMethod = "ConnectEntity"];
 		ReflectMethod(RequestSetWeaverRpcCallback)[ScriptMethod = "SetWeaverRpcCallback"];
 		ReflectMethod(RequestSetWeaverConnectionCallback)[ScriptMethod = "SetWeaverConnectionCallback"];
 		ReflectMethod(RequestStartWeaver)[ScriptMethod = "StartWeaver"];
 		ReflectMethod(RequestStopWeaver)[ScriptMethod = "StopWeaver"];
-		ReflectMethod(RequestCommitWeaverChanges)[ScriptMethod = "CommitWeaverChanges"];
 	}
 
 	return *this;
@@ -59,21 +57,4 @@ void GalaxyWeaver::RequestStopWeaver(IScript::Request& request, IScript::Delegat
 
 	weaver->Stop();
 
-}
-
-void GalaxyWeaver::RequestCommitWeaverChanges(IScript::Request& request, IScript::Delegate<Weaver> weaver) {
-	CHECK_REFERENCES_NONE();
-	CHECK_DELEGATE(weaver);
-	CHECK_THREAD_IN_LIBRARY(weaver);
-
-}
-
-void GalaxyWeaver::RequestConnectEntity(IScript::Request& request, IScript::Delegate<Weaver> weaver, IScript::Delegate<Entity> scene) {
-	CHECK_REFERENCES_NONE();
-	CHECK_DELEGATE(weaver);
-	CHECK_DELEGATE(scene);
-	CHECK_THREAD_IN_LIBRARY(weaver);
-	CHECK_THREAD_IN_LIBRARY(scene);
-
-	assert(false);
 }

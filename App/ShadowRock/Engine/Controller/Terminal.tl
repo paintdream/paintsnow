@@ -76,7 +76,7 @@ function Terminal:EventHandlerHttp(connection : Connection, status : string) : b
 	if status == "Read" or status == "Connected" then
 		local request = connection:ReadConnectionHttpRequest() as HttpRequestRecord
 		local code, data, reason, header = self.DataHandler(connection, request.Uri, request.Method, request.Header, request.Data)
-		connection:WriteConnectionHttpResponse(code, data, reason, header as {any})
+		connection:WriteConnectionHttpResponse(code, reason, header as {any}, data)
 		return true
 	elseif status == "Close" or status == "Error" then
 		self.StateHandler(connection, false, "", "")

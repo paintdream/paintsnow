@@ -133,7 +133,7 @@ void EchoLegend::RequestWriteConnectionHttpRequest(IScript::Request& request, IS
 	connection->WriteHttpRequest(uri, method, header, data);
 }
 
-void EchoLegend::RequestWriteConnectionHttpResponse(IScript::Request& request, IScript::Delegate<Connection> connection, int code, const String& data, const String& reason, std::list<std::pair<String, String> >& header) {
+void EchoLegend::RequestWriteConnectionHttpResponse(IScript::Request& request, IScript::Delegate<Connection> connection, int code, const String& reason, std::list<std::pair<String, String> >& header, const String& data) {
 	if (connection) {
 		connection->WriteHttpResponse(data, code, reason, header);
 	} else {
