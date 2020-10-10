@@ -565,7 +565,7 @@ TShared<ResourceBase> SnowyStream::RequestCloneResource(IScript::Request& reques
 	return nullptr;
 }
 
-void SnowyStream::RequestMapResource(IScript::Request& request, IScript::Delegate<ResourceBase> resource, const String& typeExtension) {
+void SnowyStream::RequestMapResource(IScript::Request& request, IScript::Delegate<ResourceBase> resource) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(resource);
 	bridgeSunset.GetKernel().YieldCurrentWarp();
