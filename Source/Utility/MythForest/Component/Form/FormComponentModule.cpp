@@ -47,21 +47,21 @@ void FormComponentModule::RequestSetData(IScript::Request& request, IScript::Del
 	}
 }
 
-void FormComponentModule::RequestGetData(IScript::Request& request, IScript::Delegate<FormComponent> formComponent, int32_t index) {
+const String& FormComponentModule::RequestGetData(IScript::Request& request, IScript::Delegate<FormComponent> formComponent, int32_t index) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(formComponent);
 	CHECK_THREAD_IN_MODULE(formComponent);
 
 	if (index >= 0 && index < (int32_t)formComponent->values.size()) {
 		const String& v = formComponent->values[(size_t)index];
-		engine.GetKernel().YieldCurrentWarp();
-		request.DoLock();
-		request << v;
-		request.UnLock();
+		return v;
+	} else {
+		static String emptyString;
+		return emptyString;
 	}
 }
 
-String FormComponentModule::RequestGetName(IScript::Request& request, IScript::Delegate<FormComponent> formComponent) {
+const String& FormComponentModule::RequestGetName(IScript::Request& request, IScript::Delegate<FormComponent> formComponent) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(formComponent);
 	CHECK_THREAD_IN_MODULE(formComponent);

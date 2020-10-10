@@ -39,193 +39,193 @@ namespace PaintsNow {
 		/// <summary>
 		/// Open or create a resource
 		/// </summary>
-		/// <param name = "path"> resouce path, can be a file path or virtual path </param>
-		/// <param name = "expectedResType"> resource type, specify an empty string to extract from path </param>
-		/// <param name = "createAlways"> always create a new resource (regardless whether it exists or not </param>
+		/// <param name="path"> resouce path, can be a file path or virtual path </param>
+		/// <param name="expectedResType"> resource type, specify an empty string to extract from path </param>
+		/// <param name="createAlways"> always create a new resource (regardless whether it exists or not </param>
 		/// <returns> Resource object </returns>
 		TShared<ResourceBase> RequestNewResource(IScript::Request& request, const String& path, const String& expectedResType, bool createAlways);
 
 		/// <summary>
 		/// Open bulk of resources in asynchorinzed way
 		/// </summary>
-		/// <param name = "pathList"> resouce path list </param>
-		/// <param name = "expectedResType"> resource type, specify an empty string to extract from path </param>
-		/// <param name = "callbackStep"> callback on one resource created </param>
-		/// <param name = "callbackComplete"> callback on all resources created </param>
+		/// <param name="pathList"> resouce path list </param>
+		/// <param name="expectedResType"> resource type, specify an empty string to extract from path </param>
+		/// <param name="callbackStep"> callback on one resource created </param>
+		/// <param name="callbackComplete"> callback on all resources created </param>
 		/// <returns> Resource object </returns>
 		void RequestNewResourcesAsync(IScript::Request& request, std::vector<String>& pathList, String& expectedResType, IScript::Request::Ref callbackStep, IScript::Request::Ref callbackComplete);
 
 		/// <summary>
 		/// Load external (raw) resource data from local file(s)
 		/// </summary>
-		/// <param name = "resource"> Resource object </param>
-		/// <param name = "externalPath"> external (raw) local file path </param>
+		/// <param name="resource"> Resource object </param>
+		/// <param name="externalPath"> external (raw) local file path </param>
 		/// <returns></returns>
 		void RequestLoadExternalResourceData(IScript::Request& request, IScript::Delegate<ResourceBase> resource, const String& externalPath);
 
 		/// <summary>
 		/// Inspect resource information
 		/// </summary>
-		/// <param name = "resource"> Resource object </param>
+		/// <param name="resource"> Resource object </param>
 		/// <returns> A dict with { "Flag" : integer, "Path" : string, "Depends", { Resource } } </returns>
 		void RequestInspectResource(IScript::Request& request, IScript::Delegate<ResourceBase> resource);
 
 		/// <summary>
 		/// Save resource to disk
 		/// </summary>
-		/// <param name = "resource"> Resource object </param>
+		/// <param name="resource"> Resource object </param>
 		/// <returns></returns>
 		void RequestPersistResource(IScript::Request& request, IScript::Delegate<ResourceBase> resource, const String& extension);
 
 		/// <summary>
 		/// Map resource to preserve local data on memory (especially for render resources), internal counted.
 		/// </summary>
-		/// <param name = "resource"> Resource object </param>
+		/// <param name="resource"> Resource object </param>
 		/// <returns></returns>
 		void RequestMapResource(IScript::Request& request, IScript::Delegate<ResourceBase> resource);
 
 		/// <summary>
 		/// Unmap resource to release local data on memory (especially for render resources), internal counted.
 		/// </summary>
-		/// <param name = "resource"> Resource object </param>
+		/// <param name="resource"> Resource object </param>
 		/// <returns></returns>
 		void RequestUnmapResource(IScript::Request& request, IScript::Delegate<ResourceBase> resource);
 
 		/// <summary>
 		/// Clone resource to new path
 		/// </summary>
-		/// <param name = "resource"> Resource object </param>
-		/// <param name = "path"> new path </param>
+		/// <param name="resource"> Resource object </param>
+		/// <param name="path"> new path </param>
 		/// <returns></returns>
 		TShared<ResourceBase> RequestCloneResource(IScript::Request& request, IScript::Delegate<ResourceBase>, const String& path);
 
 		/// <summary>
 		/// Compress resource in asynchronized way
 		/// </summary>
-		/// <param name = "resource"> Resource object </param>
-		/// <param name = "compressType"> compress type </param>
-		/// <param name = "callback"> completion callback </param>
+		/// <param name="resource"> Resource object </param>
+		/// <param name="compressType"> compress type </param>
+		/// <param name="callback"> completion callback </param>
 		/// <returns></returns>
 		void RequestCompressResourceAsync(IScript::Request& request, IScript::Delegate<ResourceBase> resource, String& compressType, IScript::Request::Ref callback);
 
 		/// <summary>
 		/// Parse json object from string
 		/// </summary>
-		/// <param name = "str"> json string </param>
+		/// <param name="str"> json string </param>
 		/// <returns> json object in cascaded dicts and arrays </returns>
 		void RequestParseJson(IScript::Request& request, const String& str);
 
 		/// <summary>
 		/// Open or create a file from local file system
 		/// </summary>
-		/// <param name = "path"> file path </param>
-		/// <param name = "write"> to write file or not </param>
+		/// <param name="path"> file path </param>
+		/// <param name="write"> to write file or not </param>
 		/// <returns> File object </returns>
 		TShared<File> RequestNewFile(IScript::Request& request, const String& path, bool write);
 
 		/// <summary>
 		/// Delete file
 		/// </summary>
-		/// <param name = "path"> file path </param>
+		/// <param name="path"> file path </param>
 		/// <returns></returns>
 		void RequestDeleteFile(IScript::Request& request, const String& path);
 
 		/// <summary>
 		/// Check if specified file exists
 		/// </summary>
-		/// <param name = "path"> file path </param>
+		/// <param name="path"> file path </param>
 		/// <returns></returns>
 		void RequestFileExists(IScript::Request& request, const String& path);
 
 		/// <summary>
 		/// Flush write operations on a file.
 		/// </summary>
-		/// <param name = "file"> File object </param>
+		/// <param name="file"> File object </param>
 		/// <returns></returns>
 		void RequestFlushFile(IScript::Request& request, IScript::Delegate<File> file);
 
 		/// <summary>
 		/// Read data from file
 		/// </summary>
-		/// <param name = "file"> File object </param>
-		/// <param name = "length"> Read length </param>
-		/// <param name = "callback"> optional callback, if it's not empty, the content will be passed into callback in asynchronized way, otherwise the content will be returned in synchronized way </param>
+		/// <param name="file"> File object </param>
+		/// <param name="length"> Read length </param>
+		/// <param name="callback"> optional callback, if it's not empty, the content will be passed into callback in asynchronized way, otherwise the content will be returned in synchronized way </param>
 		/// <returns></returns>
 		void RequestReadFile(IScript::Request& request, IScript::Delegate<File> file, int64_t length, IScript::Request::Ref callback);
 
 		/// <summary>
 		/// Get file size
 		/// </summary>
-		/// <param name = "file"> File object </param>
+		/// <param name="file"> File object </param>
 		/// <returns> file size </returns>
 		uint64_t RequestGetFileSize(IScript::Request& request, IScript::Delegate<File> file);
 
 		/// <summary>
 		/// Get file last modification time
 		/// </summary>
-		/// <param name = "file"> File object </param>
+		/// <param name="file"> File object </param>
 		/// <returns> file last modification time </returns>
 		uint64_t RequestGetFileLastModifiedTime(IScript::Request& request, IScript::Delegate<File> file);
 
 		/// <summary>
 		/// Write data to file
 		/// </summary>
-		/// <param name = "file"> File object </param>
-		/// <param name = "content"> data to write </param>
+		/// <param name="file"> File object </param>
+		/// <param name="content"> data to write </param>
 		/// <returns></returns>
 		void RequestWriteFile(IScript::Request& request, IScript::Delegate<File> file, const String& content, IScript::Request::Ref callback);
 
 		/// <summary>
 		/// Close file in an explicit way.
 		/// </summary>
-		/// <param name = "file"> File object </param>
+		/// <param name="file"> File object </param>
 		/// <returns></returns>
 		void RequestCloseFile(IScript::Request& request, IScript::Delegate<File> file);
 
 		/// <summary>
 		/// Seek file
 		/// </summary>
-		/// <param name = "file"> File object </param>
-		/// <param name = "type"> seek type, can be selected from { "Current", "Begin", "End" } </param>
-		/// <param name = "offset"> seek offset </param>
+		/// <param name="file"> File object </param>
+		/// <param name="type"> seek type, can be selected from { "Current", "Begin", "End" } </param>
+		/// <param name="offset"> seek offset </param>
 		/// <returns></returns>
 		void RequestSeekFile(IScript::Request& request, IScript::Delegate<File> file, const String& type, int64_t offset);
 
 		/// <summary>
 		/// Query files in folder
 		/// </summary>
-		/// <param name = "path"> Folder path </param>
+		/// <param name="path"> Folder path </param>
 		/// <returns> file path list with { string } </returns>
 		void RequestQueryFiles(IScript::Request& request, const String& path);
 
 		/// <summary>
 		/// Fetch whole file data, usually for reading small files.
 		/// </summary>
-		/// <param name = "path"> file path </param>
+		/// <param name="path"> file path </param>
 		/// <returns> file content </returns>
 		void RequestFetchFileData(IScript::Request& request, const String& path);
 
 		/// <summary>
 		/// Create new zip file
 		/// </summary>
-		/// <param name = "path"> target file path </param>
+		/// <param name="path"> target file path </param>
 		/// <returns> Zipper object </returns>
 		TShared<Zipper> RequestNewZipper(IScript::Request& request, const String& path);
 
 		/// <summary>
 		/// Post data to zipper
 		/// </summary>
-		/// <param name = "zipper"> Zipper object </param>
-		/// <param name = "path"> content path </param>
-		/// <param name = "data"> content data </param>
+		/// <param name="zipper"> Zipper object </param>
+		/// <param name="path"> content path </param>
+		/// <param name="data"> content data </param>
 		/// <returns></returns>
 		void RequestPostZipperData(IScript::Request& request, IScript::Delegate<Zipper> zipper, const String& path, const String& data);
 
 		/// <summary>
 		/// Write zipper to file
 		/// </summary>
-		/// <param name = "file"> File object </param>
-		/// <param name = "path"> Zipper object </param>
+		/// <param name="file"> File object </param>
+		/// <param name="path"> Zipper object </param>
 		/// <returns></returns>
 		void RequestWriteZipper(IScript::Request& request, IScript::Delegate<File> file, IScript::Delegate<Zipper> zipper);
 

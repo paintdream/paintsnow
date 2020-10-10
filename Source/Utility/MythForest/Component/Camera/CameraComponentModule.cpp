@@ -15,7 +15,6 @@ TObject<IReflect>& CameraComponentModule::operator () (IReflect& reflect) {
 	if (reflect.IsReflectMethod()) {
 		ReflectMethod(RequestNew)[ScriptMethod = "New"];
 		ReflectMethod(RequestBindRootEntity)[ScriptMethod = "BindRootEntity"];
-		ReflectMethod(RequestComputeCastRayFromPoint)[ScriptMethod = "ComputeCastRayFromPoint"];
 		ReflectMethod(RequestSetPerspective)[ScriptMethod = "SetPerspective"];
 		ReflectMethod(RequestGetPerspective)[ScriptMethod = "GetPerspective"];
 		ReflectMethod(RequestSetVisibleDistance)[ScriptMethod = "SetVisibleDistance"];
@@ -116,11 +115,6 @@ float CameraComponentModule::RequestGetVisibleDistance(IScript::Request& request
 	CHECK_THREAD_IN_MODULE(camera);
 
 	return camera->viewDistance;
-}
-
-// Functions
-void CameraComponentModule::RequestComputeCastRayFromPoint(IScript::Request& request, IScript::Delegate<CameraComponent> camera, Float2& point) {
-	// TODO:
 }
 
 void CameraComponentModule::RequestSetProjectionJitter(IScript::Request& request, IScript::Delegate<CameraComponent> camera, bool jitter) {

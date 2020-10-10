@@ -11,7 +11,6 @@ TObject<IReflect>& SoundComponentModule::operator () (IReflect& reflect) {
 	if (reflect.IsReflectMethod()) {
 		ReflectMethod(RequestNew)[ScriptMethod = "New"];
 		ReflectMethod(RequestGetSourceDuration)[ScriptMethod = "GetSourceDuration"];
-		ReflectMethod(RequestMoveSource)[ScriptMethod = "MoveSource"];
 		ReflectMethod(RequestSeekSource)[ScriptMethod = "SeekSource"];
 		ReflectMethod(RequestPlaySource)[ScriptMethod = "PlaySource"];
 		ReflectMethod(RequestPauseSource)[ScriptMethod = "PauseSource"];
@@ -23,23 +22,13 @@ TObject<IReflect>& SoundComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-TShared<SoundComponent> SoundComponentModule::RequestNew(IScript::Request& request, const String& path, IScript::Request::Ref callback) {
+TShared<SoundComponent> SoundComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<StreamResource> streamResource, IScript::Request::Ref callback) {
 	CHECK_REFERENCES_WITH_TYPE(callback, IScript::Request::FUNCTION);
+	CHECK_DELEGATE(streamResource);
 
-	TShared<StreamResource> audioResource = engine.snowyStream.CreateReflectedResource(UniqueType<StreamResource>(), path);
-	if (audioResource) {
-		TShared<SoundComponent> soundComponent = TShared<SoundComponent>::From(allocator->New(audioResource, callback));
-		soundComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
-		return soundComponent;
-	} else {
-		request.Error(String("SoundComponentModule::RequestNewSource: invalid path '") + path + "'");
-		return nullptr;
-	}
-}
-
-void SoundComponentModule::RequestMoveSource(IScript::Request& request, IScript::Delegate<SoundComponent> source, Float3& pos) {
-	CHECK_REFERENCES_NONE();
-	CHECK_DELEGATE(source);
+	TShared<SoundComponent> soundComponent = TShared<SoundComponent>::From(allocator->New(streamResource.Get(), callback));
+	soundComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
+	return soundComponent;
 }
 
 void SoundComponentModule::RequestSeekSource(IScript::Request& request, IScript::Delegate<SoundComponent> source, double time) {
@@ -48,7 +37,7 @@ void SoundComponentModule::RequestSeekSource(IScript::Request& request, IScript:
 	source->Seek(engine, time);
 }
 
-int64_t SoundComponentModule::RequestGetSourceDuration(IScript::Request& request, IScript::Delegate<SoundComponent> source) {
+double SoundComponentModule::RequestGetSourceDuration(IScript::Request& request, IScript::Delegate<SoundComponent> source) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(source);
 	return source->GetDuration();

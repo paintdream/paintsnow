@@ -95,7 +95,7 @@ Float2 LayoutComponentModule::RequestGetScrollOffset(IScript::Request& request, 
 	return layoutComponent->scrollOffset;
 }
 
-void LayoutComponentModule::RequestSetScrollOffset(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent, Float2& position) {
+void LayoutComponentModule::RequestSetScrollOffset(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent, const Float2& position) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(layoutComponent);
 
@@ -103,7 +103,7 @@ void LayoutComponentModule::RequestSetScrollOffset(IScript::Request& request, IS
 	layoutComponent->SetUpdateMark();
 }
 
-void LayoutComponentModule::RequestSetRect(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent, Float4& rect) {
+void LayoutComponentModule::RequestSetRect(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent, const Float4& rect) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(layoutComponent);
 
@@ -134,7 +134,7 @@ Float4 LayoutComponentModule::RequestGetSize(IScript::Request& request, IScript:
 	return Float4(layoutComponent->size);
 }
 
-void LayoutComponentModule::RequestSetSize(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent, Float4& size) {
+void LayoutComponentModule::RequestSetSize(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent, const Float4& size) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(layoutComponent);
 
@@ -142,7 +142,7 @@ void LayoutComponentModule::RequestSetSize(IScript::Request& request, IScript::D
 	layoutComponent->SetUpdateMark();
 }
 
-void LayoutComponentModule::RequestSetPadding(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent, Float4& size) {
+void LayoutComponentModule::RequestSetPadding(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent, const Float4& size) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(layoutComponent);
 	assert(size.x() >= 0 && size.y() >= 0 && size.z() >= 0 && size.w() >= 0);
@@ -158,7 +158,7 @@ Float4 LayoutComponentModule::RequestGetPadding(IScript::Request& request, IScri
 	return Float4(layoutComponent->padding);
 }
 
-void LayoutComponentModule::RequestSetMargin(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent, Float4& size) {
+void LayoutComponentModule::RequestSetMargin(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent, const Float4& size) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(layoutComponent);
 	

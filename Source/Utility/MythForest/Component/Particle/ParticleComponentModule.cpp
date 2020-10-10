@@ -10,7 +10,6 @@ TObject<IReflect>& ParticleComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 	if (reflect.IsReflectMethod()) {
 		ReflectMethod(RequestNew)[ScriptMethod = "New"];
-		ReflectMethod(RequestRebuild)[ScriptMethod = "Rebuild"];
 	}
 
 	return *this;
@@ -24,9 +23,4 @@ TShared<ParticleComponent> ParticleComponentModule::RequestNew(IScript::Request&
 	return particleComponent;
 }
 
-void ParticleComponentModule::RequestRebuild(IScript::Request& request, IScript::Delegate<ParticleComponent> particleComponent) {
-	CHECK_REFERENCES_NONE();
-	CHECK_DELEGATE(particleComponent);
-
-}
 

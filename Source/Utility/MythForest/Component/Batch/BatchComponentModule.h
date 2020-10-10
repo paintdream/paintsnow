@@ -16,9 +16,18 @@ namespace PaintsNow {
 		TShared<BatchComponent> Create(IRender::Resource::BufferDescription::Usage usage);
 
 	public:
-		// APIs
+		/// <summary>
+		/// Create BatchComponent
+		/// </summary>
+		/// <param name="usage"> batch type </param>
+		/// <returns> BatchComponent object </returns>
 		TShared<BatchComponent> RequestNew(IScript::Request& request, const String& usage);
-		void RequestGetCaptureStatistics(IScript::Request& request, IScript::Delegate<BatchComponent> component);
+
+		/// <summary>
+		/// Get Statistics of a BatchComponnet
+		/// </summary>
+		/// <param name="batchComponent"> the BatchComponent </param>
+		void RequestGetCaptureStatistics(IScript::Request& request, IScript::Delegate<BatchComponent> batchComponent);
 	};
 }
 

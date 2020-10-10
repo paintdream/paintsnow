@@ -16,8 +16,12 @@ namespace PaintsNow {
 		~ShapeComponentModule() override;
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 
+		/// <summary>
+		/// Create ShapeComponent
+		/// </summary>
+		/// <param name="meshResource"> MeshResource object </param>
+		/// <returns> ShapeComponent object </returns>
 		TShared<ShapeComponent> RequestNew(IScript::Request& request, IScript::Delegate<MeshResource> meshResource);
-		void RequestRebuild(IScript::Request& request, IScript::Delegate<ShapeComponent> shapeComponent, Float4& color);
 	};
 }
 

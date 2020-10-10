@@ -19,9 +19,27 @@ namespace PaintsNow {
 		// static int main(int argc, char* argv[]);
 
 	public:
+		/// <summary>
+		/// Create StreamComponent 
+		/// </summary>
+		/// <param name="dimension"> dimension </param>
+		/// <param name="cacheCount"> cache count </param>
+		/// <returns> StreamComponent object </returns>
 		TShared<StreamComponent> RequestNew(IScript::Request& request, const UShort3& dimension, uint16_t cacheCount);
-		void RequestSetStreamLoadHandler(IScript::Request& request, IScript::Delegate<StreamComponent> streamComponent, IScript::Request::Ref ref);
-		void RequestSetStreamUnloadHandler(IScript::Request& request, IScript::Delegate<StreamComponent> streamComponent, IScript::Request::Ref ref);
+
+		/// <summary>
+		/// Set stream load handler
+		/// </summary>
+		/// <param name="streamComponent"> the StreamComponent </param>
+		/// <param name="callback"> load callback </param>
+		void RequestSetStreamLoadHandler(IScript::Request& request, IScript::Delegate<StreamComponent> streamComponent, IScript::Request::Ref callback);
+
+		/// <summary>
+		/// Set stream unload handler 
+		/// </summary>
+		/// <param name="streamComponent"> the StreamComponent </param>
+		/// <param name="callback"> unload callback </param>
+		void RequestSetStreamUnloadHandler(IScript::Request& request, IScript::Delegate<StreamComponent> streamComponent, IScript::Request::Ref callback);
 	};
 }
 

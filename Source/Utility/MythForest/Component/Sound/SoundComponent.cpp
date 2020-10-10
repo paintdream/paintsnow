@@ -38,7 +38,7 @@ bool SoundComponent::IsOnline() const {
 	return !!(Flag() & SOUNDCOMPONENT_ONLINE);
 }
 
-int64_t SoundComponent::GetDuration() const {
+double SoundComponent::GetDuration() const {
 	return 0;
 }
 

@@ -25,40 +25,40 @@ namespace PaintsNow {
 		/// <summary>
 		/// Create a new task graph
 		/// </summary>
-		/// <param name = "statupWarp"> startup warp index of graph </param>
+		/// <param name="statupWarp"> startup warp index of graph </param>
 		/// <returns> TaskGraph object </returns>
 		TShared<TaskGraph> RequestNewGraph(IScript::Request& request, int32_t startupWarp);
 
 		/// <summary>
 		/// Queue a new task to an existing task graph
 		/// </summary>
-		/// <param name = "graph"> TaskGraph object </param>
-		/// <param name = "tiny"> task tiny object </param>
-		/// <param name = "callback"> task callback </param>
+		/// <param name="graph"> TaskGraph object </param>
+		/// <param name="tiny"> task tiny object </param>
+		/// <param name="callback"> task callback </param>
 		/// <returns> Queued task id </returns>
 		void RequestQueueGraphRoutine(IScript::Request& request, IScript::Delegate<TaskGraph> graph, IScript::Delegate<WarpTiny> tiny, IScript::Request::Ref callback);
 
 		/// <summary>
 		/// Set execution dependency between two tasks.
 		/// </summary>
-		/// <param name = "graph"> TaskGraph object </param>
-		/// <param name = "prev"> pre task </param>
-		/// <param name = "next"> post task </param>
+		/// <param name="graph"> TaskGraph object </param>
+		/// <param name="prev"> pre task </param>
+		/// <param name="next"> post task </param>
 		/// <returns></returns>
 		void RequestConnectGraphRoutine(IScript::Request& request, IScript::Delegate<TaskGraph> graph, int32_t prev, int32_t next);
 
 		/// <summary>
 		/// Execute TaskGraph at once
 		/// </summary>
-		/// <param name = "graph"> Execute TaskGraph at once </param>
+		/// <param name="graph"> Execute TaskGraph at once </param>
 		/// <returns></returns>
 		void RequestExecuteGraph(IScript::Request& request, IScript::Delegate<TaskGraph> graph);
 
 		/// <summary>
 		/// Queue a routine based on a tiny
 		/// </summary>
-		/// <param name = "tiny"> the tiny object </param>
-		/// <param name = "callback"> callback </param>
+		/// <param name="tiny"> the tiny object </param>
+		/// <param name="callback"> callback </param>
 		/// <returns></returns>
 		void RequestQueueRoutine(IScript::Request& request, IScript::Delegate<WarpTiny> tiny, IScript::Request::Ref callback);
 

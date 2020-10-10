@@ -21,7 +21,7 @@ namespace PaintsNow {
 		/// <summary>
 		/// Create a clock
 		/// </summary>
-		/// <param name = "interval"> Specifies the clock interval in milliseconds</param>
+		/// <param name="interval"> Specifies the clock interval in milliseconds</param>
 		/// <returns> Clock object </returns>
 		TShared<Clock> RequestNewClock(IScript::Request& request, int64_t interval, int64_t start);
 		void RequestSetClock(IScript::Request& request, IScript::Delegate<Clock> clock, int64_t time);
@@ -29,36 +29,36 @@ namespace PaintsNow {
 		/// <summary>
 		/// Attach queue to clock
 		/// </summary>
-		/// <param name = "clock"> Specifies the clock object </param>
-		/// <param name = "queue"> Specifies the queue object </param>
+		/// <param name="clock"> Specifies the clock object </param>
+		/// <param name="queue"> Specifies the queue object </param>
 		/// <returns> </returns>
 		void RequestAttach(IScript::Request& request, IScript::Delegate<Clock> clock, IScript::Delegate<Queue> queue);
 
 		/// <summary>
 		/// Detach queue from clock
 		/// </summary>
-		/// <param name = "queue"> Specifies the queue object </param>
+		/// <param name="queue"> Specifies the queue object </param>
 		/// <returns> </returns>
 		void RequestDetach(IScript::Request& request, IScript::Delegate<Queue> queue);
 
 		/// <summary>
 		/// Start clock
 		/// </summary>
-		/// <param name = "clock"> Specifies the clock to start </param>
+		/// <param name="clock"> Specifies the clock to start </param>
 		/// <returns> </returns>
 		void RequestStart(IScript::Request& request, IScript::Delegate<Clock> clock);
 
 		/// <summary>
 		/// Pause clock
 		/// </summary>
-		/// <param name = "clock"> Specifies the clock to pause </param>
+		/// <param name="clock"> Specifies the clock to pause </param>
 		/// <returns> </returns>
 		void RequestPause(IScript::Request& request, IScript::Delegate<Clock> clock);
 
 		/// <summary>
 		/// Get current clock time
 		/// </summary>
-		/// <param name = "clock"> Specifies the clock object </param>
+		/// <param name="clock"> Specifies the clock object </param>
 		/// <returns> The current time of the clock specified. </returns>
 		int64_t RequestNow(IScript::Request& request, IScript::Delegate<Clock> clock);
 
@@ -73,32 +73,32 @@ namespace PaintsNow {
 		/// Multiple listener/recorder/loggers on the same queue are also accepted.
 		/// Listener prototype: listener(package)
 		/// </summary>
-		/// <param name = "queue"> Specifies the queue </param>
-		/// <param name = "listener"> Specifies the listener </param>
+		/// <param name="queue"> Specifies the queue </param>
+		/// <param name="listener"> Specifies the listener </param>
 		/// <returns> </returns>
 		void RequestListen(IScript::Request& request, IScript::Delegate<Queue> queue, IScript::Request::Ref listener);
 
 		/// <summary>
 		/// Push an element to specified queue.
 		/// </summary>
-		/// <param name = "queue">Specifies the queue to push</param>
-		/// <param name = "timeStamp">Specifies the key (timeStamp)</param>
-		/// <param name = "element">Specifies the element</param>
+		/// <param name="queue">Specifies the queue to push</param>
+		/// <param name="timeStamp">Specifies the key (timeStamp)</param>
+		/// <param name="element">Specifies the element</param>
 		/// <returns> </returns>
 		void RequestPush(IScript::Request& request, IScript::Delegate<Queue> queue, int64_t timeStamp, IScript::Request::Ref element);
 
 		/// <summary>
 		/// Pop all elements whose timeStamp is less than timeStamp specified.
 		/// </summary>
-		/// <param name = "queue">Specifies the queue to pop</param>
-		/// <param name = "timeStamp">Specifies the key (timeStamp)</param>
+		/// <param name="queue">Specifies the queue to pop</param>
+		/// <param name="timeStamp">Specifies the key (timeStamp)</param>
 		/// <returns> </returns>
 		void RequestPop(IScript::Request& request, IScript::Delegate<Queue> queue, int64_t timeStamp);
 
 		/// <summary>
 		/// Pop/drop all elements
 		/// </summary>
-		/// <param name = "queue"> Specifies the queue to pop</param>
+		/// <param name="queue"> Specifies the queue to pop</param>
 		/// <returns> </returns>
 		void RequestClear(IScript::Request& request, IScript::Delegate<Queue> queue);
 

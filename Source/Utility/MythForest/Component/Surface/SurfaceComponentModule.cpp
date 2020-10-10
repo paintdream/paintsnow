@@ -9,7 +9,6 @@ TObject<IReflect>& SurfaceComponentModule::operator () (IReflect& reflect) {
 
 	if (reflect.IsReflectMethod()) {
 		ReflectMethod(RequestNew)[ScriptMethod = "New"];
-		ReflectMethod(RequestRebuild)[ScriptMethod = "Rebuild"];
 	}
 
 	return *this;
@@ -23,9 +22,3 @@ TShared<SurfaceComponent> SurfaceComponentModule::RequestNew(IScript::Request& r
 	return surfaceComponent;
 }
 
-void SurfaceComponentModule::RequestRebuild(IScript::Request& request, IScript::Delegate<SurfaceComponent> surfaceComponent) {
-	CHECK_REFERENCES_NONE();
-	CHECK_DELEGATE(surfaceComponent);
-
-
-}

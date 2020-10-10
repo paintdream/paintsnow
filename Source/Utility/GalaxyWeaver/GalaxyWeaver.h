@@ -18,37 +18,37 @@ namespace PaintsNow {
 		/// <summary>
 		/// Queue a new weaver object
 		/// </summary>
-		/// <param name = "config"> Weaver config </param>
+		/// <param name="config"> Weaver config </param>
 		/// <returns> Weaver object </returns>
 		TShared<Weaver> RequestNewWeaver(IScript::Request& request, const String& config);
 
 		/// <summary>
 		/// Set RPC callback for weaver
 		/// </summary>
-		/// <param name = "weaver"> Weaver object </param>
-		/// <param name = "callback"> rpc callback </param>
+		/// <param name="weaver"> Weaver object </param>
+		/// <param name="callback"> rpc callback </param>
 		/// <returns></returns>
 		void RequestSetWeaverRpcCallback(IScript::Request& request, IScript::Delegate<Weaver> weaver, IScript::Request::Ref callback);
 
 		/// <summary>
 		/// Set connection callback for weaver
 		/// </summary>
-		/// <param name = "weaver"> Weaver object </param>
-		/// <param name = "callback"> connection callback </param>
+		/// <param name="weaver"> Weaver object </param>
+		/// <param name="callback"> connection callback </param>
 		/// <returns></returns>
 		void RequestSetWeaverConnectionCallback(IScript::Request& request, IScript::Delegate<Weaver> weaver, IScript::Request::Ref callback);
 
 		/// <summary>
 		/// Start weaver
 		/// </summary>
-		/// <param name = "weaver"> Weaver object </param>
+		/// <param name="weaver"> Weaver object </param>
 		/// <returns></returns>
 		void RequestStartWeaver(IScript::Request& request, IScript::Delegate<Weaver> weaver);
 
 		/// <summary>
 		/// Stop weaver
 		/// </summary>
-		/// <param name = "weaver"> Weaver object </param>
+		/// <param name="weaver"> Weaver object </param>
 		/// <returns></returns>
 		void RequestStopWeaver(IScript::Request& request, IScript::Delegate<Weaver> weaver);
 

@@ -21,6 +21,11 @@ namespace PaintsNow {
 			RenderableComponent* p = (T*)nullptr; (void)p;
 		}
 
+		/// <summary>
+		/// Set render policy of RenderableComponent or its derivations
+		/// </summary>
+		/// <param name="renderableComponent"> the RenderableComponent </param>
+		/// <param name="renderPolicy"> the RenderPolicy </param>
 		void RequestSetRenderPolicy(IScript::Request& request, IScript::Delegate<T> renderableComponent, IScript::Delegate<RenderPolicy> renderPolicy) {
 			CHECK_REFERENCES_NONE();
 			CHECK_DELEGATE(renderableComponent);

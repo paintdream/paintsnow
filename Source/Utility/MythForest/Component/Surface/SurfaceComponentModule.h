@@ -14,7 +14,10 @@ namespace PaintsNow {
 		SurfaceComponentModule(Engine& engine);
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 
+		/// <summary>
+		/// Create SurfaceComponent
+		/// </summary>
+		/// <returns> SurfaceComponent object </returns>
 		TShared<SurfaceComponent> RequestNew(IScript::Request& request);
-		void RequestRebuild(IScript::Request& request, IScript::Delegate<SurfaceComponent> surfaceComponent);
 	};
 }

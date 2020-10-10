@@ -45,7 +45,7 @@ void LightComponentModule::RequestSetLightSpotAngle(IScript::Request& request, I
 	lightComponent->spotAngle = spotAngle;
 }*/
 
-void LightComponentModule::RequestSetLightColor(IScript::Request& request, IScript::Delegate<LightComponent> lightComponent, Float3& color) {
+void LightComponentModule::RequestSetLightColor(IScript::Request& request, IScript::Delegate<LightComponent> lightComponent, const Float3& color) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(lightComponent);
 	CHECK_THREAD_IN_MODULE(lightComponent);
@@ -65,7 +65,7 @@ void LightComponentModule::RequestSetLightDirectional(IScript::Request& request,
 	}
 }
 
-void LightComponentModule::RequestSetLightRange(IScript::Request& request, IScript::Delegate<LightComponent> lightComponent, Float3& range) {
+void LightComponentModule::RequestSetLightRange(IScript::Request& request, IScript::Delegate<LightComponent> lightComponent, const Float3& range) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(lightComponent);
 	CHECK_THREAD_IN_MODULE(lightComponent);

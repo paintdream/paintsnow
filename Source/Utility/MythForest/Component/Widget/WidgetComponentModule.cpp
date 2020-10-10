@@ -53,7 +53,7 @@ void WidgetComponentModule::RequestSetWidgetTexture(IScript::Request& request, I
 	widgetComponent->mainTexture = texture.Get();
 }
 
-void WidgetComponentModule::RequestSetWidgetCoord(IScript::Request& request, IScript::Delegate<WidgetComponent> widgetComponent, Float4& inCoord, Float4& outCoord) {
+void WidgetComponentModule::RequestSetWidgetCoord(IScript::Request& request, IScript::Delegate<WidgetComponent> widgetComponent, const Float4& inCoord, const Float4& outCoord) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(widgetComponent);
 	CHECK_THREAD_IN_MODULE(widgetComponent);

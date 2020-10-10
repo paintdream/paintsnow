@@ -19,11 +19,45 @@ namespace PaintsNow {
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		void Initialize() override;
 
-		TShared<TextViewComponent> RequestNew(IScript::Request& request, IScript::Delegate<FontResource> fontResource, IScript::Delegate<BatchComponent> batch, IScript::Delegate<MeshResource> meshResource, IScript::Delegate<MaterialResource> materialResource);
+		/// <summary>
+		/// Create TextViewComponent
+		/// </summary>
+		/// <param name="fontResource"> the FontResource</param>
+		/// <param name="batchComponent"> the BatchComponent</param>
+		/// <param name="meshResource"> the TextView mesh, can be empty (quad mesh default) </param>
+		/// <param name="materialResource"> the TextView material, can be empty </param>
+		/// <returns> TextViewComponent object </returns>
+		TShared<TextViewComponent> RequestNew(IScript::Request& request, IScript::Delegate<FontResource> fontResource, IScript::Delegate<BatchComponent> batchComponent, IScript::Delegate<MeshResource> meshResource, IScript::Delegate<MaterialResource> materialResource);
+
+		/// <summary>
+		/// Set font size of TextViewComponent
+		/// </summary>
+		/// <param name="textViewComponent"> the TextViewComponent </param>
+		/// <param name="fontSize"> the font size</param>
 		void RequestSetFontSize(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent, uint32_t fontSize);
+
+		/// <summary>
+		/// Get text of TextViewComponent
+		/// </summary>
+		/// <param name="textViewComponent"> the TextViewComponent </param>
+		/// <returns> text of TextViewComponent </returns>
 		String RequestGetText(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent);
-		void RequestSetText(IScript::Request& request, IScript::Delegate<TextViewComponent> window, const String& text);
-		Short3 RequestLocateText(IScript::Request& request, IScript::Delegate<TextViewComponent> window, Short2& offset, bool isRowCol);
+
+		/// <summary>
+		/// Set text of TextViewComponent
+		/// </summary>
+		/// <param name="textViewComponent"> the TextViewComponent </param>
+		/// <param name="text"> text to display, support simple text marks </param>
+		void RequestSetText(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent, const String& text);
+
+		/// <summary>
+		/// Locate text position based on raster offset
+		/// </summary>
+		/// <param name="textViewComponent"> the TextViewComponent </param>
+		/// <param name="offset"> raster offset </param>
+		/// <param name="isRowCol"> is row or column </param>
+		/// <returns> text position </returns>
+		Short3 RequestLocateText(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent, const Short2& offset, bool isRowCol);
 
 	protected:
 		TShared<MaterialResource> defaultTextMaterial;

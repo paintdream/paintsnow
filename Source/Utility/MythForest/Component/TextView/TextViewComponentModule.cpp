@@ -67,7 +67,7 @@ void TextViewComponentModule::RequestSetText(IScript::Request& request, IScript:
 	textViewComponent->SetText(engine, text);
 }
 
-Short3 TextViewComponentModule::RequestLocateText(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent, Short2& offset, bool isRowCol) {
+Short3 TextViewComponentModule::RequestLocateText(IScript::Request& request, IScript::Delegate<TextViewComponent> textViewComponent, const Short2& offset, bool isRowCol) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(textViewComponent);
 

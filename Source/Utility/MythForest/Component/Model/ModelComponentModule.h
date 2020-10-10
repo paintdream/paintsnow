@@ -17,7 +17,20 @@ namespace PaintsNow {
 
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 
-		TShared<ModelComponent> RequestNew(IScript::Request& request, IScript::Delegate<MeshResource> modelResource, IScript::Delegate<BatchComponent> batchComponentHost);
+		/// <summary>
+		/// Create ModelComponent
+		/// </summary>
+		/// <param name="meshResource"> MeshResource object </param>
+		/// <param name="batchComponentHost"> BatchComponent object </param>
+		/// <returns> ModelComponent object </returns>
+		TShared<ModelComponent> RequestNew(IScript::Request& request, IScript::Delegate<MeshResource> meshResource, IScript::Delegate<BatchComponent> batchComponentHost);
+
+		/// <summary>
+		/// Set Material for ModelComponent
+		/// </summary>
+		/// <param name="modelComponent"> the ModelComponent </param>
+		/// <param name="meshGroupIndex"> index of mesh group </param>
+		/// <param name="materialResource"> the MaterialResource </param>
 		void RequestSetMaterial(IScript::Request& request, IScript::Delegate<ModelComponent> modelComponent, uint32_t meshGroupIndex, IScript::Delegate<MaterialResource> materialResource);
 
 	protected:

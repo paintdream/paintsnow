@@ -24,7 +24,7 @@ namespace PaintsNow {
 		void Uninitialize(Engine& engine, Entity* entity) override;
 
 		void Step(IScript::Request& request);
-		int64_t GetDuration() const;
+		double GetDuration() const;
 		void Seek(Engine& engine, double time);
 		void Play(Engine& engine);
 		void Pause(Engine& engine);

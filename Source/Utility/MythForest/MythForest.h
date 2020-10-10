@@ -32,20 +32,95 @@ namespace PaintsNow {
 		Engine& GetEngine();
 
 	public:
+		/// <summary>
+		/// Enumerate all component modules
+		/// </summary>
+		/// <returns> A component module list with { Module } </returns>
 		void RequestEnumerateComponentModules(IScript::Request& request);
 
-		// Entity-Component System APIs.
+		/// <summary>
+		/// Create new entity
+		/// </summary>
+		/// <param name="warp"> warp index </param>
+		/// <returns></returns>
 		TShared<Entity> RequestNewEntity(IScript::Request& request, int32_t warp);
+
+		/// <summary>
+		/// Add component to entity
+		/// </summary>
+		/// <param name="entity"> the Entity </param>
+		/// <param name="component"> the Component to be added </param>
 		void RequestAddEntityComponent(IScript::Request& request, IScript::Delegate<Entity> entity, IScript::Delegate<Component> component);
+
+		/// <summary>
+		/// Remove component from entity
+		/// </summary>
+		/// <param name="entity"> the Entity </param>
+		/// <param name="component"> the Component to remove </param>
 		void RequestRemoveEntityComponent(IScript::Request& request, IScript::Delegate<Entity> entity, IScript::Delegate<Component> component);
+
+		/// <summary>
+		/// Update entity mask
+		/// </summary>
+		/// <param name="entity"> the Entity </param>
 		void RequestUpdateEntity(IScript::Request& request, IScript::Delegate<Entity> entity);
+
+		/// <summary>
+		/// Get all components of an entity
+		/// </summary>
+		/// <param name="entity"> the Entity </param>
+		/// <returns> A component list with { Component } </returns>
 		void RequestGetEntityComponents(IScript::Request& request, IScript::Delegate<Entity> entity);
+
+		/// <summary>
+		/// Get type of given component
+		/// </summary>
+		/// <param name="component"> the Component </param>
+		/// <returns> type of component (in string form) </returns>
 		String RequestGetComponentType(IScript::Request& request, IScript::Delegate<Component> component);
-		TShared<Component> RequestGetUniqueEntityComponent(IScript::Request& request, IScript::Delegate<Entity> entity, const String& componentName);
+
+		/// <summary>
+		/// Get unique component from entity with specified type
+		/// </summary>
+		/// <param name="entity"> the Entity </param>
+		/// <param name="componentType"> component type name</param>
+		/// <returns> Component if exists, otherwise null would be returned </returns>
+		TShared<Component> RequestGetUniqueEntityComponent(IScript::Request& request, IScript::Delegate<Entity> entity, const String& componentType);
+
+		/// <summary>
+		/// Remove all components from an entity
+		/// </summary>
+		/// <param name="entity"> the Entity </param>
 		void RequestClearEntityComponents(IScript::Request& request, IScript::Delegate<Entity> entity);
+
+		/// <summary>
+		/// Get last tick time of render device
+		/// </summary>
+		/// <returns> tick time </returns>
 		uint64_t RequestGetFrameTickTime(IScript::Request& request);
+
+		/// <summary>
+		/// Add callback for next device frame
+		/// </summary>
+		/// <param name="entity"> the Entity that holds the callback </param>
+		/// <param name="callback"> the callback </param>
 		void RequestWaitForNextFrame(IScript::Request& request, IScript::Delegate<Entity> entity, IScript::Request::Ref callback);
+
+		/// <summary>
+		/// Cast a ray from specified entity's space and gather the hit geometries
+		/// </summary>
+		/// <param name="entity"> the Entity </param>
+		/// <param name="callback"> on hit callback </param>
+		/// <param name="from"> ray start position </param>
+		/// <param name="dir"> ray direction </param>
+		/// <param name="count"> max hit count </param>
 		void RequestRaycast(IScript::Request& request, IScript::Delegate<Entity> entity, IScript::Request::Ref callback, const Float3& from, const Float3& dir, uint32_t count);
+
+		/// <summary>
+		/// [Debug] capture a render frame (usually a renderdoc dump file)
+		/// </summary>
+		/// <param name="path"> output path </param>
+		/// <param name="options"> options </param>
 		void RequestCaptureFrame(IScript::Request& request, const String& path, const String& options);
 
 		// Build-in sub modules

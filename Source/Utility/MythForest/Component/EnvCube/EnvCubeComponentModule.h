@@ -16,8 +16,24 @@ namespace PaintsNow {
 		~EnvCubeComponentModule() override;
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 
+		/// <summary>
+		/// Create EnvCubeComponent
+		/// </summary>
+		/// <returns> EnvCubeComponent object </returns>
 		TShared<EnvCubeComponent> RequestNew(IScript::Request& request);
+
+		/// <summary>
+		/// Set texture of EnvCubeComponent
+		/// </summary>
+		/// <param name="envCubeComponent"> the EnvCubeComponent </param>
+		/// <param name="textureResource"> cubemap texture resource </param>
 		void RequestSetTexture(IScript::Request& request, IScript::Delegate<EnvCubeComponent> envCubeComponent, IScript::Delegate<TextureResource> textureResource);
+
+		/// <summary>
+		/// Set effect range of EnvCubeComponent
+		/// </summary>
+		/// <param name="envCubeComponent"> the EnvCubeComponent </param>`
+		/// <param name="range"> cube effect range </param>
 		void RequestSetRange(IScript::Request& request, IScript::Delegate<EnvCubeComponent> envCubeComponent, Float3& range);
 	};
 }

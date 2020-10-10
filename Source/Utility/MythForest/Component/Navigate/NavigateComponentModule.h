@@ -16,8 +16,11 @@ namespace PaintsNow {
 		~NavigateComponentModule() override;
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 
+		/// <summary>
+		/// Create NavigateComponent
+		/// </summary>
+		/// <returns> NavigateComponent object </returns>
 		TShared<NavigateComponent> RequestNew(IScript::Request& request);
-		void RequestRebuild(IScript::Request& request, IScript::Delegate<NavigateComponent> fieldComponent);
 	};
 }
 

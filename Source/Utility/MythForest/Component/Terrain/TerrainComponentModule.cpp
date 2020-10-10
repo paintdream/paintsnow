@@ -9,7 +9,6 @@ TObject<IReflect>& TerrainComponentModule::operator () (IReflect& reflect) {
 
 	if (reflect.IsReflectMethod()) {
 		ReflectMethod(RequestNew)[ScriptMethod = "New"];
-		ReflectMethod(RequestRebuild)[ScriptMethod = "Rebuild"];
 	}
 
 	return *this;
@@ -24,9 +23,3 @@ TShared<TerrainComponent> TerrainComponentModule::RequestNew(IScript::Request& r
 	return terrainComponent;
 }
 
-void TerrainComponentModule::RequestRebuild(IScript::Request& request, IScript::Delegate<TerrainComponent> terrainComponent) {
-	CHECK_REFERENCES_NONE();
-	CHECK_DELEGATE(terrainComponent);
-
-
-}
