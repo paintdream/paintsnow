@@ -38,7 +38,9 @@ void ShadowMaskRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 	screenTransform.vertexBuffer.resource = quadMeshResource->bufferCollection.positionBuffer;
 	ShadowMaskFS& mask = Pass.mask;
 	mask.depthTexture.resource = InputDepth.textureResource->GetRenderResource();
-	mask.shadowTexture.resource = emptyShadowMask->GetRenderResource();
+	mask.shadowTexture0.resource = emptyShadowMask->GetRenderResource();
+	mask.shadowTexture1.resource = emptyShadowMask->GetRenderResource();
+	mask.shadowTexture2.resource = emptyShadowMask->GetRenderResource();
 
 	MatrixFloat4x4 inverseMatrix = CameraView->inverseProjectionMatrix * CameraView->inverseViewMatrix;
 
@@ -48,9 +50,20 @@ void ShadowMaskRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 		for (size_t j = 0; j < element.shadows.size(); j++) {
 			RenderPortLightSource::LightElement::Shadow& shadow = element.shadows[j];
 			if (shadow.shadowTexture) {
-				mask.reprojectionMatrix = inverseMatrix * shadow.shadowMatrix;
-				mask.shadowTexture.resource = shadow.shadowTexture->GetRenderResource();
-				break;
+				switch (j) {
+				case 0:
+					mask.reprojectionMatrix0 = inverseMatrix * shadow.shadowMatrix;
+					mask.shadowTexture0.resource = shadow.shadowTexture->GetRenderResource();
+					break;
+				case 1:
+					mask.reprojectionMatrix1 = inverseMatrix * shadow.shadowMatrix;
+					mask.shadowTexture1.resource = shadow.shadowTexture->GetRenderResource();
+					break;
+				case 2:
+					mask.reprojectionMatrix2 = inverseMatrix * shadow.shadowMatrix;
+					mask.shadowTexture2.resource = shadow.shadowTexture->GetRenderResource();
+					break;
+				}
 			}
 		}
 	}
