@@ -82,8 +82,8 @@ void PhaseComponent::Initialize(Engine& engine, Entity* entity) {
 		}
 
 		SnowyStream& snowyStream = engine.snowyStream;
-		const String path = "[Runtime]/MeshResource/StandardSquare";
-		quadMeshResource = snowyStream.CreateReflectedResource(UniqueType<MeshResource>(), path, true, 0, nullptr);
+		const String path = "[Runtime]/MeshResource/StandardQuad";
+		meshResource = snowyStream.CreateReflectedResource(UniqueType<MeshResource>(), path, true, 0, nullptr);
 
 		tracePipeline = snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), ShaderResource::GetShaderPathPrefix() + UniqueType<MultiHashTracePass>::Get()->GetBriefName())->QueryInterface(UniqueType<ShaderResourceImpl<MultiHashTracePass> >());
 		setupPipeline = snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), ShaderResource::GetShaderPathPrefix() + UniqueType<MultiHashSetupPass>::Get()->GetBriefName())->QueryInterface(UniqueType<ShaderResourceImpl<MultiHashSetupPass> >());

@@ -223,7 +223,7 @@ namespace PaintsNow {
 		TShared<ShaderResourceImpl<MultiHashTracePass> > tracePipeline;
 		TShared<ShaderResourceImpl<MultiHashSetupPass> > setupPipeline;
 		TShared<ShaderResourceImpl<ConstMapPass> > shadowPipeline;
-		TShared<MeshResource> quadMeshResource;
+		TShared<MeshResource> meshResource;
 
 		std::vector<TaskData> tasks;
 		std::vector<Phase> phases;

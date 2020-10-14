@@ -39,7 +39,7 @@ void ScreenRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) 
 void ScreenRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 	ScreenPass& Pass = GetPass();
 	ScreenTransformVS& screenTransform = Pass.screenTransform;
-	screenTransform.vertexBuffer.resource = quadMeshResource->bufferCollection.positionBuffer;
+	screenTransform.vertexBuffer.resource = meshResource->bufferCollection.positionBuffer;
 	ScreenFS& ScreenFS = Pass.shaderScreen;
 	ScreenFS.inputColorTexture.resource = InputColor.textureResource->GetRenderResource();
 	assert(BloomLayers.size() > 0);

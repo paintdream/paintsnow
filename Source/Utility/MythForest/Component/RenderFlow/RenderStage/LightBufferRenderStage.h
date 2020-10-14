@@ -12,7 +12,7 @@
 #include "../../../../SnowyStream/Resource/Passes/LightBufferPass.h"
 
 namespace PaintsNow {
-	class LightBufferRenderStage : public TReflected<LightBufferRenderStage, GeneralRenderStageRect<LightBufferPass> > {
+	class LightBufferRenderStage : public TReflected<LightBufferRenderStage, GeneralRenderStageMesh<LightBufferPass> > {
 	public:
 		LightBufferRenderStage(const String& config = "1");
 		void PrepareResources(Engine& engine, IRender::Queue* queue) override;

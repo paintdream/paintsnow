@@ -185,12 +185,11 @@ void RenderFlowComponent::ResolveSamplessAttachments() {
 				RenderPortRenderTargetStore* rt = portInfo.port->QueryInterface(UniqueType<RenderPortRenderTargetStore>());
 				if (rt != nullptr) {
 					RenderPortRenderTargetLoad* loader = rt->QueryLoad();
-					if (loader == nullptr) {
+					if (loader == nullptr || loader->GetLinks().empty()) {
 						targetUnions[rt] = rt;
 						// set sampless as default.
 						rt->renderTargetDescription.state.media = IRender::Resource::TextureDescription::RENDERBUFFER;
 					} else {
-						assert(!loader->GetLinks().empty());
 						RenderPortRenderTargetStore* parent = loader->GetLinks().back().port->QueryInterface(UniqueType<RenderPortRenderTargetStore>());
 						assert(parent != nullptr);
 						targetUnions[rt] = targetUnions[parent];
@@ -198,7 +197,8 @@ void RenderFlowComponent::ResolveSamplessAttachments() {
 
 					// check sampless
 					for (size_t n = 0; n < rt->GetLinks().size(); n++) {
-						if (!rt->GetLinks()[n].port->QueryInterface(UniqueType<RenderPortRenderTargetLoad>())) {
+						loader = rt->GetLinks()[n].port->QueryInterface(UniqueType<RenderPortRenderTargetLoad>());
+						if (loader == nullptr || loader->GetLinks().empty()) {
 							targetUnions[rt]->renderTargetDescription.state.media = IRender::Resource::TextureDescription::TEXTURE_RESOURCE;
 							break;
 						}
@@ -232,41 +232,44 @@ void RenderFlowComponent::SetupTextures(Engine& engine) {
 				const RenderStage::PortInfo& portInfo = portInfos[k];
 				RenderPortRenderTargetStore* rt = portInfo.port->QueryInterface(UniqueType<RenderPortRenderTargetStore>());
 
-				if (rt != nullptr && rt->QueryLoad() == nullptr) {
-					// trying to allocate from cache
-					TextureKey textureKey;
-					textureKey.state = rt->renderTargetDescription.state;
-					textureKey.dimension = rt->renderTargetDescription.dimension;
-					TextureMap::iterator it = textureMap.find(textureKey);
-					TShared<TextureResource> texture;
+				if (rt != nullptr) {
+					RenderPortRenderTargetLoad* loader = rt->QueryLoad();
+					if (loader == nullptr || loader->GetLinks().empty()) {
+						// trying to allocate from cache
+						TextureKey textureKey;
+						textureKey.state = rt->renderTargetDescription.state;
+						textureKey.dimension = rt->renderTargetDescription.dimension;
+						TextureMap::iterator it = textureMap.find(textureKey);
+						TShared<TextureResource> texture;
 
-					if (it != textureMap.end()) {
-						for (size_t n = 0; n < (*it).second.size(); n++) {
-							TShared<TextureResource>& res = (*it).second[n];
-							size_t& v = textureRefMap[res()];
-							if (v == 0) { // reuseable
-								texture = res;
-								v = rt->GetLinks().size() + 1;
-								stageHolders.emplace_back(&v);
-								break;
+						if (it != textureMap.end()) {
+							for (size_t n = 0; n < (*it).second.size(); n++) {
+								TShared<TextureResource>& res = (*it).second[n];
+								size_t& v = textureRefMap[res()];
+								if (v == 0) { // reuseable
+									texture = res;
+									v = rt->GetLinks().size() + 1;
+									stageHolders.emplace_back(&v);
+									break;
+								}
 							}
 						}
+
+						if (!texture) {
+							texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("RT", rt), false, 0, nullptr);
+							texture->description.state = textureKey.state;
+							texture->description.dimension = textureKey.dimension;
+							texture->Flag().fetch_or(TINY_MODIFIED, std::memory_order_relaxed);
+							texture->GetResourceManager().InvokeUpload(texture(), resourceQueue);
+
+							TextureList& textureList = textureMap[textureKey];
+							textureList.emplace_back(texture);
+
+							textureRefMap[texture()] = rt->GetLinks().size() + 1;
+						}
+
+						rt->attachedTexture = texture;
 					}
-
-					if (!texture) {
-						texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("RT", rt), false, 0, nullptr);
-						texture->description.state = textureKey.state;
-						texture->description.dimension = textureKey.dimension;
-						texture->Flag().fetch_or(TINY_MODIFIED, std::memory_order_relaxed);
-						texture->GetResourceManager().InvokeUpload(texture(), resourceQueue);
-
-						TextureList& textureList = textureMap[textureKey];
-						textureList.emplace_back(texture);
-
-						textureRefMap[texture()] = rt->GetLinks().size() + 1;
-					}
-
-					rt->attachedTexture = texture;
 				}
 			}
 

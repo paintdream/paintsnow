@@ -35,7 +35,7 @@ void DepthBoundingRenderStage::PrepareResources(Engine& engine, IRender::Queue* 
 void DepthBoundingRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 	DepthBoundingPass& Pass = GetPass();
 	ScreenTransformVS& screenTransform = Pass.transform;
-	screenTransform.vertexBuffer.resource = quadMeshResource->bufferCollection.positionBuffer;
+	screenTransform.vertexBuffer.resource = meshResource->bufferCollection.positionBuffer;
 	DepthMinMaxFS& minmax = Pass.minmax;
 	minmax.depthTexture.resource = InputDepth.textureResource->GetRenderResource();
 	const UShort3& dim = OutputDepth.renderTargetDescription.dimension;

@@ -10,7 +10,7 @@ WidgetComponentModule::WidgetComponentModule(Engine& engine) : BaseClass(engine)
 
 void WidgetComponentModule::Initialize() {
 	SnowyStream& snowyStream = engine.snowyStream;
-	widgetMesh = snowyStream.CreateReflectedResource(UniqueType<MeshResource>(), "[Runtime]/MeshResource/StandardSquare");
+	widgetMesh = snowyStream.CreateReflectedResource(UniqueType<MeshResource>(), "[Runtime]/MeshResource/StandardQuad");
 	defaultWidgetMaterial = snowyStream.CreateReflectedResource(UniqueType<MaterialResource>(), "[Runtime]/MaterialResource/Widget");
 }
 

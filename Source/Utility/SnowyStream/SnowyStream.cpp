@@ -29,7 +29,6 @@
 #include "Resource/Passes/WidgetPass.h"
 #include "../../Core/System/MemoryStream.h"
 #include "../../General/Driver/Filter/Json/Core/json.h"
-#include <iterator>
 
 using namespace PaintsNow;
 
@@ -867,31 +866,14 @@ void SnowyStream::CreateBuiltinSolidTexture(const String& path, const UChar4& co
 	}
 }
 
-void SnowyStream::CreateBuiltinResources() {
-	// MeshResource for widget rendering and deferred rendering ...
-	TShared<MeshResource> meshResource = CreateReflectedResource(UniqueType<MeshResource>(), "[Runtime]/MeshResource/StandardSquare", false, ResourceBase::RESOURCE_ETERNAL);
+void SnowyStream::CreateBuiltinMesh(const String& path, const Float3* vertices, size_t vertexCount, const UInt3* indices, size_t indexCount) {
+	TShared<MeshResource> meshResource = CreateReflectedResource(UniqueType<MeshResource>(), path, false, ResourceBase::RESOURCE_ETERNAL);
 	IRender& render = interfaces.render;
 
 	if (meshResource) {
-		static const Float3 vertices[] = {
-			Float3(-1.0f, -1.0f, 0.0f),
-			Float3(1.0f, -1.0f, 0.0f),
-			Float3(1.0f, 1.0f, 0.0f),
-			Float3(-1.0f, 1.0f, 0.0f),
-		};
 
-		/*
-		static const Float4 texCoords[] = {
-			Float4(0.0f, 0.0f, 0.0f, 0.0f),
-			Float4(1.0f, 0.0f, 1.0f, 0.0f),
-			Float4(1.0f, 1.0f, 1.0f, 1.0f),
-			Float4(0.0f, 1.0f, 0.0f, 1.0f)
-		};*/
-
-		static const UInt3 indices[] = { UInt3(0, 1, 2), UInt3(2, 3, 0) };
-		// No UVs
-		std::copy(vertices, vertices + sizeof(vertices) / sizeof(vertices[0]), std::back_inserter(meshResource->meshCollection.vertices));
-		std::copy(indices, indices + sizeof(indices) / sizeof(indices[0]), std::back_inserter(meshResource->meshCollection.indices));
+		meshResource->meshCollection.vertices.assign(vertices, vertices + vertexCount);
+		meshResource->meshCollection.indices.assign(indices, indices + indexCount);
 
 		// add mesh group
 		IAsset::MeshGroup group;
@@ -901,8 +883,44 @@ void SnowyStream::CreateBuiltinResources() {
 		meshResource->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
 		meshResource->GetResourceManager().InvokeUpload(meshResource());
 	} else {
-		errorHandler("Unable to create builtin mesh ...");
+		errorHandler(String("Unable to create builtin mesh: ") + path);
 	}
+}
+
+void SnowyStream::CreateBuiltinResources() {
+	// MeshResource for widget rendering and deferred rendering ...
+	static const Float3 quadVertices[] = {
+		Float3(-1.0f, -1.0f, 0.0f),
+		Float3(1.0f, -1.0f, 0.0f),
+		Float3(1.0f, 1.0f, 0.0f),
+		Float3(-1.0f, 1.0f, 0.0f),
+	};
+
+	static const UInt3 quadIndices[] = { UInt3(0, 1, 2), UInt3(2, 3, 0) };
+
+	CreateBuiltinMesh("[Runtime]/MeshResource/StandardQuad", quadVertices, sizeof(quadVertices) / sizeof(quadVertices[0]), quadIndices, sizeof(quadIndices) / sizeof(quadIndices[0]));
+
+	static const Float3 cubeVertices[] = {
+		Float3(-1.0f, -1.0f, -1.0f),
+		Float3(1.0f, -1.0f, -1.0f),
+		Float3(1.0f, 1.0f, -1.0f),
+		Float3(-1.0f, 1.0f, -1.0f),
+		Float3(-1.0f, -1.0f, 1.0f),
+		Float3(1.0f, -1.0f, 1.0f),
+		Float3(1.0f, 1.0f, 1.0f),
+		Float3(-1.0f, 1.0f, 1.0f),
+	};
+
+	static const UInt3 cubeIndices[] = {
+		UInt3(0, 1, 2), UInt3(2, 3, 0), // bottom
+		UInt3(0, 7, 4), UInt3(0, 3, 7), // left
+		UInt3(0, 4, 5), UInt3(0, 5, 1), // back
+		UInt3(4, 6, 5), UInt3(6, 4, 7), // top
+		UInt3(1, 5, 6), UInt3(1, 6, 2), // right
+		UInt3(3, 2, 6), UInt3(3, 6, 7), // front
+	};
+
+	CreateBuiltinMesh("[Runtime]/MeshResource/StandardCube", cubeVertices, sizeof(cubeVertices) / sizeof(cubeVertices[0]), cubeIndices, sizeof(cubeIndices) / sizeof(cubeIndices[0]));
 
 	CreateBuiltinSolidTexture("[Runtime]/TextureResource/Black", UChar4(0, 0, 0, 0));
 	CreateBuiltinSolidTexture("[Runtime]/TextureResource/White", UChar4(255, 255, 255, 255));

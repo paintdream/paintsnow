@@ -10,7 +10,7 @@
 #include "../../../../SnowyStream/Resource/Passes/DepthBoundingPass.h"
 
 namespace PaintsNow {
-	class DepthBoundingRenderStage : public TReflected<DepthBoundingRenderStage, GeneralRenderStageRect<DepthBoundingPass> > {
+	class DepthBoundingRenderStage : public TReflected<DepthBoundingRenderStage, GeneralRenderStageMesh<DepthBoundingPass> > {
 	public:
 		DepthBoundingRenderStage(const String& config = "1");
 		void PrepareResources(Engine& engine, IRender::Queue* queue) override;

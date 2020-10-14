@@ -48,7 +48,7 @@ void DeferredLightingRenderStage::PrepareResources(Engine& engine, IRender::Queu
 void DeferredLightingRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 	DeferredLightingPass& Pass = GetPass();
 	ScreenTransformVS& screenTransform = Pass.screenTransform;
-	screenTransform.vertexBuffer.resource = quadMeshResource->bufferCollection.positionBuffer;
+	screenTransform.vertexBuffer.resource = meshResource->bufferCollection.positionBuffer;
 	DeferredCompactDecodeFS& compactDecode = Pass.deferredCompactDecode;
 	compactDecode.BaseColorOcclusionTexture.resource = BaseColorOcclusion.textureResource->GetRenderResource();
 	compactDecode.NormalRoughnessMetallicTexture.resource = NormalRoughnessMetallic.textureResource->GetRenderResource();

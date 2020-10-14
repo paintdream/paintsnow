@@ -269,6 +269,7 @@ namespace PaintsNow {
 		void RegisterReflectedSerializers();
 		bool FilterPath(const String& path);
 		void CreateBuiltinSolidTexture(const String& path, const UChar4& color);
+		void CreateBuiltinMesh(const String& path, const Float3* vertices, size_t vertexCount, const UInt3* indices, size_t indexCount);
 
 	protected:
 		Interfaces& interfaces;

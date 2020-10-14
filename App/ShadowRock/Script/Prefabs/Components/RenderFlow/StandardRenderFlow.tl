@@ -34,11 +34,24 @@ function StandardRenderFlow.New(bloomLayerCount : number) : RenderFlowComponent
 	renderFlowComponent:LinkRenderStagePort(stageLightBuffer, "LightSource", stageDeferredLighting, "LightSource")
 	renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "CameraView", stageDeferredLighting, "CameraView")
 
-	local stageShadowMask : RenderStage = renderFlowComponent:NewRenderStage("ShadowMaskRenderStage", "1")
-	renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "CameraView", stageShadowMask, "CameraView")
-	renderFlowComponent:LinkRenderStagePort(stageLightBuffer, "LightSource", stageShadowMask, "LightSource")
-	renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "Depth", stageShadowMask, "InputDepth")
-	renderFlowComponent:LinkRenderStagePort(stageShadowMask, "OutputMask", stageDeferredLighting, "ShadowTexture")
+	local lastShadowMask : RenderStage = nil
+	for i = 1, 3 do
+		local stageShadowMask : RenderStage = renderFlowComponent:NewRenderStage("ShadowMaskRenderStage", tostring(i - 1))
+		renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "CameraView", stageShadowMask, "CameraView")
+		renderFlowComponent:LinkRenderStagePort(stageLightBuffer, "LightSource", stageShadowMask, "LightSource")
+		renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "Depth", stageShadowMask, "InputDepth")
+
+		if lastShadowMask then
+			renderFlowComponent:LinkRenderStagePort(lastShadowMask, "OutputMask", stageShadowMask, "InputMask")
+		end
+
+		if i == 3 then
+			renderFlowComponent:LinkRenderStagePort(stageShadowMask, "OutputMask", stageDeferredLighting, "ShadowTexture")
+		end
+
+		lastShadowMask = stageShadowMask
+	end
+	
 
 	-- Step 3: Anti-Aliasing
 	local stageColorBarrier : RenderStage = renderFlowComponent:NewRenderStage("FrameBarrierRenderStage", "")
@@ -82,6 +95,7 @@ function StandardRenderFlow.New(bloomLayerCount : number) : RenderFlowComponent
 	renderFlowComponent:ExportRenderStagePort(stageGeometryBuffer, "CameraView", "CameraView")
 	renderFlowComponent:ExportRenderStagePort(stageScreen, "OutputColor", "SceneColor")
 	renderFlowComponent:ExportRenderStagePort(stageWidget, "Widgets", "Widgets")
+
 	return renderFlowComponent
 end
 

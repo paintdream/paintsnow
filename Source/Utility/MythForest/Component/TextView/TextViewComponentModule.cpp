@@ -10,7 +10,7 @@ TextViewComponentModule::TextViewComponentModule(Engine& engine) : BaseClass(eng
 
 void TextViewComponentModule::Initialize() {
 	defaultTextMaterial = engine.snowyStream.CreateReflectedResource(UniqueType<MaterialResource>(), "[Runtime]/MaterialResource/Text");
-	defaultTextMesh = engine.snowyStream.CreateReflectedResource(UniqueType<MeshResource>(), "[Runtime]/MeshResource/StandardSquare");
+	defaultTextMesh = engine.snowyStream.CreateReflectedResource(UniqueType<MeshResource>(), "[Runtime]/MeshResource/StandardQuad");
 }
 
 TextViewComponentModule::~TextViewComponentModule() {}

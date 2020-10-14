@@ -31,7 +31,7 @@ void DepthResolveRenderStage::PrepareResources(Engine& engine, IRender::Queue* q
 void DepthResolveRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 	DepthResolvePass& Pass = GetPass();
 	ScreenTransformVS& screenTransform = Pass.transform;
-	screenTransform.vertexBuffer.resource = quadMeshResource->bufferCollection.positionBuffer;
+	screenTransform.vertexBuffer.resource = meshResource->bufferCollection.positionBuffer;
 	DepthResolveFS& resolve = Pass.resolve;
 	resolve.depthTexture.resource = InputDepth.textureResource->GetRenderResource();
 

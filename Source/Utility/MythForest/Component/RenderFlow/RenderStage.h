@@ -80,16 +80,20 @@ namespace PaintsNow {
 	};
 
 	template <class T>
-	class GeneralRenderStageRect : public TReflected<GeneralRenderStageRect<T>, GeneralRenderStage<T> > {
+	class GeneralRenderStageMesh : public TReflected<GeneralRenderStageMesh<T>, GeneralRenderStage<T> > {
 	public:
 		// gcc do not support referencing base type in template class. manunaly specified here.
-		typedef TReflected<GeneralRenderStageRect<T>, GeneralRenderStage<T> > BaseClass;
-		GeneralRenderStageRect(uint32_t colorAttachmentCount = 1) : BaseClass(colorAttachmentCount) {}
+		typedef TReflected<GeneralRenderStageMesh<T>, GeneralRenderStage<T> > BaseClass;
+		GeneralRenderStageMesh(uint32_t colorAttachmentCount = 1) : BaseClass(colorAttachmentCount) {}
+
 		void PrepareResources(Engine& engine, IRender::Queue* queue) override {
 			// create specified shader resource (if not exists)
-			const String path = "[Runtime]/MeshResource/StandardSquare";
-			quadMeshResource = engine.snowyStream.CreateReflectedResource(UniqueType<MeshResource>(), path, true, 0, nullptr);
-			assert(quadMeshResource->Flag() & ResourceBase::RESOURCE_UPLOADED);
+			if (!meshResource) {
+				const String path = "[Runtime]/MeshResource/StandardQuad";
+				meshResource = engine.snowyStream.CreateReflectedResource(UniqueType<MeshResource>(), path, true, 0, nullptr);
+			}
+
+			assert(meshResource->Flag() & ResourceBase::RESOURCE_UPLOADED);
 			BaseClass::PrepareResources(engine, queue);
 		}
 
@@ -106,7 +110,7 @@ namespace PaintsNow {
 				assert(BaseClass::newResources.empty());
 				updater.Update(render, queue, drawCallDescription, BaseClass::newResources, bufferData,
 					(1 << IRender::Resource::BufferDescription::VERTEX) | (1 << IRender::Resource::BufferDescription::UNIFORM) | (1 << IRender::Resource::BufferDescription::INSTANCED));
-				drawCallDescription.indexBufferResource.buffer = quadMeshResource->bufferCollection.indexBuffer;
+				drawCallDescription.indexBufferResource.buffer = meshResource->bufferCollection.indexBuffer;
 				drawCallDescription.shaderResource = BaseClass::GetShaderResource();
 				BaseClass::drawCallResource = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_DRAWCALL);
 			} else {
@@ -127,7 +131,7 @@ namespace PaintsNow {
 		}
 
 	protected:
-		TShared<MeshResource> quadMeshResource;
+		TShared<MeshResource> meshResource;
 		IRender::Resource::DrawCallDescription drawCallDescription;
 	};
 }

@@ -5,7 +5,12 @@
 
 using namespace PaintsNow;
 
-ShadowMaskRenderStage::ShadowMaskRenderStage(const String& config) : OutputMask(renderTargetDescription.colorStorages[0]) {}
+ShadowMaskRenderStage::ShadowMaskRenderStage(const String& config) : OutputMask(renderTargetDescription.colorStorages[0]), InputMask(renderTargetDescription.colorStorages[0]) {
+	layerIndex = atoi(config.c_str());
+	IRender::Resource::RenderStateDescription& s = renderStateDescription;
+	s.cullFrontFace = 1;
+	s.depthTest = IRender::Resource::RenderStateDescription::DISABLED;
+}
 
 TObject<IReflect>& ShadowMaskRenderStage::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
@@ -14,6 +19,7 @@ TObject<IReflect>& ShadowMaskRenderStage::operator () (IReflect& reflect) {
 		ReflectProperty(LightSource);
 		ReflectProperty(CameraView);
 		ReflectProperty(InputDepth);
+		ReflectProperty(InputMask);
 		ReflectProperty(OutputMask);
 	}
 
@@ -22,12 +28,21 @@ TObject<IReflect>& ShadowMaskRenderStage::operator () (IReflect& reflect) {
 
 void ShadowMaskRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	SnowyStream& snowyStream = engine.snowyStream;
-	OutputMask.renderTargetDescription.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
-	OutputMask.renderTargetDescription.state.layout = IRender::Resource::TextureDescription::R;
-	OutputMask.renderTargetDescription.state.immutable = false;
-	OutputMask.renderTargetDescription.state.attachment = true;
+
+	if (InputMask.GetLinks().empty()) {
+		OutputMask.renderTargetDescription.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
+		OutputMask.renderTargetDescription.state.layout = IRender::Resource::TextureDescription::R;
+		OutputMask.renderTargetDescription.state.immutable = false;
+		OutputMask.renderTargetDescription.state.attachment = true;
+
+		renderTargetDescription.colorStorages[0].loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
+	}
 
 	emptyShadowMask = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), "[Runtime]/TextureResource/Black", true, 0, nullptr);
+
+	const String path = "[Runtime]/MeshResource/StandardCube";
+	meshResource = engine.snowyStream.CreateReflectedResource(UniqueType<MeshResource>(), path, true, 0, nullptr);
+	assert(meshResource->Flag() & ResourceBase::RESOURCE_UPLOADED);
 
 	BaseClass::PrepareResources(engine, queue);
 }
@@ -35,35 +50,22 @@ void ShadowMaskRenderStage::PrepareResources(Engine& engine, IRender::Queue* que
 void ShadowMaskRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 	ShadowMaskPass& Pass = GetPass();
 	ScreenTransformVS& screenTransform = Pass.transform;
-	screenTransform.vertexBuffer.resource = quadMeshResource->bufferCollection.positionBuffer;
+	screenTransform.vertexBuffer.resource = meshResource->bufferCollection.positionBuffer;
 	ShadowMaskFS& mask = Pass.mask;
 	mask.depthTexture.resource = InputDepth.textureResource->GetRenderResource();
-	mask.shadowTexture0.resource = emptyShadowMask->GetRenderResource();
-	mask.shadowTexture1.resource = emptyShadowMask->GetRenderResource();
-	mask.shadowTexture2.resource = emptyShadowMask->GetRenderResource();
+	mask.shadowTexture.resource = emptyShadowMask->GetRenderResource();
 
 	MatrixFloat4x4 inverseMatrix = CameraView->inverseProjectionMatrix * CameraView->inverseViewMatrix;
 
 	for (size_t i = 0; i < LightSource->lightElements.size(); i++) {
 		RenderPortLightSource::LightElement& element = LightSource->lightElements[i];
 		// just get first shadow
-		for (size_t j = 0; j < element.shadows.size(); j++) {
-			RenderPortLightSource::LightElement::Shadow& shadow = element.shadows[j];
+		if (layerIndex < element.shadows.size()) {
+			RenderPortLightSource::LightElement::Shadow& shadow = element.shadows[layerIndex];
+			mask.reprojectionMatrix = inverseMatrix * shadow.shadowMatrix;
+
 			if (shadow.shadowTexture) {
-				switch (j) {
-				case 0:
-					mask.reprojectionMatrix0 = inverseMatrix * shadow.shadowMatrix;
-					mask.shadowTexture0.resource = shadow.shadowTexture->GetRenderResource();
-					break;
-				case 1:
-					mask.reprojectionMatrix1 = inverseMatrix * shadow.shadowMatrix;
-					mask.shadowTexture1.resource = shadow.shadowTexture->GetRenderResource();
-					break;
-				case 2:
-					mask.reprojectionMatrix2 = inverseMatrix * shadow.shadowMatrix;
-					mask.shadowTexture2.resource = shadow.shadowTexture->GetRenderResource();
-					break;
-				}
+				mask.shadowTexture.resource = shadow.shadowTexture->GetRenderResource();
 			}
 		}
 	}

@@ -10,7 +10,7 @@
 #include "../../../../SnowyStream/Resource/Passes/DepthResolvePass.h"
 
 namespace PaintsNow {
-	class DepthResolveRenderStage : public TReflected<DepthResolveRenderStage, GeneralRenderStageRect<DepthResolvePass> > {
+	class DepthResolveRenderStage : public TReflected<DepthResolveRenderStage, GeneralRenderStageMesh<DepthResolvePass> > {
 	public:
 		DepthResolveRenderStage(const String& config = "1");
 		void PrepareResources(Engine& engine, IRender::Queue* queue) override;

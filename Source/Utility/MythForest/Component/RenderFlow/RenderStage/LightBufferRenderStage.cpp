@@ -42,7 +42,7 @@ void LightBufferRenderStage::Uninitialize(Engine& engine, IRender::Queue* queue)
 void LightBufferRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 	LightBufferPass& Pass = GetPass();
 	ScreenTransformVS& screenTransform = Pass.transform;
-	screenTransform.vertexBuffer.resource = quadMeshResource->bufferCollection.positionBuffer;
+	screenTransform.vertexBuffer.resource = meshResource->bufferCollection.positionBuffer;
 	LightEncoderFS& encoder = Pass.encoder;
 	encoder.depthTexture.resource = InputDepth.textureResource->GetRenderResource();
 	encoder.inverseProjectionMatrix = CameraView->inverseProjectionMatrix;

@@ -12,7 +12,7 @@
 #include "../../../../SnowyStream/Resource/Passes/ShadowMaskPass.h"
 
 namespace PaintsNow {
-	class ShadowMaskRenderStage : public TReflected<ShadowMaskRenderStage, GeneralRenderStageRect<ShadowMaskPass> > {
+	class ShadowMaskRenderStage : public TReflected<ShadowMaskRenderStage, GeneralRenderStageMesh<ShadowMaskPass> > {
 	public:
 		ShadowMaskRenderStage(const String& config = "1");
 		void PrepareResources(Engine& engine, IRender::Queue* queue) override;
@@ -23,7 +23,9 @@ namespace PaintsNow {
 		TRenderPortReference<RenderPortLightSource> LightSource;
 		TRenderPortReference<RenderPortCameraView> CameraView;
 		RenderPortTextureInput InputDepth;
+		RenderPortRenderTargetLoad InputMask; // optional
 		RenderPortRenderTargetStore OutputMask;
+		size_t layerIndex;
 
 		TShared<TextureResource> emptyShadowMask;
 	};

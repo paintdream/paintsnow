@@ -33,7 +33,7 @@ void AntiAliasingRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) 
 	// Do not update pass in UpdatePass(engine)
 	AntiAliasingPass& Pass = GetPass();
 	ScreenTransformVS& screenTransform = Pass.transform;
-	screenTransform.vertexBuffer.resource = quadMeshResource->bufferCollection.positionBuffer;
+	screenTransform.vertexBuffer.resource = meshResource->bufferCollection.positionBuffer;
 	
 	AntiAliasingFS& antiAliasing = Pass.antiAliasing;
 	antiAliasing.inputTexture.resource = InputColor.textureResource->GetRenderResource();

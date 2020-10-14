@@ -11,7 +11,7 @@
 #include "../../../../SnowyStream/Resource/Passes/AntiAliasingPass.h"
 
 namespace PaintsNow {
-	class AntiAliasingRenderStage : public TReflected<AntiAliasingRenderStage, GeneralRenderStageRect<AntiAliasingPass> > {
+	class AntiAliasingRenderStage : public TReflected<AntiAliasingRenderStage, GeneralRenderStageMesh<AntiAliasingPass> > {
 	public:
 		AntiAliasingRenderStage(const String& options);
 		void PrepareResources(Engine& engine, IRender::Queue* queue) override;

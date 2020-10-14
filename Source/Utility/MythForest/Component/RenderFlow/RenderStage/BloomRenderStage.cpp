@@ -30,7 +30,7 @@ void BloomRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 void BloomRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 	BloomPass& Pass = GetPass();
 	ScreenTransformVS& screenTransform = Pass.screenTransform;
-	screenTransform.vertexBuffer.resource = quadMeshResource->bufferCollection.positionBuffer;
+	screenTransform.vertexBuffer.resource = meshResource->bufferCollection.positionBuffer;
 	
 	BloomFS& bloom = Pass.screenBloom;
 	bloom.screenTexture.resource = InputColor.textureResource->GetRenderResource();

@@ -11,7 +11,7 @@
 #include "../../../../SnowyStream/Resource/Passes/ConstMapPass.h"
 
 namespace PaintsNow {
-	class StencilMaskRenderStage : public TReflected<StencilMaskRenderStage, GeneralRenderStageRect<ConstMapPass> > {
+	class StencilMaskRenderStage : public TReflected<StencilMaskRenderStage, GeneralRenderStageMesh<ConstMapPass> > {
 	public:
 		StencilMaskRenderStage(const String& config = "1");
 		void PrepareResources(Engine& engine, IRender::Queue* queue) override;
