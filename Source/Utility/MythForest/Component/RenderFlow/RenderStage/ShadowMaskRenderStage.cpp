@@ -5,11 +5,15 @@
 
 using namespace PaintsNow;
 
-ShadowMaskRenderStage::ShadowMaskRenderStage(const String& config) : OutputMask(renderTargetDescription.colorStorages[0]), InputMask(renderTargetDescription.colorStorages[0]) {
+ShadowMaskRenderStage::ShadowMaskRenderStage(const String& config) : OutputMask(renderTargetDescription.colorStorages[0]), InputMask(renderTargetDescription.colorStorages[0]), LoadDepth(renderTargetDescription.depthStorage) {
 	layerIndex = atoi(config.c_str());
 	IRender::Resource::RenderStateDescription& s = renderStateDescription;
 	s.cullFrontFace = 1;
+	s.stencilTest = IRender::Resource::RenderStateDescription::GREATER;
+	s.stencilWrite = 1;
+	s.stencilReplacePass = 1;
 	s.depthTest = IRender::Resource::RenderStateDescription::DISABLED;
+	s.depthWrite = 0;
 }
 
 TObject<IReflect>& ShadowMaskRenderStage::operator () (IReflect& reflect) {
@@ -19,6 +23,7 @@ TObject<IReflect>& ShadowMaskRenderStage::operator () (IReflect& reflect) {
 		ReflectProperty(LightSource);
 		ReflectProperty(CameraView);
 		ReflectProperty(InputDepth);
+		ReflectProperty(LoadDepth);
 		ReflectProperty(InputMask);
 		ReflectProperty(OutputMask);
 	}
@@ -38,6 +43,7 @@ void ShadowMaskRenderStage::PrepareResources(Engine& engine, IRender::Queue* que
 		renderTargetDescription.colorStorages[0].loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
 	}
 
+
 	emptyShadowMask = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), "[Runtime]/TextureResource/Black", true, 0, nullptr);
 
 	const String path = "[Runtime]/MeshResource/StandardCube";
@@ -54,6 +60,12 @@ void ShadowMaskRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 	ShadowMaskFS& mask = Pass.mask;
 	mask.depthTexture.resource = InputDepth.textureResource->GetRenderResource();
 	mask.shadowTexture.resource = emptyShadowMask->GetRenderResource();
+
+	if (renderStateDescription.stencilMask != LightSource->stencilShadow) {
+		renderStateDescription.stencilMask = renderStateDescription.stencilValue = LightSource->stencilShadow;
+		IRender& render = engine.interfaces.render;
+		render.UploadResource(queue, renderState, &renderStateDescription);
+	}
 
 	MatrixFloat4x4 inverseMatrix = CameraView->inverseProjectionMatrix * CameraView->inverseViewMatrix;
 

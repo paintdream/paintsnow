@@ -24,6 +24,7 @@ namespace PaintsNow {
 		TRenderPortReference<RenderPortCameraView> CameraView;
 		RenderPortTextureInput InputDepth;
 		RenderPortRenderTargetLoad InputMask; // optional
+		RenderPortRenderTargetLoad LoadDepth;
 		RenderPortRenderTargetStore OutputMask;
 		size_t layerIndex;
 

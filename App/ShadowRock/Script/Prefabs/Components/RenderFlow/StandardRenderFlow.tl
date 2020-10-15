@@ -40,6 +40,7 @@ function StandardRenderFlow.New(bloomLayerCount : number) : RenderFlowComponent
 		renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "CameraView", stageShadowMask, "CameraView")
 		renderFlowComponent:LinkRenderStagePort(stageLightBuffer, "LightSource", stageShadowMask, "LightSource")
 		renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "Depth", stageShadowMask, "InputDepth")
+		renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "Depth", stageShadowMask, "LoadDepth")
 
 		if lastShadowMask then
 			renderFlowComponent:LinkRenderStagePort(lastShadowMask, "OutputMask", stageShadowMask, "InputMask")

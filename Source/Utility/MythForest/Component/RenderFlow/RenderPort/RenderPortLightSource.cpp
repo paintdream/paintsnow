@@ -3,7 +3,7 @@
 
 using namespace PaintsNow;
 
-RenderPortLightSource::RenderPortLightSource() : stencilMask(0) {}
+RenderPortLightSource::RenderPortLightSource() : stencilMask(0), stencilShadow(0) {}
 
 TObject<IReflect>& RenderPortLightSource::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);

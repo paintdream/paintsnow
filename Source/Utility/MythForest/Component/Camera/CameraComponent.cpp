@@ -27,8 +27,9 @@ using namespace PaintsNow;
 // From glu source code
 const double PI = 3.14159265358979323846;
 enum {
-	STENCIL_REFLECTION = 0x20,
-	STENCIL_BLOOM = 0x40,
+	STENCIL_SHADOW = 0x10,
+	// STENCIL_REFLECTION = 0x20,
+	// STENCIL_BLOOM = 0x40,
 	STENCIL_LIGHTING = 0x80
 };
 
@@ -406,6 +407,7 @@ void CameraComponent::CommitRenderRequests(Engine& engine, TaskData& taskData, I
 							portLightSource->stencilMask = STENCIL_LIGHTING;
 						}
 
+						portLightSource->stencilShadow = STENCIL_SHADOW;
 						portLightSource->lightElements.emplace_back(std::move(element));
 
 						if (element.position.w() == 0) {
@@ -569,6 +571,7 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 		// Add Lighting stencil
 		assert(!(drawCall.renderStateDescription.stencilValue & STENCIL_LIGHTING));
 		drawCall.renderStateDescription.stencilValue |= STENCIL_LIGHTING;
+		drawCall.renderStateDescription.stencilMask |= STENCIL_LIGHTING;
 
 		// Generate key
 		InstanceKey key;

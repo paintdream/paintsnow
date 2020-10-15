@@ -1181,7 +1181,7 @@ struct ResourceImplOpenGL<IRender::Resource::RenderStateDescription> final : pub
 			glStencilOp(d.stencilReplaceFail ? GL_REPLACE : GL_KEEP, d.stencilReplaceZFail ? GL_REPLACE : GL_KEEP, d.stencilReplacePass ? GL_REPLACE : GL_KEEP);
 		}
 		
-		glStencilMask(d.stencilWrite ? 0xFFFFFFFF : 0);
+		glStencilMask(d.stencilWrite ? d.stencilMask : 0);
 
 		// alpha
 		// Alpha test is not always available
@@ -1385,8 +1385,8 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> final : pu
 			}
 
 			if (d.stencilStorage.loadOp == IRender::Resource::RenderTargetDescription::CLEAR) {
-				if (!queue.device->lastRenderState.stencilWrite) {
-					glStencilMask(0xFFFFFFFF);
+				if (!queue.device->lastRenderState.stencilWrite || queue.device->lastRenderState.stencilMask != 0xFF) {
+					glStencilMask(0xFF);
 				}
 
 				clearMask |= GL_STENCIL_BUFFER_BIT;
@@ -1441,8 +1441,8 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> final : pu
 			}
 
 			if (d.stencilStorage.loadOp == IRender::Resource::RenderTargetDescription::CLEAR) {
-				if (!queue.device->lastRenderState.stencilWrite) {
-					glStencilMask(0);
+				if (!queue.device->lastRenderState.stencilWrite || queue.device->lastRenderState.stencilMask != 0xFF) {
+					glStencilMask(queue.device->lastRenderState.stencilMask);
 				}
 			}
 

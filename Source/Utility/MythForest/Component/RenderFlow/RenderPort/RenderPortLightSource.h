@@ -42,7 +42,8 @@ namespace PaintsNow {
 		TShared<TextureResource> cubeMapTexture;
 		TShared<TextureResource> skyMapTexture;
 		uint8_t stencilMask;
-		uint8_t reserved[3];
+		uint8_t stencilShadow;
+		uint8_t reserved[2];
 	};
 }
 
