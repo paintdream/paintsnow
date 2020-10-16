@@ -751,6 +751,7 @@ void CameraComponent::CollectLightComponent(Engine& engine, LightComponent* ligh
 			RenderPortLightSource::LightElement::Shadow shadow;
 			shadow.shadowTexture = grid->Flag() & TINY_MODIFIED ? nullptr : grid->texture;
 			shadow.shadowMatrix = grid->shadowMatrix;
+			shadow.lightMatrix = grid->lightMatrix;
 			element.shadows.emplace_back(std::move(shadow));
 		}
 	} else {

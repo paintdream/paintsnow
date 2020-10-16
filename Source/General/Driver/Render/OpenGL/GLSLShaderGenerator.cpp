@@ -276,12 +276,14 @@ void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refT
 
 		if (typeID == uniqueBindBuffer) {
 			const IShader::BindBuffer* bindBuffer = static_cast<const IShader::BindBuffer*>(&s);
-			mapBufferDeclaration[bindBuffer] = std::make_pair(String(name), String(""));
-			mapBufferEnabled[bindBuffer] = enabled;
-			if (bindBuffer->description.usage == IRender::Resource::BufferDescription::UNIFORM || IRender::Resource::BufferDescription::STORAGE) {
-				bufferBindings.emplace_back(std::make_pair(bindBuffer, String("_") + name));
-			} else {
-				bufferBindings.emplace_back(std::make_pair(bindBuffer, name));
+			if (bindBuffer->description.usage != IRender::Resource::BufferDescription::UNIFORM || enabled) {
+				mapBufferDeclaration[bindBuffer] = std::make_pair(String(name), String(""));
+				mapBufferEnabled[bindBuffer] = enabled;
+				if (bindBuffer->description.usage == IRender::Resource::BufferDescription::UNIFORM || IRender::Resource::BufferDescription::STORAGE) {
+					bufferBindings.emplace_back(std::make_pair(bindBuffer, String("_") + name));
+				} else {
+					bufferBindings.emplace_back(std::make_pair(bindBuffer, name));
+				}
 			}
 		} else if (typeID == uniqueBindTexture) {
 			assert(enabled);

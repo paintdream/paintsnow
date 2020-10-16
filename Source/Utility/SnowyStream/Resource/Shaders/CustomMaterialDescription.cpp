@@ -110,7 +110,8 @@ void CustomShaderDescription::ReflectInputTemplate(IReflect& reflect) {
 
 		Unique type = UniqueFromVariableType(var.type);
 		static IReflectObject dummy;
-		DummyMetaChain<IShader::BindInput> bindInput(IShader::BindInput(IShader::BindInput::TEXCOORD + safe_cast<uint32_t>(i)));
+		IShader::BindInput slot((uint32_t)IShader::BindInput::TEXCOORD + safe_cast<uint32_t>(i));
+		DummyMetaChain<IShader::BindInput> bindInput(slot);
 		// Make alignment
 		uint32_t size = safe_cast<uint32_t>(type->GetSize());
 		offset = (offset + size - 1) & (size - 1); // make alignment for variable
@@ -130,7 +131,8 @@ void CustomShaderDescription::ReflectOutputTemplate(IReflect& reflect) {
 
 		Unique type = UniqueFromVariableType(var.type);
 		static IReflectObject dummy;
-		DummyMetaChain<IShader::BindOutput> bindOutput(IShader::BindOutput(IShader::BindOutput::TEXCOORD + safe_cast<uint32_t>(i)));
+		IShader::BindOutput slot((uint32_t)IShader::BindOutput::TEXCOORD + safe_cast<uint32_t>(i));
+		DummyMetaChain<IShader::BindOutput> bindOutput(slot);
 		// Make alignment
 		uint32_t size = safe_cast<uint32_t>(type->GetSize());
 		offset = (offset + size - 1) & (size - 1); // make alignment for variable

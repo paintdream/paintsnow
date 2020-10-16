@@ -19,6 +19,7 @@ namespace PaintsNow {
 
 			struct Shadow {
 				MatrixFloat4x4 shadowMatrix;
+				MatrixFloat4x4 lightMatrix;
 				TShared<TextureResource> shadowTexture;
 			};
 

@@ -1014,6 +1014,7 @@ struct ResourceImplOpenGL<IRender::Resource::ShaderDescription> final : public R
 
 				for (size_t k = 0; k < declaration.bufferBindings.size(); k++) {
 					std::pair<const IShader::BindBuffer*, String>& item = declaration.bufferBindings[k];
+					assert(std::find(uniformBufferNames.begin(), uniformBufferNames.end(), item.second) == uniformBufferNames.end());
 					if (item.first->description.usage == IRender::Resource::BufferDescription::UNIFORM) {
 						uniformBufferNames.emplace_back(item.second);
 					} else if (item.first->description.usage == IRender::Resource::BufferDescription::STORAGE) {

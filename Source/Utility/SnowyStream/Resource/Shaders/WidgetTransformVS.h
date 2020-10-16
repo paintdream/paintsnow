@@ -19,7 +19,7 @@ namespace PaintsNow {
 		IShader::BindBuffer vertexBuffer;
 
 		// Input attribs
-		Float3 unitPositionTexCoord;
+		Float3 vertexPosition;
 
 		// instanced
 		MatrixFloat4x4 worldMatrix;

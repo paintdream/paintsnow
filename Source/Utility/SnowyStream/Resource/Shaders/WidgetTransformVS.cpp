@@ -11,12 +11,12 @@ WidgetTransformVS::WidgetTransformVS() {
 
 String WidgetTransformVS::GetShaderText() {
 	return UnifyShaderCode(
-		position.xyz = unitPositionTexCoord;
+		position.xyz = vertexPosition;
 		position.w = 1;
 		position = mult_vec(worldMatrix, position);
 
 		// copy outputs
-		texCoord = unitPositionTexCoord.xyxy;
+		texCoord = vertexPosition.xyxy;
 
 		float4 scale = mult_vec(worldMatrix, float4(1, 1, 0, 0));
 		scale.zw = subTexMark.xy + float2(1.0, 1.0) - subTexMark.zw; // in ratio
@@ -36,7 +36,7 @@ TObject<IReflect>& WidgetTransformVS::operator () (IReflect& reflect) {
 		ReflectProperty(vertexBuffer);
 		ReflectProperty(instanceBuffer);
 
-		ReflectProperty(unitPositionTexCoord)[vertexBuffer][BindInput(BindInput::POSITION)];
+		ReflectProperty(vertexPosition)[vertexBuffer][BindInput(BindInput::POSITION)];
 		ReflectProperty(worldMatrix)[instanceBuffer][BindInput(BindInput::TRANSFORM_WORLD)];
 		ReflectProperty(subTexMark)[instanceBuffer][BindInput(BindInput::TEXCOORD)];
 		ReflectProperty(mainCoordRect)[instanceBuffer][BindInput(BindInput::TEXCOORD + 1)];

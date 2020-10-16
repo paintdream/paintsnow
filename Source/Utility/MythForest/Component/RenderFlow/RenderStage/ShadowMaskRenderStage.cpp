@@ -75,6 +75,7 @@ void ShadowMaskRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 		if (layerIndex < element.shadows.size()) {
 			RenderPortLightSource::LightElement::Shadow& shadow = element.shadows[layerIndex];
 			mask.reprojectionMatrix = inverseMatrix * shadow.shadowMatrix;
+			screenTransform.worldTransform = shadow.lightMatrix * CameraView->viewMatrix * CameraView->projectionMatrix;
 
 			if (shadow.shadowTexture) {
 				mask.shadowTexture.resource = shadow.shadowTexture->GetRenderResource();

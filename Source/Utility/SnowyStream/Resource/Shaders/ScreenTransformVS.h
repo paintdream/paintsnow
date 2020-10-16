@@ -14,10 +14,15 @@ namespace PaintsNow {
 		String GetShaderText() override;
 
 		IShader::BindBuffer vertexBuffer;
+		IShader::BindBuffer transformBuffer;
 
-	protected:
-		Float3 unitPositionTexCoord;
+		bool enableVertexTransform;
+		bool reserved[3];
+
+		Float3 vertexPosition;
 		Float2 rasterCoord;
+
+		MatrixFloat4x4 worldTransform;
 
 		// Output vars
 		Float4 position;

@@ -123,6 +123,7 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 		// calculate position
 		CaptureData captureData;
 		MatrixFloat4x4 viewMatrix = shadowContext->lightTransformMatrix;
+		shadowGrid->lightMatrix = viewMatrix;
 		viewMatrix(3, 0) = shadowContext->cameraWorldMatrix(3, 0);
 		viewMatrix(3, 1) = shadowContext->cameraWorldMatrix(3, 1);
 		viewMatrix(3, 2) = shadowContext->cameraWorldMatrix(3, 2);
