@@ -15,7 +15,7 @@ namespace PaintsNow {
 
 		BindTexture noiseTexture;
 
-		Float2 rasterCoord;
+		Float4 rasterCoord;
 		Float4 tintColor;
 	};
 }

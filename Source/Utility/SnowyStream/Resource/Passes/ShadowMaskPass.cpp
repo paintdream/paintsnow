@@ -4,6 +4,7 @@ using namespace PaintsNow;
 
 ShadowMaskPass::ShadowMaskPass() {
 	transform.enableVertexTransform = true;
+	transform.enableRasterCoord = false;
 }
 
 TObject<IReflect>& ShadowMaskPass::operator () (IReflect& reflect) {

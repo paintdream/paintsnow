@@ -12,7 +12,7 @@ TObject<IReflect>& MultiHashSetupFS::operator () (IReflect& reflect) {
 	if (reflect.IsReflectProperty()) {
 		ReflectProperty(noiseTexture);
 
-		ReflectProperty(rasterCoord)[BindInput(BindInput::TEXCOORD)];
+		ReflectProperty(rasterCoord)[BindInput(BindInput::RASTERCOORD)];
 		ReflectProperty(tintColor)[BindOutput(BindOutput::LOCAL)];
 	}
 
