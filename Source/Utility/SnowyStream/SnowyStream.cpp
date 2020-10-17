@@ -912,12 +912,12 @@ void SnowyStream::CreateBuiltinResources() {
 	};
 
 	static const UInt3 cubeIndices[] = {
-		UInt3(0, 1, 2), UInt3(2, 3, 0), // bottom
-		UInt3(0, 7, 4), UInt3(0, 3, 7), // left
-		UInt3(0, 4, 5), UInt3(0, 5, 1), // back
-		UInt3(4, 6, 5), UInt3(6, 4, 7), // top
-		UInt3(1, 5, 6), UInt3(1, 6, 2), // right
-		UInt3(3, 2, 6), UInt3(3, 6, 7), // front
+		UInt3(0, 2, 1), UInt3(2, 0, 3), // bottom
+		UInt3(0, 4, 7), UInt3(0, 7, 3), // left
+		UInt3(0, 5, 4), UInt3(0, 1, 5), // back
+		UInt3(4, 5, 6), UInt3(6, 7, 4), // top
+		UInt3(1, 6, 5), UInt3(1, 2, 6), // right
+		UInt3(3, 6, 2), UInt3(3, 7, 6), // front
 	};
 
 	CreateBuiltinMesh("[Runtime]/MeshResource/StandardCube", cubeVertices, sizeof(cubeVertices) / sizeof(cubeVertices[0]), cubeIndices, sizeof(cubeIndices) / sizeof(cubeIndices[0]));

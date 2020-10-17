@@ -19,9 +19,10 @@ namespace PaintsNow {
 
 		// Uniforms
 		MatrixFloat4x4 reprojectionMatrix;
+		Float2 invScreenSize;
 
 		// Inputs
-		Float2 rasterCoord;
+		Float4 rasterCoord;
 
 		// Outputs
 		Float4 shadow;

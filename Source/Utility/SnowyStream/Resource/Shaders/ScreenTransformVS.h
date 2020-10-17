@@ -17,7 +17,8 @@ namespace PaintsNow {
 		IShader::BindBuffer transformBuffer;
 
 		bool enableVertexTransform;
-		bool reserved[3];
+		bool enableRasterCoord;
+		bool reserved[2];
 
 		Float3 vertexPosition;
 		Float2 rasterCoord;

@@ -18,7 +18,7 @@ namespace PaintsNow {
 
 	protected:
 		// Vertex shaders
-		StandardTransformVS screenTransform;
+		StandardTransformVS standardTransform;
 		// Fragment shaders
 		StandardParameterFS shaderParameter;
 		DeferredCompactEncodeFS shaderCompactEncode;

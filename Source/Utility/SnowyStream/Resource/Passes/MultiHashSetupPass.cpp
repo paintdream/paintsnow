@@ -2,9 +2,7 @@
 
 using namespace PaintsNow;
 
-MultiHashSetupPass::MultiHashSetupPass() {
-	standardTransform.enableRasterCoord = true;
-}
+MultiHashSetupPass::MultiHashSetupPass() {}
 
 TObject<IReflect>& MultiHashSetupPass::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);

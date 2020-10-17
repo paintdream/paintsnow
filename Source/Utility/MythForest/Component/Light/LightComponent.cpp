@@ -80,7 +80,6 @@ LightComponent::ShadowLayer::ShadowLayer(Engine& engine) : gridSize(1), scale(1)
 }
 
 TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engine, const UShort3& coord, const TShared<SharedTiny>& tiny, const TShared<SharedTiny>& context) {
-	assert(coord.z() == 0);
 	assert(context);
 
 	// Do nothing by now
@@ -122,14 +121,8 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 
 		// calculate position
 		CaptureData captureData;
-		MatrixFloat4x4 viewMatrix = shadowContext->lightTransformMatrix;
-		shadowGrid->lightMatrix = viewMatrix;
-		viewMatrix(3, 0) = shadowContext->cameraWorldMatrix(3, 0);
-		viewMatrix(3, 1) = shadowContext->cameraWorldMatrix(3, 1);
-		viewMatrix(3, 2) = shadowContext->cameraWorldMatrix(3, 2);
-
+		const MatrixFloat4x4& viewMatrix = shadowContext->lightTransformMatrix;
 		OrthoCamera::UpdateCaptureData(captureData, viewMatrix);
-
 		WorldInstanceData instanceData;
 		instanceData.worldMatrix = shadowGrid->shadowMatrix = Math::QuickInverse(Math::Scale(viewMatrix, Float4(1, -1, -1, 1)));
 		taskData->rootEntity = shadowContext->rootEntity; // in case of gc
@@ -536,15 +529,23 @@ TShared<LightComponent::ShadowGrid> LightComponent::ShadowLayer::UpdateShadow(En
 	Float3 lightCoord = Math::Transform3D(Math::QuickInverse(lightTransform), position);
 	const UShort3& dimension = streamComponent->GetDimension();
 
+	int x = int(lightCoord.x() / gridSize), y = int(lightCoord.y() / gridSize), z = int(lightCoord.z() / gridSize);
+
 	UShort3 coord(
-		safe_cast<uint16_t>((int(lightCoord.x() / gridSize) % dimension.x() + dimension.x()) % dimension.x()),
-		safe_cast<uint16_t>((int(lightCoord.y() / gridSize) % dimension.y() + dimension.y()) % dimension.y()),
-		0);
+		safe_cast<uint16_t>((x % dimension.x() + dimension.x()) % dimension.x()),
+		safe_cast<uint16_t>((y % dimension.y() + dimension.y()) % dimension.y()),
+		safe_cast<uint16_t>((z % dimension.z() + dimension.z()) % dimension.z()));
 
 	TShared<ShadowContext> shadowContext = TShared<ShadowContext>::From(new ShadowContext());
 	shadowContext->rootEntity = rootEntity;
-	shadowContext->cameraWorldMatrix = cameraTransform;
-	shadowContext->lightTransformMatrix = Math::Scale(lightTransform, Float4(scale, scale, scale, 1));
+	shadowContext->lightTransformMatrix = Math::Scale(lightTransform, Float4(scale, scale, scale * 5, 1));
+
+	// Make alignment
+	Float3 alignedPosition = Math::Transform3D(lightTransform, Float3(x * gridSize, y * gridSize, z * gridSize));
+	shadowContext->lightTransformMatrix(3, 0) = alignedPosition.x();
+	shadowContext->lightTransformMatrix(3, 1) = alignedPosition.y();
+	shadowContext->lightTransformMatrix(3, 2) = alignedPosition.z();
+
 	TShared<ShadowGrid> grid = streamComponent->Load(engine, coord, shadowContext())->QueryInterface(UniqueType<ShadowGrid>());
 	assert(grid);
 

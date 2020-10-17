@@ -119,7 +119,6 @@ namespace PaintsNow {
 		public:
 			TShared<TextureResource> texture;
 			MatrixFloat4x4 shadowMatrix;
-			MatrixFloat4x4 lightMatrix;
 		};
 
 		std::vector<TShared<ShadowGrid> > UpdateShadow(Engine& engine, const MatrixFloat4x4& viewTransform, const MatrixFloat4x4& lightTransform, Entity* rootEntity);
@@ -128,7 +127,6 @@ namespace PaintsNow {
 	protected:
 		class ShadowContext : public TReflected<ShadowContext, SharedTiny> {
 		public:
-			MatrixFloat4x4 cameraWorldMatrix;
 			MatrixFloat4x4 lightTransformMatrix;
 			TShared<Entity> rootEntity;
 		};

@@ -4,7 +4,7 @@
 
 using namespace PaintsNow;
 
-StandardTransformVS::StandardTransformVS() : enableInstancing(true), enableSkinning(false), enableViewProjectionMatrix(true), enableVertexColor(false), enableVertexNormal(true), enableInstancedColor(false), enableVertexTangent(true), enableRasterCoord(false), enableClampedNear(false), enableClampedFar(false) {
+StandardTransformVS::StandardTransformVS() : enableInstancing(true), enableSkinning(false), enableViewProjectionMatrix(true), enableVertexColor(false), enableVertexNormal(true), enableInstancedColor(false), enableVertexTangent(true), enableClampedNear(false), enableClampedFar(false) {
 	instanceBuffer.description.usage = IRender::Resource::BufferDescription::INSTANCED;
 	vertexPositionBuffer.description.usage = IRender::Resource::BufferDescription::VERTEX;
 	vertexNormalBuffer.description.usage = IRender::Resource::BufferDescription::VERTEX;
@@ -69,10 +69,6 @@ String StandardTransformVS::GetShaderText() {
 		tintColor *= instancedColor;
 	}
 
-	if (enableRasterCoord) {
-		rasterCoord = rasterPosition.xy * float(2.0) - float2(1.0, 1.0);
-	}
-
 	if (enableClampedFar) {
 		rasterPosition.z = max(rasterPosition.z, -1);
 	}
@@ -94,7 +90,6 @@ TObject<IReflect>& StandardTransformVS::operator () (IReflect& reflect) {
 		ReflectProperty(enableVertexTangent)[BindConst<bool>()];
 		ReflectProperty(enableViewProjectionMatrix)[BindConst<bool>()];
 		ReflectProperty(enableInstancedColor)[BindConst<bool>()];
-		ReflectProperty(enableRasterCoord)[BindConst<bool>()];
 		ReflectProperty(enableClampedNear)[BindConst<bool>()];
 		ReflectProperty(enableClampedFar)[BindConst<bool>()];
 
@@ -131,7 +126,6 @@ TObject<IReflect>& StandardTransformVS::operator () (IReflect& reflect) {
 		ReflectProperty(viewNormal)[BindOption(enableVertexNormal)][BindOutput(BindOutput::TEXCOORD + 1)];
 		ReflectProperty(viewTangent)[BindOption(enableVertexTangent)][BindOutput(BindOutput::TEXCOORD + 2)];
 		ReflectProperty(viewBinormal)[BindOption(enableVertexTangent)][BindOutput(BindOutput::TEXCOORD + 3)];
-		ReflectProperty(rasterCoord)[BindOption(enableRasterCoord)][BindOutput(BindOutput::TEXCOORD + 4)];
 		ReflectProperty(tintColor)[BindOutput(BindOutput::COLOR)];
 	}
 

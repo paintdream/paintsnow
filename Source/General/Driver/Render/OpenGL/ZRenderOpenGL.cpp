@@ -1034,6 +1034,10 @@ struct ResourceImplOpenGL<IRender::Resource::ShaderDescription> final : public R
 			glShaderSource(shaderID, 1, source, nullptr);
 			glCompileShader(shaderID);
 
+			if (program.shaderName.find("ShadowMaskPass") != String::npos) {
+				int a = 0;
+			}
+
 			// printf("Shader code: %s\n", fullShader.c_str());
 
 			int success;

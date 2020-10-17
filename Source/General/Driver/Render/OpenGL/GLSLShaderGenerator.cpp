@@ -163,6 +163,8 @@ void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refT
 				} else if (bindInput->description == IShader::BindInput::LOCAL) {
 					// Do not declare it here
 					// initialization += String("\t") + declareMap[typeID] + " " + name + ";\n";
+				} else if (bindInput->description == IShader::BindInput::RASTERCOORD) {
+					initialization += String("\t") + declareMap[typeID] + " " + name + " = gl_FragCoord;\n";
 				} else {
 					if (bindBuffer == nullptr || mapBufferEnabled[bindBuffer]) {
 						if (stage == IRender::Resource::ShaderDescription::VERTEX) {
