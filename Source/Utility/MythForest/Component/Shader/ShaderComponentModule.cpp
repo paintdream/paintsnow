@@ -11,6 +11,7 @@ TObject<IReflect>& ShaderComponentModule::operator () (IReflect& reflect) {
 		ReflectMethod(RequestNew)[ScriptMethod = "New"];
 		ReflectMethod(RequestSetCode)[ScriptMethod = "SetCode"];
 		ReflectMethod(RequestSetInput)[ScriptMethod = "SetInput"];
+		ReflectMethod(RequestSetCallback)[ScriptMethod = "SetCallback"];
 		ReflectMethod(RequestSetComplete)[ScriptMethod = "SetComplete"];
 	}
 
@@ -21,7 +22,7 @@ TShared<ShaderComponent> ShaderComponentModule::RequestNew(IScript::Request& req
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(resourceTemplate);
 
-	TShared<ShaderComponent> terrainComponent = TShared<ShaderComponent>::From(allocator->New(std::ref(name)));
+	TShared<ShaderComponent> terrainComponent = TShared<ShaderComponent>::From(allocator->New(resourceTemplate.Get(), std::ref(name)));
 	terrainComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
 	return terrainComponent;
 }

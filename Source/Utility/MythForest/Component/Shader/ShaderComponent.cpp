@@ -4,7 +4,19 @@
 
 using namespace PaintsNow;
 
-ShaderComponent::ShaderComponent(const String& n) : name(n) {}
+ShaderComponent::ShaderComponent(const TShared<ShaderResource>& shader, const String& n) : name(n) {
+	customMaterialShader = shader->QueryInterface(UniqueType<ShaderResourceImpl<CustomMaterialPass> >());
+	assert(customMaterialShader); // by now we only support CustomMaterialPass.
+	customMaterialShader = static_cast<ShaderResourceImpl<CustomMaterialPass>*>(customMaterialShader->Clone());
+	std::stringstream ss;
+	ss << std::hex << (void*)this;
+
+	customMaterialShader->SetLocation(shader->GetLocation() + "/" + name + "/" + ss.str());
+}
+
+ShaderComponent::~ShaderComponent() {
+	assert(!compileCallbackRef);
+}
 
 void ShaderComponent::SetCallback(IScript::Request& request, IScript::Request::Ref callback) {
 	assert(Flag() & TINY_ACTIVATED);
@@ -15,20 +27,6 @@ void ShaderComponent::SetCallback(IScript::Request& request, IScript::Request::R
 	}
 
 	compileCallbackRef = callback;
-}
-
-void ShaderComponent::Initialize(Engine& engine, Entity* entity) {
-	TShared<ShaderResource> shaderResource = engine.snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), "[Runtime]/ShaderResource/CustomMaterialPass");
-	assert(shaderResource);
-	customMaterialShader = shaderResource->QueryInterface(UniqueType<ShaderResourceImpl<CustomMaterialPass> >());
-	assert(customMaterialShader);
-	customMaterialShader = static_cast<ShaderResourceImpl<CustomMaterialPass>*>(customMaterialShader->Clone());
-	std::stringstream ss;
-	ss << std::hex << (void*)this;
-
-	customMaterialShader->SetLocation(shaderResource->GetLocation() + "/" + name + "/" + ss.str());
-
-	BaseClass::Initialize(engine, entity);
 }
 
 void ShaderComponent::Uninitialize(Engine& engine, Entity* entity) {
