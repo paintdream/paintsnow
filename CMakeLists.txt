@@ -110,6 +110,12 @@ ELSE (MSVC)
 		add_definitions(-msse4.1)
 		add_definitions(-msse3)
 	ENDIF (IS_X86_64)
+
+	IF (CMAKE_COMPILER_IS_GNUCXX)
+		add_definitions(-std=c++11)
+		add_definitions(-lstdc++)
+	ENDIF (CMAKE_COMPILER_IS_GNUCXX)
+	
 	add_definitions(-fno-exceptions)
 	add_definitions(-O3)
 	add_definitions(-Wno-unused-command-line-argument)

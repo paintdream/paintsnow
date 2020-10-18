@@ -109,13 +109,13 @@ ZFrameGLFW::ZFrameGLFW(GLFWwindow** windowPtr, bool vulkan, const Int2& size, IF
 	assert(glfwGetError(nullptr) == 0);
 	glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_NATIVE_CONTEXT_API);
 	assert(glfwGetError(nullptr) == 0);
+	*/
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	assert(glfwGetError(nullptr) == 0);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-	assert(glfwGetError(nullptr) == 0);*/
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	if (isVulkan) {
-		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+		glfwWindowHint(GLFW_CLIENT_API, 0);
 	}
 
 	window = glfwCreateWindow(size.x(), size.y(), "PaintsNow.Net", NULL, NULL);
@@ -123,12 +123,13 @@ ZFrameGLFW::ZFrameGLFW(GLFWwindow** windowPtr, bool vulkan, const Int2& size, IF
 		*windowPtr = window;
 	}
 
+	/*
 	if (isVulkan) {
 		if (!glfwVulkanSupported()) {
 			fprintf(stderr, "Vulkan not supported.");
 			exit(0);
 		}
-	}
+	}*/
 
 	glfwSetWindowUserPointer(window, this);
 	OnWindowSize(size);
