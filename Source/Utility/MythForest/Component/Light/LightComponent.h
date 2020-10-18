@@ -149,7 +149,7 @@ namespace PaintsNow {
 			TShared<TextureResource> dummyColorAttachment;
 			TShared<ShaderResourceImpl<ConstMapPass> > pipeline;
 			TShared<TaskData> currentTask;
-			TShared<ShadowGrid> fallbackGrid; // last known good one
+			TShared<ShadowGrid> currentGrid; // last known good one
 			uint32_t layer;
 			float gridSize;
 			float scale;

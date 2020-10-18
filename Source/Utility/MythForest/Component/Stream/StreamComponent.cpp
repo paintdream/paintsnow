@@ -49,6 +49,8 @@ SharedTiny* StreamComponent::Load(Engine& engine, const UShort3& coord, const TS
 		id = recycleQueue[recycleStart];
 
 		Grid& grid = grids[id];
+		TShared<SharedTiny> last = grid.object;
+
 		if (grid.object) {
 			UnloadInternal(engine, grid, context);
 		}
@@ -62,7 +64,7 @@ SharedTiny* StreamComponent::Load(Engine& engine, const UShort3& coord, const TS
 
 			request.DoLock();
 			request.Push();
-			request.Call(sync, loadHandler.script, coord, grid.object, context);
+			request.Call(sync, loadHandler.script, coord, last, context);
 			request >> w;
 			request.Pop();
 			request.UnLock();
@@ -72,7 +74,7 @@ SharedTiny* StreamComponent::Load(Engine& engine, const UShort3& coord, const TS
 			engine.bridgeSunset.ReleaseSafe(&request);
 		} else {
 			assert(loadHandler.native);
-			grid.object = loadHandler.native(engine, coord, grid.object, context);
+			grid.object = loadHandler.native(engine, coord, last, context);
 		}
 
 		grid.coord = coord;

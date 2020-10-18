@@ -76,8 +76,7 @@ void LightComponent::BindShadowStream(Engine& engine, uint32_t layer, const TSha
 	shadowLayer->Initialize(engine, streamComponent, res, size, scale);
 }
 
-LightComponent::ShadowLayer::ShadowLayer(Engine& engine) : gridSize(1), scale(1) {
-}
+LightComponent::ShadowLayer::ShadowLayer(Engine& engine) : gridSize(1), scale(1) {}
 
 TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engine, const UShort3& coord, const TShared<SharedTiny>& tiny, const TShared<SharedTiny>& context) {
 	assert(context);
@@ -86,7 +85,7 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 	TShared<ShadowGrid> shadowGrid;
 	TShared<TaskData> taskData = currentTask;
 
-	if (tiny) {
+	if (tiny && tiny != currentGrid) {
 		shadowGrid = tiny->QueryInterface(UniqueType<ShadowGrid>());
 		assert(shadowGrid);
 	} else {
@@ -104,56 +103,56 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 			texture->description.state.attachment = true;
 			texture->description.state.format = IRender::Resource::TextureDescription::FLOAT;
 			texture->description.state.layout = IRender::Resource::TextureDescription::DEPTH;
-			texture->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
+			texture->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_relaxed);
 			texture->GetResourceManager().InvokeUpload(texture(), taskData->renderQueue);
 			shadowGrid->texture = texture;
+			shadowGrid->Flag().fetch_or(TINY_MODIFIED, std::memory_order_relaxed);
 		}
 	}
 
-	if (!(taskData->Flag() & TINY_MODIFIED)) {
-		// refresh shadow grid info
-		taskData->Flag().fetch_or(TINY_MODIFIED, std::memory_order_acquire);
-		shadowGrid->Flag().fetch_or(TINY_MODIFIED, std::memory_order_acquire);
+	assert(!(taskData->Flag() & TINY_MODIFIED));
+	taskData->Flag().fetch_or(TINY_MODIFIED, std::memory_order_release);
 
-		// get entity
-		ShadowContext* shadowContext = context->QueryInterface(UniqueType<ShadowContext>());
-		assert(shadowContext != nullptr);
+	// get entity
+	ShadowContext* shadowContext = context->QueryInterface(UniqueType<ShadowContext>());
+	assert(shadowContext != nullptr);
 
-		// calculate position
-		CaptureData captureData;
-		const MatrixFloat4x4& viewMatrix = shadowContext->lightTransformMatrix;
-		OrthoCamera::UpdateCaptureData(captureData, viewMatrix);
-		WorldInstanceData instanceData;
-		instanceData.worldMatrix = shadowGrid->shadowMatrix = Math::QuickInverse(Math::Scale(viewMatrix, Float4(1, -1, -1, 1)));
-		taskData->rootEntity = shadowContext->rootEntity; // in case of gc
-		taskData->shadowGrid = shadowGrid();
-		taskData->ReferenceObject();
+	// calculate position
+	CaptureData captureData;
+	const MatrixFloat4x4& viewMatrix = shadowContext->lightTransformMatrix;
+	OrthoCamera::UpdateCaptureData(captureData, viewMatrix);
+	WorldInstanceData instanceData;
+	instanceData.worldMatrix = shadowGrid->shadowMatrix = Math::QuickInverse(Math::Scale(viewMatrix, Float4(1, -1, -1, 1)));
+	taskData->rootEntity = shadowContext->rootEntity; // in case of gc
+	taskData->shadowGrid = shadowGrid();
+	taskData->ReferenceObject();
 
-		// Prepare render target
-		IRender::Resource::RenderTargetDescription desc;
-		desc.colorStorages.resize(1);
-		IRender::Resource::RenderTargetDescription::Storage& s = desc.colorStorages[0];
-		s.resource = dummyColorAttachment->GetRenderResource();
-		// we don't care color
-		s.loadOp = IRender::Resource::RenderTargetDescription::DISCARD;
-		s.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
-		desc.depthStorage.loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
-		desc.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
-		desc.depthStorage.resource = shadowGrid->texture->GetRenderResource();
+	// Prepare render target
+	IRender::Resource::RenderTargetDescription desc;
+	desc.colorStorages.resize(1);
+	IRender::Resource::RenderTargetDescription::Storage& s = desc.colorStorages[0];
+	s.resource = dummyColorAttachment->GetRenderResource();
+	// we don't care color
+	s.loadOp = IRender::Resource::RenderTargetDescription::DISCARD;
+	s.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
+	desc.depthStorage.loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
+	desc.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
+	desc.depthStorage.resource = shadowGrid->texture->GetRenderResource();
 
-		IRender& render = engine.interfaces.render;
-		render.UploadResource(taskData->renderQueue, taskData->renderTargetResource, &desc);
-		render.ExecuteResource(taskData->renderQueue, taskData->stateResource);
-		render.ExecuteResource(taskData->renderQueue, taskData->renderTargetResource);
+	IRender& render = engine.interfaces.render;
+	render.UploadResource(taskData->renderQueue, taskData->renderTargetResource, &desc);
+	render.ExecuteResource(taskData->renderQueue, taskData->stateResource);
+	render.ExecuteResource(taskData->renderQueue, taskData->renderTargetResource);
 
-		CollectComponentsFromEntity(engine, *taskData, instanceData, captureData, shadowContext->rootEntity());
-	}
+	CollectComponentsFromEntity(engine, *taskData, instanceData, captureData, shadowContext->rootEntity());
 
 	return shadowGrid();
 }
 
 TShared<SharedTiny> LightComponent::ShadowLayer::StreamUnloadHandler(Engine& engine, const UShort3& coord, const TShared<SharedTiny>& tiny, const TShared<SharedTiny>& context) {
-	return tiny;
+	// tiny->Flag().fetch_or(TINY_MODIFIED, std::memory_order_relaxed);
+
+	return nullptr;
 }
 
 const Float3& LightComponent::GetColor() const {
@@ -545,15 +544,17 @@ TShared<LightComponent::ShadowGrid> LightComponent::ShadowLayer::UpdateShadow(En
 	shadowContext->lightTransformMatrix(3, 0) = alignedPosition.x();
 	shadowContext->lightTransformMatrix(3, 1) = alignedPosition.y();
 	shadowContext->lightTransformMatrix(3, 2) = alignedPosition.z();
+	TShared<ShadowGrid> grid;
 
-	TShared<ShadowGrid> grid = streamComponent->Load(engine, coord, shadowContext())->QueryInterface(UniqueType<ShadowGrid>());
-	assert(grid);
+	if (!(currentTask->Flag() & TINY_MODIFIED)) {
+		grid = streamComponent->Load(engine, coord, shadowContext())->QueryInterface(UniqueType<ShadowGrid>());
+		assert(grid);
 
-	if (!(grid->Flag() & TINY_MODIFIED) || !fallbackGrid) {
-		fallbackGrid = grid;
+		if (!(grid->Flag() & TINY_MODIFIED) || !currentGrid) {
+			currentGrid = grid;
+		}
 	}
 
-	// printf("COORD: %d, %d, %d\n", coord.x(), coord.y(), coord.z());
-	return fallbackGrid;
+	return currentGrid;
 }
 
