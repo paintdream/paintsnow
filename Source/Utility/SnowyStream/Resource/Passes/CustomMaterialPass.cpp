@@ -16,16 +16,16 @@ TObject<IReflect>& CustomMaterialPass::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void CustomMaterialPass::SetInput(const String& stage, const String& type, const String& name, const String& value, const std::vector<std::pair<String, String> >& config) {
+void CustomMaterialPass::SetInput(const String& stage, const String& type, const String& name, const String& value, const String& binding, const std::vector<std::pair<String, String> >& config) {
 	if (stage == "VertexInput") {
-		shaderTransform.description->SetInput("Input", type, name, value, config);
+		shaderTransform.description->SetInput("Input", type, name, value, binding, config);
 	} else if (stage == "VertexUniform") {
-		shaderTransform.description->SetInput("Uniform", type, name, value, config);
+		shaderTransform.description->SetInput("Uniform", type, name, value, binding, config);
 	} else if (stage == "VertexVarying") {
-		shaderTransform.description->SetInput("Output", type, name, value, config);
-		shaderParameter.description->SetInput("Input", type, name, value, config);
+		shaderTransform.description->SetInput("Output", type, name, value, binding, config);
+		shaderParameter.description->SetInput("Input", type, name, value, binding, config);
 	} else if (stage == "FragmentUniform") {
-		shaderParameter.description->SetInput("Uniform", type, name, value, config);
+		shaderParameter.description->SetInput("Uniform", type, name, value, binding, config);
 	}
 }
 

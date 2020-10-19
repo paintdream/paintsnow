@@ -40,8 +40,9 @@ namespace PaintsNow {
 		/// <param name="type"> input type </param>
 		/// <param name="name"> input name </param>
 		/// <param name="value"> input value </param>
+		/// <param name="binding"> binding semantic </param>
 		/// <param name="config"> config </param>
-		void RequestSetInput(IScript::Request& request, IScript::Delegate<ShaderComponent> shaderComponent, const String& stage, const String& type, const String& name, const String& value, const std::vector<std::pair<String, String> >& config);
+		void RequestSetInput(IScript::Request& request, IScript::Delegate<ShaderComponent> shaderComponent, const String& stage, const String& type, const String& name, const String& value, const String& binding, const std::vector<std::pair<String, String> >& config);
 
 		/// <summary>
 		/// Notify shader setting complete, start compiling

@@ -15,6 +15,11 @@ namespace PaintsNow {
 		PassBase();
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		~PassBase() override;
+
+		virtual void SetInput(const String& stage, const String& type, const String& name, const String& value, const String& binding, const std::vector<std::pair<String, String> >& config);
+		virtual void SetCode(const String& stage, const String& code, const std::vector<std::pair<String, String> >& config);
+		virtual void SetComplete();
+
 		IRender::Resource* Compile(IRender& render, IRender::Queue* queue, const TWrapper<void, IRender::Resource*, IRender::Resource::ShaderDescription&, IRender::Resource::ShaderDescription::Stage, const String&, const String&>& callback = TWrapper<void, IRender::Resource*, IRender::Resource::ShaderDescription&, IRender::Resource::ShaderDescription::Stage, const String&, const String&>(), void* context = nullptr, IRender::Resource* existedShaderResource = nullptr);
 		Bytes ExportHash(bool onlyConstants);
 

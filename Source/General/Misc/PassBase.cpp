@@ -5,6 +5,10 @@ using namespace PaintsNow;
 
 PassBase::PassBase() {}
 
+void PassBase::SetInput(const String& stage, const String& type, const String& name, const String& value, const String& binding, const std::vector<std::pair<String, String> >& config) {}
+void PassBase::SetCode(const String& stage, const String& code, const std::vector<std::pair<String, String> >& config) {}
+void PassBase::SetComplete() {}
+
 TObject<IReflect>& PassBase::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 	return *this;
@@ -467,3 +471,4 @@ void PassBase::PartialData::Export(PartialUpdater& particalUpdater, PassBase::Up
 
 	particalUpdater.parameters = std::move(reflector.outputs);
 }
+

@@ -15,7 +15,7 @@ namespace PaintsNow {
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		void SetCode(const String& text);
-		void SetInput(const String& category, const String& type, const String& name, const String& value, const std::vector<std::pair<String, String> >& config);
+		void SetInput(const String& category, const String& type, const String& name, const String& value, const String& binding, const std::vector<std::pair<String, String> >& config);
 		void SetComplete();
 
 		void ReflectVertexTemplate(IReflect& reflect);
