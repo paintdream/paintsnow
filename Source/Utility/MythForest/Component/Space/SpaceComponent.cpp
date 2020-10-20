@@ -19,39 +19,6 @@ SpaceComponent::SpaceComponent(bool sorted) : rootEntity(nullptr), entityCount(0
 
 SpaceComponent::~SpaceComponent() {}
 
-void SpaceComponent::UpdateEntityWarpIndex(Entity* entity) {
-	uint32_t warpIndex = GetWarpIndex();
-	while (entity != nullptr) {
-		uint32_t entityWarpIndex = entity->GetWarpIndex();
-		if (entityWarpIndex != warpIndex) {
-			const std::vector<Component*>& components = entity->GetComponents();
-
-			for (size_t i = 0; i < components.size(); i++) {
-				Component* component = components[i];
-				if (component != nullptr) {
-					if (component->GetEntityFlagMask() & Entity::ENTITY_HAS_SPACE) {
-						SpaceComponent* spaceComponent = static_cast<SpaceComponent*>(component);
-						if (!(spaceComponent->Flag() & COMPONENT_LOCALIZED_WARP)) {
-							assert(spaceComponent->GetWarpIndex() == entityWarpIndex);
-							assert(spaceComponent->GetWarpIndex() != warpIndex);
-							spaceComponent->SetWarpIndex(warpIndex);
-							spaceComponent->UpdateEntityWarpIndex(spaceComponent->GetRootEntity());
-						}
-					} else if (component->GetWarpIndex() == entityWarpIndex && !(component->Flag() & COMPONENT_LOCALIZED_WARP)) {
-						component->SetWarpIndex(warpIndex);
-					}
-				}
-			}
-
-			entity->SetWarpIndex(warpIndex);
-			UpdateEntityWarpIndex(entity->Left());
-			entity = entity->Right();
-		} else {
-			break;
-		}
-	}
-}
-
 void SpaceComponent::Initialize(Engine& engine, Entity* entity) {
 	BaseClass::Initialize(engine, entity);
 
@@ -108,9 +75,6 @@ bool SpaceComponent::Insert(Engine& engine, Entity* entity) {
 	// cleanup has_engine flag
 	entity->CleanupEngineInternal();
 	entity->SetIndex(entityCount % 6);
-
-	// already the same
-	// UpdateEntityWarpIndex(entity);
 
 	if (rootEntity)
 	{

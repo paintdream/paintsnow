@@ -21,6 +21,7 @@ namespace PaintsNow {
 
 		void QueueRoutine(Engine& engine, ITask* task);
 		void QueryEntities(std::vector<TShared<Entity> >& entities, const Float3Pair& box);
+
 		bool Insert(Engine& engine, Entity* entity);
 		bool Remove(Engine& engine, Entity* entity);
 		void RemoveAll(Engine& engine);
@@ -39,7 +40,6 @@ namespace PaintsNow {
 		void Uninitialize(Engine& engine, Entity* entity) override;
 		void AttachUnsorted(Entity* parent, Entity* child, uint32_t seed);
 		Entity* DetachUnsorted(Entity* child);
-		void UpdateEntityWarpIndex(Entity* entity);
 		float RoutineRaycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const;
 		void RoutineUpdateBoundingBox();
 		void RoutineUpdateBoundingBoxRecursive(Float3Pair& box, Entity* entity);
