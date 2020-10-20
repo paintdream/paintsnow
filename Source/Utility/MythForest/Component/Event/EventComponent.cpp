@@ -5,7 +5,7 @@
 using namespace PaintsNow;
 
 EventComponent::EventComponent() : rootEntity(nullptr), tickTimeStamp(0), tickTimeDelta(0) {
-	Flag().fetch_or(Tiny::TINY_UNIQUE, std::memory_order_acquire);
+	Flag().fetch_or(Tiny::TINY_UNIQUE, std::memory_order_relaxed);
 	critical.store(0, std::memory_order_relaxed);
 }
 
@@ -51,12 +51,12 @@ void EventComponent::Execute(void* context) {
 }
 
 void EventComponent::InstallFrame() {
-	Flag().fetch_or(EVENTCOMPONENT_INSTALLED_FRAME, std::memory_order_acquire);
+	Flag().fetch_or(EVENTCOMPONENT_INSTALLED_FRAME, std::memory_order_relaxed);
 
 }
 
 void EventComponent::UninstallFrame() {
-	Flag().fetch_and(~EVENTCOMPONENT_INSTALLED_FRAME, std::memory_order_release);
+	Flag().fetch_and(~EVENTCOMPONENT_INSTALLED_FRAME, std::memory_order_relaxed);
 	SpinLock(critical);
 	frameTickerCollection.clear();
 	SpinUnLock(critical);
@@ -69,7 +69,8 @@ void EventComponent::InstallTick(Engine& engine, const TShared<Clock>& c) {
 	}
 
 	if (!(Flag() & EVENTCOMPONENT_INSTALLED_TICK)) {
-		Flag().fetch_or((EVENTCOMPONENT_INSTALLED_TICK | (EVENTCOMPONENT_BASE << Event::EVENT_TICK)), std::memory_order_acquire);
+		Flag().fetch_or((EVENTCOMPONENT_INSTALLED_TICK | (EVENTCOMPONENT_BASE << Event::EVENT_TICK)), std::memory_order_release);
+
 		clock = c;
 		tickTimeStamp = ITimer::GetSystemClock();
 
@@ -83,6 +84,7 @@ void EventComponent::UninstallTick(Engine& engine) {
 		clock->RemoveTicker(this);
 		clock = nullptr;
 		Flag().fetch_and(~(EVENTCOMPONENT_INSTALLED_TICK | (EVENTCOMPONENT_BASE << Event::EVENT_TICK)), std::memory_order_release);
+
 		ReleaseObject();
 	}
 }

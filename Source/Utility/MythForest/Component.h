@@ -75,7 +75,7 @@ namespace PaintsNow {
 	template <class T, uint32_t quickID>
 	class UniqueComponent : public TReflected<UniqueComponent<T, quickID>, T> {
 	public:
-		UniqueComponent() { T::Flag().fetch_or(Tiny::TINY_UNIQUE, std::memory_order_acquire); }
+		UniqueComponent() { T::Flag().fetch_or(Tiny::TINY_UNIQUE, std::memory_order_relaxed); }
 		static inline uint32_t StaticGetQuickUniqueID() { return quickID; }
 
 	private:

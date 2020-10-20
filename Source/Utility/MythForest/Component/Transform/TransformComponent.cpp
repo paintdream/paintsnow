@@ -41,7 +41,7 @@ TShared<TransformComponent::TRS>& TransformComponent::Modify() {
 
 void TransformComponent::SetRotation(const Float3& r) {
 	Modify()->rotation = Quaternion<float>(r);
-	Flag().fetch_or(TINY_MODIFIED, std::memory_order_acquire);
+	Flag().fetch_or(TINY_MODIFIED, std::memory_order_relaxed);
 }
 
 static inline Float3 GetArcballVector(const Float2& pt) {
@@ -84,7 +84,7 @@ void TransformComponent::EditorRotate(const Float2& from, const Float2& to) {
 	// Quaternion<float> delta(Float3(0, to.y() - from.y(), -(to.x() - from.x())));
 	// MakeEditor()->rotation = MakeEditor()->rotation * delta;
 	MakeEditor()->rotation = Quaternion<float>::Align(GetArcballVector(from), GetArcballVector(to)) * MakeEditor()->rotation;
-	Flag().fetch_or(TINY_MODIFIED, std::memory_order_acquire);*/
+	Flag().fetch_or(TINY_MODIFIED, std::memory_order_relaxed);*/
 }
 
 Float3 TransformComponent::GetRotation() {
@@ -97,7 +97,7 @@ const Quaternion<float>& TransformComponent::GetRotationQuaternion() {
 
 void TransformComponent::SetTranslation(const Float3& t) {
 	Modify()->translation = t;
-	Flag().fetch_or(TINY_MODIFIED, std::memory_order_acquire);
+	Flag().fetch_or(TINY_MODIFIED, std::memory_order_relaxed);
 }
 
 const Float3& TransformComponent::GetTranslation() {
@@ -110,7 +110,7 @@ Float3 TransformComponent::GetQuickTranslation() const {
 
 void TransformComponent::SetScale(const Float3& s) {
 	Modify()->scale = s;
-	Flag().fetch_or(TINY_MODIFIED, std::memory_order_acquire);
+	Flag().fetch_or(TINY_MODIFIED, std::memory_order_relaxed);
 }
 
 const Float3& TransformComponent::GetScale() {

@@ -59,9 +59,9 @@ void LightComponentModule::RequestSetLightDirectional(IScript::Request& request,
 	CHECK_THREAD_IN_MODULE(lightComponent);
 
 	if (directional) {
-		lightComponent->Flag().fetch_or(LightComponent::LIGHTCOMPONENT_DIRECTIONAL, std::memory_order_acquire);
+		lightComponent->Flag().fetch_or(LightComponent::LIGHTCOMPONENT_DIRECTIONAL, std::memory_order_relaxed);
 	} else {
-		lightComponent->Flag().fetch_and(~LightComponent::LIGHTCOMPONENT_DIRECTIONAL, std::memory_order_release);
+		lightComponent->Flag().fetch_and(~LightComponent::LIGHTCOMPONENT_DIRECTIONAL, std::memory_order_relaxed);
 	}
 }
 

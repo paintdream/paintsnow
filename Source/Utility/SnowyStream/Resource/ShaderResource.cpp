@@ -62,7 +62,8 @@ IReflectObject* ShaderResource::Clone() const {
 	// By default, new created one are not compiled
 	ShaderResource* clone = new ShaderResource(resourceManager, uniqueLocation);
 	clone->shaderResource = nullptr;
-	clone->Flag().fetch_or(RESOURCE_ORPHAN, std::memory_order_acquire);
+	clone->Flag().fetch_or(RESOURCE_ORPHAN, std::memory_order_relaxed);
+
 	return clone;
 }
 

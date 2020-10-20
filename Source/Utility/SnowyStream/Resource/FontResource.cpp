@@ -86,9 +86,9 @@ const FontResource::Char& FontResource::Get(IRender& render, IRender::Queue* que
 	const FontResource::Char& ret = slice.Get(render, queue, fontBase, ch);
 	std::atomic<uint32_t>& lock = reinterpret_cast<std::atomic<uint32_t>&>(slice.critical);
 
-	if (lock.load(std::memory_order_acquire) == 2u) {
+	if (lock.load(std::memory_order_relaxed) == 2u) {
 		// need update
-		Flag().fetch_or(TINY_MODIFIED, std::memory_order_acquire);
+		Flag().fetch_or(TINY_MODIFIED, std::memory_order_release);
 	}
 
 	return ret;
@@ -180,7 +180,8 @@ uint32_t FontResource::Update(IRender& render, IRender::Queue* queue) {
 	if (Flag() & TINY_MODIFIED) {
 		for (std::map<uint32_t, Slice>::iterator it = sliceMap.begin(); it != sliceMap.end(); it++) {
 			std::atomic<uint32_t>& lock = reinterpret_cast<std::atomic<uint32_t>&>(it->second.critical);
-			if (lock.load(std::memory_order_acquire) == 2u) {
+
+			if (lock.load(std::memory_order_relaxed) == 2u) {
 				count += it->second.UpdateFontTexture(render, queue);
 			}
 		}

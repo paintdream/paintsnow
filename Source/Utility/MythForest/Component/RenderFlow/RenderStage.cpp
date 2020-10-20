@@ -4,7 +4,7 @@
 using namespace PaintsNow;
 
 RenderStage::RenderStage(uint32_t colorAttachmentCount) : renderState(nullptr), renderTarget(nullptr), drawCallResource(nullptr), resolutionShift(0, 0) {
-	Flag().fetch_or(RENDERSTAGE_ADAPT_MAIN_RESOLUTION, std::memory_order_acquire);
+	Flag().fetch_or(RENDERSTAGE_ADAPT_MAIN_RESOLUTION, std::memory_order_relaxed);
 
 	// Initialize state
 	IRender::Resource::RenderStateDescription& s = renderStateDescription;
@@ -78,7 +78,7 @@ void RenderStage::Initialize(Engine& engine, IRender::Queue* queue) {
 		nodePorts[i].port->Initialize(render, queue);
 	}
 
-	Flag().fetch_or(TINY_ACTIVATED, std::memory_order_acquire);
+	Flag().fetch_or(TINY_ACTIVATED, std::memory_order_relaxed);
 }
 
 void RenderStage::Uninitialize(Engine& engine, IRender::Queue* queue) {

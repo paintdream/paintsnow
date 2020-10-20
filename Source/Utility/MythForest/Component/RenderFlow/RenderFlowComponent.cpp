@@ -8,7 +8,7 @@
 using namespace PaintsNow;
 
 RenderFlowComponent::RenderFlowComponent() {
-	Flag().fetch_or(RENDERFLOWCOMPONENT_SYNC_DEVICE_RESOLUTION, std::memory_order_acquire);
+	Flag().fetch_or(RENDERFLOWCOMPONENT_SYNC_DEVICE_RESOLUTION, std::memory_order_relaxed);
 }
 
 RenderFlowComponent::~RenderFlowComponent() {}
@@ -34,7 +34,7 @@ UShort2 RenderFlowComponent::GetMainResolution() const {
 
 void RenderFlowComponent::SetMainResolution(const UShort2 res) {
 	mainResolution = res;
-	Flag().fetch_or(RENDERFLOWCOMPONENT_RESOLUTION_MODIFIED, std::memory_order_acquire);
+	Flag().fetch_or(RENDERFLOWCOMPONENT_RESOLUTION_MODIFIED, std::memory_order_relaxed);
 }
 
 void RenderFlowComponent::RemoveNode(RenderStage* stage) {
@@ -57,7 +57,7 @@ RenderStage::Port* RenderFlowComponent::BeginPort(const String& symbol) {
 	if (s != symbolMap.end()) {
 		RenderStage::Port* port = (*s->second.first)[s->second.second];
 		assert(!(port->Flag() & TINY_ACTIVATED)); // no shared
-		port->Flag().fetch_or(TINY_ACTIVATED, std::memory_order_acquire);
+		port->Flag().fetch_or(TINY_ACTIVATED, std::memory_order_relaxed);
 		return port;
 	} else {
 		return nullptr;
@@ -66,7 +66,7 @@ RenderStage::Port* RenderFlowComponent::BeginPort(const String& symbol) {
 
 void RenderFlowComponent::EndPort(RenderStage::Port* port) {
 	assert((port->Flag() & TINY_ACTIVATED));
-	port->Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_release);
+	port->Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_relaxed);
 }
 
 bool RenderFlowComponent::ExportSymbol(const String& symbol, RenderStage* renderStage, const String& port) {
@@ -123,6 +123,7 @@ void RenderFlowComponent::Compile() {
 void RenderFlowComponent::Render(Engine& engine) {
 	if (Flag() & TINY_ACTIVATED) {
 		Flag().fetch_or(RENDERFLOWCOMPONENT_RENDERING, std::memory_order_acquire);
+
 		// Commit resource queue first
 		IRender& render = engine.interfaces.render;
 		render.PresentQueues(&resourceQueue, 1, IRender::PRESENT_EXECUTE_ALL);
@@ -404,13 +405,13 @@ void RenderFlowComponent::DispatchEvent(Event& event, Entity* entity) {
 		if (Flag() & TINY_ACTIVATED) {
 			Engine& engine = event.engine;
 			const Tiny::FLAG condition = RENDERFLOWCOMPONENT_RENDER_SYNC_TICKING | TINY_ACTIVATED;
-			while ((Flag() & condition) == condition) {
+			while ((Flag().load(std::memory_order_acquire) & condition) == condition) {
 				YieldThread();
 			}
 
 			Render(event.engine);
 
-			Flag().fetch_or(RENDERFLOWCOMPONENT_RENDER_SYNC_TICKING, std::memory_order_acquire);
+			Flag().fetch_or(RENDERFLOWCOMPONENT_RENDER_SYNC_TICKING, std::memory_order_release);
 			engine.GetKernel().QueueRoutine(this, CreateTaskContextFree(Wrap(this, &RenderFlowComponent::RenderSyncTick), std::ref(engine)));
 		}
 	} else if (event.eventID == Event::EVENT_TICK) {

@@ -133,7 +133,7 @@ void EventComponentModule::RequestBindEventUserInput(IScript::Request& request, 
 	CHECK_DELEGATE(eventComponent);
 
 	if (enable) {
-		eventComponent->Flag().fetch_or((EventComponent::EVENTCOMPONENT_BASE << Event::EVENT_INPUT), std::memory_order_acquire);
+		eventComponent->Flag().fetch_or((EventComponent::EVENTCOMPONENT_BASE << Event::EVENT_INPUT), std::memory_order_relaxed);
 		SpinLock(critical);
 		std::vector<TShared<EventComponent> >::iterator it = std::binary_find(userInputs.begin(), userInputs.end(), eventComponent.Get());
 		if (it == userInputs.end()) std::binary_insert(userInputs, eventComponent.Get());

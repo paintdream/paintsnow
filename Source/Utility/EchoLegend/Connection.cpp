@@ -72,7 +72,7 @@ Connection::Connection(BridgeSunset& bs, INetwork& nt, WorkDispatcher* disp, ISc
 		bitMask |= TINY_ACTIVATED;
 	}
 
-	Flag().fetch_or(bitMask, std::memory_order_acquire);
+	Flag().fetch_or(bitMask, std::memory_order_relaxed);
 
 	if (connection != nullptr) {
 		dispatcher->ReferenceObject();
@@ -80,7 +80,7 @@ Connection::Connection(BridgeSunset& bs, INetwork& nt, WorkDispatcher* disp, ISc
 		if (Flag() & CONNECTION_HTTP) {
 			if (httpRequest == nullptr) {
 				httpRequest = network.OpenHttpRequest(connection, Wrap(this, &Connection::OnEventHttp));
-				Flag().fetch_or(CONNECTION_OWN_REQUEST, std::memory_order_acquire);
+				Flag().fetch_or(CONNECTION_OWN_REQUEST, std::memory_order_relaxed);
 			}
 		}
 	}
@@ -91,9 +91,8 @@ bool Connection::IsValid() const {
 }
 
 void Connection::Deactivate() {
-	if (Flag() & TINY_ACTIVATED) {
+	if (Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_relaxed) & TINY_ACTIVATED) {
 		network.DeactivateConnection(connection);
-		Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_release);
 	}
 }
 
@@ -113,8 +112,7 @@ Connection::~Connection() {
 
 bool Connection::Activate() {
 	bool ret = false;
-	if (!(Flag() & TINY_ACTIVATED)) {
-		Flag().fetch_or(TINY_ACTIVATED, std::memory_order_acquire);
+	if (!(Flag().fetch_or(TINY_ACTIVATED, std::memory_order_acquire) & TINY_ACTIVATED)) {
 		ret = network.ActivateConnection(connection);
 	}
 

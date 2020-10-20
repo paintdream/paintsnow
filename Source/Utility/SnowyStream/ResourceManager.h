@@ -57,7 +57,7 @@ namespace PaintsNow {
 		void InvokeAttach(ResourceBase* resource, void* deviceContext) override {
 			assert(resource != nullptr);
 			assert(!(resource->Flag() & ResourceBase::RESOURCE_ATTACHED));
-			resource->Flag().fetch_or(ResourceBase::RESOURCE_ATTACHED, std::memory_order_acquire);
+			resource->Flag().fetch_or(ResourceBase::RESOURCE_ATTACHED, std::memory_order_relaxed);
 			DeviceResourceBase<T>* typedResource = static_cast<DeviceResourceBase<T>*>(resource);
 			typedResource->Attach(device, deviceContext != nullptr ? deviceContext : GetContext());
 		}

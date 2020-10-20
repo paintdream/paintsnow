@@ -152,13 +152,14 @@ void VisibilityComponent::DispatchEvent(Event& event, Entity* entity) {
 
 void VisibilityComponent::Setup(Engine& engine, float distance, const Float3Pair& range, const UShort3& division, uint32_t frameTimeLimit, uint32_t tc, const UShort2& resolution) {
 	assert(!(Flag() & TINY_MODIFIED));
-	Flag().fetch_or(TINY_MODIFIED, std::memory_order_acquire);
 
 	taskCount = tc;
 	boundingBox = range;
 	subDivision = division;
 	maxFrameExecutionTime = frameTimeLimit;
 	viewDistance = distance;
+
+	Flag().fetch_or(TINY_MODIFIED, std::memory_order_release);
 }
 
 void VisibilityComponent::SetupIdentities(Engine& engine, Entity* entity) {

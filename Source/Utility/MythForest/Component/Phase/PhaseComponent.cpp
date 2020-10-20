@@ -240,7 +240,7 @@ void PhaseComponent::Setup(Engine& engine, uint32_t phaseCount, uint32_t taskCou
 		phase.normalRoughnessMetallic->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
 		phase.normalRoughnessMetallic->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 		phase.normalRoughnessMetallic->description.state.layout = IRender::Resource::TextureDescription::RGBA;
-		phase.normalRoughnessMetallic->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
+		phase.normalRoughnessMetallic->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_relaxed);
 		phase.normalRoughnessMetallic->GetResourceManager().InvokeUpload(phase.normalRoughnessMetallic(), renderQueue);
 
 		// create noise texture
@@ -859,7 +859,7 @@ void PhaseComponent::CollectComponents(Engine& engine, TaskData& task, const Wor
 				}
 			} else if (component->GetEntityFlagMask() & Entity::ENTITY_HAS_SPACE) {
 				std::atomic<uint32_t>& counter = reinterpret_cast<std::atomic<uint32_t>&>(task.pendingCount);
-				counter.fetch_add(1, std::memory_order_acquire);;
+				counter.fetch_add(1, std::memory_order_release);
 				SpaceComponent* spaceComponent = static_cast<SpaceComponent*>(component);
 				if (transformComponent != nullptr) {
 					CaptureData newCaptureData;

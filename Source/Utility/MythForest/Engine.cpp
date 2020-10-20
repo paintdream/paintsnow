@@ -125,7 +125,7 @@ Kernel& Engine::GetKernel() {
 }
 
 void Engine::NotifyUnitConstruct(Unit* unit) {
-	unitCount.fetch_add(1, std::memory_order_release);
+	unitCount.fetch_add(1, std::memory_order_relaxed);
 #if defined(_DEBUG)
 	static Unique entityUnique = UniqueType<Entity>::Get();
 	if (unit->GetUnique() != entityUnique) return;
@@ -138,7 +138,7 @@ void Engine::NotifyUnitConstruct(Unit* unit) {
 }
 
 void Engine::NotifyUnitDestruct(Unit* unit) {
-	if (unitCount.fetch_sub(1, std::memory_order_release) == 1) {
+	if (unitCount.fetch_sub(1, std::memory_order_relaxed) == 1) {
 		interfaces.thread.Signal(finalizeEvent, false);
 	}
 

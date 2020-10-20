@@ -3,7 +3,7 @@
 using namespace PaintsNow;
 
 StreamResource::StreamResource(ResourceManager& manager, const String& uniqueID) : BaseClass(manager, uniqueID) {
-	Flag().fetch_or(RESOURCE_STREAM, std::memory_order_acquire);
+	Flag().fetch_or(RESOURCE_STREAM, std::memory_order_relaxed);
 }
 
 void StreamResource::Download(IArchive& archive, void* deviceContext) {}

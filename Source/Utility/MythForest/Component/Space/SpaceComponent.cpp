@@ -7,10 +7,10 @@ using namespace PaintsNow;
 
 SpaceComponent::SpaceComponent(bool sorted) : rootEntity(nullptr), entityCount(0), boundingBox(Float3(FLT_MAX, FLT_MAX, FLT_MAX), Float3(-FLT_MAX, -FLT_MAX, -FLT_MAX)) {
 	if (sorted) {
-		Flag().fetch_or(SPACECOMPONENT_ORDERED, std::memory_order_acquire);
+		Flag().fetch_or(SPACECOMPONENT_ORDERED, std::memory_order_relaxed);
 	}
 
-	Flag().fetch_or(COMPONENT_SHARED, std::memory_order_acquire);
+	Flag().fetch_or(COMPONENT_SHARED, std::memory_order_relaxed);
 
 #ifdef _DEBUG
 	hostEntity = nullptr;

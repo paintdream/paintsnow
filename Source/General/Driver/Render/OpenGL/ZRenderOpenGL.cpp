@@ -160,12 +160,12 @@ private:
 struct QueueImplOpenGL final : public IRender::Queue {
 	QueueImplOpenGL(DeviceImplOpenGL* d, bool shared) : device(d), next(nullptr) {
 		critical.store(shared ? 0u : ~(uint32_t)0u, std::memory_order_relaxed);
-		flushCount.store(0u, std::memory_order_release);
+		flushCount.store(0u, std::memory_order_relaxed);
 	}
 
 	inline void Flush() {
 		QueueCommand(ResourceCommandImplOpenGL(ResourceCommandImplOpenGL::OP_EXECUTE, nullptr));
-		flushCount.fetch_add(1, std::memory_order_release);
+		flushCount.fetch_add(1, std::memory_order_relaxed);
 	}
 
 	inline void QueueCommand(const ResourceCommandImplOpenGL& command) {

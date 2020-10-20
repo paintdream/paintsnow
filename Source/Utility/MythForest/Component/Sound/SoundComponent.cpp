@@ -3,7 +3,7 @@
 using namespace PaintsNow;
 
 SoundComponent::SoundComponent(const TShared<StreamResource>& resource, IScript::Request::Ref r) : callback(r), audioStream(nullptr), audioSource(nullptr), audioBuffer(nullptr) {
-	Flag().fetch_or(SOUNDCOMPONENT_ONLINE, std::memory_order_acquire);
+	Flag().fetch_or(SOUNDCOMPONENT_ONLINE, std::memory_order_relaxed);
 
 	audioResource.Reset(static_cast<StreamResource*>(resource->Clone()));
 }
@@ -85,17 +85,17 @@ SoundComponent::~SoundComponent() {
 }
 
 void SoundComponent::Play(Engine& engine) {
-	Flag().fetch_or(TINY_ACTIVATED, std::memory_order_acquire);
+	Flag().fetch_or(TINY_ACTIVATED, std::memory_order_relaxed);
 	engine.interfaces.audio.Play(audioSource);
 }
 
 void SoundComponent::Pause(Engine& engine) {
-	Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_release);
+	Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_relaxed);
 	engine.interfaces.audio.Pause(audioSource);
 }
 
 void SoundComponent::Stop(Engine& engine) {
-	Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_release);
+	Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_relaxed);
 	engine.interfaces.audio.Stop(audioSource);
 }
 

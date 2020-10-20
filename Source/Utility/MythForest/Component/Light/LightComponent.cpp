@@ -390,7 +390,7 @@ void LightComponent::ShadowLayer::CollectComponents(Engine& engine, TaskData& ta
 
 				VisibilityComponent* visibilityComponent = entity->GetUniqueComponent(UniqueType<VisibilityComponent>());
 
-				taskData.pendingCount.fetch_add(1, std::memory_order_acquire);
+				taskData.pendingCount.fetch_add(1, std::memory_order_release);
 
 				CaptureData newCaptureData;
 				const MatrixFloat4x4& mat = captureData.viewTransform;
@@ -498,7 +498,7 @@ void LightComponent::ShadowLayer::Initialize(Engine& engine, const TShared<Strea
 	texture->description.state.attachment = true;
 	texture->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 	texture->description.state.layout = IRender::Resource::TextureDescription::R;
-	texture->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
+	texture->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_relaxed);
 	texture->GetResourceManager().InvokeUpload(texture(), engine.GetWarpResourceQueue());
 
 	dummyColorAttachment = texture;

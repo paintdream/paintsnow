@@ -29,11 +29,12 @@ void ResourceManager::RemoveAll() {
 	for (std::unordered_map<String, ResourceBase*>::const_iterator it = temp.begin(); it != temp.end(); ++it) {
 		ResourceBase* resource = (*it).second;
 		InvokeDetach(resource, GetContext());
-		resource->Flag().fetch_or(ResourceBase::RESOURCE_ORPHAN, std::memory_order_acquire);
 
 		if (resource->Flag() & ResourceBase::RESOURCE_ETERNAL) {
 			externals.emplace_back(resource);
 		}
+
+		resource->Flag().fetch_or(ResourceBase::RESOURCE_ORPHAN, std::memory_order_relaxed);
 	}
 
 	for (size_t i = 0; i < externals.size(); i++) {
@@ -53,7 +54,6 @@ void ResourceManager::Insert(const TShared<ResourceBase>& resource) {
 	assert(!id.empty());
 	assert(&resource->GetResourceManager() == this);
 	assert(resourceMap.find(id) == resourceMap.end());
-	resource->Flag().fetch_and(~ResourceBase::RESOURCE_ORPHAN, std::memory_order_acquire);
 
 	resourceMap[id] = resource();
 
@@ -61,6 +61,7 @@ void ResourceManager::Insert(const TShared<ResourceBase>& resource) {
 		resource->ReferenceObject();
 	}
 
+	resource->Flag().fetch_and(~ResourceBase::RESOURCE_ORPHAN, std::memory_order_release);
 	InvokeAttach(resource(), GetContext());
 }
 
@@ -112,7 +113,7 @@ void ResourceManager::Remove(const TShared<ResourceBase>& resource) {
 		InvokeDetach(resource(), GetContext());
 	}
 
-	resource->Flag().fetch_or(ResourceBase::RESOURCE_ORPHAN, std::memory_order_acquire);
+	resource->Flag().fetch_or(ResourceBase::RESOURCE_ORPHAN, std::memory_order_release);
 }
 
 TShared<ResourceBase> ResourceSerializerBase::DeserializeFromArchive(ResourceManager& manager, IArchive& archive, const String& path, IFilterBase& protocol, bool openExisting, Tiny::FLAG flag) {

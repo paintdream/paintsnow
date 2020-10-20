@@ -18,11 +18,11 @@ const String& Component::GetAliasedTypeName() const {
 
 void Component::Initialize(Engine& engine, Entity* entity) {
 	assert((Flag() & COMPONENT_LOCALIZED_WARP) || entity->GetWarpIndex() == GetWarpIndex());
-	Flag().fetch_or(Tiny::TINY_ACTIVATED, std::memory_order_acquire);
+	Flag().fetch_or(Tiny::TINY_ACTIVATED, std::memory_order_relaxed);
 }
 
 void Component::Uninitialize(Engine& engine, Entity* entity) {
-	Flag().fetch_and(~Tiny::TINY_ACTIVATED, std::memory_order_release);
+	Flag().fetch_and(~Tiny::TINY_ACTIVATED, std::memory_order_relaxed);
 }
 
 void Component::DispatchEvent(Event& event, Entity* entity) {}
@@ -48,11 +48,11 @@ Component::RaycastTask::~RaycastTask() {
 
 void Component::RaycastTask::AddPendingTask() {
 	ReferenceObject();
-	pendingCount.fetch_add(1, std::memory_order_acquire);
+	pendingCount.fetch_add(1, std::memory_order_relaxed);
 }
 
 void Component::RaycastTask::RemovePendingTask() {
-	if (pendingCount.fetch_sub(1, std::memory_order_release) == 1) {
+	if (pendingCount.fetch_sub(1, std::memory_order_relaxed) == 1) {
 		std::vector<RaycastResult> finalResult;
 
 		uint32_t collectedWarpCount = 0;

@@ -129,7 +129,7 @@ void TextViewComponent::TagParser::Clear() {
 }
 
 TextViewComponent::TextViewComponent(const TShared<FontResource>& font, const TShared<MeshResource>& mesh, const TShared<BatchComponent>& batch) : BaseClass(mesh, batch), fontResource(std::move(font)), passwordChar(0), cursorChar('|'), cursorPos(0), fontSize(24), size(256, 32), scroll(0, 0), padding(0, 0), fullSize(0, 0), selectRange(0, 0), cursorColor(255, 255, 255, 255), selectColor(0, 0, 0, 0) {
-	Flag().fetch_or(RENDERABLECOMPONENT_CAMERAVIEW | TEXTVIEWCOMPONENT_CURSOR_REV_COLOR | TEXTVIEWCOMPONENT_SELECT_REV_COLOR, std::memory_order_acquire);
+	Flag().fetch_or(RENDERABLECOMPONENT_CAMERAVIEW | TEXTVIEWCOMPONENT_CURSOR_REV_COLOR | TEXTVIEWCOMPONENT_SELECT_REV_COLOR, std::memory_order_relaxed);
 }
 
 void TextViewComponent::Initialize(Engine& engine, Entity* entity) {
@@ -519,5 +519,5 @@ bool TextViewComponent::IsEmpty() const {
 }
 
 void TextViewComponent::SetUpdateMark() {
-	Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_acquire);
+	Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_relaxed);
 }

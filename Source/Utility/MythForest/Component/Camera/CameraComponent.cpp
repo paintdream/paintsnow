@@ -37,7 +37,7 @@ CameraComponent::TaskData::WarpData::WarpData() : entityCount(0), visibleEntityC
 
 CameraComponent::CameraComponent(const TShared<RenderFlowComponent>& prenderFlowComponent, const String& name)
 : collectedEntityCount(0), collectedVisibleEntityCount(0), viewDistance(256), rootEntity(nullptr), jitterIndex(0), renderFlowComponent(std::move(prenderFlowComponent)), cameraViewPortName(name) {
-	Flag().fetch_or(CAMERACOMPONENT_PERSPECTIVE | CAMERACOMPONENT_UPDATE_COMMITTED, std::memory_order_acquire);
+	Flag().fetch_or(CAMERACOMPONENT_PERSPECTIVE | CAMERACOMPONENT_UPDATE_COMMITTED, std::memory_order_relaxed);
 }
 
 void CameraComponent::UpdateJitterMatrices(CameraComponentConfig::WorldGlobalData& worldGlobalData) {
@@ -62,8 +62,6 @@ void CameraComponent::UpdateJitterMatrices(CameraComponentConfig::WorldGlobalDat
 void CameraComponent::UpdateRootMatrices(const MatrixFloat4x4& cameraWorldMatrix) {
 	MatrixFloat4x4 projectionMatrix = (Flag() & CAMERACOMPONENT_PERSPECTIVE) ? Math::Perspective(fov, aspect, nearPlane, farPlane) : Math::Ortho(Float3(1, 1, 1));
 
-	Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release);
-
 	MatrixFloat4x4 viewMatrix = Math::QuickInverse(cameraWorldMatrix);
 	nextTaskData->worldGlobalData.cameraMatrix = cameraWorldMatrix;
 	nextTaskData->worldGlobalData.projectionMatrix = projectionMatrix;
@@ -72,6 +70,9 @@ void CameraComponent::UpdateRootMatrices(const MatrixFloat4x4& cameraWorldMatrix
 	nextTaskData->worldGlobalData.tanHalfFov = (float)tan(fov / 2.0f);
 	nextTaskData->worldGlobalData.viewPosition = Float3(cameraWorldMatrix(3, 0), cameraWorldMatrix(3, 1), cameraWorldMatrix(3, 2));
 	nextTaskData->worldGlobalData.lastViewProjectionMatrix = prevTaskData->worldGlobalData.viewProjectionMatrix;
+
+	Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release);
+
 }
 
 RenderFlowComponent* CameraComponent::GetRenderFlowComponent() const {
@@ -861,7 +862,7 @@ void CameraComponent::CollectComponents(Engine& engine, TaskData& taskData, cons
 
 				VisibilityComponent* visibilityComponent = entity->GetUniqueComponent(UniqueType<VisibilityComponent>());
 
-				taskData.pendingCount.fetch_add(1, std::memory_order_acquire);
+				taskData.pendingCount.fetch_add(1, std::memory_order_release);
 
 				CaptureData newCaptureData = captureData;
 				SpaceComponent* spaceComponent = static_cast<SpaceComponent*>(component);

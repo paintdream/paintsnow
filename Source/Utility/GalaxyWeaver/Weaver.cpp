@@ -63,11 +63,11 @@ void Weaver::Start() {
 	}
 
 	remoteProxy.Run();
-	Flag().fetch_or(TINY_ACTIVATED, std::memory_order_acquire);
+	Flag().fetch_or(TINY_ACTIVATED, std::memory_order_relaxed);
 }
 
 void Weaver::Stop() {
-	Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_release);
+	Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_relaxed);
 	remoteProxy.Stop();
 }
 

@@ -110,9 +110,12 @@ ZFrameGLFW::ZFrameGLFW(GLFWwindow** windowPtr, bool vulkan, const Int2& size, IF
 	glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_NATIVE_CONTEXT_API);
 	assert(glfwGetError(nullptr) == 0);
 	*/
+
+#ifndef _WIN32
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#endif
 
 	if (isVulkan) {
 		glfwWindowHint(GLFW_CLIENT_API, 0);

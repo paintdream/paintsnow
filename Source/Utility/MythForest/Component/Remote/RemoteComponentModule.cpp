@@ -25,7 +25,7 @@ TShared<RemoteComponent> RemoteComponentModule::RequestNew(IScript::Request& req
 	TShared<RemoteComponent> remoteComponent = TShared<RemoteComponent>::From(allocator->New(std::ref(engine)));
 
 	if (transparentMode) {
-		remoteComponent->Flag().fetch_or(RemoteComponent::REMOTECOMPONENT_TRANSPARENT, std::memory_order_acquire);
+		remoteComponent->Flag().fetch_or(RemoteComponent::REMOTECOMPONENT_TRANSPARENT, std::memory_order_relaxed);
 	}
 
 	remoteComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());

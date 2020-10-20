@@ -4,7 +4,7 @@ using namespace PaintsNow;
 
 FrameBarrierRenderStage::FrameBarrierRenderStage(const String& s) : Next(renderTargetDescription.colorStorages[0]) {
 	Flag().fetch_and(~RENDERSTAGE_ADAPT_MAIN_RESOLUTION, std::memory_order_release);
-	Front.Flag().fetch_or(RenderStage::RENDERSTAGE_WEAK_LINKAGE, std::memory_order_acquire);
+	Front.Flag().fetch_or(RenderStage::RENDERSTAGE_WEAK_LINKAGE, std::memory_order_relaxed);
 }
 
 TObject<IReflect>& FrameBarrierRenderStage::operator () (IReflect& reflect) {

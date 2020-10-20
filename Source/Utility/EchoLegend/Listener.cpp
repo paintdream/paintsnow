@@ -6,11 +6,11 @@ using namespace PaintsNow;
 Listener::Listener(BridgeSunset& bs, INetwork& nt, WorkDispatcher* disp, IScript::Request::Ref peventHandler, IScript::Request::Ref pcallback, IScript::Request::Ref pconnectCallback, const String& ip, bool h, bool mode) : network(nt), bridgeSunset(bs), listener(nullptr), dispatcher(disp), httpd(nullptr), eventHandler(peventHandler), callback(pcallback), connectCallback(pconnectCallback) {
 //	, http(h), activated(false), packetMode(mode)
 	if (h) {
-		Flag().fetch_or(LISTENER_HTTP, std::memory_order_acquire);
+		Flag().fetch_or(LISTENER_HTTP, std::memory_order_relaxed);
 	}
 
 	if (mode) {
-		Flag().fetch_or(LISTENER_PACKET_MODE, std::memory_order_acquire);
+		Flag().fetch_or(LISTENER_PACKET_MODE, std::memory_order_relaxed);
 	}
 
 	listener = network.OpenListener(dispatcher->GetDispatcher(), Wrap(this, &Listener::OnEvent), Wrap(this, &Listener::OnAccept), ip);
@@ -94,13 +94,13 @@ void Listener::ScriptUninitialize(IScript::Request& request) {
 
 bool Listener::Activate() {
 	bool ret = false;
-	if (!(Flag() & TINY_ACTIVATED)) {
-		Flag().fetch_or(TINY_ACTIVATED, std::memory_order_acquire);
+	if (!(Flag().fetch_or(TINY_ACTIVATED, std::memory_order_acquire) & TINY_ACTIVATED)) {
 		if (Flag() & LISTENER_HTTP) {
 			ret = network.ActivateHttpd(httpd);
 		} else {
 			ret = network.ActivateListener(listener);
 		}
+
 		Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_release);
 	}
 
@@ -108,8 +108,7 @@ bool Listener::Activate() {
 }
 
 void Listener::Deactivate() {
-	if (Flag() & TINY_ACTIVATED) {
+	if (Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_release) & TINY_ACTIVATED) {
 		network.DeactivateListener(listener);
-		Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_release);
 	}
 }

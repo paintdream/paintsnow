@@ -5,7 +5,7 @@ using namespace PaintsNow;
 
 Clock::Clock(ITimer& base, BridgeSunset& b, int64_t interval, int64_t start, bool mergeTicks) : bridgeSunset(b), timerBase(base), now(start), offset(0) {
 	if (mergeTicks) {
-		Flag().fetch_or(CLOCK_MERGE_TICKS, std::memory_order_acquire);
+		Flag().fetch_or(CLOCK_MERGE_TICKS, std::memory_order_relaxed);
 	}
 
 	Play();
@@ -55,11 +55,11 @@ void Clock::Play() {
 
 void Clock::Resume() {
 	offset = GetFullClock() - now;
-	Flag().fetch_or(TINY_ACTIVATED, std::memory_order_acquire);
+	Flag().fetch_or(TINY_ACTIVATED, std::memory_order_relaxed);
 }
 
 void Clock::Pause() {
-	Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_release);
+	Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_relaxed);
 }
 
 bool Clock::IsRunning() const {
@@ -106,7 +106,7 @@ void Clock::OnTimer(size_t interval) {
 			const FLAG flagMergeTick = CLOCK_MERGE_TICKS | TINY_MODIFIED;
 
 			if ((Flag() & flagMergeTick) != flagMergeTick) {
-				Flag().fetch_or(TINY_MODIFIED, std::memory_order_acquire);
+				Flag().fetch_or(TINY_MODIFIED, std::memory_order_release);
 				bridgeSunset.GetKernel().QueueRoutine(this, this);
 			}
 		} else {

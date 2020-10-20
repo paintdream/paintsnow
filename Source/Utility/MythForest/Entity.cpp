@@ -6,7 +6,8 @@
 using namespace PaintsNow;
 
 Entity::Entity(Engine& engine) {
-	Flag().fetch_or(Tiny::TINY_ACTIVATED, std::memory_order_acquire);
+	Flag().fetch_or(Tiny::TINY_ACTIVATED, std::memory_order_relaxed);
+
 	SetEngineInternal(engine);
 	engine.NotifyUnitConstruct(this);
 	key = Float3Pair(Float3(0, 0, 0), Float3(0, 0, 0));
@@ -68,13 +69,13 @@ void Entity::ReleaseObject() {
 void Entity::SetEngineInternal(Engine& engine) {
 	// reuse parent node as engine pointer
 	assert(!(Flag() & ENTITY_STORE_ENGINE));
-	Flag().fetch_or(ENTITY_STORE_ENGINE, std::memory_order_acquire);
+	Flag().fetch_or(ENTITY_STORE_ENGINE, std::memory_order_relaxed);
 
 	reinterpret_cast<Engine*&>(*(void**)&_parentNode) = &engine;
 }
 
 void Entity::CleanupEngineInternal() {
-	Flag().fetch_and(~ENTITY_STORE_ENGINE, std::memory_order_release);
+	Flag().fetch_and(~ENTITY_STORE_ENGINE, std::memory_order_relaxed);
 
 	reinterpret_cast<Engine*&>(*(void**)&_parentNode) = nullptr;
 }
@@ -91,7 +92,7 @@ void Entity::InitializeComponent(Engine& engine, Component* component) {
 	component->Initialize(engine, this);
 
 	// add component mask
-	Flag().fetch_or((component->GetEntityFlagMask() | TINY_MODIFIED), std::memory_order_acquire);
+	Flag().fetch_or((component->GetEntityFlagMask() | TINY_MODIFIED), std::memory_order_relaxed);
 
 	if (Flag() & ENTITY_HAS_TACH_EVENT) {
 		Event event(engine, Event::EVENT_ATTACH_COMPONENT, this, component);
@@ -190,7 +191,7 @@ void Entity::RemoveComponent(Engine& engine, Component* component) {
 				UninitializeComponent(engine, target);
 				target = nullptr;
 
-				Flag().fetch_or(ENTITY_STORE_NULLSLOT, std::memory_order_acquire);
+				Flag().fetch_or(ENTITY_STORE_NULLSLOT, std::memory_order_relaxed);
 			}
 		}
 	} else {
@@ -204,7 +205,7 @@ void Entity::RemoveComponent(Engine& engine, Component* component) {
 					components.erase(components.begin() + i, components.end());
 				} else {
 					target = nullptr;
-					Flag().fetch_or(ENTITY_STORE_NULLSLOT, std::memory_order_acquire);
+					Flag().fetch_or(ENTITY_STORE_NULLSLOT, std::memory_order_relaxed);
 				}
 
 				break;

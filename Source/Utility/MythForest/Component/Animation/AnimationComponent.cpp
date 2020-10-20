@@ -7,7 +7,7 @@ using namespace PaintsNow;
 
 AnimationComponent::AnimationComponent(const TShared<SkeletonResource>& resource) : skeletonResource(resource), animationTime(0), speed(1), clipIndex(0), boneMatrixBuffer(nullptr) {
 	// can be shared between entities
-	Flag().fetch_or(Component::COMPONENT_SHARED, std::memory_order_acquire);
+	Flag().fetch_or(Component::COMPONENT_SHARED, std::memory_order_relaxed);
 	const IAsset::BoneAnimation& boneAnimation = resource->GetBoneAnimation();
 	boneMatrices.resize(boneAnimation.joints.size());
 	eventData.resize(boneAnimation.clips.size());

@@ -7,7 +7,7 @@ using namespace PaintsNow;
 
 RenderPortRenderTargetLoad::RenderPortRenderTargetLoad(IRender::Resource::RenderTargetDescription::Storage& storage, bool write) : bindingStorage(storage) {
 	if (write) {
-		Flag().fetch_or(Tiny::TINY_UNIQUE, std::memory_order_acquire);
+		Flag().fetch_or(Tiny::TINY_UNIQUE, std::memory_order_relaxed);
 	}
 }
 
