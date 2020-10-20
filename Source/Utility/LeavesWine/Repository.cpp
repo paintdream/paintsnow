@@ -37,7 +37,7 @@ void Repository::RefreshLocalFiles(IArchive& archive) {
 }
 
 void Repository::RenderItem(Item& item, uint32_t depth) {
-	if (item.Flag() & Item::ITEM_DIRECTORY) {
+	if (item.Flag().load(std::memory_order_acquire) & Item::ITEM_DIRECTORY) {
 		if (ImGui::TreeNode(item.name.empty() ? "/" : item.name.c_str())) {
 			for (size_t i = 0; i < item.children.size(); i++) {
 				RenderItem(*item.children[i], depth + 1);

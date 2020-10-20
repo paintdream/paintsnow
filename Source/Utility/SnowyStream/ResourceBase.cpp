@@ -56,7 +56,7 @@ ResourceBase::~ResourceBase() {
 #ifdef _DEBUG
 	leakGuard.Remove(this);
 #endif
-	assert(Flag() & ResourceBase::RESOURCE_ORPHAN);
+	assert(Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_ORPHAN);
 }
 
 std::pair<uint16_t, uint16_t> ResourceBase::GetProgress() const {
@@ -68,15 +68,15 @@ ResourceManager& ResourceBase::GetResourceManager() const {
 }
 
 bool ResourceBase::IsPrepared() const {
-	return !(Flag() & TINY_UPDATING);
+	return !(Flag().load(std::memory_order_acquire) & TINY_UPDATING);
 }
 
 void ResourceBase::ReleaseObject() {
 	// last?
-	if (GetExtReferCount() == 0 && !(Flag() & RESOURCE_ORPHAN)) {
+	if (GetExtReferCount() == 0 && !(Flag().load(std::memory_order_acquire) & RESOURCE_ORPHAN)) {
 		// no references exist, remove this from resource manager
 		resourceManager.DoLock();
-		if (GetExtReferCount() == 0 && !(Flag() & RESOURCE_ORPHAN)) {
+		if (GetExtReferCount() == 0 && !(Flag().load(std::memory_order_acquire) & RESOURCE_ORPHAN)) {
 			resourceManager.Remove(this);
 		}
 		resourceManager.UnLock();
@@ -225,8 +225,8 @@ bool MetaResourceInternalPersist::Read(IStreamBase& streamBase, void* ptr) const
 		IUniformResourceManager& uniformResourceManager = manager.GetUniformResourceManager();
 		resource = uniformResourceManager.CreateResource(path);
 		if (resource) {
-			if (!(resource->Flag() & ResourceBase::RESOURCE_UPLOADED) && !(resource->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release) & Tiny::TINY_MODIFIED)) {
-				assert(resource->Flag() & Tiny::TINY_MODIFIED);
+			if (!(resource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_UPLOADED) && !(resource->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release) & Tiny::TINY_MODIFIED)) {
+				assert(resource->Flag().load(std::memory_order_acquire) & Tiny::TINY_MODIFIED);
 				resource->GetResourceManager().InvokeUpload(resource());
 			}
 

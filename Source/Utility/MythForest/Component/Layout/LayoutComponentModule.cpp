@@ -78,7 +78,7 @@ void LayoutComponentModule::RequestSetFitContent(IScript::Request& request, IScr
 bool LayoutComponentModule::RequestGetFitContent(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(layoutComponent);
-	return !!(layoutComponent->Flag() & LayoutComponent::LAYOUT_ADAPTABLE);
+	return !!(layoutComponent->Flag().load(std::memory_order_acquire) & LayoutComponent::LAYOUT_ADAPTABLE);
 }
 
 Float2 LayoutComponentModule::RequestGetScrollSize(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent) {

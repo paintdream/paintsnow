@@ -399,8 +399,8 @@ TShared<ResourceBase> SnowyStream::RequestNewResource(IScript::Request& request,
 	bridgeSunset.GetKernel().YieldCurrentWarp();
 
 	if (resource) {
-		if (!(resource->Flag() & ResourceBase::RESOURCE_UPLOADED) && !(resource->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release) & Tiny::TINY_MODIFIED)) {
-			assert(resource->Flag() & Tiny::TINY_MODIFIED);
+		if (!(resource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_UPLOADED) && !(resource->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release) & Tiny::TINY_MODIFIED)) {
+			assert(resource->Flag().load(std::memory_order_acquire) & Tiny::TINY_MODIFIED);
 			resource->GetResourceManager().InvokeUpload(resource());
 		}
 
@@ -444,8 +444,8 @@ private:
 	inline void RoutineCreateResource(void* context, bool run, uint32_t index) {
 		if (run) {
 			TShared<ResourceBase> resource = resourceList[index] = snowyStream.CreateResource(pathList[index], resType, true);
-			if (resource && !(resource->Flag() & ResourceBase::RESOURCE_UPLOADED) && !(resource->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release) & Tiny::TINY_MODIFIED)) {
-				assert(resource->Flag() & Tiny::TINY_MODIFIED);
+			if (resource && !(resource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_UPLOADED) && !(resource->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release) & Tiny::TINY_MODIFIED)) {
+				assert(resource->Flag().load(std::memory_order_acquire) & Tiny::TINY_MODIFIED);
 				resource->GetResourceManager().InvokeUpload(resource());
 			}
 		}
@@ -466,7 +466,7 @@ private:
 #ifdef _DEBUG
 			for (size_t k = 0; k < resourceList.size(); k++) {
 				if (resourceList[k]) {
-					assert(resourceList[k]->Flag() & (Tiny::TINY_MODIFIED | ResourceBase::RESOURCE_UPLOADED));
+					assert(resourceList[k]->Flag().load(std::memory_order_acquire) & (Tiny::TINY_MODIFIED | ResourceBase::RESOURCE_UPLOADED));
 				}
 			}
 #endif
@@ -948,8 +948,8 @@ bool MetaResourceExternalPersist::Read(IStreamBase& streamBase, void* ptr) const
 	String path;
 	if (streamBase >> path) {
 		resource = snowyStream.CreateResource(path);
-		if (resource && !(resource->Flag() & ResourceBase::RESOURCE_UPLOADED) && !(resource->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release) & Tiny::TINY_MODIFIED)) {
-			assert(resource->Flag() & Tiny::TINY_MODIFIED);
+		if (resource && !(resource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_UPLOADED) && !(resource->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release) & Tiny::TINY_MODIFIED)) {
+			assert(resource->Flag().load(std::memory_order_acquire) & Tiny::TINY_MODIFIED);
 			resource->GetResourceManager().InvokeUpload(resource());
 		}
 	}

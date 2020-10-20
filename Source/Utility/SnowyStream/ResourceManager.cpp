@@ -30,7 +30,7 @@ void ResourceManager::RemoveAll() {
 		ResourceBase* resource = (*it).second;
 		InvokeDetach(resource, GetContext());
 
-		if (resource->Flag() & ResourceBase::RESOURCE_ETERNAL) {
+		if (resource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_ETERNAL) {
 			externals.emplace_back(resource);
 		}
 
@@ -45,7 +45,7 @@ void ResourceManager::RemoveAll() {
 void ResourceManager::Insert(const TShared<ResourceBase>& resource) {
 	assert(GetLockCount() != 0);
 	assert(resource);
-	assert(resource->Flag() & ResourceBase::RESOURCE_ORPHAN);
+	assert(resource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_ORPHAN);
 
 	// allowing anounymous resource
 	const String& id = resource->GetLocation();
@@ -57,7 +57,7 @@ void ResourceManager::Insert(const TShared<ResourceBase>& resource) {
 
 	resourceMap[id] = resource();
 
-	if (resource->Flag() & ResourceBase::RESOURCE_ETERNAL) {
+	if (resource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_ETERNAL) {
 		resource->ReferenceObject();
 	}
 
@@ -97,7 +97,7 @@ void* ResourceManager::GetContext() const {
 void ResourceManager::Remove(const TShared<ResourceBase>& resource) {
 	assert(GetLockCount() != 0);
 	assert(resource);
-	if (resource->Flag() & (ResourceBase::RESOURCE_ORPHAN | ResourceBase::RESOURCE_ETERNAL))
+	if (resource->Flag().load(std::memory_order_acquire) & (ResourceBase::RESOURCE_ORPHAN | ResourceBase::RESOURCE_ETERNAL))
 		return;
 
 	const String& location = resource->GetLocation();
@@ -109,7 +109,7 @@ void ResourceManager::Remove(const TShared<ResourceBase>& resource) {
 	}
 
 	// Parallel bug here.
-	if (resource->Flag() & ResourceBase::RESOURCE_ATTACHED) {
+	if (resource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_ATTACHED) {
 		InvokeDetach(resource(), GetContext());
 	}
 
@@ -136,7 +136,7 @@ TShared<ResourceBase> ResourceSerializerBase::DeserializeFromArchive(ResourceMan
 			resource = Deserialize(manager, path, protocol, flag, stream);
 
 			if (resource) {
-				if (!(resource->Flag() & ResourceBase::RESOURCE_STREAM)) {
+				if (!(resource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_STREAM)) {
 					stream->ReleaseObject();
 				}
 			} else {

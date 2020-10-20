@@ -48,7 +48,7 @@ void ShadowMaskRenderStage::PrepareResources(Engine& engine, IRender::Queue* que
 
 	const String path = "[Runtime]/MeshResource/StandardCube";
 	meshResource = engine.snowyStream.CreateReflectedResource(UniqueType<MeshResource>(), path, true, 0, nullptr);
-	assert(meshResource->Flag() & ResourceBase::RESOURCE_UPLOADED);
+	assert(meshResource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_UPLOADED);
 
 	BaseClass::PrepareResources(engine, queue);
 }

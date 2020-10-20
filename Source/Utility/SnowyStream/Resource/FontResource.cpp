@@ -177,7 +177,7 @@ uint16_t FontResource::GetFontTextureSize() const {
 
 uint32_t FontResource::Update(IRender& render, IRender::Queue* queue) {
 	uint32_t count = 0;
-	if (Flag() & TINY_MODIFIED) {
+	if (Flag().load(std::memory_order_acquire) & TINY_MODIFIED) {
 		for (std::map<uint32_t, Slice>::iterator it = sliceMap.begin(); it != sliceMap.end(); it++) {
 			std::atomic<uint32_t>& lock = reinterpret_cast<std::atomic<uint32_t>&>(it->second.critical);
 

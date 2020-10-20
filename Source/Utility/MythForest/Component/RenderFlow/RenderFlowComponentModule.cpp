@@ -158,12 +158,12 @@ void RenderFlowComponentModule::RequestLinkRenderStagePort(IScript::Request& req
 		return;
 	}
 
-	if (!fromPort->GetLinks().empty() && ((fromPort->Flag() & Tiny::TINY_UNIQUE) || (toPort->Flag() & Tiny::TINY_UNIQUE))) {
+	if (!fromPort->GetLinks().empty() && ((fromPort->Flag().load(std::memory_order_relaxed) & Tiny::TINY_UNIQUE) || (toPort->Flag().load(std::memory_order_relaxed) & Tiny::TINY_UNIQUE))) {
 		request.Error(String("Sharing policy conflicts when connecting from: ") + fromPortName + " to " + toPortName);
 		return;
 	}
 
-	fromPort->Link(toPort, toPort->Flag() & RenderStage::RENDERSTAGE_WEAK_LINKAGE ? 0 : Tiny::TINY_PINNED);
+	fromPort->Link(toPort, toPort->Flag().load(std::memory_order_relaxed) & RenderStage::RENDERSTAGE_WEAK_LINKAGE ? 0 : Tiny::TINY_PINNED);
 }
 
 void RenderFlowComponentModule::RequestUnlinkRenderStagePort(IScript::Request& request, IScript::Delegate<RenderFlowComponent> renderFlowComponent, IScript::Delegate<RenderStage> from, const String& fromPortName, IScript::Delegate<RenderStage> to, const String& toPortName) {

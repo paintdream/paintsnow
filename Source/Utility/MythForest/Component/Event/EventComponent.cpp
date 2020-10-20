@@ -29,7 +29,7 @@ void EventComponent::Execute(void* context) {
 		tickTimeDelta = time - tickTimeStamp;
 
 		Event event(*reinterpret_cast<Engine*>(context), Event::EVENT_TICK, this, nullptr);
-		bool prepost = !!(rootEntity->Flag() & Entity::ENTITY_HAS_PREPOST_TICK_EVENT);
+		bool prepost = !!(rootEntity->Flag().load(std::memory_order_relaxed) & Entity::ENTITY_HAS_PREPOST_TICK_EVENT);
 
 		if (prepost) {
 			event.eventID = Event::EVENT_PRETICK;
@@ -37,7 +37,7 @@ void EventComponent::Execute(void* context) {
 			event.eventID = Event::EVENT_TICK;
 		}
 
-		if (rootEntity->Flag() & Entity::ENTITY_HAS_TICK_EVENT) {
+		if (rootEntity->Flag().load(std::memory_order_relaxed) & Entity::ENTITY_HAS_TICK_EVENT) {
 			rootEntity->PostEvent(event, Entity::ENTITY_HAS_TICK_EVENT);
 		}
 
@@ -68,7 +68,7 @@ void EventComponent::InstallTick(Engine& engine, const TShared<Clock>& c) {
 		UninstallTick(engine);
 	}
 
-	if (!(Flag() & EVENTCOMPONENT_INSTALLED_TICK)) {
+	if (!(Flag().load(std::memory_order_relaxed) & EVENTCOMPONENT_INSTALLED_TICK)) {
 		Flag().fetch_or((EVENTCOMPONENT_INSTALLED_TICK | (EVENTCOMPONENT_BASE << Event::EVENT_TICK)), std::memory_order_release);
 
 		clock = c;
@@ -80,7 +80,7 @@ void EventComponent::InstallTick(Engine& engine, const TShared<Clock>& c) {
 }
 
 void EventComponent::UninstallTick(Engine& engine) {
-	if (Flag() & EVENTCOMPONENT_INSTALLED_TICK) {
+	if (Flag().load(std::memory_order_relaxed) & EVENTCOMPONENT_INSTALLED_TICK) {
 		clock->RemoveTicker(this);
 		clock = nullptr;
 		Flag().fetch_and(~(EVENTCOMPONENT_INSTALLED_TICK | (EVENTCOMPONENT_BASE << Event::EVENT_TICK)), std::memory_order_release);
@@ -105,7 +105,7 @@ void EventComponent::Uninitialize(Engine& engine, Entity* entity) {
 }
 
 void EventComponent::RoutineSetupFrameTickers(Engine& engine) {
-	if (!(Flag() & EVENTCOMPONENT_INSTALLED_FRAME)) return;
+	if (!(Flag().load(std::memory_order_relaxed) & EVENTCOMPONENT_INSTALLED_FRAME)) return;
 
 	std::vector<TShared<Component> > nextTickerCollection;
 	if (rootEntity != nullptr) {
@@ -122,7 +122,7 @@ void EventComponent::RoutineSetupFrameTickers(Engine& engine) {
 	}
 
 	SpinLock(critical);
-	if (Flag() & EVENTCOMPONENT_INSTALLED_FRAME) {
+	if (Flag().load(std::memory_order_relaxed) & EVENTCOMPONENT_INSTALLED_FRAME) {
 		std::swap(frameTickerCollection, nextTickerCollection);
 	}
 	SpinUnLock(critical);
@@ -141,8 +141,8 @@ void EventComponent::RoutineOnSize(Engine& engine, const Int2& size) {
 }
 
 void EventComponent::OnKeyboard(Engine& engine, const IFrame::EventKeyboard& keyboard) {
-	if (Flag() & TINY_ACTIVATED) {
-		if (rootEntity->Flag() & Entity::ENTITY_HAS_SPECIAL_EVENT) {
+	if (Flag().load(std::memory_order_relaxed) & TINY_ACTIVATED) {
+		if (rootEntity->Flag().load(std::memory_order_relaxed) & Entity::ENTITY_HAS_SPECIAL_EVENT) {
 			Event event(engine, Event::EVENT_INPUT, this, TShared<SharedTiny>::From(new Event::Wrapper<IFrame::EventKeyboard>(keyboard)));
 			rootEntity->PostEvent(event, Entity::ENTITY_HAS_SPECIAL_EVENT);
 		}
@@ -150,8 +150,8 @@ void EventComponent::OnKeyboard(Engine& engine, const IFrame::EventKeyboard& key
 }
 
 void EventComponent::OnMouse(Engine& engine, const IFrame::EventMouse& mouse) {
-	if (Flag() & TINY_ACTIVATED) {
-		if (rootEntity->Flag() & Entity::ENTITY_HAS_SPECIAL_EVENT) {
+	if (Flag().load(std::memory_order_relaxed) & TINY_ACTIVATED) {
+		if (rootEntity->Flag().load(std::memory_order_relaxed) & Entity::ENTITY_HAS_SPECIAL_EVENT) {
 			Event event(engine, Event::EVENT_INPUT, this, TShared<SharedTiny>::From(new Event::Wrapper<IFrame::EventMouse>(mouse)));
 			rootEntity->PostEvent(event, Entity::ENTITY_HAS_SPECIAL_EVENT);
 		}
@@ -159,8 +159,8 @@ void EventComponent::OnMouse(Engine& engine, const IFrame::EventMouse& mouse) {
 }
 
 void EventComponent::OnSize(Engine& engine, const IFrame::EventSize& size) {
-	if (Flag() & TINY_ACTIVATED) {
-		if (rootEntity->Flag() & Entity::ENTITY_HAS_SPECIAL_EVENT) {
+	if (Flag().load(std::memory_order_relaxed) & TINY_ACTIVATED) {
+		if (rootEntity->Flag().load(std::memory_order_relaxed) & Entity::ENTITY_HAS_SPECIAL_EVENT) {
 			Event event(engine, Event::EVENT_INPUT, this, TShared<SharedTiny>::From(new Event::Wrapper<IFrame::EventSize>(size)));
 			rootEntity->PostEvent(event, Entity::ENTITY_HAS_SPECIAL_EVENT);
 		}
@@ -168,13 +168,13 @@ void EventComponent::OnSize(Engine& engine, const IFrame::EventSize& size) {
 }
 
 void EventComponent::RoutineTickFrame(Engine& engine) {
-	if (!(Flag() & TINY_ACTIVATED)) return;
+	if (!(Flag().load(std::memory_order_relaxed) & TINY_ACTIVATED)) return;
 
 	Event event(engine, Event::EVENT_FRAME, rootEntity);
 	// Do not post them directly because we are in render thread
 	// rootEntity->PostEvent(event);
 
-	if (rootEntity->Flag() & Entity::ENTITY_HAS_SPECIAL_EVENT) {
+	if (rootEntity->Flag().load(std::memory_order_relaxed) & Entity::ENTITY_HAS_SPECIAL_EVENT) {
 		engine.GetKernel().QueueRoutine(this, CreateTaskContextFree(Wrap(this, &EventComponent::RoutineSetupFrameTickers), std::ref(engine)));
 
 		// may be previous frame's collection

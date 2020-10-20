@@ -63,7 +63,7 @@ void Clock::Pause() {
 }
 
 bool Clock::IsRunning() const {
-	return !!(Flag() & TINY_ACTIVATED);
+	return !!(Flag().load(std::memory_order_acquire) & TINY_ACTIVATED);
 }
 
 void Clock::SetClock(int64_t w) {
@@ -105,7 +105,7 @@ void Clock::OnTimer(size_t interval) {
 		if (IsRunning()) {
 			const FLAG flagMergeTick = CLOCK_MERGE_TICKS | TINY_MODIFIED;
 
-			if ((Flag() & flagMergeTick) != flagMergeTick) {
+			if ((Flag().load(std::memory_order_acquire) & flagMergeTick) != flagMergeTick) {
 				Flag().fetch_or(TINY_MODIFIED, std::memory_order_release);
 				bridgeSunset.GetKernel().QueueRoutine(this, this);
 			}

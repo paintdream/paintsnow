@@ -195,7 +195,7 @@ void MythForest::RequestAddEntityComponent(IScript::Request& request, IScript::D
 	CHECK_DELEGATE(component);
 	CHECK_THREAD_IN_MODULE(entity);
 	
-	if (!(component->Flag() & Component::COMPONENT_LOCALIZED_WARP)) {
+	if (!(component->Flag().load(std::memory_order_acquire) & Component::COMPONENT_LOCALIZED_WARP)) {
 		CHECK_THREAD_IN_MODULE(component);
 	}
 
@@ -235,7 +235,7 @@ TShared<Component> MythForest::RequestGetUniqueEntityComponent(IScript::Request&
 		const std::vector<Component*>& components = entity->GetComponents();
 		for (size_t i = 0; i < components.size(); i++) {
 			Component* component = components[i];
-			if (component != nullptr && (component->Flag() & Component::COMPONENT_ALIASED_TYPE)) {
+			if (component != nullptr && (component->Flag().load(std::memory_order_acquire) & Component::COMPONENT_ALIASED_TYPE)) {
 				if (component->GetAliasedTypeName() == componentName) {
 					return component;
 				}
@@ -272,7 +272,7 @@ String MythForest::RequestGetComponentType(IScript::Request& request, IScript::D
 	CHECK_DELEGATE(component);
 	CHECK_THREAD_IN_MODULE(component);
 
-	if (component->Flag() & Component::COMPONENT_ALIASED_TYPE) {
+	if (component->Flag().load(std::memory_order_acquire) & Component::COMPONENT_ALIASED_TYPE) {
 		return component->GetAliasedTypeName();
 	} else {
 		return component->GetUnique()->GetBriefName();

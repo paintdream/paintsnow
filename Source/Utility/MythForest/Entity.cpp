@@ -46,7 +46,7 @@ static void InvokeClearComponentsAndRelease(void* request, bool run, Engine& eng
 
 void Entity::ReleaseObject() {
 	if (GetExtReferCount() == 0) {
-		if (Flag() & ENTITY_STORE_ENGINE) {
+		if (Flag().load(std::memory_order_acquire) & ENTITY_STORE_ENGINE) {
 			if (!components.empty()) {
 				Engine& engine = GetEngineInternal();
 				Kernel& kernel = engine.GetKernel();
@@ -68,7 +68,7 @@ void Entity::ReleaseObject() {
 
 void Entity::SetEngineInternal(Engine& engine) {
 	// reuse parent node as engine pointer
-	assert(!(Flag() & ENTITY_STORE_ENGINE));
+	assert(!(Flag().load(std::memory_order_acquire) & ENTITY_STORE_ENGINE));
 	Flag().fetch_or(ENTITY_STORE_ENGINE, std::memory_order_relaxed);
 
 	reinterpret_cast<Engine*&>(*(void**)&_parentNode) = &engine;
@@ -82,7 +82,7 @@ void Entity::CleanupEngineInternal() {
 
 Engine& Entity::GetEngineInternal() const {
 	assert(GetParent() != nullptr);
-	assert(Flag() & ENTITY_STORE_ENGINE);
+	assert(Flag().load(std::memory_order_acquire) & ENTITY_STORE_ENGINE);
 
 	return *reinterpret_cast<Engine*>(*(void**)&_parentNode);
 }
@@ -94,19 +94,19 @@ void Entity::InitializeComponent(Engine& engine, Component* component) {
 	// add component mask
 	Flag().fetch_or((component->GetEntityFlagMask() | TINY_MODIFIED), std::memory_order_relaxed);
 
-	if (Flag() & ENTITY_HAS_TACH_EVENT) {
+	if (Flag().load(std::memory_order_acquire) & ENTITY_HAS_TACH_EVENT) {
 		Event event(engine, Event::EVENT_ATTACH_COMPONENT, this, component);
 		PostEvent(event, ENTITY_HAS_TACH_EVENT);
 	}
 
-	if ((Flag() & (TINY_ACTIVATED | ENTITY_HAS_ACTIVE_EVENT)) == (TINY_ACTIVATED | ENTITY_HAS_ACTIVE_EVENT)) {
+	if ((Flag().load(std::memory_order_acquire) & (TINY_ACTIVATED | ENTITY_HAS_ACTIVE_EVENT)) == (TINY_ACTIVATED | ENTITY_HAS_ACTIVE_EVENT)) {
 		Event eventActivate(engine, Event::EVENT_ENTITY_ACTIVATE, this, nullptr);
 		component->DispatchEvent(eventActivate, this);
 	}
 }
 
 void Entity::UninitializeComponent(Engine& engine, Component* component) {
-	if (Flag() & ENTITY_HAS_TACH_EVENT) {
+	if (Flag().load(std::memory_order_acquire) & ENTITY_HAS_TACH_EVENT) {
 		Event event(engine, Event::EVENT_DETACH_COMPONENT, this, component);
 		PostEvent(event, ENTITY_HAS_TACH_EVENT);
 	}
@@ -121,10 +121,10 @@ void Entity::UninitializeComponent(Engine& engine, Component* component) {
 }
 
 void Entity::AddComponent(Engine& engine, Component* component) {
-	assert((component->Flag() & Component::COMPONENT_LOCALIZED_WARP) || component->GetWarpIndex() == GetWarpIndex());
+	assert((component->Flag().load(std::memory_order_acquire) & Component::COMPONENT_LOCALIZED_WARP) || component->GetWarpIndex() == GetWarpIndex());
 	uint32_t id = component->GetQuickUniqueID();
 	if (id != ~(uint32_t)0) {
-		assert(component->Flag() & TINY_UNIQUE);
+		assert(component->Flag().load(std::memory_order_relaxed) & TINY_UNIQUE);
 		if (id >= components.size()) {
 			components.resize(id + 1, nullptr);
 			components[id] = component;
@@ -144,7 +144,7 @@ void Entity::AddComponent(Engine& engine, Component* component) {
 			components[id] = component;
 			InitializeComponent(engine, component);
 		}
-	} else if (component->Flag() & Tiny::TINY_UNIQUE) {
+	} else if (component->Flag().load(std::memory_order_relaxed) & Tiny::TINY_UNIQUE) {
 		Unique unique = component->GetUnique();
 		for (size_t i = 0; i < components.size(); i++) {
 			Component*& c = components[i];
@@ -162,7 +162,7 @@ void Entity::AddComponent(Engine& engine, Component* component) {
 		components.emplace_back(component);
 		InitializeComponent(engine, component);
 	} else {
-		if (Flag() & ENTITY_STORE_NULLSLOT) {
+		if (Flag().load(std::memory_order_acquire) & ENTITY_STORE_NULLSLOT) {
 			for (size_t i = 0; i < components.size(); i++) {
 				Component*& target = components[i];
 				if (target == nullptr) {
@@ -184,7 +184,7 @@ void Entity::RemoveComponent(Engine& engine, Component* component) {
 	assert(component != nullptr);
 	uint32_t id = component->GetQuickUniqueID();
 	if (id != ~(uint32_t)0) {
-		assert(component->Flag() & TINY_UNIQUE);
+		assert(component->Flag().load(std::memory_order_acquire) & TINY_UNIQUE);
 		if (id < components.size()) {
 			Component*& target = components[id];
 			if (target == component) {
@@ -238,7 +238,7 @@ Component* Entity::GetUniqueComponent(Unique unique) const {
 	for (size_t i = 0; i < components.size(); i++) {
 		Component* component = components[i];
 		if (component != nullptr && component->GetUnique()->IsClass(unique)) {
-			assert(component->Flag() & Tiny::TINY_UNIQUE);
+			assert(component->Flag().load(std::memory_order_acquire) & Tiny::TINY_UNIQUE);
 			return component;
 		}
 	}
@@ -249,7 +249,7 @@ Component* Entity::GetUniqueComponent(Unique unique) const {
 void Entity::ClearComponents(Engine& engine) {
 	Deactivate(engine);
 
-	if (Flag() & ENTITY_HAS_TACH_EVENT) {
+	if (Flag().load(std::memory_order_acquire) & ENTITY_HAS_TACH_EVENT) {
 		for (size_t i = 0; i < components.size(); i++) {
 			Component* component = components[i];
 			if (component != nullptr) {
@@ -291,7 +291,7 @@ TObject<IReflect>& Entity::operator () (IReflect& reflect) {
 }
 
 bool Entity::IsOrphan() const {
-	return !!(Flag() & ENTITY_STORE_ENGINE);
+	return !!(Flag().load(std::memory_order_acquire) & ENTITY_STORE_ENGINE);
 }
 
 uint32_t Entity::GetPivotIndex() const {
@@ -299,7 +299,7 @@ uint32_t Entity::GetPivotIndex() const {
 }
 
 void Entity::UpdateBoundingBox(Engine& engine) {
-	if (Flag() & TINY_MODIFIED) {
+	if (Flag().load(std::memory_order_acquire) & TINY_MODIFIED) {
 		// assert(IsOrphan());
 
 		if (IsOrphan()) {
@@ -324,7 +324,7 @@ void Entity::UpdateBoundingBox(Engine& engine) {
 
 void Entity::Activate(Engine& engine) {
 	if (!(Flag().fetch_or(TINY_ACTIVATED) & TINY_ACTIVATED)) {
-		if (Flag() & ENTITY_HAS_ACTIVE_EVENT) {
+		if (Flag().load(std::memory_order_acquire) & ENTITY_HAS_ACTIVE_EVENT) {
 			Event event(engine, Event::EVENT_ENTITY_ACTIVATE, this, nullptr);
 			PostEvent(event, ENTITY_HAS_ACTIVE_EVENT);
 		}
@@ -333,7 +333,7 @@ void Entity::Activate(Engine& engine) {
 
 void Entity::Deactivate(Engine& engine) {
 	if (Flag().fetch_and(~TINY_ACTIVATED) & TINY_ACTIVATED) {
-		if (Flag() & ENTITY_HAS_ACTIVE_EVENT) {
+		if (Flag().load(std::memory_order_acquire) & ENTITY_HAS_ACTIVE_EVENT) {
 			Event event(engine, Event::EVENT_ENTITY_DEACTIVATE, this, nullptr);
 			PostEvent(event, ENTITY_HAS_ACTIVE_EVENT);
 		}

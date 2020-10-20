@@ -35,7 +35,7 @@ void SoundComponent::ScriptUninitialize(IScript::Request& request) {
 }
 
 bool SoundComponent::IsOnline() const {
-	return !!(Flag() & SOUNDCOMPONENT_ONLINE);
+	return !!(Flag().load(std::memory_order_acquire) & SOUNDCOMPONENT_ONLINE);
 }
 
 double SoundComponent::GetDuration() const {
@@ -60,7 +60,7 @@ TObject<IReflect>& SoundComponent::operator () (IReflect& reflect) {
 }
 
 bool SoundComponent::IsPlaying() const {
-	return !!(Flag() & Tiny::TINY_ACTIVATED);
+	return !!(Flag().load(std::memory_order_acquire) & Tiny::TINY_ACTIVATED);
 }
 
 void SoundComponent::Step(IScript::Request& request) {

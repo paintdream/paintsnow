@@ -57,7 +57,7 @@ void SpaceComponentModule::RequestInsertEntity(IScript::Request& request, IScrip
 	CHECK_DELEGATE(entity);
 	CHECK_THREAD_IN_MODULE(entity);
 
-	if (spaceComponent->Flag() & SpaceComponent::TINY_ACTIVATED) {
+	if (spaceComponent->Flag().load(std::memory_order_acquire) & SpaceComponent::TINY_ACTIVATED) {
 		spaceComponent->Insert(engine, entity.Get());
 	} else {
 		request.Error("Orphan SpaceComponent cannot hold entities.");

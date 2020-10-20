@@ -30,7 +30,7 @@ void FrameBarrierRenderStage::SetMainResolution(Engine& engine, IRender::Queue* 
 	if (Next.GetLinks().empty()) return;
 
 	RenderStage* stage = static_cast<RenderStage*>(Next.GetLinks().back().port->GetNode());
-	if (stage->Flag() & RENDERSTAGE_ADAPT_MAIN_RESOLUTION) {
+	if (stage->Flag().load(std::memory_order_relaxed) & RENDERSTAGE_ADAPT_MAIN_RESOLUTION) {
 		Flag().fetch_or(RENDERSTAGE_ADAPT_MAIN_RESOLUTION, std::memory_order_relaxed);
 		resolutionShift = stage->resolutionShift;
 

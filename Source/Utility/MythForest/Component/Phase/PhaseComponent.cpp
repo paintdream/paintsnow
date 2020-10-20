@@ -520,6 +520,7 @@ void PhaseComponent::Collect(Engine& engine, TaskData& taskData, const MatrixFlo
 	std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(taskData.status);
 	finalStatus.store(TaskData::STATUS_ASSEMBLING, std::memory_order_release);
 
+	std::atomic_thread_fence(std::memory_order_acquire);
 	CollectComponentsFromEntity(engine, taskData, instanceData, captureData, rootEntity);
 }
 
@@ -762,7 +763,7 @@ void PhaseComponent::LightCollector::CollectComponents(Engine& engine, TaskData&
 				if (lightComponent != nullptr) {
 					LightElement element;
 					const MatrixFloat4x4& worldMatrix = instanceData.worldMatrix;
-					if (lightComponent->Flag() & LightComponent::LIGHTCOMPONENT_DIRECTIONAL) {
+					if (lightComponent->Flag().load(std::memory_order_relaxed) & LightComponent::LIGHTCOMPONENT_DIRECTIONAL) {
 						element.position = Float4(-worldMatrix(2, 0), -worldMatrix(2, 1), -worldMatrix(2, 2), 0);
 					} else {
 						// Only directional light by now
@@ -796,6 +797,8 @@ void PhaseComponent::LightCollector::InvokeCollect(Engine& engine, Entity* entit
 	LightConfig::WorldInstanceData worldInstance;
 	worldInstance.worldMatrix = MatrixFloat4x4::Identity();
 	LightConfig::CaptureData captureData;
+
+	std::atomic_thread_fence(std::memory_order_acquire);
 	CollectComponentsFromEntity(engine, *taskData, worldInstance, captureData, entity);
 }
 
@@ -830,7 +833,7 @@ void PhaseComponent::Update(Engine& engine, const Float3& center) {
 }
 
 void PhaseComponent::CollectComponents(Engine& engine, TaskData& task, const WorldInstanceData& inst, const CaptureData& captureData, Entity* entity) {
-	Tiny::FLAG rootFlag = entity->Flag().load(std::memory_order_acquire);
+	Tiny::FLAG rootFlag = entity->Flag().load(std::memory_order_relaxed);
 	const Float3Pair& box = entity->GetKey();
 	if ((rootFlag & Tiny::TINY_ACTIVATED) && captureData(box)) {
 		TransformComponent* transformComponent = entity->GetUniqueComponent(UniqueType<TransformComponent>());
@@ -853,7 +856,7 @@ void PhaseComponent::CollectComponents(Engine& engine, TaskData& task, const Wor
 			if (component->GetEntityFlagMask() & Entity::ENTITY_HAS_RENDERABLE) {
 				if (transformComponent != nullptr) {
 					RenderableComponent* renderableComponent = static_cast<RenderableComponent*>(component);
-					if (!(renderableComponent->Flag() & RenderableComponent::RENDERABLECOMPONENT_CAMERAVIEW)) {
+					if (!(renderableComponent->Flag().load(std::memory_order_relaxed) & RenderableComponent::RENDERABLECOMPONENT_CAMERAVIEW)) {
 						CollectRenderableComponent(engine, task, renderableComponent, instanceData);
 					}
 				}

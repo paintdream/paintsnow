@@ -48,7 +48,7 @@ void RenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 void RenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 	IRender::Resource::RenderTargetDescription desc = renderTargetDescription;
 
-	if (Flag() & RENDERSTAGE_OUTPUT_TO_BACK_BUFFER) {
+	if (Flag().load(std::memory_order_acquire) & RENDERSTAGE_OUTPUT_TO_BACK_BUFFER) {
 		desc.colorStorages.clear();
 	} else {
 		// optimize for Don't Care (DISCARD)
@@ -130,7 +130,7 @@ const IRender::Resource::RenderTargetDescription& RenderStage::GetRenderTargetDe
 }
 
 void RenderStage::Commit(Engine& engine, std::vector<IRender::Queue*>& queues, std::vector<IRender::Queue*>& instantQueues, std::vector<IRender::Queue*>& deletedQueues, IRender::Queue* instantQueue) {
-	assert(Flag() & TINY_ACTIVATED);
+	assert(Flag().load(std::memory_order_acquire) & TINY_ACTIVATED);
 	for (size_t i = 0; i < nodePorts.size(); i++) {
 		nodePorts[i].port->Commit(queues, instantQueues, deletedQueues);
 	}
@@ -141,7 +141,7 @@ void RenderStage::Commit(Engine& engine, std::vector<IRender::Queue*>& queues, s
 }
 
 void RenderStage::SetMainResolution(Engine& engine, IRender::Queue* resourceQueue, UShort2 res) {
-	if (!(Flag() & RENDERSTAGE_ADAPT_MAIN_RESOLUTION)) return;	
+	if (!(Flag().load(std::memory_order_acquire) & RENDERSTAGE_ADAPT_MAIN_RESOLUTION)) return;	
 	// By default, create render buffer with resolution provided
 	// For some stages(e.g. cascaded bloom generator), we must override this function to adapt the new value
 	// by now we have no color-free render buffers

@@ -17,7 +17,7 @@ const String& Component::GetAliasedTypeName() const {
 }
 
 void Component::Initialize(Engine& engine, Entity* entity) {
-	assert((Flag() & COMPONENT_LOCALIZED_WARP) || entity->GetWarpIndex() == GetWarpIndex());
+	assert((Flag().load(std::memory_order_acquire) & COMPONENT_LOCALIZED_WARP) || entity->GetWarpIndex() == GetWarpIndex());
 	Flag().fetch_or(Tiny::TINY_ACTIVATED, std::memory_order_relaxed);
 }
 
@@ -114,7 +114,7 @@ bool Component::RaycastTask::EmplaceResult(rvalue<Component::RaycastResult> item
 float Component::Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const { return ratio; }
 
 void Component::RaycastForEntity(RaycastTask& task, Float3Pair& ray, Entity* entity) {
-	assert(!(entity->Flag() & TINY_MODIFIED));
+	assert(!(entity->Flag().load(std::memory_order_acquire) & TINY_MODIFIED));
 	if (!Math::IntersectBox(entity->GetKey(), ray))
 		return;
 

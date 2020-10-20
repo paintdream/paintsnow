@@ -33,7 +33,7 @@ static void InvokeRemoveAll(void* context, bool run, Engine& engine, SpaceCompon
 }
 
 void SpaceComponent::Uninitialize(Engine& engine, Entity* entity) {
-	if (Flag() & COMPONENT_LOCALIZED_WARP) {
+	if (Flag().load(std::memory_order_relaxed) & COMPONENT_LOCALIZED_WARP) {
 		QueueRoutine(engine, CreateTask(Wrap(InvokeRemoveAll), std::ref(engine), this));
 	} else {
 		RemoveAll(engine);
@@ -52,8 +52,8 @@ void SpaceComponent::QueueRoutine(Engine& engine, ITask* task) {
 }
 
 bool SpaceComponent::Insert(Engine& engine, Entity* entity) {
-	assert(Flag() & TINY_ACTIVATED);
-	if (!(Flag() & TINY_ACTIVATED)) {
+	assert(Flag().load(std::memory_order_relaxed) & TINY_ACTIVATED);
+	if (!(Flag().load(std::memory_order_relaxed) & TINY_ACTIVATED)) {
 		return false;
 	}
 
@@ -78,7 +78,7 @@ bool SpaceComponent::Insert(Engine& engine, Entity* entity) {
 
 	if (rootEntity)
 	{
-		if (Flag() & SPACECOMPONENT_ORDERED)
+		if (Flag().load(std::memory_order_relaxed) & SPACECOMPONENT_ORDERED)
 		{
 			rootEntity->Attach(entity);
 		}
@@ -121,8 +121,8 @@ void SpaceComponent::RoutineDispatchEvent(const Event& event) {
 
 void SpaceComponent::DispatchEvent(Event& event, Entity* entity) {
 	// forward tick only
-	if ((Flag() & SPACECOMPONENT_FORWARD_EVENT_TICK) && event.eventID == Event::EVENT_TICK) {
-		if (Flag() & COMPONENT_LOCALIZED_WARP) {
+	if ((Flag().load(std::memory_order_relaxed) & SPACECOMPONENT_FORWARD_EVENT_TICK) && event.eventID == Event::EVENT_TICK) {
+		if (Flag().load(std::memory_order_relaxed) & COMPONENT_LOCALIZED_WARP) {
 			QueueRoutine(event.engine, CreateTaskContextFree(Wrap(this, &SpaceComponent::RoutineDispatchEvent), event));
 		} else {
 			RoutineDispatchEvent(event);
@@ -200,7 +200,7 @@ bool SpaceComponent::Remove(Engine& engine, Entity* entity) {
 	}
 
 	Entity* newRoot = nullptr;
-	if (Flag() & SPACECOMPONENT_ORDERED) {
+	if (Flag().load(std::memory_order_relaxed) & SPACECOMPONENT_ORDERED) {
 		SelectRemove selectRemove;
 		newRoot = static_cast<Entity*>(entity->Detach(selectRemove));
 	} else {
@@ -338,8 +338,8 @@ float SpaceComponent::RoutineRaycast(RaycastTask& task, Float3Pair& ray, Unit* p
 }
 
 float SpaceComponent::Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const {
-	if (!(Flag() & COMPONENT_LOCALIZED_WARP) || task.GetEngine().GetKernel().GetCurrentWarpIndex() == GetWarpIndex()) {
-		if (Flag() & SPACECOMPONENT_ORDERED) {
+	if (!(Flag().load(std::memory_order_relaxed) & COMPONENT_LOCALIZED_WARP) || task.GetEngine().GetKernel().GetCurrentWarpIndex() == GetWarpIndex()) {
+		if (Flag().load(std::memory_order_relaxed) & SPACECOMPONENT_ORDERED) {
 			RaycastInternal(rootEntity, task, ray, parent, ratio, boundingBox, std::true_type());
 		} else {
 			RaycastInternal(rootEntity, task, ray, parent, ratio, boundingBox, std::false_type());

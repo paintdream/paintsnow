@@ -127,7 +127,7 @@ void TransformComponent::SetTransform(const MatrixFloat4x4& value) {
 }
 
 void TransformComponent::UpdateTransform() {
-	if (Flag() & Tiny::TINY_MODIFIED) {
+	if (Flag().load(std::memory_order_acquire) & Tiny::TINY_MODIFIED) {
 		MatrixFloat4x4 rotMatrix;
 		TShared<TRS>& trsData = Modify();
 		trsData->rotation.WriteMatrix(rotMatrix);

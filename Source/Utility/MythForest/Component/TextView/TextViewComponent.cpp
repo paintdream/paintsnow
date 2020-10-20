@@ -218,8 +218,8 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 	// if (currentHeight < 0) currentHeight = 0;
 	bool full = false;
 	bool showCursor = false;
-	bool selectRevColor = !!(Flag() & TEXTVIEWCOMPONENT_SELECT_REV_COLOR);
-	bool cursorRevColor = !!(Flag() & TEXTVIEWCOMPONENT_CURSOR_REV_COLOR);
+	bool selectRevColor = !!(Flag().load(std::memory_order_acquire) & TEXTVIEWCOMPONENT_SELECT_REV_COLOR);
+	bool cursorRevColor = !!(Flag().load(std::memory_order_acquire) & TEXTVIEWCOMPONENT_CURSOR_REV_COLOR);
 	int align = TagParser::Node::ALIGN_LEFT;
 	Short2 texSize;
 	// fontResource->GetFontTexture(render, queue, fontSize, texSize);

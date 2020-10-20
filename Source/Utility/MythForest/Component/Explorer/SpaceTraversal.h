@@ -56,7 +56,7 @@ namespace PaintsNow {
 		}
 
 		void CollectComponentsFromSpace(Engine& engine, TaskData& taskData, const WorldInstanceData& instanceData, const CaptureData& captureData, SpaceComponent* spaceComponent) {
-			if ((spaceComponent->Flag() & Component::COMPONENT_LOCALIZED_WARP) && spaceComponent->GetWarpIndex() != engine.GetKernel().GetCurrentWarpIndex()) {
+			if ((spaceComponent->Flag().load(std::memory_order_relaxed) & Component::COMPONENT_LOCALIZED_WARP) && spaceComponent->GetWarpIndex() != engine.GetKernel().GetCurrentWarpIndex()) {
 				spaceComponent->QueueRoutine(engine, CreateTaskContextFree(Wrap(this, &SpaceTraversal<T, Config>::CollectComponentsFromSpace), std::ref(engine), std::ref(taskData), instanceData, captureData, spaceComponent));
 			} else {
 				Entity* spaceRoot = spaceComponent->GetRootEntity();
@@ -65,7 +65,7 @@ namespace PaintsNow {
 					WorldInstanceData subWorldInstancedData = instanceData;
 					// update bounding box
 					subWorldInstancedData.boundingBox = spaceComponent->GetBoundingBox();
-					if (spaceComponent->Flag() & SpaceComponent::SPACECOMPONENT_ORDERED) {
+					if (spaceComponent->Flag().load(std::memory_order_relaxed) & SpaceComponent::SPACECOMPONENT_ORDERED) {
 						CollectComponentsFromEntityTree(engine, taskData, subWorldInstancedData, captureData, spaceRoot, std::true_type());
 					} else {
 						CollectComponentsFromEntityTree(engine, taskData, subWorldInstancedData, captureData, spaceRoot, std::false_type());

@@ -19,7 +19,7 @@ ShaderComponent::~ShaderComponent() {
 }
 
 void ShaderComponent::SetCallback(IScript::Request& request, IScript::Request::Ref callback) {
-	assert(Flag() & TINY_ACTIVATED);
+	assert(Flag().load(std::memory_order_acquire) & TINY_ACTIVATED);
 	if (compileCallbackRef) {
 		request.DoLock();
 		request.Dereference(compileCallbackRef);
@@ -82,7 +82,7 @@ void ShaderComponent::OnShaderCompiled(IRender::Resource* resource, IRender::Res
 #endif
 
 		customMaterialShader->SetShaderResource(resource);
-		if (customMaterialShader->Flag() & ResourceBase::RESOURCE_ORPHAN) {
+		if (customMaterialShader->Flag().load(std::memory_order_relaxed) & ResourceBase::RESOURCE_ORPHAN) {
 			customMaterialShader->GetResourceManager().Insert(customMaterialShader());
 		}
 

@@ -151,7 +151,7 @@ void VisibilityComponent::DispatchEvent(Event& event, Entity* entity) {
 }
 
 void VisibilityComponent::Setup(Engine& engine, float distance, const Float3Pair& range, const UShort3& division, uint32_t frameTimeLimit, uint32_t tc, const UShort2& resolution) {
-	assert(!(Flag() & TINY_MODIFIED));
+	assert(!(Flag().load(std::memory_order_acquire) & TINY_MODIFIED));
 
 	taskCount = tc;
 	boundingBox = range;
@@ -420,7 +420,7 @@ void VisibilityComponent::CollectComponents(Engine& engine, TaskData& task, cons
 		if (component->GetEntityFlagMask() & Entity::ENTITY_HAS_RENDERABLE) {
 			if (transformComponent != nullptr) {
 				RenderableComponent* renderableComponent = static_cast<RenderableComponent*>(component);
-				if (!(renderableComponent->Flag() & RenderableComponent::RENDERABLECOMPONENT_CAMERAVIEW)) {
+				if (!(renderableComponent->Flag().load(std::memory_order_acquire) & RenderableComponent::RENDERABLECOMPONENT_CAMERAVIEW)) {
 					CollectRenderableComponent(engine, task, renderableComponent, instanceData, transformComponent->GetObjectID());
 				}
 			}
@@ -654,7 +654,7 @@ void VisibilityComponent::DispatchTasks(Engine& engine) {
 		if (!bakePoints.empty()) {
 			break;
 		} else {
-			if (Flag() & VISIBILITYCOMPONENT_NEXT_PROCESSING)
+			if (Flag().load(std::memory_order_acquire) & VISIBILITYCOMPONENT_NEXT_PROCESSING)
 				break;
 
 			UShort3 coord = nextCoord;

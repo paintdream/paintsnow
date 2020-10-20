@@ -9,8 +9,8 @@ using namespace PaintsNow;
 TapeComponent::TapeComponent(IStreamBase& stream, const TShared<SharedTiny>&holder, size_t cache) : tape(stream), streamHolder(std::move(holder)), cacheBytes(cache), bufferStream(cache) {}
 
 std::pair<int64_t, String> TapeComponent::Read() {
-	assert(!(Flag() & TINY_UPDATING));
-	if (Flag() & TINY_UPDATING) return std::make_pair(0, String());
+	assert(!(Flag().load(std::memory_order_acquire) & TINY_UPDATING));
+	if (Flag().load(std::memory_order_acquire) & TINY_UPDATING) return std::make_pair(0, String());
 
 	int64_t seq;
 	int64_t length;
@@ -24,8 +24,8 @@ std::pair<int64_t, String> TapeComponent::Read() {
 }
 
 bool TapeComponent::Write(int64_t seq, const String& data) {
-	assert(!(Flag() & TINY_UPDATING));
-	if (Flag() & TINY_UPDATING) return false;
+	assert(!(Flag().load(std::memory_order_acquire) & TINY_UPDATING));
+	if (Flag().load(std::memory_order_acquire) & TINY_UPDATING) return false;
 
 	size_t len = data.length();
 	if (!bufferStream.Write(data.c_str(), len)) {

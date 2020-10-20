@@ -94,7 +94,7 @@ void AnimationComponent::DispatchEvent(Event& event, Entity* entity) {
 		EventComponent* eventComponent = static_cast<EventComponent*>(event.sender());
 		assert(eventComponent != nullptr);
 	
-		bool repeat = !!(Flag() & ANIMATIONCOMPONENT_REPEAT);
+		bool repeat = !!(Flag().load(std::memory_order_acquire) & ANIMATIONCOMPONENT_REPEAT);
 
 		// update bone matrices
 		float before = animationTime;

@@ -77,7 +77,7 @@ Connection::Connection(BridgeSunset& bs, INetwork& nt, WorkDispatcher* disp, ISc
 	if (connection != nullptr) {
 		dispatcher->ReferenceObject();
 
-		if (Flag() & CONNECTION_HTTP) {
+		if (Flag().load(std::memory_order_acquire) & CONNECTION_HTTP) {
 			if (httpRequest == nullptr) {
 				httpRequest = network.OpenHttpRequest(connection, Wrap(this, &Connection::OnEventHttp));
 				Flag().fetch_or(CONNECTION_OWN_REQUEST, std::memory_order_relaxed);
@@ -87,7 +87,7 @@ Connection::Connection(BridgeSunset& bs, INetwork& nt, WorkDispatcher* disp, ISc
 }
 
 bool Connection::IsValid() const {
-	return connection != nullptr && (!(Flag() & CONNECTION_HTTP) || httpRequest != nullptr);
+	return connection != nullptr && (!(Flag().load(std::memory_order_acquire) & CONNECTION_HTTP) || httpRequest != nullptr);
 }
 
 void Connection::Deactivate() {
@@ -97,11 +97,11 @@ void Connection::Deactivate() {
 }
 
 Connection::~Connection() {
-	if (httpRequest != nullptr && (Flag() & CONNECTION_OWN_REQUEST)) {
+	if (httpRequest != nullptr && (Flag().load(std::memory_order_acquire) & CONNECTION_OWN_REQUEST)) {
 		network.CloseHttpRequest(httpRequest);
 	}
 
-	if (connection != nullptr && (Flag() & CONNECTION_OWN_CONNECTION)) {
+	if (connection != nullptr && (Flag().load(std::memory_order_acquire) & CONNECTION_OWN_CONNECTION)) {
 		network.CloseConnection(connection);
 	}
 
@@ -133,7 +133,7 @@ struct Header {
 };
 
 void Connection::OnEvent(INetwork::EVENT event) {
-	if (event == INetwork::READ && (Flag() & CONNECTION_PACKET_MODE)) {
+	if (event == INetwork::READ && (Flag().load(std::memory_order_acquire) & CONNECTION_PACKET_MODE)) {
 		String segment;
 		INetwork::PacketSizeType blockSize = 0x1000;
 		segment.resize(blockSize);
@@ -148,14 +148,14 @@ void Connection::OnEvent(INetwork::EVENT event) {
 	} else {
 		DispatchEvent(event);
 
-		if ((Flag() & CONNECTION_HTTP) && event == INetwork::CONNECTED) {
+		if ((Flag().load(std::memory_order_acquire) & CONNECTION_HTTP) && event == INetwork::CONNECTED) {
 			OnEvent(INetwork::READ);
 		}
 	}
 }
 
 void Connection::DispatchEvent(INetwork::EVENT event) {
-	if (event == INetwork::READ && (Flag() & CONNECTION_PACKET_MODE)) {
+	if (event == INetwork::READ && (Flag().load(std::memory_order_acquire) & CONNECTION_PACKET_MODE)) {
 		bridgeSunset.GetKernel().QueueRoutine(this, CreateTaskScript(callback, Looper::EventToString(event), currentData));
 	} else {
 		bridgeSunset.GetKernel().QueueRoutine(this, CreateTaskScript(callback, Looper::EventToString(event)));
@@ -173,8 +173,8 @@ void Connection::ScriptUninitialize(IScript::Request& request) {
 }
 
 String Connection::Read() {
-	if (!(Flag() & TINY_ACTIVATED)) {
-		assert(!(Flag() & CONNECTION_PACKET_MODE));
+	if (!(Flag().load(std::memory_order_acquire) & TINY_ACTIVATED)) {
+		assert(!(Flag().load(std::memory_order_acquire) & CONNECTION_PACKET_MODE));
 
 		size_t length = 0;
 		network.ReadConnection(connection, nullptr, length);
@@ -189,8 +189,8 @@ String Connection::Read() {
 }
 
 void Connection::Write(const String& data) {
-	if (!(Flag() & TINY_ACTIVATED)) {
-		if (Flag() & CONNECTION_PACKET_MODE) {
+	if (!(Flag().load(std::memory_order_acquire) & TINY_ACTIVATED)) {
+		if (Flag().load(std::memory_order_relaxed) & CONNECTION_PACKET_MODE) {
 			INetwork::Packet packet;
 			INetwork::PacketSizeType length = (INetwork::PacketSizeType)data.length();
 			packet.header.length = length;

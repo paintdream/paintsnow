@@ -51,14 +51,14 @@ void Weaver::OnConnectionStatus(IScript::Request& request, bool isAuto, RemotePr
 
 	if (status == RemoteProxy::CLOSED || status == RemoteProxy::ABORTED) {
 		// restart if not manually stopped
-		if (Flag() & TINY_ACTIVATED) {
+		if (Flag().load(std::memory_order_acquire) & TINY_ACTIVATED) {
 			remoteProxy.Reset();
 		}
 	}
 }
 
 void Weaver::Start() {
-	if (Flag() & TINY_ACTIVATED) {
+	if (Flag().load(std::memory_order_acquire) & TINY_ACTIVATED) {
 		Stop();
 	}
 

@@ -24,7 +24,7 @@ Tiny::FLAG RenderFlowComponent::GetEntityFlagMask() const {
 }
 
 void RenderFlowComponent::AddNode(RenderStage* stage) {
-	assert(!(Flag() & TINY_ACTIVATED));
+	assert(!(Flag().load(std::memory_order_acquire) & TINY_ACTIVATED));
 	Graph<RenderStage>::AddNode(stage);
 }
 
@@ -38,7 +38,7 @@ void RenderFlowComponent::SetMainResolution(const UShort2 res) {
 }
 
 void RenderFlowComponent::RemoveNode(RenderStage* stage) {
-	assert(!(Flag() & TINY_ACTIVATED));
+	assert(!(Flag().load(std::memory_order_acquire) & TINY_ACTIVATED));
 	// removes all symbols related with stage ...
 	for (size_t i = 0; i < stage->GetPorts().size(); i++) {
 		RenderStage::Port* port = stage->GetPorts()[i].port;
@@ -56,7 +56,7 @@ RenderStage::Port* RenderFlowComponent::BeginPort(const String& symbol) {
 	std::map<String, std::pair<RenderStage*, String> >::const_iterator s = symbolMap.find(symbol);
 	if (s != symbolMap.end()) {
 		RenderStage::Port* port = (*s->second.first)[s->second.second];
-		assert(!(port->Flag() & TINY_ACTIVATED)); // no shared
+		assert(!(port->Flag().load(std::memory_order_acquire) & TINY_ACTIVATED)); // no shared
 		port->Flag().fetch_or(TINY_ACTIVATED, std::memory_order_relaxed);
 		return port;
 	} else {
@@ -65,7 +65,7 @@ RenderStage::Port* RenderFlowComponent::BeginPort(const String& symbol) {
 }
 
 void RenderFlowComponent::EndPort(RenderStage::Port* port) {
-	assert((port->Flag() & TINY_ACTIVATED));
+	assert((port->Flag().load(std::memory_order_acquire) & TINY_ACTIVATED));
 	port->Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_relaxed);
 }
 
@@ -110,7 +110,7 @@ public:
 };
 
 void RenderFlowComponent::Compile() {
-	assert(!(Flag() & TINY_ACTIVATED)); // aware of thread unsafe
+	assert(!(Flag().load(std::memory_order_acquire) & TINY_ACTIVATED)); // aware of thread unsafe
 	std::vector<RenderStage*> result;
 	CallBatch batch(result);
 	IterateTopological(batch, batch);
@@ -121,7 +121,7 @@ void RenderFlowComponent::Compile() {
 
 // Notice that this function is called in render device thread
 void RenderFlowComponent::Render(Engine& engine) {
-	if (Flag() & TINY_ACTIVATED) {
+	if (Flag().load(std::memory_order_acquire) & TINY_ACTIVATED) {
 		Flag().fetch_or(RENDERFLOWCOMPONENT_RENDERING, std::memory_order_acquire);
 
 		// Commit resource queue first
@@ -350,7 +350,7 @@ void RenderFlowComponent::Uninitialize(Engine& engine, Entity* entity) {
 void RenderFlowComponent::SetMainResolution(Engine& engine) {
 	bool updateResolution = false;
 	IRender::Device* device = engine.snowyStream.GetRenderDevice();
-	if (Flag() & RENDERFLOWCOMPONENT_SYNC_DEVICE_RESOLUTION) {
+	if (Flag().load(std::memory_order_relaxed) & RENDERFLOWCOMPONENT_SYNC_DEVICE_RESOLUTION) {
 		Int2 size = engine.interfaces.render.GetDeviceResolution(device);
 		if (size.x() == 0 || size.y() == 0) return;
 
@@ -358,7 +358,7 @@ void RenderFlowComponent::SetMainResolution(Engine& engine) {
 			mainResolution = UShort2(safe_cast<uint16_t>(size.x()), safe_cast<uint16_t>(size.y()));
 			updateResolution = true;
 		}
-	} else if (!!(Flag() & RENDERFLOWCOMPONENT_RESOLUTION_MODIFIED)) {
+	} else if (!!(Flag().load(std::memory_order_relaxed) & RENDERFLOWCOMPONENT_RESOLUTION_MODIFIED)) {
 		updateResolution = true;
 	}
 
@@ -375,7 +375,7 @@ void RenderFlowComponent::SetMainResolution(Engine& engine) {
 }
 
 void RenderFlowComponent::RenderSyncTick(Engine& engine) {
-	if (Flag() & TINY_ACTIVATED) {
+	if (Flag().load(std::memory_order_acquire) & TINY_ACTIVATED) {
 		SetMainResolution(engine);
 
 		IRender::Device* device = engine.snowyStream.GetRenderDevice();
@@ -402,7 +402,7 @@ void RenderFlowComponent::RenderSyncTick(Engine& engine) {
 
 void RenderFlowComponent::DispatchEvent(Event& event, Entity* entity) {
 	if (event.eventID == Event::EVENT_FRAME) {
-		if (Flag() & TINY_ACTIVATED) {
+		if (Flag().load(std::memory_order_acquire) & TINY_ACTIVATED) {
 			Engine& engine = event.engine;
 			const Tiny::FLAG condition = RENDERFLOWCOMPONENT_RENDER_SYNC_TICKING | TINY_ACTIVATED;
 			while ((Flag().load(std::memory_order_acquire) & condition) == condition) {

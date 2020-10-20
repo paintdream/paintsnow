@@ -41,7 +41,7 @@ CameraComponent::CameraComponent(const TShared<RenderFlowComponent>& prenderFlow
 }
 
 void CameraComponent::UpdateJitterMatrices(CameraComponentConfig::WorldGlobalData& worldGlobalData) {
-	if (Flag() & CAMERACOMPONENT_SUBPIXEL_JITTER) {
+	if (Flag().load(std::memory_order_relaxed) & CAMERACOMPONENT_SUBPIXEL_JITTER) {
 		jitterIndex = (jitterIndex + 1) % 9;
 
 		MatrixFloat4x4 jitterMatrix = MatrixFloat4x4::Identity();
@@ -60,7 +60,7 @@ void CameraComponent::UpdateJitterMatrices(CameraComponentConfig::WorldGlobalDat
 }
 
 void CameraComponent::UpdateRootMatrices(const MatrixFloat4x4& cameraWorldMatrix) {
-	MatrixFloat4x4 projectionMatrix = (Flag() & CAMERACOMPONENT_PERSPECTIVE) ? Math::Perspective(fov, aspect, nearPlane, farPlane) : Math::Ortho(Float3(1, 1, 1));
+	MatrixFloat4x4 projectionMatrix = (Flag().load(std::memory_order_relaxed) & CAMERACOMPONENT_PERSPECTIVE) ? Math::Perspective(fov, aspect, nearPlane, farPlane) : Math::Ortho(Float3(1, 1, 1));
 
 	MatrixFloat4x4 viewMatrix = Math::QuickInverse(cameraWorldMatrix);
 	nextTaskData->worldGlobalData.cameraMatrix = cameraWorldMatrix;
@@ -258,6 +258,8 @@ void CameraComponent::UpdateTaskData(Engine& engine, Entity* hostEntity) {
 	// Tick new collection
 	nextTaskData->Cleanup(engine.interfaces.render);
 
+	std::atomic_thread_fence(std::memory_order_acquire);
+
 	WorldInstanceData worldInstanceData;
 	worldInstanceData.worldMatrix = MatrixFloat4x4::Identity();
 
@@ -266,7 +268,7 @@ void CameraComponent::UpdateTaskData(Engine& engine, Entity* hostEntity) {
 	MatrixFloat4x4 localTransform = MatrixFloat4x4::Identity();
 	if (transformComponent != nullptr) {
 		// set smooth track
-		if (Flag() & CAMERACOMPONENT_SMOOTH_TRACK) {
+		if (Flag().load(std::memory_order_relaxed) & CAMERACOMPONENT_SMOOTH_TRACK) {
 			currentState = targetState;
 			targetState.rotation = transformComponent->GetRotationQuaternion();
 			targetState.translation = transformComponent->GetTranslation();
@@ -448,8 +450,10 @@ void CameraComponent::CommitRenderRequests(Engine& engine, TaskData& taskData, I
 }
 
 void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPort, IRender::Queue* queue) {
+	std::atomic_thread_fence(std::memory_order_acquire);
+
 	TShared<TaskData> taskData;
-	if ((Flag() & CAMERACOMPONENT_UPDATE_COLLECTED)) {
+	if ((Flag().load(std::memory_order_relaxed) & CAMERACOMPONENT_UPDATE_COLLECTED)) {
 		taskData = nextTaskData;
 		CommitRenderRequests(engine, *taskData, queue);
 		Flag().fetch_and(~CAMERACOMPONENT_UPDATE_COLLECTED, std::memory_order_relaxed);
@@ -463,7 +467,7 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 	std::vector<TaskData::WarpData>& warpData = taskData->warpData;
 	IRender& render = engine.interfaces.render;
 
-	if (Flag() & CAMERACOMPONENT_SMOOTH_TRACK) {
+	if (Flag().load(std::memory_order_relaxed) & CAMERACOMPONENT_SMOOTH_TRACK) {
 		const float ratio = 0.75f;
 		Quaternion<float>::Interpolate(currentState.rotation, currentState.rotation, targetState.rotation, ratio);
 		currentState.translation = Math::Interpolate(currentState.translation, targetState.translation, ratio);
@@ -478,7 +482,7 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 	// update camera view settings
 	if (renderFlowComponent) {
 		// update buffers
-		if (Flag() & (CAMERACOMPONENT_SMOOTH_TRACK | CAMERACOMPONENT_SUBPIXEL_JITTER)) {
+		if (Flag().load(std::memory_order_relaxed) & (CAMERACOMPONENT_SMOOTH_TRACK | CAMERACOMPONENT_SUBPIXEL_JITTER)) {
 			for (size_t i = 0; i < warpData.size(); i++) {
 				TaskData::WarpData& w = warpData[i];
 				typedef std::vector<std::key_value<ShaderResource*, TaskData::WarpData::GlobalBufferItem> > GlobalMap;
@@ -533,7 +537,7 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 }
 
 void CameraComponent::OnTickHost(Engine& engine, Entity* hostEntity) {
-	if (rootEntity != nullptr && (rootEntity->Flag() & Entity::ENTITY_HAS_SPACE)) {
+	if (rootEntity != nullptr && (rootEntity->Flag().load(std::memory_order_acquire) & Entity::ENTITY_HAS_SPACE)) {
 		UpdateTaskData(engine, hostEntity);
 	}
 }
@@ -546,7 +550,7 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 	renderableComponent->CollectDrawCalls(drawCalls, inputRenderData);
 	TaskData::WarpData::InstanceGroupMap& instanceGroups = warpData.instanceGroups;
 
-	bool isCameraViewSpace = !!(renderableComponent->Flag() & RenderableComponent::RENDERABLECOMPONENT_CAMERAVIEW);
+	bool isCameraViewSpace = !!(renderableComponent->Flag().load(std::memory_order_relaxed) & RenderableComponent::RENDERABLECOMPONENT_CAMERAVIEW);
 
 	for (size_t k = 0; k < drawCalls.size(); k++) {
 		// PassBase& Pass = provider->GetPass(k);
@@ -743,14 +747,14 @@ void CameraComponent::CompleteCollect(Engine& engine, TaskData& taskData) {
 
 void CameraComponent::CollectLightComponent(Engine& engine, LightComponent* lightComponent, std::vector<std::pair<TShared<RenderPolicy>, LightElement> >& lightElements, const MatrixFloat4x4& worldMatrix, const MatrixFloat4x4& cameraTransform) const {
 	LightElement element;
-	if (lightComponent->Flag() & LightComponent::LIGHTCOMPONENT_DIRECTIONAL) {
+	if (lightComponent->Flag().load(std::memory_order_relaxed) & LightComponent::LIGHTCOMPONENT_DIRECTIONAL) {
 		element.position = Float4(-worldMatrix(2, 0), -worldMatrix(2, 1), -worldMatrix(2, 2), 0);
 		// refresh shadow
 		std::vector<TShared<LightComponent::ShadowGrid> > shadowGrids = lightComponent->UpdateShadow(engine, cameraTransform, worldMatrix, rootEntity);
 		for (size_t i = 0; i < shadowGrids.size(); i++) {
 			TShared<LightComponent::ShadowGrid>& grid = shadowGrids[i];
 			RenderPortLightSource::LightElement::Shadow shadow;
-			shadow.shadowTexture = grid->Flag() & TINY_MODIFIED ? nullptr : grid->texture;
+			shadow.shadowTexture = grid->Flag().load(std::memory_order_relaxed) & TINY_MODIFIED ? nullptr : grid->texture;
 			shadow.shadowMatrix = grid->shadowMatrix;
 			element.shadows.emplace_back(std::move(shadow));
 		}
@@ -776,7 +780,7 @@ uint32_t CameraComponent::GetCollectedTriangleCount() const {
 }
 
 void CameraComponent::CollectComponents(Engine& engine, TaskData& taskData, const WorldInstanceData& instanceData, const CaptureData& captureData, Entity* entity) {
-	Tiny::FLAG rootFlag = entity->Flag().load(std::memory_order_acquire);
+	Tiny::FLAG rootFlag = entity->Flag().load(std::memory_order_relaxed);
 	uint32_t warpIndex = entity->GetWarpIndex();
 	assert(warpIndex == engine.GetKernel().GetCurrentWarpIndex());
 	TaskData::WarpData& warpData = taskData.warpData[warpIndex];
@@ -792,7 +796,7 @@ void CameraComponent::CollectComponents(Engine& engine, TaskData& taskData, cons
 
 		// IsVisible through visibility checking?
 		const Float3Pair& localBoundingBox = transformComponent->GetLocalBoundingBox();
-		if ((!(transformComponent->Flag() & TransformComponent::TRANSFORMCOMPONENT_DYNAMIC) && !VisibilityComponent::IsVisible(captureData.visData, transformComponent)) || !captureData(localBoundingBox)) {
+		if ((!(transformComponent->Flag().load(std::memory_order_relaxed) & TransformComponent::TRANSFORMCOMPONENT_DYNAMIC) && !VisibilityComponent::IsVisible(captureData.visData, transformComponent)) || !captureData(localBoundingBox)) {
 			visible = false;
 		}
 
@@ -825,8 +829,8 @@ void CameraComponent::CollectComponents(Engine& engine, TaskData& taskData, cons
 		for (size_t i = 0; i < components.size(); i++) {
 			Component* component = components[i];
 			if (component == nullptr) continue;
-			assert(component->Flag() & Tiny::TINY_ACTIVATED);
-			if (!(component->Flag() & Tiny::TINY_ACTIVATED)) continue;
+			assert(component->Flag().load(std::memory_order_relaxed) & Tiny::TINY_ACTIVATED);
+			if (!(component->Flag().load(std::memory_order_relaxed) & Tiny::TINY_ACTIVATED)) continue;
 
 			Unique unique = component->GetUnique();
 

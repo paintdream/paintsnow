@@ -62,7 +62,7 @@ namespace PaintsNow {
 
 					T* ret = component->QueryInterface(UniqueType<T>());
 					if (ret != nullptr) {
-						assert(ret->Flag() & Tiny::TINY_UNIQUE);
+						assert(ret->Flag().load(std::memory_order_acquire) & Tiny::TINY_UNIQUE);
 					}
 					return ret;
 				} else {
@@ -77,7 +77,7 @@ namespace PaintsNow {
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		inline Entity* Left() const {
-			// assert(!(Flag() & ENTITY_STORE_ENGINE));
+			// assert(!(Flag().load(std::memory_order_acquire) & ENTITY_STORE_ENGINE));
 			return static_cast<Entity*>(leftNode);
 		}
 
@@ -86,7 +86,7 @@ namespace PaintsNow {
 		}
 
 		inline Entity* Right() const {
-			// assert(!(Flag() & ENTITY_STORE_ENGINE));
+			// assert(!(Flag().load(std::memory_order_acquire) & ENTITY_STORE_ENGINE));
 			return static_cast<Entity*>(rightNode);
 		}
 
@@ -95,7 +95,7 @@ namespace PaintsNow {
 		}
 
 		inline Entity* Parent() const {
-			assert(!(Flag() & ENTITY_STORE_ENGINE));
+			assert(!(Flag().load(std::memory_order_acquire) & ENTITY_STORE_ENGINE));
 			return static_cast<Entity*>(GetParent());
 		}
 

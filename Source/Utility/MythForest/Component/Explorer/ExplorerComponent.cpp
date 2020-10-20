@@ -17,7 +17,7 @@ ExplorerComponent::ExplorerComponent(Unique type) : componentType(type), lastFra
 ExplorerComponent::~ExplorerComponent() {}
 
 void ExplorerComponent::Initialize(Engine& engine, Entity* entity) {
-	assert(!(Flag() & TINY_ACTIVATED));
+	assert(!(Flag().load(std::memory_order_acquire) & TINY_ACTIVATED));
 	Component::Initialize(engine, entity);
 
 	// recollect all target components
@@ -44,7 +44,7 @@ void ExplorerComponent::SetProxyConfig(Component* component, const ProxyConfig& 
 }
 
 void ExplorerComponent::Uninitialize(Engine& engine, Entity* entity) {
-	assert((Flag() & TINY_ACTIVATED));
+	assert((Flag().load(std::memory_order_acquire) & TINY_ACTIVATED));
 	Component::Uninitialize(engine, entity);
 	proxies.clear();
 }

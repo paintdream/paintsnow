@@ -22,7 +22,7 @@ Listener::Listener(BridgeSunset& bs, INetwork& nt, WorkDispatcher* disp, IScript
 }
 
 bool Listener::IsValid() const {
-	return listener != nullptr && (!(Flag() & LISTENER_HTTP) || httpd != nullptr);
+	return listener != nullptr && (!(Flag().load(std::memory_order_acquire) & LISTENER_HTTP) || httpd != nullptr);
 }
 
 String Listener::GetAddress() {
@@ -52,7 +52,7 @@ const TWrapper<void, INetwork::EVENT> Listener::OnAccept(INetwork::Connection* c
 
 	WorkDispatcher* disp = dispatcher();
 	INetwork::HttpRequest* req = (INetwork::HttpRequest*)nullptr;
-	bool packetMode = !!(Flag() & LISTENER_PACKET_MODE);
+	bool packetMode = !!(Flag().load(std::memory_order_acquire) & LISTENER_PACKET_MODE);
 	TShared<Connection> c = TShared<Connection>::From(new Connection(bridgeSunset, network, disp, ref, "", connection, false, req, false, packetMode));
 
 	IScript::BaseDelegate d(this);
@@ -68,7 +68,7 @@ void Listener::OnAcceptHttp(INetwork::Connection* connection, INetwork::HttpRequ
 	r.UnLock();
 
 	WorkDispatcher* disp = dispatcher();
-	bool packetMode = !!(Flag() & LISTENER_PACKET_MODE);
+	bool packetMode = !!(Flag().load(std::memory_order_acquire) & LISTENER_PACKET_MODE);
 	TShared<Connection> c = TShared<Connection>::From(new Connection(bridgeSunset, network, disp, ref, "", connection, true, httpRequest, true, packetMode));
 
 	bridgeSunset.GetKernel().QueueRoutine(this, CreateTaskScript(callback, this, c));
@@ -95,7 +95,7 @@ void Listener::ScriptUninitialize(IScript::Request& request) {
 bool Listener::Activate() {
 	bool ret = false;
 	if (!(Flag().fetch_or(TINY_ACTIVATED, std::memory_order_acquire) & TINY_ACTIVATED)) {
-		if (Flag() & LISTENER_HTTP) {
+		if (Flag().load(std::memory_order_acquire) & LISTENER_HTTP) {
 			ret = network.ActivateHttpd(httpd);
 		} else {
 			ret = network.ActivateListener(listener);

@@ -125,10 +125,10 @@ uint32_t MaterialResource::CollectDrawCalls(std::vector<OutputRenderData>& outpu
 	if (mutationShaderResource) {
 #ifdef _DEBUG
 		for (size_t k = 0; k < textureResources.size(); k++) {
-			if (!(textureResources[k]->Flag() & ResourceBase::RESOURCE_UPLOADED)) {
+			if (!(textureResources[k]->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_UPLOADED)) {
 				fprintf(stderr, "Texture Resource Not Uploaded: %s\n", textureResources[k]->GetLocation().c_str());
 			}
-			assert(textureResources[k]->Flag() & ResourceBase::RESOURCE_UPLOADED);
+			assert(textureResources[k]->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_UPLOADED);
 		}
 #endif
 		// uint32_t count = mutationShaderResource->CollectDrawCalls(outputDrawCalls, inputRenderData);

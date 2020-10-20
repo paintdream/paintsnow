@@ -110,7 +110,7 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 		}
 	}
 
-	assert(!(taskData->Flag() & TINY_MODIFIED));
+	assert(!(taskData->Flag().load(std::memory_order_relaxed) & TINY_MODIFIED));
 	taskData->Flag().fetch_or(TINY_MODIFIED, std::memory_order_release);
 
 	// get entity
@@ -144,6 +144,7 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 	render.ExecuteResource(taskData->renderQueue, taskData->stateResource);
 	render.ExecuteResource(taskData->renderQueue, taskData->renderTargetResource);
 
+	std::atomic_thread_fence(std::memory_order_acquire);
 	CollectComponentsFromEntity(engine, *taskData, instanceData, captureData, shadowContext->rootEntity());
 
 	return shadowGrid();
@@ -329,7 +330,7 @@ void LightComponent::ShadowLayer::CompleteCollect(Engine& engine, TaskData& task
 }
 
 void LightComponent::ShadowLayer::CollectComponents(Engine& engine, TaskData& taskData, const WorldInstanceData& instanceData, const CaptureData& captureData, Entity* entity) {
-	Tiny::FLAG rootFlag = entity->Flag().load(std::memory_order_acquire);
+	Tiny::FLAG rootFlag = entity->Flag().load(std::memory_order_relaxed);
 	uint32_t warpIndex = entity->GetWarpIndex();
 	assert(warpIndex == engine.GetKernel().GetCurrentWarpIndex());
 	TaskData::WarpData& warpData = taskData.warpData[warpIndex];
@@ -345,7 +346,7 @@ void LightComponent::ShadowLayer::CollectComponents(Engine& engine, TaskData& ta
 
 		// IsVisible through visibility checking?
 		const Float3Pair& localBoundingBox = transformComponent->GetLocalBoundingBox();
-		if ((!(transformComponent->Flag() & TransformComponent::TRANSFORMCOMPONENT_DYNAMIC) && !VisibilityComponent::IsVisible(captureData.visData, transformComponent)) || !captureData(localBoundingBox)) {
+		if ((!(transformComponent->Flag().load(std::memory_order_relaxed) & TransformComponent::TRANSFORMCOMPONENT_DYNAMIC) && !VisibilityComponent::IsVisible(captureData.visData, transformComponent)) || !captureData(localBoundingBox)) {
 			visible = false;
 		}
 
@@ -368,18 +369,18 @@ void LightComponent::ShadowLayer::CollectComponents(Engine& engine, TaskData& ta
 		for (size_t i = 0; i < components.size(); i++) {
 			Component* component = components[i];
 			if (component == nullptr) continue;
-			if (!(component->Flag() & Tiny::TINY_ACTIVATED)) continue;
+			if (!(component->Flag().load(std::memory_order_relaxed) & Tiny::TINY_ACTIVATED)) continue;
 			Unique unique = component->GetUnique();
 
 			// Since EntityMask would be much more faster than Reflection
 			// We asserted that flaged components must be derived from specified implementations
 			Tiny::FLAG entityMask = component->GetEntityFlagMask();
-			// if (!(component->Flag() & Tiny::TINY_ACTIVATED)) continue;
+			// if (!(component->Flag().load(std::memory_order_relaxed) & Tiny::TINY_ACTIVATED)) continue;
 
 			if (entityMask & Entity::ENTITY_HAS_RENDERABLE) {
 				if (visible) {
 					assert(component->QueryInterface(UniqueType<RenderableComponent>()) != nullptr);
-					if (!(component->Flag() & RenderableComponent::RENDERABLECOMPONENT_CAMERAVIEW)) {
+					if (!(component->Flag().load(std::memory_order_relaxed) & RenderableComponent::RENDERABLECOMPONENT_CAMERAVIEW)) {
 						CollectRenderableComponent(engine, taskData, static_cast<RenderableComponent*>(component), warpData, subWorldInstancedData);
 					}
 				}
@@ -546,11 +547,11 @@ TShared<LightComponent::ShadowGrid> LightComponent::ShadowLayer::UpdateShadow(En
 	shadowContext->lightTransformMatrix(3, 2) = alignedPosition.z();
 	TShared<ShadowGrid> grid;
 
-	if (!(currentTask->Flag() & TINY_MODIFIED)) {
+	if (!(currentTask->Flag().load(std::memory_order_relaxed) & TINY_MODIFIED)) {
 		grid = streamComponent->Load(engine, coord, shadowContext())->QueryInterface(UniqueType<ShadowGrid>());
 		assert(grid);
 
-		if (!(grid->Flag() & TINY_MODIFIED) || !currentGrid) {
+		if (!(grid->Flag().load(std::memory_order_relaxed) & TINY_MODIFIED) || !currentGrid) {
 			currentGrid = grid;
 		}
 	}

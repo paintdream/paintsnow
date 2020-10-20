@@ -56,7 +56,7 @@ namespace PaintsNow {
 
 		void InvokeAttach(ResourceBase* resource, void* deviceContext) override {
 			assert(resource != nullptr);
-			assert(!(resource->Flag() & ResourceBase::RESOURCE_ATTACHED));
+			assert(!(resource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_ATTACHED));
 			resource->Flag().fetch_or(ResourceBase::RESOURCE_ATTACHED, std::memory_order_relaxed);
 			DeviceResourceBase<T>* typedResource = static_cast<DeviceResourceBase<T>*>(resource);
 			typedResource->Attach(device, deviceContext != nullptr ? deviceContext : GetContext());
@@ -64,7 +64,7 @@ namespace PaintsNow {
 
 		void InvokeDetach(ResourceBase* resource, void* deviceContext) override {
 			assert(resource != nullptr);
-			assert(resource->Flag() & ResourceBase::RESOURCE_ATTACHED);
+			assert(resource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_ATTACHED);
 			DeviceResourceBase<T>* typedResource = static_cast<DeviceResourceBase<T>*>(resource);
 			typedResource->Detach(device, deviceContext != nullptr ? deviceContext : GetContext());
 			resource->Flag().fetch_and(~ResourceBase::RESOURCE_ATTACHED, std::memory_order_release);
@@ -72,7 +72,7 @@ namespace PaintsNow {
 
 		void InvokeUpload(ResourceBase* resource, void* deviceContext) override {
 			assert(resource != nullptr);
-			assert(resource->Flag() & ResourceBase::TINY_MODIFIED);
+			assert(resource->Flag().load(std::memory_order_acquire) & ResourceBase::TINY_MODIFIED);
 			resource->Flag().fetch_and(~ResourceBase::RESOURCE_UPLOADED, std::memory_order_release);
 			DeviceResourceBase<T>* typedResource = static_cast<DeviceResourceBase<T>*>(resource);
 			typedResource->Upload(device, deviceContext != nullptr ? deviceContext : GetContext());

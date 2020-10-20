@@ -40,7 +40,7 @@ Bytes& BatchComponent::GetCurrentData() {
 }
 
 uint32_t BatchComponent::Update(IRender& render, IRender::Queue* queue) {
-	if (Flag() & Tiny::TINY_MODIFIED) {
+	if (Flag().load(std::memory_order_acquire) & Tiny::TINY_MODIFIED) {
 		IRender::Resource::BufferDescription desc;
 		desc.component = 4; // packed by float4
 		desc.format = IRender::Resource::BufferDescription::FLOAT;

@@ -36,7 +36,7 @@ inline Float2 CalcDimension(LayoutComponent* win, float& lastMargin, float& sum,
 	float maxvalue = get(size.second);
 	float m = get(margin.first);
 	assert(m >= 0 && value >= 0);
-	if (win->Flag() & LayoutComponent::LAYOUT_ADAPTABLE) {
+	if (win->Flag().load(std::memory_order_relaxed) & LayoutComponent::LAYOUT_ADAPTABLE) {
 		assert(false); // not fully implemeneted.
 		CheckRect(win->rect);
 		win->rect.second = win->rect.first;
@@ -135,11 +135,11 @@ public:
 				Float2Pair& rect = win->rect;
 				CheckRect(rect);
 
-				if ((win->Flag() & checkFlag) == checkFlag) {
+				if ((win->Flag().load(std::memory_order_relaxed) & checkFlag) == checkFlag) {
 					Float2 pair = CalcDimension(win, margin, sum, size, count, win->margin, win->padding, win->size, Getter());
 					assert(pair.x() >= 0 && pair.y() >= 0);
 					if (get(win->size.second) - get(win->size.first) >= 0) {
-						if (!(win->Flag() & LayoutComponent::LAYOUT_ADAPTABLE)) {
+						if (!(win->Flag().load(std::memory_order_relaxed) & LayoutComponent::LAYOUT_ADAPTABLE)) {
 							sorted.push(win);
 							weight += win->weight;
 							valid++;
@@ -237,7 +237,7 @@ public:
 		float remained = 0;
 		for (size_t k = 0; k < components.size(); k++) {
 			LayoutComponent* win = components[k];
-			if ((win->Flag() & checkFlag) == checkFlag) {
+			if ((win->Flag().load(std::memory_order_relaxed) & checkFlag) == checkFlag) {
 				assert(win->remained >= 0);
 				Float2Pair& rect = win->rect;
 				get(rect.first) += remained;
@@ -314,7 +314,7 @@ void LayoutComponent::RoutineLayoutForSpaceComponent(Engine& engine, const TShar
 	GetAllLayoutComponents(entities, components, spaceComponent->GetRootEntity());
 	spaceComponent->RemoveAll(engine);
 
-	if (Flag() & LAYOUT_VERTICAL) {
+	if (Flag().load(std::memory_order_relaxed) & LAYOUT_VERTICAL) {
 		static DoLayoutImpl<GetY, GetX> impl;
 		impl.DoLayout(this, components);
 	} else {
@@ -338,7 +338,7 @@ void LayoutComponent::RoutineLayoutForSpaceComponent(Engine& engine, const TShar
 }
 
 void LayoutComponent::DoLayout(Engine& engine, const MatrixFloat4x4& transform) {
-	if ((Flag() & TINY_MODIFIED)) {
+	if ((Flag().load(std::memory_order_acquire) & TINY_MODIFIED)) {
 		// Collect Sub LayoutComponents
 		assert(hostEntity != nullptr);
 		const std::vector<Component*>& components = hostEntity->GetComponents();
