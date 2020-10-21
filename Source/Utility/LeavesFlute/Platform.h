@@ -87,7 +87,6 @@
 #ifdef _DEBUG
 #pragma comment(lib, "../../../../Build/Windows/VC/PaintsNow/Debug/PaintsNow.lib")
 #pragma comment(lib, "../../../../Build/Windows/VC/HeartVioliner/Debug/HeartVioliner.lib")
-#pragma comment(lib, "../../../../Build/Windows/VC/FlameWork/Debug/FlameWork.lib")
 #pragma comment(lib, "../../../../Build/Windows/VC/SnowyStream/Debug/SnowyStream.lib")
 #pragma comment(lib, "../../../../Build/Windows/VC/MythForest/Debug/MythForest.lib")
 #pragma comment(lib, "../../../../Build/Windows/VC/BridgeSunset/Debug/BridgeSunset.lib")
@@ -98,7 +97,6 @@
 #else
 #pragma comment(lib, "../../../../Build/Windows/VC/PaintsNow/Release/PaintsNow.lib")
 #pragma comment(lib, "../../../../Build/Windows/VC/HeartVioliner/Release/HeartVioliner.lib")
-#pragma comment(lib, "../../../../Build/Windows/VC/FlameWork/Release/FlameWork.lib")
 #pragma comment(lib, "../../../../Build/Windows/VC/SnowyStream/Release/SnowyStream.lib")
 #pragma comment(lib, "../../../../Build/Windows/VC/MythForest/Release/MythForest.lib")
 #pragma comment(lib, "../../../../Build/Windows/VC/BridgeSunset/Release/BridgeSunset.lib")
