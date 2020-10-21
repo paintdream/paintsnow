@@ -756,7 +756,9 @@ void PhaseComponent::LightCollector::CollectComponents(Engine& engine, TaskData&
 		Component* component = components[i];
 		if (component != nullptr) {
 			uint32_t flag = component->GetEntityFlagMask();
+			std::atomic<uint32_t>& counter = reinterpret_cast<std::atomic<uint32_t>&>(task.pendingCount);
 			if (flag & Entity::ENTITY_HAS_SPACE) {
+				counter.fetch_add(1, std::memory_order_release);
 				CollectComponentsFromSpace(engine, task, instanceData, captureData, static_cast<SpaceComponent*>(component));
 			} else if (flag & Entity::ENTITY_HAS_RENDERCONTROL) {
 				LightComponent* lightComponent = component->QueryInterface(UniqueType<LightComponent>());

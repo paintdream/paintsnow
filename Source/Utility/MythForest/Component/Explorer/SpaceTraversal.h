@@ -56,6 +56,9 @@ namespace PaintsNow {
 		}
 
 		void CollectComponentsFromSpace(Engine& engine, TaskData& taskData, const WorldInstanceData& instanceData, const CaptureData& captureData, SpaceComponent* spaceComponent) {
+			std::atomic<uint32_t>& pendingCount = reinterpret_cast<std::atomic<uint32_t>&>(taskData.pendingCount);
+
+			assert(pendingCount.load(std::memory_order_acquire) != 0); // must increase it before calling me.
 			if ((spaceComponent->Flag().load(std::memory_order_relaxed) & Component::COMPONENT_LOCALIZED_WARP) && spaceComponent->GetWarpIndex() != engine.GetKernel().GetCurrentWarpIndex()) {
 				spaceComponent->QueueRoutine(engine, CreateTaskContextFree(Wrap(this, &SpaceTraversal<T, Config>::CollectComponentsFromSpace), std::ref(engine), std::ref(taskData), instanceData, captureData, spaceComponent));
 			} else {
@@ -72,7 +75,6 @@ namespace PaintsNow {
 					}
 				}
 
-				std::atomic<uint32_t>& pendingCount = reinterpret_cast<std::atomic<uint32_t>&>(taskData.pendingCount);
 				if (pendingCount.fetch_sub(1, std::memory_order_relaxed) == 1) {
 					(static_cast<T*>(this))->CompleteCollect(engine, taskData);
 				}
