@@ -1504,7 +1504,7 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> final : public R
 			Verify("create shader module", vkCreateShaderModule(device->device, &createInfo, device->allocator, &shaderModules[k]));
 
 			if (pass.compileCallback) {
-				pass.compileCallback(pass, (IRender::Resource::ShaderDescription::Stage)k, "", fullShader);
+				pass.compileCallback(this, pass, (IRender::Resource::ShaderDescription::Stage)k, "", fullShader);
 			}
 
 			VkPipelineShaderStageCreateInfo shaderStageInfo = {};
