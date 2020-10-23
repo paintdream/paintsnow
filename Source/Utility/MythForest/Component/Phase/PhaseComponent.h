@@ -70,7 +70,7 @@ namespace PaintsNow {
 			uint32_t instanceCount;
 		};
 
-		struct WarpData {
+		struct_aligned(64) WarpData {
 			typedef std::unordered_map<InstanceKey, InstanceGroup, HashInstanceKey> InstanceGroupMap;
 			struct GlobalBufferItem {
 				PassBase::PartialUpdater globalUpdater;
@@ -164,7 +164,7 @@ namespace PaintsNow {
 				Float3Pair boundingBox;
 			};
 
-			struct WarpData {
+			struct_aligned(64) WarpData {
 				std::vector<LightElement> lightElements;
 			};
 

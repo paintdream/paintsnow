@@ -105,7 +105,7 @@ namespace PaintsNow {
 				std::vector<IRender::Resource*> runtimeResources;
 			};
 
-			struct WarpData {
+			struct_aligned(64) WarpData {
 				typedef std::unordered_map<InstanceKey, InstanceGroup, HashInstanceKey> InstanceGroupMap;
 				InstanceGroupMap instanceGroups;
 				WarpData();

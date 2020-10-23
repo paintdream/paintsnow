@@ -61,7 +61,7 @@ namespace PaintsNow {
 
 			TObject<IReflect>& operator () (IReflect& reflect) override;
 
-			struct WarpData {
+			struct_aligned(64) WarpData {
 				typedef std::unordered_map<InstanceKey, InstanceGroup, HashInstanceKey> InstanceGroupMap;
 				WarpData();
 				InstanceGroupMap instanceGroups;
