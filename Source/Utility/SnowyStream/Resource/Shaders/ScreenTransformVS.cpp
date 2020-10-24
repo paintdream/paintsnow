@@ -36,12 +36,12 @@ TObject<IReflect>& ScreenTransformVS::operator () (IReflect& reflect) {
 		ReflectProperty(enableRasterCoord)[BindConst<bool>()];
 
 		ReflectProperty(vertexBuffer);
-		ReflectProperty(transformBuffer)[BindOption(enableVertexTransform)];
+		ReflectProperty(transformBuffer)[BindEnable(enableVertexTransform)];
 
 		ReflectProperty(vertexPosition)[vertexBuffer][BindInput(BindInput::POSITION)];
-		ReflectProperty(worldTransform)[BindOption(enableVertexTransform)][transformBuffer][BindInput(BindInput::TRANSFORM_WORLD)];
+		ReflectProperty(worldTransform)[BindEnable(enableVertexTransform)][transformBuffer][BindInput(BindInput::TRANSFORM_WORLD)];
 		ReflectProperty(position)[BindOutput(BindOutput::HPOSITION)];
-		ReflectProperty(rasterCoord)[BindOption(enableRasterCoord)][BindOutput(BindOutput::TEXCOORD)] ;
+		ReflectProperty(rasterCoord)[BindEnable(enableRasterCoord)][BindOutput(BindOutput::TEXCOORD)] ;
 	}
 
 	return *this;

@@ -19,11 +19,15 @@ TObject<IReflect>& CustomMaterialPass::operator () (IReflect& reflect) {
 void CustomMaterialPass::SetInput(const String& stage, const String& type, const String& name, const String& value, const String& binding, const std::vector<std::pair<String, String> >& config) {
 	if (stage == "VertexInput") {
 		shaderTransform.description->SetInput("Input", type, name, value, binding, config);
+	} else if (stage == "VertexOptions") {
+		shaderTransform.description->SetInput("Option", type, name, value, binding, config);
 	} else if (stage == "VertexUniform") {
 		shaderTransform.description->SetInput("Uniform", type, name, value, binding, config);
 	} else if (stage == "VertexVarying") {
 		shaderTransform.description->SetInput("Output", type, name, value, binding, config);
 		shaderParameter.description->SetInput("Input", type, name, value, binding, config);
+	} else if (stage == "FragmentOptions") {
+		shaderParameter.description->SetInput("Option", type, name, value, binding, config);
 	} else if (stage == "FragmentUniform") {
 		shaderParameter.description->SetInput("Uniform", type, name, value, binding, config);
 	}
@@ -38,6 +42,9 @@ void CustomMaterialPass::SetCode(const String& stage, const String& code, const 
 }
 
 void CustomMaterialPass::SetComplete() {
-	shaderTransform.description->SetComplete();
-	shaderParameter.description->SetComplete();
+	uniformData.Clear();
+	optionData.Clear();
+
+	shaderTransform.description->SetComplete(uniformData, optionData);
+	shaderParameter.description->SetComplete(uniformData, optionData);
 }

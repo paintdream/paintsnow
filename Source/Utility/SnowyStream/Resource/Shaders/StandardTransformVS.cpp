@@ -93,27 +93,27 @@ TObject<IReflect>& StandardTransformVS::operator () (IReflect& reflect) {
 		ReflectProperty(enableClampedNear)[BindConst<bool>()];
 		ReflectProperty(enableClampedFar)[BindConst<bool>()];
 
-		ReflectProperty(instanceBuffer)[BindOption(enableInstancing)];
+		ReflectProperty(instanceBuffer)[BindEnable(enableInstancing)];
 		ReflectProperty(globalBuffer);
 		ReflectProperty(vertexPositionBuffer);
-		ReflectProperty(vertexNormalBuffer)[BindOption(enableVertexNormal)];
-		ReflectProperty(vertexTangentBuffer)[BindOption(enableVertexTangent)];
-		ReflectProperty(vertexColorBuffer)[BindOption(enableVertexColor)];
+		ReflectProperty(vertexNormalBuffer)[BindEnable(enableVertexNormal)];
+		ReflectProperty(vertexTangentBuffer)[BindEnable(enableVertexTangent)];
+		ReflectProperty(vertexColorBuffer)[BindEnable(enableVertexColor)];
 		ReflectProperty(vertexTexCoordBuffer);
 
-		ReflectProperty(boneIndexBuffer)[BindOption(enableSkinning)];
-		ReflectProperty(boneWeightBuffer)[BindOption(enableSkinning)];
-		ReflectProperty(boneMatricesBuffer)[BindOption(enableSkinning)];
+		ReflectProperty(boneIndexBuffer)[BindEnable(enableSkinning)];
+		ReflectProperty(boneWeightBuffer)[BindEnable(enableSkinning)];
+		ReflectProperty(boneMatricesBuffer)[BindEnable(enableSkinning)];
 
 		static std::vector<float4x4> boneMatries(128); // Just make reflection happy
-		ReflectProperty(boneMatries)[BindOption(enableSkinning)][boneMatricesBuffer][BindInput(BindInput::BONE_TRANSFORMS)];
-		ReflectProperty(boneIndex)[BindOption(enableSkinning)][boneIndexBuffer][BindInput(BindInput::BONE_INDEX)];
-		ReflectProperty(boneWeight)[BindOption(enableSkinning)][boneWeightBuffer][BindInput(BindInput::BONE_WEIGHT)];
+		ReflectProperty(boneMatries)[BindEnable(enableSkinning)][boneMatricesBuffer][BindInput(BindInput::BONE_TRANSFORMS)];
+		ReflectProperty(boneIndex)[BindEnable(enableSkinning)][boneIndexBuffer][BindInput(BindInput::BONE_INDEX)];
+		ReflectProperty(boneWeight)[BindEnable(enableSkinning)][boneWeightBuffer][BindInput(BindInput::BONE_WEIGHT)];
 
 		ReflectProperty(worldMatrix)[enableInstancing ? instanceBuffer : globalBuffer][BindInput(BindInput::TRANSFORM_WORLD)];
-		ReflectProperty(instancedColor)[enableInstancing ? instanceBuffer : globalBuffer][IShader::BindOption(enableInstancedColor)][BindInput(BindInput::COLOR_INSTANCED)];
-		ReflectProperty(viewMatrix)[globalBuffer][IShader::BindOption(enableViewProjectionMatrix)][BindInput(BindInput::TRANSFORM_VIEW)];
-		ReflectProperty(viewProjectionMatrix)[globalBuffer][IShader::BindOption(enableViewProjectionMatrix)][BindInput(BindInput::TRANSFORM_VIEWPROJECTION)];
+		ReflectProperty(instancedColor)[enableInstancing ? instanceBuffer : globalBuffer][IShader::BindEnable(enableInstancedColor)][BindInput(BindInput::COLOR_INSTANCED)];
+		ReflectProperty(viewMatrix)[globalBuffer][IShader::BindEnable(enableViewProjectionMatrix)][BindInput(BindInput::TRANSFORM_VIEW)];
+		ReflectProperty(viewProjectionMatrix)[globalBuffer][IShader::BindEnable(enableViewProjectionMatrix)][BindInput(BindInput::TRANSFORM_VIEWPROJECTION)];
 
 		ReflectProperty(vertexPosition)[vertexPositionBuffer][BindInput(BindInput::POSITION)];
 		ReflectProperty(vertexNormal)[vertexNormalBuffer][BindInput(BindInput::NORMAL)];
@@ -123,9 +123,9 @@ TObject<IReflect>& StandardTransformVS::operator () (IReflect& reflect) {
 
 		ReflectProperty(rasterPosition)[BindOutput(BindOutput::HPOSITION)];
 		ReflectProperty(texCoord)[BindOutput(BindOutput::TEXCOORD)];
-		ReflectProperty(viewNormal)[BindOption(enableVertexNormal)][BindOutput(BindOutput::TEXCOORD + 1)];
-		ReflectProperty(viewTangent)[BindOption(enableVertexTangent)][BindOutput(BindOutput::TEXCOORD + 2)];
-		ReflectProperty(viewBinormal)[BindOption(enableVertexTangent)][BindOutput(BindOutput::TEXCOORD + 3)];
+		ReflectProperty(viewNormal)[BindEnable(enableVertexNormal)][BindOutput(BindOutput::TEXCOORD + 1)];
+		ReflectProperty(viewTangent)[BindEnable(enableVertexTangent)][BindOutput(BindOutput::TEXCOORD + 2)];
+		ReflectProperty(viewBinormal)[BindEnable(enableVertexTangent)][BindOutput(BindOutput::TEXCOORD + 3)];
 		ReflectProperty(tintColor)[BindOutput(BindOutput::COLOR)];
 	}
 

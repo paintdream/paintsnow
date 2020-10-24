@@ -101,8 +101,8 @@ void PassBase::Updater::Property(IReflectObject& s, Unique typeID, Unique refTyp
 	if (s.IsBasicObject() || s.IsIterator()) {
 		for (const MetaChainBase* chain = meta; chain != nullptr; chain = chain->GetNext()) {
 			const MetaNodeBase* node = chain->GetNode();
-			if (node->GetUnique() == UniqueType<IShader::BindOption>::Get()) {
-				const IShader::BindOption* bindOption = static_cast<const IShader::BindOption*>(node);
+			if (node->GetUnique() == UniqueType<IShader::BindEnable>::Get()) {
+				const IShader::BindEnable* bindOption = static_cast<const IShader::BindEnable*>(node);
 				if (!*bindOption->description) break;
 			} else if (node->GetUnique() == UniqueType<IShader::BindInput>::Get()) {
 				const IShader::BindInput* bindInput = static_cast<const IShader::BindInput*>(node);
@@ -181,8 +181,8 @@ void PassBase::Updater::Property(IReflectObject& s, Unique typeID, Unique refTyp
 			} else if (node->GetUnique() == UniqueType<IShader::BindInput>::Get()) {
 				const IShader::BindInput* bindInput = static_cast<const IShader::BindInput*>(node);
 				schema = safe_cast<IShader::BindInput::SCHEMA>(bindInput->description);
-			} else if (node->GetUnique() == UniqueType<IShader::BindOption>::Get()) {
-				const IShader::BindOption* bind = static_cast<const IShader::BindOption*>(node);
+			} else if (node->GetUnique() == UniqueType<IShader::BindEnable>::Get()) {
+				const IShader::BindEnable* bind = static_cast<const IShader::BindEnable*>(node);
 				if (!*bind->description) {
 					// disabled skip.
 #ifdef _DEBUG

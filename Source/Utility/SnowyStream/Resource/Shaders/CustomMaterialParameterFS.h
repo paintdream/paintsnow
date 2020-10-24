@@ -14,6 +14,8 @@ namespace PaintsNow {
 		String GetShaderText() override;
 
 		TShared<CustomShaderDescription> description;
+		Bytes uniformData;
+		Bytes optionData;
 
 		Float3 outputColor;
 		Float3 outputNormal;

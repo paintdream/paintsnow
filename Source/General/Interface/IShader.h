@@ -102,25 +102,25 @@ namespace PaintsNow {
 			typedef BindConst Type;
 		};
 
-		class BindOption : public TReflected<BindOption, TMetaBinding<const bool*> > {
+		class BindEnable : public TReflected<BindEnable, TMetaBinding<const bool*> > {
 		public:
-			BindOption(bool& value) { description = &value; }
+			BindEnable(bool& value) { description = &value; }
 			TObject<IReflect>& operator () (IReflect& reflect) override {
 				BaseClass::operator () (reflect);
 				return *this;
 			}
 
 			template <class T, class D>
-			inline const BindOption& FilterField(T* t, D* d) const {
+			inline const BindEnable& FilterField(T* t, D* d) const {
 				return *this; // do nothing
 			}
 
 			template <class T, class D>
 			struct RealType {
-				typedef BindOption Type;
+				typedef BindEnable Type;
 			};
 
-			typedef BindOption Type;
+			typedef BindEnable Type;
 		};
 
 		class BindInput : public TReflected<BindInput, TMetaBinding<uint32_t> > {

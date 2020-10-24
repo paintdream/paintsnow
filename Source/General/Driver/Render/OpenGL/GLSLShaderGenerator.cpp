@@ -108,13 +108,13 @@ void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refT
 		const IShader::BindBuffer* bindBuffer = nullptr;
 		String arr;
 		String arrDef;
-		static Unique uniqueBindOption = UniqueType<IShader::BindOption>::Get();
+		static Unique uniqueBindOption = UniqueType<IShader::BindEnable>::Get();
 
 		for (const MetaChainBase* pre = meta; pre != nullptr; pre = pre->GetNext()) {
 			const MetaNodeBase* node = pre->GetNode();
 			Unique uniqueNode = node->GetUnique();
 			if (uniqueNode == uniqueBindOption) {
-				const IShader::BindOption* bindOption = static_cast<const IShader::BindOption*>(pre->GetNode());
+				const IShader::BindEnable* bindOption = static_cast<const IShader::BindEnable*>(pre->GetNode());
 				if (!*bindOption->description) {
 					// defines as local
 					if (s.IsIterator()) {
@@ -268,8 +268,8 @@ void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refT
 		bool enabled = true;
 		for (const MetaChainBase* check = meta; check != nullptr; check = check->GetNext()) {
 			const MetaNodeBase* node = check->GetNode();
-			if (node->GetUnique() == UniqueType<IShader::BindOption>::Get()) {
-				const IShader::BindOption* bind = static_cast<const IShader::BindOption*>(node);
+			if (node->GetUnique() == UniqueType<IShader::BindEnable>::Get()) {
+				const IShader::BindEnable* bind = static_cast<const IShader::BindEnable*>(node);
 				if (!*bind->description) {
 					enabled = false;
 				}

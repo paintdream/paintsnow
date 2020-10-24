@@ -19,15 +19,15 @@ end
 local function FromValue(value : any) : (string, string)
 	local t : string = type(value)
 	if t == "string" then
-		return "Texture", value as string
+		return "texture", value as string
 	elseif t == "boolean" then
 		return "bool", tostring(value)
 	elseif t == "table" then
 		local count = #(value as { number })
 		local v = table.concat(value as { string }, ",")
-		if count == 9 then return "MatrixFloat3x3", v
-		elseif count == 16 then return "MatrixFloat4x4", v
-		else return "Float" .. count, v  end -- vector
+		if count == 9 then return "float3x3", v
+		elseif count == 16 then return "float4x4", v
+		else return "float" .. count, v  end -- vector
 	else
 		return "float", tostring(value)
 	end

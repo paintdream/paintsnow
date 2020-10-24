@@ -14,7 +14,7 @@
 
 namespace PaintsNow {
 	namespace IAsset {
-		enum Type { TYPE_BOOL, TYPE_FLOAT, TYPE_FLOAT2, TYPE_FLOAT3, TYPE_FLOAT4, TYPE_MATRIX3, TYPE_MATRIX4, TYPE_TEXTURE };
+		enum Type { TYPE_CONST, TYPE_FLOAT, TYPE_FLOAT2, TYPE_FLOAT3, TYPE_FLOAT4, TYPE_MATRIX3, TYPE_MATRIX4, TYPE_TEXTURE };
 		struct TextureIndex {
 			TextureIndex(uint32_t i = 0) : index(i) {}
 			uint32_t index;
@@ -23,8 +23,17 @@ namespace PaintsNow {
 		template <class T>
 		struct MapType {};
 
+		// Static switches
 		template <>
-		struct MapType<bool> { enum { type = TYPE_BOOL }; };
+		struct MapType<bool> { enum { type = TYPE_CONST }; };
+		template <>
+		struct MapType<uint8_t> { enum { type = TYPE_CONST }; };
+		template <>
+		struct MapType<uint16_t> { enum { type = TYPE_CONST }; };
+		template <>
+		struct MapType<uint32_t> { enum { type = TYPE_CONST }; };
+
+		// Variables
 		template <>
 		struct MapType<float> { enum { type = TYPE_FLOAT }; };
 		template <>

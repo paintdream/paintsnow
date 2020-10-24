@@ -27,6 +27,8 @@ TObject<IReflect>& CustomMaterialParameterFS::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectProperty()) {
+		description->ReflectExternal(reflect, uniformData, optionData);
+
 		ReflectProperty(outputColor)[BindOutput(BindOutput::LOCAL)];
 		ReflectProperty(outputNormal)[BindOutput(BindOutput::LOCAL)];
 		ReflectProperty(alpha)[BindOutput(BindOutput::LOCAL)];

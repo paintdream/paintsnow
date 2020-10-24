@@ -25,5 +25,7 @@ namespace PaintsNow {
 		// Fragment shaders
 		CustomMaterialParameterFS shaderParameter;
 		DeferredCompactEncodeFS shaderCompactEncode;
+		Bytes uniformData;
+		Bytes optionData;
 	};
 }
