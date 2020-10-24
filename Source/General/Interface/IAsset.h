@@ -129,7 +129,7 @@ namespace PaintsNow {
 				TObject<IReflect>& operator () (IReflect& reflect) override;
 				Variable();
 				template <class T>
-				Variable(const String& k, const T& value) {
+				Variable(const String& k, const T& value) : schema(0) {
 					key.Assign((uint8_t*)k.data(), k.length());
 					*this = value;
 				}
@@ -162,6 +162,7 @@ namespace PaintsNow {
 				Bytes key;
 				Bytes value;
 				Type type;
+				uint32_t schema;
 			};
 
 			TObject<IReflect>& operator () (IReflect& reflect) override;

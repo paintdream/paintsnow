@@ -45,6 +45,7 @@ void CustomMaterialPass::SetComplete() {
 	uniformData.Clear();
 	optionData.Clear();
 
+	std::vector<String> defTexturePaths;
 	shaderTransform.description->SetComplete(uniformData, optionData);
 	shaderParameter.description->SetComplete(uniformData, optionData);
 }

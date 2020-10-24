@@ -8,6 +8,7 @@
 #include "../Shaders/CustomMaterialTransformVS.h"
 #include "../Shaders/CustomMaterialParameterFS.h"
 #include "../Shaders/DeferredCompactFS.h"
+#include "../TextureResource.h"
 
 namespace PaintsNow {
 	// standard pbr deferred shading Pass using ggx brdf
@@ -25,6 +26,7 @@ namespace PaintsNow {
 		// Fragment shaders
 		CustomMaterialParameterFS shaderParameter;
 		DeferredCompactEncodeFS shaderCompactEncode;
+
 		Bytes uniformData;
 		Bytes optionData;
 	};

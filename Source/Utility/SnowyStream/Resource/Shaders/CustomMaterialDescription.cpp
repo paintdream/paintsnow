@@ -4,6 +4,19 @@ using namespace PaintsNow;
 
 CustomShaderDescription::CustomShaderDescription() {}
 
+struct Schema {
+	Schema(uint32_t s) { schema = s; }
+
+	union {
+		uint32_t schema;
+
+		struct {
+			uint16_t depend;
+			uint16_t bind;
+		};
+	};
+};
+
 static inline Unique UniqueFromVariableType(uint32_t id) {
 	switch (id) {
 	case IAsset::TYPE_FLOAT:
@@ -26,12 +39,59 @@ static inline Unique UniqueFromVariableType(uint32_t id) {
 	}
 }
 
+static uint32_t SchemaFromVariableBinding(const String& binding, bool input) {
+	if (binding == "POSITION") {
+		if (input) {
+			return IShader::BindInput::POSITION;
+		}
+	} else if (binding == "NORMAL") {
+		if (input) {
+			return IShader::BindInput::NORMAL;
+		}
+	} else if (binding == "BINORMAL") {
+		if (input) {
+			return IShader::BindInput::BINORMAL;
+		}
+	} else if (binding == "TANGENT") {
+		if (input) {
+			return IShader::BindInput::TANGENT;
+		}
+	} else if (binding == "COLOR") {
+		if (input) {
+			return IShader::BindInput::COLOR;
+		} else {
+			return IShader::BindOutput::COLOR;
+		}
+	} else if (binding == "COLOR_INSTANCED") {
+		if (input) {
+			return IShader::BindInput::COLOR_INSTANCED;
+		}
+	} else if (binding == "BONE_INDEX") {
+		if (input) {
+			return IShader::BindInput::BONE_INDEX;
+		}
+	} else if (binding == "BONE_WEIGHT") {
+		if (input) {
+			return IShader::BindInput::BONE_WEIGHT;
+		}
+	} else if (binding.compare(0, 8, "TEXCOORD") == 0) {
+		uint32_t index = atoi(binding.c_str() + 8);
+		if (input) {
+			return IShader::BindInput::TEXCOORD + index;
+		} else {
+			return IShader::BindOutput::TEXCOORD + index;
+		}
+	}
+
+	return ~(uint32_t)0;
+}
+
 template <class T>
 class DummyMetaChain : public MetaChainBase {
 public:
-	DummyMetaChain(T& meta) : binder(meta) {}
+	DummyMetaChain(T& meta, const MetaChainBase* n = nullptr) : binder(meta), next(n) {}
 	const MetaChainBase* GetNext() const override {
-		return nullptr;
+		return next;
 	}
 
 	const MetaNodeBase* GetNode() const override {
@@ -43,6 +103,7 @@ public:
 	}
 
 	T& binder;
+	const MetaChainBase* next;
 };
 
 void CustomShaderDescription::ReflectUniformTemplate(IReflect& reflect, Bytes& data) {
@@ -87,7 +148,7 @@ void CustomShaderDescription::ReflectVertexTemplate(IReflect& reflect) {
 		static IReflectObject dummy;
 		DummyMetaChain<IShader::BindBuffer> chain(vertexBufferBindings[i]);
 		reflect.Property(vertexBufferBindings[i], UniqueType<IShader::BindBuffer>::Get(), UniqueType<IShader::BindBuffer>::Get(), name.c_str(), &vertexBufferBindings[0], &vertexBufferBindings[i], nullptr);
-		reflect.Property(dummy, type, type, name.c_str(), nullptr, nullptr, &chain);
+		reflect.Property(dummy, type, type, name.c_str(), nullptr, var.value.GetData(), &chain); // use var.value.GetData() to provide default value
 	}
 }
 
@@ -111,13 +172,13 @@ void CustomShaderDescription::ReflectOptionTemplate(IReflect& reflect, Bytes& da
 			IShader::BindConst<bool> slot((bool&)data[offset]);
 			DummyMetaChain<IShader::BindConst<bool> > bindOption(slot);
 			Unique type = UniqueType<bool>::Get();
-			reflect.Property(dummy, type, type, name.c_str(), nullptr, nullptr, &bindOption);
+			reflect.Property(dummy, type, type, name.c_str(), bufferBase, bufferBase + offset, &bindOption);
 		} else { // int
 			assert(size == sizeof(uint32_t));
 			IShader::BindConst<uint32_t> slot(*(uint32_t*)data[offset]);
 			DummyMetaChain<IShader::BindConst<uint32_t> > bindOption(slot);
 			Unique type = UniqueType<uint32_t>::Get();
-			reflect.Property(dummy, type, type, name.c_str(), nullptr, nullptr, &bindOption);
+			reflect.Property(dummy, type, type, name.c_str(), bufferBase, bufferBase + offset, &bindOption);
 		}
 
 		offset += size;
@@ -134,9 +195,10 @@ void CustomShaderDescription::ReflectInputTemplate(IReflect& reflect) {
 
 		Unique type = UniqueFromVariableType(var.type);
 		static IReflectObject dummy;
-		IShader::BindInput slot((uint32_t)IShader::BindInput::TEXCOORD + safe_cast<uint32_t>(i));
+		Schema schema(var.schema);
+		IShader::BindInput slot(schema.bind);
 		DummyMetaChain<IShader::BindInput> bindInput(slot);
-		reflect.Property(dummy, type, type, name.c_str(), nullptr, nullptr, &bindInput);
+		reflect.Property(dummy, type, type, name.c_str(), nullptr, var.value.GetData(), var.schema == ~(uint32_t)0 ? nullptr : &bindInput);
 	}
 }
 
@@ -150,9 +212,9 @@ void CustomShaderDescription::ReflectOutputTemplate(IReflect& reflect) {
 
 		Unique type = UniqueFromVariableType(var.type);
 		static IReflectObject dummy;
-		IShader::BindOutput slot((uint32_t)IShader::BindOutput::TEXCOORD + safe_cast<uint32_t>(i));
+		IShader::BindOutput slot(var.schema);
 		DummyMetaChain<IShader::BindOutput> bindOutput(slot);
-		reflect.Property(dummy, type, type, name.c_str(), nullptr, nullptr, &bindOutput);
+		reflect.Property(dummy, type, type, name.c_str(), nullptr, var.value.GetData(), var.schema == ~(uint32_t)0 ? nullptr : &bindOutput);
 	}
 }
 
@@ -215,6 +277,8 @@ void CustomShaderDescription::SetInput(const String& category, const String& typ
 
 	if (type == "texture") { // resource name
 		var = IAsset::TextureIndex(safe_cast<uint32_t>(uniformTextureBindings.size()));
+		// encode def path
+		var.value.Assign((const uint8_t*)value.c_str(), value.size());
 		uniformTextureBindings.emplace_back(IShader::BindTexture());
 	} else if (type == "float") {
 		var = float(atof(value.c_str()));
@@ -252,6 +316,7 @@ void CustomShaderDescription::SetInput(const String& category, const String& typ
 		t = &optionTemplate;
 	}
 
+	var.schema = SchemaFromVariableBinding(binding, category == "Output");
 	t->variables.emplace_back(std::move(var));
 }
 

@@ -41,7 +41,7 @@ function CustomShader.New(description : ShaderDescription) : ShaderComponent
 	for key, value in pairs(description.Inputs) do
 		for _, stage in ipairs(value.Stages) do
 			local t, v = FromValue(value.Value)
-			-- shaderComponent:SetInput(stage, t, key as string, v, {})
+			shaderComponent:SetInput(stage, t, key as string, v, value.Binding, {})
 		end
 	end
 

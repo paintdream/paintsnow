@@ -144,6 +144,7 @@ return {
 			Binding ="MaterialTexture"
 		},
 	},
+	
 	Shaders = {
 		Vertex = [[
 			VaryingPosition = mult_vec(ViewProjectionMatrix, Position);
