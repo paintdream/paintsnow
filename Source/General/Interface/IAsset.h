@@ -129,9 +129,9 @@ namespace PaintsNow {
 				TObject<IReflect>& operator () (IReflect& reflect) override;
 				Variable();
 				template <class T>
-				Variable(const String& k, const T& value) : schema(0) {
+				Variable(const String& k, const T& value) {
 					key.Assign((uint8_t*)k.data(), k.length());
-					*this = value;
+					SetValue(value);
 				}
 
 				template <class T>
@@ -148,7 +148,7 @@ namespace PaintsNow {
 				}
 				
 				template <class T>
-				Variable& operator = (const T& object) {
+				Variable& SetValue(const T& object) {
 #if defined(_MSC_VER) && _MSC_VER <= 1200
 					type = (Type)MapType<std::decay<T>::type>::type;
 #else
@@ -162,7 +162,6 @@ namespace PaintsNow {
 				Bytes key;
 				Bytes value;
 				Type type;
-				uint32_t schema;
 			};
 
 			TObject<IReflect>& operator () (IReflect& reflect) override;

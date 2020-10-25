@@ -17,7 +17,7 @@ struct Schema {
 	};
 };
 
-static inline Unique UniqueFromVariableType(uint32_t id) {
+static inline Unique UniqueFromEntryType(uint32_t id) {
 	switch (id) {
 	case IAsset::TYPE_FLOAT:
 		return UniqueType<float>::Get();
@@ -39,7 +39,7 @@ static inline Unique UniqueFromVariableType(uint32_t id) {
 	}
 }
 
-static uint32_t SchemaFromVariableBinding(const String& binding, bool input) {
+static uint32_t SchemaFromPredefines(const String& binding, bool input) {
 	if (binding == "POSITION") {
 		if (input) {
 			return IShader::BindInput::POSITION;
@@ -83,7 +83,7 @@ static uint32_t SchemaFromVariableBinding(const String& binding, bool input) {
 		}
 	}
 
-	return ~(uint32_t)0;
+	return 0xFF;
 }
 
 template <class T>
@@ -106,15 +106,16 @@ public:
 	const MetaChainBase* next;
 };
 
-void CustomShaderDescription::ReflectUniformTemplate(IReflect& reflect, Bytes& data) {
+void CustomShaderDescription::ReflectUniformTemplate(IReflect& reflect, Bytes& extUniformBuffer, Bytes& extOptionBuffer) {
 	ReflectProperty(uniformBuffer);
 
-	std::vector<IAsset::Material::Variable>& variables = uniformTemplate.variables;
 	uint32_t offset = 0;
-	uint8_t* bufferBase = data.GetData();
+	uint8_t* bufferBase = extUniformBuffer.GetData();
 
-	for (size_t i = 0; i < variables.size(); i++) {
-		IAsset::Material::Variable& var = variables[i];
+	for (size_t i = 0; i < entries.size(); i++) {
+		Entry& var = entries[i];
+		if (var.var != VAR_UNIFORM) continue;
+
 		String name;
 		name.assign((const char*)var.key.GetData(), var.key.GetSize());
 
@@ -123,42 +124,64 @@ void CustomShaderDescription::ReflectUniformTemplate(IReflect& reflect, Bytes& d
 			assert(index < uniformTextureBindings.size());
 			reflect.Property(uniformTextureBindings[index], UniqueType<IShader::BindTexture>::Get(), UniqueType<IShader::BindTexture>::Get(), name.c_str(), &uniformTextureBindings[0], &uniformTextureBindings[index], nullptr);
 		} else {
-			Unique type = UniqueFromVariableType(var.type);
+			Unique type = UniqueFromEntryType(var.type);
 			static IReflectObject dummy;
 			DummyMetaChain<IShader::BindBuffer> chain(uniformBuffer);
 			// Make alignment
 			uint32_t size = safe_cast<uint32_t>(type->GetSize());
 			offset = (offset + size - 1) & (size - 1); // make alignment for variable
-			reflect.Property(dummy, type, type, name.c_str(), bufferBase + offset, bufferBase + offset + size, &chain);
+			if (var.slot != 0xFF) { // depends
+				IShader::BindEnable enable((bool&)extOptionBuffer[var.offset]);
+				DummyMetaChain<IShader::BindEnable> enableChain(enable, &chain);
+				reflect.Property(dummy, type, type, name.c_str(), bufferBase + offset, bufferBase + offset + size, &enableChain);
+			} else {
+				reflect.Property(dummy, type, type, name.c_str(), bufferBase + offset, bufferBase + offset + size, &chain);
+			}
+
 			offset += size;
 		}
 	}
 }
 
-void CustomShaderDescription::ReflectVertexTemplate(IReflect& reflect) {
-	std::vector<IAsset::Material::Variable>& variables = vertexTemplate.variables;
+void CustomShaderDescription::ReflectVertexTemplate(IReflect& reflect, Bytes& extUniformBuffer, Bytes& extOptionBuffer) {
+	for (size_t i = 0, j = 0; i < entries.size(); i++) {
+		Entry& var = entries[i];
+		if (var.var != VAR_VERTEX) continue;
 
-	assert(variables.size() == vertexBufferBindings.size());
-	for (size_t i = 0; i < variables.size(); i++) {
-		IAsset::Material::Variable& var = variables[i];
 		String name;
 		name.assign((const char*)var.key.GetData(), var.key.GetSize());
 
-		Unique type = UniqueFromVariableType(var.type);
+		Unique type = UniqueFromEntryType(var.type);
 		static IReflectObject dummy;
-		DummyMetaChain<IShader::BindBuffer> chain(vertexBufferBindings[i]);
-		reflect.Property(vertexBufferBindings[i], UniqueType<IShader::BindBuffer>::Get(), UniqueType<IShader::BindBuffer>::Get(), name.c_str(), &vertexBufferBindings[0], &vertexBufferBindings[i], nullptr);
-		reflect.Property(dummy, type, type, name.c_str(), nullptr, var.value.GetData(), &chain); // use var.value.GetData() to provide default value
+		DummyMetaChain<IShader::BindBuffer> chain(vertexBufferBindings[j]);
+
+		if (var.slot != 0xFF) { // depends
+			IShader::BindEnable enable((bool&)extOptionBuffer[var.offset]);
+			DummyMetaChain<IShader::BindEnable> enableChain(enable);
+			reflect.Property(vertexBufferBindings[j], UniqueType<IShader::BindBuffer>::Get(), UniqueType<IShader::BindBuffer>::Get(), name.c_str(), &vertexBufferBindings[0], &vertexBufferBindings[j], &enableChain);
+		} else {
+			reflect.Property(vertexBufferBindings[j], UniqueType<IShader::BindBuffer>::Get(), UniqueType<IShader::BindBuffer>::Get(), name.c_str(), &vertexBufferBindings[0], &vertexBufferBindings[j], nullptr);
+		}
+
+		if (var.slot != 0xFF) { // depends
+			IShader::BindEnable enable((bool&)extOptionBuffer[var.offset]);
+			DummyMetaChain<IShader::BindEnable> enableChain(enable, &chain);
+			reflect.Property(dummy, type, type, name.c_str(), nullptr, var.value.GetData(), &enableChain); // use var.value.GetData() to provide default value
+		} else {
+			reflect.Property(dummy, type, type, name.c_str(), nullptr, var.value.GetData(), &chain); // use var.value.GetData() to provide default value
+		}
+
+		j++;
 	}
 }
 
-void CustomShaderDescription::ReflectOptionTemplate(IReflect& reflect, Bytes& data) {
-	std::vector<IAsset::Material::Variable>& variables = optionTemplate.variables;
-	uint8_t* bufferBase = data.GetData();
+void CustomShaderDescription::ReflectOptionTemplate(IReflect& reflect, Bytes& extUniformBuffer, Bytes& extOptionBuffer) {
+	uint8_t* bufferBase = extOptionBuffer.GetData();
 	uint32_t offset = 0;
 
-	for (size_t i = 0; i < variables.size(); i++) {
-		IAsset::Material::Variable& var = variables[i];
+	for (size_t i = 0; i < entries.size(); i++) {
+		Entry& var = entries[i];
+		if (var.var != VAR_OPTION) continue;
 		String name;
 		name.assign((const char*)var.key.GetData(), var.key.GetSize());
 
@@ -169,100 +192,129 @@ void CustomShaderDescription::ReflectOptionTemplate(IReflect& reflect, Bytes& da
 		offset = (offset + size - 1) & (size - 1); // make alignment for variable
 
 		if (size == 1) {
-			IShader::BindConst<bool> slot((bool&)data[offset]);
-			DummyMetaChain<IShader::BindConst<bool> > bindOption(slot);
+			IShader::BindConst<bool> slot((bool&)extOptionBuffer[offset]);
+			DummyMetaChain<IShader::BindConst<bool> > chain(slot);
 			Unique type = UniqueType<bool>::Get();
-			reflect.Property(dummy, type, type, name.c_str(), bufferBase, bufferBase + offset, &bindOption);
+
+			if (var.slot != 0xFF) {
+				IShader::BindEnable enable((bool&)extOptionBuffer[var.offset]);
+				DummyMetaChain<IShader::BindEnable> enableChain(enable, &chain);
+				reflect.Property(dummy, type, type, name.c_str(), bufferBase, bufferBase + offset, &enableChain);
+			} else {
+				reflect.Property(dummy, type, type, name.c_str(), bufferBase, bufferBase + offset, &chain);
+			}
 		} else { // int
 			assert(size == sizeof(uint32_t));
-			IShader::BindConst<uint32_t> slot(*(uint32_t*)data[offset]);
-			DummyMetaChain<IShader::BindConst<uint32_t> > bindOption(slot);
+			IShader::BindConst<uint32_t> slot(*(uint32_t*)&extOptionBuffer[offset]);
+			DummyMetaChain<IShader::BindConst<uint32_t> > chain(slot);
 			Unique type = UniqueType<uint32_t>::Get();
-			reflect.Property(dummy, type, type, name.c_str(), bufferBase, bufferBase + offset, &bindOption);
+
+			if (var.slot != 0xFF) {
+				IShader::BindEnable enable((bool&)extOptionBuffer[var.offset]);
+				DummyMetaChain<IShader::BindEnable> enableChain(enable, &chain);
+				reflect.Property(dummy, type, type, name.c_str(), bufferBase, bufferBase + offset, &enableChain);
+			} else {
+				reflect.Property(dummy, type, type, name.c_str(), bufferBase, bufferBase + offset, &chain);
+			}
 		}
 
 		offset += size;
 	}
 }
 
-void CustomShaderDescription::ReflectInputTemplate(IReflect& reflect) {
-	std::vector<IAsset::Material::Variable>& variables = inputTemplate.variables;
+void CustomShaderDescription::ReflectInputTemplate(IReflect& reflect, Bytes& extUniformBuffer, Bytes& extOptionBuffer) {
+	for (size_t i = 0; i < entries.size(); i++) {
+		Entry& var = entries[i];
+		if (var.var != VAR_INPUT) continue;
 
-	for (size_t i = 0; i < variables.size(); i++) {
-		IAsset::Material::Variable& var = variables[i];
 		String name;
 		name.assign((const char*)var.key.GetData(), var.key.GetSize());
 
-		Unique type = UniqueFromVariableType(var.type);
+		Unique type = UniqueFromEntryType(var.type);
 		static IReflectObject dummy;
 		Schema schema(var.schema);
 		IShader::BindInput slot(schema.bind);
-		DummyMetaChain<IShader::BindInput> bindInput(slot);
-		reflect.Property(dummy, type, type, name.c_str(), nullptr, var.value.GetData(), var.schema == ~(uint32_t)0 ? nullptr : &bindInput);
+		DummyMetaChain<IShader::BindInput> chain(slot);
+
+		if (var.slot != 0xFF) {
+			IShader::BindEnable enable((bool&)extOptionBuffer[var.offset]);
+			DummyMetaChain<IShader::BindEnable> enableChain(enable, &chain);
+			reflect.Property(dummy, type, type, name.c_str(), nullptr, var.value.GetData(), &enableChain);
+		} else {
+			reflect.Property(dummy, type, type, name.c_str(), nullptr, var.value.GetData(), &chain);
+		}
 	}
 }
 
-void CustomShaderDescription::ReflectOutputTemplate(IReflect& reflect) {
-	std::vector<IAsset::Material::Variable>& variables = inputTemplate.variables;
+void CustomShaderDescription::ReflectOutputTemplate(IReflect& reflect, Bytes& extUniformBuffer, Bytes& extOptionBuffer) {
+	for (size_t i = 0; i < entries.size(); i++) {
+		Entry& var = entries[i];
+		if (var.var != VAR_OUTPUT) continue;
 
-	for (size_t i = 0; i < variables.size(); i++) {
-		IAsset::Material::Variable& var = variables[i];
 		String name;
 		name.assign((const char*)var.key.GetData(), var.key.GetSize());
 
-		Unique type = UniqueFromVariableType(var.type);
+		Unique type = UniqueFromEntryType(var.type);
 		static IReflectObject dummy;
 		IShader::BindOutput slot(var.schema);
-		DummyMetaChain<IShader::BindOutput> bindOutput(slot);
-		reflect.Property(dummy, type, type, name.c_str(), nullptr, var.value.GetData(), var.schema == ~(uint32_t)0 ? nullptr : &bindOutput);
+		DummyMetaChain<IShader::BindOutput> chain(slot);
+
+		if (var.slot != 0xFF) {
+			IShader::BindEnable enable((bool&)extOptionBuffer[var.offset]);
+			DummyMetaChain<IShader::BindEnable> enableChain(enable, &chain);
+			reflect.Property(dummy, type, type, name.c_str(), nullptr, var.value.GetData(), &enableChain);
+		} else {
+			reflect.Property(dummy, type, type, name.c_str(), nullptr, var.value.GetData(), &chain);
+		}
 	}
 }
 
 void CustomShaderDescription::ReflectExternal(IReflect& reflect, Bytes& extUniformBuffer, Bytes& extOptionBuffer) {
 	if (reflect.IsReflectProperty()) {
-		ReflectUniformTemplate(reflect, extUniformBuffer);
-		ReflectOptionTemplate(reflect, extOptionBuffer);
-		ReflectVertexTemplate(reflect);
-		ReflectInputTemplate(reflect);
-		ReflectOutputTemplate(reflect);
+		ReflectUniformTemplate(reflect, extUniformBuffer, extOptionBuffer);
+		ReflectOptionTemplate(reflect, extUniformBuffer, extOptionBuffer);
+		ReflectVertexTemplate(reflect, extUniformBuffer, extOptionBuffer);
+		ReflectInputTemplate(reflect, extUniformBuffer, extOptionBuffer);
+		ReflectOutputTemplate(reflect, extUniformBuffer, extOptionBuffer);
 	}
 }
 
 void CustomShaderDescription::SetComplete(Bytes& uniformBufferData, Bytes& optionBufferData) {
-	size_t offset = uniformBufferData.GetSize();
-	std::vector<IAsset::Material::Variable>& variables = uniformTemplate.variables;
-	for (size_t i = 0; i < variables.size(); i++) {
-		IAsset::Material::Variable& var = variables[i];
-		if (var.type != IAsset::TYPE_TEXTURE) {
-			Unique type = UniqueFromVariableType(var.type);
-			static IReflectObject dummy;
-			// Make alignment
-			size_t size = safe_cast<uint32_t>(type->GetSize());
-			offset = (offset + size - 1) & (size - 1); // make alignment for variable
-			uniformBufferData.Resize(offset + size);
-			memcpy(uniformBufferData.GetData() + offset, var.value.GetData(), size);
-			offset += size;
-		}
-	}
+	size_t uniformOffset = uniformBufferData.GetSize();
+	size_t optionOffset = optionBufferData.GetSize();
 
-	std::vector<IAsset::Material::Variable>& consts = optionTemplate.variables;
-	offset = optionBufferData.GetSize();
+	for (size_t i = 0; i < entries.size(); i++) {
+		Entry& var = entries[i];
+		if (var.var == VAR_UNIFORM) {
+			if (var.type != IAsset::TYPE_TEXTURE) {
+				Unique type = UniqueFromEntryType(var.type);
+				static IReflectObject dummy;
+				// Make alignment
+				size_t size = safe_cast<uint32_t>(type->GetSize());
+				uniformOffset = (uniformOffset + size - 1) & (size - 1); // make alignment for variable
+				uniformBufferData.Resize(uniformOffset + size);
+				memcpy(uniformBufferData.GetData() + uniformOffset, var.value.GetData(), size);
 
-	for (size_t j = 0; j < variables.size(); j++) {
-		IAsset::Material::Variable& var = variables[j];
+				var.offset = uniformOffset;
+				uniformOffset += size;
+			}
+		} else if (var.var == VAR_OPTION) {
+			if (var.GetUnique() == UniqueType<bool>::Get()) {
+				optionBufferData.Append(var.value.GetData(), sizeof(bool));
+				optionOffset++;
+			} else {
+				assert(var.GetUnique() == UniqueType<int32_t>::Get());
+				// padding
+				const size_t size = sizeof(uint32_t);
+				optionOffset = (optionOffset + size - 1) & (size - 1);
 
-		if (var.GetUnique() == UniqueType<bool>::Get()) {
-			optionBufferData.Append(var.value.GetData(), sizeof(bool));
-			offset++;
-		} else {
-			assert(var.GetUnique() == UniqueType<int32_t>::Get());
-			// padding
-			const size_t size = sizeof(uint32_t);
-			offset = (offset + size - 1) & (size - 1);
+				uint32_t value = *reinterpret_cast<uint32_t*>(var.value.GetData());
+				optionBufferData.Resize(optionOffset + sizeof(value));
+				*(uint32_t*)(optionBufferData.GetData() + optionOffset) = value;
 
-			uint32_t value = *reinterpret_cast<uint32_t*>(var.value.GetData());
-			optionBufferData.Resize(offset + sizeof(value));
-			*(uint32_t*)(optionBufferData.GetData() + offset) = value;
+				var.offset = optionOffset;
+				optionOffset += sizeof(value);
+			}
 		}
 	}
 }
@@ -272,51 +324,67 @@ void CustomShaderDescription::SetCode(const String& text) {
 }
 
 void CustomShaderDescription::SetInput(const String& category, const String& type, const String& name, const String& value, const String& binding, const std::vector<std::pair<String, String> >& config) {
-	IAsset::Material::Variable var;
-	var.key.Assign((const uint8_t*)name.c_str(), safe_cast<uint32_t>(name.size()));
+	Entry var;
 
 	if (type == "texture") { // resource name
-		var = IAsset::TextureIndex(safe_cast<uint32_t>(uniformTextureBindings.size()));
+		var.SetValue(IAsset::TextureIndex(safe_cast<uint32_t>(uniformTextureBindings.size())));
 		// encode def path
 		var.value.Assign((const uint8_t*)value.c_str(), value.size());
 		uniformTextureBindings.emplace_back(IShader::BindTexture());
 	} else if (type == "float") {
-		var = float(atof(value.c_str()));
+		var.SetValue((float)atof(value.c_str()));
 	} else if (type == "float2") {
 		Float2 v(0.0f, 0.0f);
 		sscanf(value.c_str(), "%f%f", &v.x(), &v.y());
-		var = v;
+		var.SetValue(v);
 	} else if (type == "float3") {
 		Float3 v(0.0f, 0.0f, 0.0f);
 		sscanf(value.c_str(), "%f%f%f", &v.x(), &v.y(), &v.z());
-		var = v;
+		var.SetValue(v);
 	} else if (type == "float4") {
 		Float4 v(0.0f, 0.0f, 0.0f, 0.0f);
 		sscanf(value.c_str(), "%f%f%f%f", &v.x(), &v.y(), &v.z(), &v.w());
-		var = v;
+		var.SetValue(v);
 	} else if (type == "bool") {
-		var = value != "false";
+		var.SetValue(value != "false");
 	} else if (type == "int") {
-		var = (uint32_t)atoi(value.c_str()); // Hack: encode hash size
+		var.SetValue((uint32_t)atoi(value.c_str())); // Hack: encode hash size
 	}
 
-	IAsset::Material* t = &uniformTemplate;
+	var.key.Assign((const uint8_t*)name.c_str(), safe_cast<uint32_t>(name.size()));
+
 	if (category == "Vertex" || category == "Instance") {
-		t = &vertexTemplate;
 		IShader::BindBuffer bindBuffer;
+		var.var = VAR_VERTEX;
 		bindBuffer.description.usage = category == "Vertex" ? IRender::Resource::BufferDescription::VERTEX : IRender::Resource::BufferDescription::INSTANCED;
 		vertexBufferBindings.emplace_back(std::move(bindBuffer));
-	} else if (category == "Uniform") {
-		t = &uniformTemplate;
 	} else if (category == "Input") {
-		t = &inputTemplate;
+		var.var = VAR_INPUT;
 	} else if (category == "Output") {
-		t = &outputTemplate;
+		var.var = VAR_OUTPUT;
 	} else if (category == "Option") {
-		t = &optionTemplate;
+		var.var = VAR_OPTION;
+	} else if (category == "uniform") {
+		var.var = VAR_UNIFORM;
+	} else {
+		assert(false);
 	}
 
-	var.schema = SchemaFromVariableBinding(binding, category == "Output");
-	t->variables.emplace_back(std::move(var));
+	var.schema = 0xFF;
+	var.slot = 0xFFFF;
+	if (!binding.empty()) {
+		var.schema = SchemaFromPredefines(binding, category == "Output");
+		if (var.schema == 0xFF) {
+			for (size_t i = 0; i < entries.size(); i++) {
+				Bytes& key = entries[i].key;
+				if (memcmp(binding.c_str(), key.GetData(), Math::Min(binding.size(), (size_t)key.GetSize())) == 0) {
+					var.slot = safe_cast<uint16_t>(i);
+					break;
+				}
+			}
+		}
+	}
+
+	entries.emplace_back(std::move(var));
 }
 

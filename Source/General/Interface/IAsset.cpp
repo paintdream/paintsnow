@@ -65,7 +65,7 @@ TObject<IReflect>& MeshGroup::operator () (IReflect& reflect) {
 	return *this;
 }
 
-Material::Variable::Variable() : schema(0) {}
+Material::Variable::Variable() {}
 
 TObject<IReflect>& Material::Variable::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);

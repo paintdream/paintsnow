@@ -18,21 +18,34 @@ namespace PaintsNow {
 		void SetComplete(Bytes& extUniformBuffer, Bytes& extOptionBuffer);
 		void ReflectExternal(IReflect& reflect, Bytes& extUniformBuffer, Bytes& extOptionBuffer);
 
-		void ReflectVertexTemplate(IReflect& reflect);
-		void ReflectOptionTemplate(IReflect& reflect, Bytes& data);
-		void ReflectUniformTemplate(IReflect& reflect, Bytes& data);
-		void ReflectInputTemplate(IReflect& reflect);
-		void ReflectOutputTemplate(IReflect& reflect);
+		void ReflectVertexTemplate(IReflect& reflect, Bytes& uniformData, Bytes& optionData);
+		void ReflectOptionTemplate(IReflect& reflect, Bytes& uniformData, Bytes& optionData);
+		void ReflectUniformTemplate(IReflect& reflect, Bytes& uniformData, Bytes& optionData);
+		void ReflectInputTemplate(IReflect& reflect, Bytes& uniformData, Bytes& optionData);
+		void ReflectOutputTemplate(IReflect& reflect, Bytes& uniformData, Bytes& optionData);
 
 		IShader::BindBuffer uniformBuffer;
 		String code;
 
-		IAsset::Material vertexTemplate;
-		IAsset::Material uniformTemplate;
-		IAsset::Material optionTemplate;
-		IAsset::Material inputTemplate;
-		IAsset::Material outputTemplate;
+		enum {
+			VAR_VERTEX,
+			VAR_UNIFORM,
+			VAR_OPTION,
+			VAR_INPUT,
+			VAR_OUTPUT
+		};
 
+		class Entry : public IAsset::Material::Variable {
+		public:
+			Entry() : var(0), schema(0), slot(0), offset(0) {}
+
+			uint8_t var;
+			uint8_t schema;
+			uint16_t slot;
+			uint32_t offset;
+		};
+
+		std::vector<Entry> entries;
 		std::vector<IShader::BindTexture> uniformTextureBindings;
 		std::vector<IShader::BindBuffer> vertexBufferBindings;
 	};

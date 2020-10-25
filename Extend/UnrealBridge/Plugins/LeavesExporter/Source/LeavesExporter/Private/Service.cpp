@@ -28,14 +28,14 @@ namespace PaintsNow {
 			return nullptr;
 		}
 
-		virtual bool PersistResource(TShared<ResourceBase> resource, const String& extension = "") override {
+		virtual bool PersistResource(const TShared<ResourceBase>& resource, const String& extension = "") override {
 			return false;
 		}
-		virtual bool MapResource(TShared<ResourceBase> resource, const String& extension = "") override {
+		virtual bool MapResource(const TShared<ResourceBase>& resource, const String& extension = "") override {
 			return false;
 		}
 
-		virtual void UnmapResource(TShared<ResourceBase> resource) override {
+		virtual void UnmapResource(const TShared<ResourceBase>& resource) override {
 
 		}
 	};
