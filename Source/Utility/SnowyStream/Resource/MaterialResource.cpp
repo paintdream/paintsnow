@@ -42,7 +42,7 @@ void MaterialResource::Attach(IRender& render, void* deviceContext) {
 		updater.Capture(drawCallTemplate, bufferData, 1 << IRender::Resource::BufferDescription::UNIFORM);
 
 		// get shader hash
-		Bytes shaderHash = pass.ExportHash(true);
+		Bytes shaderHash = pass.ExportHash();
 		if (originalShaderResource->GetHashValue() == shaderHash) {
 			// use original
 			mutationShaderResource = originalShaderResource;

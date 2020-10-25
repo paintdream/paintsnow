@@ -29,7 +29,7 @@ const Bytes& ShaderResource::GetHashValue() const {
 void ShaderResource::Attach(IRender& render, void* deviceContext) {
 	// compute hash value
 	PassBase& pass = GetPass();
-	hashValue = pass.ExportHash(true);
+	hashValue = pass.ExportHash();
 
 	if (shaderResource != nullptr) return; // already attached.
 

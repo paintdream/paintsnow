@@ -102,6 +102,10 @@ namespace PaintsNow {
 			typedef BindConst Type;
 		};
 
+		// Dual directional binding
+		// The enable state is set to off if any satisfied:
+		// 1. The binding value is false
+		// 2. The object decorated is unavalible
 		class BindEnable : public TReflected<BindEnable, TMetaBinding<const bool*> > {
 		public:
 			BindEnable(bool& value) { description = &value; }

@@ -316,7 +316,6 @@ void PassBase::Updater::Update(IRender& render, IRender::Queue* queue, IRender::
 	}
 }
 
-template <bool constantOnly>
 class HashExporter : public IReflect {
 public:
 	Bytes hashValue;
@@ -330,8 +329,7 @@ public:
 				if (unique == UniqueType<IShader::BindConst<bool> >::Get()
 				|| unique == UniqueType<IShader::BindConst<uint32_t> >::Get()
 				|| unique == UniqueType<IShader::BindConst<uint16_t> >::Get()
-				|| unique == UniqueType<IShader::BindConst<uint8_t> >::Get()
-				|| (!constantOnly && unique == UniqueType<IShader::BindInput>::Get())) {
+				|| unique == UniqueType<IShader::BindConst<uint8_t> >::Get()) {
 					hashValue.Append(reinterpret_cast<uint8_t*>(ptr), safe_cast<uint32_t>(typeID->GetSize()));
 					break;
 				}
@@ -350,16 +348,58 @@ public:
 	void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
 };
 
-Bytes PassBase::ExportHash(bool constantOnly) {
-	if (constantOnly) {
-		HashExporter<true> exporter;
-		(*this)(exporter);
-		return exporter.hashValue;
-	} else {
-		HashExporter<false> exporter;
-		(*this)(exporter);
-		return exporter.hashValue;
+
+Bytes PassBase::ExportHash() const {
+	HashExporter exporter;
+	(const_cast<PassBase&>(*this))(exporter);
+
+	return exporter.hashValue;
+}
+
+class SwitchEvaluater : public IReflect {
+public:
+	SwitchEvaluater() : IReflect(true, false, false, false), cont(false) {}
+	bool cont;
+
+	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override {
+		if (s.IsBasicObject()) {
+			if (typeID == UniqueType<bool>::Get()) {
+				bool& value = *reinterpret_cast<bool*>(ptr);
+				if (value) {
+					for (const MetaChainBase* chain = meta; chain != nullptr; chain = chain->GetNext()) {
+						const MetaNodeBase* node = chain->GetNode();
+						Unique unique = node->GetUnique();
+						if (unique == UniqueType<IShader::BindConst<bool> >::Get()) {
+							const IShader::BindConst<bool>* bindConst = static_cast<const IShader::BindConst<bool>*>(node);
+							// we do not count disabled BindConst<bool>
+							if (!bindConst->description) {
+								cont = true;
+								value = false;
+							}
+						}
+					}
+				}
+			}
+		}
 	}
+
+	void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
+};
+
+bool PassBase::FlushSwitches() {
+	int i = 0;
+	while (true) {
+		SwitchEvaluater evaluator;
+		(const_cast<PassBase&>(*this))(evaluator);
+
+		if (!evaluator.cont) {
+			return i != 0;
+		}
+
+		i++;
+	}
+
+	return true;
 }
 
 PassBase::~PassBase() {}
