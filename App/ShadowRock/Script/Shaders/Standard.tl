@@ -130,17 +130,17 @@ return {
 		-- Options
 		EnableBaseColorTexture = {
 			Stages = { "FragmentOptions" },
-			Value = false,
+			Value = true,
 			Binding = "BaseColorTexture",
 		},
 		EnableNormalTexture = {
 			Stages = { "FragmentOptions" },
-			Value = false,
+			Value = true,
 			Binding = "NormalTexture"
 		},
 		EnableMaterialTexture = {
 			Stages = { "FragmentOptions" },
-			Value = false,
+			Value = true,
 			Binding ="MaterialTexture"
 		},
 	},

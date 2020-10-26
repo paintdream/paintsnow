@@ -358,7 +358,9 @@ Bytes PassBase::ExportHash() const {
 
 class SwitchEvaluater : public IReflect {
 public:
-	SwitchEvaluater() : IReflect(true, false, false, false), cont(false) {}
+	SwitchEvaluater(uint32_t mask) : IReflect(true, false, false, false), resourceMask(mask), cont(false) {}
+
+	uint32_t resourceMask;
 	bool cont;
 
 	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override {
@@ -380,16 +382,39 @@ public:
 					}
 				}
 			}
+		} else {
+			for (const MetaChainBase* chain = meta; chain != nullptr; chain = chain->GetNext()) {
+				const MetaNodeBase* node = chain->GetNode();
+				Unique unique = node->GetUnique();
+				if (unique == UniqueType<IShader::BindEnable>::Get()) {
+					IShader::BindEnable* bindEnable = const_cast<IShader::BindEnable*>(static_cast<const IShader::BindEnable*>(node));
+					if (*bindEnable->description) {
+						if ((resourceMask & (1 << IRender::Resource::RESOURCE_TEXTURE)) && typeID == UniqueType<IShader::BindTexture>::Get()) {
+							IShader::BindTexture* bindTexture = static_cast<IShader::BindTexture*>(&s);
+							if (bindTexture->resource == nullptr) {
+								*bindEnable->description = false;
+								cont = true;
+							}
+						} else if ((resourceMask & (1 << IRender::Resource::RESOURCE_BUFFER)) && typeID == UniqueType<IShader::BindBuffer>::Get()) {
+							IShader::BindBuffer* bindTexture = static_cast<IShader::BindBuffer*>(&s);
+							if (bindTexture->resource == nullptr) {
+								*bindEnable->description = false;
+								cont = true;
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 
 	void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
 };
 
-bool PassBase::FlushSwitches() {
+bool PassBase::FlushSwitches(uint32_t resourceMask) {
 	int i = 0;
 	while (true) {
-		SwitchEvaluater evaluator;
+		SwitchEvaluater evaluator(resourceMask);
 		(const_cast<PassBase&>(*this))(evaluator);
 
 		if (!evaluator.cont) {

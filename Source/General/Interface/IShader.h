@@ -106,7 +106,7 @@ namespace PaintsNow {
 		// The enable state is set to off if any satisfied:
 		// 1. The binding value is false
 		// 2. The object decorated is unavalible
-		class BindEnable : public TReflected<BindEnable, TMetaBinding<const bool*> > {
+		class BindEnable : public TReflected<BindEnable, TMetaBinding<bool*> > {
 		public:
 			BindEnable(bool& value) { description = &value; }
 			TObject<IReflect>& operator () (IReflect& reflect) override {
