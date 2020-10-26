@@ -295,7 +295,7 @@ void CustomShaderDescription::SetComplete(Bytes& uniformBufferData, Bytes& optio
 				uniformBufferData.Resize(uniformOffset + size);
 				memcpy(uniformBufferData.GetData() + uniformOffset, var.value.GetData(), size);
 
-				var.offset = uniformOffset;
+				var.offset = safe_cast<uint32_t>(uniformOffset);
 				uniformOffset += size;
 			}
 		} else if (var.var == VAR_OPTION) {
@@ -312,7 +312,7 @@ void CustomShaderDescription::SetComplete(Bytes& uniformBufferData, Bytes& optio
 				optionBufferData.Resize(optionOffset + sizeof(value));
 				*(uint32_t*)(optionBufferData.GetData() + optionOffset) = value;
 
-				var.offset = optionOffset;
+				var.offset = safe_cast<uint32_t>(optionOffset);
 				optionOffset += sizeof(value);
 			}
 		}
