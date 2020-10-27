@@ -42,10 +42,7 @@ void CustomMaterialPass::SetCode(const String& stage, const String& code, const 
 }
 
 void CustomMaterialPass::SetComplete() {
-	uniformData.Clear();
-	optionData.Clear();
-
 	std::vector<String> defTexturePaths;
-	shaderTransform.description->SetComplete(uniformData, optionData);
-	shaderParameter.description->SetComplete(uniformData, optionData);
+	shaderTransform.description->SetComplete(shaderTransform.uniformData, shaderTransform.optionData);
+	shaderParameter.description->SetComplete(shaderParameter.uniformData, shaderParameter.optionData);
 }

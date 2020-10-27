@@ -1,6 +1,6 @@
 local CustomShader = record end
 
-local Input = record
+local ShaderInput = record
 	Type : string
 	Stages : { string }
 	Value : any
@@ -12,7 +12,7 @@ local ShaderDescription = record
 	Name : string
 	Priority : number
 	Shaders : { string : string }
-	Inputs : { string : Input }
+	Inputs : { string : ShaderInput }
 	States : { string : string }
 end
 
@@ -49,18 +49,7 @@ function CustomShader.New(description : ShaderDescription) : ShaderComponent
 		shaderComponent:SetCode(stage, text, {})
 	end
 
-	shaderComponent:SetCallback(function (info : string, code : string)
-		if info and #info ~= 0 then
-			print("[CustomShader.New] Compiling shader: " .. description.Name .. " failed!")
-			print("[CustomShader.New] Error: " .. info)
-			print("[CustomShader.New] Shader generated: ")
-			print(code)
-		else
-			print("[CustomShader.New] Compiling shader: " .. description.Name)
-		end
-	end)
-
-	shaderComponent:SetComplete()
-
 	return shaderComponent
 end
+
+return CustomShader

@@ -39,7 +39,7 @@ static inline Unique UniqueFromEntryType(uint32_t id) {
 	}
 }
 
-static uint32_t SchemaFromPredefines(const String& binding, bool input) {
+static uint8_t SchemaFromPredefines(const String& binding, bool input) {
 	if (binding == "POSITION") {
 		if (input) {
 			return IShader::BindInput::POSITION;
@@ -130,8 +130,8 @@ void CustomShaderDescription::ReflectUniformTemplate(IReflect& reflect, Bytes& e
 			// Make alignment
 			uint32_t size = safe_cast<uint32_t>(type->GetSize());
 			offset = (offset + size - 1) & (size - 1); // make alignment for variable
-			if (var.slot != 0xFF) { // depends
-				IShader::BindEnable enable((bool&)extOptionBuffer[var.offset]);
+			if (var.slot != 0xFFFF) { // depends
+				IShader::BindEnable enable((bool&)extOptionBuffer[entries[var.slot].offset]);
 				DummyMetaChain<IShader::BindEnable> enableChain(enable, &chain);
 				reflect.Property(dummy, type, type, name.c_str(), bufferBase + offset, bufferBase + offset + size, &enableChain);
 			} else {
@@ -299,11 +299,11 @@ void CustomShaderDescription::SetComplete(Bytes& uniformBufferData, Bytes& optio
 				uniformOffset += size;
 			}
 		} else if (var.var == VAR_OPTION) {
-			if (var.GetUnique() == UniqueType<bool>::Get()) {
+			if (var.value.GetSize() == sizeof(bool)) {
 				optionBufferData.Append(var.value.GetData(), sizeof(bool));
 				optionOffset++;
 			} else {
-				assert(var.GetUnique() == UniqueType<int32_t>::Get());
+				assert(var.value.GetSize() == sizeof(uint32_t));
 				// padding
 				const size_t size = sizeof(uint32_t);
 				optionOffset = (optionOffset + size - 1) & (size - 1);
@@ -345,10 +345,27 @@ void CustomShaderDescription::SetInput(const String& category, const String& typ
 		Float4 v(0.0f, 0.0f, 0.0f, 0.0f);
 		sscanf(value.c_str(), "%f%f%f%f", &v.x(), &v.y(), &v.z(), &v.w());
 		var.SetValue(v);
+	} else if (type == "float3x3") {
+		MatrixFloat3x3 mat = MatrixFloat3x3::Identity();
+		sscanf(value.c_str(), "%f%f%f%f%f%f%f%f%f",
+			&mat(0, 0), &mat(0, 1), &mat(0, 2),
+			&mat(1, 0), &mat(1, 1), &mat(1, 2),
+			&mat(2, 0), &mat(2, 1), &mat(2, 2));
+		var.SetValue(mat);
+	} else if (type == "float4x4") {
+		MatrixFloat4x4 mat = MatrixFloat4x4::Identity();
+		sscanf(value.c_str(), "%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f%f",
+			&mat(0, 0), &mat(0, 1), &mat(0, 2), &mat(0, 3),
+			&mat(1, 0), &mat(1, 1), &mat(1, 2), &mat(1, 3),
+			&mat(2, 0), &mat(2, 1), &mat(2, 2), &mat(2, 3),
+			&mat(3, 0), &mat(3, 1), &mat(3, 2), &mat(3, 3));
+		var.SetValue(mat);
 	} else if (type == "bool") {
 		var.SetValue(value != "false");
 	} else if (type == "int") {
-		var.SetValue((uint32_t)atoi(value.c_str())); // Hack: encode hash size
+		var.SetValue((uint32_t)atoi(value.c_str()));
+	} else {
+		assert(false);
 	}
 
 	var.key.Assign((const uint8_t*)name.c_str(), safe_cast<uint32_t>(name.size()));
@@ -364,7 +381,7 @@ void CustomShaderDescription::SetInput(const String& category, const String& typ
 		var.var = VAR_OUTPUT;
 	} else if (category == "Option") {
 		var.var = VAR_OPTION;
-	} else if (category == "uniform") {
+	} else if (category == "Uniform") {
 		var.var = VAR_UNIFORM;
 	} else {
 		assert(false);

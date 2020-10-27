@@ -27,6 +27,26 @@ function Scene.New(database : Database, clock : Clock) : Scene
 	local renderPolicy = RenderFlowComponentModule.NewRenderPolicy("Primitives", 0)
 	local lightPolicy = RenderFlowComponentModule.NewRenderPolicy("LightSource", 0)
 
+	local StandardShader = require("Script/Shaders/Standard")
+	local CustomShader = require("Script/Prefabs/Components/Shader/CustomShader")
+	local customShaderComponent = CustomShader.New(StandardShader)
+
+	-- attach to an entity
+	rootEntity:AddEntityComponent(customShaderComponent as Component)
+	
+	customShaderComponent:SetCallback(function (info : string, code : string)
+		if info and #info ~= 0 then
+			print("[CustomShader.New] Compiling shader: " .. StandardShader.Name .. " failed!")
+			print("[CustomShader.New] Error: " .. info)
+			print("[CustomShader.New] Shader generated: ")
+			print(code)
+		else
+			print("[CustomShader.New] Compiling shader: " .. StandardShader.Name)
+		end
+	end)
+
+	customShaderComponent:SetComplete()
+
 	-- add scene entities
 	if database then
 		print("\tWarming up resources ...")
