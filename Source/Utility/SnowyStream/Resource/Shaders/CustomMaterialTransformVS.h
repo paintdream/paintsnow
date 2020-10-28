@@ -8,7 +8,7 @@
 #include "StandardTransformVS.h"
 
 namespace PaintsNow {
-	class CustomMaterialTransformVS : public TReflected<CustomMaterialTransformVS, StandardTransformVS> {
+	class CustomMaterialTransformVS : public TReflected<CustomMaterialTransformVS, IShader> {
 	public:
 		CustomMaterialTransformVS();
 		TObject<IReflect>& operator () (IReflect& reflect) override;

@@ -40,7 +40,7 @@ void ShaderComponent::Uninitialize(Engine& engine, Entity* entity) {
 	BaseClass::Uninitialize(engine, entity);
 }
 
-void ShaderComponent::SetInput(Engine& engine, const String& stage, const String& type, const String& value, const String& name, const String& binding, const std::vector<std::pair<String, String> >& config) {
+void ShaderComponent::SetInput(Engine& engine, const String& stage, const String& type, const String& name, const String& value, const String& binding, const std::vector<std::pair<String, String> >& config) {
 	assert(customMaterialShader);
 
 	CustomMaterialPass& pass = static_cast<CustomMaterialPass&>(customMaterialShader->GetPass());

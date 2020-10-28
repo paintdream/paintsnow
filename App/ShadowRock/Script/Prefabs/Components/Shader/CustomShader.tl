@@ -24,7 +24,7 @@ local function FromValue(value : any) : (string, string)
 		return "bool", tostring(value)
 	elseif t == "table" then
 		local count = #(value as { number })
-		local v = table.concat(value as { string }, ",")
+		local v = table.concat(value as { string }, " ")
 		if count == 9 then return "float3x3", v
 		elseif count == 16 then return "float4x4", v
 		else return "float" .. count, v  end -- vector

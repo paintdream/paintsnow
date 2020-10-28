@@ -10,12 +10,12 @@ return {
 		},
 		Color = {
 			Stages = { "VertexInput" },
-			Value = { 1.0, 1.0, 1.0, 1.0 }, -- float3
+			Value = { 1.0, 1.0, 1.0, 1.0 }, -- float4
 			Binding = "COLOR",
 		},
 		Normal = {
 			Stages = { "VertexInput" },
-			Value = { 0.0, 0.0, 1.0, 0.0 }, -- float3
+			Value = { 0.0, 0.0, 1.0, 0.0 }, -- float4
 			Binding = "NORMAL",
 		},
 		Tangent = {
@@ -64,17 +64,17 @@ return {
 		-- Options
 		EnableVertexNormal = {
 			Stages = { "VertexOptions", "FragmentOptions" },
-			Value = false,
+			Value = true,
 			Binding = "Normal",
 		},
 		EnableVertexTangent = {
 			Stages = { "VertexOptions", "FragmentOptions" },
-			Value = false,
+			Value = true,
 			Binding = "Tangent"
 		},
 		EnableVertexColor = {
 			Stages = { "VertexOptions", "FragmentOptions" },
-			Value = false,
+			Value = true,
 			Binding ="Color"
 		},
 
@@ -147,28 +147,28 @@ return {
 	
 	Shaders = {
 		Vertex = [[
-			VaryingPosition = mult_vec(ViewProjectionMatrix, Position);
-			if (EnableTexCoord) {
-				VaryingTexCoord = TexCoord;
-			}
+	VaryingPosition = mult_vec(ViewProjectionMatrix, Position);
+	if (EnableTexCoord) {
+		VaryingTexCoord = TexCoord;
+	}
 
-			if (EnableVertexColor) {
-				VaryingColor = Color;
-			}
+	if (EnableVertexColor) {
+		VaryingColor = Color;
+	}
 
-			if (EnableVertexNormal) {
-				float4 normal = Normal * 2.0 / 255.0 - float4(1.0, 1.0, 1.0, 1.0);
-				float4x4 viewWorldMatrix = mult_mat(ViewMatrix, WorldMatrix);
-				if (EnableVertexTangent) {
-					float4 tangent = Tangent * 2.0 / 255.0 - float4(1.0, 1.0, 1.0, 1.0);
-					VaryingTangent = mult_vec(float3x3(ViewWorldMatrix), tangent.xyz);
-					VaryingBinormal = mult_vec(float3x3(ViewWorldMatrix), normal.xyz);
-					VaryingNormal = cross(VaryingBinormal, VaryingTangent);
-					VaryingBinormal *= tangent.w;
-				} else {
-					VaryingNormal = mult_vec(float3x3(ViewWorldMatrix), normal.xyz);
-				}
-			}
+	if (EnableVertexNormal) {
+		float4 normal = Normal * 2.0 / 255.0 - float4(1.0, 1.0, 1.0, 1.0);
+		float4x4 viewWorldMatrix = mult_mat(ViewMatrix, WorldMatrix);
+		if (EnableVertexTangent) {
+			float4 tangent = Tangent * 2.0 / 255.0 - float4(1.0, 1.0, 1.0, 1.0);
+			VaryingTangent = mult_vec(float3x3(ViewWorldMatrix), tangent.xyz);
+			VaryingBinormal = mult_vec(float3x3(ViewWorldMatrix), normal.xyz);
+			VaryingNormal = cross(VaryingBinormal, VaryingTangent);
+			VaryingBinormal *= tangent.w;
+		} else {
+			VaryingNormal = mult_vec(float3x3(ViewWorldMatrix), normal.xyz);
+		}
+	}
 		]],
 
 		Fragment = [[

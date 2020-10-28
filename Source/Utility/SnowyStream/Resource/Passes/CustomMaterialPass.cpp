@@ -17,8 +17,10 @@ TObject<IReflect>& CustomMaterialPass::operator () (IReflect& reflect) {
 }
 
 void CustomMaterialPass::SetInput(const String& stage, const String& type, const String& name, const String& value, const String& binding, const std::vector<std::pair<String, String> >& config) {
-	if (stage == "VertexInput") {
-		shaderTransform.description->SetInput("Input", type, name, value, binding, config);
+	if (stage == "VertexInstance") {
+		shaderTransform.description->SetInput("Instance", type, name, value, binding, config);
+	} else if (stage == "VertexInput") {
+		shaderTransform.description->SetInput("Vertex", type, name, value, binding, config);
 	} else if (stage == "VertexOptions") {
 		shaderTransform.description->SetInput("Option", type, name, value, binding, config);
 	} else if (stage == "VertexUniform") {

@@ -109,11 +109,13 @@ void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refT
 		String arr;
 		String arrDef;
 		static Unique uniqueBindOption = UniqueType<IShader::BindEnable>::Get();
+		static Unique uniqueBool = UniqueType<bool>::Get();
+		bool isBoolean = typeID == uniqueBool;
 
 		for (const MetaChainBase* pre = meta; pre != nullptr; pre = pre->GetNext()) {
 			const MetaNodeBase* node = pre->GetNode();
 			Unique uniqueNode = node->GetUnique();
-			if (uniqueNode == uniqueBindOption) {
+			if (!isBoolean && uniqueNode == uniqueBindOption) {
 				const IShader::BindEnable* bindOption = static_cast<const IShader::BindEnable*>(pre->GetNode());
 				if (!*bindOption->description) {
 					// defines as local
@@ -123,6 +125,7 @@ void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refT
 					} else {
 						initialization += String("\t") + declareMap[typeID] + " " + name + ";\n";
 					}
+
 					return;
 				}
 			}

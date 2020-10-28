@@ -1,21 +1,11 @@
 #include "CustomMaterialParameterFS.h"
+#include <sstream>
 
 using namespace PaintsNow;
 
-CustomShaderDescription::CustomShaderDescription() {}
-
-struct Schema {
-	Schema(uint32_t s) { schema = s; }
-
-	union {
-		uint32_t schema;
-
-		struct {
-			uint16_t depend;
-			uint16_t bind;
-		};
-	};
-};
+CustomShaderDescription::CustomShaderDescription() {
+	uniformBuffer.description.usage = IRender::Resource::BufferDescription::UNIFORM;
+}
 
 static inline Unique UniqueFromEntryType(uint32_t id) {
 	switch (id) {
@@ -107,10 +97,15 @@ public:
 };
 
 void CustomShaderDescription::ReflectUniformTemplate(IReflect& reflect, Bytes& extUniformBuffer, Bytes& extOptionBuffer) {
-	ReflectProperty(uniformBuffer);
-
 	uint32_t offset = 0;
 	uint8_t* bufferBase = extUniformBuffer.GetData();
+
+	// Expand
+	// ReflectProperty(uniformBuffer);
+	static Unique typeBuffer = UniqueType<IShader::BindBuffer>::Get();
+	std::stringstream ss;
+	ss << "uniformBuffer_" << (void*)bufferBase;
+	reflect.Property(uniformBuffer, typeBuffer, typeBuffer, ss.str().c_str(), this, &uniformBuffer, nullptr);
 
 	for (size_t i = 0; i < entries.size(); i++) {
 		Entry& var = entries[i];
@@ -120,8 +115,7 @@ void CustomShaderDescription::ReflectUniformTemplate(IReflect& reflect, Bytes& e
 		name.assign((const char*)var.key.GetData(), var.key.GetSize());
 
 		if (var.type == IAsset::TYPE_TEXTURE) {
-			uint32_t index = var.Parse(UniqueType<IAsset::TextureIndex>()).index;
-			assert(index < uniformTextureBindings.size());
+			uint32_t index = var.offset;
 			reflect.Property(uniformTextureBindings[index], UniqueType<IShader::BindTexture>::Get(), UniqueType<IShader::BindTexture>::Get(), name.c_str(), &uniformTextureBindings[0], &uniformTextureBindings[index], nullptr);
 		} else {
 			Unique type = UniqueFromEntryType(var.type);
@@ -131,6 +125,7 @@ void CustomShaderDescription::ReflectUniformTemplate(IReflect& reflect, Bytes& e
 			uint32_t size = safe_cast<uint32_t>(type->GetSize());
 			offset = (offset + size - 1) & (size - 1); // make alignment for variable
 			if (var.slot != 0xFFFF) { // depends
+				assert(entries[var.slot].var == VAR_OPTION);
 				IShader::BindEnable enable((bool&)extOptionBuffer[entries[var.slot].offset]);
 				DummyMetaChain<IShader::BindEnable> enableChain(enable, &chain);
 				reflect.Property(dummy, type, type, name.c_str(), bufferBase + offset, bufferBase + offset + size, &enableChain);
@@ -144,7 +139,7 @@ void CustomShaderDescription::ReflectUniformTemplate(IReflect& reflect, Bytes& e
 }
 
 void CustomShaderDescription::ReflectVertexTemplate(IReflect& reflect, Bytes& extUniformBuffer, Bytes& extOptionBuffer) {
-	for (size_t i = 0, j = 0; i < entries.size(); i++) {
+	for (size_t i = 0; i < entries.size(); i++) {
 		Entry& var = entries[i];
 		if (var.var != VAR_VERTEX) continue;
 
@@ -153,25 +148,28 @@ void CustomShaderDescription::ReflectVertexTemplate(IReflect& reflect, Bytes& ex
 
 		Unique type = UniqueFromEntryType(var.type);
 		static IReflectObject dummy;
-		DummyMetaChain<IShader::BindBuffer> chain(vertexBufferBindings[j]);
-
-		if (var.slot != 0xFF) { // depends
-			IShader::BindEnable enable((bool&)extOptionBuffer[var.offset]);
+		uint32_t index = var.offset;
+		if (var.slot != 0xFFFF) { // depends
+			assert(entries[var.slot].var == VAR_OPTION);
+			IShader::BindEnable enable((bool&)extOptionBuffer[entries[var.slot].offset]);
 			DummyMetaChain<IShader::BindEnable> enableChain(enable);
-			reflect.Property(vertexBufferBindings[j], UniqueType<IShader::BindBuffer>::Get(), UniqueType<IShader::BindBuffer>::Get(), name.c_str(), &vertexBufferBindings[0], &vertexBufferBindings[j], &enableChain);
+			reflect.Property(vertexBufferBindings[index], UniqueType<IShader::BindBuffer>::Get(), UniqueType<IShader::BindBuffer>::Get(), name.c_str(), &vertexBufferBindings[0], &vertexBufferBindings[index], &enableChain);
 		} else {
-			reflect.Property(vertexBufferBindings[j], UniqueType<IShader::BindBuffer>::Get(), UniqueType<IShader::BindBuffer>::Get(), name.c_str(), &vertexBufferBindings[0], &vertexBufferBindings[j], nullptr);
+			reflect.Property(vertexBufferBindings[index], UniqueType<IShader::BindBuffer>::Get(), UniqueType<IShader::BindBuffer>::Get(), name.c_str(), &vertexBufferBindings[0], &vertexBufferBindings[index], nullptr);
 		}
 
-		if (var.slot != 0xFF) { // depends
-			IShader::BindEnable enable((bool&)extOptionBuffer[var.offset]);
+		IShader::BindInput slot(var.schema);
+		DummyMetaChain<IShader::BindInput> chainInput(slot);
+		DummyMetaChain<IShader::BindBuffer> chain(vertexBufferBindings[index], &chainInput);
+
+		if (var.slot != 0xFFFF) { // depends
+			assert(entries[var.slot].var == VAR_OPTION);
+			IShader::BindEnable enable((bool&)extOptionBuffer[entries[var.slot].offset]);
 			DummyMetaChain<IShader::BindEnable> enableChain(enable, &chain);
 			reflect.Property(dummy, type, type, name.c_str(), nullptr, var.value.GetData(), &enableChain); // use var.value.GetData() to provide default value
 		} else {
 			reflect.Property(dummy, type, type, name.c_str(), nullptr, var.value.GetData(), &chain); // use var.value.GetData() to provide default value
 		}
-
-		j++;
 	}
 }
 
@@ -196,8 +194,9 @@ void CustomShaderDescription::ReflectOptionTemplate(IReflect& reflect, Bytes& ex
 			DummyMetaChain<IShader::BindConst<bool> > chain(slot);
 			Unique type = UniqueType<bool>::Get();
 
-			if (var.slot != 0xFF) {
-				IShader::BindEnable enable((bool&)extOptionBuffer[var.offset]);
+			if (var.slot != 0xFFFF) {
+				assert(entries[var.slot].var == VAR_OPTION);
+				IShader::BindEnable enable((bool&)extOptionBuffer[entries[var.slot].offset]);
 				DummyMetaChain<IShader::BindEnable> enableChain(enable, &chain);
 				reflect.Property(dummy, type, type, name.c_str(), bufferBase, bufferBase + offset, &enableChain);
 			} else {
@@ -209,8 +208,9 @@ void CustomShaderDescription::ReflectOptionTemplate(IReflect& reflect, Bytes& ex
 			DummyMetaChain<IShader::BindConst<uint32_t> > chain(slot);
 			Unique type = UniqueType<uint32_t>::Get();
 
-			if (var.slot != 0xFF) {
-				IShader::BindEnable enable((bool&)extOptionBuffer[var.offset]);
+			if (var.slot != 0xFFFF) {
+				assert(entries[var.slot].var == VAR_OPTION);
+				IShader::BindEnable enable((bool&)extOptionBuffer[entries[var.slot].offset]);
 				DummyMetaChain<IShader::BindEnable> enableChain(enable, &chain);
 				reflect.Property(dummy, type, type, name.c_str(), bufferBase, bufferBase + offset, &enableChain);
 			} else {
@@ -232,12 +232,12 @@ void CustomShaderDescription::ReflectInputTemplate(IReflect& reflect, Bytes& ext
 
 		Unique type = UniqueFromEntryType(var.type);
 		static IReflectObject dummy;
-		Schema schema(var.schema);
-		IShader::BindInput slot(schema.bind);
+		IShader::BindInput slot(var.schema);
 		DummyMetaChain<IShader::BindInput> chain(slot);
 
-		if (var.slot != 0xFF) {
-			IShader::BindEnable enable((bool&)extOptionBuffer[var.offset]);
+		if (var.slot != 0xFFFF) {
+			assert(entries[var.slot].var == VAR_OPTION);
+			IShader::BindEnable enable((bool&)extOptionBuffer[entries[var.slot].offset]);
 			DummyMetaChain<IShader::BindEnable> enableChain(enable, &chain);
 			reflect.Property(dummy, type, type, name.c_str(), nullptr, var.value.GetData(), &enableChain);
 		} else {
@@ -259,8 +259,9 @@ void CustomShaderDescription::ReflectOutputTemplate(IReflect& reflect, Bytes& ex
 		IShader::BindOutput slot(var.schema);
 		DummyMetaChain<IShader::BindOutput> chain(slot);
 
-		if (var.slot != 0xFF) {
-			IShader::BindEnable enable((bool&)extOptionBuffer[var.offset]);
+		if (var.slot != 0xFFFF) {
+			assert(entries[var.slot].var == VAR_OPTION);
+			IShader::BindEnable enable((bool&)extOptionBuffer[entries[var.slot].offset]);
 			DummyMetaChain<IShader::BindEnable> enableChain(enable, &chain);
 			reflect.Property(dummy, type, type, name.c_str(), nullptr, var.value.GetData(), &enableChain);
 		} else {
@@ -374,6 +375,7 @@ void CustomShaderDescription::SetInput(const String& category, const String& typ
 		IShader::BindBuffer bindBuffer;
 		var.var = VAR_VERTEX;
 		bindBuffer.description.usage = category == "Vertex" ? IRender::Resource::BufferDescription::VERTEX : IRender::Resource::BufferDescription::INSTANCED;
+		var.offset = safe_cast<uint16_t>(vertexBufferBindings.size());
 		vertexBufferBindings.emplace_back(std::move(bindBuffer));
 	} else if (category == "Input") {
 		var.var = VAR_INPUT;
