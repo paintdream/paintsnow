@@ -32,8 +32,8 @@ TObject<IReflect>& ScreenTransformVS::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectProperty()) {
-		ReflectProperty(enableVertexTransform)[BindConst<bool>()];
-		ReflectProperty(enableRasterCoord)[BindConst<bool>()];
+		ReflectProperty(enableVertexTransform)[BindConst<bool>(enableVertexTransform)];
+		ReflectProperty(enableRasterCoord)[BindConst<bool>(enableRasterCoord)];
 
 		ReflectProperty(vertexBuffer);
 		ReflectProperty(transformBuffer)[BindEnable(enableVertexTransform)];

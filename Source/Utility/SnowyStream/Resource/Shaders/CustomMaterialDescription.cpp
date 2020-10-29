@@ -64,6 +64,18 @@ static uint8_t SchemaFromPredefines(const String& binding, bool input) {
 		if (input) {
 			return IShader::BindInput::BONE_WEIGHT;
 		}
+	} else if (binding == "TRANSFORM_WORLD") {
+		if (input) {
+			return IShader::BindInput::TRANSFORM_WORLD;
+		}
+	} else if (binding == "TRANSFORM_VIEW") {
+		if (input) {
+			return IShader::BindInput::TRANSFORM_VIEW;
+		}
+	} else if (binding == "TRANSFORM_VIEWPROJECTION") {
+		if (input) {
+			return IShader::BindInput::TRANSFORM_VIEWPROJECTION;
+		}
 	} else if (binding.compare(0, 8, "TEXCOORD") == 0) {
 		uint32_t index = atoi(binding.c_str() + 8);
 		if (input) {
@@ -195,8 +207,8 @@ void CustomShaderDescription::ReflectOptionTemplate(IReflect& reflect, Bytes& ex
 			Unique type = UniqueType<bool>::Get();
 
 			if (var.slot != 0xFFFF) {
-				assert(entries[var.slot].var == VAR_OPTION);
-				IShader::BindEnable enable((bool&)extOptionBuffer[entries[var.slot].offset]);
+				assert(entries[var.slot].var != VAR_OPTION);
+				IShader::BindEnable enable((bool&)extOptionBuffer[var.offset]);
 				DummyMetaChain<IShader::BindEnable> enableChain(enable, &chain);
 				reflect.Property(dummy, type, type, name.c_str(), bufferBase, bufferBase + offset, &enableChain);
 			} else {
@@ -395,8 +407,10 @@ void CustomShaderDescription::SetInput(const String& category, const String& typ
 		var.schema = SchemaFromPredefines(binding, category == "Output");
 		if (var.schema == 0xFF) {
 			for (size_t i = 0; i < entries.size(); i++) {
-				Bytes& key = entries[i].key;
+				Entry& entry = entries[i];
+				Bytes& key = entry.key;
 				if (memcmp(binding.c_str(), key.GetData(), Math::Min(binding.size(), (size_t)key.GetSize())) == 0) {
+					assert(var.var == VAR_OPTION || entry.var == VAR_OPTION);
 					var.slot = safe_cast<uint16_t>(i);
 					break;
 				}

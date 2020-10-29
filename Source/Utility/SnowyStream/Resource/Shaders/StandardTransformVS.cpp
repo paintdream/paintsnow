@@ -83,15 +83,15 @@ TObject<IReflect>& StandardTransformVS::operator () (IReflect& reflect) {
 
 	if (reflect.IsReflectProperty()) {
 		// options first
-		ReflectProperty(enableInstancing)[BindConst<bool>()];
-		ReflectProperty(enableSkinning)[BindConst<bool>()];
-		ReflectProperty(enableVertexNormal)[BindConst<bool>()];
-		ReflectProperty(enableVertexColor)[BindConst<bool>()];
-		ReflectProperty(enableVertexTangent)[BindConst<bool>()];
-		ReflectProperty(enableViewProjectionMatrix)[BindConst<bool>()];
-		ReflectProperty(enableInstancedColor)[BindConst<bool>()];
-		ReflectProperty(enableClampedNear)[BindConst<bool>()];
-		ReflectProperty(enableClampedFar)[BindConst<bool>()];
+		ReflectProperty(enableInstancing)[BindConst<bool>(enableInstancing)];
+		ReflectProperty(enableSkinning)[BindConst<bool>(enableSkinning && boneMatricesBuffer && boneIndexBuffer && boneWeightBuffer)];
+		ReflectProperty(enableVertexNormal)[BindConst<bool>(vertexNormalBuffer)];
+		ReflectProperty(enableVertexColor)[BindConst<bool>(vertexColorBuffer)];
+		ReflectProperty(enableVertexTangent)[BindConst<bool>(vertexTangentBuffer)];
+		ReflectProperty(enableViewProjectionMatrix)[BindConst<bool>(enableViewProjectionMatrix)];
+		ReflectProperty(enableInstancedColor)[BindConst<bool>(enableInstancedColor)];
+		ReflectProperty(enableClampedNear)[BindConst<bool>(enableClampedNear)];
+		ReflectProperty(enableClampedFar)[BindConst<bool>(enableClampedFar)];
 
 		ReflectProperty(instanceBuffer)[BindEnable(enableInstancing)];
 		ReflectProperty(globalBuffer);

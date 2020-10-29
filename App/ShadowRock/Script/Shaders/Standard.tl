@@ -87,27 +87,27 @@ return {
 		VaryingTexCoord = {
 			Stages = { "VertexVarying" },
 			Value = { 0.0, 0.0, 0.0, 0.0 },
-			Binding = "TexCoord"
+			Binding = ""
 		},
 		VaryingViewNormal = {
 			Stages = { "VertexVarying" },
 			Value = { 0.0, 0.0, 1.0 },
-			Binding = "Normal"
+			Binding = "EnableVertexNormal"
 		},
 		VaryingViewTangent = {
 			Stages = { "VertexVarying" },
 			Value = { 0.0, 0.0, 1.0 },
-			Binding = "Tangent"
+			Binding = "EnableVertexTangent"
 		},
 		VaryingViewBinormal = {
 			Stages = { "VertexVarying" },
 			Value = { 0.0, 0.0, 1.0 },
-			Binding = "Tangent"
+			Binding = "EnableVertexTangent"
 		},
 		VaryingColor = {
 			Stages = { "VertexVarying" },
 			Value = { 1.0, 1.0, 1.0, 1.0 },
-			Binding = "Color"
+			Binding = "EnableVertexColor"
 		},
 
 		-- Textures
@@ -121,7 +121,7 @@ return {
 			Value = "[Runtime]/TextureResource/MissingNormal",
 			Binding = ""
 		},
-		MaterialTexture = {
+		MixtureTexture = {
 			Stages = { "FragmentUniform" },
 			Value = "[Runtime]/TextureResource/MissingMaterial",
 			Binding = ""
@@ -138,10 +138,10 @@ return {
 			Value = true,
 			Binding = "NormalTexture"
 		},
-		EnableMaterialTexture = {
+		EnableMixtureTexture = {
 			Stages = { "FragmentOptions" },
 			Value = true,
-			Binding ="MaterialTexture"
+			Binding = "MixtureTexture"
 		},
 	},
 	
@@ -191,8 +191,8 @@ return {
 				OutputNormal = VaryingNormal.xyz;
 			}
 
-			if (EnableMaterialTexture) {
-				float4 material = texture(MaterialTexture, TexCoord.xy);
+			if (EnableMixtureTexture) {
+				float4 material = texture(MixtureTexture, TexCoord.xy);
 				Occlusion = material.x;
 				Roughness = material.y;
 				Metallic = material.z;

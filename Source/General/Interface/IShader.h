@@ -79,6 +79,11 @@ namespace PaintsNow {
 		class TMetaBindingResource : public TReflected<TMetaBindingResource<M>, TMetaBinding<M> > {
 		public:
 			TMetaBindingResource() : resource(nullptr) {}
+
+			operator bool() {
+				return resource != nullptr;
+			}
+
 			IRender::Resource* resource;
 		};
 

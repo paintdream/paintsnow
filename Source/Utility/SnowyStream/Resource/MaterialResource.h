@@ -7,6 +7,7 @@
 #include "GraphicResourceBase.h"
 #include "ShaderResource.h"
 #include "TextureResource.h"
+#include "MeshResource.h"
 #include "../../../General/Interface/IAsset.h"
 
 namespace PaintsNow {
@@ -33,7 +34,7 @@ namespace PaintsNow {
 		virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) = 0;
 	};
 
-	class MaterialResource : public TReflected<MaterialResource, GraphicResourceBase>, public IDrawCallProvider {
+	class MaterialResource : public TReflected<MaterialResource, GraphicResourceBase> {
 	public:
 		MaterialResource(ResourceManager& manager, const String& uniqueID);
 
@@ -43,15 +44,13 @@ namespace PaintsNow {
 		void Attach(IRender& render, void* deviceContext) override;
 		void Detach(IRender& render, void* deviceContext) override;
 		TObject<IReflect>& operator () (IReflect& reflect) override;
-		uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) override;
 
+		TShared<ShaderResource> Instantiate(const TShared<MeshResource>& mesh, IRender::Resource::DrawCallDescription& drawCallTemplate);
 		TShared<MaterialResource> CloneWithOverrideShader(const TShared<ShaderResource>& override);
 
 		IAsset::Material materialParams;
 		TShared<ShaderResource> originalShaderResource;
-		TShared<ShaderResource> mutationShaderResource;
 		std::vector<TShared<TextureResource> > textureResources;
-		IRender::Resource::DrawCallDescription drawCallTemplate;
 		std::vector<Bytes> bufferData;
 	};
 }

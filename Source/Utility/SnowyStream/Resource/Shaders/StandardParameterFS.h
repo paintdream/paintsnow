@@ -40,7 +40,7 @@ namespace PaintsNow {
 
 		bool enableBaseColorTexture;
 		bool enableNormalTexture;
-		bool enableMaterialTexture;
+		bool enableMixtureTexture;
 	};
 }
 

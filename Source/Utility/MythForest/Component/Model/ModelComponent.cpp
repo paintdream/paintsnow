@@ -28,7 +28,7 @@ static void GenerateDrawCall(IDrawCallProvider::OutputRenderData& renderData, Sh
 	assert(deviceElementSize != 0);
 	IRender::Resource::DrawCallDescription& drawCall = renderData.drawCallDescription;
 	PassBase::Updater& updater = shaderResource->GetPassUpdater();
-	drawCall.shaderResource = shaderResource->GetShaderResource();
+	assert(drawCall.shaderResource == shaderResource->GetShaderResource());
 
 	std::vector<PassBase::Parameter> outputs;
 	std::vector<std::pair<uint32_t, uint32_t> > offsets;
@@ -80,10 +80,12 @@ void ModelComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTe
 		if (meshGroupIndex < meshResource->meshCollection.groups.size()) {
 			IAsset::MeshGroup& slice = meshResource->meshCollection.groups[meshGroupIndex];
 			TShared<MaterialResource>& materialResource = mat.second;
+			if (materialResource) {
+				assert(materialResource->originalShaderResource);
+				OutputRenderData drawCall;
+				TShared<ShaderResource> shaderInstance = materialResource->Instantiate(meshResource, drawCall.drawCallDescription);
 
-			if (materialResource && materialResource->mutationShaderResource) {
 				uint32_t orgSize = safe_cast<uint32_t>(drawCallTemplates.size());
-				uint32_t subDrawCalls = materialResource->CollectDrawCalls(drawCallTemplates, inputRenderData);
 				const std::vector<Bytes>& uniformBufferData = materialResource->bufferData;
 				std::vector<IRender::Resource::DrawCallDescription::BufferRange> bufferRanges(uniformBufferData.size());
 				for (size_t n = 0; n < uniformBufferData.size(); n++) {
@@ -93,20 +95,19 @@ void ModelComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTe
 					}
 				}
 
-				for (uint32_t k = 0; k < subDrawCalls; k++) {
-					OutputRenderData& renderData = drawCallTemplates[k + orgSize];
-					renderData.dataUpdater = batchComponent();
+				drawCall.dataUpdater = batchComponent();
 
-					GenerateDrawCall(renderData, materialResource->mutationShaderResource(), meshBuffers, slice, meshResource->bufferCollection, meshResource->deviceElementSize);
-					std::vector<IRender::Resource::DrawCallDescription::BufferRange>& targetBufferRanges = renderData.drawCallDescription.bufferResources;
-					for (size_t m = 0; m < Math::Min(bufferRanges.size(), targetBufferRanges.size()); m++) {
-						const IRender::Resource::DrawCallDescription::BufferRange& targetBufferRange = targetBufferRanges[m];
-						if (bufferRanges[m].buffer != nullptr) {
-							assert(targetBufferRanges[m].buffer == nullptr);
-							targetBufferRanges[m] = bufferRanges[m];
-						}
+				GenerateDrawCall(drawCall, shaderInstance(), meshBuffers, slice, meshResource->bufferCollection, meshResource->deviceElementSize);
+				std::vector<IRender::Resource::DrawCallDescription::BufferRange>& targetBufferRanges = drawCall.drawCallDescription.bufferResources;
+				for (size_t m = 0; m < Math::Min(bufferRanges.size(), targetBufferRanges.size()); m++) {
+					const IRender::Resource::DrawCallDescription::BufferRange& targetBufferRange = targetBufferRanges[m];
+					if (bufferRanges[m].buffer != nullptr) {
+						assert(targetBufferRanges[m].buffer == nullptr);
+						targetBufferRanges[m] = bufferRanges[m];
 					}
 				}
+
+				drawCallTemplates.emplace_back(std::move(drawCall));
 			}
 		}
 	}
@@ -156,15 +157,9 @@ TObject<IReflect>& ModelComponent::operator () (IReflect& reflect) {
 
 void ModelComponent::Initialize(Engine& engine, Entity* entity) {
 	// Allocate buffers ... 
-
 	batchComponent->InstanceInitialize(engine);
 	if (hostCount++ == 0) {
 		Expand(engine);
-
-		// inspect vertex format
-		assert(drawCallTemplates.empty());
-		drawCallTemplates.reserve(materialResources.size());
-		GenerateDrawCalls(drawCallTemplates, materialResources);
 	}
 
 	RenderableComponent::Initialize(engine, entity);
@@ -216,6 +211,11 @@ void ModelComponent::Expand(Engine& engine) {
 		collapseData.meshResourceLocation = "";
 		collapseData.materialResourceLocations.clear();
 	}
+
+	// inspect vertex format
+	assert(drawCallTemplates.empty());
+	drawCallTemplates.resize(materialResources.size());
+	GenerateDrawCalls(drawCallTemplates, materialResources);
 }
 
 size_t ModelComponent::ReportGraphicMemoryUsage() const {

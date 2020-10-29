@@ -4,7 +4,7 @@
 
 using namespace PaintsNow;
 
-StandardParameterFS::StandardParameterFS() : enableBaseColorTexture(true), enableNormalTexture(true), enableMaterialTexture(true) {
+StandardParameterFS::StandardParameterFS() : enableBaseColorTexture(true), enableNormalTexture(true), enableMixtureTexture(true) {
 	baseColorTexture.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
 	normalTexture.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
 	mixtureTexture.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
@@ -24,7 +24,7 @@ String StandardParameterFS::GetShaderText() {
 			outputNormal = normalize(viewTangent.xyz * bump.x + viewBinormal.xyz * bump.y + viewNormal.xyz * bump.z);
 		}
 
-		if (enableMaterialTexture) {
+		if (enableMixtureTexture) {
 			float4 material = texture(mixtureTexture, texCoord.xy);
 			occlusion = material.x;
 			roughness = material.y;
@@ -47,9 +47,9 @@ TObject<IReflect>& StandardParameterFS::operator () (IReflect& reflect) {
 		ReflectProperty(normalTexture);
 		ReflectProperty(mixtureTexture);
 
-		ReflectProperty(enableBaseColorTexture)[BindConst<bool>()];
-		ReflectProperty(enableNormalTexture)[BindConst<bool>()];
-		ReflectProperty(enableMaterialTexture)[BindConst<bool>()];
+		ReflectProperty(enableBaseColorTexture)[BindConst<bool>(baseColorTexture)];
+		ReflectProperty(enableNormalTexture)[BindConst<bool>(normalTexture)];
+		ReflectProperty(enableMixtureTexture)[BindConst<bool>(mixtureTexture)];
 
 		/*
 		ReflectProperty(paramBuffer);
