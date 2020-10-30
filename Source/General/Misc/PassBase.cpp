@@ -71,7 +71,7 @@ uint32_t PassBase::Updater::GetTextureCount() const {
 	return textureCount;
 }
 
-PassBase::Parameter::Parameter() : internalAddress(nullptr), linearLayout(0) {}
+PassBase::Parameter::Parameter() : internalAddress(nullptr), linearLayout(0), bindBuffer(nullptr) {}
 
 const PassBase::Parameter& PassBase::Updater::operator [] (const Bytes& key) {
 	static Parameter defOutput;
@@ -114,6 +114,7 @@ void PassBase::Updater::Property(IReflectObject& s, Unique typeID, Unique refTyp
 			} else if (node->GetUnique() == UniqueType<IShader::BindBuffer>::Get()) {
 				const IShader::BindBuffer* bindBuffer = static_cast<const IShader::BindBuffer*>(chain->GetRawNode());
 				output.resourceType = safe_cast<uint8_t>(IRender::Resource::RESOURCE_BUFFER);
+				output.bindBuffer = const_cast<IShader::BindBuffer*>(bindBuffer);
 
 				std::vector<std::key_value<const IShader::BindBuffer*, std::pair<uint16_t, uint16_t> > >::iterator it = std::binary_find(bufferIDSize.begin(), bufferIDSize.end(), bindBuffer);
 

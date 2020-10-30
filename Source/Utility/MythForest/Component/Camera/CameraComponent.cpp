@@ -521,7 +521,7 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 				portCameraView->viewMatrix = worldGlobalData.viewMatrix;
 				portCameraView->inverseViewMatrix = Math::QuickInverse(portCameraView->viewMatrix);
 				portCameraView->projectionMatrix = worldGlobalData.projectionMatrix * worldGlobalData.jitterMatrix;
-				portCameraView->inverseProjectionMatrix = Math::InverseProjectionMatrix(portCameraView->projectionMatrix);
+				portCameraView->inverseProjectionMatrix = Math::InverseProjection(portCameraView->projectionMatrix);
 				portCameraView->reprojectionMatrix = portCameraView->inverseProjectionMatrix * portCameraView->inverseViewMatrix * worldGlobalData.lastViewProjectionMatrix;
 				portCameraView->jitterOffset = worldGlobalData.jitterOffset;
 			}

@@ -21,7 +21,7 @@ String ShadowMaskFS::GetShaderText() {
 
 	position.xyz = position.xyz * float(0.5) + float3(0.5, 0.5, 0.5);
 	float refDepth = textureLod(shadowTexture, position.xy, float(0)).x;
-	shadow = float4(step(position.z + 0.001, refDepth), 0, 0, 0);
+	shadow = float4(step(position.z + 0.00005, refDepth), 0, 0, 0);
 	);
 }
 

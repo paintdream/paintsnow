@@ -11,29 +11,6 @@
 #include "../../../General/Interface/IAsset.h"
 
 namespace PaintsNow {
-	class MaterialResource;
-	class IDrawCallProvider {
-	public:
-		struct InputRenderData {
-			InputRenderData(float ref = 0.0f, ShaderResource* res = nullptr, const UShort2 resolution = UShort2(0, 0)) : overrideShaderTemplate(res), viewResolution(resolution), viewReference(ref) {}
-			ShaderResource* overrideShaderTemplate;
-			UShort2 viewResolution;
-			float viewReference;
-		};
-
-		struct OutputRenderData {
-			IRender::Resource::DrawCallDescription drawCallDescription;
-			IRender::Resource::RenderStateDescription renderStateDescription;
-			IDataUpdater* dataUpdater;
-			TShared<ShaderResource> shaderResource;
-			TShared<SharedTiny> host;
-			std::vector<MatrixFloat4x4> localTransforms;
-			std::vector<std::pair<uint32_t, Bytes> > localInstancedData;
-		};
-
-		virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) = 0;
-	};
-
 	class MaterialResource : public TReflected<MaterialResource, GraphicResourceBase> {
 	public:
 		MaterialResource(ResourceManager& manager, const String& uniqueID);

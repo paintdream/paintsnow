@@ -1,8 +1,7 @@
 #include "ModelComponent.h"
-
-#include <utility>
 #include "../../../SnowyStream/SnowyStream.h"
 #include "../Transform/TransformComponent.h"
+#include <utility>
 
 using namespace PaintsNow;
 
@@ -82,8 +81,11 @@ void ModelComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTe
 			TShared<MaterialResource>& materialResource = mat.second;
 			if (materialResource) {
 				assert(materialResource->originalShaderResource);
-				OutputRenderData drawCall;
+				drawCallTemplates.emplace_back(OutputRenderData());
+
+				OutputRenderData& drawCall = drawCallTemplates.back();
 				TShared<ShaderResource> shaderInstance = materialResource->Instantiate(meshResource, drawCall.drawCallDescription);
+				drawCall.shaderResource = shaderInstance;
 
 				uint32_t orgSize = safe_cast<uint32_t>(drawCallTemplates.size());
 				const std::vector<Bytes>& uniformBufferData = materialResource->bufferData;
@@ -106,8 +108,6 @@ void ModelComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTe
 						targetBufferRanges[m] = bufferRanges[m];
 					}
 				}
-
-				drawCallTemplates.emplace_back(std::move(drawCall));
 			}
 		}
 	}
@@ -122,17 +122,16 @@ uint32_t ModelComponent::CollectDrawCalls(std::vector<OutputRenderData>& drawCal
 		baseIndex = CreateOverrider(overrideShaderTemplate);
 		// new ones
 		if (shaderOverriders.size() != orgCount) {
-			drawCallTemplates.resize(drawCallTemplates.size() + materialResources.size());
+			drawCallTemplates.reserve(drawCallTemplates.size() + materialResources.size());
 			std::vector<std::pair<uint32_t, TShared<MaterialResource> > > overrideMaterialResources;
+
 			overrideMaterialResources.resize(materialResources.size());
 			for (size_t i = 0; i < materialResources.size(); i++) {
 				overrideMaterialResources[i].first = materialResources[i].first;
 				overrideMaterialResources[i].second = materialResources[i].second->CloneWithOverrideShader(overrideShaderTemplate);
 			}
 
-			std::vector<OutputRenderData> overrideDrawCallTemplates;
-			GenerateDrawCalls(overrideDrawCallTemplates, overrideMaterialResources);
-			drawCallTemplates.insert(drawCallTemplates.begin() + baseIndex, overrideDrawCallTemplates.begin(), overrideDrawCallTemplates.end());
+			GenerateDrawCalls(drawCallTemplates, overrideMaterialResources);
 		}
 	}
 
@@ -214,7 +213,7 @@ void ModelComponent::Expand(Engine& engine) {
 
 	// inspect vertex format
 	assert(drawCallTemplates.empty());
-	drawCallTemplates.resize(materialResources.size());
+	drawCallTemplates.reserve(materialResources.size());
 	GenerateDrawCalls(drawCallTemplates, materialResources);
 }
 

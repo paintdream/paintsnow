@@ -538,7 +538,7 @@ TShared<LightComponent::ShadowGrid> LightComponent::ShadowLayer::UpdateShadow(En
 
 	TShared<ShadowContext> shadowContext = TShared<ShadowContext>::From(new ShadowContext());
 	shadowContext->rootEntity = rootEntity;
-	shadowContext->lightTransformMatrix = Math::Scale(lightTransform, Float4(scale, scale, scale * 5, 1));
+	shadowContext->lightTransformMatrix = Math::Scale(lightTransform, Float4(scale, scale, scale, 1));
 
 	// Make alignment
 	Float3 alignedPosition = Math::Transform3D(lightTransform, Float3(x * gridSize, y * gridSize, z * gridSize));

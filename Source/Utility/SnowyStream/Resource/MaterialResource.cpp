@@ -43,10 +43,14 @@ TShared<ShaderResource> MaterialResource::Instantiate(const TShared<MeshResource
 	std::vector<std::pair<uint32_t, uint32_t> > offsets;
 	mesh->bufferCollection.GetDescription(descs, offsets, updater);
 	std::vector<IRender::Resource*> data;
+	mesh->bufferCollection.UpdateData(data);
 	assert(data.size() == descs.size());
 
 	for (size_t i = 0; i < descs.size(); i++) {
-		descs[i] = data[i];
+		IShader::BindBuffer* bindBuffer = descs[i].bindBuffer;
+		if (bindBuffer != nullptr) {
+			bindBuffer->resource = data[i];
+		}
 	}
 
 	updater.Capture(drawCallTemplate, bufferData, 1 << IRender::Resource::BufferDescription::UNIFORM);

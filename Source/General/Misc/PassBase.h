@@ -57,6 +57,7 @@ namespace PaintsNow {
 			uint16_t offset;
 			uint32_t length;
 			void* internalAddress;
+			IShader::BindBuffer* bindBuffer;
 			Unique type;
 		};
 
