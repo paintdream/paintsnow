@@ -46,10 +46,10 @@ TShared<ShaderResource> MaterialResource::Instantiate(const TShared<MeshResource
 	mesh->bufferCollection.UpdateData(data);
 	assert(data.size() == descs.size());
 
-	for (size_t i = 0; i < descs.size(); i++) {
-		IShader::BindBuffer* bindBuffer = descs[i].bindBuffer;
+	for (size_t k = 0; k < descs.size(); k++) {
+		IShader::BindBuffer* bindBuffer = descs[k].bindBuffer;
 		if (bindBuffer != nullptr) {
-			bindBuffer->resource = data[i];
+			bindBuffer->resource = data[k];
 		}
 	}
 
