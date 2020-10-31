@@ -5,7 +5,7 @@
 using namespace PaintsNow;
 
 CustomMaterialParameterFS::CustomMaterialParameterFS() {
-	description = TShared<CustomShaderDescription>::From(new CustomShaderDescription());
+	description = TShared<CustomMaterialDescription>::From(new CustomMaterialDescription());
 }
 
 String CustomMaterialParameterFS::GetShaderText() {

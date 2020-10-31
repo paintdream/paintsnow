@@ -3,7 +3,7 @@
 using namespace PaintsNow;
 
 CustomMaterialTransformVS::CustomMaterialTransformVS() {
-	description = TShared<CustomShaderDescription>::From(new CustomShaderDescription());
+	description = TShared<CustomMaterialDescription>::From(new CustomMaterialDescription());
 }
 
 String CustomMaterialTransformVS::GetShaderText() {

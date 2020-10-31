@@ -3,34 +3,40 @@ return {
 	Name = "PBR",
 	Inputs = {
 		-- VertexInputs
-		Position = {
+		{
+			Name = "Position"
 			Stages = { "VertexInput" },
 			Value = { 0.0, 0.0, 0.0 }, -- float3
 			Binding = "POSITION",
 		},
-		Color = {
+		{
+			Name = "Color",
 			Stages = { "VertexInput" },
 			Value = { 1.0, 1.0, 1.0, 1.0 }, -- float4
 			Binding = "COLOR",
 		},
-		Normal = {
+		{
+			Name = "Normal",
 			Stages = { "VertexInput" },
 			Value = { 0.0, 0.0, 1.0, 0.0 }, -- float4
 			Binding = "NORMAL",
 		},
-		Tangent = {
+		{
+			Name = "Tangent",
 			Stages = { "VertexInput" },
 			Value = { 1.0, 0.0, 0.0, 0.0 },
 			Binding = "TANGENT"
 		},
-		TexCoord = {
+		{
+			Name = "TexCoord",
 			Stages = { "VertexInput" },
 			Value = { 0.0, 0.0, 0.0, 0.0 } -- float4
 			Binding = "TEXCOORD0"
 		},
 
 		-- Uniforms
-		WorldMatrix = {
+		{
+			Name = "WorldMatrix",
 			Stages = { "VertexInstance" },
 			Value = {
 				1.0, 0.0, 0.0, 0.0
@@ -40,105 +46,122 @@ return {
 			},
 			Binding = "TRANSFORM_WORLD"
 		},
-		ViewMatrix = {
+		{
+			Name = "ViewMatrix",
 			Stages = { "VertexUniform" },
 			Value = {
-				1.0, 0.0, 0.0, 0.0
-				0.0, 1.0, 0.0, 0.0
-				0.0, 0.0, 1.0, 0.0
+				1.0, 0.0, 0.0, 0.0,
+				0.0, 1.0, 0.0, 0.0,
+				0.0, 0.0, 1.0, 0.0,
 				0.0, 0.0, 0.0, 1.0
 			},
 			Binding = "TRANSFORM_VIEW"
 		},
-		ViewProjectionMatrix = {
+		{
+			Name = "ViewProjectionMatrix",
 			Stages = { "VertexUniform" },
 			Value = {
-				1.0, 0.0, 0.0, 0.0
-				0.0, 1.0, 0.0, 0.0
-				0.0, 0.0, 1.0, 0.0
+				1.0, 0.0, 0.0, 0.0,
+				0.0, 1.0, 0.0, 0.0,
+				0.0, 0.0, 1.0, 0.0,
 				0.0, 0.0, 0.0, 1.0
 			},
 			Binding = "TRANSFORM_VIEWPROJECTION"
 		},
 
 		-- Options
-		EnableVertexNormal = {
+		{
+			Name = "EnableVertexNormal"
 			Stages = { "VertexOptions", "FragmentOptions" },
 			Value = true,
 			Binding = "Normal",
 		},
-		EnableVertexTangent = {
+		{
+			Name = "EnableVertexTangent"
 			Stages = { "VertexOptions", "FragmentOptions" },
 			Value = true,
 			Binding = "Tangent"
 		},
-		EnableVertexColor = {
+		{
+			Name = "EnableVertexColor"
 			Stages = { "VertexOptions", "FragmentOptions" },
 			Value = true,
-			Binding ="Color"
+			Binding = "Color"
 		},
 
 		-- Varyings
-		VaryingPosition = {
+		{
+			Name = "VaryingPosition",
 			Stages = { "VertexVarying" },
 			Value = { 0.0, 0.0, 0.0, 1.0 },
 			Binding = "HPOSITION"
 		},
-		VaryingTexCoord = {
+		{
+			Name = "VaryingTexCoord",
 			Stages = { "VertexVarying" },
 			Value = { 0.0, 0.0, 0.0, 0.0 },
 			Binding = ""
 		},
-		VaryingViewNormal = {
+		{
+			Name = "VaryingNormal",
 			Stages = { "VertexVarying" },
 			Value = { 0.0, 0.0, 1.0 },
 			Binding = "EnableVertexNormal"
 		},
-		VaryingViewTangent = {
+		{
+			Name = "VaryingTangent",
 			Stages = { "VertexVarying" },
 			Value = { 0.0, 0.0, 1.0 },
 			Binding = "EnableVertexTangent"
 		},
-		VaryingViewBinormal = {
+		{
+			Name = "VaryingBinormal",
 			Stages = { "VertexVarying" },
 			Value = { 0.0, 0.0, 1.0 },
 			Binding = "EnableVertexTangent"
 		},
-		VaryingColor = {
+		{
+			Name = "VaryingColor",
 			Stages = { "VertexVarying" },
 			Value = { 1.0, 1.0, 1.0, 1.0 },
 			Binding = "EnableVertexColor"
 		},
 
 		-- Textures
-		BaseColorTexture = {
+		{
+			Name = "BaseColorTexture",
 			Stages = { "FragmentUniform" },
 			Value = "[Runtime]/TextureResource/MissingBaseColor",
 			Binding = ""
 		},
-		NormalTexture = {
+		{
+			Name = "NormalTexture",
 			Stages = { "FragmentUniform" },
 			Value = "[Runtime]/TextureResource/MissingNormal",
 			Binding = ""
 		},
-		MixtureTexture = {
+		{
+			Name = "MixtureTexture",
 			Stages = { "FragmentUniform" },
 			Value = "[Runtime]/TextureResource/MissingMaterial",
 			Binding = ""
 		},
 
 		-- Options
-		EnableBaseColorTexture = {
+		{
+			Name = "EnableBaseColorTexture",
 			Stages = { "FragmentOptions" },
 			Value = true,
 			Binding = "BaseColorTexture",
 		},
-		EnableNormalTexture = {
+		{
+			Name = "EnableNormalTexture",
 			Stages = { "FragmentOptions" },
 			Value = true,
 			Binding = "NormalTexture"
 		},
-		EnableMixtureTexture = {
+		{
+			Name = "EnableMixtureTexture",
 			Stages = { "FragmentOptions" },
 			Value = true,
 			Binding = "MixtureTexture"
@@ -147,10 +170,12 @@ return {
 	
 	Shaders = {
 		Vertex = [[
-	VaryingPosition = mult_vec(ViewProjectionMatrix, Position);
-	if (EnableTexCoord) {
-		VaryingTexCoord = TexCoord;
-	}
+	float4 pos;
+	pos.xyz = Position;
+	pos.w = 1;
+
+	VaryingPosition = mult_vec(ViewProjectionMatrix, pos);
+	VaryingTexCoord = TexCoord;
 
 	if (EnableVertexColor) {
 		VaryingColor = Color;
@@ -161,41 +186,41 @@ return {
 		float4x4 viewWorldMatrix = mult_mat(ViewMatrix, WorldMatrix);
 		if (EnableVertexTangent) {
 			float4 tangent = Tangent * 2.0 / 255.0 - float4(1.0, 1.0, 1.0, 1.0);
-			VaryingTangent = mult_vec(float3x3(ViewWorldMatrix), tangent.xyz);
-			VaryingBinormal = mult_vec(float3x3(ViewWorldMatrix), normal.xyz);
+			VaryingTangent = mult_vec(float3x3(viewWorldMatrix), tangent.xyz);
+			VaryingBinormal = mult_vec(float3x3(viewWorldMatrix), normal.xyz);
 			VaryingNormal = cross(VaryingBinormal, VaryingTangent);
 			VaryingBinormal *= tangent.w;
 		} else {
-			VaryingNormal = mult_vec(float3x3(ViewWorldMatrix), normal.xyz);
+			VaryingNormal = mult_vec(float3x3(viewWorldMatrix), normal.xyz);
 		}
 	}
 		]],
 
 		Fragment = [[
-			if (EnableBaseColorTexture && EnableTexCoord) {
-				float4 color = texture(BaseColorTexture, TexCoord.xy);
+			if (EnableBaseColorTexture) {
+				float4 color = texture(BaseColorTexture, VaryingTexCoord.xy);
 				if (EnableVertexColor) {
-					OutputColor = VaryingColor.xyz * color.xyz;
+					outputColor = VaryingColor.xyz * color.xyz;
 				} else {
-					OutputColor = color.xyz;
+					outputColor = color.xyz;
 				}
 				
-				Alpha = color.w;
+				alpha = color.w;
 			}
 
-			if (EnableNormalTexture && EnableNormal && EnableTangent) {
-				float4 bump = texture(NormalTexture, TexCoord.xy);
+			if (EnableNormalTexture && EnableVertexNormal && EnableVertexTangent) {
+				float4 bump = texture(NormalTexture, VaryingTexCoord.xy);
 				bump.xyz = bump.xyz * 2.0 - float3(1.0, 1.0, 1.0);
-				OutputNormal = normalize(VaryingTangent.xyz * bump.x + VaryingBinormal.xyz * bump.y + VaryingNormal.xyz * bump.z);
+				outputNormal = normalize(VaryingTangent.xyz * bump.x + VaryingBinormal.xyz * bump.y + VaryingNormal.xyz * bump.z);
 			} else {
-				OutputNormal = VaryingNormal.xyz;
+				outputNormal = VaryingNormal.xyz;
 			}
 
 			if (EnableMixtureTexture) {
-				float4 material = texture(MixtureTexture, TexCoord.xy);
-				Occlusion = material.x;
-				Roughness = material.y;
-				Metallic = material.z;
+				float4 material = texture(MixtureTexture, VaryingTexCoord.xy);
+				occlusion = material.x;
+				roughness = material.y;
+				metallic = material.z;
 			}
 		]]
 	}

@@ -1,18 +1,19 @@
 local CustomShader = record end
 
-local ShaderInput = record
+global ShaderInput = record
+	Name : string
 	Type : string
 	Stages : { string }
 	Value : any
 	Binding : string
 end
 
-local ShaderDescription = record
+global ShaderDescription = record
 	Template : string -- [Runtime]/ShaderResource/CustomMaterialPass
 	Name : string
 	Priority : number
 	Shaders : { string : string }
-	Inputs : { string : ShaderInput }
+	Inputs : { ShaderInput }
 	States : { string : string }
 end
 
@@ -38,10 +39,10 @@ function CustomShader.New(description : ShaderDescription) : ShaderComponent
 	assert(shaderResource)
 
 	local shaderComponent : ShaderComponent = ShaderComponentModule.New(shaderResource, description.Name)
-	for key, value in pairs(description.Inputs) do
+	for _, value in ipairs(description.Inputs) do
 		for _, stage in ipairs(value.Stages) do
 			local t, v = FromValue(value.Value)
-			shaderComponent:SetInput(stage, t, key as string, v, value.Binding, {})
+			shaderComponent:SetInput(stage, t, value.Name, v, value.Binding, {})
 		end
 	end
 

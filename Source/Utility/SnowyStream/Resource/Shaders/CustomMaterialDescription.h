@@ -9,15 +9,16 @@
 #include "../../../../Core/System/Tiny.h"
 
 namespace PaintsNow {
-	class CustomShaderDescription : public TReflected<CustomShaderDescription, SharedTiny> {
+	class CustomMaterialDescription : public TReflected<CustomMaterialDescription, SharedTiny> {
 	public:
-		CustomShaderDescription();
+		CustomMaterialDescription();
 
 		void SetCode(const String& text);
 		void SetInput(const String& category, const String& type, const String& name, const String& value, const String& binding, const std::vector<std::pair<String, String> >& config);
 		void SetComplete(Bytes& extUniformBuffer, Bytes& extOptionBuffer);
 		void ReflectExternal(IReflect& reflect, Bytes& extUniformBuffer, Bytes& extOptionBuffer);
 
+		void SyncOptions(Bytes& dstOptionBuffer, const CustomMaterialDescription& rhs, const Bytes& srcOptionBuffer);
 		void ReflectVertexTemplate(IReflect& reflect, Bytes& uniformData, Bytes& optionData);
 		void ReflectOptionTemplate(IReflect& reflect, Bytes& uniformData, Bytes& optionData);
 		void ReflectUniformTemplate(IReflect& reflect, Bytes& uniformData, Bytes& optionData);
@@ -48,6 +49,9 @@ namespace PaintsNow {
 		std::vector<Entry> entries;
 		std::vector<IShader::BindTexture> uniformTextureBindings;
 		std::vector<IShader::BindBuffer> vertexBufferBindings;
+
+		CustomMaterialDescription* dependency;
+		Bytes* dependOptBuffer;
 	};
 }
 

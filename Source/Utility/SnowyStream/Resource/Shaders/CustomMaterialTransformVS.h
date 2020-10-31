@@ -14,7 +14,7 @@ namespace PaintsNow {
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		String GetShaderText() override;
 
-		TShared<CustomShaderDescription> description;
+		TShared<CustomMaterialDescription> description;
 		Bytes uniformData;
 		Bytes optionData;
 	};

@@ -83,7 +83,10 @@ void ShaderComponent::OnShaderCompiled(IRender::Resource* resource, IRender::Res
 
 		customMaterialShader->SetShaderResource(resource);
 		if (customMaterialShader->Flag().load(std::memory_order_relaxed) & ResourceBase::RESOURCE_ORPHAN) {
-			customMaterialShader->GetResourceManager().Insert(customMaterialShader());
+			ResourceManager& resourceManager = customMaterialShader->GetResourceManager();
+			resourceManager.DoLock();
+			resourceManager.Insert(customMaterialShader());
+			resourceManager.UnLock();
 		}
 
 		ReleaseObject();

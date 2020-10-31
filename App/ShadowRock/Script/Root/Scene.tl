@@ -27,9 +27,8 @@ function Scene.New(database : Database, clock : Clock) : Scene
 	local renderPolicy = RenderFlowComponentModule.NewRenderPolicy("Primitives", 0)
 	local lightPolicy = RenderFlowComponentModule.NewRenderPolicy("LightSource", 0)
 
-	--[[
-	local StandardShader = require("Script/Shaders/Standard")
 	local CustomShader = require("Script/Prefabs/Components/Shader/CustomShader")
+	local StandardShader = require("Script/Shaders/Standard") as ShaderDescription
 	local customShaderComponent = CustomShader.New(StandardShader)
 
 	-- attach to an entity
@@ -47,7 +46,6 @@ function Scene.New(database : Database, clock : Clock) : Scene
 	end)
 
 	customShaderComponent:SetComplete()
-	]]
 
 	-- add scene entities
 	if database then

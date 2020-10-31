@@ -2,7 +2,10 @@
 
 using namespace PaintsNow;
 
-CustomMaterialPass::CustomMaterialPass() {}
+CustomMaterialPass::CustomMaterialPass() {
+	shaderParameter.description->dependency = shaderTransform.description();
+	shaderParameter.description->dependOptBuffer = &shaderTransform.optionData;
+}
 
 TObject<IReflect>& CustomMaterialPass::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
