@@ -1265,3 +1265,13 @@ TObject<IReflect>& RemoteFactory::operator () (IReflect& reflect) {
 IScript* RemoteProxy::NewScript() const {
 	return nullptr; // Not supported
 }
+
+bool RemoteProxy::IsClosing() const {
+	assert(false);
+	return false;
+}
+
+bool RemoteProxy::IsHosting() const {
+	assert(false);
+	return false;
+}

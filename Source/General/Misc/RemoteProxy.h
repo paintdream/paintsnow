@@ -253,6 +253,8 @@ namespace PaintsNow {
 		~RemoteProxy() override;
 		virtual void SetEntry(const String& entry);
 		virtual void Reconnect(IScript::Request& request);
+		bool IsClosing() const override;
+		bool IsHosting() const override;
 
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 

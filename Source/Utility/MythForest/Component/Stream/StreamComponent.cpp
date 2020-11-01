@@ -99,9 +99,14 @@ const UShort3& StreamComponent::GetDimension() const {
 }
 
 void StreamComponent::Uninitialize(Engine& engine, Entity* entity) {
-	IScript::Request& request = engine.interfaces.script.GetDefaultRequest();
-	SetLoadHandler(request, IScript::Request::Ref());
-	SetUnloadHandler(request, IScript::Request::Ref());
+	if (!engine.interfaces.script.IsClosing()) {
+		IScript::Request& request = engine.interfaces.script.GetDefaultRequest();
+		SetLoadHandler(request, IScript::Request::Ref());
+		SetUnloadHandler(request, IScript::Request::Ref());
+	} else {
+		loadHandler.script = IScript::Request::Ref();
+		unloadHandler.script = IScript::Request::Ref();
+	}
 
 	Component::Uninitialize(engine, entity);
 }

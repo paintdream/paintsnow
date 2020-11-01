@@ -3,13 +3,16 @@
 
 using namespace PaintsNow;
 
-const String& ZArchiveVirtual::GetRootPath() const {
-	static const String empty = "";
-	return empty;
+String ZArchiveVirtual::GetFullPath(const String& path) const {
+	return path;
 }
 
-void ZArchiveVirtual::SetRootPath(const String& path) {
+bool ZArchiveVirtual::Mount(const String& path, const String& fromPath, IArchive* archive) {
+	return false;
+}
 
+bool ZArchiveVirtual::Unmount(const String& path) {
+	return false;
 }
 
 ZArchiveVirtual::ZArchiveVirtual() {}

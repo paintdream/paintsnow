@@ -153,13 +153,16 @@ extern "C" SRes StreamSeek(void* p, Int64* buf, ESzSeek origin) {
 	return ret ? SZ_OK : SZ_ERROR_FAIL;
 }
 
-const String& ZArchive7Z::GetRootPath() const {
-	static const String empty = "";
-	return empty;
+String ZArchive7Z::GetFullPath(const String& path) const {
+	return path;
 }
 
-void ZArchive7Z::SetRootPath(const String& path) {
+bool ZArchive7Z::Mount(const String& path, const String& fromPath, IArchive* baseArchive) {
+	return false;
+}
 
+bool ZArchive7Z::Unmount(const String& path) {
+	return false;
 }
 
 ZArchive7Z::ZArchive7Z(IStreamBase& s, size_t len) : stream(s), pos(0), size(len), opened(false) {

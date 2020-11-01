@@ -22,8 +22,9 @@ namespace PaintsNow {
 	public:
 		ZArchive7Z(IStreamBase& stream, size_t len);
 		~ZArchive7Z() override;
-		const String& GetRootPath() const override;
-		void SetRootPath(const String& path) override;
+		String GetFullPath(const String& path) const override;
+		bool Mount(const String& path, const String& fromPath, IArchive* baseArchive) override;
+		bool Unmount(const String& path) override;
 		IStreamBase* Open(const String& uri, bool write, size_t& length, uint64_t* lastModifiedTime = nullptr) override;
 		void Query(const String& uri, const TWrapper<void, bool, const String&>& wrapper) const override;
 		bool IsReadOnly() const override;

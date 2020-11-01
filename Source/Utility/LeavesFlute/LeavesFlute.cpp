@@ -359,7 +359,7 @@ void LeavesFlute::RequestPrint(IScript::Request& request, const String& text) {
 }
 
 String LeavesFlute::RequestGetFullPath(IScript::Request& request, const String& path) {
-	return interfaces.archive.GetRootPath() + path;
+	return interfaces.archive.GetFullPath(path);
 }
 
 void LeavesFlute::OnConsoleOutput(const String& text) {

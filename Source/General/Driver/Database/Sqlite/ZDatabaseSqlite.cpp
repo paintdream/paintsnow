@@ -23,7 +23,7 @@ ZDatabaseSqlite::~ZDatabaseSqlite() {
 
 IDatabase::Database* ZDatabaseSqlite::Connect(IArchive& archive, const String& target, const String& username, const String& password, bool createOnNonExist) {
 	sqlite3* handle;
-	String fullPath = target == ":memory:" ? target : archive.GetRootPath() + "/" +  target;
+	String fullPath = target == ":memory:" ? target : archive.GetFullPath(target);
 	if (SQLITE_OK == sqlite3_open_v2(fullPath.c_str(), &handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_NOMUTEX, nullptr)) {
 		DatabaseSqliteImpl* impl = new DatabaseSqliteImpl();
 		impl->handle = handle;
