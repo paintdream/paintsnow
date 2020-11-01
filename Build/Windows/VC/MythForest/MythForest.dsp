@@ -487,6 +487,10 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Widget\WidgetComponentMod
 
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\WidgetRenderStage.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\General\Driver\Archive\Virtual\ZArchiveVirtual.cpp
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
@@ -910,6 +914,10 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Widget\WidgetComponentMod
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\WidgetRenderStage.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\General\Driver\Archive\Virtual\ZArchiveVirtual.h
 # End Source File
 # End Group
 # End Target

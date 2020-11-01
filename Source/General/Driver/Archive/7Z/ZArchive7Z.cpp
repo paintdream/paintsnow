@@ -252,7 +252,7 @@ inline bool ZArchive7Z::Open() {
 
 IStreamBase* ZArchive7Z::Open(const String& uri, bool write, size_t& length, uint64_t* lastModifiedTime) {
 	if (!Open()) return nullptr;
-	std::map<String, std::pair<UInt32, bool> >::const_iterator p = mapPathToID.find(uri);
+	std::unordered_map<String, std::pair<UInt32, bool> >::const_iterator p = mapPathToID.find(uri);
 	if (p == mapPathToID.end()) return nullptr;
 
 	UInt32 blockIndex = 0xFFFFFFFF; /* it can have any value before first call (if outBuffer = 0) */
@@ -261,7 +261,7 @@ IStreamBase* ZArchive7Z::Open(const String& uri, bool write, size_t& length, uin
 	size_t offset = 0;
 	size_t outSizeProcessed = 0;
 
-	SRes res = SzArEx_Extract(&db, &lookStream.s, p->second.first, &blockIndex, &outBuffer, &outBufferSize, &offset, &outSizeProcessed, &allocImp, &allocTempImp);
+	SRes res = SzArEx_Extract(&db, &lookStream.s, (*p).second.first, &blockIndex, &outBuffer, &outBufferSize, &offset, &outSizeProcessed, &allocImp, &allocTempImp);
 
 	if (res != SZ_OK) return nullptr;
 	if (lastModifiedTime != 0) {
@@ -280,9 +280,9 @@ void ZArchive7Z::Query(const String& uri, const TWrapper<void, bool, const Strin
 	ZArchive7Z* z = const_cast<ZArchive7Z*>(this);
 	if (!z->Open()) return;
 
-	for (std::map<String, std::pair<UInt32, bool> >::const_iterator p = mapPathToID.begin(); p != mapPathToID.end(); ++p) {
-		if (uri.empty() || p->first.find(uri) == 0) {
-			wrapper(p->second.second, p->first);
+	for (std::unordered_map<String, std::pair<UInt32, bool> >::const_iterator p = mapPathToID.begin(); p != mapPathToID.end(); ++p) {
+		if (uri.empty() || (*p).first.find(uri) == 0) {
+			wrapper((*p).second.second, (*p).first);
 		}
 	}
 }
@@ -318,5 +318,6 @@ int ZArchive7Z::main(int argc, char* argv[]) {
 			base->ReleaseObject();
 		}
 	}
+
 	return 0;
 }

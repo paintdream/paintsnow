@@ -49,7 +49,8 @@ namespace PaintsNow {
 		int64_t pos;
 		int64_t size;
 		bool opened;
-		std::map<String, std::pair<UInt32, bool> > mapPathToID;
+
+		std::unordered_map<String, std::pair<UInt32, bool> > mapPathToID;
 	};
 }
 
