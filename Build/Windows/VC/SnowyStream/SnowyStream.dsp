@@ -193,6 +193,10 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\MeshResource.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Mount.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\MultiHashGatherFS.cpp
 # End Source File
 # Begin Source File
@@ -351,10 +355,6 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\WidgetShadingFS.c
 
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\WidgetTransformVS.cpp
 # End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Zipper.cpp
-# End Source File
 # End Group
 # Begin Group "Header Files"
 
@@ -466,6 +466,10 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\MaterialResource.h
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\MeshResource.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Mount.h
 # End Source File
 # Begin Source File
 
@@ -626,10 +630,6 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\WidgetShadingFS.h
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\WidgetTransformVS.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Zipper.h
 # End Source File
 # End Group
 # End Target

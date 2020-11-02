@@ -98,9 +98,8 @@ TObject<IReflect>& SnowyStream::operator () (IReflect& reflect) {
 		ReflectMethod(RequestFetchFileData)[ScriptMethod = "FetchFileData"];
 		ReflectMethod(RequestFileExists)[ScriptMethod = "FileExists"];
 
-		ReflectMethod(RequestNewZipper)[ScriptMethod = "NewZipper"];
-		ReflectMethod(RequestPostZipperData)[ScriptMethod = "PostZipperData"];
-		ReflectMethod(RequestWriteZipper)[ScriptMethod = "WriteZipper"];
+		ReflectMethod(RequestMount)[ScriptMethod = "Mount"];
+		ReflectMethod(RequestUnmount)[ScriptMethod = "Unmount"];
 	}
 
 	return *this;
@@ -160,42 +159,21 @@ void SnowyStream::RequestParseJson(IScript::Request& request, const String& str)
 	}
 }
 
-TShared<Zipper> SnowyStream::RequestNewZipper(IScript::Request& request, const String& path) {
-	if (subArchiveCreator) {
-		bridgeSunset.GetKernel().YieldCurrentWarp();
-		size_t length;
-		IStreamBase* stream = interfaces.archive.Open(path, false, length);
-		if (stream != nullptr) {
-			IArchive* a = subArchiveCreator(*stream, length);
-			if (a != nullptr) {
-				return TShared<Zipper>::From(new Zipper(a, stream));
-			} else {
-				delete a;
-				request.Error("SnowyStream::CreateZipper(): Cannot open stream.");
-			}
-		} else {
-			request.Error("SnowyStream::CreateZipper(): Cannot open archive.");
-		}
-	} else {
-		request.Error("SnowyStream::CreateZipper(): No archive creator found.");
-	}
-
-	return nullptr;
-}
-
-void SnowyStream::RequestPostZipperData(IScript::Request& request, IScript::Delegate<Zipper> zipper, const String& path, const String& data) {
-	CHECK_REFERENCES_NONE();
-	CHECK_DELEGATE(zipper);
-
-	// TODO:
-}
-
-void SnowyStream::RequestWriteZipper(IScript::Request& request, IScript::Delegate<File> file, IScript::Delegate<Zipper> zipper) {
+TShared<Mount>  SnowyStream::RequestMount(IScript::Request& request, const String& path, IScript::Delegate<File> file) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(file);
-	CHECK_DELEGATE(zipper);
 
-	// TODO:
+	IArchive* ar = subArchiveCreator(*file->GetStream(), file->GetLength());
+	TShared<Mount> mount = TShared<Mount>::From(new Mount(interfaces.archive, path, ar, file.Get()));
+
+	return mount;
+}
+
+void SnowyStream::RequestUnmount(IScript::Request& request, IScript::Delegate<Mount> mount) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(mount);
+
+	mount->Unmount();
 }
 
 void SnowyStream::RequestFileExists(IScript::Request& request, const String& path) {

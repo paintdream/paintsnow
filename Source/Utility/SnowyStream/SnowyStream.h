@@ -7,7 +7,7 @@
 #include "../../General/Interface/Interfaces.h"
 #include <string>
 #include "File.h"
-#include "Zipper.h"
+#include "Mount.h"
 #include "ResourceBase.h"
 #include "ResourceManager.h"
 #include "../BridgeSunset/BridgeSunset.h"
@@ -31,6 +31,7 @@ namespace PaintsNow {
 		bool PersistResource(const TShared<ResourceBase>& resource, const String& extension = "") override;
 		bool MapResource(const TShared<ResourceBase>& resource, const String& extension = "") override;
 		void UnmapResource(const TShared<ResourceBase>& resource) override;
+
 		virtual bool RegisterResourceManager(Unique unique, ResourceManager* resourceManager);
 		virtual bool RegisterResourceSerializer(Unique unique, const String& extension, ResourceSerializerBase* serializer);
 		TObject<IReflect>& operator () (IReflect& reflect) override;
@@ -204,30 +205,20 @@ namespace PaintsNow {
 		/// <param name="path"> file path </param>
 		/// <returns> file content </returns>
 		void RequestFetchFileData(IScript::Request& request, const String& path);
+		
+		/// <summary>
+		/// Mount an archive file to specified mount point
+		/// </summary>
+		/// <param name="mountPoint"> target mount point </param>
+		/// <param name="file"> archive file </param>
+		/// <returns> Mount object </returns>
+		TShared<Mount> RequestMount(IScript::Request& request, const String& mountPoint, IScript::Delegate<File> file);
 
 		/// <summary>
-		/// Create new zip file
+		/// Umount an archive
 		/// </summary>
-		/// <param name="path"> target file path </param>
-		/// <returns> Zipper object </returns>
-		TShared<Zipper> RequestNewZipper(IScript::Request& request, const String& path);
-
-		/// <summary>
-		/// Post data to zipper
-		/// </summary>
-		/// <param name="zipper"> Zipper object </param>
-		/// <param name="path"> content path </param>
-		/// <param name="data"> content data </param>
-		/// <returns></returns>
-		void RequestPostZipperData(IScript::Request& request, IScript::Delegate<Zipper> zipper, const String& path, const String& data);
-
-		/// <summary>
-		/// Write zipper to file
-		/// </summary>
-		/// <param name="file"> File object </param>
-		/// <param name="path"> Zipper object </param>
-		/// <returns></returns>
-		void RequestWriteZipper(IScript::Request& request, IScript::Delegate<File> file, IScript::Delegate<Zipper> zipper);
+		/// <param name="mount" Mount object ></param>
+		void RequestUnmount(IScript::Request& request, IScript::Delegate<Mount> mount);
 
 	public:
 		void RegisterBuiltinPasses();

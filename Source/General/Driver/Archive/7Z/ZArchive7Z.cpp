@@ -157,11 +157,11 @@ String ZArchive7Z::GetFullPath(const String& path) const {
 	return path;
 }
 
-bool ZArchive7Z::Mount(const String& path, const String& fromPath, IArchive* baseArchive) {
+bool ZArchive7Z::Mount(const String& prefix, IArchive* baseArchive) {
 	return false;
 }
 
-bool ZArchive7Z::Unmount(const String& path) {
+bool ZArchive7Z::Unmount(const String& prefix, IArchive* baseArchive) {
 	return false;
 }
 

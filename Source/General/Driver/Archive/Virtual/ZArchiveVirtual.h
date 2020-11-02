@@ -16,15 +16,20 @@ namespace PaintsNow {
 		~ZArchiveVirtual() override;
 
 		String GetFullPath(const String& path) const override;
-		bool Mount(const String& basePath, const String& fromPath, IArchive* baseArchive) override;
-		bool Unmount(const String& basePath) override;
+		bool Mount(const String& basePath, IArchive* baseArchive) override;
+		bool Unmount(const String& prefix, IArchive* archive) override;
 		IStreamBase* Open(const String& uri, bool write, size_t& length, uint64_t* lastModifiedTime = nullptr) override;
 		void Query(const String& uri, const TWrapper<void, bool, const String&>& wrapper) const override;
 		bool IsReadOnly() const override;
 		bool Delete(const String& uri) override;
 
 	protected:
-		std::vector<IArchive*> archives;
+		struct MountInfo {
+			String prefix;
+			IArchive* archive;
+		};
+
+		std::vector<MountInfo> mountInfos;
 	};
 }
 
