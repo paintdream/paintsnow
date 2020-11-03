@@ -1,7 +1,106 @@
 #include "ZDatabaseSqlite.h"
 #include "../../../../General/Misc/DynamicObject.h"
+#include "../../../../Core/Interface/IStreamBase.h"
 
 using namespace PaintsNow;
+
+struct VFile : public sqlite3_file {
+	IStreamBase* stream;
+};
+
+int Close(sqlite3_file* f) {
+	VFile* file = static_cast<VFile*>(f);
+	file->stream->ReleaseObject();
+	
+	return SQLITE_OK;
+}
+
+int xRead(sqlite3_file* f, void* buf, int count, sqlite3_int64 offset) {
+	VFile* file = static_cast<VFile*>(f);
+	size_t length = count;
+	file->stream->Seek(IStreamBase::BEGIN, offset);
+
+	if (!file->stream->Read(buf, length)) {
+		memset((uint8_t*)buf + length, 0, (size_t)count - length);
+		return SQLITE_IOERR_SHORT_READ;
+	} else {
+		return SQLITE_OK;
+	}
+}
+
+int xWrite(sqlite3_file* f, const void* buf, int count, sqlite3_int64 offset) {
+	VFile* file = static_cast<VFile*>(f);
+	size_t length = count;
+	file->stream->Seek(IStreamBase::BEGIN, offset);
+
+	if (!file->stream->Write(buf, length)) {
+		return SQLITE_IOERR_WRITE;
+	} else {
+		return SQLITE_OK;
+	}
+}
+
+int xTruncate(sqlite3_file* f, sqlite3_int64 size) {
+	VFile* file = static_cast<VFile*>(f);
+	if (!file->stream->Truncate(size)) {
+		return SQLITE_IOERR_TRUNCATE;
+	} else {
+		return SQLITE_OK;
+	}
+}
+
+class VFS {
+	static int OnOpen(sqlite3_vfs* vfs, const char* name, sqlite3_file* file, int flags, int* outFlags) {
+		IArchive* archive = reinterpret_cast<IArchive*>(vfs->pAppData);
+		size_t length;
+		IStreamBase* stream = archive->Open(name, true, length);
+		if (stream != nullptr) {
+			VFile* vf = static_cast<VFile*>(file);
+			vf->stream = stream;
+			return SQLITE_OK;
+		} else {
+			return SQLITE_CANTOPEN;
+		}
+	}
+
+	static int OnDelete(sqlite3_vfs* vfs, const char* name, int syncDir) {
+		IArchive* archive = reinterpret_cast<IArchive*>(vfs->pAppData);
+		return archive->Delete(name) ? SQLITE_OK : SQLITE_IOERR;
+	}
+
+	static int OnAccess(sqlite3_vfs* vfs, const char* name, int flags, int* resOut) {
+		IArchive* archive = reinterpret_cast<IArchive*>(vfs->pAppData);
+		size_t length;
+		switch (flags) {
+		case SQLITE_ACCESS_EXISTS:
+		{
+			IStreamBase* s = archive->Open(name, false, length);
+			if (s == nullptr) {
+				*resOut = 0;
+			} else {
+				*resOut = 1;
+				s->ReleaseObject();
+			}
+			break;
+		}
+		case SQLITE_ACCESS_READ:
+			*resOut = 1;
+			break;
+		case SQLITE_ACCESS_READWRITE:
+			*resOut = archive->IsReadOnly() ? 0 : 1;
+			break;
+		}
+
+		return SQLITE_OK;
+	}
+
+	static int OnFullPathname(sqlite3_vfs*, const char* name, int outCount, char* bufOut) {
+		strncpy(bufOut, name, outCount);
+		bufOut[outCount] = '\0';
+
+		return SQLITE_OK;
+	}
+};
 
 // MetaData
 
