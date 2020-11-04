@@ -218,7 +218,7 @@ void CustomMaterialDescription::ReflectOptionTemplate(IReflect& reflect, Bytes& 
 					}
 					break;
 				case VAR_OPTION:
-					enabled = (bool)extOptionBuffer[var.offset];
+					enabled = extOptionBuffer[var.offset] != 0;
 					break;
 				}
 			}

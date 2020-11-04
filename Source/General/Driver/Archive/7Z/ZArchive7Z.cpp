@@ -256,7 +256,9 @@ inline bool ZArchive7Z::Open() {
 IStreamBase* ZArchive7Z::Open(const String& uri, bool write, size_t& length, uint64_t* lastModifiedTime) {
 	if (!Open()) return nullptr;
 	std::unordered_map<String, std::pair<UInt32, bool> >::const_iterator p = mapPathToID.find(uri);
-	if (p == mapPathToID.end()) return nullptr;
+
+	// not exists or is a directory?
+	if (p == mapPathToID.end() || (*p).second.second) return nullptr;
 
 	UInt32 blockIndex = 0xFFFFFFFF; /* it can have any value before first call (if outBuffer = 0) */
 	Byte *outBuffer = nullptr; /* it must be 0 before first call for each new archive. */
@@ -267,14 +269,15 @@ IStreamBase* ZArchive7Z::Open(const String& uri, bool write, size_t& length, uin
 	SRes res = SzArEx_Extract(&db, &lookStream.s, (*p).second.first, &blockIndex, &outBuffer, &outBufferSize, &offset, &outSizeProcessed, &allocImp, &allocTempImp);
 
 	if (res != SZ_OK) return nullptr;
+
 	if (lastModifiedTime != 0) {
 		lastModifiedTime = 0; // Not supported.
 	}
 
-	MemoryStream* ms = new MemoryStream(outBufferSize);
-	ms->Write(outBuffer, outBufferSize);
+	MemoryStream* ms = new MemoryStream(outSizeProcessed);
+	ms->Write(outBuffer + offset, outSizeProcessed);
 	ms->Seek(IStreamBase::BEGIN, 0);
-	length = outBufferSize;
+	length = outSizeProcessed;
 	IAlloc_Free(&allocImp, outBuffer);
 	return ms;
 }
