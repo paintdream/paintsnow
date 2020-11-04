@@ -161,6 +161,10 @@ bool ZArchive7Z::Unmount(const String& prefix, IArchive* baseArchive) {
 	return false;
 }
 
+String ZArchive7Z::GetFullPath(const String& path) const {
+	return String(); // not supported
+}
+
 ZArchive7Z::ZArchive7Z(IStreamBase& s, size_t len) : stream(s), pos(0), size(len), opened(false) {
 	allocImp.Alloc = SzAlloc;
 	allocImp.Free = SzFree;

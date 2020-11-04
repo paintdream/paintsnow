@@ -3,6 +3,20 @@
 
 using namespace PaintsNow;
 
+String ZArchiveVirtual::GetFullPath(const String& uri) const {
+	for (size_t i = 0; i < mountInfos.size(); i++) {
+		const MountInfo& info = mountInfos[i];
+		if (info.prefix.length() == 0 || info.prefix.compare(0, info.prefix.length(), uri) == 0) {
+			String path = info.archive->GetFullPath(uri);
+			if (!path.empty()) {
+				return path;
+			}
+		}
+	}
+
+	return String();
+}
+
 bool ZArchiveVirtual::Mount(const String& prefix, IArchive* archive) {
 	assert(archive != nullptr);
 	// check if exists?
@@ -59,7 +73,7 @@ IStreamBase* ZArchiveVirtual::Open(const String& uri, bool write, size_t& length
 void ZArchiveVirtual::Query(const String& uri, const TWrapper<void, bool, const String&>& wrapper) const {
 	for (size_t i = 0; i < mountInfos.size(); i++) {
 		const MountInfo& info = mountInfos[i];
-		if (info.prefix.compare(0, info.prefix.length(), uri) == 0) {
+		if (info.prefix.length() == 0 || info.prefix.compare(0, info.prefix.length(), uri) == 0) {
 			info.archive->Query(uri.substr(info.prefix.length()), wrapper);
 		}
 	}
