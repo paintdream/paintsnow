@@ -34,10 +34,25 @@ using namespace PaintsNow;
 
 String SnowyStream::reflectedExtension = "*.rds";
 
-SnowyStream::SnowyStream(Interfaces& inters, BridgeSunset& bs, const TWrapper<IArchive*, IStreamBase&, size_t>& psubArchiveCreator, const TWrapper<void, const String&>& err) : interfaces(inters), bridgeSunset(bs), errorHandler(err), subArchiveCreator(psubArchiveCreator), resourceQueue(nullptr) {
+SnowyStream::SnowyStream(Interfaces& inters, BridgeSunset& bs, const TWrapper<IArchive*, IStreamBase&, size_t>& psubArchiveCreator, const String& dm, const TWrapper<void, const String&>& err) : interfaces(inters), bridgeSunset(bs), errorHandler(err), subArchiveCreator(psubArchiveCreator), defMount(dm), resourceQueue(nullptr) {
 }
 
 void SnowyStream::Initialize() {
+	// Mount default drive
+	if (!defMount.empty()) {
+		IArchive& archive = interfaces.archive;
+		size_t length = 0;
+		uint64_t modifiedTime = 0;
+		IStreamBase* stream = archive.Open(defMount, false, length, &modifiedTime);
+		if (stream != nullptr) {
+			TShared<File> file = TShared<File>::From(new File(stream, length, modifiedTime));
+			IArchive* ar = subArchiveCreator(*file->GetStream(), file->GetLength());
+			defMountInstance = TShared<Mount>::From(new Mount(archive, "", ar, file));
+		} else {
+			fprintf(stderr, "Unable to mount default archive: %s\n", defMount.c_str());
+		}
+	}
+
 	assert(resourceManagers.empty());
 	renderDevice = interfaces.render.CreateDevice("");
 	resourceQueue = interfaces.render.CreateQueue(renderDevice, IRender::QUEUE_MULTITHREAD);
@@ -630,6 +645,8 @@ void SnowyStream::RequestCompressResourceAsync(IScript::Request& request, IScrip
 }
 
 void SnowyStream::Uninitialize() {
+	defMountInstance = nullptr;
+
 	for (std::map<Unique, TShared<ResourceManager> >::const_iterator p = resourceManagers.begin(); p != resourceManagers.end(); ++p) {
 		(*p).second->DoLock();
 		(*p).second->RemoveAll();
@@ -650,7 +667,7 @@ void RegisterPass(ResourceManager& resourceManager, UniqueType<T> type, const St
 	assert(unique != UniqueType<PassBase>().Get());
 	String name = pass.GetUnique()->GetName();
 	auto pos = name.find_last_of(':');
-	if (pos != std::string::npos) {
+	if (pos != String::npos) {
 		name = name.substr(pos + 1);
 	}
 

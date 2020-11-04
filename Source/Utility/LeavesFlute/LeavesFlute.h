@@ -19,7 +19,7 @@
 namespace PaintsNow {
 	class LeavesFlute : public TReflected<LeavesFlute, IScript::Library>, public ISyncObject, public IFrame::Callback {
 	public:
-		LeavesFlute(bool nogui, Interfaces& interfaces, const TWrapper<IArchive*, IStreamBase&, size_t>& subArchiveCreator, uint32_t threadCount, uint32_t warpCount);
+		LeavesFlute(bool nogui, Interfaces& interfaces, const TWrapper<IArchive*, IStreamBase&, size_t>& subArchiveCreator, const String& defMount, uint32_t threadCount, uint32_t warpCount);
 		~LeavesFlute() override;
 		bool IsRendering() const override;
 		TObject<IReflect>& operator () (IReflect& reflect) override;

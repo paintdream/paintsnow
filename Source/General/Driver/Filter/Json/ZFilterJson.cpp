@@ -99,7 +99,7 @@ public:
 			if (read) {
 				target = v.isString() ? v.asString() : "";
 			} else {
-				v = std::string(target.c_str(), target.length());
+				v = String(target.c_str(), target.length());
 			}
 		} else if (typeID == floatType) {
 			float& target = *reinterpret_cast<float*>(base);

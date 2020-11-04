@@ -45,8 +45,11 @@ ZArchiveVirtual::~ZArchiveVirtual() {}
 IStreamBase* ZArchiveVirtual::Open(const String& uri, bool write, size_t& length, uint64_t* lastModifiedTime) {
 	for (size_t i = 0; i < mountInfos.size(); i++) {
 		MountInfo& info = mountInfos[i];
-		if (info.prefix.compare(0, info.prefix.length(), uri) == 0) {
-			return info.archive->Open(uri.substr(info.prefix.length()), write, length, lastModifiedTime);
+		if (info.prefix.length() == 0 || info.prefix.compare(0, info.prefix.length(), uri) == 0) {
+			IStreamBase* stream = info.archive->Open(uri.substr(info.prefix.length()), write, length, lastModifiedTime);
+			if (stream != nullptr) {
+				return stream;
+			}
 		}
 	}
 

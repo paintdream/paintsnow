@@ -26,12 +26,12 @@ public:
 	std::vector<IScript::Library*> modules;
 };
 
-LeavesFlute::LeavesFlute(bool ng, Interfaces& inters, const TWrapper<IArchive*, IStreamBase&, size_t>& subArchiveCreator, uint32_t threadCount, uint32_t warpCount) :
+LeavesFlute::LeavesFlute(bool ng, Interfaces& inters, const TWrapper<IArchive*, IStreamBase&, size_t>& subArchiveCreator, const String& defMount, uint32_t threadCount, uint32_t warpCount) :
 					ISyncObject(inters.thread),
 					interfaces(inters),
 					bridgeSunset(inters.thread, inters.script, threadCount, warpCount),
 					echoLegend(inters.thread, inters.network, bridgeSunset),
-					snowyStream(inters, bridgeSunset, subArchiveCreator, Wrap(this, &LeavesFlute::OnConsoleOutput)),
+					snowyStream(inters, bridgeSunset, subArchiveCreator, defMount, Wrap(this, &LeavesFlute::OnConsoleOutput)),
 					mythForest(inters, snowyStream, bridgeSunset),
 					heartVioliner(inters.thread, inters.timer, bridgeSunset),
 					remembery(inters.thread, inters.archive, inters.database, bridgeSunset),
@@ -170,7 +170,7 @@ bool LeavesFlute::ConsoleProc(IThread::Thread* thread, size_t index) {
 #ifndef WIN32
 		int ret = poll(cinfd, 1, 1000);
 		if (ret > 0 && cinfd[0].revents == POLLIN) {
-			std::string command;
+			String command;
 			getline(std::cin, command);
 			if (command[command.size() - 1] == '\n') {
 				command = command.substr(0, command.size() - 1);

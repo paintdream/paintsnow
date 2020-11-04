@@ -16,7 +16,7 @@ namespace PaintsNow {
 	class ShaderResource;
 	class SnowyStream : public TReflected<SnowyStream, IScript::Library>, public IUniformResourceManager {
 	public:
-		SnowyStream(Interfaces& interfaces, BridgeSunset& bs, const TWrapper<IArchive*, IStreamBase&, size_t>& subArchiveCreator, const TWrapper<void, const String&>& errorHandler);
+		SnowyStream(Interfaces& interfaces, BridgeSunset& bs, const TWrapper<IArchive*, IStreamBase&, size_t>& subArchiveCreator, const String& defMount, const TWrapper<void, const String&>& errorHandler);
 		~SnowyStream() override;
 		IRender::Device* GetRenderDevice() const;
 		IRender::Queue* GetResourceQueue();
@@ -25,6 +25,7 @@ namespace PaintsNow {
 		void Initialize() override;
 		void Uninitialize() override;
 		void Reset();
+		bool MountArchive(const String& mount);
 
 		virtual Interfaces& GetInterfaces() const;
 		TShared<ResourceBase> CreateResource(const String& location, const String& extension = "", bool openExisting = true, Tiny::FLAG flag = 0, IStreamBase* sourceStream = nullptr) override;
@@ -270,6 +271,8 @@ namespace PaintsNow {
 		std::map<Unique, TShared<ResourceManager> > resourceManagers;
 		static String reflectedExtension;
 		const TWrapper<IArchive*, IStreamBase&, size_t> subArchiveCreator;
+		String defMount;
+		TShared<Mount> defMountInstance;
 
 	protected:
 		// Device related

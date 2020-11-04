@@ -124,9 +124,10 @@ void Loader::Load(const CmdLine& cmdLine) {
 	bool isVulkan = true;
 	bool enableModuleLog = false;
 	const std::map<String, CmdLine::Option>& configMap = cmdLine.GetConfigMap();
-	std::string entry = "Entry";
+	String entry = "Entry";
 	uint32_t threadCount = 4;
-	
+
+	String mount;
 	uint32_t warpCount = 0; // let mythforest decide
 	const uint32_t maxWarpCount = 1 << WarpTiny::WARP_BITS;
 	const uint32_t maxThreadCount = maxWarpCount >> 1;
@@ -139,6 +140,8 @@ void Loader::Load(const CmdLine& cmdLine) {
 			enableModuleLog = (*p).second.name == "true";
 		} else if ((*p).first == "Entry") {
 			entry = (*p).second.name;
+		} else if ((*p).first == "Mount") {
+			mount = (*p).second.name;
 		} else if ((*p).first == "Warp") {
 			// According to Unit::WARP_INDEX
 			warpCount = Math::Min(maxWarpCount, (uint32_t)safe_cast<uint32_t>(atoi((*p).second.name.c_str())));
@@ -223,7 +226,7 @@ void Loader::Load(const CmdLine& cmdLine) {
 
 #if !defined(CMAKE_PAINTSNOW) || ADD_FILTER_LZMA_BUILTIN
 	subArchiveFactory = Create7ZArchive;
-	config.RegisterFactory("ISubArchive", "ZArchive7Z", *(const TWrapper<IDevice*>*)&subArchiveFactory);
+	config.RegisterFactory("IArchive::Mount", "ZArchive7Z", *(const TWrapper<IDevice*>*)&subArchiveFactory);
 #endif
 
 	TWrapper<IScript*> scriptFactory;
@@ -263,7 +266,7 @@ void Loader::Load(const CmdLine& cmdLine) {
 	TWrapper<IFilterBase*> audioFilterFactory;
 #if !defined(CMAKE_PAINTSNOW) || ADD_AUDIO_LAME
 	audioFilterFactory = WrapFactory(UniqueType<ZFilterLAME>());
-	config.RegisterFactory("IFIlterBase::Audio", "ZDecoderLAME", audioFilterFactory);
+	config.RegisterFactory("IFilterBase::Audio", "ZDecoderLAME", audioFilterFactory);
 #endif
 
 	TWrapper<IDatabase*> databaseFactory;
@@ -293,8 +296,8 @@ void Loader::Load(const CmdLine& cmdLine) {
 	TWrapper<IArchive*> rootArchiveFactory;
 
 #if !defined(CMAKE_PAINTSNOW) || ADD_ARCHIVE_DIRENT_BUILTIN
-	archiveFactory = rootArchiveFactory = WrapFactory(UniqueType<ZArchiveDirent>());
-	config.RegisterFactory("IArchive", "ZArchiveDirent", archiveFactory);
+	rootArchiveFactory = WrapFactory(UniqueType<ZArchiveDirent>());
+	config.RegisterFactory("IArchive::Root", "ZArchiveDirent", rootArchiveFactory);
 #endif
 
 #if !defined(CMAKE_PAINTSNOW) || ADD_ARCHIVE_VIRTUAL_BUILTIN
@@ -316,8 +319,9 @@ void Loader::Load(const CmdLine& cmdLine) {
 	SetFactory((TWrapper<IDevice*>&)frameFactory, "IFrame", factoryMap);
 	SetFactory((TWrapper<IDevice*>&)threadFactory, "IThread", factoryMap);
 	SetFactory((TWrapper<IDevice*>&)audioFactory, "IAudio", factoryMap);
+	SetFactory((TWrapper<IDevice*>&)rootArchiveFactory, "IArchive::Root", factoryMap);
 	SetFactory((TWrapper<IDevice*>&)archiveFactory, "IArchive", factoryMap);
-	SetFactory((TWrapper<IDevice*>&)subArchiveFactory, "ISubArchive", factoryMap);
+	SetFactory((TWrapper<IDevice*>&)subArchiveFactory, "IArchive::Mount", factoryMap);
 	SetFactory((TWrapper<IDevice*>&)scriptFactory, "IScript", factoryMap);
 	SetFactory((TWrapper<IDevice*>&)networkFactory, "INetwork", factoryMap);
 	SetFactory((TWrapper<IDevice*>&)randomFactory, "IRandom", factoryMap);
@@ -351,6 +355,7 @@ void Loader::Load(const CmdLine& cmdLine) {
 		INetwork* network = networkFactory();
 		ITunnel* tunnel = tunnelFactory();
 		IAudio* audio = audioFactory();
+		IArchive* rootArchive = rootArchiveFactory();
 		IArchive* archive = archiveFactory();
 		IRandom* random = randomFactory();
 		IDatabase* database = databaseFactory();
@@ -358,9 +363,12 @@ void Loader::Load(const CmdLine& cmdLine) {
 		IFilterBase* audioFilter = audioFilterFactory();
 		IFontBase* font = fontFactory();
 
+		// Mount root archives
+		archive->Mount("", rootArchive);
+
 		{
 			Interfaces interfaces(*archive, *audio, *database, *assetFilter, *audioFilter, *font, *frame, *image, *network, *random, *render, *script, *thread, *timer, *tunnel);
-			LeavesFlute leavesFlute(nogui, interfaces, subArchiveFactory, threadCount, warpCount);
+			LeavesFlute leavesFlute(nogui, interfaces, subArchiveFactory, mount, threadCount, warpCount);
 			this->leavesFlute = &leavesFlute;
 
 			std::vector<String> paramList;
@@ -394,6 +402,7 @@ void Loader::Load(const CmdLine& cmdLine) {
 		render->ReleaseDevice();
 		audio->ReleaseDevice();
 		archive->ReleaseDevice();
+		rootArchive->ReleaseDevice();
 
 		frame->ReleaseDevice();
 	}
