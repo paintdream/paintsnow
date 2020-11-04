@@ -42,6 +42,10 @@
 #include "../../Core/Driver/Archive/Dirent/ZArchiveDirent.h"
 #endif
 
+#if !defined(CMAKE_PAINTSNOW) || ADD_ARCHIVE_VIRTUAL_BUILTIN
+#include "../../General/Driver/Archive/Virtual/ZArchiveVirtual.h"
+#endif
+
 #if !defined(CMAKE_PAINTSNOW) || ADD_FILTER_LZMA_BUILTIN
 #include "../../General/Driver/Archive/7Z/ZArchive7Z.h"
 #endif

@@ -15,7 +15,6 @@ namespace PaintsNow {
 		ZArchiveVirtual();
 		~ZArchiveVirtual() override;
 
-		String GetFullPath(const String& path) const override;
 		bool Mount(const String& basePath, IArchive* baseArchive) override;
 		bool Unmount(const String& prefix, IArchive* archive) override;
 		IStreamBase* Open(const String& uri, bool write, size_t& length, uint64_t* lastModifiedTime = nullptr) override;

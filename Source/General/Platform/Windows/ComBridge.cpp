@@ -48,7 +48,6 @@ IReflectObject* ComBridge::Create(IScript::Request& request, IArchive& archive, 
 		}
 	} else if (_stricmp(ext.c_str(), ".exe") == 0 || _stricmp(ext.c_str(), ".dll") == 0 || _stricmp(ext.c_str(), ".tlb") == 0) {
 		String fullPath = path.substr(0, pos);
-		fullPath = archive.GetFullPath(fullPath);
 
 		ITypeLib* type;
 		HRESULT hr;

@@ -1,55 +1,185 @@
 #include "ZDatabaseSqlite.h"
 #include "../../../../General/Misc/DynamicObject.h"
 #include "../../../../Core/Interface/IStreamBase.h"
+#include "../../../../Core/System/Tiny.h"
+#include <sstream>
 
 using namespace PaintsNow;
 
-struct VFile : public sqlite3_file {
-	IStreamBase* stream;
+// MetaData
+
+class DatabaseSqliteImpl : public IDatabase::Database {
+public:
+	sqlite3* handle;
+	DynamicUniqueAllocator uniqueAllocator;
 };
 
-int Close(sqlite3_file* f) {
-	VFile* file = static_cast<VFile*>(f);
-	file->stream->ReleaseObject();
+ZDatabaseSqlite::ZDatabaseSqlite() {
+	sqlite3_initialize();
+}
+
+ZDatabaseSqlite::~ZDatabaseSqlite() {
+	sqlite3_shutdown();
+}
+
+struct VFile : public sqlite3_file {
+public:
+	IStreamBase* stream;
+
+	static int OnClose(sqlite3_file* f) {
+		VFile* file = static_cast<VFile*>(f);
+		file->stream->ReleaseObject();
+
+		return SQLITE_OK;
+	}
+
+	static int OnRead(sqlite3_file* f, void* buf, int count, sqlite3_int64 offset) {
+		VFile* file = static_cast<VFile*>(f);
+		size_t length = count;
+		file->stream->Seek(IStreamBase::BEGIN, offset);
+
+		if (!file->stream->Read(buf, length)) {
+			memset((uint8_t*)buf + length, 0, (size_t)count - length);
+			return SQLITE_IOERR_SHORT_READ;
+		} else {
+			return SQLITE_OK;
+		}
+	}
+
+	static int OnWrite(sqlite3_file* f, const void* buf, int count, sqlite3_int64 offset) {
+		VFile* file = static_cast<VFile*>(f);
+		size_t length = count;
+		file->stream->Seek(IStreamBase::BEGIN, offset);
+
+		if (!file->stream->Write(buf, length)) {
+			return SQLITE_IOERR_WRITE;
+		} else {
+			return SQLITE_OK;
+		}
+	}
+
+	static int OnTruncate(sqlite3_file* f, sqlite3_int64 size) {
+		VFile* file = static_cast<VFile*>(f);
+		if (!file->stream->Truncate(size)) {
+			return SQLITE_IOERR_TRUNCATE;
+		} else {
+			return SQLITE_OK;
+		}
+	}
 	
-	return SQLITE_OK;
-}
+	static int OnSync(sqlite3_file* f, int flags) {
+		VFile* file = static_cast<VFile*>(f);
+		file->stream->Flush();
 
-int xRead(sqlite3_file* f, void* buf, int count, sqlite3_int64 offset) {
-	VFile* file = static_cast<VFile*>(f);
-	size_t length = count;
-	file->stream->Seek(IStreamBase::BEGIN, offset);
-
-	if (!file->stream->Read(buf, length)) {
-		memset((uint8_t*)buf + length, 0, (size_t)count - length);
-		return SQLITE_IOERR_SHORT_READ;
-	} else {
 		return SQLITE_OK;
 	}
-}
 
-int xWrite(sqlite3_file* f, const void* buf, int count, sqlite3_int64 offset) {
-	VFile* file = static_cast<VFile*>(f);
-	size_t length = count;
-	file->stream->Seek(IStreamBase::BEGIN, offset);
-
-	if (!file->stream->Write(buf, length)) {
-		return SQLITE_IOERR_WRITE;
-	} else {
-		return SQLITE_OK;
+	static int OnFileSize(sqlite3_file*, sqlite3_int64* pSize) {
+		return 0;
 	}
-}
 
-int xTruncate(sqlite3_file* f, sqlite3_int64 size) {
-	VFile* file = static_cast<VFile*>(f);
-	if (!file->stream->Truncate(size)) {
-		return SQLITE_IOERR_TRUNCATE;
-	} else {
-		return SQLITE_OK;
+	static int OnLock(sqlite3_file*, int) {
+
+		return 0;
 	}
-}
 
-class VFS {
+	static int OnUnlock(sqlite3_file*, int) {
+		return 0;
+
+	}
+
+	static int OnCheckReservedLock(sqlite3_file*, int* pResOut) {
+
+		return 0;
+	}
+
+	static int OnFileControl(sqlite3_file*, int op, void* pArg) {
+
+		return 0;
+	}
+
+	static int OnSectorSize(sqlite3_file*) {
+
+		return 0;
+	}
+
+	static int OnDeviceCharacteristics(sqlite3_file*) {
+
+		return 0;
+	}
+
+	static int OnShmMap(sqlite3_file*, int iPg, int pgsz, int, void volatile**) {
+
+		return 0;
+	}
+
+	static int OnShmLock(sqlite3_file*, int offset, int n, int flags) {
+		return 0;
+
+	}
+
+	static void OnShmBarrier(sqlite3_file*) {
+	}
+
+	static int OnShmUnmap(sqlite3_file*, int deleteFlag) {
+		return 0;
+	}
+
+	static int OnFetch(sqlite3_file*, sqlite3_int64 iOfst, int iAmt, void** pp) {
+
+		return 0;
+	}
+
+	static int OnUnfetch(sqlite3_file*, sqlite3_int64 iOfst, void* p) {
+		return 0;
+	}
+
+	static sqlite3_io_methods methods;
+};
+
+sqlite3_io_methods VFile::methods = {
+	3,
+	VFile::OnClose,
+	VFile::OnRead,
+	VFile::OnWrite,
+	VFile::OnTruncate,
+	VFile::OnSync,
+	VFile::OnFileSize,
+	VFile::OnLock,
+	VFile::OnUnlock,
+	VFile::OnCheckReservedLock,
+	VFile::OnFileControl,
+	VFile::OnSectorSize,
+	VFile::OnDeviceCharacteristics,
+	VFile::OnShmMap,
+	VFile::OnShmLock,
+	VFile::OnShmBarrier,
+	VFile::OnShmUnmap,
+	VFile::OnFetch,
+	VFile::OnUnfetch
+};
+
+class VFS : public TReflected<VFS, SharedTiny> {
+public:
+	VFS(IArchive& arc) : archive(arc) {
+		std::stringstream ss;
+		ss << "VFS_" << (void*)&arc;
+		name = ss.str();
+
+		sqlite3_vfs* defVFS = sqlite3_vfs_find(nullptr);
+		memcpy(&vfs, defVFS, sizeof(sqlite3_vfs));
+
+		vfs.iVersion = 3;
+		vfs.szOsFile = sizeof(VFile);
+		vfs.mxPathname = 1024;
+		vfs.pNext = nullptr;
+		vfs.zName = name.c_str();
+		vfs.pAppData = this;
+
+		vfs.xOpen = OnOpen;
+		vfs.xDelete = OnDelete;
+	}
+
 	static int OnOpen(sqlite3_vfs* vfs, const char* name, sqlite3_file* file, int flags, int* outFlags) {
 		IArchive* archive = reinterpret_cast<IArchive*>(vfs->pAppData);
 		size_t length;
@@ -100,30 +230,38 @@ class VFS {
 
 		return SQLITE_OK;
 	}
+
+	static String Register(IArchive& archive) {
+		static std::vector<std::key_value<IArchive*, TShared<VFS> > > registered;
+		static std::atomic<uint32_t> critical;
+
+		SpinLock(critical);
+		std::vector<std::key_value<IArchive*, TShared<VFS> > >::iterator it = std::binary_find(registered.begin(), registered.end(), &archive);
+		if (it != registered.end()) {
+			String name = it->second->name;
+			SpinUnLock(critical);
+
+			return name;
+		}
+
+		it = std::binary_insert(registered, &archive);
+		it->second = TShared<VFS>::From(new VFS(archive));
+		String name = it->second->name;
+		SpinUnLock(critical);
+
+		return name;
+	}
+
+	String name;
+	IArchive& archive;
+	sqlite3_vfs vfs;
 };
-
-// MetaData
-
-class DatabaseSqliteImpl : public IDatabase::Database {
-public:
-	sqlite3* handle;
-	DynamicUniqueAllocator uniqueAllocator;
-};
-
-ZDatabaseSqlite::ZDatabaseSqlite() {
-	static sqlite3_vfs vfs;
-	// TODO: vfs
-	sqlite3_initialize();
-}
-
-ZDatabaseSqlite::~ZDatabaseSqlite() {
-	sqlite3_shutdown();
-}
 
 IDatabase::Database* ZDatabaseSqlite::Connect(IArchive& archive, const String& target, const String& username, const String& password, bool createOnNonExist) {
+	String vfs = VFS::Register(archive);
+
 	sqlite3* handle;
-	String fullPath = target == ":memory:" ? target : archive.GetFullPath(target);
-	if (SQLITE_OK == sqlite3_open_v2(fullPath.c_str(), &handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_NOMUTEX, nullptr)) {
+	if (SQLITE_OK == sqlite3_open_v2(target.c_str(), &handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_NOMUTEX, vfs.c_str())) {
 		DatabaseSqliteImpl* impl = new DatabaseSqliteImpl();
 		impl->handle = handle;
 		return impl;
@@ -133,7 +271,7 @@ IDatabase::Database* ZDatabaseSqlite::Connect(IArchive& archive, const String& t
 		}
 
 		if (createOnNonExist) {
-			if (SQLITE_OK == sqlite3_open_v2(fullPath.c_str(), &handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_NOMUTEX, nullptr)) {
+			if (SQLITE_OK == sqlite3_open_v2(target.c_str(), &handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_NOMUTEX, vfs.c_str())) {
 				DatabaseSqliteImpl* impl = new DatabaseSqliteImpl();
 				impl->handle = handle;
 				return impl;
@@ -327,7 +465,7 @@ private:
 	DynamicUniqueAllocator& uniqueAllocator;
 	sqlite3* handle;
 	sqlite3_stmt* stmt;
-	typedef void (QueryMetaData::*Set)(int i);
+	typedef void (QueryMetaData::* Set)(int i);
 	std::vector<Set> sets;
 	DynamicObject* dynamicObject;
 
@@ -380,7 +518,7 @@ public:
 
 	sqlite3_stmt* stmt;
 	const std::vector<String>& names;
-	typedef void (MapperSqlite::*Set)(int i, const void* base);
+	typedef void (MapperSqlite::* Set)(int i, const void* base);
 	std::vector<std::pair<Set, size_t> > setters;
 	int counter;
 };

@@ -358,10 +358,6 @@ void LeavesFlute::RequestPrint(IScript::Request& request, const String& text) {
 	Print(text);
 }
 
-String LeavesFlute::RequestGetFullPath(IScript::Request& request, const String& path) {
-	return interfaces.archive.GetFullPath(path);
-}
-
 void LeavesFlute::OnConsoleOutput(const String& text) {
 	DoLock();
 	Print(text);
@@ -848,7 +844,6 @@ TObject<IReflect>& LeavesFlute::operator () (IReflect& reflect) {
 		ReflectMethod(RequestSetAppTitle)[ScriptMethod = "SetAppTitle"];
 		ReflectMethod(RequestShowCursor)[ScriptMethod = "ShowCursor"];
 		ReflectMethod(RequestWarpCursor)[ScriptMethod = "WrapCursor"];
-		ReflectMethod(RequestGetFullPath)[ScriptMethod = "GetFullPath"];
 		ReflectMethod(RequestSetScreenSize)[ScriptMethod = "SetScreenSize"];
 		ReflectMethod(RequestGetScreenSize)[ScriptMethod = "GetScreenSize"];
 		ReflectMethod(RequestListenConsole)[ScriptMethod = "ListenConsole"];

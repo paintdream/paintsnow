@@ -3,10 +3,6 @@
 
 using namespace PaintsNow;
 
-String ZArchiveVirtual::GetFullPath(const String& path) const {
-	return path;
-}
-
 bool ZArchiveVirtual::Mount(const String& prefix, IArchive* archive) {
 	assert(archive != nullptr);
 	// check if exists?

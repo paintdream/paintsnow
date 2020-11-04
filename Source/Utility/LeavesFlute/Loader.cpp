@@ -219,10 +219,11 @@ void Loader::Load(const CmdLine& cmdLine) {
 	}
 #endif
 
-	TWrapper<IArchive*, IStreamBase&, size_t> subArchiveCreator;
+	TWrapper<IArchive*, IStreamBase&, size_t> subArchiveFactory;
 
 #if !defined(CMAKE_PAINTSNOW) || ADD_FILTER_LZMA_BUILTIN
-	subArchiveCreator = Create7ZArchive;
+	subArchiveFactory = Create7ZArchive;
+	config.RegisterFactory("ISubArchive", "ZArchive7Z", *(const TWrapper<IDevice*>*)&subArchiveFactory);
 #endif
 
 	TWrapper<IScript*> scriptFactory;
@@ -289,10 +290,16 @@ void Loader::Load(const CmdLine& cmdLine) {
 #endif
 
 	TWrapper<IArchive*> archiveFactory;
+	TWrapper<IArchive*> rootArchiveFactory;
 
 #if !defined(CMAKE_PAINTSNOW) || ADD_ARCHIVE_DIRENT_BUILTIN
-	archiveFactory = WrapFactory(UniqueType<ZArchiveDirent>());
+	archiveFactory = rootArchiveFactory = WrapFactory(UniqueType<ZArchiveDirent>());
 	config.RegisterFactory("IArchive", "ZArchiveDirent", archiveFactory);
+#endif
+
+#if !defined(CMAKE_PAINTSNOW) || ADD_ARCHIVE_VIRTUAL_BUILTIN
+	archiveFactory = WrapFactory(UniqueType<ZArchiveVirtual>());
+	config.RegisterFactory("IArchive", "ZArchiveVirtual", archiveFactory);
 #endif
 
 	TWrapper<IFilterBase*> assetFilterFactory;
@@ -310,6 +317,7 @@ void Loader::Load(const CmdLine& cmdLine) {
 	SetFactory((TWrapper<IDevice*>&)threadFactory, "IThread", factoryMap);
 	SetFactory((TWrapper<IDevice*>&)audioFactory, "IAudio", factoryMap);
 	SetFactory((TWrapper<IDevice*>&)archiveFactory, "IArchive", factoryMap);
+	SetFactory((TWrapper<IDevice*>&)subArchiveFactory, "ISubArchive", factoryMap);
 	SetFactory((TWrapper<IDevice*>&)scriptFactory, "IScript", factoryMap);
 	SetFactory((TWrapper<IDevice*>&)networkFactory, "INetwork", factoryMap);
 	SetFactory((TWrapper<IDevice*>&)randomFactory, "IRandom", factoryMap);
@@ -352,7 +360,7 @@ void Loader::Load(const CmdLine& cmdLine) {
 
 		{
 			Interfaces interfaces(*archive, *audio, *database, *assetFilter, *audioFilter, *font, *frame, *image, *network, *random, *render, *script, *thread, *timer, *tunnel);
-			LeavesFlute leavesFlute(nogui, interfaces, subArchiveCreator, threadCount, warpCount);
+			LeavesFlute leavesFlute(nogui, interfaces, subArchiveFactory, threadCount, warpCount);
 			this->leavesFlute = &leavesFlute;
 
 			std::vector<String> paramList;
