@@ -165,6 +165,13 @@ String ZArchive7Z::GetFullPath(const String& path) const {
 	return String(); // not supported
 }
 
+bool ZArchive7Z::Exists(const String& path) const {
+	if (path.empty()) return false;
+	if (!(const_cast<ZArchive7Z*>(this))->Open()) return false;
+
+	return mapPathToID.find(path) != mapPathToID.end();
+}
+
 ZArchive7Z::ZArchive7Z(IStreamBase& s, size_t len) : stream(s), pos(0), size(len), opened(false) {
 	allocImp.Alloc = SzAlloc;
 	allocImp.Free = SzFree;
@@ -240,7 +247,10 @@ inline bool ZArchive7Z::Open() {
 #endif
 				);
 			if (res == SZ_OK) {
-				mapPathToID[(const char*)buf.data] = std::make_pair(i, isDir ? true : false);
+				String path = (const char*)buf.data;
+				if (isDir) path += '/';
+
+				mapPathToID[path] = i;
 			}
 
 			Buf_Free(&buf, &g_Alloc);
@@ -253,12 +263,13 @@ inline bool ZArchive7Z::Open() {
 	return opened;
 }
 
-IStreamBase* ZArchive7Z::Open(const String& uri, bool write, size_t& length, uint64_t* lastModifiedTime) {
+IStreamBase* ZArchive7Z::Open(const String& uri, bool write, uint64_t& length, uint64_t* lastModifiedTime) {
+	if (uri.empty()) return nullptr;
 	if (!Open()) return nullptr;
-	std::unordered_map<String, std::pair<UInt32, bool> >::const_iterator p = mapPathToID.find(uri);
+	if (uri[uri.size() - 1] == '/') return nullptr;
 
-	// not exists or is a directory?
-	if (p == mapPathToID.end() || (*p).second.second) return nullptr;
+	std::unordered_map<String, uint32_t>::const_iterator p = mapPathToID.find(uri);
+	if (p == mapPathToID.end()) return nullptr;
 
 	UInt32 blockIndex = 0xFFFFFFFF; /* it can have any value before first call (if outBuffer = 0) */
 	Byte *outBuffer = nullptr; /* it must be 0 before first call for each new archive. */
@@ -266,7 +277,7 @@ IStreamBase* ZArchive7Z::Open(const String& uri, bool write, size_t& length, uin
 	size_t offset = 0;
 	size_t outSizeProcessed = 0;
 
-	SRes res = SzArEx_Extract(&db, &lookStream.s, (*p).second.first, &blockIndex, &outBuffer, &outBufferSize, &offset, &outSizeProcessed, &allocImp, &allocTempImp);
+	SRes res = SzArEx_Extract(&db, &lookStream.s, (*p).second, &blockIndex, &outBuffer, &outBufferSize, &offset, &outSizeProcessed, &allocImp, &allocTempImp);
 
 	if (res != SZ_OK) return nullptr;
 
@@ -282,13 +293,13 @@ IStreamBase* ZArchive7Z::Open(const String& uri, bool write, size_t& length, uin
 	return ms;
 }
 
-void ZArchive7Z::Query(const String& uri, const TWrapper<void, bool, const String&>& wrapper) const {
+void ZArchive7Z::Query(const String& uri, const TWrapper<void, const String&>& wrapper) const {
 	ZArchive7Z* z = const_cast<ZArchive7Z*>(this);
 	if (!z->Open()) return;
 
-	for (std::unordered_map<String, std::pair<UInt32, bool> >::const_iterator p = mapPathToID.begin(); p != mapPathToID.end(); ++p) {
-		if (uri.empty() || (*p).first.find(uri) == 0) {
-			wrapper((*p).second.second, (*p).first);
+	for (std::unordered_map<String, uint32_t>::const_iterator p = mapPathToID.begin(); p != mapPathToID.end(); ++p) {
+		if (uri.empty() || uri.compare(0, uri.length(), (*p).first) == 0) {
+			wrapper((*p).first);
 		}
 	}
 }
@@ -306,8 +317,8 @@ bool ZArchive7Z::Delete(const String& uri) {
 #include "../../../../Core/Driver/Archive/Dirent/ZArchiveDirent.h"
 
 struct PrintCallback {
-	void Print(bool isDir, const String& path) {
-		printf("[%c] : %s\n", isDir ? 'D' : 'F', path.c_str());
+	void Print(const String& path) {
+		printf("%s\n", path.c_str());
 	}
 };
 
@@ -315,10 +326,10 @@ int ZArchive7Z::main(int argc, char* argv[]) {
 	if (argc >= 2) {
 		ZArchiveDirent dir("");
 
-		size_t len;
+		uint64_t len;
 		IStreamBase* base = dir.Open(argv[1], false, len);
 		if (base != nullptr) {
-			ZArchive7Z z(*base, len);
+			ZArchive7Z z(*base, safe_cast<size_t>(len));
 			PrintCallback pb;
 			z.Query("", Wrap(&pb, &PrintCallback::Print));
 			base->ReleaseObject();

@@ -417,7 +417,7 @@ public:
 	ExpandParamsScriptTask(Kernel& k, const String& p, const std::vector<String>& params, Interfaces& inters) : kernel(k), path(p), value(params), interfaces(inters) {}
 
 	bool LoadScriptText(const String& path, String& text) {
-		size_t length = 0;
+		uint64_t length = 0;
 		bool ret = false;
 		IStreamBase* stream = interfaces.archive.Open(path + "." + interfaces.script.GetFileExt(), false, length);
 		if (stream == nullptr) {
@@ -427,8 +427,9 @@ public:
 		if (stream != nullptr) {
 			if (length != 0) {
 				// read string
-				text.resize(length);
-				if (stream->Read(const_cast<char*>(text.data()), length)) {
+				size_t len = safe_cast<size_t>(length);
+				text.resize(len);
+				if (stream->Read(const_cast<char*>(text.data()), len)) {
 					ret = true;
 				}
 			} else {

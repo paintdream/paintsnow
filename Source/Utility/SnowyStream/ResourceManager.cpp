@@ -129,7 +129,7 @@ TShared<ResourceBase> ResourceSerializerBase::DeserializeFromArchive(ResourceMan
 		return resource;
 	}
 
-	size_t length;
+	uint64_t length;
 	if (openExisting) {
 		IStreamBase* stream = archive.Open(path + "." + GetExtension() + uniExtension, false, length);
 		if (stream != nullptr) {
@@ -155,7 +155,7 @@ TShared<ResourceBase> ResourceSerializerBase::DeserializeFromArchive(ResourceMan
 bool ResourceSerializerBase::MapFromArchive(ResourceBase* resource, IArchive& archive, IFilterBase& protocol, const String& path) {
 	assert(resource != nullptr);
 
-	size_t length;
+	uint64_t length;
 	IStreamBase* stream = archive.Open(path + "." + GetExtension() + uniExtension, false, length);
 	if (stream != nullptr) {
 		bool result = true;
@@ -173,7 +173,7 @@ bool ResourceSerializerBase::MapFromArchive(ResourceBase* resource, IArchive& ar
 bool ResourceSerializerBase::SerializeToArchive(ResourceBase* resource, IArchive& archive, IFilterBase& protocol, const String& path) {
 	assert(resource != nullptr);
 
-	size_t length;
+	uint64_t length;
 	IStreamBase* stream = archive.Open(path + "." + GetExtension() + uniExtension, true, length);
 	if (stream != nullptr) {
 		SpinLock(resource->critical);

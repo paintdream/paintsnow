@@ -10,15 +10,18 @@ Repository::Repository() {
 	rootItem = TShared<Item>::From(itemAllocator->New());
 }
 
-void Repository::RefreshLocalFilesRecursive(IArchive& archive, const String& path, Item& item) {
+void Repository::RefreshLocalFilesRecursive(IArchive& archive, const String& p, Item& item) {
 	// TWrapper supports lambdas in synchronized context
-	archive.Query(path, WrapClosure([&](bool directory, const String& name) {
+	String path = p;
+	if (!path.empty() && path[path.size() - 1] != '/') path += '/';
+
+	archive.Query(path, WrapClosure([&](const String& name) {
 		TShared<Item> subItem = TShared<Item>::From(itemAllocator->New());
 		subItem->name = name;
 		subItem->parent = &item;
 
-		if (directory) {
-			RefreshLocalFilesRecursive(archive, path + "/" + name, *subItem);
+		if (name[name.size() - 1] == '/') {
+			RefreshLocalFilesRecursive(archive, path + name, *subItem);
 			subItem->Flag().fetch_or(Item::ITEM_DIRECTORY, std::memory_order_relaxed);
 		}
 

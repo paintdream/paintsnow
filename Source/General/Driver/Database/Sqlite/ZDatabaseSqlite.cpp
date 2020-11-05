@@ -1,4 +1,5 @@
 #include "ZDatabaseSqlite.h"
+#include "../../../../Core/Interface/IStreamBase.h"
 #include "../../../../General/Misc/DynamicObject.h"
 
 using namespace PaintsNow;
@@ -9,11 +10,10 @@ class DatabaseSqliteImpl : public IDatabase::Database {
 public:
 	sqlite3* handle;
 	DynamicUniqueAllocator uniqueAllocator;
+	String tmpFileName;
 };
 
 ZDatabaseSqlite::ZDatabaseSqlite() {
-	static sqlite3_vfs vfs;
-	// TODO: vfs
 	sqlite3_initialize();
 }
 
@@ -24,23 +24,18 @@ ZDatabaseSqlite::~ZDatabaseSqlite() {
 IDatabase::Database* ZDatabaseSqlite::Connect(IArchive& archive, const String& target, const String& username, const String& password, bool createOnNonExist) {
 	sqlite3* handle;
 	String fullPath;
+	String tmpFileName;
 	if (target == ":memory:") {
 		fullPath = target;
 	} else {
 		fullPath = archive.GetFullPath(target);
-	}
 
-	if (SQLITE_OK == sqlite3_open_v2(fullPath.c_str(), &handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_NOMUTEX, nullptr)) {
-		DatabaseSqliteImpl* impl = new DatabaseSqliteImpl();
-		impl->handle = handle;
-		return impl;
-	} else {
-		if (handle != nullptr) {
-			sqlite3_close(handle);
-		}
+		// test if fullPath can be opened
+		FILE* fp = fopen(fullPath.c_str(), "rb");
+		if (fp != NULL) {
+			fclose(fp);
 
-		if (createOnNonExist) {
-			if (SQLITE_OK == sqlite3_open_v2(fullPath.c_str(), &handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_NOMUTEX, nullptr)) {
+			if (SQLITE_OK == sqlite3_open_v2(fullPath.c_str(), &handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_NOMUTEX, nullptr)) {
 				DatabaseSqliteImpl* impl = new DatabaseSqliteImpl();
 				impl->handle = handle;
 				return impl;
@@ -48,8 +43,51 @@ IDatabase::Database* ZDatabaseSqlite::Connect(IArchive& archive, const String& t
 				if (handle != nullptr) {
 					sqlite3_close(handle);
 				}
+
+				return nullptr;
+			}
+		} else if (archive.Exists(target)) {
+			// try to extract
+			uint64_t length;
+			IStreamBase* f = archive.Open(target, false, length);
+			if (f == nullptr) return nullptr;
+
+			char tmpName[L_tmpnam];
+			tmpnam(tmpName);
+			tmpFileName = tmpName;
+
+			FILE* fp = fopen(tmpFileName.c_str(), "wb");
+			if (fp != nullptr) {
+				uint8_t* buffer = new uint8_t[safe_cast<size_t>(length)];
+				size_t s = safe_cast<size_t>(length);
+				if (f->Read(buffer, s)) {
+					fwrite(buffer, 1, s, fp);
+				}
+
+				fclose(fp);
+			}
+
+			f->ReleaseObject();
+			fullPath = tmpFileName;
+		}
+	}
+
+	if (createOnNonExist) {
+		if (SQLITE_OK == sqlite3_open_v2(fullPath.c_str(), &handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_NOMUTEX, nullptr)) {
+			DatabaseSqliteImpl* impl = new DatabaseSqliteImpl();
+			impl->handle = handle;
+			impl->tmpFileName = std::move(tmpFileName);
+			tmpFileName = "";
+			return impl;
+		} else {
+			if (handle != nullptr) {
+				sqlite3_close(handle);
 			}
 		}
+	}
+
+	if (!tmpFileName.empty()) {
+		remove(tmpFileName.c_str());
 	}
 
 	return nullptr;
@@ -59,6 +97,10 @@ void ZDatabaseSqlite::Close(Database* database) {
 	DatabaseSqliteImpl* impl = static_cast<DatabaseSqliteImpl*>(database);
 	if (impl->handle != nullptr) {
 		sqlite3_close(impl->handle);
+	}
+
+	if (!impl->tmpFileName.empty()) {
+		remove(impl->tmpFileName.c_str());
 	}
 
 	delete impl;

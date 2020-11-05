@@ -15,11 +15,12 @@ namespace PaintsNow {
 		ZArchiveVirtual();
 		~ZArchiveVirtual() override;
 
+		bool Exists(const String& path) const;
 		String GetFullPath(const String& path) const override;
 		bool Mount(const String& basePath, IArchive* baseArchive) override;
 		bool Unmount(const String& prefix, IArchive* archive) override;
-		IStreamBase* Open(const String& uri, bool write, size_t& length, uint64_t* lastModifiedTime = nullptr) override;
-		void Query(const String& uri, const TWrapper<void, bool, const String&>& wrapper) const override;
+		IStreamBase* Open(const String& path, bool write, uint64_t& length, uint64_t* lastModifiedTime = nullptr) override;
+		void Query(const String& uri, const TWrapper<void, const String&>& wrapper) const override;
 		bool IsReadOnly() const override;
 		bool Delete(const String& uri) override;
 

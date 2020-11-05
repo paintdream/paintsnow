@@ -333,7 +333,7 @@ void PhaseComponent::CoTaskWriteDebugTexture(Engine& engine, uint32_t index, Byt
 	if (!debugPath.empty()) {
 		std::stringstream ss;
 		ss << debugPath << "phase_" << index << ".png";
-		size_t length;
+		uint64_t length;
 		IStreamBase* stream = engine.interfaces.archive.Open(ss.str(), true, length);
 		IRender::Resource::TextureDescription& description = texture->description;
 		IImage& image = engine.interfaces.image;
@@ -356,7 +356,7 @@ void PhaseComponent::CoTaskWriteDebugTexture(Engine& engine, uint32_t index, Byt
 		
 		IImage::Image* png = image.Create(description.dimension.x(), description.dimension.y(), layout, format);
 		void* buffer = image.GetBuffer(png);
-		memcpy(buffer, data.GetData(), length);
+		memcpy(buffer, data.GetData(), safe_cast<size_t>(length));
 		image.Save(png, *stream, "png");
 		image.Delete(png);
 		// write png

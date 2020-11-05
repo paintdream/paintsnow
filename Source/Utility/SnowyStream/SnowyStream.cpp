@@ -41,11 +41,11 @@ void SnowyStream::Initialize() {
 	// Mount default drive
 	if (!defMount.empty()) {
 		IArchive& archive = interfaces.archive;
-		size_t length = 0;
+		uint64_t length = 0;
 		uint64_t modifiedTime = 0;
 		IStreamBase* stream = archive.Open(defMount, false, length, &modifiedTime);
 		if (stream != nullptr) {
-			TShared<File> file = TShared<File>::From(new File(stream, length, modifiedTime));
+			TShared<File> file = TShared<File>::From(new File(stream, safe_cast<size_t>(length), modifiedTime));
 			IArchive* ar = subArchiveCreator(*file->GetStream(), file->GetLength());
 			defMountInstance = TShared<Mount>::From(new Mount(archive, "", ar, file));
 		} else {
@@ -195,7 +195,7 @@ void SnowyStream::RequestFileExists(IScript::Request& request, const String& pat
 	bridgeSunset.GetKernel().YieldCurrentWarp();
 
 	IArchive& archive = interfaces.archive;
-	size_t length;
+	uint64_t length;
 	IStreamBase* stream = archive.Open(path, false, length);
 	bool ret = stream != nullptr;
 	if (ret) {
@@ -209,14 +209,16 @@ void SnowyStream::RequestFileExists(IScript::Request& request, const String& pat
 
 void SnowyStream::RequestFetchFileData(IScript::Request& request, const String& path) {
 	bridgeSunset.GetKernel().YieldCurrentWarp();
-	size_t length;
+	uint64_t length;
 	IArchive& archive = interfaces.archive;
 	IStreamBase* stream = archive.Open(path, false, length);
 	bool success = false;
 	if (stream != nullptr) {
 		String buf;
-		buf.resize(length);
-		if (stream->Read(const_cast<char*>(buf.data()), length)) {
+		size_t len = safe_cast<size_t>(length);
+		buf.resize(len);
+
+		if (stream->Read(const_cast<char*>(buf.data()), len)) {
 			stream->ReleaseObject();
 			request.DoLock();
 			request << buf;
@@ -242,11 +244,11 @@ TShared<File> SnowyStream::RequestNewFile(IScript::Request& request, const Strin
 	CHECK_REFERENCES_NONE();
 	bridgeSunset.GetKernel().YieldCurrentWarp();
 	IArchive& archive = interfaces.archive;
-	size_t length = 0;
+	uint64_t length = 0;
 	uint64_t modifiedTime = 0;
 	IStreamBase* stream = path == ":memory:" ? new MemoryStream(0x1000, true) : archive.Open(path, write, length, &modifiedTime);
 	if (stream != nullptr) {
-		return TShared<File>::From(new File(stream, length, modifiedTime));
+		return TShared<File>::From(new File(stream, safe_cast<size_t>(length), modifiedTime));
 	} else {
 		return nullptr;
 	}
@@ -353,10 +355,8 @@ void SnowyStream::RequestSeekFile(IScript::Request& request, IScript::Delegate<F
 
 struct QueryHandler {
 	QueryHandler(const String& p, IScript::Request& r) : prefix(p), request(r) {}
-	void Accept(bool isDir, const String& path) {
-		String t = path;
-		if (isDir) t += "/";
-		request << t;
+	void Accept(const String& path) {
+		request << path;
 	}
 
 	const String prefix;
