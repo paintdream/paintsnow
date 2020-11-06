@@ -146,7 +146,7 @@ void RemoteProxy::Stop() {
 	if (dispatcher != nullptr) {
 		tunnel.DeactivateDispatcher(dispatcher);
 
-		IThread::Thread* thread = (IThread::Thread*)dispThread.exchange(nullptr, std::memory_order_release);
+		IThread::Thread* thread = dispThread.exchange(nullptr, std::memory_order_release);
 		if (thread != nullptr) {
 			threadApi.Wait(thread);
 			threadApi.DeleteThread(thread);
@@ -182,7 +182,7 @@ bool RemoteProxy::ThreadProc(IThread::Thread* thread, size_t context) {
 	tunnel.DeactivateListener(listener);
 	tunnel.CloseListener(listener);
 
-	IThread::Thread* t = (IThread::Thread*)dispThread.exchange(nullptr, std::memory_order_release);
+	IThread::Thread* t = dispThread.exchange(nullptr, std::memory_order_release);
 	if (t != nullptr) {
 		assert(t == thread);
 		threadApi.DeleteThread(t);

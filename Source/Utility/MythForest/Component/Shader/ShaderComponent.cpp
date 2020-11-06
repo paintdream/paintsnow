@@ -31,14 +31,14 @@ void ShaderComponent::SetCallback(IScript::Request& request, IScript::Request::R
 
 void ShaderComponent::Uninitialize(Engine& engine, Entity* entity) {
 	if (compileCallbackRef) {
+		engine.interfaces.script.DoLock();
 		if (!engine.interfaces.script.IsClosing()) {
 			IScript::Request& request = engine.interfaces.script.GetDefaultRequest();
-			request.DoLock();
 			request.Dereference(compileCallbackRef);
-			request.UnLock();
 		} else {
 			compileCallbackRef = IScript::Request::Ref();
 		}
+		engine.interfaces.script.UnLock();
 	}
 
 	BaseClass::Uninitialize(engine, entity);
