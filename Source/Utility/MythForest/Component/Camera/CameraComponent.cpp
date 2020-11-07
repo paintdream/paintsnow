@@ -107,6 +107,7 @@ void CameraComponent::Uninitialize(Engine& engine, Entity* entity) {
 	if (rootEntity == entity) {
 		rootEntity = nullptr;
 	} else {
+		/*
 		if (Flag().load(std::memory_order_acquire) & CAMERACOMPONENT_UPDATE_COLLECTING) {
 			Kernel& kernel = engine.GetKernel();
 			ThreadPool& threadPool = kernel.threadPool;
@@ -129,7 +130,7 @@ void CameraComponent::Uninitialize(Engine& engine, Entity* entity) {
 					}
 				}
 			}
-		}
+		}*/
 
 		RenderPort* port = renderFlowComponent->BeginPort(cameraViewPortName);
 		if (port != nullptr) {

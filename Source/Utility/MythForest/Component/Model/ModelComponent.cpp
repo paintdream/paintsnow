@@ -84,11 +84,11 @@ void ModelComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTe
 				drawCallTemplates.emplace_back(OutputRenderData());
 
 				OutputRenderData& drawCall = drawCallTemplates.back();
-				TShared<ShaderResource> shaderInstance = materialResource->Instantiate(meshResource, drawCall.drawCallDescription);
+				std::vector<Bytes> uniformBufferData;
+				TShared<ShaderResource> shaderInstance = materialResource->Instantiate(meshResource, drawCall.drawCallDescription, uniformBufferData);
 				drawCall.shaderResource = shaderInstance;
 
 				uint32_t orgSize = safe_cast<uint32_t>(drawCallTemplates.size());
-				const std::vector<Bytes>& uniformBufferData = materialResource->bufferData;
 				std::vector<IRender::Resource::DrawCallDescription::BufferRange> bufferRanges(uniformBufferData.size());
 				for (size_t n = 0; n < uniformBufferData.size(); n++) {
 					const Bytes& data = uniformBufferData[n];

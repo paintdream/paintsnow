@@ -22,13 +22,12 @@ namespace PaintsNow {
 		void Detach(IRender& render, void* deviceContext) override;
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 
-		TShared<ShaderResource> Instantiate(const TShared<MeshResource>& mesh, IRender::Resource::DrawCallDescription& drawCallTemplate);
+		TShared<ShaderResource> Instantiate(const TShared<MeshResource>& mesh, IRender::Resource::DrawCallDescription& drawCallTemplate, std::vector<Bytes>& bufferData);
 		TShared<MaterialResource> CloneWithOverrideShader(const TShared<ShaderResource>& override);
 
 		IAsset::Material materialParams;
 		TShared<ShaderResource> originalShaderResource;
 		std::vector<TShared<TextureResource> > textureResources;
-		std::vector<Bytes> bufferData;
 	};
 }
 

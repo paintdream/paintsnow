@@ -38,8 +38,12 @@ int main(int argc, char* argv[]) {
 		char target[MAX_PATH * 2] = "";
 		char current[MAX_PATH * 2] = "";
 		::GetCurrentDirectoryA(MAX_PATH * 2, current);
-		::PathRelativePathToA(target, current, FILE_ATTRIBUTE_DIRECTORY, argv[1], FILE_ATTRIBUTE_NORMAL);
-		String mount = String("--Mount=") + target;
+		String mount;
+		if (::PathRelativePathToA(target, current, FILE_ATTRIBUTE_DIRECTORY, argv[1], FILE_ATTRIBUTE_NORMAL)) {
+			mount = String("--Mount=") + target;
+		} else {
+			mount = String("--Mount=") + argv[1];
+		}
 
 		char* dragArgs[] = {
 			argv[0],

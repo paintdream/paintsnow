@@ -6,7 +6,7 @@ using namespace PaintsNow;
 
 MaterialResource::MaterialResource(ResourceManager& manager, const String& uniqueID) : BaseClass(manager, uniqueID) {}
 
-TShared<ShaderResource> MaterialResource::Instantiate(const TShared<MeshResource>& mesh, IRender::Resource::DrawCallDescription& drawCallTemplate) {
+TShared<ShaderResource> MaterialResource::Instantiate(const TShared<MeshResource>& mesh, IRender::Resource::DrawCallDescription& drawCallTemplate, std::vector<Bytes>& bufferData) {
 	assert(mesh);
 
 	TShared<ShaderResource> mutationShaderResource;
@@ -99,11 +99,6 @@ size_t MaterialResource::ReportDeviceMemoryUsage() const {
 	for (size_t i = 0; i < textureResources.size(); i++) {
 		const TShared<TextureResource>& texture = textureResources[i];
 		size += texture->ReportDeviceMemoryUsage();
-	}
-
-	// bufferData will be uploaded further in constructing drawcalls.
-	for (size_t j = 0; j < bufferData.size(); j++) {
-		size += bufferData[j].GetSize();
 	}
 
 	return size;
