@@ -68,6 +68,28 @@ namespace PaintsNow {
 		/// <returns> The count of warps </returns>
 		uint32_t RequestGetWarpCount(IScript::Request& request);
 
+		/// <summary>
+		/// Update tiny warp (danger!)
+		/// </summary>
+		/// <param name="source"> the source object </param>
+		/// <param name="index"> the new warp index </param>
+		void RequestSetWarpIndex(IScript::Request& request, IScript::Delegate<WarpTiny> source, uint32_t index);
+
+		/// <summary>
+		/// Get tiny warp
+		/// </summary>
+		/// <param name="source"> the source object </param>
+		/// <returns> the warp index of source object </returns>
+		uint32_t RequestGetWarpIndex(IScript::Request& request, IScript::Delegate<WarpTiny> source);
+
+
+		/// <summary>
+		/// Clone an object
+		/// </summary>
+		/// <param name="source"> the source object </param>
+		/// <returns> The cloned object </returns>
+		TShared<SharedTiny> RequestClone(IScript::Request& request, IScript::Delegate<SharedTiny> source);
+
 	public:
 		ThreadPool threadPool;
 		Kernel kernel;

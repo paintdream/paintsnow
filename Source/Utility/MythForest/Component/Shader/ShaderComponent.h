@@ -21,6 +21,7 @@ namespace PaintsNow {
 		void SetCode(Engine& engine, const String& stage, const String& code, const std::vector<std::pair<String, String> >& config);
 		void SetComplete(Engine& engine);
 		void SetCallback(IScript::Request& request, IScript::Request::Ref callback);
+		TShared<MaterialResource> ExportMaterial(Engine& engine, const TShared<MaterialResource>& materialTemplate);
 
 	protected:
 		void OnShaderCompiled(IRender::Resource* resource, IRender::Resource::ShaderDescription&, IRender::Resource::ShaderDescription::Stage, const String&, const String&);

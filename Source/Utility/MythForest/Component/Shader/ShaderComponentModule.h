@@ -56,5 +56,13 @@ namespace PaintsNow {
 		/// <param name="shaderComponent"> the ShaderComponent </param>
 		/// <param name="callback"> compilation callback </param>
 		void RequestSetCallback(IScript::Request& request, IScript::Delegate<ShaderComponent> shaderComponent, IScript::Request::Ref callback);
+
+		/// <summary>
+		/// Export a new material with shader in ShaderComponent
+		/// </summary>
+		/// <param name="shaderComponent"> the ShaderComponent </param>
+		/// <param name="materialResource"> reference material, can be null </param>
+		/// <returns> the new material </returns>
+		TShared<MaterialResource> RequestExportMaterial(IScript::Request& request, IScript::Delegate<ShaderComponent> shaderComponent, IScript::Delegate<MaterialResource> materialResource);
 	};
 }

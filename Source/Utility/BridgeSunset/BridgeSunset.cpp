@@ -45,6 +45,9 @@ TObject<IReflect>& BridgeSunset::operator () (IReflect& reflect) {
 		ReflectMethod(RequestExecuteGraph)[ScriptMethod = "ExecuteGraph"];
 		ReflectMethod(RequestQueueRoutine)[ScriptMethod = "QueueRoutine"];
 		ReflectMethod(RequestGetWarpCount)[ScriptMethod = "GetWarpCount"];
+		ReflectMethod(RequestSetWarpIndex)[ScriptMethod = "UpdateWarpIndex"];
+		ReflectMethod(RequestGetWarpIndex)[ScriptMethod = "GetWarpIndex"];
+		ReflectMethod(RequestClone)[ScriptMethod = "Clone"];
 	}
 
 	return *this;
@@ -170,3 +173,25 @@ void BridgeSunset::RequestExecuteGraph(IScript::Request& request, IScript::Deleg
 
 	graph->Commit();
 }
+
+void BridgeSunset::RequestSetWarpIndex(IScript::Request& request, IScript::Delegate<WarpTiny> source, uint32_t index) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(source);
+
+	source->SetWarpIndex(index);
+}
+
+uint32_t BridgeSunset::RequestGetWarpIndex(IScript::Request& request, IScript::Delegate<WarpTiny> source) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(source);
+
+	return source->GetWarpIndex();
+}
+
+TShared<SharedTiny> BridgeSunset::RequestClone(IScript::Request& request, IScript::Delegate<SharedTiny> source) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(source);
+
+	return static_cast<SharedTiny*>(source->Clone());
+}
+

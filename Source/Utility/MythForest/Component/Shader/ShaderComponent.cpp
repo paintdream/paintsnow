@@ -96,3 +96,13 @@ void ShaderComponent::OnShaderCompiled(IRender::Resource* resource, IRender::Res
 		ReleaseObject();
 	}
 }
+
+TShared<MaterialResource> ShaderComponent::ExportMaterial(Engine& engine, const TShared<MaterialResource>& materialTemplate) {
+	// create anouymous material
+	TShared<MaterialResource> materialResource = engine.snowyStream.CreateReflectedResource(UniqueType<MaterialResource>(), "", false);
+	materialResource->materialParams = materialTemplate->materialParams;
+	materialResource->textureResources = materialTemplate->textureResources;
+	materialResource->originalShaderResource = customMaterialShader();
+
+	return materialResource;
+}

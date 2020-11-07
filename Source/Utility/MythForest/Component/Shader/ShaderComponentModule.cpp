@@ -13,6 +13,7 @@ TObject<IReflect>& ShaderComponentModule::operator () (IReflect& reflect) {
 		ReflectMethod(RequestSetInput)[ScriptMethod = "SetInput"];
 		ReflectMethod(RequestSetCallback)[ScriptMethod = "SetCallback"];
 		ReflectMethod(RequestSetComplete)[ScriptMethod = "SetComplete"];
+		ReflectMethod(RequestExportMaterial)[ScriptMethod = "ExportMaterial"];
 	}
 
 	return *this;
@@ -53,4 +54,11 @@ void ShaderComponentModule::RequestSetCallback(IScript::Request& request, IScrip
 	CHECK_DELEGATE(shaderComponent);
 
 	shaderComponent->SetCallback(request, callback);
+}
+
+TShared<MaterialResource> ShaderComponentModule::RequestExportMaterial(IScript::Request& request, IScript::Delegate<ShaderComponent> shaderComponent, IScript::Delegate<MaterialResource> materialResource) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(shaderComponent);
+
+	return shaderComponent->ExportMaterial(engine, materialResource.Get());
 }
