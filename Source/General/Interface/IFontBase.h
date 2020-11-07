@@ -19,7 +19,7 @@ typedef unsigned __int64 uint64_t;
 
 namespace PaintsNow {
 	class IStreamBase;
-	class IFontBase : public IDevice {
+	class pure_interface IFontBase : public IDevice {
 	public:
 		typedef uint32_t FONTCHAR;
 

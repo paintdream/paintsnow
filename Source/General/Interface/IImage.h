@@ -13,7 +13,7 @@
 
 namespace PaintsNow {
 	class IArchive;
-	class IImage : public IDevice {
+	class pure_interface IImage : public IDevice {
 	public:
 		~IImage() override;
 		class Image {};

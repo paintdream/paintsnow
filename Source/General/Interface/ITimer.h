@@ -12,7 +12,7 @@
 #include "../../Core/Interface/IDevice.h"
 
 namespace PaintsNow {
-	class ITimer : public IDevice {
+	class pure_interface ITimer : public IDevice {
 	public:
 		~ITimer() override;
 		struct Timer {};

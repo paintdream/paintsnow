@@ -11,7 +11,7 @@
 #include "../../Core/Interface/IDevice.h"
 
 namespace PaintsNow {
-	class IAudio : public IDevice {
+	class pure_interface IAudio : public IDevice {
 	public:
 		class Buffer {};
 		class Source {};

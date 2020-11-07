@@ -8,7 +8,7 @@
 #include "ITunnel.h"
 
 namespace PaintsNow {
-	class INetwork : public ITunnel {
+	class pure_interface INetwork : public ITunnel {
 	public:
 		~INetwork() override;
 		class Httpd {};

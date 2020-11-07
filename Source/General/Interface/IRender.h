@@ -16,7 +16,7 @@
 namespace PaintsNow {
 	class IShader;
 	class IRender;
-	class IRender : public IDevice {
+	class pure_interface IRender : public IDevice {
 	public:
 		~IRender() override;
 		class Device {};

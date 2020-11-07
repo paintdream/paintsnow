@@ -13,7 +13,7 @@
 #include <map>
 
 namespace PaintsNow {
-	class IShader : public IReflectObjectComplex {
+	class pure_interface IShader : public IReflectObjectComplex {
 	public:
 		virtual String GetShaderText();
 		static int WorkGroupSize;

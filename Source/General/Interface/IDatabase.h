@@ -13,7 +13,7 @@
 #include <string>
 
 namespace PaintsNow {
-	class IDatabase : public IDevice {
+	class pure_interface IDatabase : public IDevice {
 	public:
 		~IDatabase() override;
 		class Database {};

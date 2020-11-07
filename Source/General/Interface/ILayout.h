@@ -8,7 +8,7 @@
 #include <list>
 
 namespace PaintsNow {
-	class ILayout {
+	class pure_interface ILayout {
 	public:
 		class Target {
 		public:

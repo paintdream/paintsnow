@@ -10,7 +10,7 @@
 #include "../../Core/Interface/IDevice.h"
 
 namespace PaintsNow {
-	class IFrame : public IDevice {
+	class pure_interface IFrame : public IDevice {
 	public:
 		struct EventMouse {
 			EventMouse(bool d = true, bool m = false, bool l = true, bool w = false, const Short2& p = Short2(0, 0));

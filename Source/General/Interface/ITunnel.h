@@ -12,7 +12,7 @@
 #include <list>
 
 namespace PaintsNow {
-	class ITunnel : public IDevice {
+	class pure_interface ITunnel : public IDevice {
 	public:
 		~ITunnel() override;
 		class Connection {};

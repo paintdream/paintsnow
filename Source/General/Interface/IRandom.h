@@ -10,7 +10,7 @@
 #include "../../Core/Interface/IDevice.h"
 
 namespace PaintsNow {
-	class IRandom : public IDevice {
+	class pure_interface IRandom : public IDevice {
 	public:
 		~IRandom() override;
 		virtual void Seed(long seed) = 0;

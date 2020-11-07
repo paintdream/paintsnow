@@ -10,7 +10,7 @@
 #include <string>
 
 namespace PaintsNow {
-	class IDebugger : public IDevice {
+	class pure_interface IDebugger : public IDevice {
 	public:
 		~IDebugger() override;
 		virtual void SetDumpHandler(const String& path, const TWrapper<bool>& handler) = 0;
