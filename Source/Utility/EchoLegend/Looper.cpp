@@ -30,7 +30,7 @@ void Looper::AsyncActivate(IScript::Request& request) {
 	ReferenceObject();
 	AsyncInfo* info = new AsyncInfo(*request.GetScript(), this);
 	request.UnLock();
-	threadApi.NewThread(Wrap(this, &Looper::ActivateRoutine), reinterpret_cast<size_t>(info), true);
+	threadApi.NewThread(Wrap(this, &Looper::ActivateRoutine), reinterpret_cast<size_t>(info));
 }
 
 String Looper::EventToString(INetwork::EVENT event) {

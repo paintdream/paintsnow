@@ -81,10 +81,10 @@ void Queue::Post(IScript::Request& request, IScript::Request::Ref ref, int64_t t
 		request.Push();
 		request.Call(sync, *it, timeStamp, ref);
 		request.Pop();
-		assert(request.GetScript()->GetLockCount() == 1);
+		assert(request.GetScript()->IsLocked());
 	}
 
 	// release the reference
 	request.Dereference(ref);
-	assert(request.GetScript()->GetLockCount() == 1);
+	assert(request.GetScript()->IsLocked());
 }

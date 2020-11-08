@@ -53,7 +53,9 @@ void Engine::Clear() {
 	}
 
 	while (unitCount.load(std::memory_order_acquire) != 0) {
+		DoLock();
 		threadApi.Wait(finalizeEvent, mutex, 50);
+		UnLock();
 	}
 
 	for (std::unordered_map<String, Module*>::iterator ip = modules.begin(); ip != modules.end(); ++ip) {
@@ -127,7 +129,7 @@ Kernel& Engine::GetKernel() {
 void Engine::NotifyUnitConstruct(Unit* unit) {
 	unitCount.fetch_add(1, std::memory_order_relaxed);
 #if defined(_DEBUG)
-	static Unique entityUnique = UniqueType<Entity>::Get();
+	singleton Unique entityUnique = UniqueType<Entity>::Get();
 	if (unit->GetUnique() != entityUnique) return;
 
 	SpinLock(unitCritical);
@@ -143,7 +145,7 @@ void Engine::NotifyUnitDestruct(Unit* unit) {
 	}
 
 #if defined(_DEBUG)
-	static Unique entityUnique = UniqueType<Entity>::Get();
+	singleton Unique entityUnique = UniqueType<Entity>::Get();
 	if (unit->GetUnique() != entityUnique) return;
 
 	SpinLock(unitCritical);
@@ -155,7 +157,7 @@ void Engine::NotifyUnitDestruct(Unit* unit) {
 
 void Engine::NotifyUnitAttach(Unit* unit, Unit* parent) {
 #if defined(_DEBUG)
-	static Unique entityUnique = UniqueType<Entity>::Get();
+	singleton Unique entityUnique = UniqueType<Entity>::Get();
 	assert(unit->GetUnique() == entityUnique && parent->GetUnique() == entityUnique);
 
 	SpinLock(unitCritical);
@@ -179,7 +181,7 @@ void Engine::NotifyUnitAttach(Unit* unit, Unit* parent) {
 
 void Engine::NotifyUnitDetach(Unit* unit) {
 #if defined(_DEBUG)
-	static Unique entityUnique = UniqueType<Entity>::Get();
+	singleton Unique entityUnique = UniqueType<Entity>::Get();
 	assert(unit->GetUnique() == entityUnique);
 
 	SpinLock(unitCritical);

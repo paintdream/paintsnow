@@ -13,6 +13,10 @@ bool FontResource::LoadExternalResource(Interfaces& interfaces, IStreamBase& str
 	return streamBase.ReadBlock(const_cast<char*>(rawFontData.data()), length);
 }
 
+void FontResource::Refresh(IFontBase& fontBase, void* deviceContext) {
+
+}
+
 void FontResource::Attach(IFontBase& fontBase, void* deviceContext) {
 }
 

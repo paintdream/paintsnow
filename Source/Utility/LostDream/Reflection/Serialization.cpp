@@ -65,9 +65,8 @@ struct MetaSimplePersist : public TReflected<MetaSimplePersist<X>, MetaStreamPer
 		return streamBase << *object;
 	}
 
-	virtual const String& GetUniqueName() const override {
-		static String name = BaseClass::GetUnique()->GetBriefName();
-		return name;
+	virtual String GetUniqueName() const override {
+		return BaseClass::GetUnique()->GetBriefName();
 	}
 
 	template <class T, class D>
@@ -106,9 +105,8 @@ struct MetaSharedPersist : public TReflected<MetaSharedPersist<X>, MetaStreamPer
 		return streamBase << *(*object);
 	}
 
-	virtual const String& GetUniqueName() const override {
-		static String name = BaseClass::GetUnique()->GetBriefName();
-		return name;
+	virtual String GetUniqueName() const override {
+		return BaseClass::GetUnique()->GetBriefName();
 	}
 
 	template <class T, class D>

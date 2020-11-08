@@ -6,6 +6,10 @@ GraphicResourceBase::GraphicResourceBase(ResourceManager& manager, const String&
 
 GraphicResourceBase::~GraphicResourceBase() {}
 
+void GraphicResourceBase::Refresh(IRender& render, void* deviceContext) {
+
+}
+
 void GraphicResourceBase::Attach(IRender& render, void* deviceContext) {
 }
 

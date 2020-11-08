@@ -34,6 +34,6 @@ bool MetaUnitIdentifier::Write(IStreamBase& streamBase, const void* ptr) const {
 	return true;
 }
 
-const String& MetaUnitIdentifier::GetUniqueName() const {
+String MetaUnitIdentifier::GetUniqueName() const {
 	return uniqueName;
 }

@@ -15,7 +15,7 @@ namespace PaintsNow {
 		ZArchiveVirtual();
 		~ZArchiveVirtual() override;
 
-		bool Exists(const String& path) const;
+		bool Exists(const String& path) const override;
 		String GetFullPath(const String& path) const override;
 		bool Mount(const String& basePath, IArchive* baseArchive) override;
 		bool Unmount(const String& prefix, IArchive* archive) override;

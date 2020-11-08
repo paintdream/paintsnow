@@ -121,7 +121,7 @@ void Weaver::RpcPostResource(IScript::Request& request, const String& path, cons
 
 	if (resource) {
 		// Serialize it to disk
-		success = snowyStream.PersistResource(resource);
+		success = resource->Persist();
 	}
 
 	if (rpcCallback) {

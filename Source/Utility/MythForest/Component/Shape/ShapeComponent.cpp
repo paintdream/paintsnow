@@ -99,8 +99,8 @@ void ShapeComponent::Update(Engine& engine, const TShared<MeshResource>&resource
 
 	SnowyStream& snowyStream = engine.snowyStream;
 	Cleanup();
-	if (!snowyStream.MapResource(resource())) return;
 
+	if (!resource->Map()) return;
 	meshResource = resource;
 
 	IAsset::MeshCollection& meshCollection = meshResource->meshCollection;

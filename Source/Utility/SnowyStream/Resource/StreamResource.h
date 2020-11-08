@@ -13,6 +13,7 @@ namespace PaintsNow {
 	public:
 		StreamResource(ResourceManager& manager, const String& uniqueID);
 
+		void Refresh(IArchive& device, void* deviceContext) override;
 		void Download(IArchive& device, void* deviceContext) override;
 		void Upload(IArchive& device, void* deviceContext) override;
 		void Attach(IArchive& device, void* deviceContext) override;

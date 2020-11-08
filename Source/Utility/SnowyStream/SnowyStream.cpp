@@ -392,11 +392,6 @@ TShared<ResourceBase> SnowyStream::RequestNewResource(IScript::Request& request,
 	bridgeSunset.GetKernel().YieldCurrentWarp();
 
 	if (resource) {
-		if (!(resource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_UPLOADED) && !(resource->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release) & Tiny::TINY_MODIFIED)) {
-			assert(resource->Flag().load(std::memory_order_acquire) & Tiny::TINY_MODIFIED);
-			resource->GetResourceManager().InvokeUpload(resource());
-		}
-
 		return resource;
 	} else {
 		request.Error(String("Unable to create resource ") + path);
@@ -542,7 +537,7 @@ TShared<ResourceBase> SnowyStream::RequestCloneResource(IScript::Request& reques
 	CHECK_DELEGATE(resource);
 	
 	ResourceManager& resourceManager = resource->GetResourceManager();
-	TShared<ResourceBase> exist = resourceManager.SafeLoadExist(path);
+	TShared<ResourceBase> exist = resourceManager.LoadExistSafe(path);
 	if (!exist) {
 		TShared<ResourceBase> p = TShared<ResourceBase>::From(static_cast<ResourceBase*>(resource->Clone()));
 		if (p) {
@@ -581,7 +576,7 @@ void SnowyStream::RequestPersistResource(IScript::Request& request, IScript::Del
 	CHECK_DELEGATE(resource);
 	bridgeSunset.GetKernel().YieldCurrentWarp();
 
-	bool result = PersistResource(resource.Get(), extension);
+	bool result = SaveResource(resource.Get(), extension);
 	request.DoLock();
 	request << result;
 	request.UnLock();
@@ -590,7 +585,7 @@ void SnowyStream::RequestPersistResource(IScript::Request& request, IScript::Del
 struct CompressTask : public TaskOnce {
 	CompressTask(SnowyStream& s) : snowyStream(s) {}
 	void Execute(void* context) override {
-		snowyStream.MapResource(resource);
+		resource->Map();
 		bool success = resource->Compress(compressType);
 		if (callback) {
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
@@ -606,7 +601,7 @@ struct CompressTask : public TaskOnce {
 			Finalize(context);
 		}
 
-		snowyStream.UnmapResource(resource);
+		resource->Unmap();
 		delete this;
 	}
 
@@ -745,7 +740,7 @@ bool SnowyStream::RegisterResourceManager(Unique unique, ResourceManager* resour
 	}
 }
 
-bool SnowyStream::RegisterResourceSerializer(Unique unique, const String& extension, ResourceSerializerBase* serializer) {
+bool SnowyStream::RegisterResourceSerializer(Unique unique, const String& extension, ResourceCreator* serializer) {
 	if (resourceSerializers.count(extension) == 0) {
 		resourceSerializers[extension] = std::make_pair(unique, serializer);
 		return true;
@@ -771,7 +766,7 @@ TShared<ResourceBase> SnowyStream::CreateResource(const String& path, const Stri
 	}
 
 	// Find resource serializer
-	std::unordered_map<String, std::pair<Unique, TShared<ResourceSerializerBase> > >::iterator p = resourceSerializers.find(extension);
+	std::unordered_map<String, std::pair<Unique, TShared<ResourceCreator> > >::iterator p = resourceSerializers.find(extension);
 	IArchive& archive = interfaces.archive;
 	IFilterBase& protocol = interfaces.assetFilterBase;
 
@@ -780,12 +775,67 @@ TShared<ResourceBase> SnowyStream::CreateResource(const String& path, const Stri
 		// query manager
 		std::map<Unique, TShared<ResourceManager> >::iterator t = resourceManagers.find((*p).second.first);
 		assert(t != resourceManagers.end());
-		if (sourceStream == nullptr) {
-			resource = (*p).second.second->DeserializeFromArchive(*(*t).second(), archive, location, protocol, openExisting, flag);
-		} else {
-			assert(!openExisting);
-			resource = (*p).second.second->Deserialize(*(*t).second(), location, protocol, flag, sourceStream);
+		ResourceManager& resourceManager = *(*t).second();
+
+		TShared<ResourceBase> existed = resourceManager.LoadExistSafe(location);
+		if (existed) {
+			// Create failed, already exists
+			if (!openExisting) {
+				return nullptr;
+			} else {
+				return existed;
+			}
 		}
+
+		resource = (*p).second.second->Create(resourceManager, location);
+		resource->Flag().fetch_or(flag, std::memory_order_relaxed);
+
+		// double check
+		resourceManager.DoLock();
+		existed = resourceManager.LoadExist(location);
+		if (existed) {
+			resourceManager.UnLock();
+
+			if (openExisting) {
+				return existed;
+			} else {
+				return nullptr;
+			}
+		}
+
+		resourceManager.Insert(resource);
+		resourceManager.UnLock();
+
+		IStreamBase* localStream = nullptr;
+		if (sourceStream == nullptr) {
+			if (openExisting) {
+				uint64_t length;
+				sourceStream = localStream = archive.Open(resource->GetLocation() + "." + (*p).second.second->GetExtension() + (*t).second->GetLocationPostfix(), false, length);
+			}
+		}
+
+		// Load data and upload it if provided
+		if (sourceStream != nullptr) {
+			IStreamBase* filter = protocol.CreateFilter(*sourceStream);
+			assert(filter != nullptr);
+			SpinLock(resource->critical);
+			if (!(*filter >> *resource())) {
+				fprintf(stderr, "Resource load failed: %s\n", location.c_str());
+			}
+			SpinUnLock(resource->critical);
+
+			filter->ReleaseObject();
+
+			resource->Flag().fetch_or(ResourceBase::TINY_MODIFIED, std::memory_order_relaxed);
+			resourceManager.InvokeRefresh(resource());
+			resourceManager.InvokeUpload(resource());
+
+			if (localStream != nullptr) {
+				localStream->ReleaseObject();
+			}
+		}
+
+		return resource;
 	} else {
 		return nullptr; // unknown resource type
 	}
@@ -797,43 +847,70 @@ String SnowyStream::GetReflectedExtension(Unique unique) {
 	return unique->GetBriefName();
 }
 
-void SnowyStream::UnmapResource(const TShared<ResourceBase>& resource) {
-	// Find resource serializer
-	assert(resource);
-	resource->Unmap();
-}
-
-bool SnowyStream::MapResource(const TShared<ResourceBase>& resource, const String& extension) {
+bool SnowyStream::LoadResource(const TShared<ResourceBase>& resource, const String& extension) {
 	// Find resource serializer
 	assert(resource);
 	String typeExtension = extension.empty() ? GetReflectedExtension(resource->GetUnique()) : extension;
 	IArchive& archive = interfaces.archive;
 	IFilterBase& protocol = interfaces.assetFilterBase;
 
-	std::unordered_map<String, std::pair<Unique, TShared<ResourceSerializerBase> > >::iterator p = resourceSerializers.find(typeExtension);
+	std::unordered_map<String, std::pair<Unique, TShared<ResourceCreator> > >::iterator p = resourceSerializers.find(typeExtension);
 	if (p != resourceSerializers.end()) {
 		// query manager
 		std::map<Unique, TShared<ResourceManager> >::iterator t = resourceManagers.find((*p).second.first);
 		assert(t != resourceManagers.end());
-		return (*p).second.second->MapFromArchive(resource(), archive, protocol, resource->GetLocation());
+
+		uint64_t length;
+		IStreamBase* stream = archive.Open(resource->GetLocation() + "." + (*p).second.second->GetExtension() + (*t).second->GetLocationPostfix(), false, length);
+
+		bool result = false;
+		if (stream != nullptr) {
+			IStreamBase* filter = protocol.CreateFilter(*stream);
+			assert(filter != nullptr);
+			SpinLock(resource->critical);
+			result = *filter >> *resource();
+			SpinUnLock(resource->critical);
+			filter->ReleaseObject();
+			stream->ReleaseObject();
+
+			ResourceManager& resourceManager = *(*t).second();
+			resourceManager.InvokeRefresh(resource());
+		}
+
+		return result;
 	} else {
 		return false;
 	}
 }
 
-bool SnowyStream::PersistResource(const TShared<ResourceBase>& resource, const String& extension) {
+bool SnowyStream::SaveResource(const TShared<ResourceBase>& resource, const String& extension) {
 	// Find resource serializer
 	assert(resource);
 	String typeExtension = extension.empty() ? GetReflectedExtension(resource->GetUnique()) : extension;
 	IArchive& archive = interfaces.archive;
 	IFilterBase& protocol = interfaces.assetFilterBase;
 
-	std::unordered_map<String, std::pair<Unique, TShared<ResourceSerializerBase> > >::iterator p = resourceSerializers.find(typeExtension);
+	std::unordered_map<String, std::pair<Unique, TShared<ResourceCreator> > >::iterator p = resourceSerializers.find(typeExtension);
 	if (p != resourceSerializers.end()) {
 		// query manager
 		std::map<Unique, TShared<ResourceManager> >::iterator t = resourceManagers.find((*p).second.first);
 		assert(t != resourceManagers.end());
-		return (*p).second.second->SerializeToArchive(resource(), archive, protocol, resource->GetLocation());
+
+		uint64_t length;
+		IStreamBase* stream = archive.Open(resource->GetLocation() + "." + (*p).second.second->GetExtension() + (*t).second->GetLocationPostfix(), true, length);
+
+		bool result = false;
+		if (stream != nullptr) {
+			IStreamBase* filter = protocol.CreateFilter(*stream);
+			assert(filter != nullptr);
+			SpinLock(resource->critical);
+			result = *filter << *resource();
+			SpinUnLock(resource->critical);
+			filter->ReleaseObject();
+			stream->ReleaseObject();
+		}
+
+		return result;
 	} else {
 		return false;
 	}
@@ -867,7 +944,6 @@ void SnowyStream::CreateBuiltinMesh(const String& path, const Float3* vertices, 
 	IRender& render = interfaces.render;
 
 	if (meshResource) {
-
 		meshResource->meshCollection.vertices.assign(vertices, vertices + vertexCount);
 		meshResource->meshCollection.indices.assign(indices, indices + indexCount);
 
@@ -943,10 +1019,6 @@ bool MetaResourceExternalPersist::Read(IStreamBase& streamBase, void* ptr) const
 	String path;
 	if (streamBase >> path) {
 		resource = snowyStream.CreateResource(path);
-		if (resource && !(resource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_UPLOADED) && !(resource->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release) & Tiny::TINY_MODIFIED)) {
-			assert(resource->Flag().load(std::memory_order_acquire) & Tiny::TINY_MODIFIED);
-			resource->GetResourceManager().InvokeUpload(resource());
-		}
 	}
 
 	return resource;
@@ -966,7 +1038,7 @@ bool MetaResourceExternalPersist::Write(IStreamBase& streamBase, const void* ptr
 	return streamBase << path;
 }
 
-const String& MetaResourceExternalPersist::GetUniqueName() const {
+String MetaResourceExternalPersist::GetUniqueName() const {
 	return uniqueName;
 }
 

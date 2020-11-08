@@ -345,7 +345,6 @@ void Loader::Load(const CmdLine& cmdLine) {
 	}
 
 	thread = threadFactory(); // precreate thread
-	mainThread = thread->OpenCurrentThread();
 	{
 		frame = frameFactory();
 		IScript* script = scriptFactory();
@@ -407,7 +406,6 @@ void Loader::Load(const CmdLine& cmdLine) {
 		frame->ReleaseDevice();
 	}
 
-	thread->DeleteThread(mainThread);
 	delete thread;
 }
 

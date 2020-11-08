@@ -289,10 +289,10 @@ class MapperSqlite : public IReflect {
 public:
 	MapperSqlite(sqlite3_stmt* s, const std::vector<String>& n) : IReflect(true, false), stmt(s), names(n), counter(0) {}
 	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override {
-		static Unique intType = UniqueType<int>::Get();
-		static Unique strType = UniqueType<String>::Get();
-		static Unique cstrType = UniqueType<const char*>::Get();
-		static Unique doubleType = UniqueType<double>::Get();
+		singleton Unique intType = UniqueType<int>::Get();
+		singleton Unique strType = UniqueType<String>::Get();
+		singleton Unique cstrType = UniqueType<const char*>::Get();
+		singleton Unique doubleType = UniqueType<double>::Get();
 
 		size_t offset = (const char*)ptr - (const char*)base;
 		if (typeID == intType) {

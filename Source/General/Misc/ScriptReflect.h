@@ -25,7 +25,7 @@ namespace PaintsNow {
 		public:
 			typedef T type;
 			Unique GetValueType() const override {
-				static Unique u = UniqueType<T>::Get();
+				singleton Unique u = UniqueType<T>::Get();
 				return u;
 			}
 
@@ -53,7 +53,7 @@ namespace PaintsNow {
 		static const std::unordered_map<Unique, Type>& GetGlobalMap();
 		template <class T>
 		ScriptReflect& operator >> (T& object) {
-			static Unique u = UniqueType<T>::Get();
+			singleton Unique u = UniqueType<T>::Get();
 			Perform(object, &object, u);
 			return *this;
 		}
@@ -61,7 +61,7 @@ namespace PaintsNow {
 		template <class T>
 		ScriptReflect& operator << (const T& object) {
 			assert(!read);
-			static Unique u = UniqueType<T>::Get();
+			singleton Unique u = UniqueType<T>::Get();
 			Perform(object, const_cast<T*>(&object), u);
 			return *this;
 		}

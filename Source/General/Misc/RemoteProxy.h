@@ -109,7 +109,7 @@ namespace PaintsNow {
 		}
 		Value(const T& v) : value(v) {}
 		Unique QueryValueUnique() const override {
-			static Unique type = UniqueType<T>::Get();
+			singleton Unique type = UniqueType<T>::Get();
 			return type;
 		}
 
@@ -133,7 +133,7 @@ namespace PaintsNow {
 		}
 		Value(const char*& t) : value(t) {}
 		Unique QueryValueUnique() const override {
-			static Unique u = UniqueType<String>::Get();;
+			singleton Unique u = UniqueType<String>::Get();;
 			return u;
 		}
 
@@ -222,7 +222,7 @@ namespace PaintsNow {
 		Value(const TableImpl& t) : value(t) {}
 
 		Unique QueryValueUnique() const override {
-			static Unique u = UniqueType<TableImpl>::Get();
+			singleton Unique u = UniqueType<TableImpl>::Get();
 			return u;
 		}
 

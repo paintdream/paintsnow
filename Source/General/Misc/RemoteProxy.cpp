@@ -117,7 +117,7 @@ public:
 
 	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override {}
 	void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {
-		static Unique typedBaseType = UniqueType<IScript::MetaMethod::TypedBase>::Get();
+		singleton Unique typedBaseType = UniqueType<IScript::MetaMethod::TypedBase>::Get();
 		for (const MetaChainBase* t = meta; t != nullptr; t = t->GetNext()) {
 			const MetaNodeBase* node = t->GetNode();
 			if (!node->IsBasicObject() && node->GetUnique() == typedBaseType) {
@@ -208,7 +208,7 @@ bool RemoteProxy::Run() {
 	}
 
 	assert(dispThread.load(std::memory_order_relaxed) == nullptr);
-	dispThread.store(threadApi.NewThread(Wrap(this, &RemoteProxy::ThreadProc), 0, false), std::memory_order_relaxed);
+	dispThread.store(threadApi.NewThread(Wrap(this, &RemoteProxy::ThreadProc), 0), std::memory_order_relaxed);
 
 	return dispThread.load(std::memory_order_relaxed) != nullptr;
 }
@@ -617,7 +617,7 @@ std::vector<IScript::Request::Key> RemoteProxy::Request::Enumerate() {
 
 static int IncreaseTableIndex(std::vector<Variant>& buffer, int count = 1) {
 	Variant& var = buffer[buffer.size() - 1];
-	static Unique intType = UniqueType<int>::Get();
+	singleton Unique intType = UniqueType<int>::Get();
 	assert(var->QueryValueUnique() == intType);
 	int& val = static_cast<Value<int>*>(var.Get())->value;
 
@@ -639,7 +639,7 @@ inline void Write(RemoteProxy::Request& request, C& value) {
 
 	if (tableLevel != 0) {
 		Variant& arr = buffer[buffer.size() - 2];
-		static Unique tableType = UniqueType<TableImpl>::Get();
+		singleton Unique tableType = UniqueType<TableImpl>::Get();
 		assert(arr.Get()->QueryValueUnique() == tableType);
 
 		TableImpl& table = (static_cast<Value<TableImpl>*>(arr.Get()))->value;
@@ -667,7 +667,7 @@ IScript::Request& RemoteProxy::Request::operator << (const TableStart&) {
 
 	if (tableLevel != 0) {
 		Variant& arr = buffer[buffer.size() - 2];
-		static Unique tableType = UniqueType<TableImpl>::Get();
+		singleton Unique tableType = UniqueType<TableImpl>::Get();
 		assert(arr.Get()->QueryValueUnique() == tableType);
 
 		TableImpl& table = (static_cast<Value<TableImpl>*>(arr.Get()))->value;
@@ -700,7 +700,7 @@ inline void Read(RemoteProxy::Request& request, C& value) {
 
 	if (tableLevel != 0) {
 		Variant& arr = buffer[buffer.size() - 2];
-		static Unique tableType = UniqueType<TableImpl>::Get();
+		singleton Unique tableType = UniqueType<TableImpl>::Get();
 		assert(arr.Get()->QueryValueUnique() == tableType);
 
 		TableImpl& table = (static_cast<Value<TableImpl>*>(arr.Get()))->value;
@@ -750,7 +750,7 @@ IScript::Request& RemoteProxy::Request::operator >> (TableStart& ts) {
 		buffer.emplace_back(v);
 	} else {
 		Variant& arr = buffer[buffer.size() - 2];
-		static Unique tableType = UniqueType<TableImpl>::Get();
+		singleton Unique tableType = UniqueType<TableImpl>::Get();
 		assert(arr.Get()->QueryValueUnique() == tableType);
 		TableImpl& table = (static_cast<Value<TableImpl>*>(arr.Get()))->value;
 		if (key.empty()) {
@@ -771,7 +771,7 @@ IScript::Request& RemoteProxy::Request::operator >> (TableStart& ts) {
 	key = "";
 	buffer.emplace_back(Variant((int)0));
 	Variant& v = buffer[buffer.size() - 2];
-	static Unique tableType = UniqueType<TableImpl>::Get();
+	singleton Unique tableType = UniqueType<TableImpl>::Get();
 	assert(v.Get()->QueryValueUnique() == tableType);
 	TableImpl& t = static_cast<Value<TableImpl>*>(v.Get())->value;
 	ts.count = t.arrayPart.size();
@@ -1041,7 +1041,7 @@ bool RemoteProxy::Request::Call(const AutoWrapperBase& wrapper, const Request::R
 		return false;
 
 	const Variant& var = buffer[initCount];
-	static Unique int64Type = UniqueType<int64_t>::Get();
+	singleton Unique int64Type = UniqueType<int64_t>::Get();
 	if (!(var.Get()->QueryValueUnique() == int64Type)) {
 		return false;
 	}
@@ -1177,7 +1177,7 @@ ReflectRoutines::ReflectRoutines(IScript::Request& request, const IScript::BaseD
 
 void ReflectRoutines::Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) {
 	if (s.IsBasicObject()) {
-		static Unique wrapperType = UniqueType<IScript::MetaRemoteEntryBase>::Get();
+		singleton Unique wrapperType = UniqueType<IScript::MetaRemoteEntryBase>::Get();
 		if (typeID->GetSize() == sizeof(TWrapper<void>)) {
 			for (const MetaChainBase* p = meta; p != nullptr; p = p->GetNext()) {
 				const MetaNodeBase* node = p->GetNode();

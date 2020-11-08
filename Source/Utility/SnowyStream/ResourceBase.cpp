@@ -104,18 +104,20 @@ bool ResourceBase::Compress(const String& compressType) {
 	return false; // by default no compression available
 }
 
+bool ResourceBase::Persist() {
+	return resourceManager.GetUniformResourceManager().SaveResource(this);
+}
+
 bool ResourceBase::Map() {
 	if (mapCount.fetch_add(1, std::memory_order_relaxed) == 0) {
-		return resourceManager.GetUniformResourceManager().MapResource(this);
+		return resourceManager.GetUniformResourceManager().LoadResource(this);
 	} else {
 		return true;
 	}
 }
 
 void ResourceBase::Unmap() {
-	if (mapCount.fetch_sub(1, std::memory_order_release) == 1) {
-		resourceManager.GetUniformResourceManager().UnmapResource(this);
-	}
+	mapCount.fetch_sub(1, std::memory_order_release);
 }
 
 class SearchDependencies : public IReflect {
@@ -213,7 +215,7 @@ MetaResourceInternalPersist::MetaResourceInternalPersist(ResourceManager& r) : r
 	uniqueName = GetUnique()->GetBriefName() + "(" + r.GetUnique()->GetBriefName() + ")";
 }
 
-const String& MetaResourceInternalPersist::GetUniqueName() const {
+String MetaResourceInternalPersist::GetUniqueName() const {
 	return uniqueName;
 }
 
@@ -225,10 +227,11 @@ bool MetaResourceInternalPersist::Read(IStreamBase& streamBase, void* ptr) const
 		IUniformResourceManager& uniformResourceManager = manager.GetUniformResourceManager();
 		resource = uniformResourceManager.CreateResource(path);
 		if (resource) {
+			/*
 			if (!(resource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_UPLOADED) && !(resource->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release) & Tiny::TINY_MODIFIED)) {
 				assert(resource->Flag().load(std::memory_order_acquire) & Tiny::TINY_MODIFIED);
 				resource->GetResourceManager().InvokeUpload(resource());
-			}
+			}*/
 
 			return true;
 		} else {

@@ -39,7 +39,7 @@ namespace PaintsNow {
 
 		bool Read(IStreamBase& streamBase, void* ptr) const override;
 		bool Write(IStreamBase& streamBase, const void* ptr) const override;
-		const String& GetUniqueName() const override;
+		String GetUniqueName() const override;
 
 	private:
 		String uniqueName;

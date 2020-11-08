@@ -4,9 +4,12 @@
 
 using namespace PaintsNow;
 
-static const String uniExtension = ".pod";
-
 ResourceManager::ResourceManager(IThread& threadApi, IUniformResourceManager& hostManager, const TWrapper<void, const String&>& err, void* c) : ISyncObject(threadApi), uniformResourceManager(hostManager), errorHandler(err), context(c) {
+}
+
+const String& ResourceManager::GetLocationPostfix() const {
+	static const String uniExtension = ".pod";
+	return uniExtension;
 }
 
 ResourceManager::~ResourceManager() {
@@ -19,7 +22,7 @@ void ResourceManager::Report(const String& err) {
 }
 
 void ResourceManager::RemoveAll() {
-	assert(GetLockCount() != 0);
+	assert(IsLocked());
 
 	// remove all eternal resources
 	std::unordered_map<String, ResourceBase*> temp;
@@ -43,7 +46,7 @@ void ResourceManager::RemoveAll() {
 }
 
 void ResourceManager::Insert(const TShared<ResourceBase>& resource) {
-	assert(GetLockCount() != 0);
+	assert(IsLocked());
 	assert(resource);
 	assert(resource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_ORPHAN);
 
@@ -70,7 +73,7 @@ IUniformResourceManager& ResourceManager::GetUniformResourceManager() {
 }
 
 TShared<ResourceBase> ResourceManager::LoadExist(const String& id) {
-	assert(GetLockCount() != 0);
+	assert(IsLocked());
 	std::unordered_map<String, ResourceBase*>::iterator p = resourceMap.find(id);
 	ResourceBase* pointer = nullptr;
 	if (p != resourceMap.end()) {
@@ -81,8 +84,7 @@ TShared<ResourceBase> ResourceManager::LoadExist(const String& id) {
 	return pointer;
 }
 
-TShared<ResourceBase> ResourceManager::SafeLoadExist(const String& id) {
-	assert(GetLockCount() == 0);
+TShared<ResourceBase> ResourceManager::LoadExistSafe(const String& id) {
 	DoLock();
 	TShared<ResourceBase> pointer = LoadExist(id);
 	UnLock();
@@ -95,7 +97,7 @@ void* ResourceManager::GetContext() const {
 }
 
 void ResourceManager::Remove(const TShared<ResourceBase>& resource) {
-	assert(GetLockCount() != 0);
+	assert(IsLocked());
 	assert(resource);
 	if (resource->Flag().load(std::memory_order_acquire) & (ResourceBase::RESOURCE_ORPHAN | ResourceBase::RESOURCE_ETERNAL))
 		return;
@@ -116,79 +118,4 @@ void ResourceManager::Remove(const TShared<ResourceBase>& resource) {
 	resource->Flag().fetch_or(ResourceBase::RESOURCE_ORPHAN, std::memory_order_release);
 }
 
-TShared<ResourceBase> ResourceSerializerBase::DeserializeFromArchive(ResourceManager& manager, IArchive& archive, const String& path, IFilterBase& protocol, bool openExisting, Tiny::FLAG flag) {
-	assert(manager.GetDeviceUnique() == GetDeviceUnique());
-	if (manager.GetDeviceUnique() != GetDeviceUnique())
-		return nullptr;
-	
-	manager.DoLock();
-
-	TShared<ResourceBase> resource = manager.LoadExist(path);
-	if (resource) {
-		manager.UnLock();
-		return resource;
-	}
-
-	uint64_t length;
-	if (openExisting) {
-		IStreamBase* stream = archive.Open(path + "." + GetExtension() + uniExtension, false, length);
-		if (stream != nullptr) {
-			resource = Deserialize(manager, path, protocol, flag, stream);
-
-			if (resource) {
-				if (!(resource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_STREAM)) {
-					stream->ReleaseObject();
-				}
-			} else {
-				stream->ReleaseObject();
-				assert(false);
-			}
-		}
-	} else {
-		resource = Deserialize(manager, path, protocol, flag, nullptr);
-	}
-
-	manager.UnLock();
-	return resource;
-}
-
-bool ResourceSerializerBase::MapFromArchive(ResourceBase* resource, IArchive& archive, IFilterBase& protocol, const String& path) {
-	assert(resource != nullptr);
-
-	uint64_t length;
-	IStreamBase* stream = archive.Open(path + "." + GetExtension() + uniExtension, false, length);
-	if (stream != nullptr) {
-		bool result = true;
-		SpinLock(resource->critical);
-		result = LoadData(resource, protocol, *stream);
-		SpinUnLock(resource->critical);
-
-		stream->ReleaseObject();
-		return result;
-	}
-
-	return false;
-}
-
-bool ResourceSerializerBase::SerializeToArchive(ResourceBase* resource, IArchive& archive, IFilterBase& protocol, const String& path) {
-	assert(resource != nullptr);
-
-	uint64_t length;
-	IStreamBase* stream = archive.Open(path + "." + GetExtension() + uniExtension, true, length);
-	if (stream != nullptr) {
-		SpinLock(resource->critical);
-		bool result = Serialize(resource, protocol, *stream);
-		SpinUnLock(resource->critical);
-		stream->ReleaseObject();
-
-		if (!result) {
-			archive.Delete(path);
-		}
-
-		return result;
-	}
-
-	return false;
-}
-
-ResourceSerializerBase::~ResourceSerializerBase() {}
+ResourceCreator::~ResourceCreator() {}

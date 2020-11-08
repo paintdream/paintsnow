@@ -357,8 +357,8 @@ uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData>& outp
 
 	uint32_t start = safe_cast<uint32_t>(outputDrawCalls.size());
 	uint32_t count = BaseClass::CollectDrawCalls(outputDrawCalls, inputRenderData);
-	static Bytes texCoordRectKey = StaticBytes(texCoordRect);
-	static Bytes instanceColorKey = StaticBytes(instanceColor);
+	const Bytes texCoordRectKey = StaticBytes(texCoordRect);
+	const Bytes instanceColorKey = StaticBytes(instanceColor);
 	float invTexSize = 1.0f / fontResource->GetFontTextureSize();
 
 	assert(inputRenderData.viewResolution.x() != 0 && inputRenderData.viewResolution.y() != 0);

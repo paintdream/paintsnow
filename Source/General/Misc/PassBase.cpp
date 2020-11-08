@@ -18,7 +18,7 @@ class ReflectCollectShader : public IReflect {
 public:
 	ReflectCollectShader() : IReflect(true, false) {}
 	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override {
-		static Unique shaderTypeUnique = UniqueType<IShader::MetaShader>::Get();
+		singleton Unique shaderTypeUnique = UniqueType<IShader::MetaShader>::Get();
 		while (meta != nullptr) {
 			const MetaNodeBase* metaNode = meta->GetNode();
 			if (metaNode->GetUnique() == shaderTypeUnique) {
@@ -407,8 +407,8 @@ bool PassBase::FlushSwitches(uint32_t resourceMask) {
 PassBase::~PassBase() {}
 
 void PassBase::PartialUpdater::Snapshot(std::vector<Bytes>& bufferData, std::vector<IRender::Resource::DrawCallDescription::BufferRange>& bufferResources, std::vector<IRender::Resource*>& textureResources, const PassBase::PartialData& partialData) const {
-	static Unique uniqueBindBuffer = UniqueType<IShader::BindBuffer>::Get();
-	static Unique uniqueBindTexture = UniqueType<IShader::BindTexture>::Get();
+	singleton Unique uniqueBindBuffer = UniqueType<IShader::BindBuffer>::Get();
+	singleton Unique uniqueBindTexture = UniqueType<IShader::BindTexture>::Get();
 
 	std::vector<uint32_t> starts(bufferData.size(), ~(uint32_t)0);
 

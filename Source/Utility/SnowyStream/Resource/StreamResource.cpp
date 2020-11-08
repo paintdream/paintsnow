@@ -6,6 +6,7 @@ StreamResource::StreamResource(ResourceManager& manager, const String& uniqueID)
 	Flag().fetch_or(RESOURCE_STREAM, std::memory_order_relaxed);
 }
 
+void StreamResource::Refresh(IArchive& archive, void* deviceContext) {}
 void StreamResource::Download(IArchive& archive, void* deviceContext) {}
 void StreamResource::Upload(IArchive& archive, void* deviceContext) {}
 void StreamResource::Attach(IArchive& archive, void* deviceContext) {}

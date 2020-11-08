@@ -19,6 +19,7 @@ namespace PaintsNow {
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		bool LoadExternalResource(Interfaces& interfaces, IStreamBase& streamBase, size_t length) override;
 
+		void Refresh(IFontBase& font, void* deviceContext) override;
 		void Upload(IFontBase& font, void* deviceContext) override;
 		void Download(IFontBase& font, void* deviceContext) override;
 		void Attach(IFontBase& font, void* deviceContext) override;

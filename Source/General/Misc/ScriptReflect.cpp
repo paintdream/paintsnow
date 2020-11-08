@@ -27,7 +27,7 @@ class Declare {
 public:
 	static void Register(const String& name, std::unordered_map<Unique, ScriptReflect::Type>& reflectParserMap) {
 		static ScriptReflect::ValueParser<T> instance;
-		static Unique u = UniqueType<T>::Get();
+		singleton Unique u = UniqueType<T>::Get();
 		reflectParserMap[u] = ScriptReflect::Type(name, &instance);
 	}
 };

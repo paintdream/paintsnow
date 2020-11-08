@@ -104,7 +104,7 @@ void LeavesFlute::EnterMainLoop() {
 
 void LeavesFlute::BeginConsole() {
 	assert(consoleThread == nullptr);
-	consoleThread = interfaces.thread.NewThread(Wrap(this, &LeavesFlute::ConsoleProc), 0, false);
+	consoleThread = interfaces.thread.NewThread(Wrap(this, &LeavesFlute::ConsoleProc), 0);
 }
 
 void LeavesFlute::EndConsole() {
@@ -502,7 +502,7 @@ struct InspectCustomStructure : public IReflect {
 	}
 
 	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override {
-		static Unique typedBaseType = UniqueType<IScript::MetaVariable::TypedBase>::Get();
+		singleton Unique typedBaseType = UniqueType<IScript::MetaVariable::TypedBase>::Get();
 		for (const MetaChainBase* t = meta; t != nullptr; t = t->GetNext()) {
 			const MetaNodeBase* node = t->GetNode();
 			if (!node->IsBasicObject() && node->GetUnique() == typedBaseType) {
@@ -740,7 +740,7 @@ struct InspectProcs : public IReflect {
 		// convert params ...
 		while (meta != nullptr) {
 			const MetaNodeBase* node = meta->GetNode();
-			static Unique ScriptMethodUnique = UniqueType<IScript::MetaMethod::TypedBase>::Get();
+			singleton Unique ScriptMethodUnique = UniqueType<IScript::MetaMethod::TypedBase>::Get();
 			if (node->GetUnique() == ScriptMethodUnique) {
 				const IScript::MetaMethod::TypedBase* entry = static_cast<const IScript::MetaMethod::TypedBase*>(node);
 				request << key(entry->name.empty() ? name : entry->name) << begintable << key("Params") << beginarray;

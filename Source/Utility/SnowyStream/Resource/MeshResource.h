@@ -15,6 +15,7 @@ namespace PaintsNow {
 		~MeshResource() override;
 		void Upload(IRender& render, void* deviceContext) override;
 		void Download(IRender& render, void* deviceContext) override;
+		void Refresh(IRender& render, void* deviceContext) override;
 		void Attach(IRender& render, void* deviceContext) override;
 		void Detach(IRender& render, void* deviceContext) override;
 		void Unmap() override;

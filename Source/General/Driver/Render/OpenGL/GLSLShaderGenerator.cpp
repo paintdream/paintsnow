@@ -93,14 +93,14 @@ struct DeclareMap {
 };
 
 void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) {
-	// static Unique uniqueBindOffset = UniqueType<IShader::BindOffset>::Get();
-	static Unique uniqueBindInput = UniqueType<IShader::BindInput>::Get();
-	static Unique uniqueBindOutput = UniqueType<IShader::BindOutput>::Get();
-	static Unique uniqueBindTexture = UniqueType<IShader::BindTexture>::Get();
-	static Unique uniqueBindBuffer = UniqueType<IShader::BindBuffer>::Get();
-	static Unique uniqueBindConstBool = UniqueType<IShader::BindConst<bool> >::Get();
-	static Unique uniqueBindConstInt = UniqueType<IShader::BindConst<int> >::Get();
-	static Unique uniqueBindConstFloat = UniqueType<IShader::BindConst<float> >::Get();
+	// singleton Unique uniqueBindOffset = UniqueType<IShader::BindOffset>::Get();
+	singleton Unique uniqueBindInput = UniqueType<IShader::BindInput>::Get();
+	singleton Unique uniqueBindOutput = UniqueType<IShader::BindOutput>::Get();
+	singleton Unique uniqueBindTexture = UniqueType<IShader::BindTexture>::Get();
+	singleton Unique uniqueBindBuffer = UniqueType<IShader::BindBuffer>::Get();
+	singleton Unique uniqueBindConstBool = UniqueType<IShader::BindConst<bool> >::Get();
+	singleton Unique uniqueBindConstInt = UniqueType<IShader::BindConst<int> >::Get();
+	singleton Unique uniqueBindConstFloat = UniqueType<IShader::BindConst<float> >::Get();
 	static DeclareMap declareMap;
 
 	if (s.IsBasicObject() || s.IsIterator()) {
@@ -108,8 +108,8 @@ void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refT
 		const IShader::BindBuffer* bindBuffer = nullptr;
 		String arr;
 		String arrDef;
-		static Unique uniqueBindOption = UniqueType<IShader::BindEnable>::Get();
-		static Unique uniqueBool = UniqueType<bool>::Get();
+		singleton Unique uniqueBindOption = UniqueType<IShader::BindEnable>::Get();
+		singleton Unique uniqueBool = UniqueType<bool>::Get();
 		bool isBoolean = typeID == uniqueBool;
 
 		for (const MetaChainBase* pre = meta; pre != nullptr; pre = pre->GetNext()) {

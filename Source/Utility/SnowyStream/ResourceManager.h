@@ -24,12 +24,14 @@ namespace PaintsNow {
 		virtual Unique GetDeviceUnique() const = 0;
 		void Report(const String& err);
 		void* GetContext() const;
+		const String& GetLocationPostfix() const;
 
-		TShared<ResourceBase> SafeLoadExist(const String& uniqueLocation);
+		TShared<ResourceBase> LoadExistSafe(const String& uniqueLocation);
 		TShared<ResourceBase> LoadExist(const String& uniqueLocation);
 		IUniformResourceManager& GetUniformResourceManager();
 
 	public:
+		virtual void InvokeRefresh(ResourceBase* resource, void* deviceContext = nullptr) = 0;
 		virtual void InvokeAttach(ResourceBase* resource, void* deviceContext = nullptr) = 0;
 		virtual void InvokeDetach(ResourceBase* resource, void* deviceContext = nullptr) = 0;
 		virtual void InvokeUpload(ResourceBase* resource, void* deviceContext = nullptr) = 0;
@@ -52,6 +54,12 @@ namespace PaintsNow {
 
 		T& GetDevice() const {
 			return device;
+		}
+
+		void InvokeRefresh(ResourceBase* resource, void* deviceContext) override {
+			assert(resource != nullptr);
+			DeviceResourceBase<T>* typedResource = static_cast<DeviceResourceBase<T>*>(resource);
+			typedResource->Refresh(device, deviceContext != nullptr ? deviceContext : GetContext());
 		}
 
 		void InvokeAttach(ResourceBase* resource, void* deviceContext) override {
@@ -89,69 +97,28 @@ namespace PaintsNow {
 		T& device;
 	};
 
-	class ResourceSerializerBase : public TReflected<ResourceSerializerBase, SharedTiny> {
+	class ResourceCreator : public TReflected<ResourceCreator, SharedTiny> {
 	public:
-		~ResourceSerializerBase() override;
-		TShared<ResourceBase> DeserializeFromArchive(ResourceManager& manager, IArchive& archive, const String& path, IFilterBase& protocol, bool openExisting, Tiny::FLAG flag);
-		bool MapFromArchive(ResourceBase* resource, IArchive& archive, IFilterBase& protocol, const String& path);
-		bool SerializeToArchive(ResourceBase* resource, IArchive& archive, IFilterBase& protocol, const String& path);
+		~ResourceCreator() override;
 
-		virtual TShared<ResourceBase> Deserialize(ResourceManager& manager, const String& id, IFilterBase& protocol, Tiny::FLAG flag, IStreamBase* stream) = 0;
-		virtual bool Serialize(ResourceBase* res, IFilterBase& protocol, IStreamBase& stream) = 0;
-		virtual bool LoadData(ResourceBase* res, IFilterBase& protocol, IStreamBase& stream) = 0;
+		virtual TShared<ResourceBase> Create(ResourceManager& manager, const String& location) = 0;
 		virtual Unique GetDeviceUnique() const = 0;
 		virtual const String& GetExtension() const = 0;
 	};
 
 	template <class T>
-	class ResourceReflectedSerializer : public ResourceSerializerBase {
+	class ResourceReflectedCreator : public ResourceCreator {
 	public:
-		ResourceReflectedSerializer(const String& ext) : extension(ext) {}
+		ResourceReflectedCreator(const String& ext) : extension(ext) {}
+
 	protected:
 		const String& GetExtension() const override { return extension; }
 		Unique GetDeviceUnique() const override {
 			return UniqueType<typename T::DriverType>::Get();
 		}
 
-		bool LoadData(ResourceBase* res, IFilterBase& protocol, IStreamBase& stream) override {
-			IStreamBase* filter = protocol.CreateFilter(stream);
-			assert(filter != nullptr);
-			bool success = *filter >> *res;
-			filter->ReleaseObject();
-			return success;
-		}
-
-		TShared<ResourceBase> Deserialize(ResourceManager& manager, const String& id, IFilterBase& protocol, Tiny::FLAG flag, IStreamBase* stream) override {
-			TShared<T> object = TShared<T>::From(new T(manager, id));
-
-			if (stream != nullptr) {
-				if (LoadData(object(), protocol, *stream)) {
-					if (flag != 0) object->Flag().fetch_or(flag, std::memory_order_release);
-
-					manager.DoLock();
-					manager.Insert(object());
-					manager.UnLock();
-				} else {
-					object = nullptr;
-				}
-			} else {
-				object->Flag().fetch_or(flag, std::memory_order_release);
-
-				manager.DoLock();
-				manager.Insert(object());
-				manager.UnLock();
-			}
-
-			return object();
-		}
-
-		bool Serialize(ResourceBase* object, IFilterBase& protocol, IStreamBase& stream) override {
-			IStreamBase* filter = protocol.CreateFilter(stream);
-			assert(filter != nullptr);
-			bool state = *filter << *object;
-			filter->ReleaseObject();
-
-			return state;
+		TShared<ResourceBase> Create(ResourceManager& manager, const String& location) override {
+			return TShared<ResourceBase>::From(new T(manager, location));
 		}
 
 		String extension;

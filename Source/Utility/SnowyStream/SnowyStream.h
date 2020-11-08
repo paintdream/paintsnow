@@ -29,12 +29,13 @@ namespace PaintsNow {
 
 		virtual Interfaces& GetInterfaces() const;
 		TShared<ResourceBase> CreateResource(const String& location, const String& extension = "", bool openExisting = true, Tiny::FLAG flag = 0, IStreamBase* sourceStream = nullptr) override;
-		bool PersistResource(const TShared<ResourceBase>& resource, const String& extension = "") override;
-		bool MapResource(const TShared<ResourceBase>& resource, const String& extension = "") override;
-		void UnmapResource(const TShared<ResourceBase>& resource) override;
+
+	protected:
+		bool SaveResource(const TShared<ResourceBase>& resource, const String& extension = "") override;
+		bool LoadResource(const TShared<ResourceBase>& resource, const String& extension = "") override;
 
 		virtual bool RegisterResourceManager(Unique unique, ResourceManager* resourceManager);
-		virtual bool RegisterResourceSerializer(Unique unique, const String& extension, ResourceSerializerBase* serializer);
+		virtual bool RegisterResourceSerializer(Unique unique, const String& extension, ResourceCreator* serializer);
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 	public:
@@ -224,7 +225,7 @@ namespace PaintsNow {
 	public:
 		void RegisterBuiltinPasses();
 		template <class T>
-		bool RegisterResourceSerializer(const String& extension, T& device, ResourceSerializerBase* serializer, void* context) {
+		bool RegisterResourceSerializer(const String& extension, T& device, ResourceCreator* serializer, void* context) {
 			Unique unique = UniqueType<T>::Get();
 			if (!RegisterResourceSerializer(unique, extension, serializer)) {
 				return false;
@@ -245,7 +246,7 @@ namespace PaintsNow {
 		template <class T>
 		void RegisterReflectedSerializer(UniqueType<T> type, typename T::DriverType& device, void* context) {
 			String extension = GetReflectedExtension(type.Get());
-			ResourceSerializerBase* serializer = new ResourceReflectedSerializer<T>(extension);
+			ResourceCreator* serializer = new ResourceReflectedCreator<T>(extension);
 			RegisterResourceSerializer(extension, device, serializer, context);
 			serializer->ReleaseObject();
 		}
@@ -267,7 +268,7 @@ namespace PaintsNow {
 		Interfaces& interfaces;
 		BridgeSunset& bridgeSunset;
 		const TWrapper<void, const String&> errorHandler;
-		std::unordered_map<String, std::pair<Unique, TShared<ResourceSerializerBase> > > resourceSerializers;
+		std::unordered_map<String, std::pair<Unique, TShared<ResourceCreator> > > resourceSerializers;
 		std::map<Unique, TShared<ResourceManager> > resourceManagers;
 		static String reflectedExtension;
 		const TWrapper<IArchive*, IStreamBase&, size_t> subArchiveCreator;
@@ -301,7 +302,7 @@ namespace PaintsNow {
 
 		bool Read(IStreamBase& streamBase, void* ptr) const override;
 		bool Write(IStreamBase& streamBase, const void* ptr) const override;
-		const String& GetUniqueName() const override;
+		String GetUniqueName() const override;
 
 	private:
 		String uniqueName;

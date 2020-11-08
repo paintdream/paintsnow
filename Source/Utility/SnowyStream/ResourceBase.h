@@ -34,6 +34,9 @@ namespace PaintsNow {
 		virtual Unique GetDeviceUnique() const;
 		virtual bool LoadExternalResource(Interfaces& interfaces, IStreamBase& streamBase, size_t length);
 		virtual bool Compress(const String& compressType);
+		virtual bool Persist();
+		virtual bool Map();
+		virtual void Unmap();
 
 		struct Dependency {
 			String key;
@@ -49,8 +52,6 @@ namespace PaintsNow {
 		// virtual bool operator >> (IStreamBase& stream) const override;
 		// virtual bool operator << (IStreamBase& stream) override;
 		TObject<IReflect>& operator () (IReflect& reflect) override;
-		virtual bool Map();
-		virtual void Unmap();
 		std::atomic<uint32_t> critical;
 
 	protected:
@@ -66,6 +67,7 @@ namespace PaintsNow {
 		typedef T DriverType;
 		DeviceResourceBase(ResourceManager& manager, const String& uniqueLocation) : BaseClass(manager, uniqueLocation) {}
 
+		virtual void Refresh(T& device, void* deviceContext) = 0;
 		virtual void Download(T& device, void* deviceContext) = 0;
 		virtual void Upload(T& device, void* deviceContext) = 0;
 		virtual void Attach(T& device, void* deviceContext) = 0;
@@ -96,7 +98,7 @@ namespace PaintsNow {
 
 		bool Read(IStreamBase& streamBase, void* ptr) const override;
 		bool Write(IStreamBase& streamBase, const void* ptr) const override;
-		const String& GetUniqueName() const override;
+		String GetUniqueName() const override;
 
 	private:
 		ResourceManager& resourceManager;
@@ -106,9 +108,8 @@ namespace PaintsNow {
 	class IUniformResourceManager {
 	public:
 		virtual TShared<ResourceBase> CreateResource(const String& location, const String& extension = "", bool openExisting = true, Tiny::FLAG flag = 0, IStreamBase* sourceStream = nullptr) = 0;
-		virtual bool PersistResource(const TShared<ResourceBase>& resource, const String& extension = "") = 0;
-		virtual bool MapResource(const TShared<ResourceBase>& resource, const String& extension = "") = 0;
-		virtual void UnmapResource(const TShared<ResourceBase>& resource) = 0;
+		virtual bool SaveResource(const TShared<ResourceBase>& resource, const String& extension = "") = 0;
+		virtual bool LoadResource(const TShared<ResourceBase>& resource, const String& extension = "") = 0;
 	};
 }
 

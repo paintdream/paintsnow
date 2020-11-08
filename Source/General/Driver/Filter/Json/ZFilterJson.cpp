@@ -55,14 +55,14 @@ public:
 	Exchanger(Json::Value& v) : IReflect(true, false), root(v) {}
 	// IReflect
 	void OnValue(IReflectObject& s, Unique typeID, Json::Value& v, void* base) {
-		static Unique strType = UniqueType<String>::Get();
-		static Unique floatType = UniqueType<float>::Get();
-		static Unique doubleType = UniqueType<double>::Get();
-		static Unique int32Type = UniqueType<int32_t>::Get();
-		static Unique uint32Type = UniqueType<uint32_t>::Get();
-		static Unique int64Type = UniqueType<int64_t>::Get();
-		static Unique uint64Type = UniqueType<uint64_t>::Get();
-		static Unique boolType = UniqueType<bool>::Get();
+		singleton Unique strType = UniqueType<String>::Get();
+		singleton Unique floatType = UniqueType<float>::Get();
+		singleton Unique doubleType = UniqueType<double>::Get();
+		singleton Unique int32Type = UniqueType<int32_t>::Get();
+		singleton Unique uint32Type = UniqueType<uint32_t>::Get();
+		singleton Unique int64Type = UniqueType<int64_t>::Get();
+		singleton Unique uint64Type = UniqueType<uint64_t>::Get();
+		singleton Unique boolType = UniqueType<bool>::Get();
 
 		if (!s.IsBasicObject()) {
 			if (s.IsIterator()) {

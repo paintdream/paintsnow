@@ -45,8 +45,7 @@ MythForest::MythForest(Interfaces& interfaces, SnowyStream& snowyStream, BridgeS
 	entityAllocator = TShared<Entity::Allocator>::From(new Entity::Allocator());
 }
 
-MythForest::~MythForest() {
-}
+MythForest::~MythForest() {}
 
 void MythForest::Initialize() {
 	// add builtin modules

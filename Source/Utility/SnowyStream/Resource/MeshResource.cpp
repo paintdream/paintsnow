@@ -3,7 +3,7 @@
 
 using namespace PaintsNow;
 
-MeshResource::MeshResource(ResourceManager& manager, const String& uniqueID) : BaseClass(manager, uniqueID), deviceMemoryUsage(0), deviceElementSize(0) {}
+MeshResource::MeshResource(ResourceManager& manager, const String& uniqueID) : BaseClass(manager, uniqueID), deviceMemoryUsage(0), deviceElementSize(0), boundingBox(Float3(FLT_MAX, FLT_MAX, FLT_MAX), Float3(-FLT_MAX, -FLT_MAX, -FLT_MAX)) {}
 
 MeshResource::~MeshResource() {}
 
@@ -18,7 +18,7 @@ static inline void ClearBuffer(IRender& render, IRender::Queue* queue, IRender::
 	}
 }
 
-void MeshResource::Attach(IRender& render, void* deviceContext) {
+void MeshResource::Refresh(IRender& render, void* deviceContext) {
 	// Compute boundingBox
 	std::vector<Float3>& positionBuffer = meshCollection.vertices;
 	if (!positionBuffer.empty()) {
@@ -37,6 +37,11 @@ void MeshResource::Attach(IRender& render, void* deviceContext) {
 	} else {
 		deviceElementSize = sizeof(UInt3);
 	}
+
+}
+
+void MeshResource::Attach(IRender& render, void* deviceContext) {
+	// delayed to upload
 
 	GraphicResourceBase::Attach(render, deviceContext);
 }
@@ -138,7 +143,9 @@ void MeshResource::Unmap() {
 	GraphicResourceBase::Unmap();
 
 	SpinLock(critical);
-	meshCollection = IAsset::MeshCollection();
+	if (mapCount.load(std::memory_order_acquire) == 0) {
+		meshCollection = IAsset::MeshCollection();
+	}
 	SpinUnLock(critical);
 }
 
