@@ -175,4 +175,3 @@ namespace PaintsNow {
 		virtual AutoVariant* Create(ComVariant& t) const = 0;
 	};
 }
-
