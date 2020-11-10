@@ -141,7 +141,7 @@ void Engine::NotifyUnitConstruct(Unit* unit) {
 
 void Engine::NotifyUnitDestruct(Unit* unit) {
 	if (unitCount.fetch_sub(1, std::memory_order_relaxed) == 1) {
-		interfaces.thread.Signal(finalizeEvent, false);
+		interfaces.thread.Signal(finalizeEvent);
 	}
 
 #if defined(_DEBUG)

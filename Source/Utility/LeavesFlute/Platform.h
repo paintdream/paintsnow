@@ -62,16 +62,6 @@
 #pragma comment(lib, "OpenGL32.lib")
 #endif
 
-#if !defined(_MSC_VER) || _MSC_VER <= 1200
-#if !defined(CMAKE_PAINTSNOW) || ADD_THREAD_PTHREAD
-#if defined(_DEBUG) && _MSC_VER > 1200
-#pragma comment(lib, "pthreadD.lib")
-#else
-#pragma comment(lib, "pthread.lib")
-#endif
-#endif
-#endif
-
 #if !defined(CMAKE_PAINTSNOW) || ADD_NETWORK_LIBEVENT
 #if defined(_DEBUG) && _MSC_VER > 1200
 #pragma comment(lib, "libeventD.lib")
@@ -79,9 +69,7 @@
 #pragma comment(lib, "libevent.lib")
 #endif
 #endif
-
 #endif
-
 
 #if defined(_MSC_VER) && _MSC_VER <= 1200
 #ifdef _DEBUG

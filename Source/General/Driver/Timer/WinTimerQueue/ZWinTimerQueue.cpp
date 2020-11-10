@@ -1,17 +1,11 @@
 #if defined(_WIN32) || defined(WIN32)
 #include "ZWinTimerQueue.h"
 #include <cassert>
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0501
+#endif
 #include <windows.h>
 
-#if USE_STATIC_THIRDPARTY_LIBRARIES
-#define PTW32_STATIC_LIB
-#endif
-
-#if !defined(_MSC_VER) || _MSC_VER > 1200
-#define USE_STD_THREAD
-#endif
-
-#include <pthread.h>
 using namespace PaintsNow;
 
 struct TimerController {
@@ -33,16 +27,10 @@ struct WinTimerQueueImpl : public ITimer::Timer {
 
 static VOID WINAPI TimerFunc(PVOID pContext, BOOLEAN bTimeOrWait) {
 	TimerController* q = reinterpret_cast<TimerController*>(pContext);
-#ifndef USE_STD_THREAD
-	pthread_win32_thread_attach_np();
-#endif
 	if (::TryEnterCriticalSection(&q->cs)) { // Do not alert it at busy
 		q->wrapper(q->interval);
 		::LeaveCriticalSection(&q->cs);
 	}
-#ifndef USE_STD_THREAD
-	pthread_win32_thread_detach_np(); // to avoid memory leak
-#endif
 }
 
 ZWinTimerQueue::ZWinTimerQueue() {

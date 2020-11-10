@@ -408,7 +408,7 @@ void RemoteProxy::Request::ProcessPacket(Packet& packet) {
 	if (!packet.deferred && (wrapper == nullptr || wrapper->IsSync())) {
 		idx = (int)buffer.size();
 		std::copy(packet.vars.begin(), packet.vars.end(), std::back_inserter(buffer));
-		threadApi.Signal(syncCallEvent, false);
+		threadApi.Signal(syncCallEvent);
 	} else if (wrapper != nullptr) {
 		assert(!wrapper->IsSync());
 		int argCount = (int)packet.vars.size();

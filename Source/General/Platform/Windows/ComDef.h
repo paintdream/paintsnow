@@ -7,6 +7,9 @@
 #include "../../../Core/PaintsNow.h"
 
 #if defined(_MSC_VER) && _MSC_VER <= 1200
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x501
+#endif
 #include <afxdisp.h>
 #ifndef typename
 #define typename class

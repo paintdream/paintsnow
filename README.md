@@ -5,7 +5,7 @@ __PaintsNow__ is a lightweight script-driven platform for graphical applications
 
 Author: PaintDream (paintdream@paintdream.com)
 
-3rd party libraries: OpenGL & GLFW & pthread & glew & freetype & lua 5.4 & lzma & lame & OpenAL & freeimage & teal & libevent & sqlite3 & libnoise & JsonCPP & Intel(R) Fast Texture Compression Tool & RenderDoc
+3rd party libraries: OpenGL & GLFW & glew & freetype & lua 5.4 & lzma & lame & OpenAL & freeimage & teal & libevent & sqlite3 & libnoise & JsonCPP & Intel(R) Fast Texture Compression Tool & RenderDoc
 
 Quick installation for dependencies + build essentials on Debian/Ubuntu: 
 
