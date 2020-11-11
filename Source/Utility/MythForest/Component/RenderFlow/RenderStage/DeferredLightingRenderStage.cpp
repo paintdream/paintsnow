@@ -67,10 +67,12 @@ void DeferredLightingRenderStage::UpdatePass(Engine& engine, IRender::Queue* que
 
 	StandardLightingFS& standardLighting = Pass.standardLighting;
 	standardLighting.cubeLevelInv = 1.0f;
+	standardLighting.cubeStrength = 1.0f;
 
 	if (LightSource->cubeMapTexture) {
 		standardLighting.specTexture.resource = LightSource->cubeMapTexture->GetRenderResource();
 		standardLighting.cubeLevelInv = 1.0f / Math::Log2((uint32_t)LightSource->cubeMapTexture->description.dimension.x());
+		standardLighting.cubeStrength = LightSource->cubeStrength;
 	} else {
 		standardLighting.specTexture.resource = BaseColorOcclusion.textureResource->GetRenderResource();
 	}

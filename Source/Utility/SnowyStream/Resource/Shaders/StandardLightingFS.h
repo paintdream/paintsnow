@@ -31,9 +31,10 @@ namespace PaintsNow {
 		uint32_t lightCount;
 		MatrixFloat4x4 invWorldNormalMatrix;
 		float cubeLevelInv;
+		float cubeStrength;
+		
 		Float2 rasterCoord; // imported
-
-		Float4 mainColor;
+		Float4 mainColor; // target
 	};
 }
 

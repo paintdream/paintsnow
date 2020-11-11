@@ -29,6 +29,7 @@ namespace PaintsNow {
 			TShared<TextureResource> cubeMapTexture;
 			TShared<TextureResource> skyMapTexture;
 			Float3 position;
+			float cubeStrength;
 		};
 
 		RenderPortLightSource();
@@ -41,6 +42,7 @@ namespace PaintsNow {
 		std::vector<LightElement> lightElements;
 		TShared<TextureResource> cubeMapTexture;
 		TShared<TextureResource> skyMapTexture;
+		float cubeStrength;
 		uint8_t stencilMask;
 		uint8_t stencilShadow;
 		uint8_t reserved[2];

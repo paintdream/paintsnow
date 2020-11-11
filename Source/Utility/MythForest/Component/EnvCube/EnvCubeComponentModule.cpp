@@ -12,6 +12,7 @@ TObject<IReflect>& EnvCubeComponentModule::operator () (IReflect& reflect) {
 		ReflectMethod(RequestNew)[ScriptMethod = "New"];
 		ReflectMethod(RequestSetTexture)[ScriptMethod = "SetTexture"];
 		ReflectMethod(RequestSetRange)[ScriptMethod = "SetRange"];
+		ReflectMethod(RequestSetStrength)[ScriptMethod = "SetStrength"];
 	}
 
 	return *this;
@@ -37,4 +38,11 @@ void EnvCubeComponentModule::RequestSetRange(IScript::Request& request, IScript:
 	CHECK_DELEGATE(envCubeComponent);
 
 	envCubeComponent->range = range;
+}
+
+void EnvCubeComponentModule::RequestSetStrength(IScript::Request& request, IScript::Delegate<EnvCubeComponent> envCubeComponent, float strength) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(envCubeComponent);
+
+	envCubeComponent->strength = strength;
 }

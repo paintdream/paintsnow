@@ -3,8 +3,7 @@
 
 using namespace PaintsNow;
 
-EnvCubeComponent::EnvCubeComponent() {
-}
+EnvCubeComponent::EnvCubeComponent() : range(1.0f, 1.0f, 1.0f), strength(1.0f) {}
 
 EnvCubeComponent::~EnvCubeComponent() {}
 

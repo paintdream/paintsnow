@@ -107,7 +107,6 @@ void CameraComponent::Uninitialize(Engine& engine, Entity* entity) {
 	if (rootEntity == entity) {
 		rootEntity = nullptr;
 	} else {
-		/*
 		if (Flag().load(std::memory_order_acquire) & CAMERACOMPONENT_UPDATE_COLLECTING) {
 			Kernel& kernel = engine.GetKernel();
 			ThreadPool& threadPool = kernel.threadPool;
@@ -130,7 +129,7 @@ void CameraComponent::Uninitialize(Engine& engine, Entity* entity) {
 					}
 				}
 			}
-		}*/
+		}
 
 		RenderPort* port = renderFlowComponent->BeginPort(cameraViewPortName);
 		if (port != nullptr) {
@@ -437,6 +436,7 @@ void CameraComponent::CommitRenderRequests(Engine& engine, TaskData& taskData, I
 					if (dist < minDist) {
 						portLightSource->cubeMapTexture = element.cubeMapTexture ? element.cubeMapTexture : portLightSource->cubeMapTexture;
 						portLightSource->skyMapTexture = element.skyMapTexture ? element.skyMapTexture : portLightSource->skyMapTexture;
+						portLightSource->cubeStrength = element.cubeStrength;
 						minDist = dist;
 					}
 				}
@@ -731,6 +731,7 @@ void CameraComponent::CollectEnvCubeComponent(EnvCubeComponent* envCubeComponent
 	EnvCubeElement element;
 	element.position = Float3(worldMatrix(3, 0), worldMatrix(3, 1), worldMatrix(3, 2));
 	element.cubeMapTexture = envCubeComponent->cubeMapTexture;
+	element.cubeStrength = envCubeComponent->strength;
 	envCubeElements.emplace_back(std::make_pair(envCubeComponent->renderPolicy, std::move(element)));
 }
 

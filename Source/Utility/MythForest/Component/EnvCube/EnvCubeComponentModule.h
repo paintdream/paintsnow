@@ -35,6 +35,13 @@ namespace PaintsNow {
 		/// <param name="envCubeComponent"> the EnvCubeComponent </param>`
 		/// <param name="range"> cube effect range </param>
 		void RequestSetRange(IScript::Request& request, IScript::Delegate<EnvCubeComponent> envCubeComponent, Float3& range);
+
+		/// <summary>
+		/// Set strength of EnvCubeComponent
+		/// </summary>
+		/// <param name="envCubeComponent"> the EnvCubeComponent </param>`
+		/// <param name="strength"> strength of light </param>
+		void RequestSetStrength(IScript::Request& request, IScript::Delegate<EnvCubeComponent> envCubeComponent, float strength);
 	};
 }
 

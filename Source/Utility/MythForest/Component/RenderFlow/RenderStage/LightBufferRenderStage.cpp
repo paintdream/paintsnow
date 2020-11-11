@@ -25,7 +25,7 @@ TObject<IReflect>& LightBufferRenderStage::operator () (IReflect& reflect) {
 
 void LightBufferRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	SnowyStream& snowyStream = engine.snowyStream;
-	LightTexture.renderTargetDescription.state.format = IRender::Resource::TextureDescription::UNSIGNED_SHORT;
+	LightTexture.renderTargetDescription.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 	LightTexture.renderTargetDescription.state.layout = IRender::Resource::TextureDescription::RGBA;
 	LightTexture.renderTargetDescription.state.sample = IRender::Resource::TextureDescription::POINT;
 	LightTexture.renderTargetDescription.state.immutable = false;
@@ -72,8 +72,8 @@ void LightBufferRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 			// i.e.
 			const Float4& color = light.colorAttenuation;
 			float intensity = color.x() * 0.2126f + color.y() * 0.7152f + color.z() * 0.0722f;
-			float radius = (float)sqrt(100 * intensity / (0.0001 + color.w()));
-			lightPosition.w() = Math::Max(0.05f, radius * radius);
+			float radius = (float)(100 * intensity / (0.0001 + color.w()));
+			lightPosition.w() = Math::Max(0.05f, radius);
 		}
 	}
 

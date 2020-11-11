@@ -4,7 +4,7 @@
 
 using namespace PaintsNow;
 
-StandardLightingFS::StandardLightingFS() : lightCount(0), cubeLevelInv(0) {
+StandardLightingFS::StandardLightingFS() : lightCount(0), cubeLevelInv(0), cubeStrength(1.0f) {
 	specTexture.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D_CUBE;
 	lightBuffer.description.usage = IRender::Resource::BufferDescription::UNIFORM;
 	paramBuffer.description.usage = IRender::Resource::BufferDescription::UNIFORM;
@@ -29,41 +29,50 @@ String StandardLightingFS::GetShaderText() {
 	env = env * AB.x + AB.y;
 	mainColor = float4(0, 0, 0, 1);
 	// mainColor.xyz += diff.xyz * float3(1.0, 1.0, 1.0); // ambient
-	mainColor.xyz += env * spec;
+	mainColor.xyz += env * spec * cubeStrength;
 
-	float4 idx = texture(lightTexture, rasterCoord.xy);
+	float4 idx = texture(lightTexture, rasterCoord.xy) * float(255.0);
 	float f = saturate(50.0 * spec.y);
 	float p = roughness * roughness;
 	p = p * p;
 
-	for (int k = 0; k < 8; k++) {
-		float v = idx[k / 2];
-		int i = int(v * 65535);
-		i = k % 2 == 0 ? i - (i / 256) * 256 : i / 256;
+	float4 NoH = float4(0, 0, 0, 0);
+	float4 NoL = float4(0, 0, 0, 0);
+	float4 VoH = float4(0, 0, 0, 0);
+	float3 lightColor[4];
+
+	int k;
+	for (k = 0; k < 4; k++) {
+		int i = int(idx[k]);
 		if (i == 0) break;
 
 		float4 pos = lightInfos[i * 2 - 2];
 		float4 color = lightInfos[i * 2 - 1];
-		if (pos.w - shadow < -0.5) continue;
 
 		float3 L = pos.xyz - viewPosition.xyz * pos.www;
-		float s = saturate(1.0 / (0.001 + dot(L, L) * color.w));
-		color.xyz = color.xyz * s;
+		float s = saturate(1.0 / (0.001 + dot(L, L) * color.w)) * step(-0.5, pos.w - shadow);
 		L = normalize(L);
 		float3 H = normalize(L + V);
-		float NoH = saturate(dot(N, H));
-		float NoL = saturate(dot(N, L));
-		float VoH = saturate(dot(V, H));
-		float q = (NoH * p - NoH) * NoH + 1.0;
-		float D = p / max(q * q, 0.0001);
-		float2 vl = clamp(float2(NoV, NoL), float2(0.01, 0.1), float2(1, 1));
-		vl = vl.yx * sqrt(saturate(-vl * p + vl) * vl + p);
-		float G = (0.5 / PI) / max(vl.x + vl.y, 0.0001);
-		float e = exp2(VoH * (-5.55473 * VoH - 6.98316));
-		float3 F = spec + (float3(f, f, f) - spec) * e;
 
-		mainColor.xyz += (diff + F * (D * G)) * color.xyz * NoL;
+		lightColor[k] = color.xyz * s;
+		NoH[k] = saturate(dot(N, H));
+		NoL[k] = saturate(dot(N, L));
+		VoH[k] = saturate(dot(V, H));
 	}
+
+	float4 q = (NoH * p - NoH) * NoH + float4(1.0, 1.0, 1.0, 1.0);
+	float4 vl = clamp(NoL, float4(0.1, 0.1, 0.1, 0.1), float4(1, 1, 1, 1));
+	float vlc = clamp(NoV, float(0.01), float(1.0));
+	float4 vls = vl * sqrt(saturate(-vlc * p + vlc) * vlc + p);
+	vls += sqrt(saturate(-vl * p + vl) * vl + p) * vlc;
+	float4 DG = (float4(0.5, 0.5, 0.5, 0.5) / PI * p) / max(vls * q * q, float4(0.0001, 0.0001, 0.0001, 0.0001));
+	float4 e = exp2(VoH * (VoH * float(-5.55473) - float4(6.98316, 6.98316, 6.98316, 6.98316)));
+
+	for (int i = 0; i < k; i++) {
+		float3 F = spec + (float3(f, f, f) - spec) * e[i];
+		mainColor.xyz += (diff + F * DG[i]) * lightColor[i].xyz * NoL[i];
+	}
+
 	mainColor.xyz = pow(max(mainColor.xyz, float3(0, 0, 0)), float3(1.0, 1.0, 1.0) / GAMMA);
 	// mainColor.xyz = mainColor.xyz * float(0.0001) + float3(1 - shadow, 1 - shadow, 1 - shadow);
 );
@@ -87,6 +96,7 @@ TObject<IReflect>& StandardLightingFS::operator () (IReflect& reflect) {
 		ReflectProperty(occlusion)[BindInput(BindInput::LOCAL)];
 		ReflectProperty(invWorldNormalMatrix)[paramBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(cubeLevelInv)[paramBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(cubeStrength)[paramBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(lightInfos)[lightBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(mainColor)[BindOutput(BindOutput::COLOR)];
 	}

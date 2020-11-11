@@ -20,7 +20,9 @@ namespace PaintsNow {
 
 		TShared<TextureResource> cubeMapTexture; // pre-filterred specular texture
 		TShared<TextureResource> skyMapTexture; // irrandiance map texture
+
 		Float3 range;
+		float strength;
 	};
 }
 

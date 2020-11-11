@@ -164,6 +164,7 @@ function Scene.New(database : Database, clock : Clock) : Scene
 						component:SetTexture(textureResource as TextureResource)
 						component:SetRenderPolicy(lightPolicy)
 						component:SetRange({1000, 1000, 1000})
+						component:SetStrength(0.25)
 					else
 						print("\tUnable to load texture resource: " .. path as string)
 					end
@@ -239,9 +240,10 @@ function Scene.New(database : Database, clock : Clock) : Scene
 		--[[
 		print("\tAdding point lights")
 		math.randomseed(20)
-		local colors : { number : any } = {
+		local colors : { {number} } = {
 			{1, 0, 0},{0, 1, 0}, {0, 0, 1}, {1, 1, 0}, {0, 1, 1}, {1, 0, 1}, {1, 1, 1}, {2, 2, 2}
 		}
+
 		for k = 1, 8 do 
 			local c = colors[k]
 			local r = math.random(20, 40)
@@ -250,20 +252,20 @@ function Scene.New(database : Database, clock : Clock) : Scene
 			end
 		end
 
-		for i = 1, 32 do 
+		for i = 1, 16 do 
 			local light = MythForest.NewEntity(-(((1))))
 			local lightTransformComponent = TransformComponentModule.New()
 			lightTransformComponent:SetRotation({0.25 * math.pi, 0.75 * math.pi, 0})
-			lightTransformComponent:SetTranslation({math.random(-((5)),0), math.random(0,3), math.random(2,5)})
+			lightTransformComponent:SetTranslation({math.random(0, 5), math.random(2,4), math.random(4,5)})
 			lightTransformComponent:UpdateTransform()
-			light:AddEntityComponent(lightTransformComponent)
+			light:AddEntityComponent(lightTransformComponent as Component)
 			local lightComponent = LightComponentModule.New()
 			lightComponent:SetLightColor(colors[((i + 1) % 8) - 1])
 			lightComponent:SetLightRange({1000, 1000, 1000})
 			lightComponent:SetLightAttenuation(math.random(100,400) * 0.2)
 			lightComponent:SetLightDirectional(false)
 			lightComponent:SetRenderPolicy(lightPolicy)
-			light:AddEntityComponent(lightComponent)
+			light:AddEntityComponent(lightComponent as Component)
 			spaceComponent:InsertEntity(light)
 		end
 		]]
