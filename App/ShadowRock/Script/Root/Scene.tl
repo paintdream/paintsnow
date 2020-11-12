@@ -237,7 +237,6 @@ function Scene.New(database : Database, clock : Clock) : Scene
 		sun:AddEntityComponent(lightComponent as Component)
 		spaceComponent:InsertEntity(sun)
 
-		--[[
 		print("\tAdding point lights")
 		math.randomseed(20)
 		local colors : { {number} } = {
@@ -268,7 +267,6 @@ function Scene.New(database : Database, clock : Clock) : Scene
 			light:AddEntityComponent(lightComponent as Component)
 			spaceComponent:InsertEntity(light)
 		end
-		]]
 	end
 
 	return setmetatable(meta, Scene as METATABLE) as Scene

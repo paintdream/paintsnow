@@ -37,11 +37,13 @@ namespace PaintsNow {
 			MatrixFloat4x4 projectionMatrix;
 			MatrixFloat4x4 lastViewProjectionMatrix;
 			MatrixFloat4x4 viewMatrix;
-			MatrixFloat4x4 cameraMatrix; // inverse of viewMatrix
+			MatrixFloat4x4 inverseViewMatrix; // inverse of viewMatrix
 			MatrixFloat4x4 jitterMatrix;
+			MatrixFloat3x3 viewNormalMatrix;
+
 			Float3 viewPosition;
-			float time;
 			Float2 jitterOffset;
+			float time;
 			float tanHalfFov;
 		};
 
@@ -176,7 +178,7 @@ namespace PaintsNow {
 		void Instancing(Engine& engine, TaskData& taskData);
 		void CommitRenderRequests(Engine& engine, TaskData& taskData, IRender::Queue* queue);
 
-		void CollectLightComponent(Engine& engine, LightComponent* lightComponent, std::vector<std::pair<TShared<RenderPolicy>, LightElement> >& lightElements, const MatrixFloat4x4& worldTransform, const MatrixFloat4x4& cameraTransform) const;
+		void CollectLightComponent(Engine& engine, LightComponent* lightComponent, std::vector<std::pair<TShared<RenderPolicy>, LightElement> >& lightElements, const MatrixFloat4x4& worldTransform, const TaskData& taskData) const;
 		void CollectEnvCubeComponent(EnvCubeComponent* envCubeComponent, std::vector<std::pair<TShared<RenderPolicy>, EnvCubeElement> >& envCubeElements, const MatrixFloat4x4& worldMatrix) const;
 		void CollectRenderableComponent(Engine& engine, TaskData& taskData, RenderableComponent* renderableComponent, TaskData::WarpData& warpData, const WorldInstanceData& instanceData);
 		void CollectComponents(Engine& engine, TaskData& taskData, const WorldInstanceData& instanceData, const CaptureData& captureData, Entity* rootEntity);
