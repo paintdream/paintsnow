@@ -496,7 +496,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 			}
 			case Resource::TextureDescription::HALF:
 			{
-				static const GLuint presets[Resource::TextureDescription::Layout::END] = { GL_R16F, GL_RG16F, GL_RGB16F, GL_RGBA16F, GL_DEPTH_COMPONENT16, GL_STENCIL_INDEX16, GL_NONE, GL_NONE };
+				static const GLuint presets[Resource::TextureDescription::Layout::END] = { GL_R16F, GL_RG16F, GL_RGB16F, GL_RGBA16F, GL_DEPTH_COMPONENT16, GL_STENCIL_INDEX16, GL_NONE, GL_R11F_G11F_B10F };
 				static const GLuint byteDepths[Resource::TextureDescription::Layout::END] = { 2, 4, 6, 8, 2, 2, 0, 0 };
 				format = presets[state.layout];
 				byteDepth = byteDepths[state.layout];
@@ -505,7 +505,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 			}
 			case Resource::TextureDescription::FLOAT:
 			{
-				static const GLuint presets[Resource::TextureDescription::Layout::END] = { GL_R32F, GL_RG32F, GL_RGB32F, GL_RGBA32F, GL_DEPTH_COMPONENT32F, GL_NONE, GL_DEPTH24_STENCIL8, GL_R11F_G11F_B10F };
+				static const GLuint presets[Resource::TextureDescription::Layout::END] = { GL_R32F, GL_RG32F, GL_RGB32F, GL_RGBA32F, GL_DEPTH_COMPONENT32F, GL_NONE, GL_DEPTH24_STENCIL8, GL_NONE };
 				static const GLuint byteDepths[Resource::TextureDescription::Layout::END] = { 4, 8, 12, 16, 4, 0, 4, 4 };
 				format = presets[state.layout];
 				byteDepth = byteDepths[state.layout];

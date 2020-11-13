@@ -20,7 +20,7 @@ TObject<IReflect>& BloomRenderStage::operator () (IReflect& reflect) {
 void BloomRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	SnowyStream& snowyStream = engine.snowyStream;
 	OutputColor.renderTargetDescription.state.format = IRender::Resource::TextureDescription::HALF;
-	OutputColor.renderTargetDescription.state.layout = IRender::Resource::TextureDescription::RGB;
+	OutputColor.renderTargetDescription.state.layout = IRender::Resource::TextureDescription::RGB10PACK;
 	OutputColor.renderTargetDescription.state.immutable = false;
 	OutputColor.renderTargetDescription.state.attachment = true;
 

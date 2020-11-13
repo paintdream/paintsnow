@@ -38,7 +38,7 @@ void DeferredLightingRenderStage::PrepareResources(Engine& engine, IRender::Queu
 	IRender& render = engine.interfaces.render;
 	SnowyStream& snowyStream = engine.snowyStream;
 	OutputColor.renderTargetDescription.state.format = IRender::Resource::TextureDescription::HALF;
-	OutputColor.renderTargetDescription.state.layout = IRender::Resource::TextureDescription::RGBA;
+	OutputColor.renderTargetDescription.state.layout = IRender::Resource::TextureDescription::RGB10PACK;
 	OutputColor.renderTargetDescription.state.immutable = false;
 	OutputColor.renderTargetDescription.state.attachment = true;
 
