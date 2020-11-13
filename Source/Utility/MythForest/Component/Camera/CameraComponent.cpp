@@ -66,15 +66,6 @@ void CameraComponent::UpdateRootMatrices(const MatrixFloat4x4& cameraWorldMatrix
 	nextTaskData->worldGlobalData.inverseViewMatrix = cameraWorldMatrix;
 	nextTaskData->worldGlobalData.projectionMatrix = projectionMatrix;
 	nextTaskData->worldGlobalData.viewMatrix = viewMatrix;
-
-	MatrixFloat3x3 viewNormalMatrix;
-	for (size_t j = 0; j < 3; j++) {
-		for (size_t i = 0; i < 3; i++) {
-			viewNormalMatrix(i, j) = viewMatrix(i, j);
-		}
-	}
-
-	nextTaskData->worldGlobalData.viewNormalMatrix = viewNormalMatrix;
 	nextTaskData->worldGlobalData.viewProjectionMatrix = viewMatrix * projectionMatrix;
 	nextTaskData->worldGlobalData.tanHalfFov = (float)tan(fov / 2.0f);
 	nextTaskData->worldGlobalData.viewPosition = Float3(cameraWorldMatrix(3, 0), cameraWorldMatrix(3, 1), cameraWorldMatrix(3, 2));
@@ -759,10 +750,7 @@ void CameraComponent::CompleteCollect(Engine& engine, TaskData& taskData) {
 void CameraComponent::CollectLightComponent(Engine& engine, LightComponent* lightComponent, std::vector<std::pair<TShared<RenderPolicy>, LightElement> >& lightElements, const MatrixFloat4x4& worldMatrix, const TaskData& taskData) const {
 	LightElement element;
 	if (lightComponent->Flag().load(std::memory_order_relaxed) & LightComponent::LIGHTCOMPONENT_DIRECTIONAL) {
-		Float3 p(-worldMatrix(2, 0), -worldMatrix(2, 1), -worldMatrix(2, 2));
-		p = p * taskData.worldGlobalData.viewNormalMatrix;
-		p.Normalize();
-		element.position = Float4(p.x(), p.y(), p.z(), 0);
+		element.position = Float4(-worldMatrix(2, 0), -worldMatrix(2, 1), -worldMatrix(2, 2), 0);
 
 		// refresh shadow
 		std::vector<TShared<LightComponent::ShadowGrid> > shadowGrids = lightComponent->UpdateShadow(engine, taskData.worldGlobalData.inverseViewMatrix, worldMatrix, rootEntity);
@@ -774,10 +762,8 @@ void CameraComponent::CollectLightComponent(Engine& engine, LightComponent* ligh
 			element.shadows.emplace_back(std::move(shadow));
 		}
 	} else {
-		Float3 p(worldMatrix(3, 0), worldMatrix(3, 1), worldMatrix(3, 2));
-		p = Math::Transform3D(taskData.worldGlobalData.viewMatrix, p);
 		float range = lightComponent->GetRange().x();
-		element.position = Float4(p.x(), p.y(), p.z(), Math::Max(0.05f, range * range));
+		element.position = Float4(worldMatrix(3, 0), worldMatrix(3, 1), worldMatrix(3, 2), Math::Max(0.05f, range * range));
 	}
 
 	const Float3& color = lightComponent->GetColor();

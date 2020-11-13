@@ -63,9 +63,25 @@ void LightBufferRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 	uint32_t count = Math::Min((uint32_t)lights.size(), (uint32_t)LightEncoderFS::MAX_LIGHT_COUNT);
 	encoder.lightCount = (float)count;
 
+	MatrixFloat3x3 normalMatrix;
+
+	for (uint32_t j = 0; j < 3; j++) {
+		for (uint32_t i = 0; i < 3; i++) {
+			normalMatrix(i, j) = CameraView->viewMatrix(i, j);
+		}
+	}
+
 	for (uint32_t i = 0; i < count; i++) {
 		const RenderPortLightSource::LightElement& light = lights[i];
-		lightInfos[i] = light.position;
+		Float3 p(light.position.x(), light.position.y(), light.position.z());
+		if (light.position.w() != 0) {
+			p = Math::Transform3D(CameraView->viewMatrix, p);
+		} else {
+			p = p * normalMatrix;
+			p.Normalize();
+		}
+
+		lightInfos[i] = Float4(p.x(), p.y(), p.z(), light.position.w());
 	}
 
 	// assemble block data

@@ -127,7 +127,7 @@ void PassBase::Updater::Property(IReflectObject& s, Unique typeID, Unique refTyp
 						assert(iterator.IsLayoutLinear());
 						uint32_t count = safe_cast<uint32_t>(iterator.GetTotalCount());
 						assert(count != 0);
-						size = (uint32_t)safe_cast<uint32_t>(iterator.GetPrototypeUnique()->GetSize()) * count;
+						size = (uint32_t)safe_cast<uint32_t>(iterator.GetElementUnique()->GetSize()) * count;
 
 						iterator.Next();
 						output.internalAddress = iterator.Get();

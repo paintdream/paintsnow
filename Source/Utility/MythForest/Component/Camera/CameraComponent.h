@@ -39,7 +39,6 @@ namespace PaintsNow {
 			MatrixFloat4x4 viewMatrix;
 			MatrixFloat4x4 inverseViewMatrix; // inverse of viewMatrix
 			MatrixFloat4x4 jitterMatrix;
-			MatrixFloat3x3 viewNormalMatrix;
 
 			Float3 viewPosition;
 			Float2 jitterOffset;

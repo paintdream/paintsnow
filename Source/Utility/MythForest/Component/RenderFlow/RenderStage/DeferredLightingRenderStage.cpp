@@ -87,11 +87,28 @@ void DeferredLightingRenderStage::UpdatePass(Engine& engine, IRender::Queue* que
 
 	// fill light buffers
 	standardLighting.invWorldNormalMatrix = CameraView->inverseViewMatrix;
+	MatrixFloat3x3 normalMatrix;
+
+	for (uint32_t j = 0; j < 3; j++) {
+		for (uint32_t i = 0; i < 3; i++) {
+			normalMatrix(i, j) = CameraView->viewMatrix(i, j);
+		}
+	}
+
 	const std::vector<RenderPortLightSource::LightElement>& lights = LightSource->lightElements;
 	uint32_t count = Math::Min((uint32_t)lights.size(), (uint32_t)StandardLightingFS::MAX_LIGHT_COUNT);
 	for (uint32_t i = 0; i < count; i++) {
 		const RenderPortLightSource::LightElement& light = lights[i];
-		standardLighting.lightInfos[i * 2] = light.position;
+
+		Float3 p(light.position.x(), light.position.y(), light.position.z());
+		if (light.position.w() != 0) {
+			p = Math::Transform3D(CameraView->viewMatrix, p);
+		} else {
+			p = p * normalMatrix;
+			p.Normalize();
+		}
+
+		standardLighting.lightInfos[i * 2] = Float4(p.x(), p.y(), p.z(), light.position.w());
 		standardLighting.lightInfos[i * 2 + 1] = light.colorAttenuation;
 	}
 

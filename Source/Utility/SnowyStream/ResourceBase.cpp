@@ -67,6 +67,10 @@ ResourceManager& ResourceBase::GetResourceManager() const {
 	return resourceManager;
 }
 
+bool ResourceBase::IsMapped() const {
+	return mapCount.load(std::memory_order_acquire) != 0;
+}
+
 bool ResourceBase::IsPrepared() const {
 	return !(Flag().load(std::memory_order_acquire) & TINY_UPDATING);
 }
@@ -112,7 +116,7 @@ bool ResourceBase::Map() {
 	if (mapCount.fetch_add(1, std::memory_order_relaxed) == 0) {
 		return resourceManager.GetUniformResourceManager().LoadResource(this);
 	} else {
-		return true;
+		return false;
 	}
 }
 
@@ -159,7 +163,7 @@ public:
 			if (s.IsIterator()) {
 				IIterator& iterator = static_cast<IIterator&>(s);
 				uint32_t index = 0;
-				const IReflectObject& prototype = iterator.GetPrototype();
+				const IReflectObject& prototype = iterator.GetElementPrototype();
 				while (iterator.Next()) {
 					std::stringstream ss;
 					ss << savedPath << "." << name << "[" << index++ << "]";

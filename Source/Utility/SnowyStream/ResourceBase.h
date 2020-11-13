@@ -20,7 +20,8 @@ namespace PaintsNow {
 			RESOURCE_ETERNAL = TINY_CUSTOM_BEGIN << 4,
 			RESOURCE_ORPHAN = TINY_CUSTOM_BEGIN << 5,
 			RESOURCE_COMPRESSED = TINY_CUSTOM_BEGIN << 6,
-			RESOURCE_CUSTOM_BEGIN = TINY_CUSTOM_BEGIN << 7
+			RESOURCE_VIRTUAL = TINY_CUSTOM_BEGIN << 7,
+			RESOURCE_CUSTOM_BEGIN = TINY_CUSTOM_BEGIN << 8
 		};
 
 		static String GenerateLocation(const String& prefix, const void* ptr);
@@ -37,6 +38,7 @@ namespace PaintsNow {
 		virtual bool Persist();
 		virtual bool Map();
 		virtual void Unmap();
+		bool IsMapped() const;
 
 		struct Dependency {
 			String key;

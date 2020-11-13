@@ -10,7 +10,7 @@
 using namespace PaintsNow;
 
 
-LightComponent::LightComponent() : attenuation(0) /*, spotAngle(1), temperature(6500) */ {
+LightComponent::LightComponent() : attenuation(0), range(0, 0, 0) /*, spotAngle(1), temperature(6500) */ {
 }
 
 Tiny::FLAG LightComponent::GetEntityFlagMask() const {

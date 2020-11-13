@@ -114,6 +114,8 @@ void ModelComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTe
 }
 
 uint32_t ModelComponent::CollectDrawCalls(std::vector<OutputRenderData>& drawCalls, const InputRenderData& inputRenderData) {
+	if (drawCallTemplates.empty()) return 0;
+
 	drawCalls.reserve(drawCalls.size() + materialResources.size());
 	ShaderResource* overrideShaderTemplate = inputRenderData.overrideShaderTemplate;
 	uint32_t baseIndex = 0;
@@ -180,8 +182,15 @@ String ModelComponent::GetDescription() const {
 
 void ModelComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box) {
 	const Float3Pair& sub = meshResource->GetBoundingBox();
-	Union(box, sub.first);
-	Union(box, sub.second);
+
+	assert(sub.first.x() > -FLT_MAX && sub.second.x() < FLT_MAX);
+	assert(sub.first.y() > -FLT_MAX && sub.second.y() < FLT_MAX);
+	assert(sub.first.z() > -FLT_MAX && sub.second.z() < FLT_MAX);
+
+	if (sub.first.x() <= sub.second.x()) {
+		Union(box, sub.first);
+		Union(box, sub.second);
+	}
 }
 
 void ModelComponent::Collapse(Engine& engine) {

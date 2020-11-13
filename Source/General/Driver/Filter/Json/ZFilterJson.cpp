@@ -77,8 +77,8 @@ public:
 
 				if (v.isArray()) {
 					size_t index = 0;
-					Unique id = it.GetPrototypeUnique();
-					IReflectObject& prototype = const_cast<IReflectObject&>(it.GetPrototype());
+					Unique id = it.GetElementUnique();
+					IReflectObject& prototype = const_cast<IReflectObject&>(it.GetElementPrototype());
 					if (prototype.IsBasicObject()) {
 						while (it.Next()) {
 							OnValue(prototype, id, v[(Json::ArrayIndex)index++], it.Get());

@@ -702,8 +702,8 @@ struct InspectProcs : public IReflect {
 			}
 		} else if (s.IsIterator()) {
 			IIterator& it = static_cast<IIterator&>(s);
-			if (it.GetPrototype().IsBasicObject()) {
-				Unique unique = it.GetPrototypeUnique();
+			if (it.IsElementBasicObject()) {
+				Unique unique = it.GetElementUnique();
 				if (unique != refTypeID) {
 					request << key(name) << beginarray;
 					while (it.Next()) {
@@ -711,7 +711,7 @@ struct InspectProcs : public IReflect {
 					}
 					request << endarray;
 				} else {
-					std::map<Unique, IInspectPrimitive*>::const_iterator p = inspectPrimitives.mapInspectors.find(it.GetPrototypeUnique());
+					std::map<Unique, IInspectPrimitive*>::const_iterator p = inspectPrimitives.mapInspectors.find(it.GetElementUnique());
 					if (p != inspectPrimitives.mapInspectors.end()) {
 						request << key(name) << beginarray;
 

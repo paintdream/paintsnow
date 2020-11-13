@@ -276,10 +276,20 @@ void SpaceComponent::RoutineUpdateBoundingBoxRecursive(Float3Pair& box, Entity* 
 		// Do not trigger entities' UpdateBoundingBox
 		// It should be updated manually by entity's owner
 		const Float3Pair& eb = entity->GetKey();
+
+		assert(eb.first.x() > -FLT_MAX && eb.second.x() < FLT_MAX);
+		assert(eb.first.y() > -FLT_MAX && eb.second.y() < FLT_MAX);
+		assert(eb.first.z() > -FLT_MAX && eb.second.z() < FLT_MAX);
 		Union(box, eb.first);
 		Union(box, eb.second);
+		assert(box.first.x() > -FLT_MAX && box.second.x() < FLT_MAX);
+		assert(box.first.y() > -FLT_MAX && box.second.y() < FLT_MAX);
+		assert(box.first.z() > -FLT_MAX && box.second.z() < FLT_MAX);
 
 		RoutineUpdateBoundingBoxRecursive(box, entity->Left());
+		assert(box.first.x() > -FLT_MAX && box.second.x() < FLT_MAX);
+		assert(box.first.y() > -FLT_MAX && box.second.y() < FLT_MAX);
+		assert(box.first.z() > -FLT_MAX && box.second.z() < FLT_MAX);
 		entity = entity->Right();
 	}
 }
@@ -287,6 +297,9 @@ void SpaceComponent::RoutineUpdateBoundingBoxRecursive(Float3Pair& box, Entity* 
 void SpaceComponent::RoutineUpdateBoundingBox() {
 	Float3Pair box(Float3(FLT_MAX, FLT_MAX, FLT_MAX), Float3(-FLT_MAX, -FLT_MAX, -FLT_MAX));
 	RoutineUpdateBoundingBoxRecursive(box, rootEntity);
+	assert(box.first.x() > -FLT_MAX && box.second.x() < FLT_MAX);
+	assert(box.first.y() > -FLT_MAX && box.second.y() < FLT_MAX);
+	assert(box.first.z() > -FLT_MAX && box.second.z() < FLT_MAX);
 	boundingBox = box;
 	Flag().fetch_and(~Tiny::TINY_UPDATING, std::memory_order_release);
 }
@@ -372,8 +385,10 @@ void SpaceComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box) {
 		Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release);
 	}
 
-	Union(box, boundingBox.first);
-	Union(box, boundingBox.second);
+	if (boundingBox.first.x() <= boundingBox.second.x()) {
+		Union(box, boundingBox.first);
+		Union(box, boundingBox.second);
+	}
 }
 
 const Float3Pair& SpaceComponent::GetBoundingBox() const {

@@ -8,6 +8,10 @@ MeshResource::MeshResource(ResourceManager& manager, const String& uniqueID) : B
 MeshResource::~MeshResource() {}
 
 const Float3Pair& MeshResource::GetBoundingBox() const {
+	assert(boundingBox.first.x() > -FLT_MAX && boundingBox.second.x() < FLT_MAX);
+	assert(boundingBox.first.y() > -FLT_MAX && boundingBox.second.y() < FLT_MAX);
+	assert(boundingBox.first.z() > -FLT_MAX && boundingBox.second.z() < FLT_MAX);
+
 	return boundingBox;
 }
 
@@ -50,7 +54,7 @@ typedef IRender::Resource::BufferDescription Description;
 
 void MeshResource::Upload(IRender& render, void* deviceContext) {
 	// Update buffers ...
-	if (!(Flag().fetch_or(RESOURCE_UPLOADED) & RESOURCE_UPLOADED)) {
+	if (Flag().fetch_and(~TINY_MODIFIED) & TINY_MODIFIED) {
 		SpinLock(critical);
 
 		IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(deviceContext);
@@ -134,9 +138,9 @@ void MeshResource::Upload(IRender& render, void* deviceContext) {
 		}
 
 		SpinUnLock(critical);
-
-		Flag().fetch_and(~Tiny::TINY_MODIFIED, std::memory_order_release);
 	}
+
+	Flag().fetch_or(RESOURCE_UPLOADED, std::memory_order_release);
 }
 
 void MeshResource::Unmap() {

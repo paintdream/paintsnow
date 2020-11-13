@@ -431,11 +431,7 @@ private:
 
 	inline void RoutineCreateResource(void* context, bool run, uint32_t index) {
 		if (run) {
-			TShared<ResourceBase> resource = resourceList[index] = snowyStream.CreateResource(pathList[index], resType, true);
-			if (resource && !(resource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_UPLOADED) && !(resource->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release) & Tiny::TINY_MODIFIED)) {
-				assert(resource->Flag().load(std::memory_order_acquire) & Tiny::TINY_MODIFIED);
-				resource->GetResourceManager().InvokeUpload(resource());
-			}
+			resourceList[index] = snowyStream.CreateResource(pathList[index], resType, true);
 		}
 
 		if (callbackStep) {
@@ -451,13 +447,6 @@ private:
 
 		// is abount to finish
 		if (completed.fetch_add(1, std::memory_order_release) + 1 == pathList.size()) {
-#ifdef _DEBUG
-			for (size_t k = 0; k < resourceList.size(); k++) {
-				if (resourceList[k]) {
-					assert(resourceList[k]->Flag().load(std::memory_order_acquire) & (Tiny::TINY_MODIFIED | ResourceBase::RESOURCE_UPLOADED));
-				}
-			}
-#endif
 			assert(context != nullptr);
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 			IScript::Request& request = *bridgeSunset.AcquireSafe();
@@ -655,8 +644,8 @@ void SnowyStream::Uninitialize() {
 }
 
 template <class T>
-void RegisterPass(ResourceManager& resourceManager, UniqueType<T> type, const String& matName = "") {
-	ShaderResourceImpl<T>* shaderResource = new ShaderResourceImpl<T>(resourceManager, "", ResourceBase::RESOURCE_ETERNAL);
+void RegisterPass(ResourceManager& resourceManager, UniqueType<T> type, const String& matName = "", const IRender::Resource::RenderStateDescription& renderState = IRender::Resource::RenderStateDescription()) {
+	ShaderResourceImpl<T>* shaderResource = new ShaderResourceImpl<T>(resourceManager, "", ResourceBase::RESOURCE_ETERNAL | ResourceBase::RESOURCE_VIRTUAL);
 	PassBase& pass = shaderResource->GetPass();
 	Unique unique = pass.GetUnique();
 	assert(unique != UniqueType<PassBase>().Get());
@@ -674,7 +663,8 @@ void RegisterPass(ResourceManager& resourceManager, UniqueType<T> type, const St
 	if (!matName.empty()) {
 		TShared<MaterialResource> materialResource = TShared<MaterialResource>::From(new MaterialResource(resourceManager, String("[Runtime]/MaterialResource/") + matName));
 		materialResource->originalShaderResource = shaderResource;
-		materialResource->Flag().fetch_or(ResourceBase::RESOURCE_ETERNAL, std::memory_order_release);
+		materialResource->materialParams.state = renderState;
+		materialResource->Flag().fetch_or(ResourceBase::RESOURCE_ETERNAL | ResourceBase::RESOURCE_VIRTUAL, std::memory_order_release);
 
 		resourceManager.DoLock();
 		resourceManager.Insert(materialResource());
@@ -701,8 +691,11 @@ void SnowyStream::RegisterBuiltinPasses() {
 	RegisterPass(*resourceManager(), UniqueType<ScreenPass>());
 	RegisterPass(*resourceManager(), UniqueType<ShadowMaskPass>());
 	RegisterPass(*resourceManager(), UniqueType<StandardPass>());
-	RegisterPass(*resourceManager(), UniqueType<TextPass>(), "Text");
-	RegisterPass(*resourceManager(), UniqueType<WidgetPass>(), "Widget");
+
+	IRender::Resource::RenderStateDescription state;
+	state.depthTest = 0;
+	RegisterPass(*resourceManager(), UniqueType<TextPass>(), "Text", state);
+	RegisterPass(*resourceManager(), UniqueType<WidgetPass>(), "Widget", state);
 
 	/*
 	RegisterPass(*resourceManager(), UniqueType<ForwardLightingPass>());
@@ -777,8 +770,10 @@ TShared<ResourceBase> SnowyStream::CreateResource(const String& path, const Stri
 		assert(t != resourceManagers.end());
 		ResourceManager& resourceManager = *(*t).second();
 
-		TShared<ResourceBase> existed = resourceManager.LoadExistSafe(location);
+		resourceManager.DoLock();
+		TShared<ResourceBase> existed = resourceManager.LoadExist(location);
 		if (existed) {
+			resourceManager.UnLock();
 			// Create failed, already exists
 			if (!openExisting) {
 				return nullptr;
@@ -791,49 +786,34 @@ TShared<ResourceBase> SnowyStream::CreateResource(const String& path, const Stri
 		resource->Flag().fetch_or(flag, std::memory_order_relaxed);
 
 		// double check
-		resourceManager.DoLock();
 		existed = resourceManager.LoadExist(location);
 		if (existed) {
 			resourceManager.UnLock();
 
-			if (openExisting) {
-				return existed;
-			} else {
+			if (!openExisting) {
 				return nullptr;
+			} else {
+				return existed;
 			}
 		}
 
 		resourceManager.Insert(resource);
+		
+#if !defined(_MSC_VER) || _MSC_VER > 1200
 		resourceManager.UnLock();
+#endif
 
-		IStreamBase* localStream = nullptr;
-		if (sourceStream == nullptr) {
-			if (openExisting) {
-				uint64_t length;
-				sourceStream = localStream = archive.Open(resource->GetLocation() + "." + (*p).second.second->GetExtension() + (*t).second->GetLocationPostfix(), false, length);
+		if (!(resource->Flag().load(std::memory_order_relaxed) & ResourceBase::RESOURCE_VIRTUAL)) {
+			if (resource->Map()) {
+				resourceManager.InvokeUpload(resource());
 			}
+
+			resource->Unmap();
 		}
 
-		// Load data and upload it if provided
-		if (sourceStream != nullptr) {
-			IStreamBase* filter = protocol.CreateFilter(*sourceStream);
-			assert(filter != nullptr);
-			SpinLock(resource->critical);
-			if (!(*filter >> *resource())) {
-				fprintf(stderr, "Resource load failed: %s\n", location.c_str());
-			}
-			SpinUnLock(resource->critical);
-
-			filter->ReleaseObject();
-
-			resource->Flag().fetch_or(ResourceBase::TINY_MODIFIED, std::memory_order_relaxed);
-			resourceManager.InvokeRefresh(resource());
-			resourceManager.InvokeUpload(resource());
-
-			if (localStream != nullptr) {
-				localStream->ReleaseObject();
-			}
-		}
+#if defined(_MSC_VER) && _MSC_VER <= 1200
+		resourceManager.UnLock();
+#endif
 
 		return resource;
 	} else {
@@ -850,6 +830,7 @@ String SnowyStream::GetReflectedExtension(Unique unique) {
 bool SnowyStream::LoadResource(const TShared<ResourceBase>& resource, const String& extension) {
 	// Find resource serializer
 	assert(resource);
+	assert(resource->IsMapped());
 	String typeExtension = extension.empty() ? GetReflectedExtension(resource->GetUnique()) : extension;
 	IArchive& archive = interfaces.archive;
 	IFilterBase& protocol = interfaces.assetFilterBase;
@@ -869,6 +850,7 @@ bool SnowyStream::LoadResource(const TShared<ResourceBase>& resource, const Stri
 			assert(filter != nullptr);
 			SpinLock(resource->critical);
 			result = *filter >> *resource();
+			resource->Flag().fetch_or(Tiny::TINY_MODIFIED);
 			SpinUnLock(resource->critical);
 			filter->ReleaseObject();
 			stream->ReleaseObject();
@@ -886,6 +868,7 @@ bool SnowyStream::LoadResource(const TShared<ResourceBase>& resource, const Stri
 bool SnowyStream::SaveResource(const TShared<ResourceBase>& resource, const String& extension) {
 	// Find resource serializer
 	assert(resource);
+	assert(resource->IsMapped());
 	String typeExtension = extension.empty() ? GetReflectedExtension(resource->GetUnique()) : extension;
 	IArchive& archive = interfaces.archive;
 	IFilterBase& protocol = interfaces.assetFilterBase;
@@ -919,7 +902,7 @@ bool SnowyStream::SaveResource(const TShared<ResourceBase>& resource, const Stri
 void SnowyStream::CreateBuiltinSolidTexture(const String& path, const UChar4& color) {
 	IRender& render = interfaces.render;
 	// Error Texture for missing textures ...
-	TShared<TextureResource> errorTexture = CreateReflectedResource(UniqueType<TextureResource>(), path, false, ResourceBase::RESOURCE_ETERNAL);
+	TShared<TextureResource> errorTexture = CreateReflectedResource(UniqueType<TextureResource>(), path, false, ResourceBase::RESOURCE_ETERNAL | ResourceBase::RESOURCE_VIRTUAL);
 	if (errorTexture) {
 		errorTexture->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 		errorTexture->description.state.layout = IRender::Resource::TextureDescription::RGBA;
@@ -940,7 +923,7 @@ void SnowyStream::CreateBuiltinSolidTexture(const String& path, const UChar4& co
 }
 
 void SnowyStream::CreateBuiltinMesh(const String& path, const Float3* vertices, size_t vertexCount, const UInt3* indices, size_t indexCount) {
-	TShared<MeshResource> meshResource = CreateReflectedResource(UniqueType<MeshResource>(), path, false, ResourceBase::RESOURCE_ETERNAL);
+	TShared<MeshResource> meshResource = CreateReflectedResource(UniqueType<MeshResource>(), path, false, ResourceBase::RESOURCE_ETERNAL | ResourceBase::RESOURCE_VIRTUAL);
 	IRender& render = interfaces.render;
 
 	if (meshResource) {

@@ -86,9 +86,10 @@ namespace PaintsNow {
 			void Initialize(size_t count) override;
 			size_t GetTotalCount() const override;
 			void* Get() override;
-			const IReflectObject& GetPrototype() const override;
-			Unique GetPrototypeUnique() const override;
-			Unique GetPrototypeReferenceUnique() const override;
+			bool IsElementBasicObject() const override;
+			Unique GetElementUnique() const override;
+			Unique GetElementReferenceUnique() const override;
+			const IReflectObject& GetElementPrototype() const override;
 			bool IsLayoutLinear() const override;
 			bool IsLayoutPinned() const override;
 			bool Next() override;

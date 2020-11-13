@@ -121,7 +121,7 @@ void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refT
 					// defines as local
 					if (s.IsIterator()) {
 						IIterator& iterator = static_cast<IIterator&>(s);
-						initialization += String("\t") + declareMap[iterator.GetPrototypeUnique()] + " " + name + "[1];\n";
+						initialization += String("\t") + declareMap[iterator.GetElementUnique()] + " " + name + "[1];\n";
 					} else {
 						initialization += String("\t") + declareMap[typeID] + " " + name + ";\n";
 					}
@@ -143,7 +143,7 @@ void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refT
 			arr = ss.str();
 			arrDef = "[]";
 
-			typeID = iterator.GetPrototypeUnique();
+			typeID = iterator.GetElementUnique();
 		}
 
 		for (const MetaChainBase* chain = meta; chain != nullptr; chain = chain->GetNext()) {

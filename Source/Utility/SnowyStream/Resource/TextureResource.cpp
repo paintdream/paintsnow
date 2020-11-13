@@ -33,7 +33,7 @@ void TextureResource::Detach(IRender& render, void* deviceContext) {
 
 void TextureResource::Unmap() {
 	GraphicResourceBase::Unmap();
-	
+
 	SpinLock(critical);
 	if (mapCount.load(std::memory_order_relaxed) == 0) {
 		description.data.Clear();
@@ -46,12 +46,12 @@ void TextureResource::Upload(IRender& render, void* deviceContext) {
 	//	assert(description.data.size() == (size_t)description.dimension.x() * description.dimension.y() * IImage::GetPixelSize((IRender::Resource::TextureDescription::Format)description.state.format, (IRender::Resource::TextureDescription::Layout)description.state.layout));
 	IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(deviceContext);
 
-	if (!(Flag().fetch_or(RESOURCE_UPLOADED) & RESOURCE_UPLOADED)) {
+	if (Flag().fetch_and(~TINY_MODIFIED) & TINY_MODIFIED) {
 		SpinLock(critical);
 
 		description.state.reserved = 0;
 		description.state.media = 0;
-		if (description.state.compress) {
+		if (description.state.compress || GetLocation()[0] == '/') {
 			assert(!description.data.Empty());
 		}
 
@@ -68,9 +68,9 @@ void TextureResource::Upload(IRender& render, void* deviceContext) {
 #endif
 
 		SpinUnLock(critical);
-
-		Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release);
 	}
+
+	Flag().fetch_or(RESOURCE_UPLOADED, std::memory_order_release);
 }
 
 void TextureResource::Download(IRender& render, void* deviceContext) {

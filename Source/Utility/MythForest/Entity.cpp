@@ -309,11 +309,21 @@ void Entity::UpdateBoundingBox(Engine& engine) {
 			for (size_t i = components.size(); i > 0; i--) {
 				Component* component = components[i - 1];
 				if (component != nullptr) {
+					assert(box.first.x() > -FLT_MAX && box.second.x() < FLT_MAX);
+					assert(box.first.y() > -FLT_MAX && box.second.y() < FLT_MAX);
+					assert(box.first.z() > -FLT_MAX && box.second.z() < FLT_MAX);
 					component->UpdateBoundingBox(engine, box);
+					assert(box.first.x() > -FLT_MAX && box.second.x() < FLT_MAX);
+					assert(box.first.y() > -FLT_MAX && box.second.y() < FLT_MAX);
+					assert(box.first.z() > -FLT_MAX && box.second.z() < FLT_MAX);
 				}
 			}
 
 			if (box.second.x() - box.first.x() >= 0) {
+				assert(box.first.x() > -FLT_MAX && box.second.x() < FLT_MAX);
+				assert(box.first.y() > -FLT_MAX && box.second.y() < FLT_MAX);
+				assert(box.first.z() > -FLT_MAX && box.second.z() < FLT_MAX);
+
 				SetKey(box);
 			}
 		}

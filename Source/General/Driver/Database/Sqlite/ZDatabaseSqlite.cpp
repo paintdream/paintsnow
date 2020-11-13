@@ -216,14 +216,18 @@ public:
 		assert(false);
 	}
 
-	Unique GetPrototypeUnique() const override {
+	Unique GetElementUnique() const override {
 		assert(false);
 		return Unique();
 	}
 
-	Unique GetPrototypeReferenceUnique() const override {
+	Unique GetElementReferenceUnique() const override {
 		assert(false);
 		return Unique();
+	}
+
+	bool IsElementBasicObject() const override {
+		return true;
 	}
 
 	size_t GetTotalCount() const override {
@@ -239,7 +243,7 @@ public:
 		return dynamicObject;
 	}
 
-	const IReflectObject& GetPrototype() const override {
+	const IReflectObject& GetElementPrototype() const override {
 		return *dynamicObject;
 	}
 
@@ -411,7 +415,7 @@ IDatabase::MetaData* ZDatabaseSqlite::Execute(Database* database, const String& 
 			fprintf(stderr, "\nerror %s\n", sqlite3_errmsg(impl->handle));*/
 
 			// bind data
-			const IReflectObject& prototype = postData->GetPrototype();
+			const IReflectObject& prototype = postData->GetElementPrototype();
 			MapperSqlite reflect(stmt, names);
 			prototype(reflect);
 
@@ -431,7 +435,7 @@ IDatabase::MetaData* ZDatabaseSqlite::Execute(Database* database, const String& 
 					sqlite3_reset(stmt);
 				}
 			} else {
-				assert(!postData->GetPrototype().IsBasicObject());
+				assert(!postData->IsElementBasicObject());
 				while (postData->Next()) {
 					WriterSqlite writer(reflect);
 					(*reinterpret_cast<IReflectObject*>(postData->Get()))(writer);

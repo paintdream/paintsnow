@@ -90,7 +90,9 @@ void MaterialResource::Attach(IRender& render, void* deviceContext) {}
 
 void MaterialResource::Detach(IRender& render, void* deviceContext) {}
 
-void MaterialResource::Upload(IRender& render, void* deviceContext) {}
+void MaterialResource::Upload(IRender& render, void* deviceContext) {
+	Flag().fetch_or(RESOURCE_UPLOADED, std::memory_order_release);
+}
 
 void MaterialResource::Download(IRender& render, void* deviceContext) {}
 

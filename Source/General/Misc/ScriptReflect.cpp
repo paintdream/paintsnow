@@ -101,7 +101,7 @@ void ScriptReflect::Property(IReflectObject& s, Unique typeID, Unique refTypeID,
 				// count = (uint64_t)it.GetTotalCount();
 			}
 
-			if (it.GetPrototype().IsBasicObject()) {
+			if (it.IsElementBasicObject()) {
 				while (it.Next()) {
 					(*reinterpret_cast<IReflectObject*>(it.Get()))(*this);
 				}

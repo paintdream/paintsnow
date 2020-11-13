@@ -164,6 +164,9 @@ void TransformComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box) {
 			Union(newBox, Float3(pt.x(), pt.y(), pt.z()));
 		}
 
+		assert(newBox.first.x() > -FLT_MAX && newBox.second.x() < FLT_MAX);
+		assert(newBox.first.y() > -FLT_MAX && newBox.second.y() < FLT_MAX);
+		assert(newBox.first.z() > -FLT_MAX && newBox.second.z() < FLT_MAX);
 		box = newBox;
 	}
 

@@ -179,12 +179,12 @@ void IWidget::Property(IReflectObject& s, Unique typeID, Unique refTypeID, const
 			}
 		} else if (s.IsIterator()) {
 			IIterator& iterator = static_cast<IIterator&>(s);
-			Unique subUnique = iterator.GetPrototypeUnique();
-			Unique refUnique = iterator.GetPrototypeReferenceUnique();
+			Unique subUnique = iterator.GetElementUnique();
+			Unique refUnique = iterator.GetElementReferenceUnique();
 			char name[64];
 			int i = 0;
 			while (iterator.Next()) {
-				IReflectObject& prototype = const_cast<IReflectObject&>(iterator.GetPrototype());
+				IReflectObject& prototype = const_cast<IReflectObject&>(iterator.GetElementPrototype());
 				sprintf(name, "[%d]", i++);
 				void* ptr = iterator.Get();
 				assert(ptr != nullptr);

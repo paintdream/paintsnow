@@ -16,7 +16,7 @@ namespace PaintsNow {
 
 Honey::Honey(IDatabase::MetaData* data) : metaData(data) {
 	assert(data != nullptr);
-	(data->GetPrototype())(resolver); // resolve schema
+	(data->GetElementPrototype())(resolver); // resolve schema
 }
 
 Honey::~Honey() {
@@ -69,12 +69,12 @@ void* HoneyData::GetHost() const {
 	return nullptr;
 }
 
-Unique HoneyData::GetPrototypeUnique() const {
+Unique HoneyData::GetElementUnique() const {
 	assert(false);
 	return Unique();
 }
 
-Unique HoneyData::GetPrototypeReferenceUnique() const {
+Unique HoneyData::GetElementReferenceUnique() const {
 	assert(false);
 	return Unique();
 }
@@ -228,7 +228,11 @@ void* HoneyData::Get() {
 	return dynamicObject;
 }
 
-const IReflectObject& HoneyData::GetPrototype() const {
+bool HoneyData::IsElementBasicObject() const {
+	return false;
+}
+
+const IReflectObject& HoneyData::GetElementPrototype() const {
 	return *dynamicObject;
 }
 

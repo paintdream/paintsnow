@@ -77,17 +77,21 @@ size_t DynamicVector::Iterator::GetTotalCount() const {
 	return base->count;
 }
 
-Unique DynamicVector::Iterator::GetPrototypeUnique() const {
+bool DynamicVector::Iterator::IsElementBasicObject() const {
+	return true;
+}
+
+Unique DynamicVector::Iterator::GetElementUnique() const {
 	return base->unique;
 }
 
-Unique DynamicVector::Iterator::GetPrototypeReferenceUnique() const {
+Unique DynamicVector::Iterator::GetElementReferenceUnique() const {
 	return base->unique;
 }
 
 static IReflectObject dummyObject((int)0);
 
-const IReflectObject& DynamicVector::Iterator::GetPrototype() const {
+const IReflectObject& DynamicVector::Iterator::GetElementPrototype() const {
 	return base->count == 0 || !base->reflectable ? dummyObject : *reinterpret_cast<const IReflectObject*>(base->buffer);
 }
 
