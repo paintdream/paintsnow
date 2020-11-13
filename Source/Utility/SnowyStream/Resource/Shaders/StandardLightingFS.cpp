@@ -49,8 +49,11 @@ String StandardLightingFS::GetShaderText() {
 		float4 pos = lightInfos[i * 2 - 2];
 		float4 color = lightInfos[i * 2 - 1];
 
-		float3 L = pos.xyz - viewPosition.xyz * pos.www;
-		float s = saturate(1.0 / (0.001 + dot(L, L) * color.w)) * step(-0.5, pos.w - shadow);
+		float nondirectional = step(0.025, pos.w);
+		float3 L = pos.xyz - viewPosition.xyz * nondirectional;
+		float dist = dot(L, L) * nondirectional;
+		float falloff = saturate(dist / max(0.025, pos.w));
+		float s = (1.0 - falloff * falloff) / (1.0 + dist * color.w) * step(-0.5, nondirectional - shadow);
 		L = normalize(L);
 		float3 H = normalize(L + V);
 

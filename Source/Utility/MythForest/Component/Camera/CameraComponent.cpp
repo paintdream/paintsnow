@@ -776,8 +776,8 @@ void CameraComponent::CollectLightComponent(Engine& engine, LightComponent* ligh
 	} else {
 		Float3 p(worldMatrix(3, 0), worldMatrix(3, 1), worldMatrix(3, 2));
 		p = Math::Transform3D(taskData.worldGlobalData.viewMatrix, p);
-
-		element.position = Float4(p.x(), p.y(), p.z(), 1);
+		float range = lightComponent->GetRange().x();
+		element.position = Float4(p.x(), p.y(), p.z(), Math::Max(0.05f, range * range));
 	}
 
 	const Float3& color = lightComponent->GetColor();

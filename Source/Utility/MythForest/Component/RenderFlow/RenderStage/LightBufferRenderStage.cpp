@@ -65,16 +65,7 @@ void LightBufferRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 
 	for (uint32_t i = 0; i < count; i++) {
 		const RenderPortLightSource::LightElement& light = lights[i];
-		Float4& lightPosition = lightInfos[i] = light.position;
-		if (lightPosition.w() != 0) {
-			// make box
-			// energy = intensity / (0.001 + dist * dist * attenuation) < 0.05
-			// i.e.
-			const Float4& color = light.colorAttenuation;
-			float intensity = color.x() * 0.2126f + color.y() * 0.7152f + color.z() * 0.0722f;
-			float radius = (float)(100 * intensity / (0.0001 + color.w()));
-			lightPosition.w() = Math::Max(0.05f, radius);
-		}
+		lightInfos[i] = light.position;
 	}
 
 	// assemble block data

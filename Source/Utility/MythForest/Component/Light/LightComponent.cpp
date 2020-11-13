@@ -177,6 +177,7 @@ const Float3& LightComponent::GetRange() const {
 }
 
 void LightComponent::SetRange(const Float3& r) {
+	assert(r.x() > 0 && r.y() > 0 && r.z() > 0);
 	range = r;
 }
 

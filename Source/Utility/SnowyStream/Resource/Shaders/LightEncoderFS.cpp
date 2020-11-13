@@ -25,7 +25,7 @@ String LightEncoderFS::GetShaderText() {
 		outputIndex = float4(0, 0, 0, 0);
 		for (int i = 0, j = 0; i < count && j < 4; i++) {
 			float4 lightInfo = lightInfos[i];
-			if (lightInfo.w < 0.025) {
+			if (lightInfo.w == 0.0) {
 				outputIndex[j++] = i + 1;
 			} else {
 				float3 L = lightInfo.xyz - nearPosition.xyz;
