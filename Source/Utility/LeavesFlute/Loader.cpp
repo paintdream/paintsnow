@@ -118,8 +118,6 @@ void Loader::Load(const CmdLine& cmdLine) {
 	// Load necessary modules
 	const std::list<CmdLine::Option>& modules = cmdLine.GetModuleList();
 
-	printf("LeavesFlute %s\nPaintDream (paintdream@paintdream.com) (C) 2014-2020\nBased on PaintsNow [https://github.com/paintdream/paintsnow]\n", PAINTSNOW_VERSION_MINOR);
-
 	bool nogui = true;
 	bool isVulkan = true;
 	bool enableModuleLog = false;

@@ -1,4 +1,5 @@
 #include "../LeavesFlute/LeavesFlute.h"
+#include "../LeavesFlute/Platform.h"
 #ifdef _WIN32
 #include "../../General/Driver/Debugger/MiniDump/ZDebuggerWin.h"
 #include <shlwapi.h>
@@ -59,8 +60,13 @@ int main(int argc, char* argv[]) {
 	cmdLine.Process(argc, argv);
 #endif
 
+	printf("LeavesWing %s\nPaintDream (paintdream@paintdream.com) (C) 2014-2020\nBased on PaintsNow [https://github.com/paintdream/paintsnow]\n", PAINTSNOW_VERSION_MINOR);
+
 	Loader loader;
 	loader.Load(cmdLine);
 
+#ifdef _WIN32
+	OutputDebugStringA("LeavesWing exited without any errors.\n");
+#endif
 	return 0;
 }

@@ -53,6 +53,7 @@ ResourceBase::ResourceBase(ResourceManager& manager, const String& id) : BaseCla
 }
 
 ResourceBase::~ResourceBase() {
+	assert(mapCount.load(std::memory_order_acquire) == 0);
 #ifdef _DEBUG
 	leakGuard.Remove(this);
 #endif
@@ -78,6 +79,9 @@ bool ResourceBase::IsPrepared() const {
 void ResourceBase::ReleaseObject() {
 	// last?
 	if (GetExtReferCount() == 0 && !(Flag().load(std::memory_order_acquire) & RESOURCE_ORPHAN)) {
+		// must not locked.
+		assert(critical.load(std::memory_order_acquire) == 0);
+
 		// no references exist, remove this from resource manager
 		resourceManager.DoLock();
 		if (GetExtReferCount() == 0 && !(Flag().load(std::memory_order_acquire) & RESOURCE_ORPHAN)) {

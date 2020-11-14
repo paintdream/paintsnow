@@ -53,8 +53,12 @@ function Scene.New(database : Database, clock : Clock) : Scene
 		local warmingUpResources : { string : { string }} = {}
 		for _, line in database:Lines("select Path, Names.Name from `Resources`, `Names` where `TypeID` == Names.ID") do
 			local path, name = table.unpack(line as { string })
-			warmingUpResources[name as string] = warmingUpResources[name as string] or {}
-			table.insert(warmingUpResources[name as string], path as string)
+
+			-- no need to warming up materials
+			if name ~= "MaterialResource" then
+				warmingUpResources[name as string] = warmingUpResources[name as string] or {}
+				table.insert(warmingUpResources[name as string], path as string)
+			end
 		end
 
 		local running = coroutine.running()

@@ -42,6 +42,7 @@ void TextureResource::Unmap() {
 }
 
 void TextureResource::Upload(IRender& render, void* deviceContext) {
+	assert(!(Flag().load(std::memory_order_acquire) & RESOURCE_UPLOADED));
 	// if (description.data.size() == 0) return;
 	//	assert(description.data.size() == (size_t)description.dimension.x() * description.dimension.y() * IImage::GetPixelSize((IRender::Resource::TextureDescription::Format)description.state.format, (IRender::Resource::TextureDescription::Layout)description.state.layout));
 	IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(deviceContext);

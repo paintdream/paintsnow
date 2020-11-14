@@ -773,8 +773,8 @@ TShared<ResourceBase> SnowyStream::CreateResource(const String& path, const Stri
 		resourceManager.DoLock();
 		TShared<ResourceBase> existed = resourceManager.LoadExist(location);
 		if (existed) {
-			resourceManager.UnLock();
 			// Create failed, already exists
+			resourceManager.UnLock();
 			if (!openExisting) {
 				return nullptr;
 			} else {
@@ -784,24 +784,8 @@ TShared<ResourceBase> SnowyStream::CreateResource(const String& path, const Stri
 
 		resource = (*p).second.second->Create(resourceManager, location);
 		resource->Flag().fetch_or(flag, std::memory_order_relaxed);
-
-		// double check
-		existed = resourceManager.LoadExist(location);
-		if (existed) {
-			resourceManager.UnLock();
-
-			if (!openExisting) {
-				return nullptr;
-			} else {
-				return existed;
-			}
-		}
-
 		resourceManager.Insert(resource);
-		
-#if !defined(_MSC_VER) || _MSC_VER > 1200
 		resourceManager.UnLock();
-#endif
 
 		if (!(resource->Flag().load(std::memory_order_relaxed) & ResourceBase::RESOURCE_VIRTUAL)) {
 			if (resource->Map()) {
@@ -810,10 +794,6 @@ TShared<ResourceBase> SnowyStream::CreateResource(const String& path, const Stri
 
 			resource->Unmap();
 		}
-
-#if defined(_MSC_VER) && _MSC_VER <= 1200
-		resourceManager.UnLock();
-#endif
 
 		return resource;
 	} else {
