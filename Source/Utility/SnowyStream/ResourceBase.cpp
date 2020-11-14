@@ -32,6 +32,7 @@ struct LeakGuard {
 
 	void Remove(SharedTiny* s) {
 		SpinLock(section);
+		assert(collection.count(s));
 		collection.erase(s);
 		SpinUnLock(section);
 	}

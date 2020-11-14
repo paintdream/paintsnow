@@ -794,10 +794,6 @@ TShared<ResourceBase> SnowyStream::CreateResource(const String& path, const Stri
 
 			resource->Unmap();
 		}
-
-		return resource;
-	} else {
-		return nullptr; // unknown resource type
 	}
 
 	return resource;

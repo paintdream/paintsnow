@@ -115,6 +115,7 @@ void VisibilityComponent::Initialize(Engine& engine, Entity* entity) {
 }
 
 void VisibilityComponent::Uninitialize(Engine& engine, Entity* entity) {
+	// TODO: wait for all download tasks to finish.
 	assert(hostEntity != nullptr);
 	hostEntity = nullptr;
 	IRender& render = engine.interfaces.render;
