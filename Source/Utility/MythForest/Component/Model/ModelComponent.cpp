@@ -6,6 +6,7 @@
 using namespace PaintsNow;
 
 ModelComponent::ModelComponent(const TShared<MeshResource>& res, const TShared<BatchComponent>& batch) : batchComponent(std::move(batch)), meshResource(std::move(res)), hostCount(0) {
+	assert(res);
 	Flag().fetch_or(COMPONENT_SHARED, std::memory_order_relaxed); // can be shared among different entities
 }
 

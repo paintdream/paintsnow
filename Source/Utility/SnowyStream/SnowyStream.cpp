@@ -195,12 +195,7 @@ void SnowyStream::RequestFileExists(IScript::Request& request, const String& pat
 	bridgeSunset.GetKernel().YieldCurrentWarp();
 
 	IArchive& archive = interfaces.archive;
-	uint64_t length;
-	IStreamBase* stream = archive.Open(path, false, length);
-	bool ret = stream != nullptr;
-	if (ret) {
-		stream->ReleaseObject();
-	} 
+	bool ret = archive.Exists(path);
 
 	request.DoLock();
 	request << ret;
@@ -432,6 +427,7 @@ private:
 	inline void RoutineCreateResource(void* context, bool run, uint32_t index) {
 		if (run) {
 			resourceList[index] = snowyStream.CreateResource(pathList[index], resType, true);
+			assert(resourceList[index]);
 		}
 
 		if (callbackStep) {
@@ -782,10 +778,14 @@ TShared<ResourceBase> SnowyStream::CreateResource(const String& path, const Stri
 			}
 		}
 
+		assert((path[0] != '/') == !!(flag & ResourceBase::RESOURCE_VIRTUAL));
 		resource = (*p).second.second->Create(resourceManager, location);
 		resource->Flag().fetch_or(flag, std::memory_order_relaxed);
 		resourceManager.Insert(resource);
+
+#if !defined(_MSC_VER) || _MSC_VER > 1200
 		resourceManager.UnLock();
+#endif
 
 		if (!(resource->Flag().load(std::memory_order_relaxed) & ResourceBase::RESOURCE_VIRTUAL)) {
 			if (resource->Map()) {
@@ -794,6 +794,9 @@ TShared<ResourceBase> SnowyStream::CreateResource(const String& path, const Stri
 
 			resource->Unmap();
 		}
+#if defined(_MSC_VER) && _MSC_VER <= 1200
+		resourceManager.UnLock();
+#endif
 	}
 
 	return resource;

@@ -67,10 +67,10 @@ void PhaseComponent::Initialize(Engine& engine, Entity* entity) {
 		hostEntity = entity;
 
 		String location = ResourceBase::GenerateLocation("PhaseEmptyColorAttachment", (void*)(((size_t)resolution.x() << 16) | resolution.y()));
-		emptyColorAttachment = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), location);
+		emptyColorAttachment = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), location, false, ResourceBase::RESOURCE_VIRTUAL);
 
 		if (!emptyColorAttachment) {
-			emptyColorAttachment = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), location, false, 0, nullptr);
+			emptyColorAttachment = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), location, false, ResourceBase::RESOURCE_VIRTUAL);
 			emptyColorAttachment->description.state.attachment = true;
 			emptyColorAttachment->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
 			emptyColorAttachment->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
@@ -83,11 +83,11 @@ void PhaseComponent::Initialize(Engine& engine, Entity* entity) {
 
 		SnowyStream& snowyStream = engine.snowyStream;
 		const String path = "[Runtime]/MeshResource/StandardQuad";
-		meshResource = snowyStream.CreateReflectedResource(UniqueType<MeshResource>(), path, true, 0, nullptr);
+		meshResource = snowyStream.CreateReflectedResource(UniqueType<MeshResource>(), path, true, ResourceBase::RESOURCE_VIRTUAL);
 
-		tracePipeline = snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), ShaderResource::GetShaderPathPrefix() + UniqueType<MultiHashTracePass>::Get()->GetBriefName())->QueryInterface(UniqueType<ShaderResourceImpl<MultiHashTracePass> >());
-		setupPipeline = snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), ShaderResource::GetShaderPathPrefix() + UniqueType<MultiHashSetupPass>::Get()->GetBriefName())->QueryInterface(UniqueType<ShaderResourceImpl<MultiHashSetupPass> >());
-		shadowPipeline = snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), ShaderResource::GetShaderPathPrefix() + UniqueType<ConstMapPass>::Get()->GetBriefName())->QueryInterface(UniqueType<ShaderResourceImpl<ConstMapPass> >());
+		tracePipeline = snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), ShaderResource::GetShaderPathPrefix() + UniqueType<MultiHashTracePass>::Get()->GetBriefName(), true, ResourceBase::RESOURCE_VIRTUAL)->QueryInterface(UniqueType<ShaderResourceImpl<MultiHashTracePass> >());
+		setupPipeline = snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), ShaderResource::GetShaderPathPrefix() + UniqueType<MultiHashSetupPass>::Get()->GetBriefName(), true, ResourceBase::RESOURCE_VIRTUAL)->QueryInterface(UniqueType<ShaderResourceImpl<MultiHashSetupPass> >());
+		shadowPipeline = snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), ShaderResource::GetShaderPathPrefix() + UniqueType<ConstMapPass>::Get()->GetBriefName(), true, ResourceBase::RESOURCE_VIRTUAL)->QueryInterface(UniqueType<ShaderResourceImpl<ConstMapPass> >());
 
 		IRender& render = engine.interfaces.render;
 		IRender::Device* device = engine.snowyStream.GetRenderDevice();
@@ -210,7 +210,7 @@ void PhaseComponent::Setup(Engine& engine, uint32_t phaseCount, uint32_t taskCou
 		phase.tracePipeline->GetPassUpdater().Update(render, renderQueue, phase.drawCallDescription, phase.uniformBuffers, bufferData, 1 << IRender::Resource::BufferDescription::UNIFORM);
 		phase.drawCallResource = render.CreateResource(device, IRender::Resource::RESOURCE_DRAWCALL);
 
-		phase.depth = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseDepth", &phase), false, 0, nullptr);
+		phase.depth = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseDepth", &phase), false, ResourceBase::RESOURCE_VIRTUAL);
 
 		phase.depth->description.state.attachment = true;
 		phase.depth->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
@@ -219,7 +219,7 @@ void PhaseComponent::Setup(Engine& engine, uint32_t phaseCount, uint32_t taskCou
 		phase.depth->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
 		phase.depth->GetResourceManager().InvokeUpload(phase.depth(), renderQueue);
 
-		phase.irradiance = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseIrradiance", &phase), false, 0, nullptr);
+		phase.irradiance = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseIrradiance", &phase), false, ResourceBase::RESOURCE_VIRTUAL);
 		phase.irradiance->description.state.attachment = true;
 		phase.irradiance->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
 		phase.irradiance->description.state.format = IRender::Resource::TextureDescription::HALF;
@@ -227,7 +227,7 @@ void PhaseComponent::Setup(Engine& engine, uint32_t phaseCount, uint32_t taskCou
 		phase.irradiance->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
 		phase.irradiance->GetResourceManager().InvokeUpload(phase.irradiance(), renderQueue);
 
-		phase.baseColorOcclusion = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseBaseColorOcclusion", &phase), false, 0, nullptr);
+		phase.baseColorOcclusion = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseBaseColorOcclusion", &phase), false, ResourceBase::RESOURCE_VIRTUAL);
 		phase.baseColorOcclusion->description.state.attachment = true;
 		phase.baseColorOcclusion->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
 		phase.baseColorOcclusion->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
@@ -235,7 +235,7 @@ void PhaseComponent::Setup(Engine& engine, uint32_t phaseCount, uint32_t taskCou
 		phase.baseColorOcclusion->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
 		phase.baseColorOcclusion->GetResourceManager().InvokeUpload(phase.baseColorOcclusion(), renderQueue);
 
-		phase.normalRoughnessMetallic = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseNormalRoughness", &phase), false, 0, nullptr);
+		phase.normalRoughnessMetallic = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseNormalRoughness", &phase), false, ResourceBase::RESOURCE_VIRTUAL);
 		phase.normalRoughnessMetallic->description.state.attachment = true;
 		phase.normalRoughnessMetallic->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
 		phase.normalRoughnessMetallic->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
@@ -244,7 +244,7 @@ void PhaseComponent::Setup(Engine& engine, uint32_t phaseCount, uint32_t taskCou
 		phase.normalRoughnessMetallic->GetResourceManager().InvokeUpload(phase.normalRoughnessMetallic(), renderQueue);
 
 		// create noise texture
-		phase.noiseTexture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseNoise", &phase), false, 0, nullptr);
+		phase.noiseTexture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseNoise", &phase), false, ResourceBase::RESOURCE_VIRTUAL);
 		phase.noiseTexture->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
 		phase.noiseTexture->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 		phase.noiseTexture->description.state.layout = IRender::Resource::TextureDescription::RGBA;
@@ -695,7 +695,7 @@ void PhaseComponent::CompleteUpdateLights(Engine& engine, std::vector<LightEleme
 		Shadow& shadow = shadows[i];
 		const LightElement& lightElement = elements[i];
 		if (!shadow.shadow) {
-			shadow.shadow = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseShadow", &shadow), false, 0, nullptr);
+			shadow.shadow = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseShadow", &shadow), false, ResourceBase::RESOURCE_VIRTUAL);
 			shadow.shadow->description.state.attachment = true;
 			shadow.shadow->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
 			shadow.shadow->description.state.format = IRender::Resource::TextureDescription::FLOAT;

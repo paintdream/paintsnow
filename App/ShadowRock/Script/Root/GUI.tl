@@ -18,7 +18,7 @@ function GUI.New() : GUI
 
 	local widgetEntity = MythForest.NewEntity(-1)
 	local fontBatchComponent = BatchComponentModule.New()
-	local fontResource = SnowyStream.NewResource("Packed/Font/Cantarell-Regular", "FontResource", false)
+	local fontResource = SnowyStream.NewResource("/Packed/Font/Cantarell-Regular", "FontResource", false)
 	local textViewComponent = TextViewComponentModule.New(fontResource as FontResource, fontBatchComponent)
 	textViewComponent:SetRenderPolicy(renderPolicy)
 	textViewComponent:SetText("Hello, world!")

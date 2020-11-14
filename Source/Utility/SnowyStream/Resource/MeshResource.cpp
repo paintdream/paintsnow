@@ -53,8 +53,10 @@ void MeshResource::Attach(IRender& render, void* deviceContext) {
 typedef IRender::Resource::BufferDescription Description;
 
 void MeshResource::Upload(IRender& render, void* deviceContext) {
+	if (Flag().load(std::memory_order_acquire) & RESOURCE_UPLOADED)
+		return;
+
 	// Update buffers ...
-	assert(!(Flag().load(std::memory_order_acquire) & RESOURCE_UPLOADED));
 	if (Flag().fetch_and(~TINY_MODIFIED) & TINY_MODIFIED) {
 		SpinLock(critical);
 

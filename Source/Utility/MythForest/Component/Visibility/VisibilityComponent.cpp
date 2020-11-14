@@ -57,7 +57,7 @@ void VisibilityComponent::Initialize(Engine& engine, Entity* entity) {
 	renderQueue = render.CreateQueue(device);
 
 	String path = ShaderResource::GetShaderPathPrefix() + UniqueType<ConstMapPass>::Get()->GetBriefName();
-	pipeline = engine.snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), path, true, 0, nullptr)->QueryInterface(UniqueType<ShaderResourceImpl<ConstMapPass> >());
+	pipeline = engine.snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), path, true, ResourceBase::RESOURCE_VIRTUAL)->QueryInterface(UniqueType<ShaderResourceImpl<ConstMapPass> >());
 
 	IRender::Resource::RenderStateDescription rs;
 	rs.stencilReplacePass = 1;
@@ -89,7 +89,7 @@ void VisibilityComponent::Initialize(Engine& engine, Entity* entity) {
 		task.renderQueue = render.CreateQueue(device);
 
 		TShared<TextureResource>& texture = task.texture;
-		texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("VisBake", &task), false, 0, nullptr);
+		texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("VisBake", &task), false, ResourceBase::RESOURCE_VIRTUAL);
 		texture->description.dimension = dim;
 		texture->description.state.attachment = true;
 		texture->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;

@@ -239,6 +239,7 @@ void RenderFlowComponent::SetupTextures(Engine& engine) {
 						// trying to allocate from cache
 						TextureKey textureKey;
 						textureKey.state = rt->renderTargetDescription.state;
+						assert(textureKey.state.attachment);
 						textureKey.dimension = rt->renderTargetDescription.dimension;
 						TextureMap::iterator it = textureMap.find(textureKey);
 						TShared<TextureResource> texture;
@@ -257,7 +258,7 @@ void RenderFlowComponent::SetupTextures(Engine& engine) {
 						}
 
 						if (!texture) {
-							texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("RT", rt), false, 0, nullptr);
+							texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("RT", rt), false, ResourceBase::RESOURCE_VIRTUAL);
 							texture->description.state = textureKey.state;
 							texture->description.dimension = textureKey.dimension;
 							texture->Flag().fetch_or(TINY_MODIFIED, std::memory_order_relaxed);

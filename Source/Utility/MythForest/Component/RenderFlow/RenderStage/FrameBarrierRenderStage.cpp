@@ -5,6 +5,7 @@ using namespace PaintsNow;
 FrameBarrierRenderStage::FrameBarrierRenderStage(const String& s) : Next(renderTargetDescription.colorStorages[0]) {
 	Flag().fetch_and(~RENDERSTAGE_ADAPT_MAIN_RESOLUTION, std::memory_order_release);
 	Front.Flag().fetch_or(RenderStage::RENDERSTAGE_WEAK_LINKAGE, std::memory_order_relaxed);
+	Next.renderTargetDescription.state.attachment = true;
 }
 
 TObject<IReflect>& FrameBarrierRenderStage::operator () (IReflect& reflect) {
@@ -52,10 +53,11 @@ void FrameBarrierRenderStage::Tick(Engine& engine, IRender::Queue* queue) {
 		|| Front.textureResource->description.dimension.x() != Next.renderTargetDescription.dimension.x()
 		|| Front.textureResource->description.dimension.y() != Next.renderTargetDescription.dimension.y()) {
 		Next.renderTargetDescription.state = Front.textureResource->description.state;
+		assert(Next.renderTargetDescription.state.attachment);
 		Next.renderTargetDescription.dimension.x() = Front.textureResource->description.dimension.x();
 		Next.renderTargetDescription.dimension.y() = Front.textureResource->description.dimension.y();
 		if (!Next.attachedTexture) {
-			Next.attachedTexture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("RT", this), false, 0, nullptr);
+			Next.attachedTexture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("RT", this), false, ResourceBase::RESOURCE_VIRTUAL);
 		}
 
 		Next.attachedTexture->description.state = Next.renderTargetDescription.state;

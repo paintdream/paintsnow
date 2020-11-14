@@ -49,7 +49,9 @@ void RenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 	IRender::Resource::RenderTargetDescription desc = renderTargetDescription;
 
 	if (Flag().load(std::memory_order_acquire) & RENDERSTAGE_OUTPUT_TO_BACK_BUFFER) {
-		desc.colorStorages.clear();
+		desc.colorStorages.resize(1);
+		desc.colorStorages[0].backBuffer = 1;
+		desc.colorStorages[0].resource = nullptr;
 	} else {
 		// optimize for Don't Care (DISCARD)
 		const std::vector<PortInfo>& ports = GetPorts();
@@ -68,7 +70,7 @@ void RenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 			}
 		}
 	}
-	
+
 	engine.interfaces.render.UploadResource(queue, renderTarget, &desc);
 }
 

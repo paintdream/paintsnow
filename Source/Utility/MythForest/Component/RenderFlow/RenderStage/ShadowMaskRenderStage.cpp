@@ -44,10 +44,10 @@ void ShadowMaskRenderStage::PrepareResources(Engine& engine, IRender::Queue* que
 	}
 
 
-	emptyShadowMask = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), "[Runtime]/TextureResource/Black", true, 0, nullptr);
+	emptyShadowMask = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), "[Runtime]/TextureResource/Black", true, ResourceBase::RESOURCE_VIRTUAL);
 
 	const String path = "[Runtime]/MeshResource/StandardCube";
-	meshResource = engine.snowyStream.CreateReflectedResource(UniqueType<MeshResource>(), path, true, 0, nullptr);
+	meshResource = engine.snowyStream.CreateReflectedResource(UniqueType<MeshResource>(), path, true, ResourceBase::RESOURCE_VIRTUAL);
 	assert(meshResource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_UPLOADED);
 
 	BaseClass::PrepareResources(engine, queue);

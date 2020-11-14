@@ -182,11 +182,12 @@ namespace PaintsNow {
 				};
 
 				struct Storage {
-					Storage() : loadOp(DEFAULT), storeOp(DEFAULT), mipLevel(DEFAULT), resource(nullptr), clearColor(0, 0, 0, 0) {}
+					Storage() : loadOp(DEFAULT), storeOp(DEFAULT), mipLevel(0), backBuffer(0), resource(nullptr), clearColor(0, 0, 0, 0) {}
 
 					uint8_t loadOp;
 					uint8_t storeOp;
-					uint16_t mipLevel; // used for render to mip
+					uint8_t mipLevel; // used for render to mip
+					uint8_t backBuffer;
 					Resource* resource;
 					Float4 clearColor;
 				};

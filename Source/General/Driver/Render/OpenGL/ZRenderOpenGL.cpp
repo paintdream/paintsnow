@@ -1260,7 +1260,7 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> final : pu
 			glGenVertexArrays(1, &vertexArrayID);
 		}
 
-		if (!d.colorStorages.empty()) {
+		if (!(d.colorStorages.size() == 1 && d.colorStorages[0].backBuffer != 0)) {
 			// currently formats are not configurable for depth & stencil buffer
 			GL_GUARD();
 			if (frameBufferID == 0) {
@@ -1461,19 +1461,21 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> final : pu
 
 		UShort2Pair range = d.range;
 		if (range.second.x() == 0) {
-			if (d.colorStorages.empty()) {
+			if (d.colorStorages.empty() || (d.colorStorages.size() == 1 && d.colorStorages[0].backBuffer != 0)) {
 				range.second.x() = queue.device->resolution.x();
 			} else {
-				ResourceImplOpenGL<TextureDescription>* texture = static_cast<ResourceImplOpenGL<TextureDescription>*>(d.colorStorages[0].resource);
+				ResourceImplOpenGL<TextureDescription>* texture = static_cast<ResourceImplOpenGL<TextureDescription>*>(d.colorStorages.empty() ? d.depthStorage.resource : d.colorStorages[0].resource);
+				assert(texture != nullptr);
 				range.second.x() = texture->GetDescription().dimension.x();
 			}
 		}
 
 		if (range.second.y() == 0) {
-			if (d.colorStorages.empty()) {
+			if (d.colorStorages.size() == 1 && d.colorStorages[0].backBuffer != 0) {
 				range.second.y() = queue.device->resolution.y();
 			} else {
-				ResourceImplOpenGL<TextureDescription>* texture = static_cast<ResourceImplOpenGL<TextureDescription>*>(d.colorStorages[0].resource);
+				ResourceImplOpenGL<TextureDescription>* texture = static_cast<ResourceImplOpenGL<TextureDescription>*>(d.colorStorages.empty() ? d.depthStorage.resource : d.colorStorages[0].resource);
+				assert(texture != nullptr);
 				range.second.y() = texture->GetDescription().dimension.y();
 			}
 		}

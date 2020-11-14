@@ -1,6 +1,6 @@
-local globalFont = "Packed/Font/Cantarell-Regular"
+local globalFont = "/Packed/Font/Cantarell-Regular"
 local globalImage = {
-	path = "Packed/Texture/DarkUI",
+	path = "/Packed/Texture/DarkUI",
 	width = 512,
 	height = 512
 }

@@ -71,7 +71,7 @@ function package.searchpath(name, filter, ...)
 end
 
 function require(name, ...)
-	-- print("Requiring " .. name)
+	print("Requiring " .. name)
 	local mod = package.loaded[name]
 	if mod then
 		return mod
@@ -79,7 +79,7 @@ function require(name, ...)
 
 	path, msg = package.searchpath(name, "")
 	if not path then
-		print("Module " .. name .. " not found.")
+		print("Module " .. name .. " not found. Message: " .. msg)
 		return nil
 	end
 

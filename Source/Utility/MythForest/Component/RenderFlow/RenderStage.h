@@ -56,7 +56,7 @@ namespace PaintsNow {
 		void PrepareResources(Engine& engine, IRender::Queue* queue) override {
 			// create specified shader resource (if not exists)
 			String path = ShaderResource::GetShaderPathPrefix() + UniqueType<T>::Get()->GetBriefName();
-			sharedShader = engine.snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), path, true, 0, nullptr);
+			sharedShader = engine.snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), path, true, ResourceBase::RESOURCE_VIRTUAL);
 			shaderInstance.Reset(static_cast<ShaderResourceImpl<T>*>(sharedShader->Clone()));
 			BaseClass::PrepareResources(engine, queue);
 		}
@@ -90,7 +90,8 @@ namespace PaintsNow {
 			// create specified shader resource (if not exists)
 			if (!meshResource) {
 				const String path = "[Runtime]/MeshResource/StandardQuad";
-				meshResource = engine.snowyStream.CreateReflectedResource(UniqueType<MeshResource>(), path, true, 0, nullptr);
+				meshResource = engine.snowyStream.CreateReflectedResource(UniqueType<MeshResource>(), path, true, ResourceBase::RESOURCE_VIRTUAL);
+				assert(meshResource);
 			}
 
 			assert(meshResource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_UPLOADED);

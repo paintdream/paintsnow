@@ -81,14 +81,12 @@ namespace PaintsNow {
 		void InvokeUpload(ResourceBase* resource, void* deviceContext) override {
 			assert(resource != nullptr);
 			assert(resource->Flag().load(std::memory_order_acquire) & ResourceBase::TINY_MODIFIED);
-			resource->Flag().fetch_and(~ResourceBase::RESOURCE_UPLOADED, std::memory_order_release);
 			DeviceResourceBase<T>* typedResource = static_cast<DeviceResourceBase<T>*>(resource);
 			typedResource->Upload(device, deviceContext != nullptr ? deviceContext : GetContext());
 		}
 
 		void InvokeDownload(ResourceBase* resource, void* deviceContext) override {
 			assert(resource != nullptr);
-			resource->Flag().fetch_and(~ResourceBase::RESOURCE_DOWNLOADED, std::memory_order_release);
 			DeviceResourceBase<T>* typedResource = static_cast<DeviceResourceBase<T>*>(resource);
 			typedResource->Download(device, deviceContext != nullptr ? deviceContext : GetContext());
 		}

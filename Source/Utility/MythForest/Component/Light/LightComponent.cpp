@@ -98,7 +98,7 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 		depthStencilDescription.state.layout = IRender::Resource::TextureDescription::DEPTH;
 
 		if (!shadowGrid->texture) {
-			TShared<TextureResource> texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("LightShadowBake", shadowGrid()), false, 0, nullptr);
+			TShared<TextureResource> texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("LightShadowBake", shadowGrid()), false, ResourceBase::RESOURCE_VIRTUAL);
 			texture->description.dimension = dim;
 			texture->description.state.attachment = true;
 			texture->description.state.format = IRender::Resource::TextureDescription::FLOAT;
@@ -492,10 +492,10 @@ void LightComponent::ShadowLayer::Initialize(Engine& engine, const TShared<Strea
 
 	if (!pipeline) {
 		String path = ShaderResource::GetShaderPathPrefix() + UniqueType<ConstMapPass>::Get()->GetBriefName();
-		pipeline = engine.snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), path, true, 0, nullptr)->QueryInterface(UniqueType<ShaderResourceImpl<ConstMapPass> >());
+		pipeline = engine.snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), path, true, ResourceBase::RESOURCE_VIRTUAL)->QueryInterface(UniqueType<ShaderResourceImpl<ConstMapPass> >());
 	}
 
-	TShared<TextureResource> texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("LightShadowBakeDummy", this), false, 0, nullptr);
+	TShared<TextureResource> texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("LightShadowBakeDummy", this), false, ResourceBase::RESOURCE_VIRTUAL);
 	texture->description.dimension = UShort3(res.x(), res.y(), 1);
 	texture->description.state.attachment = true;
 	texture->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
