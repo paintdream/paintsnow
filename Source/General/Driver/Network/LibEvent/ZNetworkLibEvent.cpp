@@ -265,7 +265,7 @@ void FromHost(const String& host, String& ip, int& port) {
 void ToHost(String& host, const String& ip, int port) {
 	std::ostringstream ss;
 	ss << ip.c_str() << ":" << port;
-	host = ss.str().c_str();
+	host = StdToUtf8(ss.str()).c_str();
 }
 
 static void listener_cb(struct evconnlistener *listener, evutil_socket_t fd, struct sockaddr *sa, int socklen, void *user_data) {

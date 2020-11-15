@@ -139,7 +139,7 @@ static void WriteValue(IScript::Request& request, const Json::Value& value) {
 		request << value.asDouble();
 		break;
 	case stringValue:
-		request << String(value.asString());
+		request << StdToUtf8(value.asString());
 		break;
 	case booleanValue:
 		request << value.asBool();
@@ -154,7 +154,7 @@ static void WriteValue(IScript::Request& request, const Json::Value& value) {
 	case objectValue:
 		request << begintable;
 		for (it = value.begin(); it != value.end(); ++it) {
-			request << key(it.name());
+			request << key(StdToUtf8(it.name()));
 			WriteValue(request, *it);
 		}
 		request << endtable;
@@ -167,7 +167,7 @@ void SnowyStream::RequestParseJson(IScript::Request& request, const String& str)
 	Reader reader;
 	Value document;
 	
-	if (reader.parse(str, document)) {
+	if (reader.parse(Utf8ToStd(str), document)) {
 		request.DoLock();
 		WriteValue(request, document);
 		request.UnLock();
@@ -782,10 +782,7 @@ TShared<ResourceBase> SnowyStream::CreateResource(const String& path, const Stri
 		resource = (*p).second.second->Create(resourceManager, location);
 		resource->Flag().fetch_or(flag, std::memory_order_relaxed);
 		resourceManager.Insert(resource);
-
-#if !defined(_MSC_VER) || _MSC_VER > 1200
 		resourceManager.UnLock();
-#endif
 
 		if (!(resource->Flag().load(std::memory_order_relaxed) & ResourceBase::RESOURCE_VIRTUAL)) {
 			if (resource->Map()) {
@@ -794,9 +791,6 @@ TShared<ResourceBase> SnowyStream::CreateResource(const String& path, const Stri
 
 			resource->Unmap();
 		}
-#if defined(_MSC_VER) && _MSC_VER <= 1200
-		resourceManager.UnLock();
-#endif
 	}
 
 	return resource;

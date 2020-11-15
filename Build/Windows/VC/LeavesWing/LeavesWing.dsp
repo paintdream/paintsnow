@@ -54,7 +54,7 @@ LINK32=link.exe
 # SUBTRACT LINK32 /pdb:none
 # Begin Special Build Tool
 SOURCE="$(InputPath)"
-PostBuild_Cmds=copy    Release\LeavesWing.exe    ..\..\..\..\Binary\	upx     ..\..\..\..\Binary\LeavesWing.exe
+PostBuild_Cmds=copy    Release\LeavesWing.exe    ..\..\..\..\Binary\	upx --best --8mib-ram --no-reloc --ultra-brute ..\..\..\..\Binary\LeavesWing.exe
 # End Special Build Tool
 
 !ELSEIF  "$(CFG)" == "LeavesWing - Win32 Debug"

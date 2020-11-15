@@ -296,14 +296,16 @@ void MoveResource(T& target, T& source) {
 #if defined(_MSC_VER) && _MSC_VER <= 1200
 template <>
 void MoveResource<IRender::Resource::TextureDescription>(IRender::Resource::TextureDescription& target, IRender::Resource::TextureDescription& source) {
-	Bytes data = std::move(source.data);
+	Bytes data;
+	data = std::move(source.data);
 	target = source;
 	target.data = std::move(data);
 }
 
 template <>
 void MoveResource<IRender::Resource::BufferDescription>(IRender::Resource::BufferDescription& target, IRender::Resource::BufferDescription& source) {
-	Bytes data = std::move(source.data);
+	Bytes data;
+	data = std::move(source.data);
 	target = source;
 	target.data = std::move(data);
 }

@@ -97,9 +97,9 @@ public:
 		} else if (typeID == strType) {
 			String& target = *reinterpret_cast<String*>(base);
 			if (read) {
-				target = v.isString() ? v.asString() : "";
+				target = v.isString() ? StdToUtf8(v.asString()) : "";
 			} else {
-				v = String(target.c_str(), target.length());
+				v = std::string(target.c_str(), target.length());
 			}
 		} else if (typeID == floatType) {
 			float& target = *reinterpret_cast<float*>(base);
@@ -159,12 +159,7 @@ bool FilterJsonImpl::Write(IReflectObject& s, void* ptr, size_t length) {
 	Exchanger<false> exchanger(v);
 	s(exchanger);
 
-#if UNIFY_STRING_LAYOUT
-	stream << v.toStyledString().c_str();
-#else
 	stream << v.toStyledString();
-#endif
-
 	return true;
 }
 
@@ -215,7 +210,7 @@ static DynamicInfo* ParseUniqueObject(DynamicObjectWrapper& wrapper, const Value
 	for (Value::const_iterator it = value.begin(); it != value.end(); ++it) {
 		DynamicInfo::Field& field = fields[count++];
 
-		field.name = it.name();
+		field.name = StdToUtf8(it.name());
 		std::pair<Unique, DynamicInfo::MemController*> info = ParseUniqueValue(wrapper, *it);
 		field.type = info.first;
 		field.controller = info.second;
@@ -272,11 +267,7 @@ bool FilterJsonImpl::Read(IReflectObject& s, void* ptr, size_t length) {
 	if (stream >> str) {
 		Reader reader;
 		Value document;
-#ifdef UNIFY_STRING_LAYOUT
-		reader.parse(str.c_str(), str.size(), document, false);
-#else
-		reader.parse(str, document, false);
-#endif
+		reader.parse(str.c_str(), str.c_str() + str.length(), document, false);
 
 		if (document.isObject()) {
 			if (s.GetUnique() == UniqueType<DynamicObjectWrapper>::Get()) {

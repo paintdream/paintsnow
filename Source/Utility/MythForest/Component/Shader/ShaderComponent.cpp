@@ -11,7 +11,7 @@ ShaderComponent::ShaderComponent(const TShared<ShaderResource>& shader, const St
 	std::stringstream ss;
 	ss << std::hex << (void*)this;
 
-	customMaterialShader->SetLocation(shader->GetLocation() + "/" + name + "/" + ss.str());
+	customMaterialShader->SetLocation(shader->GetLocation() + "/" + name + "/" + StdToUtf8(ss.str()));
 }
 
 ShaderComponent::~ShaderComponent() {

@@ -548,6 +548,14 @@ SOURCE=..\..\..\..\Source\General\Platform\Windows\ComDispatch.h
 # End Source File
 # End Group
 # End Group
+# Begin Group "Backport"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Core\Backport\VC98STRING.h
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\General\PaintsNow.h

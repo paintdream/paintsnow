@@ -14,7 +14,7 @@ static void PrimitiveString(const void* ptr) {
 	const T& value = *reinterpret_cast<const T*>(ptr);
 	std::stringstream ss;
 	ss << value;
-	ImGui::Text("%s", ss.str().c_str());
+	ImGui::Text("%s", StdToUtf8(ss.str()).c_str());
 }
 
 template <class T>
@@ -28,9 +28,9 @@ static void VectorString(const void* ptr) {
 	}
 
 	if (n == 0) {
-		ImGui::Text("%s", ss.str().c_str());
+		ImGui::Text("%s", StdToUtf8(ss.str()).c_str());
 	} else {
-		ImGui::Text("(%s)", ss.str().c_str());
+		ImGui::Text("(%s)", StdToUtf8(ss.str()).c_str());
 	}
 }
 
@@ -221,7 +221,7 @@ void IWidget::Method(Unique typeID, const char* name, const TProxy<>* p, const P
 	}
 
 	ss << ")";
-	ImGui::Text("%s", ss.str().c_str());
+	ImGui::Text("%s", StdToUtf8(ss.str()).c_str());
 	ImGui::NextColumn();
 
 	if (layerCount != 0)

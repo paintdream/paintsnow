@@ -191,7 +191,7 @@ DynamicInfo* DynamicUniqueAllocator::AllocFromDescriptor(const String& name, con
 	std::stringstream ss;
 	ss << name.c_str() << "{" << descriptors.size() << "-" << HashBuffer(allNames.c_str(), allNames.size()) << "-" << HashBuffer(desc.c_str(), desc.size()) << "}";
 
-	String newName = ss.str();
+	String newName = StdToUtf8(ss.str());
 	std::map<String, DynamicInfo>::iterator it = mapType.find(newName);
 	if (it != mapType.end()) {
 		// assert(false); // Performance warning: should check it before calling me!

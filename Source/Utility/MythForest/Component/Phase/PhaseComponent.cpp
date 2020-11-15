@@ -334,7 +334,7 @@ void PhaseComponent::CoTaskWriteDebugTexture(Engine& engine, uint32_t index, Byt
 		std::stringstream ss;
 		ss << debugPath << "phase_" << index << ".png";
 		uint64_t length;
-		IStreamBase* stream = engine.interfaces.archive.Open(ss.str(), true, length);
+		IStreamBase* stream = engine.interfaces.archive.Open(StdToUtf8(ss.str()), true, length);
 		IRender::Resource::TextureDescription& description = texture->description;
 		IImage& image = engine.interfaces.image;
 		IRender::Resource::TextureDescription::Layout layout = (IRender::Resource::TextureDescription::Layout)description.state.layout;

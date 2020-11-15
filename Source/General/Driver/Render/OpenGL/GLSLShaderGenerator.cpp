@@ -62,7 +62,7 @@ void GLSLShaderGenerator::Complete() {
 static inline String ToString(uint32_t value) {
 	std::stringstream ss;
 	ss << value;
-	return ss.str();
+	return StdToUtf8(ss.str());
 }
 
 struct DeclareMap {
@@ -140,7 +140,7 @@ void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refT
 			IIterator& iterator = static_cast<IIterator&>(s);
 			std::stringstream ss;
 			ss << "[" << (int)iterator.GetTotalCount() << "]";
-			arr = ss.str();
+			arr = StdToUtf8(ss.str());
 			arrDef = "[]";
 
 			typeID = iterator.GetElementUnique();
@@ -161,7 +161,7 @@ void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refT
 						const UInt3& data = *reinterpret_cast<UInt3*>(ptr);
 						std::stringstream ss;
 						ss << "layout (local_size_x = " << data.x() << ", local_size_y = " << data.y() << ", local_size_z = " << data.z() << ") in;\n";
-						initialization += ss.str();
+						initialization += StdToUtf8(ss.str());
 					}
 				} else if (bindInput->description == IShader::BindInput::LOCAL) {
 					// Do not declare it here
@@ -231,12 +231,12 @@ void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refT
 				const IShader::BindConst<int>* bindOption = static_cast<const IShader::BindConst<int>*>(node);
 				std::stringstream ss;
 				ss << bindOption->description;
-				declaration += String("#define ") + name + " " + ss.str() + "\n";
+				declaration += String("#define ") + name + " " + StdToUtf8(ss.str()) + "\n";
 			} else if (uniqueNode == uniqueBindConstFloat) {
 				const IShader::BindConst<float>* bindOption = static_cast<const IShader::BindConst<float>*>(node);
 				std::stringstream ss;
 				ss << bindOption->description;
-				declaration += String("#define ") + name + " " + ss.str() + "\n";
+				declaration += String("#define ") + name + " " + StdToUtf8(ss.str()) + "\n";
 			}
 		}
 

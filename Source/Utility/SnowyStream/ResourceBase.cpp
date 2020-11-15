@@ -97,7 +97,7 @@ void ResourceBase::ReleaseObject() {
 String ResourceBase::GenerateLocation(const String& prefix, const void* ptr) {
 	std::stringstream ss;
 	ss << "[Temporary]/" << prefix << "/" << std::hex << (size_t)ptr;
-	return ss.str();
+	return StdToUtf8(ss.str());
 }
 
 Unique ResourceBase::GetDeviceUnique() const {
@@ -172,7 +172,7 @@ public:
 				while (iterator.Next()) {
 					std::stringstream ss;
 					ss << savedPath << "." << name << "[" << index++ << "]";
-					currentPath = ss.str();
+					currentPath = StdToUtf8(ss.str());
 					if (!prototype.IsBasicObject()) {
 						IReflectObject* p = reinterpret_cast<IReflectObject*>(iterator.Get());
 						(*p)(*this);

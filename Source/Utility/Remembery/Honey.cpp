@@ -156,7 +156,7 @@ void HoneyData::Attach(void* base) {
 		for (size_t i = 0; i < ds.count; i++) {
 			std::stringstream ss;
 			ss << "_" << i;
-			String key = ss.str();
+			String key = StdToUtf8(ss.str());
 			DynamicInfo::Field& field = fields[i];
 			field.name = key;
 			static DynamicInfo::MemController mc = {

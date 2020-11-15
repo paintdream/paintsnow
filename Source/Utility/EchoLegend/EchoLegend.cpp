@@ -159,7 +159,7 @@ void EchoLegend::RequestParseUri(IScript::Request& request, const String& url) {
 	request.DoLock();
 	request << begintable
 		<< key("User") << user
-		<< key("Host") << String(ss.str())
+		<< key("Host") << StdToUtf8(ss.str())
 		<< key("Path") << path
 		<< key("Fragment") << fragment
 		<< key("Query") << beginarray;

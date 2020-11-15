@@ -117,7 +117,7 @@ void CustomMaterialDescription::ReflectUniformTemplate(IReflect& reflect, Bytes&
 	singleton Unique typeBuffer = UniqueType<IShader::BindBuffer>::Get();
 	std::stringstream ss;
 	ss << "uniformBuffer_" << (void*)bufferBase;
-	reflect.Property(uniformBuffer, typeBuffer, typeBuffer, ss.str().c_str(), this, &uniformBuffer, nullptr);
+	reflect.Property(uniformBuffer, typeBuffer, typeBuffer, StdToUtf8(ss.str()).c_str(), this, &uniformBuffer, nullptr);
 
 	for (size_t i = 0; i < entries.size(); i++) {
 		Entry& var = entries[i];

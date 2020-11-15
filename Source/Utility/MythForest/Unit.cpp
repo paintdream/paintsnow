@@ -6,7 +6,7 @@ using namespace PaintsNow;
 String Unit::GetDescription() const {
 	std::stringstream ss;
 	ss << GetUnique()->GetBriefName() << "(" << std::hex << (size_t)this << ")";
-	return ss.str();
+	return StdToUtf8(ss.str());
 }
 
 TObject<IReflect>& Unit::operator () (IReflect& reflect) {
