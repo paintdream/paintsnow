@@ -16,6 +16,7 @@ namespace PaintsNow {
 			return UniqueType<UObject>::Get();
 		}
 
+		virtual void InvokeRefresh(ResourceBase* resource, void* deviceContext) override {}
 		virtual void InvokeAttach(ResourceBase* resource, void* deviceContext) override {}
 		virtual void InvokeDetach(ResourceBase* resource, void* deviceContext) override {}
 		virtual void InvokeUpload(ResourceBase* resource, void* deviceContext) override {}
@@ -28,15 +29,11 @@ namespace PaintsNow {
 			return nullptr;
 		}
 
-		virtual bool PersistResource(const TShared<ResourceBase>& resource, const String& extension = "") override {
+		virtual bool SaveResource(const TShared<ResourceBase>& resource, const String& extension = "") override {
 			return false;
 		}
-		virtual bool MapResource(const TShared<ResourceBase>& resource, const String& extension = "") override {
+		virtual bool LoadResource(const TShared<ResourceBase>& resource, const String& extension = "") override {
 			return false;
-		}
-
-		virtual void UnmapResource(const TShared<ResourceBase>& resource) override {
-
 		}
 	};
 
