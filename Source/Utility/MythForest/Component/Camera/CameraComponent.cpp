@@ -284,7 +284,7 @@ void CameraComponent::UpdateTaskData(Engine& engine, Entity* hostEntity) {
 	// Must called from entity thread
 	assert(engine.GetKernel().GetCurrentWarpIndex() == rootEntity->GetWarpIndex());
 	VisibilityComponent* visibilityComponent = rootEntity->GetUniqueComponent(UniqueType<VisibilityComponent>());
-	const Bytes& visData = visibilityComponent != nullptr ? visibilityComponent->QuerySample(Float3(localTransform(3, 0), localTransform(3, 1), localTransform(3, 2))) : Bytes::Null();
+	const Bytes& visData = visibilityComponent != nullptr ? visibilityComponent->QuerySample(engine, Float3(localTransform(3, 0), localTransform(3, 1), localTransform(3, 2))) : Bytes::Null();
 
 	captureData.visData = visData;
 	CollectComponentsFromEntity(engine, *nextTaskData, worldInstanceData, captureData, rootEntity);
@@ -882,7 +882,7 @@ void CameraComponent::CollectComponents(Engine& engine, TaskData& taskData, cons
 				}
 
 				const MatrixFloat4x4& newMat = newCaptureData.viewTransform;
-				const Bytes& visData = visibilityComponent != nullptr ? visibilityComponent->QuerySample(Float3(newMat(3, 0), newMat(3, 1), newMat(3, 2))) : Bytes::Null();
+				const Bytes& visData = visibilityComponent != nullptr ? visibilityComponent->QuerySample(engine, Float3(newMat(3, 0), newMat(3, 1), newMat(3, 2))) : Bytes::Null();
 				newCaptureData.visData = visData;
 
 				CollectComponentsFromSpace(engine, taskData, subSpaceWorldInstancedData, newCaptureData, spaceComponent);

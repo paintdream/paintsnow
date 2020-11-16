@@ -1,11 +1,10 @@
 #include "LightComponent.h"
-
-#include <utility>
 #include "../Explorer/ExplorerComponent.h"
 #include "../Transform/TransformComponent.h"
 #include "../Visibility/VisibilityComponent.h"
 #include "../../../SnowyStream/SnowyStream.h"
 #include "../../../MythForest/MythForest.h"
+#include <utility>
 
 using namespace PaintsNow;
 
@@ -396,7 +395,7 @@ void LightComponent::ShadowLayer::CollectComponents(Engine& engine, TaskData& ta
 
 				CaptureData newCaptureData;
 				const MatrixFloat4x4& mat = captureData.viewTransform;
-				const Bytes& visData = visibilityComponent != nullptr ? visibilityComponent->QuerySample(Float3(mat(3, 0), mat(3, 1), mat(3, 2))) : Bytes::Null();
+				const Bytes& visData = visibilityComponent != nullptr ? visibilityComponent->QuerySample(engine, Float3(mat(3, 0), mat(3, 1), mat(3, 2))) : Bytes::Null();
 				newCaptureData.visData = visData;
 				SpaceComponent* spaceComponent = static_cast<SpaceComponent*>(component);
 				bool captureFree = !!(spaceComponent->GetEntityFlagMask() & Entity::ENTITY_HAS_RENDERCONTROL);
@@ -512,8 +511,8 @@ void LightComponent::ShadowLayer::Initialize(Engine& engine, const TShared<Strea
 
 void LightComponent::ShadowLayer::Uninitialize(Engine& engine) {
 	if (streamComponent) {
-		streamComponent->SetLoadHandler(TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, const TShared<SharedTiny>&, const TShared<SharedTiny>& >());
-		streamComponent->SetUnloadHandler(TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, const TShared<SharedTiny>&, const TShared<SharedTiny>& >());
+		streamComponent->SetLoadHandler(TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, const TShared<SharedTiny>&, const TShared<SharedTiny>&>());
+		streamComponent->SetUnloadHandler(TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, const TShared<SharedTiny>&, const TShared<SharedTiny>&>());
 	}
 
 	if (currentTask) {
@@ -530,19 +529,15 @@ TShared<LightComponent::ShadowGrid> LightComponent::ShadowLayer::UpdateShadow(En
 	Float3 lightCoord = Math::Transform3D(Math::QuickInverse(lightTransform), position);
 	const UShort3& dimension = streamComponent->GetDimension();
 
-	int x = int(lightCoord.x() / gridSize), y = int(lightCoord.y() / gridSize), z = int(lightCoord.z() / gridSize);
-
-	UShort3 coord(
-		safe_cast<uint16_t>((x % dimension.x() + dimension.x()) % dimension.x()),
-		safe_cast<uint16_t>((y % dimension.y() + dimension.y()) % dimension.y()),
-		safe_cast<uint16_t>((z % dimension.z() + dimension.z()) % dimension.z()));
+	Int3 intPosition((int32_t)(lightCoord.x() / gridSize), (int32_t)(lightCoord.y() / gridSize), (int32_t)(lightCoord.z() / gridSize));
+	UShort3 coord = streamComponent->ComputeWrapCoordinate(intPosition);
 
 	TShared<ShadowContext> shadowContext = TShared<ShadowContext>::From(new ShadowContext());
 	shadowContext->rootEntity = rootEntity;
 	shadowContext->lightTransformMatrix = Math::Scale(lightTransform, Float4(scale, scale, scale, 1));
 
 	// Make alignment
-	Float3 alignedPosition = Math::Transform3D(lightTransform, Float3(x * gridSize, y * gridSize, z * gridSize));
+	Float3 alignedPosition = Math::Transform3D(lightTransform, Float3(intPosition.x() * gridSize, intPosition.y() * gridSize, intPosition.z() * gridSize));
 	shadowContext->lightTransformMatrix(3, 0) = alignedPosition.x();
 	shadowContext->lightTransformMatrix(3, 1) = alignedPosition.y();
 	shadowContext->lightTransformMatrix(3, 2) = alignedPosition.z();

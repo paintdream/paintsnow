@@ -6,12 +6,24 @@
 using namespace PaintsNow;
 
 StreamComponent::StreamComponent(const UShort3& dim, uint16_t cacheCount) : dimension(dim), recycleStart(0) {
+	assert(dim.x() != 0 && dim.y() != 0 && dim.z() != 0);
 	idGrids.resize(dim.x() * dim.y() * dim.z(), (uint16_t)~0);
 	grids.resize(cacheCount);
 	recycleQueue.resize(cacheCount);
 	for (uint16_t i = 0; i < cacheCount; i++) {
 		recycleQueue[i] = i;
 	}
+}
+
+UShort3 StreamComponent::ComputeWrapCoordinate(const Int3& pos) const {
+	return UShort3(
+		safe_cast<uint16_t>((pos.x() % dimension.x() + dimension.x()) % dimension.x()),
+		safe_cast<uint16_t>((pos.y() % dimension.y() + dimension.y()) % dimension.y()),
+		safe_cast<uint16_t>((pos.z() % dimension.z() + dimension.z()) % dimension.z()));
+}
+
+uint16_t StreamComponent::GetCacheCount() const {
+	return safe_cast<uint16_t>(grids.size());
 }
 
 void StreamComponent::Unload(Engine& engine, const UShort3& coord, const TShared<SharedTiny>&context) {

@@ -269,7 +269,7 @@ void RenderFlowComponent::SetupTextures(Engine& engine) {
 						}
 
 						if (!texture) {
-							texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("RT", rt), false, ResourceBase::RESOURCE_VIRTUAL);
+							texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("Transient", rt), false, ResourceBase::RESOURCE_VIRTUAL);
 							texture->description.state = textureKey.state;
 							texture->description.dimension = textureKey.dimension;
 							texture->Flag().fetch_or(TINY_MODIFIED, std::memory_order_relaxed);

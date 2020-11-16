@@ -10,9 +10,11 @@
 
 using namespace PaintsNow;
 
-VisibilityComponent::VisibilityComponent() : nextCoord(~(uint16_t)0, ~(uint16_t)0, ~(uint16_t)0), subDivision(1, 1, 1), taskCount(32), resolution(128, 128), maxFrameExecutionTime(5), viewDistance(512.0f), activeCellCacheIndex(0), hostEntity(nullptr), renderQueue(nullptr), depthStencilResource(nullptr), stateResource(nullptr) {
+const uint32_t FACE_COUNT = 6;
+
+VisibilityComponent::VisibilityComponent(const TShared<StreamComponent>& stream) : gridSize(0.5f, 0.5f, 0.5f), viewDistance(512.0f), taskCount(32), resolution(128, 128), activeCellCacheIndex(0), hostEntity(nullptr), renderQueue(nullptr), depthStencilResource(nullptr), stateResource(nullptr), collectLock(nullptr), streamComponent(stream) {
 	maxVisIdentity.store(0, std::memory_order_relaxed);
-	collectCritical.store(0, std::memory_order_relaxed);
+	cellAllocator.Reset(new TObjectAllocator<Cell>());
 }
 
 Tiny::FLAG VisibilityComponent::GetEntityFlagMask() const {
@@ -23,13 +25,10 @@ TObject<IReflect>& VisibilityComponent::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectProperty()) {
-		ReflectProperty(taskCount);
-		ReflectProperty(resolution);
-
-		ReflectProperty(boundingBox);
-		ReflectProperty(subDivision);
-		ReflectProperty(maxFrameExecutionTime);
+		ReflectProperty(gridSize);
 		ReflectProperty(viewDistance);
+		ReflectProperty(resolution);
+		ReflectProperty(taskCount);
 	}
 
 	return *this;
@@ -51,6 +50,9 @@ void VisibilityComponent::Initialize(Engine& engine, Entity* entity) {
 			SetupIdentities(engine, spaceComponent->GetRootEntity());
 		}
 	}
+
+	IThread& thread = engine.interfaces.thread;
+	collectLock = thread.NewLock();
 
 	IRender& render = engine.interfaces.render;
 	IRender::Device* device = engine.snowyStream.GetRenderDevice();
@@ -111,12 +113,18 @@ void VisibilityComponent::Initialize(Engine& engine, Entity* entity) {
 		render.UploadResource(renderQueue, task.renderTarget, &desc);
 	}
 
+	streamComponent->SetLoadHandler(Wrap(this, &VisibilityComponent::StreamLoadHandler));
+	streamComponent->SetUnloadHandler(Wrap(this, &VisibilityComponent::StreamUnloadHandler));
+
 	BaseComponent::Initialize(engine, entity);
 }
 
 void VisibilityComponent::Uninitialize(Engine& engine, Entity* entity) {
 	// TODO: wait for all download tasks to finish.
 	assert(hostEntity != nullptr);
+	streamComponent->SetLoadHandler(TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, const TShared<SharedTiny>&, const TShared<SharedTiny>&>());
+	streamComponent->SetUnloadHandler(TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, const TShared<SharedTiny>&, const TShared<SharedTiny>&>());
+
 	hostEntity = nullptr;
 	IRender& render = engine.interfaces.render;
 	for (size_t k = 0; k < tasks.size(); k++) {
@@ -133,6 +141,9 @@ void VisibilityComponent::Uninitialize(Engine& engine, Entity* entity) {
 
 	stateResource = depthStencilResource = nullptr;
 	renderQueue = nullptr;
+
+	engine.interfaces.thread.DeleteLock(collectLock);
+	collectLock = nullptr;
 	BaseComponent::Uninitialize(engine, entity);
 }
 
@@ -151,14 +162,13 @@ void VisibilityComponent::DispatchEvent(Event& event, Entity* entity) {
 	}
 }
 
-void VisibilityComponent::Setup(Engine& engine, float distance, const Float3Pair& range, const UShort3& division, uint32_t frameTimeLimit, uint32_t tc, const UShort2& resolution) {
+void VisibilityComponent::Setup(Engine& engine, float distance, const Float3& size, uint32_t tc, const UShort2& res) {
 	assert(!(Flag().load(std::memory_order_acquire) & TINY_MODIFIED));
 
 	taskCount = tc;
-	boundingBox = range;
-	subDivision = division;
-	maxFrameExecutionTime = frameTimeLimit;
+	gridSize = size;
 	viewDistance = distance;
+	resolution = res;
 
 	Flag().fetch_or(TINY_MODIFIED, std::memory_order_release);
 }
@@ -196,72 +206,74 @@ static inline void MergeSample(Bytes& dst, const Bytes& src) {
 	}
 }
 
-const Bytes& VisibilityComponent::QuerySample(const Float3& position) {
-	Float3 offset = (position - boundingBox.first) / (boundingBox.second - boundingBox.first);
+VisibilityComponentConfig::Cell::Cell() : finishCount(0) {}
 
-	// out of range
-	if (offset.x() < 0 || offset.y() < 0 || offset.z() < 0 || offset.x() > 1 || offset.y() > 1 || offset.z() > 1) return Bytes::Null();
-
-	UShort3 coord;
-	for (uint32_t k = 0; k < 3; k++) {
-		coord[k] = (uint16_t)Math::Min((int)floor((subDivision[k] - 1) * offset[k] + 0.5), subDivision[k] - 1);
-	}
+const Bytes& VisibilityComponent::QuerySample(Engine& engine, const Float3& position) {
+	Int3 intPosition(int32_t(position.x() / gridSize.x()), int32_t(position.y() / gridSize.y()), int32_t(position.z() / gridSize.z()));
+	const UShort3& dimension = streamComponent->GetDimension();
+	assert(dimension.x() >= 4 && dimension.y() >= 4 && dimension.z() >= 4);
+	assert(streamComponent->GetCacheCount() >= 64);
 
 	// load cache
-	Cache* cache = nullptr;
-	for (uint32_t i = 0; i < sizeof(cellCache) / sizeof(cellCache[0]); i++) {
-		Cache& current = cellCache[i];
-		if (current.counter != 0 && current.index == coord) {
+	const uint32_t cacheCount = sizeof(cellCache) / sizeof(cellCache[0]);
+	for (uint32_t i = activeCellCacheIndex; i < cacheCount + activeCellCacheIndex; i++) {
+		Cache& current = cellCache[i % cacheCount];
+		if (!current.payload.Empty() && current.intPosition == intPosition) {
 			// hit!
-			return current.mergedPayload;
+			//return current.payload;
 		}
 	}
 
-	// cache miss
-	UShort3 lowerBound((uint16_t)Math::Max(coord.x() - 1, 0), (uint16_t)Math::Max(coord.y() - 1, 0), (uint16_t)Math::Max(coord.z() - 1, 0));
-	UShort3 upperBound((uint16_t)Math::Min(coord.x() + 1, (int)subDivision.x() - 1), (uint16_t)Math::Min(coord.y() + 1, (int)subDivision.y() - 1), (uint16_t)Math::Min(coord.z() + 1, (int)subDivision.z() - 1));
+	std::vector<TShared<Cell> > toMerge;
+	toMerge.reserve(27);
+	uint32_t mergedSize = 0;
+	bool incomplete = false;
 
-	Cell& center = cells[coord];
-	if (center.incompleteness != 0) {
-		if (nextCoord != coord) {
-			nextCoord = coord;
-			Flag().fetch_and(~VISIBILITYCOMPONENT_NEXT_PROCESSING, std::memory_order_release);
-		}
+	for (int32_t z = intPosition.z() - 1; z <= intPosition.z() + 1; z++) {
+		for (int32_t y = intPosition.y() - 1; y <= intPosition.y() + 1; y++) {
+			for (int32_t x = intPosition.x() - 1; x <= intPosition.x() + 1; x++) {
+				Int3 coord(x, y, z);
+				TShared<Cell> cell = streamComponent->Load(engine, streamComponent->ComputeWrapCoordinate(coord), nullptr)->QueryInterface(UniqueType<Cell>());
 
-		return Bytes::Null();
-	} else {
-		std::vector<Bytes*> toMerge;
-		toMerge.reserve(9);
-		uint32_t mergedSize = 0;
-
-		for (uint16_t z = lowerBound.z(); z <= upperBound.z(); z++) {
-			for (uint16_t y = lowerBound.y(); y <= upperBound.y(); y++) {
-				for (uint16_t x = lowerBound.x(); x <= upperBound.x(); x++) {
-					UShort3 coord(x, y, z);
-					Cell& cell = cells[coord];
-					if (!cell.payload.Empty()) {
-						mergedSize = Math::Max(mergedSize, (uint32_t)safe_cast<uint32_t>(cell.payload.GetSize()));
-						toMerge.emplace_back(&cell.payload);
-					}
+				if (!(cell->Flag().load(std::memory_order_acquire) & TINY_ACTIVATED)) {
+					cell->intPosition = coord;
+					std::binary_insert(bakePoints, cell);
 				}
+
+				incomplete = incomplete || cell->finishCount != FACE_COUNT;
+				toMerge.emplace_back(cell);
+				mergedSize = Math::Max(mergedSize, (uint32_t)safe_cast<uint32_t>(cell->payload.GetSize()));
 			}
 		}
+	}
 
-		// Do Merge
-		Bytes mergedPayload;
-		mergedPayload.Resize(mergedSize, 0);
-		for (size_t i = 0; i < toMerge.size(); i++) {
-			MergeSample(mergedPayload, *toMerge[i]);
-		}
+	if (incomplete) return Bytes::Null();
 
-		Cache& targetCache = cellCache[activeCellCacheIndex];
-		targetCache.index = coord;
-		targetCache.counter = 1;
-		targetCache.mergedPayload = std::move(mergedPayload);
-		activeCellCacheIndex = (activeCellCacheIndex + 1) % (sizeof(cellCache) / sizeof(cellCache[0]));
-		return targetCache.mergedPayload;
-	} 
+	// Do Merge
+	Bytes mergedPayload;
+	mergedPayload.Resize(mergedSize, 0);
+	for (size_t j = 0; j < toMerge.size(); j++) {
+		MergeSample(mergedPayload, toMerge[j]->payload);
+	}
 
+	Cache& targetCache = cellCache[activeCellCacheIndex];
+	targetCache.intPosition = intPosition;
+	targetCache.payload = std::move(mergedPayload);
+	activeCellCacheIndex = (activeCellCacheIndex + 1) % (sizeof(cellCache) / sizeof(cellCache[0]));
+	return targetCache.payload;
+}
+
+TShared<SharedTiny> VisibilityComponent::StreamLoadHandler(Engine& engine, const UShort3& coord, const TShared<SharedTiny>& tiny, const TShared<SharedTiny>& context) {
+	return tiny ? tiny->QueryInterface(UniqueType<Cell>()) : cellAllocator->New();
+}
+
+TShared<SharedTiny> VisibilityComponent::StreamUnloadHandler(Engine& engine, const UShort3& coord, const TShared<SharedTiny>& tiny, const TShared<SharedTiny>& context) {
+	TShared<Cell> cell = tiny->QueryInterface(UniqueType<Cell>());
+	cell->payload.Clear();
+	cell->finishCount = 0;
+	cell->Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_release);
+
+	return cell();
 }
 
 bool VisibilityComponent::IsVisible(const Bytes& s, TransformComponent* transformComponent) {
@@ -277,10 +289,6 @@ bool VisibilityComponent::IsVisible(const Bytes& s, TransformComponent* transfor
 	assert(offset < size);
 	return !!(ptr[offset] & testBit);
 }
-
-// Cell
-
-VisibilityComponent::Cell::Cell() : incompleteness(27 * 6) {}
 
 // Baker
 
@@ -365,9 +373,10 @@ void VisibilityComponent::CollectRenderableComponent(Engine& engine, TaskData& t
 	} else {
 		IDrawCallProvider::InputRenderData inputRenderData(0.0f, pipeline());
 		std::vector<IDrawCallProvider::OutputRenderData> drawCalls;
-		SpinLock(collectCritical);
+		IThread& thread = engine.interfaces.thread;
+		thread.DoLock(collectLock);
 		renderableComponent->CollectDrawCalls(drawCalls, inputRenderData);
-		SpinUnLock(collectCritical);
+		thread.UnLock(collectLock);
 		assert(drawCalls.size() < sizeof(RenderableComponent) - 1);
 
 		for (size_t i = 0; i < drawCalls.size(); i++) {
@@ -446,8 +455,7 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 		TaskData& task = tasks[k];
 		std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(task.status);
 		if (task.status == TaskData::STATUS_BAKED) {
-			UShort3 coord = task.coord;
-			Cell& cell = cells[coord];
+			Cell& cell = *task.cell;
 			Bytes& encodedData = cell.payload;
 			const Bytes& data = task.data;
 			assert(data.GetSize() % sizeof(uint32_t) == 0);
@@ -466,21 +474,7 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 				target[location] |= 1 << (objectID & 7);
 			}
 
-			// scan neighbors
-			UShort3 lowerBound((uint16_t)Math::Max(coord.x() - 1, 0), (uint16_t)Math::Max(coord.y() - 1, 0), (uint16_t)Math::Max(coord.z() - 1, 0));
-			UShort3 upperBound((uint16_t)Math::Min(coord.x() + 1, (int)subDivision.x() - 1), (uint16_t)Math::Min(coord.y() + 1, (int)subDivision.y() - 1), (uint16_t)Math::Min(coord.z() + 1, (int)subDivision.z() - 1));
-
-			for (uint16_t z = lowerBound.z(); z <= upperBound.z(); z++) {
-				for (uint16_t y = lowerBound.y(); y <= upperBound.y(); y++) {
-					for (uint16_t x = lowerBound.x(); x <= upperBound.x(); x++) {
-						UShort3 t(x, y, z);
-						Cell& c = cells[t];
-						assert(c.incompleteness != 0);
-						--c.incompleteness;
-					}
-				}
-			}
-
+			cell.finishCount++;
 			finalStatus.store(TaskData::STATUS_IDLE);
 			// printf("Bake task (%d, %d, %d) [Remains %d] .\n", coord.x(), coord.y(), coord.z(), cell.incompleteness);
 		} else if (task.status == TaskData::STATUS_ASSEMBLING) {
@@ -550,8 +544,9 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 	}
 }
 
-void VisibilityComponent::CoTaskAssembleTask(Engine& engine, TaskData& task, const BakePoint& bakePoint) {
+void VisibilityComponent::CoTaskAssembleTask(Engine& engine, TaskData& task, uint32_t face) {
 	if (hostEntity == nullptr) return;
+
 	IRender& render = engine.interfaces.render;
 	assert(task.status == TaskData::STATUS_DISPATCHED);
 	render.ExecuteResource(task.renderQueue, stateResource);
@@ -577,7 +572,7 @@ void VisibilityComponent::CoTaskAssembleTask(Engine& engine, TaskData& task, con
 	task.camera = camera;
 
 	const float r2 = (float)sqrt(2.0f) / 2.0f;
-	static const Float3 directions[6] = {
+	static const Float3 directions[FACE_COUNT] = {
 		Float3(r2, r2, 0),
 		Float3(-r2, r2, 0),
 		Float3(-r2, -r2, 0),
@@ -586,7 +581,7 @@ void VisibilityComponent::CoTaskAssembleTask(Engine& engine, TaskData& task, con
 		Float3(0, 0, -1)
 	};
 
-	static const Float3 ups[6] = {
+	static const Float3 ups[FACE_COUNT] = {
 		Float3(0, 0, 1),
 		Float3(0, 0, 1),
 		Float3(0, 0, 1),
@@ -595,14 +590,8 @@ void VisibilityComponent::CoTaskAssembleTask(Engine& engine, TaskData& task, con
 		Float3(1, 0, 0),
 	};
 
-
-	uint16_t i = bakePoint.coord.x();
-	uint16_t j = bakePoint.coord.y();
-	uint16_t k = bakePoint.coord.z();
-
-	task.coord = bakePoint.coord;
-	uint16_t face = bakePoint.face;
-	Float3 viewPosition = boundingBox.first + (boundingBox.second - boundingBox.first) * Float3((float)(i + 0.5f) / subDivision.x(), (float)(j + 0.5f) / subDivision.y(), (float)(k + 0.5f) / subDivision.z());
+	const Int3& intPosition = task.cell->intPosition;
+	Float3 viewPosition((intPosition.x() + 0.5f) * gridSize.x(), (intPosition.y() + 0.5f) * gridSize.y(), (intPosition.z() + 0.5f) * gridSize.z());
 	task.instanceGroups.resize(engine.GetKernel().GetWarpCount());
 	CaptureData captureData;
 	MatrixFloat4x4 viewMatrix = Math::LookAt(viewPosition, directions[face], ups[face]);
@@ -612,7 +601,6 @@ void VisibilityComponent::CoTaskAssembleTask(Engine& engine, TaskData& task, con
 
 	WorldInstanceData instanceData;
 	instanceData.worldMatrix = viewProjectionMatrix;
-
 	CollectComponentsFromEntity(engine, task, instanceData, captureData, hostEntity);
 
 	std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(task.status);
@@ -620,77 +608,41 @@ void VisibilityComponent::CoTaskAssembleTask(Engine& engine, TaskData& task, con
 }
 
 void VisibilityComponent::DispatchTasks(Engine& engine) {
-	size_t n = 0;
 	Kernel& kernel = engine.GetKernel();
 	ThreadPool& threadPool = kernel.threadPool;
 
-	while (true) {
-		while (!bakePoints.empty()) {
-			BakePoint bakePoint = bakePoints.top();
-			Cell& cell = cells[bakePoint.coord];
-			// already baked?
-			if (cell.incompleteness != 0) {
-				Entity* entity = hostEntity;
-				// find idle task
-				while (n < tasks.size()) {
-					TaskData& task = tasks[n];
-					std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(task.status);
-					if (task.status == TaskData::STATUS_START) {
-						finalStatus.store(TaskData::STATUS_DISPATCHED, std::memory_order_release);
-						threadPool.Push(CreateCoTaskContextFree(kernel, Wrap(this, &VisibilityComponent::CoTaskAssembleTask), std::ref(engine), std::ref(task), bakePoint));
-						break;
-					}
+	for (size_t i = 0, n = 0; i < bakePoints.size(); i++) {
+		const TShared<Cell>& cell = bakePoints[i];
 
-					n++;
-				}
-
-				// no more slots ... go next frame
-				if (n == tasks.size())
-					break;
+		Entity* entity = hostEntity;
+		// find idle task
+		TaskData* targets[FACE_COUNT] = { nullptr };
+		uint32_t k = 0;
+		for (uint32_t j = n; j < tasks.size(); j++) {
+			TaskData& task = tasks[j];
+			std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(task.status);
+			if (task.status == TaskData::STATUS_START) {
+				targets[k++] = &task;
+				if (k >= FACE_COUNT) break;
 			}
-
-			bakePoints.pop();
 		}
 
-		if (!bakePoints.empty()) {
-			break;
-		} else {
-			if (Flag().load(std::memory_order_acquire) & VISIBILITYCOMPONENT_NEXT_PROCESSING)
-				break;
+		if (k < FACE_COUNT) break; // not enough, go to next frame
 
-			UShort3 coord = nextCoord;
-			if (coord.x() == (uint16_t)~0)
-				break;
+		if (cell->Flag().fetch_or(TINY_ACTIVATED) & TINY_ACTIVATED) continue;
 
-			Cell& center = cells[coord];
-			if (center.incompleteness == 0)
-				break;
-
-			UShort3 lowerBound((uint16_t)Math::Max(coord.x() - 1, 0), (uint16_t)Math::Max(coord.y() - 1, 0), (uint16_t)Math::Max(coord.z() - 1, 0));
-			UShort3 upperBound((uint16_t)Math::Min(coord.x() + 1, (int)subDivision.x() - 1), (uint16_t)Math::Min(coord.y() + 1, (int)subDivision.y() - 1), (uint16_t)Math::Min(coord.z() + 1, (int)subDivision.z() - 1));
-
-			for (uint16_t z = lowerBound.z(); z <= upperBound.z(); z++) {
-				for (uint16_t y = lowerBound.y(); y <= upperBound.y(); y++) {
-					for (uint16_t x = lowerBound.x(); x <= upperBound.x(); x++) {
-						UShort3 coord(x, y, z);
-						Cell& cell = cells[coord];
-						if (cell.payload.Empty()) {
-							// Add new tasks
-							BakePoint bakePoint;
-							bakePoint.coord = coord;
-							cell.payload.Resize(sizeof(uint32_t), 0);
-							for (uint16_t f = 0; f < 6; f++) {
-								bakePoint.face = f;
-								bakePoints.push(bakePoint);
-							}
-						}
-					}
-				}
-			}
-
-			Flag().fetch_or(VISIBILITYCOMPONENT_NEXT_PROCESSING, std::memory_order_release);
+		for (k = 0; k < FACE_COUNT; k++) {
+			TaskData& task = *targets[k];
+			task.cell = cell;
+			std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(task.status);
+			finalStatus.store(TaskData::STATUS_DISPATCHED, std::memory_order_release);
+			threadPool.Push(CreateCoTaskContextFree(kernel, Wrap(this, &VisibilityComponent::CoTaskAssembleTask), std::ref(engine), std::ref(task), k));
 		}
+
+		n += k;
 	}
+
+	bakePoints.clear();
 }
 
 void VisibilityComponent::RoutineTickTasks(Engine& engine) {

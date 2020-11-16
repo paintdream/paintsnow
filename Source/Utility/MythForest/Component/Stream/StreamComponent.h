@@ -18,6 +18,8 @@ namespace PaintsNow {
 		void SetUnloadHandler(const TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, const TShared<SharedTiny>&, const TShared<SharedTiny>& >& handler);
 		void Uninitialize(Engine& engine, Entity* entity) override;
 		const UShort3& GetDimension() const;
+		UShort3 ComputeWrapCoordinate(const Int3& pos) const;
+		uint16_t GetCacheCount() const;
 
 	protected:
 		struct Grid {

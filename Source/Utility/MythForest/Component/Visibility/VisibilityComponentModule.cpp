@@ -15,18 +15,20 @@ TObject<IReflect>& VisibilityComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-TShared<VisibilityComponent> VisibilityComponentModule::RequestNew(IScript::Request& request) {
+TShared<VisibilityComponent> VisibilityComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<StreamComponent> streamComponent) {
 	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(streamComponent);
 
-	TShared<VisibilityComponent> visibilityComponent = TShared<VisibilityComponent>::From(allocator->New());
+	TShared<VisibilityComponent> visibilityComponent = TShared<VisibilityComponent>::From(allocator->New(streamComponent.Get()));
 	visibilityComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
+
 	return visibilityComponent;
 }
 
-void VisibilityComponentModule::RequestSetup(IScript::Request& request, IScript::Delegate<VisibilityComponent> visibilityComponent, float maxDistance, const Float3Pair& range, const UShort3& division, uint32_t frameTimeLimit, uint32_t taskCount, const UShort2& resolution) {
+void VisibilityComponentModule::RequestSetup(IScript::Request& request, IScript::Delegate<VisibilityComponent> visibilityComponent, float maxDistance, const Float3& gridSize, uint32_t taskCount, const UShort2& resolution) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(visibilityComponent);
 	CHECK_THREAD_IN_MODULE(visibilityComponent);
 
-	visibilityComponent->Setup(engine, maxDistance, range, division, frameTimeLimit, taskCount, resolution);
+	visibilityComponent->Setup(engine, maxDistance, gridSize, taskCount, resolution);
 }

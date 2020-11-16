@@ -57,7 +57,7 @@ void FrameBarrierRenderStage::Tick(Engine& engine, IRender::Queue* queue) {
 		Next.renderTargetDescription.dimension.x() = Front.textureResource->description.dimension.x();
 		Next.renderTargetDescription.dimension.y() = Front.textureResource->description.dimension.y();
 		if (!Next.attachedTexture) {
-			Next.attachedTexture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("RT", this), false, ResourceBase::RESOURCE_VIRTUAL);
+			Next.attachedTexture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("Swap", this), false, ResourceBase::RESOURCE_VIRTUAL);
 		}
 
 		Next.attachedTexture->description.state = Next.renderTargetDescription.state;

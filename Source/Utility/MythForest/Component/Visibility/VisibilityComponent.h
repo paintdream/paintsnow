@@ -13,6 +13,7 @@
 #include "../../../SnowyStream/Resource/TextureResource.h"
 #include "../../../SnowyStream/Resource/MeshResource.h"
 #include "../../../SnowyStream/Resource/Passes/ConstMapPass.h"
+#include "../Stream/StreamComponent.h"
 
 namespace PaintsNow {
 	class SpaceComponent;
@@ -41,6 +42,18 @@ namespace PaintsNow {
 
 		struct CaptureData : public FrustrumCuller {};
 
+		class Cache {
+		public:
+			Int3 intPosition;
+			Bytes payload;
+		};
+
+		class Cell : public TAllocatedTiny<Cell, SharedTiny>, public Cache {
+		public:
+			Cell();
+			uint32_t finishCount;
+		};
+
 		struct TaskData {
 			enum {
 				STATUS_IDLE,
@@ -56,7 +69,7 @@ namespace PaintsNow {
 
 			uint32_t pendingCount;
 			uint32_t status;
-			UShort3 coord;
+			TShared<Cell> cell;
 			IRender::Queue* renderQueue;
 			IRender::Resource* renderTarget;
 			TShared<TextureResource> texture;
@@ -70,14 +83,15 @@ namespace PaintsNow {
 	class VisibilityComponent : public TAllocatedTiny<VisibilityComponent, UniqueComponent<Component, SLOT_VISIBILITY_COMPONENT> >, public SpaceTraversal<VisibilityComponent, VisibilityComponentConfig> {
 	public:
 		friend class SpaceTraversal<VisibilityComponent, VisibilityComponentConfig>;
-		VisibilityComponent();
+		VisibilityComponent(const TShared<StreamComponent>& streamComponent);
 		enum {
 			VISIBILITYCOMPONENT_PARALLEL = COMPONENT_CUSTOM_BEGIN,
-			VISIBILITYCOMPONENT_NEXT_PROCESSING = COMPONENT_CUSTOM_BEGIN << 1,
-			VISIBILITYCOMPONENT_CUSTOM_BEGIN = COMPONENT_CUSTOM_BEGIN << 2
+			VISIBILITYCOMPONENT_CUSTOM_BEGIN = COMPONENT_CUSTOM_BEGIN << 1
 		};
 
 		typedef VisibilityComponentConfig::InstanceGroup InstanceGroup;
+		typedef VisibilityComponentConfig::Cache Cache;
+		typedef VisibilityComponentConfig::Cell Cell;
 
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		void Initialize(Engine& engine, Entity* entity) final;
@@ -86,65 +100,48 @@ namespace PaintsNow {
 		void DispatchEvent(Event& event, Entity* entity) final;
 		Entity* GetHostEntity() const final;
 
-		const Bytes& QuerySample(const Float3& position);
+		const Bytes& QuerySample(Engine& engine, const Float3& position);
 		static bool IsVisible(const Bytes& sample, TransformComponent* transformComponent);
 
-		void Setup(Engine& engine, float distance, const Float3Pair& range, const UShort3& division, uint32_t frameTimeLimit, uint32_t taskCount, const UShort2& resolution);
+		void Setup(Engine& engine, float distance, const Float3& gridSize, uint32_t taskCount, const UShort2& resolution);
 
 	protected:
-		struct Cell {
-		public:
-			Cell();
-			Bytes payload;
-			uint32_t incompleteness;
-		};
-
-		struct Cache {
-			Cache() : counter(0) {}
-			UShort3 index;
-			uint16_t counter;
-			Bytes mergedPayload;
-		};
 
 		void TickRender(Engine& engine);
 		void RoutineTickTasks(Engine& engine);
 		void ResolveTasks(Engine& engine);
 		void DispatchTasks(Engine& engine);
 
-		struct BakePoint {
-			UShort3 coord;
-			uint16_t face;
-		};
 
-		void CoTaskAssembleTask(Engine& engine, TaskData& task, const BakePoint& bakePoint);
+		void CoTaskAssembleTask(Engine& engine, TaskData& task, uint32_t face);
 		void SetupIdentities(Engine& engine, Entity* hostEntity);
 		void CollectRenderableComponent(Engine& engine, TaskData& task, RenderableComponent* renderableComponent, WorldInstanceData& instanceData, uint32_t identity);
 		void CollectComponents(Engine& engine, TaskData& task, const WorldInstanceData& instanceData, const CaptureData& captureData, Entity* entity);
 		void CompleteCollect(Engine& engine, TaskData& task);
 
+		TShared<SharedTiny> StreamLoadHandler(Engine& engine, const UShort3& coord, const TShared<SharedTiny>& tiny, const TShared<SharedTiny>& context);
+		TShared<SharedTiny> StreamUnloadHandler(Engine& engine, const UShort3& coord, const TShared<SharedTiny>& tiny, const TShared<SharedTiny>& context);
+
 	protected:
+		TShared<StreamComponent> streamComponent;
 		Entity* hostEntity;
 
-		Float3Pair boundingBox;
-		UShort3 nextCoord;
-		UShort3 subDivision;
-		UShort2 resolution;
-		uint32_t taskCount;
-		uint32_t maxFrameExecutionTime; // in ms
+		Float3 gridSize;
 		float viewDistance;
+		uint32_t taskCount;
+		UShort2 resolution;
 		std::atomic<uint32_t> maxVisIdentity;
-		std::map<UShort3, Cell> cells;
 		uint32_t activeCellCacheIndex;
 		Cache cellCache[8];
+		TShared<TObjectAllocator<Cell> > cellAllocator;
 
 		// Runtime Baker
 		IRender::Queue* renderQueue;
 		IRender::Resource* depthStencilResource;
 		IRender::Resource* stateResource;
+		IThread::Lock* collectLock;
 		TShared<ShaderResourceImpl<ConstMapPass> > pipeline;
-		std::atomic<uint32_t> collectCritical;
-
 		std::vector<TaskData> tasks;
-		std::stack<BakePoint> bakePoints;
+		std::vector<TShared<Cell> > bakePoints;
 	};
 }
