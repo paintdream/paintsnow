@@ -65,21 +65,31 @@ void RenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 		// optimize for Don't Care (DISCARD)
 		const std::vector<PortInfo>& ports = GetPorts();
 		for (size_t i = 0; i < ports.size(); i++) {
-			RenderPortRenderTargetStore* rt = ports[i].port->QueryInterface(UniqueType<RenderPortRenderTargetStore>());
+			RenderPortRenderTargetStore* store = ports[i].port->QueryInterface(UniqueType<RenderPortRenderTargetStore>());
 			// Not referenced by any other nodes
-			if (rt != nullptr && rt->GetLinks().empty()) {
-				assert(rt->attachedTexture);
+			if (store != nullptr && store->GetLinks().empty()) {
+				assert(store->attachedTexture);
 
 				// can be safety discarded?
-				if (rt->attachedTexture->description.frameBarrierIndex < frameBarrierIndex) {
-					if (&renderTargetDescription.depthStorage == &rt->bindingStorage) {
+				if (store->attachedTexture->description.frameBarrierIndex < frameBarrierIndex) {
+					if (&renderTargetDescription.depthStorage == &store->bindingStorage) {
 						desc.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
-					} else if (&renderTargetDescription.stencilStorage == &rt->bindingStorage) {
+					} else if (&renderTargetDescription.stencilStorage == &store->bindingStorage) {
 						desc.stencilStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
 					} else {
-						size_t index = &rt->bindingStorage - &renderTargetDescription.colorStorages[0];
+						size_t index = &store->bindingStorage - &renderTargetDescription.colorStorages[0];
 						desc.colorStorages[index].storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
 					}
+				}
+			}
+
+			RenderPortRenderTargetLoad* load = ports[i].port->QueryInterface(UniqueType<RenderPortRenderTargetLoad>());
+			if (load != nullptr && !load->GetLinks().empty()) {
+				assert(load->GetLinks().size() == 1);
+				RenderPortRenderTargetStore* upstream = static_cast<RenderPortRenderTargetStore*>(load->GetLinks().back().port);
+				assert(upstream != nullptr);
+				if (upstream->bindingStorage.storeOp == IRender::Resource::RenderTargetDescription::DISCARD) {
+					assert(load->bindingStorage.loadOp != IRender::Resource::RenderTargetDescription::DEFAULT);
 				}
 			}
 		}
