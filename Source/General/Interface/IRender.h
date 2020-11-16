@@ -84,7 +84,7 @@ namespace PaintsNow {
 					NOMIP, AUTOMIP, SPECMIP
 				};
 
-				TextureDescription() : dimension(0, 0, 0), reserved(0) {}
+				TextureDescription() : dimension(0, 0, 0), frameBarrierIndex(0) {}
 				
 				struct State {
 					State() : type(TEXTURE_2D), format(UNSIGNED_BYTE), 
@@ -117,7 +117,7 @@ namespace PaintsNow {
 
 				Bytes data;
 				UShort3 dimension; // width, height, depth
-				short reserved;
+				uint16_t frameBarrierIndex;
 				State state;
 			};
 

@@ -26,6 +26,7 @@ namespace PaintsNow {
 		RenderPortRenderTargetLoad InputMask; // optional
 		RenderPortRenderTargetLoad LoadDepth;
 		RenderPortRenderTargetStore OutputMask;
+		RenderPortRenderTargetStore MoveDepth;
 		size_t layerIndex;
 
 		TShared<TextureResource> emptyShadowMask;

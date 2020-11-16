@@ -40,10 +40,12 @@ function StandardRenderFlow.New(bloomLayerCount : number) : RenderFlowComponent
 		renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "CameraView", stageShadowMask, "CameraView")
 		renderFlowComponent:LinkRenderStagePort(stageLightBuffer, "LightSource", stageShadowMask, "LightSource")
 		renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "Depth", stageShadowMask, "InputDepth")
-		renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "Depth", stageShadowMask, "LoadDepth")
 
 		if lastShadowMask then
 			renderFlowComponent:LinkRenderStagePort(lastShadowMask, "OutputMask", stageShadowMask, "InputMask")
+			renderFlowComponent:LinkRenderStagePort(lastShadowMask, "MoveDepth", stageShadowMask, "LoadDepth")
+		else
+			renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "Depth", stageShadowMask, "LoadDepth")
 		end
 
 		if i == 3 then
@@ -52,7 +54,6 @@ function StandardRenderFlow.New(bloomLayerCount : number) : RenderFlowComponent
 
 		lastShadowMask = stageShadowMask
 	end
-	
 
 	-- Step 3: Anti-Aliasing
 	local stageColorBarrier : RenderStage = renderFlowComponent:NewRenderStage("FrameBarrierRenderStage", "")

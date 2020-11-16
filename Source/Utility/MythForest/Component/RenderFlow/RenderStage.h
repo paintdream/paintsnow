@@ -31,6 +31,8 @@ namespace PaintsNow {
 		virtual void Tick(Engine& engine, IRender::Queue* resourceQueue);
 		virtual void Commit(Engine& engine, std::vector<IRender::Queue*>& queues, std::vector<IRender::Queue*>& instantQueues, std::vector<IRender::Queue*>& deletedQueues, IRender::Queue* instantQueue);
 
+		uint16_t GetFrameBarrierIndex() const;
+		void SetFrameBarrierIndex(uint16_t index);
 		IRender::Resource* GetRenderTargetResource() const;
 		const IRender::Resource::RenderTargetDescription& GetRenderTargetDescription() const;
 		friend class FrameBarrierRenderStage;
@@ -43,7 +45,7 @@ namespace PaintsNow {
 		IRender::Resource* renderTarget;
 		IRender::Resource* drawCallResource;
 		Char2 resolutionShift;
-		Char2 reserved;
+		uint16_t frameBarrierIndex;
 		std::vector<IRender::Resource*> newResources;
 	};
 

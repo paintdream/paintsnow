@@ -3,7 +3,7 @@
 
 using namespace PaintsNow;
 
-RenderStage::RenderStage(uint32_t colorAttachmentCount) : renderState(nullptr), renderTarget(nullptr), drawCallResource(nullptr), resolutionShift(0, 0) {
+RenderStage::RenderStage(uint32_t colorAttachmentCount) : renderState(nullptr), renderTarget(nullptr), drawCallResource(nullptr), resolutionShift(0, 0), frameBarrierIndex(0) {
 	Flag().fetch_or(RENDERSTAGE_ADAPT_MAIN_RESOLUTION, std::memory_order_relaxed);
 
 	// Initialize state
@@ -21,6 +21,7 @@ RenderStage::RenderStage(uint32_t colorAttachmentCount) : renderState(nullptr), 
 	s.stencilMask = 0;
 
 	IRender::Resource::RenderTargetDescription& t = renderTargetDescription;
+
 	t.colorStorages.resize(colorAttachmentCount);
 	for (size_t i = 0; i < t.colorStorages.size(); i++) {
 		IRender::Resource::RenderTargetDescription::Storage& s = t.colorStorages[i];
@@ -30,6 +31,14 @@ RenderStage::RenderStage(uint32_t colorAttachmentCount) : renderState(nullptr), 
 
 	t.depthStorage.loadOp = IRender::Resource::RenderTargetDescription::DISCARD;
 	t.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
+}
+
+uint16_t RenderStage::GetFrameBarrierIndex() const {
+	return frameBarrierIndex;
+}
+
+void RenderStage::SetFrameBarrierIndex(uint16_t index) {
+	frameBarrierIndex = index;
 }
 
 void RenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
@@ -59,13 +68,18 @@ void RenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 			RenderPortRenderTargetStore* rt = ports[i].port->QueryInterface(UniqueType<RenderPortRenderTargetStore>());
 			// Not referenced by any other nodes
 			if (rt != nullptr && rt->GetLinks().empty()) {
-				if (&renderTargetDescription.depthStorage == &rt->bindingStorage) {
-					desc.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
-				} else if (&renderTargetDescription.stencilStorage == &rt->bindingStorage) {
-					desc.stencilStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
-				} else {
-					size_t index = &rt->bindingStorage - &renderTargetDescription.colorStorages[0];
-					desc.colorStorages[index].storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
+				assert(rt->attachedTexture);
+
+				// can be safety discarded?
+				if (rt->attachedTexture->description.frameBarrierIndex < frameBarrierIndex) {
+					if (&renderTargetDescription.depthStorage == &rt->bindingStorage) {
+						desc.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
+					} else if (&renderTargetDescription.stencilStorage == &rt->bindingStorage) {
+						desc.stencilStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
+					} else {
+						size_t index = &rt->bindingStorage - &renderTargetDescription.colorStorages[0];
+						desc.colorStorages[index].storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
+					}
 				}
 			}
 		}

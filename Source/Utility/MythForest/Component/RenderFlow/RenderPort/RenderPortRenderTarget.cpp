@@ -63,7 +63,9 @@ RenderPortRenderTargetStore* RenderPortRenderTargetLoad::QueryStore() const {
 
 // RenderPortRenderTargetStore
 
-RenderPortRenderTargetStore::RenderPortRenderTargetStore(IRender::Resource::RenderTargetDescription::Storage& storage) : bindingStorage(storage) {}
+RenderPortRenderTargetStore::RenderPortRenderTargetStore(IRender::Resource::RenderTargetDescription::Storage& storage) : bindingStorage(storage) {
+	renderTargetDescription.state.attachment = true;
+}
 
 TObject<IReflect>& RenderPortRenderTargetStore::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);

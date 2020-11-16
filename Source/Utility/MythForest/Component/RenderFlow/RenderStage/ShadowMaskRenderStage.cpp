@@ -5,7 +5,7 @@
 
 using namespace PaintsNow;
 
-ShadowMaskRenderStage::ShadowMaskRenderStage(const String& config) : OutputMask(renderTargetDescription.colorStorages[0]), InputMask(renderTargetDescription.colorStorages[0]), LoadDepth(renderTargetDescription.depthStorage) {
+ShadowMaskRenderStage::ShadowMaskRenderStage(const String& config) : OutputMask(renderTargetDescription.colorStorages[0]), InputMask(renderTargetDescription.colorStorages[0]), LoadDepth(renderTargetDescription.depthStorage), MoveDepth(renderTargetDescription.depthStorage) {
 	layerIndex = atoi(config.c_str());
 	IRender::Resource::RenderStateDescription& s = renderStateDescription;
 	s.cullFrontFace = 1;
@@ -14,6 +14,9 @@ ShadowMaskRenderStage::ShadowMaskRenderStage(const String& config) : OutputMask(
 	s.stencilReplacePass = 1;
 	s.depthTest = IRender::Resource::RenderStateDescription::DISABLED;
 	s.depthWrite = 0;
+
+	renderTargetDescription.depthStorage.loadOp = renderTargetDescription.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
+	renderTargetDescription.stencilStorage.loadOp = renderTargetDescription.stencilStorage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 }
 
 TObject<IReflect>& ShadowMaskRenderStage::operator () (IReflect& reflect) {
@@ -24,6 +27,7 @@ TObject<IReflect>& ShadowMaskRenderStage::operator () (IReflect& reflect) {
 		ReflectProperty(CameraView);
 		ReflectProperty(InputDepth);
 		ReflectProperty(LoadDepth);
+		ReflectProperty(MoveDepth);
 		ReflectProperty(InputMask);
 		ReflectProperty(OutputMask);
 	}
@@ -41,8 +45,9 @@ void ShadowMaskRenderStage::PrepareResources(Engine& engine, IRender::Queue* que
 		OutputMask.renderTargetDescription.state.attachment = true;
 
 		renderTargetDescription.colorStorages[0].loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
+	} else {
+		renderTargetDescription.colorStorages[0].loadOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 	}
-
 
 	emptyShadowMask = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), "[Runtime]/TextureResource/Black", true, ResourceBase::RESOURCE_VIRTUAL);
 

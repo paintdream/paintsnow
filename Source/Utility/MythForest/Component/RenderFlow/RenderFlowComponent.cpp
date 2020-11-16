@@ -116,6 +116,17 @@ void RenderFlowComponent::Compile() {
 	IterateTopological(batch, batch);
 	result.emplace_back(nullptr); // sentinel for optimization
 
+	// set barrier stages
+	uint16_t index = 0;
+	for (size_t n = 0; n < cachedRenderStages.size(); n++) {
+		RenderStage* renderStage = cachedRenderStages[n];
+		if (renderStage == nullptr) {
+			index++;
+		} else {
+			renderStage->SetFrameBarrierIndex(index);
+		}
+	}
+
 	std::swap(result, cachedRenderStages);
 }
 
@@ -271,6 +282,7 @@ void RenderFlowComponent::SetupTextures(Engine& engine) {
 						}
 
 						rt->attachedTexture = texture;
+						texture->description.frameBarrierIndex = Math::Max(texture->description.frameBarrierIndex, renderStage->frameBarrierIndex);
 					}
 				}
 			}
