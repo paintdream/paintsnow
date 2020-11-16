@@ -739,7 +739,7 @@ bool SnowyStream::RegisterResourceSerializer(Unique unique, const String& extens
 }
 
 TShared<ResourceBase> SnowyStream::CreateResource(const String& path, const String& ext, bool openExisting, Tiny::FLAG flag, IStreamBase* sourceStream) {
-	assert(!path.empty());
+	assert(!path.empty() || (!openExisting && !ext.empty()));
 	// try to parse extension from location if no ext provided
 	String location;
 	String extension;
@@ -766,15 +766,17 @@ TShared<ResourceBase> SnowyStream::CreateResource(const String& path, const Stri
 		assert(t != resourceManagers.end());
 		ResourceManager& resourceManager = *(*t).second();
 
-		resourceManager.DoLock();
-		TShared<ResourceBase> existed = resourceManager.LoadExist(location);
-		if (existed) {
-			// Create failed, already exists
-			resourceManager.UnLock();
-			if (!openExisting) {
-				return nullptr;
-			} else {
-				return existed;
+		if (!location.empty()) {
+			resourceManager.DoLock();
+			TShared<ResourceBase> existed = resourceManager.LoadExist(location);
+			if (existed) {
+				// Create failed, already exists
+				resourceManager.UnLock();
+				if (!openExisting) {
+					return nullptr;
+				} else {
+					return existed;
+				}
 			}
 		}
 
@@ -782,7 +784,10 @@ TShared<ResourceBase> SnowyStream::CreateResource(const String& path, const Stri
 		resource = (*p).second.second->Create(resourceManager, location);
 		resource->Flag().fetch_or(flag, std::memory_order_relaxed);
 		resourceManager.Insert(resource);
-		resourceManager.UnLock();
+
+		if (!location.empty()) {
+			resourceManager.UnLock();
+		}
 
 		if (!(resource->Flag().load(std::memory_order_relaxed) & ResourceBase::RESOURCE_VIRTUAL)) {
 			if (resource->Map()) {

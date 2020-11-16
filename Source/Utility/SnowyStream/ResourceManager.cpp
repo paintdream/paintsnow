@@ -46,25 +46,26 @@ void ResourceManager::RemoveAll() {
 }
 
 void ResourceManager::Insert(const TShared<ResourceBase>& resource) {
-	assert(IsLocked());
 	assert(resource);
 	assert(resource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_ORPHAN);
 
 	// allowing anounymous resource
 	const String& id = resource->GetLocation();
-	if (id.empty()) return;
+	if (!id.empty()) {
+		assert(IsLocked());
+		assert(!id.empty());
+		assert(&resource->GetResourceManager() == this);
+		assert(resourceMap.find(id) == resourceMap.end());
 
-	assert(!id.empty());
-	assert(&resource->GetResourceManager() == this);
-	assert(resourceMap.find(id) == resourceMap.end());
+		resourceMap[id] = resource();
 
-	resourceMap[id] = resource();
+		if (resource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_ETERNAL) {
+			resource->ReferenceObject();
+		}
 
-	if (resource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_ETERNAL) {
-		resource->ReferenceObject();
+		resource->Flag().fetch_and(~ResourceBase::RESOURCE_ORPHAN, std::memory_order_release);
 	}
 
-	resource->Flag().fetch_and(~ResourceBase::RESOURCE_ORPHAN, std::memory_order_release);
 	InvokeAttach(resource(), GetContext());
 }
 

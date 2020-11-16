@@ -95,9 +95,13 @@ void ResourceBase::ReleaseObject() {
 }
 
 String ResourceBase::GenerateLocation(const String& prefix, const void* ptr) {
+#ifdef _DEBUG
 	std::stringstream ss;
 	ss << "[Temporary]/" << prefix << "/" << std::hex << (size_t)ptr;
 	return StdToUtf8(ss.str());
+#else
+	return String();
+#endif
 }
 
 Unique ResourceBase::GetDeviceUnique() const {
