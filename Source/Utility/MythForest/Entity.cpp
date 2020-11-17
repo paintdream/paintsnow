@@ -277,6 +277,21 @@ void Entity::PostEvent(Event& event, FLAG mask) {
 			component->DispatchEvent(event, this);
 		}
 	}
+
+	// Flush deferred targets
+	if (this == event.sender()) {
+		event.deferredEnd = safe_cast<uint32_t>(event.deferredTargets.size());
+		do {
+			event.deferredNext = 0;
+			event.stage++;
+
+			while (event.deferredIndex < event.deferredEnd) {
+				event.deferredTargets[event.deferredIndex++]->DispatchEvent(event, this);
+			}
+
+			event.deferredEnd = event.deferredNext;
+		} while (event.deferredEnd != 0);
+	}
 }
 
 TObject<IReflect>& Entity::operator () (IReflect& reflect) {

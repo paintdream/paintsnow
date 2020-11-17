@@ -28,22 +28,9 @@ void EventComponent::Execute(void* context) {
 		uint64_t time = ITimer::GetSystemClock();
 		tickTimeDelta = time - tickTimeStamp;
 
-		Event event(*reinterpret_cast<Engine*>(context), Event::EVENT_TICK, this, nullptr);
-		bool prepost = !!(rootEntity->Flag().load(std::memory_order_relaxed) & Entity::ENTITY_HAS_PREPOST_TICK_EVENT);
-
-		if (prepost) {
-			event.eventID = Event::EVENT_PRETICK;
-			rootEntity->PostEvent(event, Entity::ENTITY_HAS_PREPOST_TICK_EVENT);
-			event.eventID = Event::EVENT_TICK;
-		}
-
 		if (rootEntity->Flag().load(std::memory_order_relaxed) & Entity::ENTITY_HAS_TICK_EVENT) {
+			Event event(*reinterpret_cast<Engine*>(context), Event::EVENT_TICK, this, nullptr);
 			rootEntity->PostEvent(event, Entity::ENTITY_HAS_TICK_EVENT);
-		}
-
-		if (prepost) {
-			event.eventID = Event::EVENT_POSTTICK;
-			rootEntity->PostEvent(event, Entity::ENTITY_HAS_PREPOST_TICK_EVENT);
 		}
 
 		tickTimeStamp = time;

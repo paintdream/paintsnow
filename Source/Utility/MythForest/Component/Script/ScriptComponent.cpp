@@ -75,7 +75,6 @@ void ScriptComponent::UpdateEntityFlagMask() {
 	entityFlagMask = (handlers[Event::EVENT_ATTACH_COMPONENT] || handlers[Event::EVENT_DETACH_COMPONENT]
 		? Entity::ENTITY_HAS_TACH_EVENT : 0)
 		| (handlers[Event::EVENT_ENTITY_ACTIVATE] || handlers[Event::EVENT_ENTITY_DEACTIVATE] ? Entity::ENTITY_HAS_ACTIVE_EVENT : 0)
-		| (handlers[Event::EVENT_PRETICK] || handlers[Event::EVENT_POSTTICK] ? Entity::ENTITY_HAS_PREPOST_TICK_EVENT : 0)
 		| (handlers[Event::EVENT_TICK] ? Entity::ENTITY_HAS_TICK_EVENT : 0)
 		| (handlers[Event::EVENT_CUSTOM] || handlers[Event::EVENT_INPUT] || handlers[Event::EVENT_OUTPUT] || handlers[Event::EVENT_FRAME] || handlers[Event::EVENT_FRAME_SYNC_TICK] ? Entity::ENTITY_HAS_SPECIAL_EVENT : 0);
 }
@@ -91,14 +90,13 @@ void ScriptComponent::DispatchEvent(Event& event, Entity* entity) {
 
 		// Translate message
 		switch (event.eventID) {
-			case Event::EVENT_PRETICK:
 			case Event::EVENT_TICK:
-			case Event::EVENT_POSTTICK:
 			{
 				EventComponent* eventComponent = event.sender->QueryInterface(UniqueType<EventComponent>());
 				request << eventComponent->GetTickDeltaTime();
 				break;
 			}
+			case Event::EVENT_UPDATE:
 			case Event::EVENT_ATTACH_COMPONENT:
 			case Event::EVENT_DETACH_COMPONENT:
 			case Event::EVENT_ENTITY_ACTIVATE:

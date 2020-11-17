@@ -8,14 +8,14 @@
 #include "Engine.h"
 
 namespace PaintsNow {
+	class Component;
 	class Event {
 	public:
 		enum EVENT_ID {
 			// Inner events
 			EVENT_BEGIN = 0,
-			EVENT_PRETICK = EVENT_BEGIN,
 			EVENT_TICK,
-			EVENT_POSTTICK,
+			EVENT_UPDATE,
 			EVENT_ATTACH_COMPONENT,
 			EVENT_DETACH_COMPONENT,
 			EVENT_ENTITY_ACTIVATE,
@@ -32,9 +32,8 @@ namespace PaintsNow {
 
 		static void ReflectEventIDs(IReflect& reflect) {
 			if (reflect.IsReflectEnum()) {
-				ReflectEnum(EVENT_PRETICK);
 				ReflectEnum(EVENT_TICK);
-				ReflectEnum(EVENT_POSTTICK);
+				ReflectEnum(EVENT_UPDATE);
 				ReflectEnum(EVENT_ATTACH_COMPONENT);
 				ReflectEnum(EVENT_DETACH_COMPONENT);
 				ReflectEnum(EVENT_ENTITY_ACTIVATE);
@@ -64,9 +63,14 @@ namespace PaintsNow {
 		Event();
 #endif
 		std::reference_wrapper<Engine> engine;	// (0/0)
-		EVENT_ID eventID;
+		uint16_t eventID;
+		uint16_t stage;
+		uint32_t deferredIndex;
+		uint32_t deferredEnd;
+		uint32_t deferredNext;
 		TShared<SharedTiny> sender;
 		TShared<SharedTiny> detail;
+		std::vector<Component*> deferredTargets;
 	};
 }
 
