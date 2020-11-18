@@ -6,6 +6,7 @@ using namespace PaintsNow;
 
 ShadowMaskFS::ShadowMaskFS() {
 	uniformBuffer.description.usage = IRender::Resource::BufferDescription::UNIFORM;
+	shadowTexture.description.state.pcf = true;
 }
 
 String ShadowMaskFS::GetShaderText() {
@@ -20,8 +21,7 @@ String ShadowMaskFS::GetShaderText() {
 	clip(float(uv.x < 1 && uv.y < 1 && uv.z < 1) - float(0.5));
 
 	position.xyz = position.xyz * float(0.5) + float3(0.5, 0.5, 0.5);
-	float refDepth = textureLod(shadowTexture, position.xy, float(0)).x;
-	shadow = float4(step(position.z + 0.00005, refDepth), 0, 0, 0);
+	shadow.x = textureShadow(shadowTexture, position.xyz); // hardware pcf
 	);
 }
 

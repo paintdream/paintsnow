@@ -17,6 +17,7 @@ static const String frameCode = "#version 330\n\
 #define lerp(a, b, v) mix(a, b, v) \n\
 #define ddx dFdx \n\
 #define ddy dFdy \n\
+#define textureShadow texture \n\
 float saturate(float x) { return clamp(x, 0.0, 1.0); } \n\
 float2 saturate(float2 x) { return clamp(x, float2(0.0, 0.0), float2(1.0, 1.0)); } \n\
 float3 saturate(float3 x) { return clamp(x, float3(0.0, 0.0, 0.0), float3(1.0, 1.0, 1.0)); } \n\
@@ -298,7 +299,7 @@ void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refT
 			};
 
 			// declaration += String("layout(location = ") + ToString(textureIndex++) + ") uniform " + samplerTypes[bindTexture->description.state.type] + (bindTexture->description.dimension.z() != 0 && bindTexture->description.state.type != IRender::Resource::TextureDescription::TEXTURE_3D ? "Array " : " ") + name + ";\n";
-			declaration += String("uniform ") + samplerTypes[bindTexture->description.state.type] + (bindTexture->description.dimension.z() != 0 && bindTexture->description.state.type != IRender::Resource::TextureDescription::TEXTURE_3D ? "Array " : " ") + name + ";\n";
+			declaration += String("uniform ") + samplerTypes[bindTexture->description.state.type] + (bindTexture->description.dimension.z() != 0 && bindTexture->description.state.type != IRender::Resource::TextureDescription::TEXTURE_3D ? "Array" : "") + (bindTexture->description.state.pcf ? "Shadow " : " ") + name + ";\n";
 			textureBindings.emplace_back(std::make_pair(bindTexture, name));
 			textureIndex++;
 		}

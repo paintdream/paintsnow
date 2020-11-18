@@ -776,6 +776,11 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 		glTexParameteri(textureType, GL_TEXTURE_MIN_FILTER, d.state.sample == Resource::TextureDescription::POINT ? GL_NEAREST : GL_LINEAR);
 		glTexParameteri(textureType, GL_TEXTURE_MAG_FILTER, d.state.sample == Resource::TextureDescription::POINT ? GL_NEAREST : GL_LINEAR);
 
+		// PCF?
+		if (d.state.pcf) {
+			glTexParameteri(textureType, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
+		}
+
 		/*
 #ifdef _DEBUG
 		fprintf(stderr, "Device Texture Uploaded: %s\n", note.c_str());

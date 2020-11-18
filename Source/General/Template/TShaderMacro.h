@@ -166,6 +166,11 @@ namespace PaintsNow {
 	}
 
 	template <class T>
+	float textureShadow(const IShader::BindTexture& tex, const TVector<T, 3>& v) {
+		return 0;
+	}
+
+	template <class T>
 	void clip(T value) {}
 
 	template <class T, class D>

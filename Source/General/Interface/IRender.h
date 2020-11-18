@@ -88,7 +88,7 @@ namespace PaintsNow {
 				
 				struct State {
 					State() : type(TEXTURE_2D), format(UNSIGNED_BYTE), 
-						wrap(1), immutable(1), attachment(0), layout(RGBA), sample(LINEAR), mip(NOMIP), compress(0), media(TEXTURE_RESOURCE), reserved(0) {}
+						wrap(1), immutable(1), attachment(0), layout(RGBA), sample(LINEAR), mip(NOMIP), compress(0), media(TEXTURE_RESOURCE), pcf(0), reserved(0) {}
 
 					inline bool operator == (const State& rhs) const {
 						return memcmp(this, &rhs, sizeof(*this)) == 0;
@@ -112,7 +112,8 @@ namespace PaintsNow {
 					uint32_t sample : 2;
 					uint32_t mip : 2;
 					uint32_t media : 2;
-					uint32_t reserved : 14;
+					uint32_t pcf : 1;
+					uint32_t reserved : 13;
 				};
 
 				Bytes data;
