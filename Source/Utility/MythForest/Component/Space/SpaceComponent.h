@@ -38,8 +38,6 @@ namespace PaintsNow {
 	protected:
 		void Initialize(Engine& engine, Entity* entity) override;
 		void Uninitialize(Engine& engine, Entity* entity) override;
-		void AttachUnsorted(Entity* parent, Entity* child, uint32_t seed);
-		Entity* DetachUnsorted(Entity* child);
 		float RoutineRaycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const;
 		void RoutineUpdateBoundingBox();
 		void RoutineUpdateBoundingBoxRecursive(Float3Pair& box, Entity* entity);

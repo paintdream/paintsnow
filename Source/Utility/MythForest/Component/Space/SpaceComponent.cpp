@@ -76,22 +76,20 @@ bool SpaceComponent::Insert(Engine& engine, Entity* entity) {
 	entity->CleanupEngineInternal();
 	entity->SetIndex(entityCount % 6);
 
-	if (rootEntity)
-	{
-		if (Flag().load(std::memory_order_relaxed) & SPACECOMPONENT_ORDERED)
-		{
+	if (rootEntity != nullptr) {
+		if (Flag().load(std::memory_order_relaxed) & SPACECOMPONENT_ORDERED) {
 			rootEntity->Attach(entity);
-		}
-		else
-		{
-			AttachUnsorted(rootEntity, entity, entityCount);
+		} else {
+			// chain
+			entity->Right() = rootEntity;
+			assert(rootEntity->GetParent() == nullptr);
+			rootEntity->SetParent(entity);
+			rootEntity = entity;
 		}
 
 		Union(boundingBox, entity->GetKey().first);
 		Union(boundingBox, entity->GetKey().second);
-	}
-	else
-	{
+	} else {
 		rootEntity = entity;
 		boundingBox = entity->GetKey();
 	}
@@ -156,44 +154,6 @@ struct SelectRemove {
 	}
 };
 
-void SpaceComponent::AttachUnsorted(Entity* parent, Entity* entity, uint32_t seed) {
-	if (parent->Left() == nullptr) {
-		parent->Left() = entity;
-		entity->SetParent(parent);
-	} else if (parent->Right() == nullptr) {
-		parent->Right() = entity;
-		entity->SetParent(parent);
-	} else {
-		AttachUnsorted(seed & 1 ? parent->Left() : parent->Right(), entity, seed >> 1);
-	}
-}
-
-Entity* SpaceComponent::DetachUnsorted(Entity* entity) {
-	Entity* parent = entity->Parent();
-	Entity* left = entity->Left();
-	Entity* right = entity->Right();
-
-	if (left != nullptr) {
-		if (right != nullptr) {
-			left = entityCount & 1 ? right : left;
-		}
-	} else {
-		left = right;
-	}
-
-	if (parent != nullptr) {
-		if (entity == parent->Left()) {
-			parent->Left() = left;
-		} else {
-			parent->Right() = left;
-		}
-
-		return nullptr;
-	} else {
-		return left;
-	}
-}
-
 bool SpaceComponent::Remove(Engine& engine, Entity* entity) {
 	if (!ValidateEntity(entity)) {
 		return false;
@@ -202,13 +162,12 @@ bool SpaceComponent::Remove(Engine& engine, Entity* entity) {
 	Entity* newRoot = nullptr;
 	if (Flag().load(std::memory_order_relaxed) & SPACECOMPONENT_ORDERED) {
 		SelectRemove selectRemove;
-		newRoot = static_cast<Entity*>(entity->Detach(selectRemove));
+		rootEntity = static_cast<Entity*>(entity->Detach(selectRemove));
+	} else if (rootEntity == entity) {
+		rootEntity = entity->Right();
 	} else {
-		newRoot = DetachUnsorted(entity);
-	}
-
-	if (newRoot != nullptr || entity == rootEntity) {
-		rootEntity = newRoot;
+		assert(entity->Parent() != nullptr);
+		entity->Parent()->Right() = entity->Right();
 	}
 
 	if (--entityCount == 0) {

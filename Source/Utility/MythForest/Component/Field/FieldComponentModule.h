@@ -29,21 +29,22 @@ namespace PaintsNow {
 		/// </summary>
 		/// <param name="fieldComponent"> the FieldComponent </param>
 		/// <param name="shapeType"> shape type </param>
-		void RequestFromSimplygon(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, const String& shapeType);
+		/// <param name="range"> field range </param>
+		void RequestLoadSimplygon(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, const String& shapeType, const Float3Pair& range);
 
 		/// <summary>
 		/// Initialize FieldComponent from a texture
 		/// </summary>
 		/// <param name="fieldComponent"> the FieldComponent </param>
 		/// <param name="textureResource"> the TextureResource </param>
-		void RequestFromTexture(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, IScript::Delegate<TextureResource> textureResource);
+		void RequestLoadTexture(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, IScript::Delegate<TextureResource> textureResource, const Float3Pair& range);
 
 		/// <summary>
 		/// Initialize FieldComponent from a mesh
 		/// </summary>
 		/// <param name="fieldComponent"> the FieldComponent </param>
 		/// <param name="meshResource"> the MeshResource </param>
-		void RequestFromMesh(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, IScript::Delegate<MeshResource> meshResource);
+		void RequestLoadMesh(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, IScript::Delegate<MeshResource> meshResource, const Float3Pair& range);
 
 		/// <summary>
 		/// Query field value

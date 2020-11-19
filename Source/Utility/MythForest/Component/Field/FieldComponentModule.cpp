@@ -12,9 +12,9 @@ TObject<IReflect>& FieldComponentModule::operator () (IReflect& reflect) {
 
 	if (reflect.IsReflectMethod()) {
 		ReflectMethod(RequestNew)[ScriptMethod = "New"];
-		ReflectMethod(RequestFromSimplygon)[ScriptMethod = "FromSimplygon"];
-		ReflectMethod(RequestFromTexture)[ScriptMethod = "FromTexture"];
-		ReflectMethod(RequestFromMesh)[ScriptMethod = "FromMesh"];
+		ReflectMethod(RequestLoadSimplygon)[ScriptMethod = "LoadSimplygon"];
+		ReflectMethod(RequestLoadTexture)[ScriptMethod = "LoadTexture"];
+		ReflectMethod(RequestLoadMesh)[ScriptMethod = "LoadMesh"];
 		ReflectMethod(RequestQuery)[ScriptMethod = "Query"];
 	}
 
@@ -37,7 +37,7 @@ String FieldComponentModule::RequestQuery(IScript::Request& request, IScript::De
 	return String((char*)result.GetData(), result.GetSize());
 }
 
-void FieldComponentModule::RequestFromSimplygon(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, const String& shapeType) {
+void FieldComponentModule::RequestLoadSimplygon(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, const String& shapeType, const Float3Pair& range) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(fieldComponent);
 
@@ -51,7 +51,7 @@ void FieldComponentModule::RequestFromSimplygon(IScript::Request& request, IScri
 		type = FieldSimplygon::BOUNDING_CYLINDER;
 	}
 
-	TShared<FieldSimplygon> instance = TShared<FieldSimplygon>(new FieldSimplygon(type));
+	TShared<FieldSimplygon> instance = TShared<FieldSimplygon>(new FieldSimplygon(type, range));
 
 	engine.GetKernel().YieldCurrentWarp();
 	request.DoLock();
@@ -59,14 +59,14 @@ void FieldComponentModule::RequestFromSimplygon(IScript::Request& request, IScri
 	request.UnLock();
 }
 
-void FieldComponentModule::RequestFromTexture(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, IScript::Delegate<TextureResource> textureResource) {
+void FieldComponentModule::RequestLoadTexture(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, IScript::Delegate<TextureResource> textureResource, const Float3Pair& range) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(fieldComponent);
 	CHECK_DELEGATE(textureResource);
 
 }
 
-void FieldComponentModule::RequestFromMesh(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, IScript::Delegate<MeshResource> meshResource) {
+void FieldComponentModule::RequestLoadMesh(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, IScript::Delegate<MeshResource> meshResource, const Float3Pair& range) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(fieldComponent);
 	CHECK_DELEGATE(meshResource);

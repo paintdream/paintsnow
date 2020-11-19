@@ -13,13 +13,16 @@ namespace PaintsNow {
 			BOUNDING_BOX, BOUNDING_SPHERE, BOUNDING_CYLINDER,
 		};
 
-		FieldSimplygon(SIMPOLYGON_TYPE type);
+		FieldSimplygon(SIMPOLYGON_TYPE type, const Float3Pair& box);
 
-		Bytes operator [] (const Float3& position) const override;
 		TObject<IReflect>& operator () (IReflect& reflect) override;
+
+		Bytes operator [] (const Float3& position) const override final;
+		void PostEventForEntityTree(Entity* entity, Event& event, FLAG mask) const override final;
 
 	protected:
 		SIMPOLYGON_TYPE type;
+		Float3Pair box;
 	};
 }
 
