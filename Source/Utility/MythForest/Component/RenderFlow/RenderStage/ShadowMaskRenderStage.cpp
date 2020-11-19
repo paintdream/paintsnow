@@ -43,7 +43,6 @@ void ShadowMaskRenderStage::PrepareResources(Engine& engine, IRender::Queue* que
 		OutputMask.renderTargetDescription.state.layout = IRender::Resource::TextureDescription::R;
 		OutputMask.renderTargetDescription.state.immutable = false;
 		OutputMask.renderTargetDescription.state.attachment = true;
-		OutputMask.renderTargetDescription.state.pcf = true; // use hardware pcf
 
 		renderTargetDescription.colorStorages[0].loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
 	} else {

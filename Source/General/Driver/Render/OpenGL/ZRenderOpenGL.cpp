@@ -779,6 +779,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 		// PCF?
 		if (d.state.pcf) {
 			glTexParameteri(textureType, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
+			glTexParameteri(textureType, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
 		}
 
 		/*

@@ -220,7 +220,7 @@ const Bytes& VisibilityComponent::QuerySample(Engine& engine, const Float3& posi
 		Cache& current = cellCache[i % cacheCount];
 		if (!current.payload.Empty() && current.intPosition == intPosition) {
 			// hit!
-			//return current.payload;
+			return current.payload;
 		}
 	}
 
