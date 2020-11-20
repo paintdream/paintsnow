@@ -1,6 +1,7 @@
 #include "FieldComponentModule.h"
 #include "../../Engine.h"
 #include "Types/FieldSimplygon.h"
+#include "Types/FieldTexture.h"
 
 using namespace PaintsNow;
 
@@ -55,10 +56,7 @@ void FieldComponentModule::RequestLoadSimplygon(IScript::Request& request, IScri
 
 	TShared<FieldSimplygon> instance = TShared<FieldSimplygon>(new FieldSimplygon(type, range));
 
-	engine.GetKernel().YieldCurrentWarp();
-	request.DoLock();
-	request << instance();
-	request.UnLock();
+	fieldComponent->SetField(instance);
 }
 
 void FieldComponentModule::RequestLoadTexture(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, IScript::Delegate<TextureResource> textureResource, const Float3Pair& range) {
@@ -66,6 +64,9 @@ void FieldComponentModule::RequestLoadTexture(IScript::Request& request, IScript
 	CHECK_DELEGATE(fieldComponent);
 	CHECK_DELEGATE(textureResource);
 
+	TShared<FieldTexture> instance = TShared<FieldTexture>(new FieldTexture(textureResource.Get(), range));
+
+	fieldComponent->SetField(instance);
 }
 
 void FieldComponentModule::RequestLoadMesh(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, IScript::Delegate<MeshResource> meshResource, const Float3Pair& range) {

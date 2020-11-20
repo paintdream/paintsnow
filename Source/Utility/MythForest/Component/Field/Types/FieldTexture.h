@@ -10,6 +10,8 @@
 namespace PaintsNow {
 	class FieldTexture : public FieldComponent::FieldBase {
 	public:
+		FieldTexture(TShared<TextureResource> textureResource, const Float3Pair& range);
+		virtual ~FieldTexture();
 		Bytes operator [] (const Float3& position) const override;
 
 		enum TEXTURE_TYPE {
@@ -18,6 +20,7 @@ namespace PaintsNow {
 
 	protected:
 		TShared<TextureResource> textureResource;
+		Float3Pair range;
 	};
 }
 

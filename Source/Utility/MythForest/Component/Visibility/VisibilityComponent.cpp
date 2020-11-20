@@ -618,7 +618,7 @@ void VisibilityComponent::DispatchTasks(Engine& engine) {
 		// find idle task
 		TaskData* targets[FACE_COUNT] = { nullptr };
 		uint32_t k = 0;
-		for (uint32_t j = n; j < tasks.size(); j++) {
+		for (size_t j = n; j < tasks.size(); j++) {
 			TaskData& task = tasks[j];
 			std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(task.status);
 			if (task.status == TaskData::STATUS_START) {
