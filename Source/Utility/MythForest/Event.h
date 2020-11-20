@@ -14,7 +14,7 @@ namespace PaintsNow {
 		enum EVENT_ID {
 			// Inner events
 			EVENT_BEGIN = 0,
-			EVENT_TICK,
+			EVENT_TICK = EVENT_BEGIN,
 			EVENT_UPDATE,
 			EVENT_ATTACH_COMPONENT,
 			EVENT_DETACH_COMPONENT,

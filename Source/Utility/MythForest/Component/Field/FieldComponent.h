@@ -19,11 +19,13 @@ namespace PaintsNow {
 		class pure_interface FieldBase : public TReflected<FieldBase, SharedTiny> {
 		public:
 			virtual Bytes operator [] (const Float3& position) const = 0;
-			virtual void PostEventForEntityTree(Entity* spaceComponent, Event& event, FLAG mask) const;
+			virtual void PostEventForEntityTree(Entity* entity, Event& event, FLAG mask) const;
+			virtual void QueryEntitiesForEntityTree(Entity* entity, std::vector<TShared<Entity> >& entities) const;
 		};
 
 		void SetField(const TShared<FieldBase>& field);
 		void PostEvent(SpaceComponent* spaceComponent, Event& event, FLAG mask) const;
+		void QueryEntities(SpaceComponent* spaceComponent, std::vector<TShared<Entity> >& entities) const;
 
 	protected:
 		uint32_t subType;

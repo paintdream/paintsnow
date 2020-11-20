@@ -36,6 +36,18 @@ void FieldComponent::PostEvent(SpaceComponent* spaceComponent, Event& event, FLA
 	}
 }
 
+void FieldComponent::QueryEntities(SpaceComponent* spaceComponent, std::vector<TShared<Entity> >& entities) const {
+	assert(spaceComponent != nullptr);
+	assert(fieldImpl);
+	assert(spaceComponent->GetWarpIndex() == GetWarpIndex());
+
+	Entity* rootEntity = spaceComponent->GetRootEntity();
+	if (rootEntity != nullptr) {
+		fieldImpl->QueryEntitiesForEntityTree(rootEntity, entities);
+	}
+}
+
+
 // Trivial implementation with operator []
 void FieldComponent::FieldBase::PostEventForEntityTree(Entity* entity, Event& event, FLAG mask) const {
 	assert(entity != nullptr);
@@ -52,6 +64,25 @@ void FieldComponent::FieldBase::PostEventForEntityTree(Entity* entity, Event& ev
 		Entity* left = p->Left();
 		if (left != nullptr) {
 			PostEventForEntityTree(left, event, mask);
+		}
+	}
+}
+
+void FieldComponent::FieldBase::QueryEntitiesForEntityTree(Entity* entity, std::vector<TShared<Entity> >& entities) const {
+	assert(entity != nullptr);
+	for (Entity* p = entity; p != nullptr; p = p->Right()) {
+		// Query center only ...
+		const Float3Pair& box = p->GetKey();
+		Float3 center = (box.second + box.first) * 0.5f;
+		Bytes result = (*this)[center];
+		if (!result.Empty() && *result.GetData() != 0) {
+			entities.emplace_back(p);
+		}
+
+		// iterate next entities ...
+		Entity* left = p->Left();
+		if (left != nullptr) {
+			QueryEntitiesForEntityTree(left, entities);
 		}
 	}
 }

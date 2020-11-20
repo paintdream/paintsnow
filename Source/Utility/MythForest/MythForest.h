@@ -123,6 +123,15 @@ namespace PaintsNow {
 		/// <param name="options"> options </param>
 		void RequestCaptureFrame(IScript::Request& request, const String& path, const String& options);
 
+		/// <summary>
+		/// Post custom or update event to entity manually
+		/// </summary>
+		/// <param name="entity"> the entity </param>
+		/// <param name="type"> event type, can be 'Update' or 'Custom' </param>
+		/// <param name="sender"> event sender </param>
+		/// <param name="param"> custom param </param>
+		void RequestPostEvent(IScript::Request& request, IScript::Delegate<Entity> entity, const String& type, IScript::Delegate<SharedTiny> sender, IScript::Request::Ref param);
+
 		// Build-in sub modules
 	private:
 		Engine engine;

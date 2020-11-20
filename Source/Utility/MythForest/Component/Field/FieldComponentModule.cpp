@@ -15,7 +15,9 @@ TObject<IReflect>& FieldComponentModule::operator () (IReflect& reflect) {
 		ReflectMethod(RequestLoadSimplygon)[ScriptMethod = "LoadSimplygon"];
 		ReflectMethod(RequestLoadTexture)[ScriptMethod = "LoadTexture"];
 		ReflectMethod(RequestLoadMesh)[ScriptMethod = "LoadMesh"];
-		ReflectMethod(RequestQuery)[ScriptMethod = "Query"];
+		ReflectMethod(RequestQueryData)[ScriptMethod = "QueryData"];
+		ReflectMethod(RequestQuerySpaceEntities)[ScriptMethod = "QuerySpaceEntities"];
+		ReflectMethod(RequestPostSpaceEvent)[ScriptMethod = "PostSpaceEvent"];
 	}
 
 	return *this;
@@ -29,7 +31,7 @@ TShared<FieldComponent> FieldComponentModule::RequestNew(IScript::Request& reque
 	return fieldComponent;
 }
 
-String FieldComponentModule::RequestQuery(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, const Float3& position) {
+String FieldComponentModule::RequestQueryData(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, const Float3& position) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(fieldComponent);
 
@@ -71,4 +73,36 @@ void FieldComponentModule::RequestLoadMesh(IScript::Request& request, IScript::D
 	CHECK_DELEGATE(fieldComponent);
 	CHECK_DELEGATE(meshResource);
 	
+}
+
+std::vector<TShared<Entity> > FieldComponentModule::RequestQuerySpaceEntities(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, IScript::Delegate<SpaceComponent> spaceComponent) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(fieldComponent);
+	CHECK_DELEGATE(spaceComponent);
+	CHECK_THREAD_IN_MODULE(spaceComponent);
+
+	std::vector<TShared<Entity> > entities;
+	fieldComponent->QueryEntities(spaceComponent.Get(), entities);
+	return entities;
+}
+
+void FieldComponentModule::RequestPostSpaceEvent(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, IScript::Delegate<SpaceComponent> spaceComponent, const String& type, IScript::Delegate<SharedTiny> sender,  IScript::Request::Ref param) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(fieldComponent);
+	CHECK_DELEGATE(spaceComponent);
+	CHECK_THREAD_IN_MODULE(spaceComponent);
+
+	TShared<TSharedTinyWrapper<IScript::Request::Ref> > wrapper;
+	if (param) {
+		wrapper.Reset(new TSharedTinyWrapper<IScript::Request::Ref>(param));
+	}
+
+	// now we only support post custom events and update event.
+	Event event(engine, type == "Update" ? Event::EVENT_UPDATE : Event::EVENT_CUSTOM, sender.Get(), wrapper);
+
+	if (param) {
+		request.DoLock();
+		request.Dereference(param);
+		request.UnLock();
+	}
 }

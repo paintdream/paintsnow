@@ -101,8 +101,19 @@ void ScriptComponent::DispatchEvent(Event& event, Entity* entity) {
 			case Event::EVENT_DETACH_COMPONENT:
 			case Event::EVENT_ENTITY_ACTIVATE:
 			case Event::EVENT_ENTITY_DEACTIVATE:
+			case Event::EVENT_CUSTOM:
 			{
-				request << event.sender << event.detail;
+				request << event.sender;
+				if (event.detail) {
+					TSharedTinyWrapper<IScript::Request::Ref>* w = event.detail->QueryInterface(UniqueType< TSharedTinyWrapper<IScript::Request::Ref>>());
+					if (w != nullptr) {
+						request << w->Get();
+					} else {
+						request << event.detail;
+					}
+				} else {
+					request << event.detail;
+				}
 				break;
 			}
 			case Event::EVENT_INPUT:

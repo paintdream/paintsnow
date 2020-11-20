@@ -19,6 +19,7 @@ namespace PaintsNow {
 
 		Bytes operator [] (const Float3& position) const override final;
 		void PostEventForEntityTree(Entity* entity, Event& event, FLAG mask) const override final;
+		void QueryEntitiesForEntityTree(Entity* entity, std::vector<TShared<Entity> >& entities) const override final;
 
 	protected:
 		SIMPOLYGON_TYPE type;

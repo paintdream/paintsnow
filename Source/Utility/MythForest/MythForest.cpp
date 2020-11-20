@@ -129,6 +129,7 @@ TObject<IReflect>& MythForest::operator () (IReflect& reflect) {
 		ReflectMethod(RequestWaitForNextFrame)[ScriptMethod = "WaitForNextFrame"];
 		ReflectMethod(RequestRaycast)[ScriptMethod = "Raycast"];
 		ReflectMethod(RequestCaptureFrame)[ScriptMethod = "CaptureFrame"];
+		ReflectMethod(RequestPostEvent)[ScriptMethod = "PostEvent"];
 	}
 
 	return *this;
@@ -336,6 +337,27 @@ void MythForest::RequestRaycast(IScript::Request& request, IScript::Delegate<Ent
 
 void MythForest::RequestCaptureFrame(IScript::Request& request, const String& path, const String& options) {
 	InvokeCaptureFrame(path, options);
+}
+
+void MythForest::RequestPostEvent(IScript::Request& request, IScript::Delegate<Entity> entity, const String& type, IScript::Delegate<SharedTiny> sender, IScript::Request::Ref param) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(entity);
+	CHECK_THREAD_IN_MODULE(entity);
+
+	TShared<TSharedTinyWrapper<IScript::Request::Ref> > wrapper;
+	if (param) {
+		wrapper.Reset(new TSharedTinyWrapper<IScript::Request::Ref>(param));
+	}
+
+	// now we only support post custom events and update event.
+	Event event(engine, type == "Update" ? Event::EVENT_UPDATE : Event::EVENT_CUSTOM, sender.Get(), wrapper);
+	entity->PostEvent(event, ~0);
+
+	if (param) {
+		request.DoLock();
+		request.Dereference(param);
+		request.UnLock();
+	}
 }
 
 //
