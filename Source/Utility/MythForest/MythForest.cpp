@@ -350,7 +350,7 @@ void MythForest::RequestPostEvent(IScript::Request& request, IScript::Delegate<E
 	}
 
 	// now we only support post custom events and update event.
-	Event event(engine, type == "Update" ? Event::EVENT_UPDATE : Event::EVENT_CUSTOM, sender.Get(), wrapper);
+	Event event(engine, type == "Update" ? Event::EVENT_UPDATE : Event::EVENT_CUSTOM, sender.Get(), wrapper());
 	entity->PostEvent(event, ~0);
 
 	if (param) {

@@ -105,7 +105,7 @@ void ScriptComponent::DispatchEvent(Event& event, Entity* entity) {
 			{
 				request << event.sender;
 				if (event.detail) {
-					TSharedTinyWrapper<IScript::Request::Ref>* w = event.detail->QueryInterface(UniqueType< TSharedTinyWrapper<IScript::Request::Ref>>());
+					TSharedTinyWrapper<IScript::Request::Ref>* w = event.detail->QueryInterface(UniqueType<TSharedTinyWrapper<IScript::Request::Ref> >());
 					if (w != nullptr) {
 						request << w->Get();
 					} else {
