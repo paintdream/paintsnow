@@ -87,6 +87,7 @@ function Scene.New(database : Database, clock : Clock) : Scene
 			rootEntity:AddEntityComponent(interSpaceComponent as Component)
 
 			BridgeSunset.QueueRoutine(interSpaceComponent, function ()
+				local holdWarmingResources = resourceHandles -- in case of gc
 				local subRootEntity = MythForest.NewEntity(-1)
 				local subSpaceComponent = SpaceComponentModule.New(-1, true)
 				local subSpaceComponentHuge = SpaceComponentModule.New(-1, false)
@@ -136,7 +137,7 @@ function Scene.New(database : Database, clock : Clock) : Scene
 						if modelComponent then
 							modelComponent:SetRenderPolicy(renderPolicy)
 							-- override material
-							-- materialResource = customShaderComponent:ExportMaterial(materialResource)
+							materialResource = customShaderComponent:ExportMaterial(materialResource)
 							modelComponent:SetMaterial(meshGroupID as number, materialResource)
 						end
 					end

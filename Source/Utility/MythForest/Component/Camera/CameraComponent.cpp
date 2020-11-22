@@ -638,7 +638,9 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 
 				ig->second.renderQueue = queue;
 				taskData.worldGlobalData.Export(ig->second.globalUpdater, updater);
+				assert(!ig->second.globalUpdater.parameters.empty());
 				instanceData.Export(ig->second.instanceUpdater, updater);
+				assert(!ig->second.instanceUpdater.parameters.empty());
 
 				std::vector<Bytes> s;
 				std::vector<IRender::Resource::DrawCallDescription::BufferRange> bufferResources;

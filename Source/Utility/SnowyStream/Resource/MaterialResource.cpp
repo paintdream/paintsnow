@@ -18,6 +18,7 @@ TShared<ShaderResource> MaterialResource::Instantiate(const TShared<MeshResource
 		assert(mutationShaderResource->GetPassUpdater().GetBufferCount() != 0);
 		PassBase& pass = mutationShaderResource->GetPass();
 		PassBase::Updater& updater = mutationShaderResource->GetPassUpdater();
+		mutationShaderResource->GetPass().ClearBindings();
 
 		// Apply material
 		for (size_t i = 0; i < materialParams.variables.size(); i++) {
@@ -65,6 +66,10 @@ TShared<ShaderResource> MaterialResource::Instantiate(const TShared<MeshResource
 
 		if (templateHash == shaderHash) { // matched!
 			updater.Capture(drawCallTemplate, bufferData, 1 << IRender::Resource::BufferDescription::UNIFORM);
+			for (size_t k = 0; k < descs.size(); k++) {
+				assert(descs[k].slot < drawCallTemplate.bufferResources.size());
+			}
+
 			drawCallTemplate.shaderResource = shaderTemplateResource->GetShaderResource();
 			assert(shaderTemplateResource->GetPassUpdater().GetBufferCount() != 0);
 			return shaderTemplateResource;
@@ -78,11 +83,24 @@ TShared<ShaderResource> MaterialResource::Instantiate(const TShared<MeshResource
 			}
 
 			location.append((const char*)shaderHash.GetData(), shaderHash.GetSize());
-			mutationShaderResource.Reset(static_cast<ShaderResource*>(mutationShaderResource->Clone()));
+
+			resourceManager.DoLock();
+			TShared<ShaderResource> cached = static_cast<ShaderResource*>(resourceManager.LoadExist(location)());
+
+			if (cached) {
+				// use cache
+				mutationShaderResource = cached;
+			}
+
+			resourceManager.UnLock();
+
+			if (!cached) {
+				mutationShaderResource.Reset(static_cast<ShaderResource*>(mutationShaderResource->Clone()));
+			}
 
 			// cached?
 			resourceManager.DoLock();
-			TShared<ShaderResource> cached = static_cast<ShaderResource*>(resourceManager.LoadExist(location)());
+			cached = static_cast<ShaderResource*>(resourceManager.LoadExist(location)());
 
 			if (cached) {
 				// use cache

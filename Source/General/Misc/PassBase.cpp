@@ -356,12 +356,43 @@ public:
 	void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
 };
 
-
 Bytes PassBase::ExportHash() const {
 	HashExporter exporter;
 	(const_cast<PassBase&>(*this))(exporter);
 
 	return exporter.hashValue;
+}
+
+class BindingCleaner : public IReflect {
+public:
+	BindingCleaner() : IReflect(true, false, false, false) {}
+
+	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override {
+		if (!s.IsBasicObject()) {
+			if (typeID == UniqueType<IShader::BindBuffer>::Get()) {
+				IShader::BindBuffer* bindBuffer = static_cast<IShader::BindBuffer*>(&s);
+				bindBuffer->resource = nullptr;
+			} else if (typeID == UniqueType<IShader::BindTexture>::Get()) {
+				IShader::BindTexture* bindTexture = static_cast<IShader::BindTexture*>(&s);
+				bindTexture->resource = nullptr;
+			} else {
+				for (const MetaChainBase* check = meta; check != nullptr; check = check->GetNext()) {
+					const MetaNodeBase* node = check->GetNode();
+					if (node->GetUnique() == UniqueType<IShader::MetaShader>::Get()) {
+						const IShader::MetaShader* metaShader = static_cast<const IShader::MetaShader*>(node);
+						s(*this);
+					}
+				}
+			}
+		}
+	}
+
+	void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
+};
+
+void PassBase::ClearBindings() {
+	BindingCleaner cleaner;
+	(const_cast<PassBase&>(*this))(cleaner);
 }
 
 class OptionEvaluator : public IReflect {

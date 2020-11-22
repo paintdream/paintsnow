@@ -31,6 +31,8 @@ void CustomMaterialPass::SetInput(const String& stage, const String& type, const
 		shaderTransform.description->SetInput("Option", type, name, value, binding, config);
 	} else if (stage == "VertexUniform") {
 		shaderTransform.description->SetInput("Uniform", type, name, value, binding, config);
+	} else if (stage == "VertexOutput") {
+		shaderTransform.description->SetInput("Output", type, name, value, binding, config);
 	} else if (stage == "VertexVarying") {
 		shaderTransform.description->SetInput("Output", type, name, value, binding, config);
 		shaderParameter.description->SetInput("Input", type, name, value, binding, config);
@@ -53,4 +55,9 @@ void CustomMaterialPass::SetComplete() {
 	std::vector<String> defTexturePaths;
 	shaderTransform.description->SetComplete(shaderTransform.instanceData);
 	shaderParameter.description->SetComplete(shaderParameter.instanceData);
+}
+
+void CustomMaterialPass::DetachDescription() {
+	shaderTransform.description.Reset(new CustomMaterialDescription());
+	shaderParameter.description.Reset(new CustomMaterialDescription());
 }

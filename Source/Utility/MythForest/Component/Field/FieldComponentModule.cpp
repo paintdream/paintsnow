@@ -56,7 +56,7 @@ void FieldComponentModule::RequestLoadSimplygon(IScript::Request& request, IScri
 
 	TShared<FieldSimplygon> instance = TShared<FieldSimplygon>(new FieldSimplygon(type, range));
 
-	fieldComponent->SetField(instance);
+	fieldComponent->SetField(instance());
 }
 
 void FieldComponentModule::RequestLoadTexture(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, IScript::Delegate<TextureResource> textureResource, const Float3Pair& range) {
@@ -66,7 +66,7 @@ void FieldComponentModule::RequestLoadTexture(IScript::Request& request, IScript
 
 	TShared<FieldTexture> instance = TShared<FieldTexture>(new FieldTexture(textureResource.Get(), range));
 
-	fieldComponent->SetField(instance);
+	fieldComponent->SetField(instance());
 }
 
 void FieldComponentModule::RequestLoadMesh(IScript::Request& request, IScript::Delegate<FieldComponent> fieldComponent, IScript::Delegate<MeshResource> meshResource, const Float3Pair& range) {

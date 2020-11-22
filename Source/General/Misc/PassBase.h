@@ -21,6 +21,7 @@ namespace PaintsNow {
 		virtual void SetComplete();
 
 		IRender::Resource* Compile(IRender& render, IRender::Queue* queue, const TWrapper<void, IRender::Resource*, IRender::Resource::ShaderDescription&, IRender::Resource::ShaderDescription::Stage, const String&, const String&>& callback = TWrapper<void, IRender::Resource*, IRender::Resource::ShaderDescription&, IRender::Resource::ShaderDescription::Stage, const String&, const String&>(), void* context = nullptr, IRender::Resource* existedShaderResource = nullptr);
+		void ClearBindings();
 		virtual bool FlushOptions();
 		Bytes ExportHash() const;
 

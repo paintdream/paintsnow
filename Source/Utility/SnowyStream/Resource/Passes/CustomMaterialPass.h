@@ -20,6 +20,7 @@ namespace PaintsNow {
 		void SetCode(const String& stage, const String& code, const std::vector<std::pair<String, String> >& config) override;
 		void SetComplete() override;
 		bool FlushOptions() override;
+		void DetachDescription();
 
 		// Vertex shaders
 		CustomMaterialTransformVS shaderTransform;

@@ -91,10 +91,10 @@ return {
 
 		-- Varyings
 		{
-			Name = "VaryingPosition",
-			Stages = { "VertexVarying" },
+			Name = "OutputPosition",
+			Stages = { "VertexOutput" },
 			Value = { 0.0, 0.0, 0.0, 1.0 },
-			Binding = "HPOSITION"
+			Binding = "POSITION"
 		},
 		{
 			Name = "VaryingTexCoord",
@@ -174,7 +174,8 @@ return {
 	pos.xyz = Position;
 	pos.w = 1;
 
-	VaryingPosition = mult_vec(ViewProjectionMatrix, pos);
+	pos = mult_vec(WorldMatrix, pos);
+	OutputPosition = mult_vec(ViewProjectionMatrix, pos);
 	VaryingTexCoord = TexCoord;
 
 	if (EnableVertexColor) {

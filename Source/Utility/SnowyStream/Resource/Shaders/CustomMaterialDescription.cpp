@@ -33,6 +33,8 @@ static uint8_t SchemaFromPredefines(const String& binding, bool input) {
 	if (binding == "POSITION") {
 		if (input) {
 			return IShader::BindInput::POSITION;
+		} else {
+			return IShader::BindOutput::HPOSITION;
 		}
 	} else if (binding == "NORMAL") {
 		if (input) {
@@ -137,13 +139,16 @@ void CustomMaterialDescription::ReflectUniformTemplate(IReflect& reflect, Instan
 		} else {
 			Unique type = UniqueFromEntryType(var.type);
 			static IReflectObject dummy;
-			DummyMetaChain<IShader::BindBuffer> chain(uniformBuffer);
+			IShader::BindInput schemaBinding(var.schema);
+			DummyMetaChain<IShader::BindInput> chainSchemaBinding(schemaBinding);
+			DummyMetaChain<IShader::BindBuffer> chain(uniformBuffer, var.schema == 0xFF ? nullptr : &chainSchemaBinding);
 			// Make alignment
 			uint32_t size = safe_cast<uint32_t>(type->GetSize());
 			offset = (offset + size - 1) & Math::AlignmentMask(size); // make alignment for variable
 
 			if (var.slot != 0xFFFF) { // depends
 				assert(entries[var.slot].var == VAR_OPTION);
+				assert(entries[var.slot].offset < extOptionBuffer.GetSize());
 				IShader::BindEnable enable((bool&)extOptionBuffer[entries[var.slot].offset]);
 				DummyMetaChain<IShader::BindEnable> enableChain(enable, &chain);
 				reflect.Property(dummy, type, type, name.c_str(), bufferBase + offset, bufferBase + offset + size, &enableChain);
@@ -174,6 +179,7 @@ void CustomMaterialDescription::ReflectVertexTemplate(IReflect& reflect, Instanc
 		uint32_t index = var.offset;
 		if (var.slot != 0xFFFF) { // depends
 			assert(entries[var.slot].var == VAR_OPTION);
+			assert(entries[var.slot].offset < extOptionBuffer.GetSize());
 			IShader::BindEnable enable((bool&)extOptionBuffer[entries[var.slot].offset]);
 			DummyMetaChain<IShader::BindEnable> enableChain(enable);
 			reflect.Property(vertexBufferBindings[index], UniqueType<IShader::BindBuffer>::Get(), UniqueType<IShader::BindBuffer>::Get(), name.c_str(), &vertexBufferBindings[0], &vertexBufferBindings[index], &enableChain);
@@ -187,14 +193,12 @@ void CustomMaterialDescription::ReflectVertexTemplate(IReflect& reflect, Instanc
 
 		if (var.slot != 0xFFFF) { // depends
 			assert(entries[var.slot].var == VAR_OPTION);
+			assert(entries[var.slot].offset < extOptionBuffer.GetSize());
 			IShader::BindEnable enable((bool&)extOptionBuffer[entries[var.slot].offset]);
 			DummyMetaChain<IShader::BindEnable> enableChain(enable, &chain);
 			reflect.Property(dummy, type, type, name.c_str(), nullptr, var.value.GetData(), &enableChain); // use var.value.GetData() to provide default value
 		} else {
-			bool bind = vertexBufferBindings[var.offset];
-			IShader::BindEnable enable(bind);
-			DummyMetaChain<IShader::BindEnable> enableChain(enable, &chain);
-			reflect.Property(dummy, type, type, name.c_str(), nullptr, var.value.GetData(), &enableChain); // use var.value.GetData() to provide default value
+			reflect.Property(dummy, type, type, name.c_str(), nullptr, var.value.GetData(), &chain); // use var.value.GetData() to provide default value
 		}
 	}
 }
@@ -223,7 +227,8 @@ void CustomMaterialDescription::ReflectOptionTemplate(IReflect& reflect, Instanc
 		// bool?
 		if (size == 1) {
 			Unique type = UniqueType<bool>::Get();
-			bool enabled = (bool)extOptionBuffer[var.offset];
+			assert(var.offset < extOptionBuffer.GetSize());
+			bool enabled = extOptionBuffer[var.offset] != 0;
 
 			if (var.slot != 0xFFFF) {
 				Entry& target = entries[var.slot];
@@ -250,6 +255,7 @@ void CustomMaterialDescription::ReflectOptionTemplate(IReflect& reflect, Instanc
 			reflect.Property(dummy, type, type, name.c_str(), bufferBase, bufferBase + var.offset, &chain);
 		} else { // int
 			assert(size == sizeof(uint32_t));
+			assert(var.offset < extOptionBuffer.GetSize());
 			IShader::BindConst<uint32_t> slot(*(uint32_t*)&extOptionBuffer[var.offset]);
 			DummyMetaChain<IShader::BindConst<uint32_t> > chain(slot);
 			reflect.Property(dummy, type, type, name.c_str(), bufferBase, bufferBase + var.offset, &chain);
@@ -277,6 +283,7 @@ void CustomMaterialDescription::ReflectInputTemplate(IReflect& reflect, Instance
 
 		if (var.slot != 0xFFFF) {
 			assert(entries[var.slot].var == VAR_OPTION);
+			assert(entries[var.slot].offset < extOptionBuffer.GetSize());
 			IShader::BindEnable enable((bool&)extOptionBuffer[entries[var.slot].offset]);
 			DummyMetaChain<IShader::BindEnable> enableChain(enable, &chain);
 			reflect.Property(dummy, type, type, name.c_str(), nullptr, var.value.GetData(), &enableChain);
@@ -306,6 +313,7 @@ void CustomMaterialDescription::ReflectOutputTemplate(IReflect& reflect, Instanc
 
 		if (var.slot != 0xFFFF) {
 			assert(entries[var.slot].var == VAR_OPTION);
+			assert(entries[var.slot].offset < extOptionBuffer.GetSize());
 			IShader::BindEnable enable((bool&)extOptionBuffer[entries[var.slot].offset]);
 			DummyMetaChain<IShader::BindEnable> enableChain(enable, &chain);
 			reflect.Property(dummy, type, type, name.c_str(), nullptr, var.value.GetData(), &enableChain);
@@ -382,6 +390,7 @@ void CustomMaterialDescription::SetInput(const String& category, const String& t
 		var.SetValue(IAsset::TextureIndex(safe_cast<uint32_t>(uniformTextureBindingsTemplate.size())));
 		// encode def path
 		var.value.Assign((const uint8_t*)value.c_str(), value.size());
+		var.offset = safe_cast<uint16_t>(uniformTextureBindingsTemplate.size());
 		uniformTextureBindingsTemplate.emplace_back(IShader::BindTexture());
 	} else if (type == "float") {
 		var.SetValue((float)atof(value.c_str()));
@@ -413,7 +422,7 @@ void CustomMaterialDescription::SetInput(const String& category, const String& t
 			&mat(3, 0), &mat(3, 1), &mat(3, 2), &mat(3, 3));
 		var.SetValue(mat);
 	} else if (type == "bool") {
-		var.SetValue(true); // always true
+		var.SetValue(value == "true");
 	} else if (type == "int") {
 		var.SetValue((uint32_t)atoi(value.c_str()));
 	} else {
@@ -443,7 +452,7 @@ void CustomMaterialDescription::SetInput(const String& category, const String& t
 	var.schema = 0xFF;
 	var.slot = 0xFFFF;
 	if (!binding.empty()) {
-		var.schema = SchemaFromPredefines(binding, category != "Input");
+		var.schema = SchemaFromPredefines(binding, category != "Output");
 		if (var.schema == 0xFF) {
 			for (size_t i = 0; i < entries.size(); i++) {
 				Entry& entry = entries[i];
@@ -451,6 +460,9 @@ void CustomMaterialDescription::SetInput(const String& category, const String& t
 				if (memcmp(binding.c_str(), key.GetData(), Math::Min(binding.size(), (size_t)key.GetSize())) == 0) {
 					assert(var.var == VAR_OPTION || entry.var == VAR_OPTION);
 					var.slot = safe_cast<uint16_t>(i);
+					if (entry.var == VAR_VERTEX) {
+						entry.slot = safe_cast<uint16_t>(entries.size()); // dual binding
+					}
 					break;
 				}
 			}
