@@ -942,6 +942,21 @@ struct ResourceImplOpenGL<IRender::Resource::ShaderDescription> final : public R
 		String shaderName;
 	};
 
+	static String FormatCode(const String& input) {
+		String result;
+		result.reserve(input.size() * 12 / 10);
+
+		for (size_t i = 0; i < input.size(); i++) {
+			char ch = input[i];
+			result += ch;
+			if ((ch == '{' || ch == ';') && input[i + 1] != '\n') {
+				result += '\n';
+			}
+		}
+
+		return result;
+	}
+
 	void Cleanup() {
 		GL_GUARD();
 
@@ -978,30 +993,38 @@ struct ResourceImplOpenGL<IRender::Resource::ShaderDescription> final : public R
 		std::vector<String> textureNames;
 		std::vector<String> uniformBufferNames;
 		std::vector<String> sharedBufferNames;
+		String allShaderCode;
 
 		for (size_t k = 0; k < Resource::ShaderDescription::END; k++) {
 			std::vector<IShader*>& pieces = shaders[k];
 			if (pieces.empty()) continue;
 
 			GLuint shaderType = GL_VERTEX_SHADER;
+			String stage = "Fragment";
 			switch (k) {
 			case Resource::ShaderDescription::VERTEX:
 				shaderType = GL_VERTEX_SHADER;
+				stage = "Vertex";
 				break;
 			case Resource::ShaderDescription::TESSELLATION_CONTROL:
 				shaderType = GL_TESS_CONTROL_SHADER;
+				stage = "TessControl";
 				break;
 			case Resource::ShaderDescription::TESSELLATION_EVALUATION:
 				shaderType = GL_TESS_EVALUATION_SHADER;
+				stage = "TessEvaluation";
 				break;
 			case Resource::ShaderDescription::GEOMETRY:
 				shaderType = GL_GEOMETRY_SHADER;
+				stage = "Geometry";
 				break;
 			case Resource::ShaderDescription::FRAGMENT:
 				shaderType = GL_FRAGMENT_SHADER;
+				stage = "Fragment";
 				break;
 			case Resource::ShaderDescription::COMPUTE:
 				shaderType = GL_COMPUTE_SHADER;
+				stage = "Compute";
 				program.isComputeShader = 1;
 				break;
 			}
@@ -1017,7 +1040,7 @@ struct ResourceImplOpenGL<IRender::Resource::ShaderDescription> final : public R
 				(*shader)(declaration);
 				declaration.Complete();
 
-				body += declaration.initialization + shader->GetShaderText() + declaration.finalization + "\n";
+				body += declaration.initialization + FormatCode(shader->GetShaderText()) + declaration.finalization + "\n";
 				head += declaration.declaration;
 
 				for (size_t k = 0; k < declaration.bufferBindings.size(); k++) {
@@ -1046,6 +1069,7 @@ struct ResourceImplOpenGL<IRender::Resource::ShaderDescription> final : public R
 
 			int success;
 			glGetShaderiv(shaderID, GL_COMPILE_STATUS, &success);
+			String piece = String("<") + stage + ">\n" + fullShader + "<" + stage + "/>\n\n";
 
 			if (success == 0) {
 				const int MAX_INFO_LOG_SIZE = 4096;
@@ -1055,14 +1079,15 @@ struct ResourceImplOpenGL<IRender::Resource::ShaderDescription> final : public R
 				fprintf(stderr, "ZRenderOpenGL::CompileShader(): %s\n", fullShader.c_str());
 				// assert(false);
 				if (pass.compileCallback) {
-					pass.compileCallback(this, pass, (IRender::Resource::ShaderDescription::Stage)k, info, fullShader);
+					pass.compileCallback(this, pass, (IRender::Resource::ShaderDescription::Stage)k, info, piece);
 				}
 				Cleanup();
 				return;
 			} else if (pass.compileCallback) {
-				pass.compileCallback(this, pass, (IRender::Resource::ShaderDescription::Stage)k, "", fullShader);
+				pass.compileCallback(this, pass, (IRender::Resource::ShaderDescription::Stage)k, "", piece);
 			}
 
+			allShaderCode += piece;
 			glAttachShader(programID, shaderID);
 			program.shaderIDs.emplace_back(shaderID);
 		}
@@ -1076,13 +1101,13 @@ struct ResourceImplOpenGL<IRender::Resource::ShaderDescription> final : public R
 			glGetProgramInfoLog(programID, MAX_INFO_LOG_SIZE - 1, nullptr, info);
 			fprintf(stderr, "ZRenderOpenGL::LinkProgram(): %s\n", info);
 			if (pass.compileCallback) {
-				pass.compileCallback(this, pass, IRender::Resource::ShaderDescription::END, info, "<Link>");
+				pass.compileCallback(this, pass, IRender::Resource::ShaderDescription::END, info, allShaderCode);
 			}
 			// assert(false);
 			Cleanup();
 			return;
 		} else if (pass.compileCallback) {
-			pass.compileCallback(this, pass, IRender::Resource::ShaderDescription::END, "", "<Link>");
+			pass.compileCallback(this, pass, IRender::Resource::ShaderDescription::END, "", allShaderCode);
 		}
 
 		// Query texture locations.

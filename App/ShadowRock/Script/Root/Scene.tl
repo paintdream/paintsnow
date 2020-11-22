@@ -38,11 +38,12 @@ function Scene.New(database : Database, clock : Clock) : Scene
 		if info and #info ~= 0 then
 			print("[CustomShader.New] Compiling shader: " .. StandardShader.Name .. " failed!")
 			print("[CustomShader.New] Error: " .. info)
-			print("[CustomShader.New] Shader generated: ")
-			print(code)
 		else
 			print("[CustomShader.New] Compiling shader: " .. StandardShader.Name)
 		end
+		
+		print("[CustomShader.New] Shader generated: ")
+		print(code)
 	end)
 
 	customShaderComponent:SetComplete()
@@ -53,12 +54,8 @@ function Scene.New(database : Database, clock : Clock) : Scene
 		local warmingUpResources : { string : { string }} = {}
 		for _, line in database:Lines("select Path, Names.Name from `Resources`, `Names` where `TypeID` == Names.ID") do
 			local path, name = table.unpack(line as { string })
-
-			-- no need to warming up materials
-			if name ~= "MaterialResource" then
-				warmingUpResources[name as string] = warmingUpResources[name as string] or {}
-				table.insert(warmingUpResources[name as string], path as string)
-			end
+			warmingUpResources[name as string] = warmingUpResources[name as string] or {}
+			table.insert(warmingUpResources[name as string], path as string)
 		end
 
 		local running = coroutine.running()
@@ -138,6 +135,8 @@ function Scene.New(database : Database, clock : Clock) : Scene
 						local modelComponent = components[componentID as number] as ModelComponent
 						if modelComponent then
 							modelComponent:SetRenderPolicy(renderPolicy)
+							-- override material
+							-- materialResource = customShaderComponent:ExportMaterial(materialResource)
 							modelComponent:SetMaterial(meshGroupID as number, materialResource)
 						end
 					end

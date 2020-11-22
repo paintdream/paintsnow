@@ -14,7 +14,7 @@ TObject<IReflect>& CustomMaterialTransformVS::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectProperty()) {
-		description->ReflectExternal(reflect, uniformData, optionData);
+		description->ReflectExternal(reflect, instanceData);
 	}
 
 	return *this;

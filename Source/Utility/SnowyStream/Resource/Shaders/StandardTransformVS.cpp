@@ -4,7 +4,7 @@
 
 using namespace PaintsNow;
 
-StandardTransformVS::StandardTransformVS() : enableInstancing(true), enableSkinning(false), enableViewProjectionMatrix(true), enableVertexColor(false), enableVertexNormal(true), enableInstancedColor(false), enableVertexTangent(true), enableClampedNear(false), enableClampedFar(false) {
+StandardTransformVS::StandardTransformVS() : enableInstancing(true), enableSkinning(true), enableViewProjectionMatrix(true), enableVertexColor(true), enableVertexNormal(true), enableInstancedColor(false), enableVertexTangent(true), enableClampedNear(false), enableClampedFar(false) {
 	instanceBuffer.description.usage = IRender::Resource::BufferDescription::INSTANCED;
 	vertexPositionBuffer.description.usage = IRender::Resource::BufferDescription::VERTEX;
 	vertexNormalBuffer.description.usage = IRender::Resource::BufferDescription::VERTEX;
@@ -101,14 +101,9 @@ TObject<IReflect>& StandardTransformVS::operator () (IReflect& reflect) {
 		ReflectProperty(vertexColorBuffer)[BindEnable(enableVertexColor)];
 		ReflectProperty(vertexTexCoordBuffer);
 
+		ReflectProperty(boneMatricesBuffer)[BindEnable(enableSkinning)];
 		ReflectProperty(boneIndexBuffer)[BindEnable(enableSkinning)];
 		ReflectProperty(boneWeightBuffer)[BindEnable(enableSkinning)];
-		ReflectProperty(boneMatricesBuffer)[BindEnable(enableSkinning)];
-
-		static std::vector<float4x4> boneMatries(128); // Just make reflection happy
-		ReflectProperty(boneMatries)[BindEnable(enableSkinning)][boneMatricesBuffer][BindInput(BindInput::BONE_TRANSFORMS)];
-		ReflectProperty(boneIndex)[BindEnable(enableSkinning)][boneIndexBuffer][BindInput(BindInput::BONE_INDEX)];
-		ReflectProperty(boneWeight)[BindEnable(enableSkinning)][boneWeightBuffer][BindInput(BindInput::BONE_WEIGHT)];
 
 		ReflectProperty(worldMatrix)[enableInstancing ? instanceBuffer : globalBuffer][BindInput(BindInput::TRANSFORM_WORLD)];
 		ReflectProperty(instancedColor)[enableInstancing ? instanceBuffer : globalBuffer][IShader::BindEnable(enableInstancedColor)][BindInput(BindInput::COLOR_INSTANCED)];
@@ -120,6 +115,11 @@ TObject<IReflect>& StandardTransformVS::operator () (IReflect& reflect) {
 		ReflectProperty(vertexTangent)[vertexTangentBuffer][BindInput(BindInput::TANGENT)];
 		ReflectProperty(vertexColor)[vertexColorBuffer][BindInput(BindInput::COLOR)];
 		ReflectProperty(vertexTexCoord)[vertexTexCoordBuffer][BindInput(BindInput::TEXCOORD)];
+
+		static std::vector<float4x4> boneMatries(128); // Just make reflection happy
+		ReflectProperty(boneMatries)[BindEnable(enableSkinning)][boneMatricesBuffer][BindInput(BindInput::BONE_TRANSFORMS)];
+		ReflectProperty(boneIndex)[BindEnable(enableSkinning)][boneIndexBuffer][BindInput(BindInput::BONE_INDEX)];
+		ReflectProperty(boneWeight)[BindEnable(enableSkinning)][boneWeightBuffer][BindInput(BindInput::BONE_WEIGHT)];
 
 		ReflectProperty(rasterPosition)[BindOutput(BindOutput::HPOSITION)];
 		ReflectProperty(texCoord)[BindOutput(BindOutput::TEXCOORD)];

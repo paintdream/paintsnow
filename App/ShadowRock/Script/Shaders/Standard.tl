@@ -129,19 +129,19 @@ return {
 
 		-- Textures
 		{
-			Name = "BaseColorTexture",
+			Name = "baseColorTexture",
 			Stages = { "FragmentUniform" },
 			Value = "[Runtime]/TextureResource/MissingBaseColor",
 			Binding = ""
 		},
 		{
-			Name = "NormalTexture",
+			Name = "normalTexture",
 			Stages = { "FragmentUniform" },
 			Value = "[Runtime]/TextureResource/MissingNormal",
 			Binding = ""
 		},
 		{
-			Name = "MixtureTexture",
+			Name = "mixtureTexture",
 			Stages = { "FragmentUniform" },
 			Value = "[Runtime]/TextureResource/MissingMaterial",
 			Binding = ""
@@ -152,19 +152,19 @@ return {
 			Name = "EnableBaseColorTexture",
 			Stages = { "FragmentOptions" },
 			Value = true,
-			Binding = "BaseColorTexture",
+			Binding = "baseColorTexture",
 		},
 		{
 			Name = "EnableNormalTexture",
 			Stages = { "FragmentOptions" },
 			Value = true,
-			Binding = "NormalTexture"
+			Binding = "normalTexture"
 		},
 		{
 			Name = "EnableMixtureTexture",
 			Stages = { "FragmentOptions" },
 			Value = true,
-			Binding = "MixtureTexture"
+			Binding = "mixtureTexture"
 		},
 	},
 	
@@ -198,7 +198,7 @@ return {
 
 		Fragment = [[
 			if (EnableBaseColorTexture) {
-				float4 color = texture(BaseColorTexture, VaryingTexCoord.xy);
+				float4 color = texture(baseColorTexture, VaryingTexCoord.xy);
 				if (EnableVertexColor) {
 					outputColor = VaryingColor.xyz * color.xyz;
 				} else {
@@ -209,7 +209,7 @@ return {
 			}
 
 			if (EnableNormalTexture && EnableVertexNormal && EnableVertexTangent) {
-				float4 bump = texture(NormalTexture, VaryingTexCoord.xy);
+				float4 bump = texture(normalTexture, VaryingTexCoord.xy);
 				bump.xyz = bump.xyz * 2.0 - float3(1.0, 1.0, 1.0);
 				outputNormal = normalize(VaryingTangent.xyz * bump.x + VaryingBinormal.xyz * bump.y + VaryingNormal.xyz * bump.z);
 			} else {
@@ -217,7 +217,7 @@ return {
 			}
 
 			if (EnableMixtureTexture) {
-				float4 material = texture(MixtureTexture, VaryingTexCoord.xy);
+				float4 material = texture(mixtureTexture, VaryingTexCoord.xy);
 				occlusion = material.x;
 				roughness = material.y;
 				metallic = material.z;

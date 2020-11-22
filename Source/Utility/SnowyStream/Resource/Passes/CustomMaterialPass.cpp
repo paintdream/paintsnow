@@ -2,9 +2,12 @@
 
 using namespace PaintsNow;
 
-CustomMaterialPass::CustomMaterialPass() {
-	shaderParameter.description->dependency = shaderTransform.description();
-	shaderParameter.description->dependOptBuffer = &shaderTransform.optionData;
+CustomMaterialPass::CustomMaterialPass() {}
+
+bool CustomMaterialPass::FlushOptions() {
+	bool flushed = BaseClass::FlushOptions();
+	shaderParameter.description->SynchronizeInstance(shaderParameter.instanceData, *shaderTransform.description, shaderTransform.instanceData);
+	return BaseClass::FlushOptions() || flushed;
 }
 
 TObject<IReflect>& CustomMaterialPass::operator () (IReflect& reflect) {
@@ -48,6 +51,6 @@ void CustomMaterialPass::SetCode(const String& stage, const String& code, const 
 
 void CustomMaterialPass::SetComplete() {
 	std::vector<String> defTexturePaths;
-	shaderTransform.description->SetComplete(shaderTransform.uniformData, shaderTransform.optionData);
-	shaderParameter.description->SetComplete(shaderParameter.uniformData, shaderParameter.optionData);
+	shaderTransform.description->SetComplete(shaderTransform.instanceData);
+	shaderParameter.description->SetComplete(shaderParameter.instanceData);
 }

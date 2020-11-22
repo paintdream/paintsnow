@@ -58,6 +58,16 @@ void ShaderComponent::SetCode(Engine& engine, const String& stage, const String&
 	pass.SetCode(stage, code, config);
 }
 
+static void FillBindingPoints(CustomMaterialDescription::InstanceData& instanceData, IRender::Resource* bufferResource, IRender::Resource* textureResource) {
+	for (size_t i = 0; i < instanceData.vertexBufferBindings.size(); i++) {
+		instanceData.vertexBufferBindings[i].resource = bufferResource;
+	}
+
+	for (size_t j = 0; j < instanceData.uniformTextureBindings.size(); j++) {
+		instanceData.uniformTextureBindings[j].resource = textureResource;
+	}
+}
+
 void ShaderComponent::SetComplete(Engine& engine) {
 	assert(customMaterialShader);
 
@@ -69,6 +79,19 @@ void ShaderComponent::SetComplete(Engine& engine) {
 	IRender::Queue* queue = engine.snowyStream.GetResourceQueue();
 
 	ReferenceObject();
+
+	PassBase::Updater& updater = customMaterialShader->GetPassUpdater();
+	// enable all binding points for flushing
+	IRender::Resource* dummy = (IRender::Resource*)~(size_t)0;
+	FillBindingPoints(pass.shaderTransform.instanceData, dummy, dummy);
+	FillBindingPoints(pass.shaderParameter.instanceData, dummy, dummy);
+	updater.Initialize(pass);
+	pass.FlushOptions();
+	// then disable all binding points
+	FillBindingPoints(pass.shaderTransform.instanceData, nullptr, nullptr);
+	FillBindingPoints(pass.shaderParameter.instanceData, nullptr, nullptr);
+
+	// fill vertex buffers
 	pass.Compile(render, queue, Wrap(this, &ShaderComponent::OnShaderCompiled), &engine, customMaterialShader->GetShaderResource());
 }
 
@@ -99,7 +122,8 @@ void ShaderComponent::OnShaderCompiled(IRender::Resource* resource, IRender::Res
 
 TShared<MaterialResource> ShaderComponent::ExportMaterial(Engine& engine, const TShared<MaterialResource>& materialTemplate) {
 	// create anouymous material
-	TShared<MaterialResource> materialResource = engine.snowyStream.CreateReflectedResource(UniqueType<MaterialResource>(), "", false);
+	TShared<MaterialResource> materialResource = engine.snowyStream.CreateReflectedResource(UniqueType<MaterialResource>(), "", false, ResourceBase::RESOURCE_VIRTUAL);
+	// assert(materialTemplate->Flag() & ResourceBase::RESOURCE_UPLOADED);
 	materialResource->materialParams = materialTemplate->materialParams;
 	materialResource->textureResources = materialTemplate->textureResources;
 	materialResource->originalShaderResource = customMaterialShader();

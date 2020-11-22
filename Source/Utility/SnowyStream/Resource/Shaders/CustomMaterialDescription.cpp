@@ -3,7 +3,7 @@
 
 using namespace PaintsNow;
 
-CustomMaterialDescription::CustomMaterialDescription() : dependency(nullptr), dependOptBuffer(nullptr) {
+CustomMaterialDescription::CustomMaterialDescription() {
 	uniformBuffer.description.usage = IRender::Resource::BufferDescription::UNIFORM;
 }
 
@@ -108,7 +108,12 @@ public:
 	const MetaChainBase* next;
 };
 
-void CustomMaterialDescription::ReflectUniformTemplate(IReflect& reflect, Bytes& extUniformBuffer, Bytes& extOptionBuffer) {
+void CustomMaterialDescription::ReflectUniformTemplate(IReflect& reflect, InstanceData& instanceData) {
+	Bytes& extOptionBuffer = instanceData.optionData;
+	Bytes& extUniformBuffer = instanceData.uniformData;
+	std::vector<IShader::BindTexture>& uniformTextureBindings = instanceData.uniformTextureBindings;
+	std::vector<IShader::BindBuffer>& vertexBufferBindings = instanceData.vertexBufferBindings;
+
 	uint32_t offset = 0;
 	uint8_t* bufferBase = extUniformBuffer.GetData();
 
@@ -135,7 +140,8 @@ void CustomMaterialDescription::ReflectUniformTemplate(IReflect& reflect, Bytes&
 			DummyMetaChain<IShader::BindBuffer> chain(uniformBuffer);
 			// Make alignment
 			uint32_t size = safe_cast<uint32_t>(type->GetSize());
-			offset = (offset + size - 1) & (size - 1); // make alignment for variable
+			offset = (offset + size - 1) & Math::AlignmentMask(size); // make alignment for variable
+
 			if (var.slot != 0xFFFF) { // depends
 				assert(entries[var.slot].var == VAR_OPTION);
 				IShader::BindEnable enable((bool&)extOptionBuffer[entries[var.slot].offset]);
@@ -150,7 +156,12 @@ void CustomMaterialDescription::ReflectUniformTemplate(IReflect& reflect, Bytes&
 	}
 }
 
-void CustomMaterialDescription::ReflectVertexTemplate(IReflect& reflect, Bytes& extUniformBuffer, Bytes& extOptionBuffer) {
+void CustomMaterialDescription::ReflectVertexTemplate(IReflect& reflect, InstanceData& instanceData) {
+	Bytes& extOptionBuffer = instanceData.optionData;
+	Bytes& extUniformBuffer = instanceData.uniformData;
+	std::vector<IShader::BindTexture>& uniformTextureBindings = instanceData.uniformTextureBindings;
+	std::vector<IShader::BindBuffer>& vertexBufferBindings = instanceData.vertexBufferBindings;
+
 	for (size_t i = 0; i < entries.size(); i++) {
 		Entry& var = entries[i];
 		if (var.var != VAR_VERTEX) continue;
@@ -180,18 +191,26 @@ void CustomMaterialDescription::ReflectVertexTemplate(IReflect& reflect, Bytes& 
 			DummyMetaChain<IShader::BindEnable> enableChain(enable, &chain);
 			reflect.Property(dummy, type, type, name.c_str(), nullptr, var.value.GetData(), &enableChain); // use var.value.GetData() to provide default value
 		} else {
-			reflect.Property(dummy, type, type, name.c_str(), nullptr, var.value.GetData(), &chain); // use var.value.GetData() to provide default value
+			bool bind = vertexBufferBindings[var.offset];
+			IShader::BindEnable enable(bind);
+			DummyMetaChain<IShader::BindEnable> enableChain(enable, &chain);
+			reflect.Property(dummy, type, type, name.c_str(), nullptr, var.value.GetData(), &enableChain); // use var.value.GetData() to provide default value
 		}
 	}
 }
 
-void CustomMaterialDescription::ReflectOptionTemplate(IReflect& reflect, Bytes& extUniformBuffer, Bytes& extOptionBuffer) {
+void CustomMaterialDescription::ReflectOptionTemplate(IReflect& reflect, InstanceData& instanceData) {
+	Bytes& extOptionBuffer = instanceData.optionData;
+	Bytes& extUniformBuffer = instanceData.uniformData;
+	std::vector<IShader::BindTexture>& uniformTextureBindings = instanceData.uniformTextureBindings;
+	std::vector<IShader::BindBuffer>& vertexBufferBindings = instanceData.vertexBufferBindings;
+
 	uint8_t* bufferBase = extOptionBuffer.GetData();
-	uint32_t offset = 0;
 
 	for (size_t i = 0; i < entries.size(); i++) {
 		Entry& var = entries[i];
 		if (var.var != VAR_OPTION) continue;
+
 		String name;
 		name.assign((const char*)var.key.GetData(), var.key.GetSize());
 
@@ -199,46 +218,51 @@ void CustomMaterialDescription::ReflectOptionTemplate(IReflect& reflect, Bytes& 
 		static IReflectObject dummy;
 		// Make alignment
 		uint32_t size = safe_cast<uint32_t>(var.value.GetSize());
-		offset = (offset + size - 1) & (size - 1); // make alignment for variable
+		Unique type = UniqueType<bool>::Get();
 
 		// bool?
 		if (size == 1) {
 			Unique type = UniqueType<bool>::Get();
-			bool& enabled = (bool&)extOptionBuffer[offset];
+			bool enabled = (bool)extOptionBuffer[var.offset];
 
 			if (var.slot != 0xFFFF) {
 				Entry& target = entries[var.slot];
 				switch (target.var) {
 				case VAR_VERTEX:
-					enabled = vertexBufferBindings[var.offset];
+					enabled = vertexBufferBindings[target.offset];
 					break;
 				case VAR_UNIFORM:
 					if (target.type == IAsset::TYPE_TEXTURE) {
-						enabled = uniformTextureBindings[var.offset];
+						enabled = uniformTextureBindings[target.offset];
 					}
 					break;
 				case VAR_OPTION:
-					enabled = extOptionBuffer[var.offset] != 0;
+					enabled = extOptionBuffer[target.offset] != 0;
+					break;
+				default:
+					assert(false);
 					break;
 				}
 			}
 
 			IShader::BindConst<bool> bindConst(enabled);
 			DummyMetaChain<IShader::BindConst<bool> > chain(bindConst);
-			reflect.Property(dummy, type, type, name.c_str(), bufferBase, bufferBase + offset, &chain);
+			reflect.Property(dummy, type, type, name.c_str(), bufferBase, bufferBase + var.offset, &chain);
 		} else { // int
 			assert(size == sizeof(uint32_t));
-			IShader::BindConst<uint32_t> slot(*(uint32_t*)&extOptionBuffer[offset]);
+			IShader::BindConst<uint32_t> slot(*(uint32_t*)&extOptionBuffer[var.offset]);
 			DummyMetaChain<IShader::BindConst<uint32_t> > chain(slot);
-			Unique type = UniqueType<uint32_t>::Get();
-			reflect.Property(dummy, type, type, name.c_str(), bufferBase, bufferBase + offset, &chain);
+			reflect.Property(dummy, type, type, name.c_str(), bufferBase, bufferBase + var.offset, &chain);
 		}
-
-		offset += size;
 	}
 }
 
-void CustomMaterialDescription::ReflectInputTemplate(IReflect& reflect, Bytes& extUniformBuffer, Bytes& extOptionBuffer) {
+void CustomMaterialDescription::ReflectInputTemplate(IReflect& reflect, InstanceData& instanceData) {
+	Bytes& extOptionBuffer = instanceData.optionData;
+	Bytes& extUniformBuffer = instanceData.uniformData;
+	std::vector<IShader::BindTexture>& uniformTextureBindings = instanceData.uniformTextureBindings;
+	std::vector<IShader::BindBuffer>& vertexBufferBindings = instanceData.vertexBufferBindings;
+
 	for (size_t i = 0; i < entries.size(); i++) {
 		Entry& var = entries[i];
 		if (var.var != VAR_INPUT) continue;
@@ -256,13 +280,18 @@ void CustomMaterialDescription::ReflectInputTemplate(IReflect& reflect, Bytes& e
 			IShader::BindEnable enable((bool&)extOptionBuffer[entries[var.slot].offset]);
 			DummyMetaChain<IShader::BindEnable> enableChain(enable, &chain);
 			reflect.Property(dummy, type, type, name.c_str(), nullptr, var.value.GetData(), &enableChain);
-		} else {
+		} else {	
 			reflect.Property(dummy, type, type, name.c_str(), nullptr, var.value.GetData(), &chain);
 		}
 	}
 }
 
-void CustomMaterialDescription::ReflectOutputTemplate(IReflect& reflect, Bytes& extUniformBuffer, Bytes& extOptionBuffer) {
+void CustomMaterialDescription::ReflectOutputTemplate(IReflect& reflect, InstanceData& instanceData) {
+	Bytes& extOptionBuffer = instanceData.optionData;
+	Bytes& extUniformBuffer = instanceData.uniformData;
+	std::vector<IShader::BindTexture>& uniformTextureBindings = instanceData.uniformTextureBindings;
+	std::vector<IShader::BindBuffer>& vertexBufferBindings = instanceData.vertexBufferBindings;
+
 	for (size_t i = 0; i < entries.size(); i++) {
 		Entry& var = entries[i];
 		if (var.var != VAR_OUTPUT) continue;
@@ -286,22 +315,22 @@ void CustomMaterialDescription::ReflectOutputTemplate(IReflect& reflect, Bytes& 
 	}
 }
 
-void CustomMaterialDescription::ReflectExternal(IReflect& reflect, Bytes& extUniformBuffer, Bytes& extOptionBuffer) {
+void CustomMaterialDescription::ReflectExternal(IReflect& reflect, InstanceData& instanceData) {
 	if (reflect.IsReflectProperty()) {
-		if (dependency != nullptr) {
-			assert(dependOptBuffer != nullptr);
-			SyncOptions(extOptionBuffer, *dependency, *dependOptBuffer);
-		}
-
-		ReflectUniformTemplate(reflect, extUniformBuffer, extOptionBuffer);
-		ReflectOptionTemplate(reflect, extUniformBuffer, extOptionBuffer);
-		ReflectVertexTemplate(reflect, extUniformBuffer, extOptionBuffer);
-		ReflectInputTemplate(reflect, extUniformBuffer, extOptionBuffer);
-		ReflectOutputTemplate(reflect, extUniformBuffer, extOptionBuffer);
+		ReflectUniformTemplate(reflect, instanceData);
+		ReflectOptionTemplate(reflect, instanceData);
+		ReflectVertexTemplate(reflect, instanceData);
+		ReflectInputTemplate(reflect, instanceData);
+		ReflectOutputTemplate(reflect, instanceData);
 	}
 }
 
-void CustomMaterialDescription::SetComplete(Bytes& uniformBufferData, Bytes& optionBufferData) {
+void CustomMaterialDescription::SetComplete(InstanceData& instanceData) {
+	Bytes& uniformBufferData = instanceData.uniformData;
+	Bytes& optionBufferData = instanceData.optionData;
+	instanceData.uniformTextureBindings = uniformTextureBindingsTemplate;
+	instanceData.vertexBufferBindings = vertexBufferBindingsTemplate;
+
 	size_t uniformOffset = uniformBufferData.GetSize();
 	size_t optionOffset = optionBufferData.GetSize();
 
@@ -313,7 +342,8 @@ void CustomMaterialDescription::SetComplete(Bytes& uniformBufferData, Bytes& opt
 				static IReflectObject dummy;
 				// Make alignment
 				size_t size = safe_cast<uint32_t>(type->GetSize());
-				uniformOffset = (uniformOffset + size - 1) & (size - 1); // make alignment for variable
+				uniformOffset = (uniformOffset + size - 1) & Math::AlignmentMask(size); // make alignment for variable
+
 				uniformBufferData.Resize(uniformOffset + size);
 				memcpy(uniformBufferData.GetData() + uniformOffset, var.value.GetData(), size);
 
@@ -323,12 +353,12 @@ void CustomMaterialDescription::SetComplete(Bytes& uniformBufferData, Bytes& opt
 		} else if (var.var == VAR_OPTION) {
 			if (var.value.GetSize() == sizeof(bool)) {
 				optionBufferData.Append(var.value.GetData(), sizeof(bool));
-				optionOffset++;
+				var.offset = optionOffset++;
 			} else {
 				assert(var.value.GetSize() == sizeof(uint32_t));
 				// padding
 				const size_t size = sizeof(uint32_t);
-				optionOffset = (optionOffset + size - 1) & (size - 1);
+				optionOffset = (optionOffset + size - 1) & Math::AlignmentMask(size);
 
 				uint32_t value = *reinterpret_cast<uint32_t*>(var.value.GetData());
 				optionBufferData.Resize(optionOffset + sizeof(value), false);
@@ -349,10 +379,10 @@ void CustomMaterialDescription::SetInput(const String& category, const String& t
 	Entry var;
 
 	if (type == "texture") { // resource name
-		var.SetValue(IAsset::TextureIndex(safe_cast<uint32_t>(uniformTextureBindings.size())));
+		var.SetValue(IAsset::TextureIndex(safe_cast<uint32_t>(uniformTextureBindingsTemplate.size())));
 		// encode def path
 		var.value.Assign((const uint8_t*)value.c_str(), value.size());
-		uniformTextureBindings.emplace_back(IShader::BindTexture());
+		uniformTextureBindingsTemplate.emplace_back(IShader::BindTexture());
 	} else if (type == "float") {
 		var.SetValue((float)atof(value.c_str()));
 	} else if (type == "float2") {
@@ -383,7 +413,7 @@ void CustomMaterialDescription::SetInput(const String& category, const String& t
 			&mat(3, 0), &mat(3, 1), &mat(3, 2), &mat(3, 3));
 		var.SetValue(mat);
 	} else if (type == "bool") {
-		var.SetValue(value != "false");
+		var.SetValue(true); // always true
 	} else if (type == "int") {
 		var.SetValue((uint32_t)atoi(value.c_str()));
 	} else {
@@ -396,8 +426,8 @@ void CustomMaterialDescription::SetInput(const String& category, const String& t
 		IShader::BindBuffer bindBuffer;
 		var.var = VAR_VERTEX;
 		bindBuffer.description.usage = category == "Vertex" ? IRender::Resource::BufferDescription::VERTEX : IRender::Resource::BufferDescription::INSTANCED;
-		var.offset = safe_cast<uint16_t>(vertexBufferBindings.size());
-		vertexBufferBindings.emplace_back(std::move(bindBuffer));
+		var.offset = safe_cast<uint16_t>(vertexBufferBindingsTemplate.size());
+		vertexBufferBindingsTemplate.emplace_back(std::move(bindBuffer));
 	} else if (category == "Input") {
 		var.var = VAR_INPUT;
 	} else if (category == "Output") {
@@ -432,12 +462,14 @@ void CustomMaterialDescription::SetInput(const String& category, const String& t
 	entries.emplace_back(std::move(var));
 }
 
-void CustomMaterialDescription::SyncOptions(Bytes& dstOptionBuffer, const CustomMaterialDescription& rhs, const Bytes& srcOptionBuffer) {
+void CustomMaterialDescription::SynchronizeInstance(InstanceData& dstInstanceData, const CustomMaterialDescription& rhs, const InstanceData& srcInstanceData) {
+	const Bytes& srcOptionBuffer = srcInstanceData.optionData;
+	Bytes& dstOptionBuffer = dstInstanceData.optionData;
 	for (size_t i = 0; i < entries.size(); i++) {
 		Entry& target = entries[i];
 
 		if (target.var == VAR_OPTION && target.value.GetSize() == 1) {
-			for (size_t j = 0; j < entries.size(); j++) {
+			for (size_t j = 0; j < rhs.entries.size(); j++) {
 				const Entry& source = rhs.entries[j];
 
 				if (source.var == VAR_OPTION && source.value.GetSize() == 1) {

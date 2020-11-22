@@ -643,6 +643,8 @@ template <class T>
 void RegisterPass(ResourceManager& resourceManager, UniqueType<T> type, const String& matName = "", const IRender::Resource::RenderStateDescription& renderState = IRender::Resource::RenderStateDescription()) {
 	ShaderResourceImpl<T>* shaderResource = new ShaderResourceImpl<T>(resourceManager, "", ResourceBase::RESOURCE_ETERNAL | ResourceBase::RESOURCE_VIRTUAL);
 	PassBase& pass = shaderResource->GetPass();
+	shaderResource->GetPassUpdater().Initialize(pass);
+
 	Unique unique = pass.GetUnique();
 	assert(unique != UniqueType<PassBase>().Get());
 	String name = pass.GetUnique()->GetName();

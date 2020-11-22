@@ -87,10 +87,8 @@ PassBase& ShaderResource::GetPass() {
 }
 
 PassBase::Updater& ShaderResource::GetPassUpdater() {
-	static PassBase dummy;
-	static PassBase::Updater updater(dummy);
+	static PassBase::Updater updater;
 	assert(false);
-
 	return updater;
 }
 

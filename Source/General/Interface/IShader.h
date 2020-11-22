@@ -95,7 +95,6 @@ namespace PaintsNow {
 
 			template <class T, class D>
 			inline const BindConst& FilterField(T* t, D* d) const {
-				const_cast<D&>(this->description) = *d;
 				return *this; // do nothing
 			}
 
@@ -107,10 +106,6 @@ namespace PaintsNow {
 			typedef BindConst Type;
 		};
 
-		// Dual directional binding
-		// The enable state is set to off if any satisfied:
-		// 1. The binding value is false
-		// 2. The object decorated is unavalible
 		class BindEnable : public TReflected<BindEnable, TMetaBinding<bool*> > {
 		public:
 			BindEnable(bool& value) { description = &value; }

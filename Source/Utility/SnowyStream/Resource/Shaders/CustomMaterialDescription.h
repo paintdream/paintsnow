@@ -13,17 +13,24 @@ namespace PaintsNow {
 	public:
 		CustomMaterialDescription();
 
+		struct InstanceData {
+			Bytes uniformData;
+			Bytes optionData;
+			std::vector<IShader::BindTexture> uniformTextureBindings;
+			std::vector<IShader::BindBuffer> vertexBufferBindings;
+		};
+
 		void SetCode(const String& text);
 		void SetInput(const String& category, const String& type, const String& name, const String& value, const String& binding, const std::vector<std::pair<String, String> >& config);
-		void SetComplete(Bytes& extUniformBuffer, Bytes& extOptionBuffer);
-		void ReflectExternal(IReflect& reflect, Bytes& extUniformBuffer, Bytes& extOptionBuffer);
+		void SetComplete(InstanceData& instanceData);
+		void ReflectExternal(IReflect& reflect, InstanceData& instanceData);
 
-		void SyncOptions(Bytes& dstOptionBuffer, const CustomMaterialDescription& rhs, const Bytes& srcOptionBuffer);
-		void ReflectVertexTemplate(IReflect& reflect, Bytes& uniformData, Bytes& optionData);
-		void ReflectOptionTemplate(IReflect& reflect, Bytes& uniformData, Bytes& optionData);
-		void ReflectUniformTemplate(IReflect& reflect, Bytes& uniformData, Bytes& optionData);
-		void ReflectInputTemplate(IReflect& reflect, Bytes& uniformData, Bytes& optionData);
-		void ReflectOutputTemplate(IReflect& reflect, Bytes& uniformData, Bytes& optionData);
+		void SynchronizeInstance(InstanceData& dstOptionData, const CustomMaterialDescription& rhs, const InstanceData& instanceData);
+		void ReflectVertexTemplate(IReflect& reflect, InstanceData& instanceData);
+		void ReflectOptionTemplate(IReflect& reflect, InstanceData& instanceData);
+		void ReflectUniformTemplate(IReflect& reflect, InstanceData& instanceData);
+		void ReflectInputTemplate(IReflect& reflect, InstanceData& instanceData);
+		void ReflectOutputTemplate(IReflect& reflect, InstanceData& instanceData);
 
 		IShader::BindBuffer uniformBuffer;
 		String code;
@@ -47,11 +54,8 @@ namespace PaintsNow {
 		};
 
 		std::vector<Entry> entries;
-		std::vector<IShader::BindTexture> uniformTextureBindings;
-		std::vector<IShader::BindBuffer> vertexBufferBindings;
-
-		CustomMaterialDescription* dependency;
-		Bytes* dependOptBuffer;
+		std::vector<IShader::BindTexture> uniformTextureBindingsTemplate;
+		std::vector<IShader::BindBuffer> vertexBufferBindingsTemplate;
 	};
 }
 

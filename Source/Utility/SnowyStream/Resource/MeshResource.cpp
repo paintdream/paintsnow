@@ -220,7 +220,7 @@ void MeshResource::BufferCollection::GetDescription(std::vector<PassBase::Parame
 			offset += sizeof(UChar4);
 		}
 
-		if (hasNormalBuffer) {
+		if (hasTangentBuffer) {
 			desc.emplace_back(updater[IShader::BindInput::TANGENT]);
 			offsets.emplace_back(std::make_pair(offset, 4));
 			offset += sizeof(UChar4);

@@ -21,7 +21,7 @@ namespace PaintsNow {
 		virtual void SetComplete();
 
 		IRender::Resource* Compile(IRender& render, IRender::Queue* queue, const TWrapper<void, IRender::Resource*, IRender::Resource::ShaderDescription&, IRender::Resource::ShaderDescription::Stage, const String&, const String&>& callback = TWrapper<void, IRender::Resource*, IRender::Resource::ShaderDescription&, IRender::Resource::ShaderDescription::Stage, const String&, const String&>(), void* context = nullptr, IRender::Resource* existedShaderResource = nullptr);
-		bool FlushSwitches(uint32_t resourceMask = 1 << IRender::Resource::RESOURCE_TEXTURE); // e.g. 1 << IRender::RESOURCE_TEXTURE
+		virtual bool FlushOptions();
 		Bytes ExportHash() const;
 
 		struct Parameter {
@@ -63,21 +63,23 @@ namespace PaintsNow {
 
 		class Updater : public IReflect {
 		public:
-			Updater(PassBase& pass);
+			Updater();
 
 			const Parameter& operator [] (const Bytes& key);
 			const Parameter& operator [] (IShader::BindInput::SCHEMA schema);
 
+			void Initialize(PassBase& pass);
 			void Capture(IRender::Resource::DrawCallDescription& drawCallDescription, std::vector<Bytes>& bufferData, uint32_t bufferMask);
 			void Update(IRender& render, IRender::Queue* queue, IRender::Resource::DrawCallDescription& drawCall, std::vector<IRender::Resource*>& newBuffers, std::vector<Bytes>& bufferData, uint32_t bufferMask);
-			void Flush();
 			void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override;
 			void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
 			
 			uint32_t GetBufferCount() const;
 			uint32_t GetTextureCount() const;
+			std::vector<Parameter>& GetParameters();
 
 		private:
+			void Flush();
 			std::vector<const IShader::BindBuffer*> buffers;
 			std::vector<std::key_value<const IShader::BindBuffer*, std::pair<uint16_t, uint16_t> > > bufferIDSize;
 			std::vector<std::key_value<Bytes, uint32_t> > mapParametersKey;

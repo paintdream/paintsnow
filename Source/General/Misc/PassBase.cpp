@@ -58,10 +58,7 @@ IRender::Resource* PassBase::Compile(IRender& render, IRender::Queue* queue, con
 	return shader;
 }
 
-PassBase::Updater::Updater(PassBase& Pass) : textureCount(0), IReflect(true, false, false, false) {
-	Pass(*this);
-	Flush();
-}
+PassBase::Updater::Updater() : textureCount(0), IReflect(true, false, false, false) {}
 
 uint32_t PassBase::Updater::GetBufferCount() const {
 	return safe_cast<uint32_t>(buffers.size());
@@ -69,6 +66,10 @@ uint32_t PassBase::Updater::GetBufferCount() const {
 
 uint32_t PassBase::Updater::GetTextureCount() const {
 	return textureCount;
+}
+
+std::vector<PassBase::Parameter>& PassBase::Updater::GetParameters() {
+	return parameters;
 }
 
 PassBase::Parameter::Parameter() : internalAddress(nullptr), linearLayout(0), bindBuffer(nullptr) {}
@@ -268,6 +269,12 @@ void PassBase::Updater::Flush() {
 	bufferIDSize.clear();
 }
 
+void PassBase::Updater::Initialize(PassBase& pass) {
+	assert(GetBufferCount() == 0);
+	pass(*this);
+	Flush();
+}
+
 void PassBase::Updater::Capture(IRender::Resource::DrawCallDescription& drawCallDescription, std::vector<Bytes>& bufferData, uint32_t bufferMask) {
 	drawCallDescription.bufferResources.resize(buffers.size());
 
@@ -357,11 +364,9 @@ Bytes PassBase::ExportHash() const {
 	return exporter.hashValue;
 }
 
-class SwitchEvaluater : public IReflect {
+class OptionEvaluator : public IReflect {
 public:
-	SwitchEvaluater(uint32_t mask) : IReflect(true, false, false, false), resourceMask(mask), next(false) {}
-
-	uint32_t resourceMask;
+	OptionEvaluator() : IReflect(true, false, false, false), next(false) {}
 	bool next;
 
 	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override {
@@ -382,16 +387,24 @@ public:
 					}
 				}
 			}
+		} else {
+			for (const MetaChainBase* check = meta; check != nullptr; check = check->GetNext()) {
+				const MetaNodeBase* node = check->GetNode();
+				if (node->GetUnique() == UniqueType<IShader::MetaShader>::Get()) {
+					const IShader::MetaShader* metaShader = static_cast<const IShader::MetaShader*>(node);
+					s(*this);
+				}
+			}
 		}
 	}
 
 	void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
 };
 
-bool PassBase::FlushSwitches(uint32_t resourceMask) {
+bool PassBase::FlushOptions() {
 	int i = 0;
 	while (true) {
-		SwitchEvaluater evaluator(resourceMask);
+		OptionEvaluator evaluator;
 		(const_cast<PassBase&>(*this))(evaluator);
 
 		if (!evaluator.next) {

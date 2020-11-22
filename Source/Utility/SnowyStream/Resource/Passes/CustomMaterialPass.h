@@ -19,8 +19,8 @@ namespace PaintsNow {
 		void SetInput(const String& stage, const String& type, const String& name, const String& value, const String& binding, const std::vector<std::pair<String, String> >& config) override;
 		void SetCode(const String& stage, const String& code, const std::vector<std::pair<String, String> >& config) override;
 		void SetComplete() override;
+		bool FlushOptions() override;
 
-	protected:
 		// Vertex shaders
 		CustomMaterialTransformVS shaderTransform;
 		// Fragment shaders

@@ -9,80 +9,92 @@ MaterialResource::MaterialResource(ResourceManager& manager, const String& uniqu
 TShared<ShaderResource> MaterialResource::Instantiate(const TShared<MeshResource>& mesh, IRender::Resource::DrawCallDescription& drawCallTemplate, std::vector<Bytes>& bufferData) {
 	assert(mesh);
 
-	TShared<ShaderResource> mutationShaderResource;
-	mutationShaderResource.Reset(static_cast<ShaderResource*>(originalShaderResource->Clone()));
-	PassBase& pass = mutationShaderResource->GetPass();
-	PassBase::Updater& updater = mutationShaderResource->GetPassUpdater();
+	TShared<ShaderResource> shaderTemplateResource = originalShaderResource;
+	Bytes templateHash = shaderTemplateResource->GetHashValue();
 
-	// Apply material
-	for (size_t i = 0; i < materialParams.variables.size(); i++) {
-		const IAsset::Material::Variable& var = materialParams.variables[i];
-		PassBase::Parameter& parameter = const_cast<PassBase::Parameter&>(updater[var.key]);
-		if (parameter) {
-			if (var.type == IAsset::TYPE_TEXTURE) {
-				// Lookup texture 
-				IAsset::TextureIndex textureIndex = var.Parse(UniqueType<IAsset::TextureIndex>());
-				IRender::Resource* texture = nullptr;
-				assert(textureIndex.index < textureResources.size());
-				if (textureIndex.index < textureResources.size()) {
-					TShared<TextureResource>& res = textureResources[textureIndex.index];
-					assert(res);
-					if (res) {
-						texture = res->GetRenderResource();
+	while (true) {
+		TShared<ShaderResource> mutationShaderResource;
+		mutationShaderResource.Reset(static_cast<ShaderResource*>(shaderTemplateResource->Clone()));
+		assert(mutationShaderResource->GetPassUpdater().GetBufferCount() != 0);
+		PassBase& pass = mutationShaderResource->GetPass();
+		PassBase::Updater& updater = mutationShaderResource->GetPassUpdater();
+
+		// Apply material
+		for (size_t i = 0; i < materialParams.variables.size(); i++) {
+			const IAsset::Material::Variable& var = materialParams.variables[i];
+			PassBase::Parameter& parameter = const_cast<PassBase::Parameter&>(updater[var.key]);
+			if (parameter) {
+				if (var.type == IAsset::TYPE_TEXTURE) {
+					// Lookup texture 
+					IAsset::TextureIndex textureIndex = var.Parse(UniqueType<IAsset::TextureIndex>());
+					IRender::Resource* texture = nullptr;
+					assert(textureIndex.index < textureResources.size());
+					if (textureIndex.index < textureResources.size()) {
+						TShared<TextureResource>& res = textureResources[textureIndex.index];
+						assert(res);
+						if (res) {
+							texture = res->GetRenderResource();
+						}
 					}
-				}
 
-				parameter = texture;
-			} else {
-				parameter = var.value;
+					parameter = texture;
+				} else {
+					parameter = var.value;
+				}
 			}
 		}
-	}
 
-	std::vector<PassBase::Parameter> descs;
-	std::vector<std::pair<uint32_t, uint32_t> > offsets;
-	mesh->bufferCollection.GetDescription(descs, offsets, updater);
-	std::vector<IRender::Resource*> data;
-	mesh->bufferCollection.UpdateData(data);
-	assert(data.size() == descs.size());
+		// apply buffers
+		std::vector<PassBase::Parameter> descs;
+		std::vector<std::pair<uint32_t, uint32_t> > offsets;
+		mesh->bufferCollection.GetDescription(descs, offsets, updater);
+		std::vector<IRender::Resource*> data;
+		mesh->bufferCollection.UpdateData(data);
+		assert(data.size() == descs.size());
 
-	for (size_t k = 0; k < descs.size(); k++) {
-		IShader::BindBuffer* bindBuffer = descs[k].bindBuffer;
-		if (bindBuffer != nullptr) {
-			bindBuffer->resource = data[k];
+		for (size_t k = 0; k < descs.size(); k++) {
+			IShader::BindBuffer* bindBuffer = descs[k].bindBuffer;
+			if (bindBuffer != nullptr) {
+				bindBuffer->resource = data[k];
+			}
 		}
-	}
 
-	updater.Capture(drawCallTemplate, bufferData, 1 << IRender::Resource::BufferDescription::UNIFORM);
+		// get shader hash
+		pass.FlushOptions();
+		Bytes shaderHash = pass.ExportHash();
 
-	// get shader hash
-	pass.FlushSwitches();
-	Bytes shaderHash = pass.ExportHash();
-
-	if (originalShaderResource->GetHashValue() == shaderHash) {
-		drawCallTemplate.shaderResource = originalShaderResource->GetShaderResource();
-		return originalShaderResource;
-	} else {
-		String location = originalShaderResource->GetLocation();
-		location += "/";
-		location.append((const char*)shaderHash.GetData(), shaderHash.GetSize());
-
-		// cached?
-		resourceManager.DoLock();
-		TShared<ShaderResource> cached = static_cast<ShaderResource*>(resourceManager.LoadExist(location)());
-
-		if (cached) {
-			// use cache
-			mutationShaderResource = cached;
+		if (templateHash == shaderHash) { // matched!
+			updater.Capture(drawCallTemplate, bufferData, 1 << IRender::Resource::BufferDescription::UNIFORM);
+			drawCallTemplate.shaderResource = shaderTemplateResource->GetShaderResource();
+			assert(shaderTemplateResource->GetPassUpdater().GetBufferCount() != 0);
+			return shaderTemplateResource;
 		} else {
-			mutationShaderResource->SetLocation(location);
-			resourceManager.Insert(mutationShaderResource());
+			templateHash = shaderHash;
+			// create new shader mutation
+			String location = originalShaderResource->GetLocation();
+			location += "/";
+			for (size_t i = 0; i < shaderHash.GetSize(); i++) {
+				shaderHash[i] += (uint8_t)'0';
+			}
+
+			location.append((const char*)shaderHash.GetData(), shaderHash.GetSize());
+			mutationShaderResource.Reset(static_cast<ShaderResource*>(mutationShaderResource->Clone()));
+
+			// cached?
+			resourceManager.DoLock();
+			TShared<ShaderResource> cached = static_cast<ShaderResource*>(resourceManager.LoadExist(location)());
+
+			if (cached) {
+				// use cache
+				mutationShaderResource = cached;
+			} else {
+				mutationShaderResource->SetLocation(location);
+				resourceManager.Insert(mutationShaderResource());
+			}
+
+			resourceManager.UnLock();
+			shaderTemplateResource = mutationShaderResource;
 		}
-
-		resourceManager.UnLock();
-		drawCallTemplate.shaderResource = mutationShaderResource->GetShaderResource();
-
-		return mutationShaderResource;
 	}
 }
 

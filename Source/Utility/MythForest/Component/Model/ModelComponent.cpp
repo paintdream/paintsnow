@@ -28,6 +28,7 @@ static void GenerateDrawCall(IDrawCallProvider::OutputRenderData& renderData, Sh
 	assert(deviceElementSize != 0);
 	IRender::Resource::DrawCallDescription& drawCall = renderData.drawCallDescription;
 	PassBase::Updater& updater = shaderResource->GetPassUpdater();
+	assert(updater.GetBufferCount() != 0);
 	assert(drawCall.shaderResource == shaderResource->GetShaderResource());
 
 	std::vector<PassBase::Parameter> outputs;
@@ -39,9 +40,9 @@ static void GenerateDrawCall(IDrawCallProvider::OutputRenderData& renderData, Sh
 		if (outputs[k]) {
 			uint8_t slot = outputs[k].slot;
 			assert(outputs[k].offset == 0);
-
-			if (slot >= drawCall.bufferResources.size()) drawCall.bufferResources.resize(slot + 1);
+			assert(slot < drawCall.bufferResources.size());
 			assert(meshBuffers[k] != nullptr);
+
 			drawCall.bufferResources[slot].buffer = meshBuffers[k];
 			drawCall.bufferResources[slot].offset = offsets[k].first;
 			drawCall.bufferResources[slot].component = offsets[k].second;
@@ -87,6 +88,7 @@ void ModelComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTe
 				OutputRenderData& drawCall = drawCallTemplates.back();
 				std::vector<Bytes> uniformBufferData;
 				TShared<ShaderResource> shaderInstance = materialResource->Instantiate(meshResource, drawCall.drawCallDescription, uniformBufferData);
+				assert(shaderInstance->GetPassUpdater().GetBufferCount() != 0);
 				drawCall.shaderResource = shaderInstance;
 
 				uint32_t orgSize = safe_cast<uint32_t>(drawCallTemplates.size());
