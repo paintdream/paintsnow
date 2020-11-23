@@ -129,7 +129,7 @@ void IWidget::Property(IReflectObject& s, Unique typeID, Unique refTypeID, const
 	if (layerCount != 0)
 		ImGui::Indent(8.0f * layerCount);
 
-	void* address = s.IsIterator() ? static_cast<IIterator&>(s).GetHost() : ptr;
+	void* address = ptr;
 	if (!s.IsBasicObject() || refTypeID != typeID) {
 		expanded = expandedObjects.count(address) != 0;
 		ImGui::Text(expanded ? "-" : "+");
@@ -184,11 +184,12 @@ void IWidget::Property(IReflectObject& s, Unique typeID, Unique refTypeID, const
 			char name[64];
 			int i = 0;
 			while (iterator.Next()) {
-				IReflectObject& prototype = const_cast<IReflectObject&>(iterator.GetElementPrototype());
 				sprintf(name, "[%d]", i++);
-				void* ptr = iterator.Get();
-				assert(ptr != nullptr);
-				Property(prototype.IsBasicObject() ? prototype : *reinterpret_cast<IReflectObject*>(ptr), subUnique, refUnique, name, nullptr, ptr, nullptr);
+				void* subptr = iterator.Get();
+				assert(subptr != nullptr);
+				static IReflectObject dummy;
+				subptr = subUnique == refUnique ? subptr : *reinterpret_cast<void**>(subptr);
+				Property(iterator.IsElementBasicObject() && subUnique == refUnique ? dummy : *reinterpret_cast<IReflectObject*>(subptr), refUnique, refUnique, name, nullptr, subptr, nullptr);
 			}
 		} else {
 			s(*this);

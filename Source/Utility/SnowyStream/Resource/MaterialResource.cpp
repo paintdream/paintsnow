@@ -84,17 +84,12 @@ TShared<ShaderResource> MaterialResource::Instantiate(const TShared<MeshResource
 
 			location.append((const char*)shaderHash.GetData(), shaderHash.GetSize());
 
-			resourceManager.DoLock();
-			TShared<ShaderResource> cached = static_cast<ShaderResource*>(resourceManager.LoadExist(location)());
+			TShared<ShaderResource> cached = static_cast<ShaderResource*>(resourceManager.LoadExistSafe(location)());
 
 			if (cached) {
 				// use cache
 				mutationShaderResource = cached;
-			}
-
-			resourceManager.UnLock();
-
-			if (!cached) {
+			} else {
 				mutationShaderResource.Reset(static_cast<ShaderResource*>(mutationShaderResource->Clone()));
 			}
 

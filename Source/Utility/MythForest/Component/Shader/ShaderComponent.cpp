@@ -107,10 +107,6 @@ void ShaderComponent::OnShaderCompiled(IRender::Resource* resource, IRender::Res
 TShared<MaterialResource> ShaderComponent::ExportMaterial(Engine& engine, const TShared<MaterialResource>& materialTemplate) {
 	// create anouymous material
 	TShared<MaterialResource> materialResource = engine.snowyStream.CreateReflectedResource(UniqueType<MaterialResource>(), "", false, ResourceBase::RESOURCE_VIRTUAL);
-	/*
-	while (!(materialTemplate->Flag() & ResourceBase::RESOURCE_UPLOADED)) {
-		YieldThread();
-	}*/
 
 	assert(materialTemplate->Flag() & ResourceBase::RESOURCE_UPLOADED);
 	assert(!materialTemplate->materialParams.variables.empty());
