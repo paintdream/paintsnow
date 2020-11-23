@@ -111,23 +111,7 @@ void CameraComponent::Uninitialize(Engine& engine, Entity* entity) {
 			Kernel& kernel = engine.GetKernel();
 			ThreadPool& threadPool = kernel.threadPool;
 			if (threadPool.GetThreadCount() != 0) {
-				uint32_t threadIndex = threadPool.GetCurrentThreadIndex();
-				uint32_t warpIndex = kernel.GetCurrentWarpIndex();
-				kernel.YieldCurrentWarp();
-				while (Flag().load(std::memory_order_acquire) & CAMERACOMPONENT_UPDATE_COLLECTING) {
-					// wait for it finishes
-					threadPool.PollRoutine(safe_cast<uint32_t>(threadIndex));
-					if (threadPool.GetThreadCount() == 0)
-						break;
-				}
-
-				if (threadPool.GetThreadCount() != 0) {
-					Kernel::SubTaskQueue& queue = kernel.taskQueueGrid[warpIndex];
-					while (!queue.PreemptExecution()) {
-						// wait for preemption
-						threadPool.PollRoutine(safe_cast<uint32_t>(threadIndex));
-					}
-				}
+				Wait(kernel, CAMERACOMPONENT_UPDATE_COLLECTING, 0);
 			}
 		}
 

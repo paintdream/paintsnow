@@ -110,7 +110,7 @@ void BridgeSunset::ContinueScriptDispatcher(IScript::Request& request, IHost* ho
 		queue.Flush(threadPool);
 
 		// wait for it finishes
-		while (scriptContinuer.token.load(std::memory_order_acquire) != 0) {
+		while (scriptContinuer.token.load(std::memory_order_acquire) != 0 && threadPool.IsRunning()) {
 			threadPool.PollRoutine(safe_cast<uint32_t>(threadIndex));
 		}
 
