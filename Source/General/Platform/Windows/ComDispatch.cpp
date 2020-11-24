@@ -74,7 +74,7 @@ ComDispatch::ComDispatch(IScript::Request& request, ComBridge* br, IDispatch* di
 TObject<IReflect>& ComDispatch::operator () (IReflect& reflect) {
 	for (size_t i = 0; i < methods.size(); i++) {
 		const Method& m = methods[i];
-		reflect.Method(Unique(), m.name.c_str(), reinterpret_cast<TProxy<>*>(i), m.retValue, m.params, nullptr);
+		reflect.Method(m.name.c_str(), reinterpret_cast<TProxy<>*>(i), m.retValue, m.params, nullptr);
 	}
 	return *this;
 }

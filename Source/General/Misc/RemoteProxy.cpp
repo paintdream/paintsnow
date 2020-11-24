@@ -116,7 +116,7 @@ public:
 	}
 
 	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override {}
-	void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {
+	void Method(const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {
 		singleton Unique typedBaseType = UniqueType<IScript::MetaMethod::TypedBase>::Get();
 		for (const MetaChainBase* t = meta; t != nullptr; t = t->GetNext()) {
 			const MetaNodeBase* node = t->GetNode();
@@ -1129,7 +1129,7 @@ public:
 	// input source
 	ReflectRoutines(IScript::Request& request, const IScript::BaseDelegate& d, RemoteProxy::ObjectInfo& objInfo);
 	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override;
-	void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override;
+	void Method(const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override;
 
 private:
 	std::map<String, TWrapper<std::pair<IScript::Request::Ref, size_t>, IScript::Request&, bool>*> mapNameToWrapper;
@@ -1193,7 +1193,7 @@ void ReflectRoutines::Property(IReflectObject& s, Unique typeID, Unique refTypeI
 	}
 }
 
-void ReflectRoutines::Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) {}
+void ReflectRoutines::Method(const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) {}
 
 class QueryInterfaceCallback : public IReflectObject {
 public:

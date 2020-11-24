@@ -19,7 +19,7 @@ namespace PaintsNow {
 		static void SetValueFloat(IScript::Request& request, char* base);
 		static void SetValueInt(IScript::Request& request, char* base);
 		static void SetValueNull(IScript::Request& request, char* base);
-		void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override;
+		void Method(const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override;
 
 		typedef void(*Set)(IScript::Request& request, char* base);
 		std::vector<std::pair<Set, size_t> > setters;

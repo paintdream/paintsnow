@@ -21,7 +21,7 @@ public:
 		}
 	}
 
-	void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
+	void Method(const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
 
 	std::vector<IScript::Library*> modules;
 };
@@ -513,7 +513,7 @@ struct InspectCustomStructure : public IReflect {
 		}
 	}
 
-	void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
+	void Method(const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
 
 	static bool FilterType(const String& name, String& ret, String& count) {
 		// parse name
@@ -736,7 +736,7 @@ struct InspectProcs : public IReflect {
 		}
 	}
 
-	void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {
+	void Method(const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {
 		// convert params ...
 		while (meta != nullptr) {
 			const MetaNodeBase* node = meta->GetNode();

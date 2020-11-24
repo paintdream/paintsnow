@@ -39,7 +39,7 @@ namespace PaintsNow {
 		IWidget();
 		virtual void TickRender(LeavesFlute& leavesFlute) = 0;
 		virtual void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta);
-		virtual void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta);
+		virtual void Method(const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta);
 		virtual void Class(IReflectObject& host, Unique id, const char* name, const char* path, const MetaChainBase* meta);
 		virtual void Enum(size_t value, Unique id, const char* name, const MetaChainBase* meta);
 

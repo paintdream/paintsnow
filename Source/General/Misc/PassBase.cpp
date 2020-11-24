@@ -34,7 +34,7 @@ public:
 		assert(s.IsBasicObject() || s.QueryInterface(UniqueType<IShader>()) == nullptr);
 	}
 
-	void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
+	void Method(const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
 
 	typedef std::vector<std::pair<IRender::Resource::ShaderDescription::Stage, IShader*> > ShaderMap;
 	ShaderMap shaders;
@@ -353,7 +353,7 @@ public:
 		}
 	}
 
-	void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
+	void Method(const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
 };
 
 Bytes PassBase::ExportHash() const {
@@ -387,7 +387,7 @@ public:
 		}
 	}
 
-	void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
+	void Method(const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
 };
 
 void PassBase::ClearBindings() {
@@ -429,7 +429,7 @@ public:
 		}
 	}
 
-	void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
+	void Method(const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
 };
 
 bool PassBase::FlushOptions() {

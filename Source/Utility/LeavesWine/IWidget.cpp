@@ -198,7 +198,7 @@ void IWidget::Property(IReflectObject& s, Unique typeID, Unique refTypeID, const
 	}
 }
 
-void IWidget::Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) {
+void IWidget::Method(const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) {
 	if (layerCount != 0)
 		ImGui::Indent(8.0f * layerCount);
 

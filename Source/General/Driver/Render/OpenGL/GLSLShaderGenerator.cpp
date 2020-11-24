@@ -306,4 +306,4 @@ void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refT
 	}
 }
 
-void GLSLShaderGenerator::Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) {}
+void GLSLShaderGenerator::Method(const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) {}

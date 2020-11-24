@@ -15,7 +15,7 @@ namespace PaintsNow {
 		static const String& GetFrameCode();
 		void Complete();
 		void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override;
-		void Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override;
+		void Method(const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override;
 
 		IRender::Resource::ShaderDescription::Stage stage;
 		String declaration;

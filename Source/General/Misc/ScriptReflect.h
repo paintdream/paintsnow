@@ -47,7 +47,7 @@ namespace PaintsNow {
 		ScriptReflect(IScript::Request& request, bool read, const std::unordered_map<Unique, Type>& reflectParserMap = ScriptReflect::GetGlobalMap());
 
 		void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override;
-		void Method(Unique typeID, const char* name, const TProxy<>* p, const IReflect::Param& retValue, const std::vector<IReflect::Param>& params, const MetaChainBase* meta) override;
+		void Method(const char* name, const TProxy<>* p, const IReflect::Param& retValue, const std::vector<IReflect::Param>& params, const MetaChainBase* meta) override;
 
 		const Type& GetType(Unique id) const;
 		static const std::unordered_map<Unique, Type>& GetGlobalMap();
@@ -118,7 +118,7 @@ namespace PaintsNow {
 	public:
 		ObjectDumper(IScript::Request& request, Tunnel& tunnel, const std::unordered_map<Unique, Type>& m);
 		void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override;
-		void Method(Unique typeID, const char* name, const TProxy<>* p, const IReflect::Param& retValue, const std::vector<IReflect::Param>& params, const MetaChainBase* meta) override;
+		void Method(const char* name, const TProxy<>* p, const IReflect::Param& retValue, const std::vector<IReflect::Param>& params, const MetaChainBase* meta) override;
 
 	private:
 		IScript::Request& request;

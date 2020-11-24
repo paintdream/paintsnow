@@ -122,7 +122,7 @@ void SchemaResolver::SetValueNull(IScript::Request& request, char* base) {
 	request << nil;
 }
 
-void SchemaResolver::Method(Unique typeID, const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) {}
+void SchemaResolver::Method(const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) {}
 
 static void StringCreator(void* buffer) {
 	new (buffer) String();
