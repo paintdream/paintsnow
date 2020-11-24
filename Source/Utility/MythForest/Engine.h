@@ -12,6 +12,7 @@
 #include "../../Core/Template/TMap.h"
 #include "../../General/Interface/Interfaces.h"
 #include "../../Core/System/Kernel.h"
+#include <queue>
 
 namespace PaintsNow {
 	class Interfaces;
@@ -52,7 +53,7 @@ namespace PaintsNow {
 		std::atomic<uint32_t> unitCount;
 		IThread::Event* finalizeEvent;
 		std::unordered_map<String, Module*> modules;
-		std::vector<TQueue<ITask*> > frameTasks;
+		std::vector<std::queue<ITask*> > frameTasks;
 		std::vector<IRender::Queue*> warpResourceQueues;
 
 #ifdef _DEBUG

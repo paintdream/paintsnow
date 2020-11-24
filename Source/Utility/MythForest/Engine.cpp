@@ -25,7 +25,7 @@ void Engine::QueueFrameRoutine(ITask* task) {
 	uint32_t warp = GetKernel().GetCurrentWarpIndex();
 	assert(warp != ~(uint32_t)0);
 
-	frameTasks[warp].Push(task);
+	frameTasks[warp].push(task);
 }
 
 IRender::Queue* Engine::GetWarpResourceQueue() {
@@ -43,10 +43,10 @@ void Engine::Clear() {
 	}
 
 	for (size_t i = 0; i < frameTasks.size(); i++) {
-		TQueue<ITask*>& q = frameTasks[i];
-		while (!q.Empty()) {
-			ITask* task = q.Top();
-			q.Pop();
+		std::queue<ITask*>& q = frameTasks[i];
+		while (!q.empty()) {
+			ITask* task = q.front();
+			q.pop();
 
 			task->Abort(this);
 		}
@@ -102,10 +102,10 @@ void Engine::TickFrame() {
 	}
 
 	for (size_t j = 0; j < frameTasks.size(); j++) {
-		TQueue<ITask*>& q = frameTasks[j];
-		while (!q.Empty()) {
-			ITask* task = q.Top();
-			q.Pop();
+		std::queue<ITask*>& q = frameTasks[j];
+		while (!q.empty()) {
+			ITask* task = q.front();
+			q.pop();
 
 			task->Execute(this);
 		}
