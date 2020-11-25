@@ -57,7 +57,7 @@ bool GLErrorGuard::enableGuard = true;
 
 class DeviceImplOpenGL final : public IRender::Device {
 public:
-	DeviceImplOpenGL(IRender& r) : lastProgramID(0), lastFrameBufferID(0), render(r) {}
+	DeviceImplOpenGL(IRender& r) : lastProgramID(0), lastFrameBufferID(0), render(r), resolution(640, 480) {}
 
 	void CompleteStore() {
 		if (!storeInvalidates.empty()) {
@@ -1707,11 +1707,13 @@ IRender::Device* ZRenderOpenGL::CreateDevice(const String& description) {
 
 void ZRenderOpenGL::SetDeviceResolution(IRender::Device* device, const Int2& resolution) {
 	DeviceImplOpenGL* impl = static_cast<DeviceImplOpenGL*>(device);
+	assert(resolution.x() != 0 && resolution.y() != 0);
 	impl->resolution = resolution;
 }
 
 Int2 ZRenderOpenGL::GetDeviceResolution(IRender::Device* device) {
 	DeviceImplOpenGL* impl = static_cast<DeviceImplOpenGL*>(device);
+	assert(impl->resolution.x() != 0 && impl->resolution.y() != 0);
 	return impl->resolution;
 }
 

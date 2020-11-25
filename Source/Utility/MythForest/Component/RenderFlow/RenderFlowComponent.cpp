@@ -7,7 +7,7 @@
 
 using namespace PaintsNow;
 
-RenderFlowComponent::RenderFlowComponent() {
+RenderFlowComponent::RenderFlowComponent() : mainResolution(640, 480), resourceQueue(nullptr) {
 	Flag().fetch_or(RENDERFLOWCOMPONENT_SYNC_DEVICE_RESOLUTION, std::memory_order_relaxed);
 }
 
