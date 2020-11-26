@@ -374,8 +374,6 @@ namespace PaintsNow {
 			TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		public:
-			void DoLock() override;
-			void UnLock() override;
 			RemoteProxy& host;
 			IThread& threadApi;
 
@@ -402,7 +400,6 @@ namespace PaintsNow {
 			MemoryStream stream;
 
 			bool manually;
-			int lockCount;
 		};
 
 		friend class Request;
