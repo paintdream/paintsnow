@@ -361,7 +361,7 @@ void CustomMaterialDescription::SetComplete(InstanceData& instanceData) {
 		} else if (var.var == VAR_OPTION) {
 			if (var.value.GetSize() == sizeof(bool)) {
 				optionBufferData.Append(var.value.GetData(), sizeof(bool));
-				var.offset = optionOffset++;
+				var.offset = safe_cast<uint32_t>(optionOffset++);
 			} else {
 				assert(var.value.GetSize() == sizeof(uint32_t));
 				// padding

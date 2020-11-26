@@ -554,7 +554,7 @@ void PhaseComponent::CoTaskAssembleTaskSetup(Engine& engine, TaskData& task, con
 void PhaseComponent::DispatchTasks(Engine& engine) {
 	size_t n = 0;
 	Kernel& kernel = engine.GetKernel();
-	ThreadPool& threadPool = kernel.threadPool;
+	ThreadPool& threadPool = kernel.GetThreadPool();
 
 	for (size_t i = 0; i < tasks.size(); i++) {
 		TaskData& task = tasks[n];

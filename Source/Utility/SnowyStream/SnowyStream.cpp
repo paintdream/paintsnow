@@ -403,7 +403,7 @@ public:
 	}
 	
 	void Start(IScript::Request& request) {
-		ThreadPool& threadPool = bridgeSunset.GetKernel().threadPool;
+		ThreadPool& threadPool = bridgeSunset.GetKernel().GetThreadPool();
 		ReferenceObject();
 		for (uint32_t i = 0; i < safe_cast<uint32_t>(pathList.size()); i++) {
 			// Create async task and use low-level thread pool dispatching it
@@ -622,7 +622,7 @@ void SnowyStream::RequestCompressResourceAsync(IScript::Request& request, IScrip
 	task->compressType = std::move(compressType);
 	task->callback = callback;
 
-	bridgeSunset.GetKernel().threadPool.Push(task);
+	bridgeSunset.GetKernel().GetThreadPool().Push(task);
 }
 
 void SnowyStream::Uninitialize() {

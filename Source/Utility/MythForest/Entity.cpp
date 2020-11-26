@@ -27,7 +27,7 @@ static void InvokeClearComponentsAndRelease(void* request, bool run, Engine& eng
 
 	if (!run) {
 		if (orgIndex != warpIndex) {
-			bool result = engine.GetKernel().taskQueueGrid[warpIndex].PreemptExecution();
+			bool result = engine.GetKernel().WaitWarp(warpIndex);
 			assert(result);
 		}
 	} else {
@@ -39,7 +39,7 @@ static void InvokeClearComponentsAndRelease(void* request, bool run, Engine& eng
 
 	if (!run) {
 		if (orgIndex != ~(uint32_t)0 && orgIndex != warpIndex) {
-			engine.GetKernel().taskQueueGrid[orgIndex].PreemptExecution();
+			engine.GetKernel().WaitWarp(orgIndex);
 		}
 	}
 }

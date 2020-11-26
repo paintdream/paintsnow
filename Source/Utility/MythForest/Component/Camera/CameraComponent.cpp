@@ -109,9 +109,9 @@ void CameraComponent::Uninitialize(Engine& engine, Entity* entity) {
 	} else {
 		if (Flag().load(std::memory_order_acquire) & CAMERACOMPONENT_UPDATE_COLLECTING) {
 			Kernel& kernel = engine.GetKernel();
-			ThreadPool& threadPool = kernel.threadPool;
+			ThreadPool& threadPool = kernel.GetThreadPool();
 			if (threadPool.GetThreadCount() != 0) {
-				Wait(kernel, CAMERACOMPONENT_UPDATE_COLLECTING, 0);
+				Wait(threadPool, CAMERACOMPONENT_UPDATE_COLLECTING, 0);
 			}
 		}
 

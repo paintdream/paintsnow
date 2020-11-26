@@ -481,7 +481,7 @@ void LeavesFlute::Execute(const String& path, const std::vector<String>& params)
 	Kernel& kernel = bridgeSunset.GetKernel();
 	ExpandParamsScriptTask* task = new ExpandParamsScriptTask(kernel, path, params, interfaces);
 	uint32_t warpIndex = task->GetWarpIndex();
-	ThreadPool& threadPool = kernel.threadPool;
+	ThreadPool& threadPool = kernel.GetThreadPool();
 	kernel.QueueRoutine(task, task);
 }
 

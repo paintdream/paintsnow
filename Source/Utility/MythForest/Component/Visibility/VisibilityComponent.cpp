@@ -609,7 +609,7 @@ void VisibilityComponent::CoTaskAssembleTask(Engine& engine, TaskData& task, uin
 
 void VisibilityComponent::DispatchTasks(Engine& engine) {
 	Kernel& kernel = engine.GetKernel();
-	ThreadPool& threadPool = kernel.threadPool;
+	ThreadPool& threadPool = kernel.GetThreadPool();
 
 	for (size_t i = 0, n = 0; i < bakePoints.size(); i++) {
 		const TShared<Cell>& cell = bakePoints[i];

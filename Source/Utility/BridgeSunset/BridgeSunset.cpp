@@ -61,63 +61,26 @@ void BridgeSunset::Dispatch(ITask* task) {
 	threadPool.Push(task);
 }
 
-class ScriptContinuer : public TaskOnce {
-public:
-	ScriptContinuer(const TWrapper<void, IScript::Request&>& c, IScript::Request& r) : continuer(c), request(r) {
-		token.store(1, std::memory_order_relaxed);
-	}
-
-	inline void Complete() {
-		token.store(0, std::memory_order_release);
-	}
-
-	void Execute(void* context) override {
-		BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
-		request.DoLock();
-		bridgeSunset.ContinueScriptDispatcher(request, nullptr, 0, continuer);
-		request.UnLock();
-		Complete();
-	}
-
-	void Abort(void* context) override {
-		// do not block script processing
-		Execute(context);
-		// Complete();
-	}
-
-	TWrapper<void, IScript::Request&> continuer;
-	std::atomic<int32_t> token;
-	IScript::Request& request;
-};
-
 void BridgeSunset::ContinueScriptDispatcher(IScript::Request& request, IHost* host, size_t paramCount, const TWrapper<void, IScript::Request&>& continuer) {
 	// check if current warp is yielded
-	static thread_local uint32_t stackWarpIndex = 0;
+	static thread_local uint32_t stackWarpIndex = ~(uint32_t)0;
 	uint32_t warpIndex = kernel.GetCurrentWarpIndex();
-	if (warpIndex == ~(uint32_t)0) warpIndex = stackWarpIndex;
-	else stackWarpIndex = warpIndex;
-	Kernel::SubTaskQueue& queue = kernel.taskQueueGrid[warpIndex];
-
-	if (queue.PreemptExecution()) {
+	if (warpIndex != ~(uint32_t)0) {
+		stackWarpIndex = warpIndex;
 		continuer(request);
-		queue.YieldExecution();
+		stackWarpIndex = warpIndex;
 	} else {
-		request.UnLock();
-		size_t threadIndex = threadPool.GetCurrentThreadIndex();
-		// Only fails on destructing
-		ScriptContinuer scriptContinuer(continuer, request);
-		queue.Push(safe_cast<uint32_t>(threadIndex), &scriptContinuer, nullptr);
-		queue.Flush(threadPool);
-
-		// wait for it finishes
-		while (scriptContinuer.token.load(std::memory_order_acquire) != 0 && threadPool.IsRunning()) {
-			threadPool.PollRoutine(safe_cast<uint32_t>(threadIndex));
+		uint32_t saveStackWarpIndex = stackWarpIndex;
+		if (saveStackWarpIndex != ~(uint32_t)0) {
+			request.UnLock();
+			kernel.WaitWarp(stackWarpIndex);
+			request.DoLock();
 		}
 
-		request.DoLock();
+		continuer(request);
+		stackWarpIndex = saveStackWarpIndex;
+		kernel.YieldCurrentWarp();
 	}
-
-	stackWarpIndex = warpIndex;
 }
 
 void BridgeSunset::RequestQueueRoutine(IScript::Request& request, IScript::Delegate<WarpTiny> unit, IScript::Request::Ref callback) {

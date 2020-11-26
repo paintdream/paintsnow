@@ -18,58 +18,65 @@ static inline bool SortActiveWarpTinies(const std::pair<WarpTiny*, System::WarpS
 	return rhs.second.count < lhs.second.count;
 }
 
-void System::WarpStat::Execute(void* context) {
-	uint32_t warpIndex = kernel.GetCurrentWarpIndex();
+class KernelSpy : public Kernel {
+public:
+	void Execute(System::WarpStat* stat) {
+		uint32_t warpIndex = GetCurrentWarpIndex();
 
-	Kernel::SubTaskQueue& taskQueue = kernel.taskQueueGrid[warpIndex];
-	const std::vector<TaskQueue::RingBuffer>& ringBuffers = taskQueue.GetRingBuffers();
+		Kernel::SubTaskQueue& taskQueue = taskQueueGrid[warpIndex];
+		const std::vector<TaskQueue::RingBuffer>& ringBuffers = taskQueue.GetRingBuffers();
 
-	for (size_t k = 0; k < ringBuffers.size(); k++) {
-		const TaskQueue::RingBuffer& ringBuffer = ringBuffers[k];
-		for (TaskQueue::RingBuffer::Iterator p = ringBuffer.Begin(); p != ringBuffer.End(); ++p) {
-			const std::pair<ITask*, void*>& task = (*p.p)[p.it];
-			WarpTiny* warpTiny = reinterpret_cast<WarpTiny*>(task.second);
-			if (warpTiny != nullptr && warpTiny != this) {
-				Record& record = activeWarpTinies[warpTiny];
-				if (record.count++ == 0) {
-					record.unique = warpTiny->GetUnique();
+		for (size_t k = 0; k < ringBuffers.size(); k++) {
+			const TaskQueue::RingBuffer& ringBuffer = ringBuffers[k];
+			for (TaskQueue::RingBuffer::Iterator p = ringBuffer.Begin(); p != ringBuffer.End(); ++p) {
+				const std::pair<ITask*, void*>& task = (*p.p)[p.it];
+				WarpTiny* warpTiny = reinterpret_cast<WarpTiny*>(task.second);
+				if (warpTiny != nullptr && warpTiny != stat) {
+					System::WarpStat::Record& record = stat->activeWarpTinies[warpTiny];
+					if (record.count++ == 0) {
+						record.unique = warpTiny->GetUnique();
+					}
 				}
 			}
 		}
-	}
 
-	// Update last result
-	int64_t timeStamp = ITimer::GetSystemClock();
-	if (timeStamp - lastClockStamp > statWindowDuration) {
-		std::vector<std::pair<WarpTiny*, WarpStat::Record> > sortedResults;
-		std::copy(activeWarpTinies.begin(), activeWarpTinies.end(), std::back_inserter(sortedResults));
-		std::sort(sortedResults.begin(), sortedResults.end(), SortActiveWarpTinies);
+		// Update last result
+		int64_t timeStamp = ITimer::GetSystemClock();
+		if (timeStamp - stat->lastClockStamp > stat->statWindowDuration) {
+			std::vector<std::pair<WarpTiny*, System::WarpStat::Record> > sortedResults;
+			std::copy(stat->activeWarpTinies.begin(), stat->activeWarpTinies.end(), std::back_inserter(sortedResults));
+			std::sort(sortedResults.begin(), sortedResults.end(), SortActiveWarpTinies);
 
-		SpinLock(critical);
-		std::swap(sortedResults, lastActiveWarpTinies);
-		SpinUnLock(critical);
+			SpinLock(stat->critical);
+			std::swap(sortedResults, stat->lastActiveWarpTinies);
+			SpinUnLock(stat->critical);
 
-		activeWarpTinies.clear();
-		lastClockStamp = timeStamp;
+			stat->activeWarpTinies.clear();
+			stat->lastClockStamp = timeStamp;
 
-		uint32_t total = 0;
-		for (size_t k = 0; k < sortedResults.size(); k++) {
-			total += sortedResults[k].second.count;
-		}
-
-		historyOffset = (historyOffset + 1) % HISTORY_LENGTH;
-		float oldValue = history[historyOffset];
-		history[historyOffset] = (float)total;
-		maxHistory = Math::Max(maxHistory, (float)total);
-
-		if (oldValue >= maxHistory) {
-			float newMax = 0;
-			for (size_t n = 0; n < HISTORY_LENGTH; n++) {
-				newMax = Math::Max(history[n], newMax);
+			uint32_t total = 0;
+			for (size_t k = 0; k < sortedResults.size(); k++) {
+				total += sortedResults[k].second.count;
 			}
-			maxHistory = newMax;
+
+			stat->historyOffset = (stat->historyOffset + 1) % System::WarpStat::HISTORY_LENGTH;
+			float oldValue = stat->history[stat->historyOffset];
+			stat->history[stat->historyOffset] = (float)total;
+			stat->maxHistory = Math::Max(stat->maxHistory, (float)total);
+
+			if (oldValue >= stat->maxHistory) {
+				float newMax = 0;
+				for (size_t n = 0; n < System::WarpStat::HISTORY_LENGTH; n++) {
+					newMax = Math::Max(stat->history[n], newMax);
+				}
+				stat->maxHistory = newMax;
+			}
 		}
 	}
+};
+
+void System::WarpStat::Execute(void* context) {
+	static_cast<KernelSpy&>(kernel).Execute(this);
 }
 
 void System::WarpStat::Abort(void* context) {
