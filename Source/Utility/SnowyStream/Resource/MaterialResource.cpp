@@ -135,22 +135,32 @@ TShared<MaterialResource> MaterialResource::CloneWithOverrideShader(const TShare
 	if (overrideShaderResource == originalShaderResource) {
 		return this;
 	} else {
+		assert(overrideShaderResource);
 		// create overrider
-		String overrideLocation = uniqueLocation + "@(" + overrideShaderResource->GetLocation() + ")";
-		resourceManager.DoLock();
-		TShared<MaterialResource> clone = static_cast<MaterialResource*>(resourceManager.LoadExist(overrideLocation)());
+		TShared<MaterialResource> clone;
+		if (uniqueLocation.size() != 0) {
+			String overrideLocation = uniqueLocation + "@(" + overrideShaderResource->GetLocation() + ")";
+			resourceManager.DoLock();
+			clone = static_cast<MaterialResource*>(resourceManager.LoadExist(overrideLocation)());
 
-		if (!clone) {
-			clone = TShared<MaterialResource>::From(new MaterialResource(resourceManager, overrideLocation));
+			if (!clone) {
+				clone = TShared<MaterialResource>::From(new MaterialResource(resourceManager, overrideLocation));
+				clone->materialParams = materialParams;
+				clone->textureResources = textureResources;
+				clone->originalShaderResource = overrideShaderResource;
+				clone->SetLocation(overrideLocation);
+
+				resourceManager.Insert(clone());
+			}
+
+			resourceManager.UnLock();
+		} else {
+			// Orphan
+			clone = TShared<MaterialResource>::From(new MaterialResource(resourceManager, ""));
 			clone->materialParams = materialParams;
 			clone->textureResources = textureResources;
 			clone->originalShaderResource = overrideShaderResource;
-			clone->SetLocation(overrideLocation);
-
-			resourceManager.Insert(clone());
 		}
-
-		resourceManager.UnLock();
 
 		return clone;
 	}

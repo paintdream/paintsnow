@@ -118,6 +118,7 @@ void ModelComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTe
 
 uint32_t ModelComponent::CollectDrawCalls(std::vector<OutputRenderData>& drawCalls, const InputRenderData& inputRenderData) {
 	if (drawCallTemplates.empty()) return 0;
+	assert(!(Flag().fetch_or(Tiny::TINY_PINNED) & Tiny::TINY_PINNED));
 
 	drawCalls.reserve(drawCalls.size() + materialResources.size());
 	ShaderResource* overrideShaderTemplate = inputRenderData.overrideShaderTemplate;
@@ -144,6 +145,7 @@ uint32_t ModelComponent::CollectDrawCalls(std::vector<OutputRenderData>& drawCal
 		drawCalls.emplace_back(drawCallTemplates[i + baseIndex]);
 	}
 
+	assert(Flag().fetch_and(~Tiny::TINY_PINNED) & Tiny::TINY_PINNED);
 	return safe_cast<uint32_t>(materialResources.size());
 }
 

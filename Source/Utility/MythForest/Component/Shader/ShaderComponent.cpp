@@ -7,7 +7,7 @@ using namespace PaintsNow;
 ShaderComponent::ShaderComponent(const TShared<ShaderResource>& shader, const String& n) : name(n) {
 	customMaterialShader = shader->QueryInterface(UniqueType<ShaderResourceImpl<CustomMaterialPass> >());
 	assert(customMaterialShader); // by now we only support CustomMaterialPass.
-	customMaterialShader = static_cast<ShaderResourceImpl<CustomMaterialPass>*>(customMaterialShader->Clone());
+	customMaterialShader.Reset(static_cast<ShaderResourceImpl<CustomMaterialPass>*>(customMaterialShader->Clone()));
 	CustomMaterialPass& pass = static_cast<CustomMaterialPass&>(customMaterialShader->GetPass());
 	pass.DetachDescription();
 	std::stringstream ss;

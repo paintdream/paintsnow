@@ -79,19 +79,23 @@ bool ResourceBase::IsPrepared() const {
 
 void ResourceBase::ReleaseObject() {
 	// last?
-	if (GetExtReferCount() == 0 && !(Flag().load(std::memory_order_acquire) & RESOURCE_ORPHAN)) {
-		// must not locked.
-		assert(critical.load(std::memory_order_acquire) == 0);
+	if (GetExtReferCount() == 0) {
+		if (!(Flag().load(std::memory_order_acquire) & RESOURCE_ORPHAN)) {
+			// must not locked.
+			assert(critical.load(std::memory_order_acquire) == 0);
 
-		// no references exist, remove this from resource manager
-		resourceManager.DoLock();
-		if (GetExtReferCount() == 0 && !(Flag().load(std::memory_order_acquire) & RESOURCE_ORPHAN)) {
-			resourceManager.Remove(this);
+			// no references exist, remove this from resource manager
+			resourceManager.DoLock();
+			if (GetExtReferCount() == 0 && !(Flag().load(std::memory_order_acquire) & RESOURCE_ORPHAN)) {
+				resourceManager.Remove(this);
+			}
+			resourceManager.UnLock();
 		}
-		resourceManager.UnLock();
+		
+		SharedTiny::ReleaseObject();
+	} else {
+		extReferCount.fetch_sub(1, std::memory_order_relaxed);
 	}
-
-	SharedTiny::ReleaseObject();
 }
 
 String ResourceBase::GenerateLocation(const String& prefix, const void* ptr) {
