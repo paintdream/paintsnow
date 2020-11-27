@@ -79,22 +79,19 @@ bool ResourceBase::IsPrepared() const {
 
 void ResourceBase::ReleaseObject() {
 	// last?
-	if (GetExtReferCount() == 0) {
-		if (!(Flag().load(std::memory_order_acquire) & RESOURCE_ORPHAN)) {
-			// must not locked.
-			assert(critical.load(std::memory_order_acquire) == 0);
-
-			// no references exist, remove this from resource manager
-			resourceManager.DoLock();
-			if (GetExtReferCount() == 0 && !(Flag().load(std::memory_order_acquire) & RESOURCE_ORPHAN)) {
-				resourceManager.Remove(this);
-			}
+	if (referCount.fetch_sub(1, std::memory_order_release) == 1) {
+		resourceManager.DoLock();
+		if (!(Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_ORPHAN)) {
+			resourceManager.Remove(this);
 			resourceManager.UnLock();
+			Tiny::ReleaseObject();
+			return;
+		} else {
+			resourceManager.UnLock();
+			if (referCount.load(std::memory_order_acquire) == 0) {
+				Tiny::ReleaseObject();
+			}
 		}
-		
-		SharedTiny::ReleaseObject();
-	} else {
-		extReferCount.fetch_sub(1, std::memory_order_relaxed);
 	}
 }
 

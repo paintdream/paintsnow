@@ -40,13 +40,15 @@ void ResourceManager::RemoveAll() {
 		resource->Flag().fetch_or(ResourceBase::RESOURCE_ORPHAN, std::memory_order_relaxed);
 	}
 
+	UnLock();
 	for (size_t i = 0; i < externals.size(); i++) {
 		externals[i]->ReleaseObject();
 	}
+	DoLock();
 }
 
-void ResourceManager::Insert(const TShared<ResourceBase>& resource) {
-	assert(resource);
+void ResourceManager::Insert(ResourceBase* resource) {
+	assert(resource != nullptr);
 	assert(resource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_ORPHAN);
 
 	// allowing anounymous resource
@@ -57,7 +59,7 @@ void ResourceManager::Insert(const TShared<ResourceBase>& resource) {
 		assert(&resource->GetResourceManager() == this);
 		assert(resourceMap.find(id) == resourceMap.end());
 
-		resourceMap[id] = resource();
+		resourceMap[id] = resource;
 
 		if (resource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_ETERNAL) {
 			resource->ReferenceObject();
@@ -66,7 +68,7 @@ void ResourceManager::Insert(const TShared<ResourceBase>& resource) {
 		resource->Flag().fetch_and(~ResourceBase::RESOURCE_ORPHAN, std::memory_order_release);
 	}
 
-	InvokeAttach(resource(), GetContext());
+	InvokeAttach(resource, GetContext());
 }
 
 IUniformResourceManager& ResourceManager::GetUniformResourceManager() {
@@ -97,9 +99,9 @@ void* ResourceManager::GetContext() const {
 	return context;
 }
 
-void ResourceManager::Remove(const TShared<ResourceBase>& resource) {
+void ResourceManager::Remove(ResourceBase* resource) {
 	assert(IsLocked());
-	assert(resource);
+	assert(resource != nullptr);
 	if (resource->Flag().load(std::memory_order_acquire) & (ResourceBase::RESOURCE_ORPHAN | ResourceBase::RESOURCE_ETERNAL))
 		return;
 
@@ -113,7 +115,7 @@ void ResourceManager::Remove(const TShared<ResourceBase>& resource) {
 
 	// Parallel bug here.
 	if (resource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_ATTACHED) {
-		InvokeDetach(resource(), GetContext());
+		InvokeDetach(resource, GetContext());
 	}
 
 	resource->Flag().fetch_or(ResourceBase::RESOURCE_ORPHAN, std::memory_order_release);

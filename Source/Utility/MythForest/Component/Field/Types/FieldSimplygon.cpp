@@ -24,7 +24,7 @@ Bytes FieldSimplygon::operator [] (const Float3& position) const {
 	case BOUNDING_SPHERE:
 		{
 			Float3 local = ToLocal(box, position);
-			result = local.SquareLength() <= 1.0f;
+			result = SquareLength(local) <= 1.0f;
 		}
 		break;
 	case BOUNDING_CYLINDER:
@@ -33,7 +33,7 @@ Bytes FieldSimplygon::operator [] (const Float3& position) const {
 			if (local.z() < -1.0f || local.z() > 1.0f) {
 				result = false;
 			} else {
-				result = Float2(local.x(), local.y()).SquareLength() <= 1.0f;
+				result = SquareLength(Float2(local.x(), local.y())) <= 1.0f;
 			}
 		}
 		break;

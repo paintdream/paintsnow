@@ -30,9 +30,9 @@ TShared<TransformComponent::TRS>& TransformComponent::Modify() {
 		trsData->rotation = Quaternion<float>(transform);
 		trsData->translation = Float3(transform(3, 0), transform(3, 1), transform(3, 2));
 		trsData->scale = Float3(
-			Float3(transform(0, 0), transform(0, 1), transform(0, 2)).Length(),
-			Float3(transform(1, 0), transform(1, 1), transform(1, 2)).Length(),
-			Float3(transform(2, 0), transform(2, 1), transform(2, 2)).Length()
+			Length(Float3(transform(0, 0), transform(0, 1), transform(0, 2))),
+			Length(Float3(transform(1, 0), transform(1, 1), transform(1, 2))),
+			Length(Float3(transform(2, 0), transform(2, 1), transform(2, 2)))
 		);
 	}
 
@@ -47,12 +47,12 @@ void TransformComponent::SetRotation(const Float3& r) {
 static inline Float3 GetArcballVector(const Float2& pt) {
 	Float3 ret(pt.x(), pt.y(), 0);
 
-	float sq = pt.SquareLength();
+	float sq = SquareLength(pt);
 	if (sq < 1) {
 		ret.z() = sqrt(1 - sq);
 		return ret;
 	} else {
-		return ret.Normalize();
+		return Normalize(ret);
 	}
 }
 
@@ -60,10 +60,8 @@ void TransformComponent::EditorRotate(const Float2& from, const Float2& to) {
 	Float3 x, y, z;
 	Float3 position = GetQuickTranslation();
 	GetAxises(x, y, z);
-	z = z + x * (from.x() - to.x()) + y * (from.y() - to.y());
-	z.Normalize();
-	x = CrossProduct(Float3(0, 0, 1), z);
-	x.Normalize();
+	z = Normalize(z + x * (from.x() - to.x()) + y * (from.y() - to.y()));
+	x = Normalize(CrossProduct(Float3(0, 0, 1), z));
 	y = CrossProduct(z, x);
 
 	transform(0, 0) = x.x();
@@ -190,7 +188,7 @@ float TransformComponent::Raycast(RaycastTask& task, Float3Pair& ray, Unit* pare
 	ray.first = Math::Transform3D(invTransform, ray.first);
 	ray.second = Math::Transform3D(invTransform, ray.second) - ray.first;
 
-	return ratio * oldRay.second.SquareLength() / ray.second.SquareLength();
+	return ratio * SquareLength(oldRay.second) / SquareLength(ray.second);
 }
 
 const Float3Pair& TransformComponent::GetLocalBoundingBox() const {

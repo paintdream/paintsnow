@@ -714,7 +714,7 @@ void PhaseComponent::CompleteUpdateLights(Engine& engine, std::vector<LightEleme
 		shadow.lightElement = lightElement;
 		Float3 view = (Float3)lightElement.position;
 		Float3 dir = -view;
-		if (dir.SquareLength() < 1e-6) {
+		if (SquareLength(dir) < 1e-6) {
 			dir = Float3(0, 0, -1);
 		}
 

@@ -81,7 +81,7 @@ inline uint32_t ToCacheIndex(uint32_t i, uint32_t j, uint32_t M, uint32_t N) {
 }
 
 inline bool InRange(const Float2& center, const Float2& sigma, uint32_t i, uint32_t j) {
-	return Float2((center.x() - i) / sigma.x(), (center.y() - j) / sigma.y()).Length() <= 1;
+	return SquareLength(Float2((center.x() - i) / sigma.x(), (center.y() - j) / sigma.y())) <= 1;
 }
 
 inline void FixRange(uint32_t& i, uint32_t& j, uint32_t totalWidth, uint32_t totalHeight) {
@@ -104,7 +104,7 @@ inline const Float3& Get(uint32_t i, uint32_t j, std::vector<Float3>& gradHeight
 
 inline uint32_t GenVertex(std::vector<GradVertex>& buffer, const GradVertex& desc, bool forceNew = false) {
 	const float EPSILON = 0.01f;
-	if (forceNew || buffer.size() == 0 || (buffer[buffer.size() - 1].vertex - desc.vertex).Length() > EPSILON) {
+	if (forceNew || buffer.size() == 0 || SquareLength(buffer[buffer.size() - 1].vertex - desc.vertex) > EPSILON) {
 		buffer.emplace_back(desc);
 	}
 

@@ -45,7 +45,7 @@ static void InvokeClearComponentsAndRelease(void* request, bool run, Engine& eng
 }
 
 void Entity::ReleaseObject() {
-	if (GetExtReferCount() == 0) {
+	if (referCount.fetch_sub(1, std::memory_order_relaxed) == 1) {
 		if (Flag().load(std::memory_order_acquire) & ENTITY_STORE_ENGINE) {
 			if (!components.empty()) {
 				Engine& engine = GetEngineInternal();
@@ -54,6 +54,7 @@ void Entity::ReleaseObject() {
 				if (kernel.GetCurrentWarpIndex() == GetWarpIndex()) {
 					ClearComponents(engine);
 				} else {
+					ReferenceObject();
 					kernel.QueueRoutine(this, CreateTask(Wrap(InvokeClearComponentsAndRelease), std::ref(engine), this));
 					return;
 				}
@@ -61,9 +62,9 @@ void Entity::ReleaseObject() {
 		} else {
 			assert(components.empty());
 		}
-	}
 
-	Unit::ReleaseObject();
+		Tiny::ReleaseObject();
+	}
 }
 
 void Entity::SetEngineInternal(Engine& engine) {

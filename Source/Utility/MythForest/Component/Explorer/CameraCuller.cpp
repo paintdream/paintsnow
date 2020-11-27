@@ -9,7 +9,7 @@ PerspectiveCamera::PerspectiveCamera() : fov((float)PI / 2.0f), aspect(1.0f), ne
 static inline Float4 BuildPlane(const Float3& a, const Float3& b, const Float3& c) {
 	Float3 u = a - b;
 	Float3 v = c - b;
-	Float3 n = CrossProduct(u, v).Normalize();
+	Float3 n = Normalize(CrossProduct(u, v));
 	return Float4(n.x(), n.y(), n.z(), -DotProduct(a, n));
 }
 
@@ -42,13 +42,13 @@ void PerspectiveCamera::UpdateCaptureData(FrustrumCuller& captureData, const Mat
 	Float3 position(cameraWorldMatrix(3, 0), cameraWorldMatrix(3, 1), cameraWorldMatrix(3, 2));
 	Float3 up(cameraWorldMatrix(1, 0), cameraWorldMatrix(1, 1), cameraWorldMatrix(1, 2));
 	Float3 direction(-cameraWorldMatrix(2, 0), -cameraWorldMatrix(2, 1), -cameraWorldMatrix(2, 2));
-	direction.Normalize();
+	direction = Normalize(direction);
 
 	captureData.viewTransform = cameraWorldMatrix;
 
 	// update planes ...
 	float tanHalfFov = (float)tan(fov / 2.0f);
-	Float3 basisX = CrossProduct(direction, up).Normalize();
+	Float3 basisX = Normalize(CrossProduct(direction, up));
 	Float3 basisY = CrossProduct(basisX, direction);
 	float nearStepY = nearPlane * tanHalfFov;
 	float nearStepX = nearStepY * aspect;

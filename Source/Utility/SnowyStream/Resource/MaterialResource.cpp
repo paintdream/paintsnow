@@ -99,13 +99,14 @@ TShared<ShaderResource> MaterialResource::Instantiate(const TShared<MeshResource
 
 			if (cached) {
 				// use cache
+				resourceManager.UnLock();
 				mutationShaderResource = cached;
 			} else {
 				mutationShaderResource->SetLocation(location);
 				resourceManager.Insert(mutationShaderResource());
+				resourceManager.UnLock();
 			}
 
-			resourceManager.UnLock();
 			shaderTemplateResource = mutationShaderResource;
 		}
 	}

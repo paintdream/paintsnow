@@ -528,7 +528,7 @@ TShared<ResourceBase> SnowyStream::RequestCloneResource(IScript::Request& reques
 		TShared<ResourceBase> p = TShared<ResourceBase>::From(static_cast<ResourceBase*>(resource->Clone()));
 		if (p) {
 			p->SetLocation(path);
-			resourceManager.Insert(p);
+			resourceManager.Insert(p());
 			return p;
 		}
 	} else {
@@ -786,7 +786,7 @@ TShared<ResourceBase> SnowyStream::CreateResource(const String& path, const Stri
 		assert((path[0] != '/') == !!(flag & ResourceBase::RESOURCE_VIRTUAL));
 		resource = (*p).second.second->Create(resourceManager, location);
 		resource->Flag().fetch_or(flag, std::memory_order_relaxed);
-		resourceManager.Insert(resource);
+		resourceManager.Insert(resource());
 
 		if (!location.empty()) {
 			resourceManager.UnLock();

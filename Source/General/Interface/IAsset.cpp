@@ -25,7 +25,7 @@ void MeshCollection::CalulateNormals(Float3* outputNormals, const Float3* vertic
 	for (size_t i = 0; i < faceCount; i++) {
 		const Int3& index = faces[i];
 		Float3 normal = CrossProduct(vertices[index.y()] - vertices[index.x()], vertices[index.z()] - vertices[index.x()]);
-		float length = normal.Length();
+		float length = Length(normal);
 		if (length > 1e-5) {
 			normal /= length;
 			for (size_t j = 0; j < 3; j++) {
@@ -36,7 +36,7 @@ void MeshCollection::CalulateNormals(Float3* outputNormals, const Float3* vertic
 
 	for (size_t k = 0; k < vertexCount; k++) {
 		Float3& normal = outputNormals[k];
-		float length = normal.Length();
+		float length = Length(normal);
 		if (length > 1e-5) {
 			normal /= length;
 		}

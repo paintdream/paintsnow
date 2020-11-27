@@ -195,7 +195,7 @@ struct ShapeComponent::PatchRaycaster {
 				Float3 res;
 				Float2 uv;
 				if (Math::Intersect3D(res, uv, points, ray)) {
-					float s = (res - ray.first).SquareLength();
+					float s = SquareLength(res - ray.first);
 					if (s < distance) {
 						distance = s;
 						hitPatch = &patch;
