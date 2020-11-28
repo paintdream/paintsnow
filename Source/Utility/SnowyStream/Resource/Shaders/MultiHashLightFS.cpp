@@ -33,7 +33,7 @@ String MultiHashLightFS::GetShaderText() {
 		float depth = texture(depthTexture, rasterCoord).x;
 		float4 position = float4(rasterCoord.x, rasterCoord.y, depth, 1);
 		position = mult_vec(invProjectionMatrix, position);
-		position.xyz /= position.w;
+		position.xyz = position.xyz / position.w;
 
 		float4 refPosition = mult_vec(lightProjectionMatrix, position);
 		refPosition.xyz = refPosition.xyz / refPosition.w * float3(0.5, 0.5, 0.5) + float3(0.5, 0.5, 0.5);

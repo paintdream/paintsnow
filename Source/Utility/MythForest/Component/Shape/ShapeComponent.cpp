@@ -93,7 +93,7 @@ void ShapeComponent::Cleanup() {
 	}
 }
 
-void ShapeComponent::Update(Engine& engine, const TShared<MeshResource>&resource) {
+void ShapeComponent::Update(Engine& engine, const TShared<MeshResource>& resource) {
 	static_assert(sizeof(Patch) == 64, "Patch size must be 64.");
 	if (resource == meshResource) return;
 
@@ -102,11 +102,14 @@ void ShapeComponent::Update(Engine& engine, const TShared<MeshResource>&resource
 
 	resource->Map();
 	meshResource = resource;
+	assert(meshResource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_UPLOADED);
 
 	IAsset::MeshCollection& meshCollection = meshResource->meshCollection;
 	Float3Pair bound = meshResource->boundingBox;
 
+
 	// Build Tree
+	// TODO: race condition on mesh.
 	const std::vector<Float3>& vertices = meshCollection.vertices;
 	const std::vector<UInt3>& indices = meshCollection.indices;
 

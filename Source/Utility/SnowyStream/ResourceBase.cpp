@@ -83,14 +83,10 @@ void ResourceBase::ReleaseObject() {
 		resourceManager.DoLock();
 		if (!(Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_ORPHAN)) {
 			resourceManager.Remove(this);
-			resourceManager.UnLock();
+		}
+		resourceManager.UnLock();
+		if (referCount.load(std::memory_order_acquire) == 0) {
 			Tiny::ReleaseObject();
-			return;
-		} else {
-			resourceManager.UnLock();
-			if (referCount.load(std::memory_order_acquire) == 0) {
-				Tiny::ReleaseObject();
-			}
 		}
 	}
 }

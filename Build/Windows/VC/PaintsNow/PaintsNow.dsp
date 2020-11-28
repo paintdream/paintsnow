@@ -556,10 +556,6 @@ SOURCE=..\..\..\..\Source\General\Platform\Windows\ComDispatch.h
 SOURCE=..\..\..\..\Source\Core\Backport\VC98STRING.h
 # End Source File
 # End Group
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\General\PaintsNow.h
-# End Source File
 # End Group
 # Begin Group "Driver"
 
@@ -1881,5 +1877,13 @@ SOURCE=..\..\..\..\Source\General\Driver\Debugger\RenderDoc\ZDebuggerRenderDoc.h
 # End Group
 # End Group
 # End Group
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Core\PaintsNow.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Core\PaintsNow.h
+# End Source File
 # End Target
 # End Project

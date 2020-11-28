@@ -29,7 +29,7 @@ String StandardLightingFS::GetShaderText() {
 	env = env * AB.x + AB.y;
 	mainColor = float4(0, 0, 0, 1);
 	// mainColor.xyz += diff.xyz * float3(1.0, 1.0, 1.0); // ambient
-	mainColor.xyz += env * spec * cubeStrength;
+	mainColor.xyz = mainColor.xyz + env * spec * cubeStrength;
 
 	float4 idx = texture(lightTexture, rasterCoord.xy) * float(255.0);
 	float f = saturate(50.0 * spec.y);
@@ -67,13 +67,13 @@ String StandardLightingFS::GetShaderText() {
 	float4 vl = clamp(NoL, float4(0.1, 0.1, 0.1, 0.1), float4(1, 1, 1, 1));
 	float vlc = clamp(NoV, float(0.01), float(1.0));
 	float4 vls = vl * sqrt(saturate(-vlc * p + vlc) * vlc + p);
-	vls += sqrt(saturate(-vl * p + vl) * vl + p) * vlc;
+	vls = vls + sqrt(saturate(-vl * p + vl) * vl + p) * vlc;
 	float4 DG = (float4(0.5, 0.5, 0.5, 0.5) / PI * p) / max(vls * q * q, float4(0.0001, 0.0001, 0.0001, 0.0001));
 	float4 e = exp2(VoH * (VoH * float(-5.55473) - float4(6.98316, 6.98316, 6.98316, 6.98316)));
 
 	for (int i = 0; i < k; i++) {
 		float3 F = spec + (float3(f, f, f) - spec) * e[i];
-		mainColor.xyz += (diff + F * DG[i]) * lightColor[i].xyz * NoL[i];
+		mainColor.xyz = mainColor.xyz + (diff + F * DG[i]) * lightColor[i].xyz * NoL[i];
 	}
 
 	mainColor.xyz = pow(max(mainColor.xyz, float3(0, 0, 0)), float3(1.0, 1.0, 1.0) / GAMMA);

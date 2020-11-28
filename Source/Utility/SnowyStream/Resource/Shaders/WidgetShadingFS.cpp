@@ -13,8 +13,8 @@ String WidgetShadingFS::GetShaderText() {
 		float4 offset = max(texCoord.xyxy - texCoordMark.xyzw, float4(0.0, 0.0, 0.0, 0.0));
 		float2 minCoord = min(texCoord.xy, texCoordMark.xy);
 		float2 newCoord = minCoord * texCoordScale.xy;
-		newCoord.xy += texCoordScale.zw * (offset.xy - offset.zw);
-		newCoord.xy += texCoordScale.xy * offset.zw;
+		newCoord.xy = newCoord.xy + texCoordScale.zw * (offset.xy - offset.zw);
+		newCoord.xy = newCoord.xy + texCoordScale.xy * offset.zw;
 		float2 coord = lerp(texCoordRect.xy, texCoordRect.zw, newCoord.xy);
 		target = texture(mainTexture, coord.xy);
 	);

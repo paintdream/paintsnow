@@ -58,18 +58,16 @@ namespace PaintsNow {
 			if (id != ~(uint32_t)0) {
 				if (id < components.size()) {
 					Component* component = components[id];
-					if (component == nullptr) return nullptr;
+					if (component == nullptr || component->GetUnique() != type.Get()) return nullptr;
 
-					T* ret = component->QueryInterface(UniqueType<T>());
-					if (ret != nullptr) {
-						assert(ret->Flag().load(std::memory_order_acquire) & Tiny::TINY_UNIQUE);
-					}
-					return ret;
+					assert(component == component->QueryInterface(UniqueType<T>()));
+					assert(component->Flag().load(std::memory_order_acquire) & Tiny::TINY_UNIQUE);
+					return static_cast<T*>(component);
 				} else {
 					return nullptr;
 				}
 			} else {
-				return static_cast<T*>(GetUniqueComponent(UniqueType<T>::Get()));
+				return static_cast<T*>(GetUniqueComponent(type.Get()));
 			}
 		}
 

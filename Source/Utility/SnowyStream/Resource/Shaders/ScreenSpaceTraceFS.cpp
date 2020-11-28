@@ -12,7 +12,7 @@ String ScreenSpaceTraceFS::GetShaderText() {
 		float4 r = float4(0, 0, 0, 1);
 		r.xyz = worldPosition.xyz;
 		float4 startPosition = mult_vec(viewProjectionMatrix, r);
-		r.xyz += traceDirection.xyz;
+		r.xyz = r.xyz + traceDirection.xyz;
 		float4 endPosition = mult_vec(viewProjectionMatrix, r);
 
 		for (int i = 0; i < 12; i++) {

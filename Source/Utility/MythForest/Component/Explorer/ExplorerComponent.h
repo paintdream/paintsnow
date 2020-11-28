@@ -10,7 +10,7 @@
 
 namespace PaintsNow {
 	// Level of details controller
-	class ExplorerComponent : public TAllocatedTiny<ExplorerComponent, Component> {
+	class ExplorerComponent : public TAllocatedTiny<ExplorerComponent, UniqueComponent<Component, SLOT_EXPLORER_COMPONENT> > {
 	public:
 		ExplorerComponent(Unique componentType);
 		~ExplorerComponent() override;

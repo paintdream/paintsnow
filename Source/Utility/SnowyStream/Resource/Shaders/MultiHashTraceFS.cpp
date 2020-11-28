@@ -45,7 +45,7 @@ String MultiHashTraceFS::GetShaderText() {
 	dstPos.xyz = dstPos.xyz * float3(2, 2, 2) - float3(1, 1, 1);
 	dstPos = mult_vec(dstInverseProjection, dstPos);
 	float4 srcCoord = mult_vec(srcProjection, dstPos);
-	dstPos.xyz /= dstPos.w;
+	dstPos.xyz = dstPos.xyz / dstPos.w;
 	srcCoord.xy = srcCoord.xy / srcCoord.z * float2(0.5, 0.5) + float2(0.5, 0.5);
 	float4 dstColor = textureLod(dstBaseColorOcclusionTexture, rasterCoord.xy, float(0));
 	float4 dstInfo = textureLod(dstNormalRoughnessMetallicTexture, rasterCoord.xy, float(0));
@@ -69,7 +69,7 @@ String MultiHashTraceFS::GetShaderText() {
 		float4 srcPos = float4(srcCoord.x, srcCoord.y, srcDepth, 1);
 		srcPos.xyz = srcPos.xyz * float3(2, 2, 2) - float3(1, 1, 1);
 		srcPos = mult_vec(srcInverseProjection, srcPos);
-		srcPos.xyz /= srcPos.w;
+		srcPos.xyz = srcPos.xyz / srcPos.w;
 		float3 L = srcPos.xyz - dstPos.xyz;
 		float dist = length(L) + 0.0001; L /= dist;
 		float NoL = dot(L, N);
@@ -88,6 +88,6 @@ String MultiHashTraceFS::GetShaderText() {
 		float DG = p / max(q * q, 0.0001) * (0.5 / PI) / max(vl.x + vl.y, 0.0001);
 		float f = saturate(50.0 * spec.y);
 		float3 F = spec + (float3(f, f, f) - spec) * float(exp2(VoH * (-5.55473 * VoH - 6.98316)));
-		dstLit.xyz += (diff + F * DG) * srcLit.xyz / srcLit.w * NoL * s;
+		dstLit.xyz = dstLit.xyz + (diff + F * DG) * srcLit.xyz / srcLit.w * NoL * s;
 	});
 }
