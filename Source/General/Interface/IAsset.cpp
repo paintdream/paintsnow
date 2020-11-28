@@ -24,8 +24,8 @@ void MeshCollection::CalulateNormals(Float3* outputNormals, const Float3* vertic
 	memset(outputNormals, 0, sizeof(Float3) * vertexCount);
 	for (size_t i = 0; i < faceCount; i++) {
 		const Int3& index = faces[i];
-		Float3 normal = CrossProduct(vertices[index.y()] - vertices[index.x()], vertices[index.z()] - vertices[index.x()]);
-		float length = Length(normal);
+		Float3 normal = Math::CrossProduct(vertices[index.y()] - vertices[index.x()], vertices[index.z()] - vertices[index.x()]);
+		float length = Math::Length(normal);
 		if (length > 1e-5) {
 			normal /= length;
 			for (size_t j = 0; j < 3; j++) {
@@ -36,7 +36,7 @@ void MeshCollection::CalulateNormals(Float3* outputNormals, const Float3* vertic
 
 	for (size_t k = 0; k < vertexCount; k++) {
 		Float3& normal = outputNormals[k];
-		float length = Length(normal);
+		float length = Math::Length(normal);
 		if (length > 1e-5) {
 			normal /= length;
 		}

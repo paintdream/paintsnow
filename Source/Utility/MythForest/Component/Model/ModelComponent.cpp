@@ -193,8 +193,8 @@ void ModelComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box) {
 	assert(sub.first.z() > -FLT_MAX && sub.second.z() < FLT_MAX);
 
 	if (sub.first.x() <= sub.second.x()) {
-		Union(box, sub.first);
-		Union(box, sub.second);
+		Math::Union(box, sub.first);
+		Math::Union(box, sub.second);
 	}
 }
 

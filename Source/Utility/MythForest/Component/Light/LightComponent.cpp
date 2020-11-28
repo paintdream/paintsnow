@@ -46,8 +46,8 @@ void LightComponent::Uninitialize(Engine& engine, Entity* entity) {
 }
 
 void LightComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box) {
-	Union(box, Float3(-range));
-	Union(box, range);
+	Math::Union(box, Float3(-range));
+	Math::Union(box, range);
 }
 
 std::vector<TShared<LightComponent::ShadowGrid> > LightComponent::UpdateShadow(Engine& engine, const MatrixFloat4x4& cameraTransform, const MatrixFloat4x4& lightTransform, Entity* rootEntity) {

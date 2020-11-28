@@ -28,7 +28,7 @@ void MeshResource::Refresh(IRender& render, void* deviceContext) {
 	if (!positionBuffer.empty()) {
 		Float3Pair bound(Float3(FLT_MAX, FLT_MAX, FLT_MAX), Float3(-FLT_MAX, -FLT_MAX, -FLT_MAX));
 		for (size_t i = 0; i < positionBuffer.size(); i++) {
-			Union(bound, positionBuffer[i]);
+			Math::Union(bound, positionBuffer[i]);
 		}
 
 		boundingBox = std::move(bound);

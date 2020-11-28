@@ -8,7 +8,7 @@ using namespace PaintsNow;
 
 inline Float3Pair BuildBoundingFromVertex(const Float3& first, const Float3& second) {
 	Float3Pair box(first, first);
-	Union(box, second);
+	Math::Union(box, second);
 	return box;
 }
 
@@ -25,7 +25,7 @@ inline Float3Pair BuildBoundingFloat3PairRandomly() {
 struct Queryer {
 	size_t count;
 	bool operator () (const Float3Pair& b, const Tree::Base& tree) {
-		if (Overlap(b, tree.GetKey()))
+		if (Math::Overlap(b, tree.GetKey()))
 			count++;
 		return true;
 	}
@@ -50,7 +50,7 @@ inline size_t LinearSearch(Tree* root, std::vector<Tree>& nodes, const Float3Pai
 	size_t count = 0;
 	for (size_t i = 0; i < nodes.size(); i++) {
 		if (nodes[i].GetParent() != nullptr || &nodes[i] == root)
-			count += Overlap(nodes[i].GetKey(), box);
+			count += Math::Overlap(nodes[i].GetKey(), box);
 	}
 
 	return count;

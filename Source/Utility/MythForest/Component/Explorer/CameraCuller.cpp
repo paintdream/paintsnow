@@ -9,20 +9,24 @@ PerspectiveCamera::PerspectiveCamera() : fov((float)PI / 2.0f), aspect(1.0f), ne
 static inline Float4 BuildPlane(const Float3& a, const Float3& b, const Float3& c) {
 	Float3 u = a - b;
 	Float3 v = c - b;
-	Float3 n = Normalize(CrossProduct(u, v));
-	return Float4(n.x(), n.y(), n.z(), -DotProduct(a, n));
+	Float3 n = Math::Normalize(Math::CrossProduct(u, v));
+	return Float4(n.x(), n.y(), n.z(), -Math::DotProduct(a, n));
 }
 
 bool FrustrumCuller::operator () (const Float3Pair& box) const {
 	// check visibility
-	// Float3Pair box(Float3(0, -6, 0), Float3(0, -5, 0));
-	Float3 size = (box.second - box.first) * 0.5f;
-	Float3 center = box.first + size;
+	const Float4 one(1, 1, 1, 1);
+	const Float4 half(0.5f, 0.5f, 0.5f, 0.5f);
+	Float4 begin = Float4::Load(box.first);
+	Float4 end = Float4::Load(box.second);
+	Float4 size = (end - begin) * half;
+	Float4 center = begin + size;
+
 	for (size_t i = 0; i < sizeof(planes) / sizeof(planes[0]); i++) {
 		const Float4& plane = planes[i];
-		float r = fabs(size.x() * plane.x()) + fabs(size.y() * plane.y()) + fabs(size.z() * plane.z());
-		Float3 n(plane.x(), plane.y(), plane.z());
-		if (DotProduct(n, center) + r + plane.w() < -1e-4) {
+		float r = Math::DotProduct(Math::Abs(size * plane), one) + plane.w();
+
+		if (Math::DotProduct(plane, center) + r < -1e-4) {
 			return false;
 		}
 	}
@@ -42,14 +46,14 @@ void PerspectiveCamera::UpdateCaptureData(FrustrumCuller& captureData, const Mat
 	Float3 position(cameraWorldMatrix(3, 0), cameraWorldMatrix(3, 1), cameraWorldMatrix(3, 2));
 	Float3 up(cameraWorldMatrix(1, 0), cameraWorldMatrix(1, 1), cameraWorldMatrix(1, 2));
 	Float3 direction(-cameraWorldMatrix(2, 0), -cameraWorldMatrix(2, 1), -cameraWorldMatrix(2, 2));
-	direction = Normalize(direction);
+	direction = Math::Normalize(direction);
 
 	captureData.viewTransform = cameraWorldMatrix;
 
 	// update planes ...
 	float tanHalfFov = (float)tan(fov / 2.0f);
-	Float3 basisX = Normalize(CrossProduct(direction, up));
-	Float3 basisY = CrossProduct(basisX, direction);
+	Float3 basisX = Math::Normalize(Math::CrossProduct(direction, up));
+	Float3 basisY = Math::CrossProduct(basisX, direction);
 	float nearStepY = nearPlane * tanHalfFov;
 	float nearStepX = nearStepY * aspect;
 	float farStepY = farPlane * tanHalfFov;

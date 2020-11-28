@@ -87,8 +87,8 @@ bool SpaceComponent::Insert(Engine& engine, Entity* entity) {
 			rootEntity = entity;
 		}
 
-		Union(boundingBox, entity->GetKey().first);
-		Union(boundingBox, entity->GetKey().second);
+		Math::Union(boundingBox, entity->GetKey().first);
+		Math::Union(boundingBox, entity->GetKey().second);
 	} else {
 		rootEntity = entity;
 		boundingBox = entity->GetKey();
@@ -212,7 +212,7 @@ public:
 	CollectEntityHandler(std::vector<TShared<Entity> >& t) : entityList(t) {}
 
 	bool operator () (const Float3Pair& box, Entity::Type& tree) {
-		if (Overlap(box, tree.GetKey())) {
+		if (Math::Overlap(box, tree.GetKey())) {
 			entityList.emplace_back(static_cast<Entity*>(&tree));
 		}
 
@@ -239,8 +239,8 @@ void SpaceComponent::RoutineUpdateBoundingBoxRecursive(Float3Pair& box, Entity* 
 		assert(eb.first.x() > -FLT_MAX && eb.second.x() < FLT_MAX);
 		assert(eb.first.y() > -FLT_MAX && eb.second.y() < FLT_MAX);
 		assert(eb.first.z() > -FLT_MAX && eb.second.z() < FLT_MAX);
-		Union(box, eb.first);
-		Union(box, eb.second);
+		Math::Union(box, eb.first);
+		Math::Union(box, eb.second);
 		assert(box.first.x() > -FLT_MAX && box.second.x() < FLT_MAX);
 		assert(box.first.y() > -FLT_MAX && box.second.y() < FLT_MAX);
 		assert(box.first.z() > -FLT_MAX && box.second.z() < FLT_MAX);
@@ -345,8 +345,8 @@ void SpaceComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box) {
 	}
 
 	if (boundingBox.first.x() <= boundingBox.second.x()) {
-		Union(box, boundingBox.first);
-		Union(box, boundingBox.second);
+		Math::Union(box, boundingBox.first);
+		Math::Union(box, boundingBox.second);
 	}
 }
 

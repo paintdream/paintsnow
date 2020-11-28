@@ -15,7 +15,7 @@ Bytes FieldTexture::operator [] (const Float3& position) const {
 	assert(textureResource->description.state.type == IRender::Resource::TextureDescription::TEXTURE_2D || textureResource->description.state.type);
 	assert(textureResource->description.state.layout <= IRender::Resource::TextureDescription::DEPTH);
 
-	Float3 uv = ToLocal(range, position);
+	Float3 uv = Math::ToLocal(range, position);
 	Bytes& data = textureResource->description.data;
 	assert(!data.Empty());
 	const UShort3& dimension = textureResource->description.dimension;

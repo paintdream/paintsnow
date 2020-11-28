@@ -8,7 +8,7 @@ ShapeComponent::~ShapeComponent() {
 }
 
 static inline UShort3 ToLocalInt(const Float3Pair& bound, const Float3& pt, uint32_t divCount) {
-	Float3 local = ToLocal(bound, pt);
+	Float3 local = Math::ToLocal(bound, pt);
 	UShort3 ret;
 	for (uint32_t i = 0; i < 3; i++) {
 		ret[i] = safe_cast<uint16_t>(Math::Clamp((uint32_t)(local[i] * divCount), 0u, divCount - 1));
@@ -74,11 +74,11 @@ ShapeComponent::Patch* ShapeComponent::MakeBound(Patch& patch, const std::vector
 		if (i == 0) {
 			box = Float3Pair(first, first);
 		} else {
-			Union(box, first);
+			Math::Union(box, first);
 		}
 
-		Union(box, second);
-		Union(box, third);
+		Math::Union(box, second);
+		Math::Union(box, third);
 	}
 
 	patch.SetIndex(index);
@@ -129,8 +129,8 @@ void ShapeComponent::Update(Engine& engine, const TShared<MeshResource>&resource
 		const UInt3& index = indices[i];
 		UShort3 first = ToLocalInt(bound, vertices[index.x()], divCount);
 		UShort3Pair box(first, first);
-		Union(box, ToLocalInt(bound, vertices[index.y()], divCount));
-		Union(box, ToLocalInt(bound, vertices[index.z()], divCount));
+		Math::Union(box, ToLocalInt(bound, vertices[index.y()], divCount));
+		Math::Union(box, ToLocalInt(bound, vertices[index.z()], divCount));
 		codeIndices.emplace_back(Encode(box, level, i));
 	}
 
@@ -195,7 +195,7 @@ struct ShapeComponent::PatchRaycaster {
 				Float3 res;
 				Float2 uv;
 				if (Math::Intersect3D(res, uv, points, ray)) {
-					float s = SquareLength(res - ray.first);
+					float s = Math::SquareLength(res - ray.first);
 					if (s < distance) {
 						distance = s;
 						hitPatch = &patch;
@@ -223,7 +223,7 @@ struct ShapeComponent::PatchRaycaster {
 float ShapeComponent::Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const {
 	if (!patches.empty()) {
 		Float3Pair box(ray.first, ray.first);
-		Union(box, ray.second);
+		Math::Union(box, ray.second);
 		IAsset::MeshCollection& meshCollection = meshResource->meshCollection;
 		PatchRaycaster q(meshCollection.vertices, meshCollection.indices, ray);
 		(const_cast<Patch&>(patches[0])).Query(box, q);

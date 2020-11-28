@@ -19,21 +19,21 @@ Bytes FieldSimplygon::operator [] (const Float3& position) const {
 	bool result = false;
 	switch (type) {
 	case BOUNDING_BOX:
-		result = Contain(box, position);
+		result = Math::Contain(box, position);
 		break;
 	case BOUNDING_SPHERE:
 		{
-			Float3 local = ToLocal(box, position);
-			result = SquareLength(local) <= 1.0f;
+			Float3 local = Math::ToLocal(box, position);
+			result = Math::SquareLength(local) <= 1.0f;
 		}
 		break;
 	case BOUNDING_CYLINDER:
 		{
-			Float3 local = ToLocal(box, position);
+			Float3 local = Math::ToLocal(box, position);
 			if (local.z() < -1.0f || local.z() > 1.0f) {
 				result = false;
 			} else {
-				result = SquareLength(Float2(local.x(), local.y())) <= 1.0f;
+				result = Math::SquareLength(Float2(local.x(), local.y())) <= 1.0f;
 			}
 		}
 		break;
@@ -53,8 +53,8 @@ struct BoxQueryer {
 		if (type == FieldSimplygon::BOUNDING_BOX) {
 			queryer(static_cast<Entity&>(tree));
 		} else if (type == FieldSimplygon::BOUNDING_SPHERE) {
-			Float3 from = ToLocal(b, tree.GetKey().first);
-			Float3 to = ToLocal(b, tree.GetKey().second);
+			Float3 from = Math::ToLocal(b, tree.GetKey().first);
+			Float3 to = Math::ToLocal(b, tree.GetKey().second);
 			
 			float dx = Math::Max(0.0f, Math::Max(from.x(), -to.x()));
 			float dy = Math::Max(0.0f, Math::Max(from.y(), -to.y()));
@@ -64,8 +64,8 @@ struct BoxQueryer {
 				queryer(static_cast<Entity&>(tree));
 			}
 		} else if (type == FieldSimplygon::BOUNDING_CYLINDER) {
-			Float3 from = ToLocal(b, tree.GetKey().first);
-			Float3 to = ToLocal(b, tree.GetKey().second);
+			Float3 from = Math::ToLocal(b, tree.GetKey().first);
+			Float3 to = Math::ToLocal(b, tree.GetKey().second);
 			
 			float dx = Math::Max(0.0f, Math::Max(from.x(), -to.x()));
 			float dy = Math::Max(0.0f, Math::Max(from.y(), -to.y()));

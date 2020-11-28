@@ -26,6 +26,6 @@ TObject<IReflect>& EnvCubeComponent::operator () (IReflect& reflect) {
 }
 
 void EnvCubeComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box) {
-	Union(box, Float3(-range));
-	Union(box, range);
+	Math::Union(box, Float3(-range));
+	Math::Union(box, range);
 }

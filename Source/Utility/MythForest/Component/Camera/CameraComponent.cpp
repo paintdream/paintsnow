@@ -416,7 +416,7 @@ void CameraComponent::CommitRenderRequests(Engine& engine, TaskData& taskData, I
 				RenderPolicy* renderPolicy = e.first();
 				if (renderPolicy != nullptr) {
 					RenderPortLightSource* portLightSource = QueryPort(render, policyPortMap, renderFlowComponent(), renderPolicy, UniqueType<RenderPortLightSource>());
-					float dist = SquareLength(element.position - viewPosition);
+					float dist = Math::SquareLength(element.position - viewPosition);
 					if (dist < minDist) {
 						portLightSource->cubeMapTexture = element.cubeMapTexture ? element.cubeMapTexture : portLightSource->cubeMapTexture;
 						portLightSource->skyMapTexture = element.skyMapTexture ? element.skyMapTexture : portLightSource->skyMapTexture;
@@ -797,10 +797,10 @@ void CameraComponent::CollectComponents(Engine& engine, TaskData& taskData, cons
 		Float3 start = Math::Transform3D(instanceData.worldMatrix, localBoundingBox.first);
 		Float3 end = Math::Transform3D(instanceData.worldMatrix, localBoundingBox.second);
 		Float3 center = (start + end) * 0.5f;
-		float length = SquareLength(end - start);
+		float length = Math::SquareLength(end - start);
 
 		// Project
-		subWorldInstancedData.viewReference = Math::Max(0.0f, 1.0f - length / (0.001f + tanHalfFov * SquareLength(center - captureData.GetPosition())));
+		subWorldInstancedData.viewReference = Math::Max(0.0f, 1.0f - length / (0.001f + tanHalfFov * Math::SquareLength(center - captureData.GetPosition())));
 	}
 
 	if (rootFlag & (Entity::ENTITY_HAS_RENDERABLE | Entity::ENTITY_HAS_RENDERCONTROL | Entity::ENTITY_HAS_SPACE)) {

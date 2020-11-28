@@ -104,7 +104,7 @@ void DeferredLightingRenderStage::UpdatePass(Engine& engine, IRender::Queue* que
 		if (light.position.w() != 0) {
 			p = Math::Transform3D(CameraView->viewMatrix, p);
 		} else {
-			p = Normalize(p * normalMatrix);
+			p = Math::Normalize(p * normalMatrix);
 		}
 
 		standardLighting.lightInfos[i * 2] = Float4(p.x(), p.y(), p.z(), light.position.w());

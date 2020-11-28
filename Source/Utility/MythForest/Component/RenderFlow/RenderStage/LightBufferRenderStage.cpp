@@ -77,7 +77,7 @@ void LightBufferRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 		if (light.position.w() != 0) {
 			p = Math::Transform3D(CameraView->viewMatrix, p);
 		} else {
-			p = Normalize(p * normalMatrix);
+			p = Math::Normalize(p * normalMatrix);
 		}
 
 		lightInfos[i] = Float4(p.x(), p.y(), p.z(), light.position.w());

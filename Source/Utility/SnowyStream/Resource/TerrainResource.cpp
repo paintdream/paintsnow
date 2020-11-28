@@ -81,7 +81,7 @@ inline uint32_t ToCacheIndex(uint32_t i, uint32_t j, uint32_t M, uint32_t N) {
 }
 
 inline bool InRange(const Float2& center, const Float2& sigma, uint32_t i, uint32_t j) {
-	return SquareLength(Float2((center.x() - i) / sigma.x(), (center.y() - j) / sigma.y())) <= 1;
+	return Math::SquareLength(Float2((center.x() - i) / sigma.x(), (center.y() - j) / sigma.y())) <= 1;
 }
 
 inline void FixRange(uint32_t& i, uint32_t& j, uint32_t totalWidth, uint32_t totalHeight) {
@@ -104,7 +104,7 @@ inline const Float3& Get(uint32_t i, uint32_t j, std::vector<Float3>& gradHeight
 
 inline uint32_t GenVertex(std::vector<GradVertex>& buffer, const GradVertex& desc, bool forceNew = false) {
 	const float EPSILON = 0.01f;
-	if (forceNew || buffer.size() == 0 || SquareLength(buffer[buffer.size() - 1].vertex - desc.vertex) > EPSILON) {
+	if (forceNew || buffer.size() == 0 || Math::SquareLength(buffer[buffer.size() - 1].vertex - desc.vertex) > EPSILON) {
 		buffer.emplace_back(desc);
 	}
 
@@ -288,14 +288,14 @@ void GenerateDetails(Region& root, std::vector<Region>& regions, std::vector<Gra
 
 	root.faceRange = std::make_pair(faceStart, (uint32_t)faces.size());
 	root.box = Float3Pair(buffer[leftTop].vertex, buffer[rightBottom].vertex);
-	Union(root.box, buffer[rightTop].vertex);
-	Union(root.box, buffer[leftBottom].vertex);
+	Math::Union(root.box, buffer[rightTop].vertex);
+	Math::Union(root.box, buffer[leftBottom].vertex);
 
 	if (root.regionRange.first != 0) {
 		for (uint32_t k = 0; k < 4; k++) {
 			const Float3Pair& s = regions[root.regionRange.first + k].box;
-			Union(root.box, s.first);
-			Union(root.box, s.second);
+			Math::Union(root.box, s.first);
+			Math::Union(root.box, s.second);
 		}
 	}
 }
