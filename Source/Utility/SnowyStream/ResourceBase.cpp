@@ -70,7 +70,7 @@ ResourceManager& ResourceBase::GetResourceManager() const {
 }
 
 bool ResourceBase::IsMapped() const {
-	return mapCount.load(std::memory_order_acquire) != 0;
+	return !!(Flag().load(std::memory_order_acquire) & RESOURCE_MAPPED);
 }
 
 bool ResourceBase::IsPrepared() const {
@@ -120,9 +120,22 @@ bool ResourceBase::Persist() {
 
 bool ResourceBase::Map() {
 	if (mapCount.fetch_add(1, std::memory_order_relaxed) == 0) {
-		return resourceManager.GetUniformResourceManager().LoadResource(this);
+		bool ret = resourceManager.GetUniformResourceManager().LoadResource(this);
+			Flag().fetch_or(RESOURCE_MAPPED | (ret ? 0 : RESOURCE_INVALID), std::memory_order_release);
+		if (!ret) {
+			mapCount.fetch_sub(1, std::memory_order_release);
+		}
+		return ret;
 	} else {
-		return false;
+		ThreadPool& threadPool = resourceManager.GetThreadPool();
+		bool ret = threadPool.PollWait(Flag(), RESOURCE_MAPPED, RESOURCE_MAPPED);
+		if (ret) {
+			assert(Flag().load(std::memory_order_acquire) & RESOURCE_MAPPED);
+		} else {
+			assert(false);
+		}
+
+		return ret && !(Flag().load(std::memory_order_acquire) & RESOURCE_INVALID);
 	}
 }
 

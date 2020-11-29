@@ -8,6 +8,7 @@
 #include "../../Core/Interface/IFilterBase.h"
 #include "../../Core/Template/TMap.h"
 #include "../../Core/System/Tiny.h"
+#include "../../Core/System/ThreadPool.h"
 #include "ResourceBase.h"
 
 namespace PaintsNow {
@@ -16,7 +17,7 @@ namespace PaintsNow {
 	class DeviceResourceBase;
 	class ResourceManager : public TReflected<ResourceManager, SharedTiny>, public ISyncObject {
 	public:
-		ResourceManager(IThread& threadApi, IUniformResourceManager& hostManager, const TWrapper<void, const String&>& errorHandler, void* context);
+		ResourceManager(ThreadPool& threadPool, IUniformResourceManager& hostManager, const TWrapper<void, const String&>& errorHandler, void* context);
 		~ResourceManager() override;
 		void Insert(ResourceBase* resource);
 		void Remove(ResourceBase* resource);
@@ -29,6 +30,7 @@ namespace PaintsNow {
 		TShared<ResourceBase> LoadExistSafe(const String& uniqueLocation);
 		TShared<ResourceBase> LoadExist(const String& uniqueLocation);
 		IUniformResourceManager& GetUniformResourceManager();
+		ThreadPool& GetThreadPool();
 
 	public:
 		virtual void InvokeRefresh(ResourceBase* resource, void* deviceContext = nullptr) = 0;
@@ -38,6 +40,7 @@ namespace PaintsNow {
 		virtual void InvokeDownload(ResourceBase* resource, void* deviceContext = nullptr) = 0;
 
 	private:
+		ThreadPool& threadPool;
 		std::unordered_map<String, ResourceBase*> resourceMap;
 		IUniformResourceManager& uniformResourceManager;
 		TWrapper<void, const String&> errorHandler;
@@ -47,7 +50,7 @@ namespace PaintsNow {
 	template <class T>
 	class DeviceResourceManager : public ResourceManager {
 	public:
-		DeviceResourceManager(IThread& threadApi, IUniformResourceManager& hostManager, T& dev, const TWrapper<void, const String&>& errorHandler, void* context) : ResourceManager(threadApi, hostManager, errorHandler, context), device(dev) {}
+		DeviceResourceManager(ThreadPool& tp, IUniformResourceManager& hostManager, T& dev, const TWrapper<void, const String&>& errorHandler, void* context) : ResourceManager(tp, hostManager, errorHandler, context), device(dev) {}
 		Unique GetDeviceUnique() const override {
 			return UniqueType<T>::Get();
 		}

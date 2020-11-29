@@ -98,86 +98,87 @@ void ShapeComponent::Update(Engine& engine, const TShared<MeshResource>& resourc
 	if (resource == meshResource) return;
 
 	SnowyStream& snowyStream = engine.snowyStream;
-	Cleanup();
+	if (resource->Map()) {
+		Cleanup();
+		meshResource = resource;
+		assert(meshResource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_UPLOADED);
 
-	resource->Map();
-	meshResource = resource;
-	assert(meshResource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_UPLOADED);
+		IAsset::MeshCollection& meshCollection = meshResource->meshCollection;
+		Float3Pair bound = meshResource->boundingBox;
 
-	IAsset::MeshCollection& meshCollection = meshResource->meshCollection;
-	Float3Pair bound = meshResource->boundingBox;
+		// Build Tree
+		// TODO: race condition on mesh.
+		const std::vector<Float3>& vertices = meshCollection.vertices;
+		const std::vector<UInt3>& indices = meshCollection.indices;
 
+		if (indices.empty()) return;
 
-	// Build Tree
-	// TODO: race condition on mesh.
-	const std::vector<Float3>& vertices = meshCollection.vertices;
-	const std::vector<UInt3>& indices = meshCollection.indices;
-
-	if (indices.empty()) return;
-
-	// safe
-	for (uint32_t n = 0; n < 3; n++) {
-		if (bound.second[n] - bound.first[n] < 1e-4f) {
-			bound.second[n] = bound.first[n] + 1e-4f;
+		// safe
+		for (uint32_t n = 0; n < 3; n++) {
+			if (bound.second[n] - bound.first[n] < 1e-4f) {
+				bound.second[n] = bound.first[n] + 1e-4f;
+			}
 		}
-	}
 
-	// convert to local position
-	uint32_t level = Math::Min(Math::Log2(indices.size() / 8), (uint32_t)(sizeof(uint32_t) * 8 / 3));
-	uint32_t divCount = 1 << level;
+		// convert to local position
+		uint32_t level = Math::Min(Math::Log2(indices.size() / 8), (uint32_t)(sizeof(uint32_t) * 8 / 3));
+		uint32_t divCount = 1 << level;
 
-	std::vector<CodeIndex> codeIndices;
-	codeIndices.reserve(indices.size());
-	for (uint32_t i = 0; i < indices.size(); i++) {
-		const UInt3& index = indices[i];
-		UShort3 first = ToLocalInt(bound, vertices[index.x()], divCount);
-		UShort3Pair box(first, first);
-		Math::Union(box, ToLocalInt(bound, vertices[index.y()], divCount));
-		Math::Union(box, ToLocalInt(bound, vertices[index.z()], divCount));
-		codeIndices.emplace_back(Encode(box, level, i));
-	}
+		std::vector<CodeIndex> codeIndices;
+		codeIndices.reserve(indices.size());
+		for (uint32_t i = 0; i < indices.size(); i++) {
+			const UInt3& index = indices[i];
+			UShort3 first = ToLocalInt(bound, vertices[index.x()], divCount);
+			UShort3Pair box(first, first);
+			Math::Union(box, ToLocalInt(bound, vertices[index.y()], divCount));
+			Math::Union(box, ToLocalInt(bound, vertices[index.z()], divCount));
+			codeIndices.emplace_back(Encode(box, level, i));
+		}
 
-	// sort by z-code
-	std::sort(codeIndices.begin(), codeIndices.end());
+		// sort by z-code
+		std::sort(codeIndices.begin(), codeIndices.end());
 
-	// make tree
-	std::vector<Patch> linearPatches;
-	linearPatches.reserve(indices.size());
+		// make tree
+		std::vector<Patch> linearPatches;
+		linearPatches.reserve(indices.size());
 
-	Patch patch;
-	uint32_t k = 0;
-	uint32_t lastLevel = ~(uint32_t)0;
-	for (uint32_t m = 0; m < codeIndices.size(); m++) {
-		const CodeIndex& codeIndex = codeIndices[m];
-		if (codeIndex.level != lastLevel || k == MAX_PATCH_COUNT) {
-			if (!linearPatches.empty() && k != MAX_PATCH_COUNT) {
-				linearPatches.back().indices[k] = ~(uint32_t)0;
+		Patch patch;
+		uint32_t k = 0;
+		uint32_t lastLevel = ~(uint32_t)0;
+		for (uint32_t m = 0; m < codeIndices.size(); m++) {
+			const CodeIndex& codeIndex = codeIndices[m];
+			if (codeIndex.level != lastLevel || k == MAX_PATCH_COUNT) {
+				if (!linearPatches.empty() && k != MAX_PATCH_COUNT) {
+					linearPatches.back().indices[k] = ~(uint32_t)0;
+				}
+
+				lastLevel = codeIndex.level;
+				k = 0;
+				linearPatches.emplace_back(Patch());
 			}
 
-			lastLevel = codeIndex.level;
-			k = 0;
-			linearPatches.emplace_back(Patch());
+			linearPatches.back().indices[k++] = codeIndex.index;
 		}
 
-		linearPatches.back().indices[k++] = codeIndex.index;
+		if (!linearPatches.empty() && k != MAX_PATCH_COUNT) {
+			linearPatches.back().indices[k++] = ~(uint32_t)0;
+		}
+
+		// heap order
+		std::vector<Patch> newPatches;
+		newPatches.reserve(linearPatches.size());
+		MakeHeapInternal(newPatches, &linearPatches[0], &linearPatches[0] + linearPatches.size());
+
+		// Connect
+		Patch* root = MakeBound(newPatches[0], vertices, indices, 0);
+		for (uint32_t s = 1; s < newPatches.size(); s++) {
+			root->Attach(MakeBound(newPatches[s], vertices, indices, s % 6));
+		}
+
+		std::swap(newPatches, patches);
+	} else {
+		assert(false);
 	}
-
-	if (!linearPatches.empty() && k != MAX_PATCH_COUNT) {
-		linearPatches.back().indices[k++] = ~(uint32_t)0;
-	}
-
-	// heap order
-	std::vector<Patch> newPatches;
-	newPatches.reserve(linearPatches.size());
-	MakeHeapInternal(newPatches, &linearPatches[0], &linearPatches[0] + linearPatches.size());
-
-	// Connect
-	Patch* root = MakeBound(newPatches[0], vertices, indices, 0);
-	for (uint32_t s = 1; s < newPatches.size(); s++) {
-		root->Attach(MakeBound(newPatches[s], vertices, indices, s % 6));
-	}
-
-	std::swap(newPatches, patches);
 }
 
 struct ShapeComponent::PatchRaycaster {

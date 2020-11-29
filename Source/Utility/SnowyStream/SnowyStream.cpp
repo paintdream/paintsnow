@@ -811,7 +811,6 @@ String SnowyStream::GetReflectedExtension(Unique unique) {
 bool SnowyStream::LoadResource(const TShared<ResourceBase>& resource, const String& extension) {
 	// Find resource serializer
 	assert(resource);
-	assert(resource->IsMapped());
 	String typeExtension = extension.empty() ? GetReflectedExtension(resource->GetUnique()) : extension;
 	IArchive& archive = interfaces.archive;
 	IFilterBase& protocol = interfaces.assetFilterBase;

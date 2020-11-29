@@ -1,4 +1,5 @@
 #include "MeshResource.h"
+#include "../ResourceManager.h"
 #include "../../../General/Interface/IShader.h"
 
 using namespace PaintsNow;
@@ -58,89 +59,90 @@ void MeshResource::Upload(IRender& render, void* deviceContext) {
 
 	// Update buffers ...
 	if (Flag().fetch_and(~TINY_MODIFIED) & TINY_MODIFIED) {
-		SpinLock(critical);
+		ThreadPool& threadPool = resourceManager.GetThreadPool();
+		if (threadPool.PollExchange(critical, 1u) == 0u) {
+			IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(deviceContext);
+			assert(queue != nullptr);
 
-		IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(deviceContext);
-		assert(queue != nullptr);
+			deviceMemoryUsage = 0;
 
-		deviceMemoryUsage = 0;
+			assert(!meshCollection.vertices.empty());
+			assert(meshCollection.boneIndices.size() == meshCollection.boneWeights.size());
 
-		assert(!meshCollection.vertices.empty());
-		assert(meshCollection.boneIndices.size() == meshCollection.boneWeights.size());
+			uint32_t cnt = 0;
+			cnt += bufferCollection.hasNormalBuffer = !meshCollection.normals.empty();
+			cnt += bufferCollection.hasTangentBuffer = !meshCollection.tangents.empty();
+			cnt += bufferCollection.hasColorBuffer = !meshCollection.colors.empty();
+			bufferCollection.hasIndexWeightBuffer = !meshCollection.indices.empty();
 
-		uint32_t cnt = 0;
-		cnt += bufferCollection.hasNormalBuffer = !meshCollection.normals.empty();
-		cnt += bufferCollection.hasTangentBuffer = !meshCollection.tangents.empty();
-		cnt += bufferCollection.hasColorBuffer = !meshCollection.colors.empty();
-		bufferCollection.hasIndexWeightBuffer = !meshCollection.indices.empty();
+			std::vector<UChar4> normalTangentColorData(meshCollection.normals.size() * cnt);
+			if (cnt != 0) {
+				for (size_t i = 0; i < meshCollection.vertices.size(); i++) {
+					uint32_t offset = 0;
+					if (bufferCollection.hasNormalBuffer) {
+						normalTangentColorData[i * cnt + offset++] = meshCollection.normals[i];
+					}
 
-		std::vector<UChar4> normalTangentColorData(meshCollection.normals.size() * cnt);
-		if (cnt != 0) {
-			for (size_t i = 0; i < meshCollection.vertices.size(); i++) {
-				uint32_t offset = 0;
-				if (bufferCollection.hasNormalBuffer) {
-					normalTangentColorData[i * cnt + offset++] = meshCollection.normals[i];
-				}
+					if (bufferCollection.hasTangentBuffer) {
+						normalTangentColorData[i * cnt + offset++] = meshCollection.tangents[i];
+					}
 
-				if (bufferCollection.hasTangentBuffer) {
-					normalTangentColorData[i * cnt + offset++] = meshCollection.tangents[i];
-				}
-
-				if (bufferCollection.hasColorBuffer) {
-					normalTangentColorData[i * cnt + offset++] = meshCollection.colors[i];
+					if (bufferCollection.hasColorBuffer) {
+						normalTangentColorData[i * cnt + offset++] = meshCollection.colors[i];
+					}
 				}
 			}
-		}
 
-		std::vector<UChar4> boneData(meshCollection.boneIndices.size() * 2);
-		for (size_t i = 0; i < meshCollection.boneIndices.size(); i++) {
-			boneData[i * 2] = meshCollection.boneIndices[i];
-			boneData[i * 2 + 1] = meshCollection.boneWeights[i];
-		}
-
-		if (meshCollection.vertices.size() <= 0xFF) {
-			std::vector<UChar3> indices;
-			indices.reserve(meshCollection.indices.size());
-			for (size_t i = 0; i < meshCollection.indices.size(); i++) {
-				const UInt3& v = meshCollection.indices[i];
-				indices.emplace_back(UChar3(safe_cast<uint8_t>(v.x()), safe_cast<uint8_t>(v.y()), safe_cast<uint8_t>(v.z())));
-			}
-			
-			deviceElementSize = sizeof(UChar3);
-			deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.indexBuffer, indices, Description::INDEX, "Index");
-		} else if (meshCollection.vertices.size() <= 0xFFFF) {
-			std::vector<UShort3> indices;
-			indices.reserve(meshCollection.indices.size());
-			for (size_t i = 0; i < meshCollection.indices.size(); i++) {
-				const UInt3& v = meshCollection.indices[i];
-				indices.emplace_back(UShort3(safe_cast<uint16_t>(v.x()), safe_cast<uint16_t>(v.y()), safe_cast<uint16_t>(v.z())));
+			std::vector<UChar4> boneData(meshCollection.boneIndices.size() * 2);
+			for (size_t i = 0; i < meshCollection.boneIndices.size(); i++) {
+				boneData[i * 2] = meshCollection.boneIndices[i];
+				boneData[i * 2 + 1] = meshCollection.boneWeights[i];
 			}
 
-			deviceElementSize = sizeof(UShort3);
-			deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.indexBuffer, indices, Description::INDEX, "Index");
-		} else {
-			deviceElementSize = sizeof(UInt3);
-			deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.indexBuffer, meshCollection.indices, Description::INDEX, "Index");
+			if (meshCollection.vertices.size() <= 0xFF) {
+				std::vector<UChar3> indices;
+				indices.reserve(meshCollection.indices.size());
+				for (size_t i = 0; i < meshCollection.indices.size(); i++) {
+					const UInt3& v = meshCollection.indices[i];
+					indices.emplace_back(UChar3(safe_cast<uint8_t>(v.x()), safe_cast<uint8_t>(v.y()), safe_cast<uint8_t>(v.z())));
+				}
+
+				deviceElementSize = sizeof(UChar3);
+				deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.indexBuffer, indices, Description::INDEX, "Index");
+			} else if (meshCollection.vertices.size() <= 0xFFFF) {
+				std::vector<UShort3> indices;
+				indices.reserve(meshCollection.indices.size());
+				for (size_t i = 0; i < meshCollection.indices.size(); i++) {
+					const UInt3& v = meshCollection.indices[i];
+					indices.emplace_back(UShort3(safe_cast<uint16_t>(v.x()), safe_cast<uint16_t>(v.y()), safe_cast<uint16_t>(v.z())));
+				}
+
+				deviceElementSize = sizeof(UShort3);
+				deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.indexBuffer, indices, Description::INDEX, "Index");
+			} else {
+				deviceElementSize = sizeof(UInt3);
+				deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.indexBuffer, meshCollection.indices, Description::INDEX, "Index");
+			}
+
+			deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.positionBuffer, meshCollection.vertices, Description::VERTEX, "Position");
+			deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.normalTangentColorBuffer, normalTangentColorData, Description::VERTEX, "NormalColor", cnt);
+			deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.boneIndexWeightBuffer, boneData, Description::VERTEX, "BoneIndexWeight", 2);
+
+			bufferCollection.texCoordBuffers.resize(meshCollection.texCoords.size(), nullptr);
+			for (size_t j = 0; j < meshCollection.texCoords.size(); j++) {
+				IAsset::TexCoord& texCoord = meshCollection.texCoords[j];
+				deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.texCoordBuffers[j], texCoord.coords, Description::VERTEX, "TexCoord");
+			}
+
+			if (mapCount.load(std::memory_order_relaxed) == 0) {
+				std::vector<IAsset::MeshGroup> groups;
+				std::swap(meshCollection.groups, groups);
+				meshCollection = IAsset::MeshCollection();
+				std::swap(meshCollection.groups, groups);
+			}
+
+			SpinUnLock(critical);
 		}
-
-		deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.positionBuffer, meshCollection.vertices, Description::VERTEX, "Position");
-		deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.normalTangentColorBuffer, normalTangentColorData, Description::VERTEX, "NormalColor", cnt);
-		deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.boneIndexWeightBuffer, boneData, Description::VERTEX, "BoneIndexWeight", 2);
-
-		bufferCollection.texCoordBuffers.resize(meshCollection.texCoords.size(), nullptr);
-		for (size_t j = 0; j < meshCollection.texCoords.size(); j++) {
-			IAsset::TexCoord& texCoord = meshCollection.texCoords[j];
-			deviceMemoryUsage += UpdateBuffer(render, queue, bufferCollection.texCoordBuffers[j], texCoord.coords, Description::VERTEX, "TexCoord");
-		}
-
-		if (mapCount.load(std::memory_order_relaxed) == 0) {
-			std::vector<IAsset::MeshGroup> groups;
-			std::swap(meshCollection.groups, groups);
-			meshCollection = IAsset::MeshCollection();
-			std::swap(meshCollection.groups, groups);
-		}
-
-		SpinUnLock(critical);
 	}
 
 	Flag().fetch_or(RESOURCE_UPLOADED, std::memory_order_release);
@@ -149,11 +151,16 @@ void MeshResource::Upload(IRender& render, void* deviceContext) {
 void MeshResource::Unmap() {
 	GraphicResourceBase::Unmap();
 
-	SpinLock(critical);
-	if (mapCount.load(std::memory_order_acquire) == 0) {
-		meshCollection = IAsset::MeshCollection();
+	ThreadPool& threadPool = resourceManager.GetThreadPool();
+	if (threadPool.PollExchange(critical, 1u) == 0u) {
+		if (mapCount.load(std::memory_order_acquire) == 0) {
+			std::vector<IAsset::MeshGroup> groups;
+			std::swap(groups, meshCollection.groups);
+			meshCollection = IAsset::MeshCollection();
+			std::swap(groups, meshCollection.groups);
+		}
+		SpinUnLock(critical);
 	}
-	SpinUnLock(critical);
 }
 
 void MeshResource::Detach(IRender& render, void* deviceContext) {

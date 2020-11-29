@@ -33,12 +33,13 @@ void TextureResource::Detach(IRender& render, void* deviceContext) {
 
 void TextureResource::Unmap() {
 	GraphicResourceBase::Unmap();
-
-	SpinLock(critical);
-	if (mapCount.load(std::memory_order_relaxed) == 0) {
-		description.data.Clear();
+	ThreadPool& threadPool = resourceManager.GetThreadPool();
+	if (threadPool.PollExchange(critical, 1u) == 0u) {
+		if (mapCount.load(std::memory_order_relaxed) == 0) {
+			description.data.Clear();
+		}
+		SpinUnLock(critical);
 	}
-	SpinUnLock(critical);
 }
 
 void TextureResource::Upload(IRender& render, void* deviceContext) {
@@ -50,27 +51,28 @@ void TextureResource::Upload(IRender& render, void* deviceContext) {
 	IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(deviceContext);
 
 	if (Flag().fetch_and(~TINY_MODIFIED) & TINY_MODIFIED) {
-		SpinLock(critical);
+		ThreadPool& threadPool = resourceManager.GetThreadPool();
+		if (threadPool.PollExchange(critical, 1u) == 0u) {
+			description.state.reserved = 0;
+			description.state.media = 0;
+			if (description.state.compress || GetLocation()[0] == '/') {
+				assert(!description.data.Empty());
+			}
 
-		description.state.reserved = 0;
-		description.state.media = 0;
-		if (description.state.compress || GetLocation()[0] == '/') {
-			assert(!description.data.Empty());
-		}
-
-		deviceMemoryUsage = description.data.GetSize();
-		if (mapCount.load(std::memory_order_relaxed) != 0) {
-			IRender::Resource::TextureDescription desc = description;
-			render.UploadResource(queue, instance, &desc);
-		} else {
-			render.UploadResource(queue, instance, &description);
-		}
+			deviceMemoryUsage = description.data.GetSize();
+			if (mapCount.load(std::memory_order_relaxed) != 0) {
+				IRender::Resource::TextureDescription desc = description;
+				render.UploadResource(queue, instance, &desc);
+			} else {
+				render.UploadResource(queue, instance, &description);
+			}
 
 #ifdef _DEBUG
-		render.SetResourceNotation(instance, GetLocation());
+			render.SetResourceNotation(instance, GetLocation());
 #endif
 
-		SpinUnLock(critical);
+			SpinUnLock(critical);
+		}
 	}
 
 	Flag().fetch_or(RESOURCE_UPLOADED, std::memory_order_release);
@@ -186,11 +188,13 @@ bool TextureResource::Compress(const String& compressionType) {
 
 		// TODO: conflicts with mapped resource
 		assert(mapCount.load(std::memory_order_relaxed) == 0);
-		SpinLock(critical);
-		description.data.Assign((uint8_t*)target.GetBuffer(), safe_cast<uint32_t>(target.GetTotalLength()));
-		description.state.compress = 1;
-		description.state.layout = IRender::Resource::TextureDescription::RGBA;
-		SpinUnLock(critical);
+		ThreadPool& threadPool = resourceManager.GetThreadPool();
+		if (threadPool.PollExchange(critical, 1u) == 0u) {
+			description.data.Assign((uint8_t*)target.GetBuffer(), safe_cast<uint32_t>(target.GetTotalLength()));
+			description.state.compress = 1;
+			description.state.layout = IRender::Resource::TextureDescription::RGBA;
+			SpinUnLock(critical);
+		}
 
 		filter->ReleaseObject();
 		return true;
@@ -210,15 +214,17 @@ bool TextureResource::LoadExternalResource(Interfaces& interfaces, IStreamBase& 
 	IRender::Resource::TextureDescription::Layout layout = imageBase.GetLayoutType(image);
 	IRender::Resource::TextureDescription::Format dataType = imageBase.GetDataType(image);
 
-	SpinLock(critical);
-	description.state.layout = layout;
-	description.state.format = dataType;
-	description.dimension.x() = safe_cast<uint16_t>(imageBase.GetWidth(image));
-	description.dimension.y() = safe_cast<uint16_t>(imageBase.GetHeight(image));
+	ThreadPool& threadPool = resourceManager.GetThreadPool();
+	if (threadPool.PollExchange(critical, 1u) == 0u) {
+		description.state.layout = layout;
+		description.state.format = dataType;
+		description.dimension.x() = safe_cast<uint16_t>(imageBase.GetWidth(image));
+		description.dimension.y() = safe_cast<uint16_t>(imageBase.GetHeight(image));
 
-	void* buffer = imageBase.GetBuffer(image);
-	description.data.Assign(reinterpret_cast<uint8_t*>(buffer), (size_t)description.dimension.x() * description.dimension.y() * IImage::GetPixelSize(dataType, layout));
-	SpinUnLock(critical);
+		void* buffer = imageBase.GetBuffer(image);
+		description.data.Assign(reinterpret_cast<uint8_t*>(buffer), (size_t)description.dimension.x() * description.dimension.y() * IImage::GetPixelSize(dataType, layout));
+		SpinUnLock(critical);
+	}
 
 	// copy info
 	imageBase.Delete(image);

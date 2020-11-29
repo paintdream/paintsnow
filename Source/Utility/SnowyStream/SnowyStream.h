@@ -233,7 +233,7 @@ namespace PaintsNow {
 
 			std::map<Unique, TShared<ResourceManager> >::iterator it = resourceManagers.find(unique);
 			if (it == resourceManagers.end()) {
-				ResourceManager* resourceManager = new DeviceResourceManager<T>(interfaces.thread, *this, device, errorHandler, context);
+				ResourceManager* resourceManager = new DeviceResourceManager<T>(bridgeSunset.GetKernel().GetThreadPool(), *this, device, errorHandler, context);
 				RegisterResourceManager(unique, resourceManager);
 				resourceManager->ReleaseObject();
 			}
