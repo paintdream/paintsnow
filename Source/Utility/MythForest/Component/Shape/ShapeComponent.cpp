@@ -107,11 +107,10 @@ void ShapeComponent::Update(Engine& engine, const TShared<MeshResource>& resourc
 		Float3Pair bound = meshResource->boundingBox;
 
 		// Build Tree
-		// TODO: race condition on mesh.
 		const std::vector<Float3>& vertices = meshCollection.vertices;
 		const std::vector<UInt3>& indices = meshCollection.indices;
 
-		if (indices.empty() || vertices.empty()) return;
+		assert(!vertices.empty() && !indices.empty());
 
 		// safe
 		for (uint32_t n = 0; n < 3; n++) {

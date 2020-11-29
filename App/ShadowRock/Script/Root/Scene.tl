@@ -73,7 +73,7 @@ function Scene.New(database : Database, clock : Clock) : Scene
 		-- wait for all resource scheduled
 		print("\tSynchronizing resource creation ...")
 		rootEntity:WaitForNextFrame(function () coroutine.resume(running) end)
-		coroutine.yield()
+		coroutine.yield() -- also switch to warp of rootEntity
 
 		-- all resources prepared.
 
@@ -213,11 +213,24 @@ function Scene.New(database : Database, clock : Clock) : Scene
 				subRootEntity:AddEntityComponent(visibilityComponent as Component)
 				subRootEntity:AddEntityComponent(batchComponent as Component)
 				interSpaceComponent:InsertEntity(subRootEntity)
+
+				coroutine.resume(running)
 			end)
 		end
 
+		print("\tWaiting for components loading ... ")
+		for i = 1, dupCount do
+			coroutine.yield()
+		end
+
+		-- switch to rootEntity's warp
+		BridgeSunset.QueueRoutine(rootEntity, function ()
+			coroutine.resume(running)
+		end)
+
+		coroutine.yield()
+
 		print("\tAdding lights")
-		
 		local sun = MythForest.NewEntity(-(1))
 		local sunTransformComponent : TransformComponent = TransformComponentModule.New()
 		sunTransformComponent:SetScale({ 8, 8, 8 })

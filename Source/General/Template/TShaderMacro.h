@@ -41,6 +41,17 @@ namespace PaintsNow {
 #define make_float4x4(a11, a12, a13, a14, a21, a22, a23, a24, a31, a32, a33, a34, a41, a42, a43, a44) float4x4()
 
 	// just prototypes to make compiler happy. No actual effects.
+#if defined(_MSC_VER) && _MSC_VER <= 1200
+#define FILTER_FUNCTION(func) \
+	template <class T> \
+	T func(T input) { return input; } \
+	template <class T> \
+	TType2<T> func(const TVector<T, 2>& input) { return input;  } \
+	template <class T> \
+	TType3<T> func(const TVector<T, 3>& input) { return input;  } \
+	template <class T> \
+	TType4<T> func(const TVector<T, 4>& input) { return input;  }
+#else
 #define FILTER_FUNCTION(func) \
 	template <class T> \
 	T func(const T& input) { return input; } \
@@ -50,6 +61,8 @@ namespace PaintsNow {
 	TType3<T> func(const TVector<T, 3>& input) { return input;  } \
 	template <class T> \
 	TType4<T> func(const TVector<T, 4>& input) { return input;  }
+#endif
+
 
 	FILTER_FUNCTION(normalize);
 	FILTER_FUNCTION(saturate);
@@ -170,6 +183,20 @@ namespace PaintsNow {
 		return 0;
 	}
 
+#if defined(_MSC_VER) && _MSC_VER <= 1200
+	template <class T>
+	void clip(T value) {}
+
+	template <class T, class D>
+	T lerp(T r, T v, D c) {
+		return T();
+	}
+
+	template <class T>
+	T clamp(T r, T v, T c) {
+		return T();
+	}
+#else
 	template <class T>
 	void clip(const T& value) {}
 
@@ -182,6 +209,7 @@ namespace PaintsNow {
 	T clamp(const T& r, const T& v, const T& c) {
 		return T();
 	}
+#endif
 
 	template <class T>
 	TType2<T> lerp(const TVector<T, 2>& r, const TVector<T, 2>& v, T value) {

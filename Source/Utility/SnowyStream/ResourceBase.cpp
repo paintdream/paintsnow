@@ -140,7 +140,9 @@ bool ResourceBase::Map() {
 }
 
 void ResourceBase::Unmap() {
-	mapCount.fetch_sub(1, std::memory_order_release);
+	if (mapCount.fetch_sub(1, std::memory_order_relaxed) == 1) {
+		Flag().fetch_and(~RESOURCE_MAPPED, std::memory_order_release);
+	}
 }
 
 class SearchDependencies : public IReflect {
