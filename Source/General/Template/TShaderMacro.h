@@ -43,7 +43,7 @@ namespace PaintsNow {
 	// just prototypes to make compiler happy. No actual effects.
 #define FILTER_FUNCTION(func) \
 	template <class T> \
-	T func(T input) { return input; } \
+	T func(const T& input) { return input; } \
 	template <class T> \
 	TType2<T> func(const TVector<T, 2>& input) { return input;  } \
 	template <class T> \
@@ -171,15 +171,15 @@ namespace PaintsNow {
 	}
 
 	template <class T>
-	void clip(T value) {}
+	void clip(const T& value) {}
 
 	template <class T, class D>
-	T lerp(T r, T v, D c) {
+	T lerp(const T& r, const T& v, const D& c) {
 		return T();
 	}
 
 	template <class T>
-	T clamp(T r, T v, T c) {
+	T clamp(const T& r, const T& v, const T& c) {
 		return T();
 	}
 

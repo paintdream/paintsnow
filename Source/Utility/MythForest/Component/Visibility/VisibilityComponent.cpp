@@ -234,7 +234,9 @@ const Bytes& VisibilityComponent::QuerySample(Engine& engine, const Float3& posi
 			for (int32_t x = intPosition.x() - 1; x <= intPosition.x() + 1; x++) {
 				Int3 coord(x, y, z);
 				TShared<Cell> cell = streamComponent->Load(engine, streamComponent->ComputeWrapCoordinate(coord), nullptr)->QueryInterface(UniqueType<Cell>());
+				incomplete = true;
 
+				/*
 				if (!(cell->Flag().load(std::memory_order_acquire) & TINY_ACTIVATED)) {
 					cell->intPosition = coord;
 					std::binary_insert(bakePoints, cell);
@@ -242,7 +244,7 @@ const Bytes& VisibilityComponent::QuerySample(Engine& engine, const Float3& posi
 
 				incomplete = incomplete || cell->finishCount != FACE_COUNT;
 				toMerge.emplace_back(cell);
-				mergedSize = Math::Max(mergedSize, (uint32_t)safe_cast<uint32_t>(cell->payload.GetSize()));
+				mergedSize = Math::Max(mergedSize, (uint32_t)safe_cast<uint32_t>(cell->payload.GetSize()));*/
 			}
 		}
 	}
@@ -264,7 +266,7 @@ const Bytes& VisibilityComponent::QuerySample(Engine& engine, const Float3& posi
 }
 
 TShared<SharedTiny> VisibilityComponent::StreamLoadHandler(Engine& engine, const UShort3& coord, const TShared<SharedTiny>& tiny, const TShared<SharedTiny>& context) {
-	return tiny ? tiny->QueryInterface(UniqueType<Cell>()) : cellAllocator->New();
+	return tiny ? tiny->QueryInterface(UniqueType<Cell>()) : TShared<SharedTiny>::From(cellAllocator->New());
 }
 
 TShared<SharedTiny> VisibilityComponent::StreamUnloadHandler(Engine& engine, const UShort3& coord, const TShared<SharedTiny>& tiny, const TShared<SharedTiny>& context) {
