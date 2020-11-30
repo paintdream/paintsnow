@@ -1707,8 +1707,9 @@ IRender::Device* ZRenderOpenGL::CreateDevice(const String& description) {
 
 void ZRenderOpenGL::SetDeviceResolution(IRender::Device* device, const Int2& resolution) {
 	DeviceImplOpenGL* impl = static_cast<DeviceImplOpenGL*>(device);
-	assert(resolution.x() != 0 && resolution.y() != 0);
-	impl->resolution = resolution;
+	if (resolution.x() != 0 && resolution.y() != 0) {
+		impl->resolution = resolution;
+	}
 }
 
 Int2 ZRenderOpenGL::GetDeviceResolution(IRender::Device* device) {

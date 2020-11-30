@@ -686,7 +686,7 @@ void PhaseComponent::CollectRenderableComponent(Engine& engine, TaskData& taskDa
 }
 
 void PhaseComponent::CompleteUpdateLights(Engine& engine, std::vector<LightElement>& elements) {
-	MatrixFloat4x4 projectionMatrix = Math::Ortho(range);
+	MatrixFloat4x4 projectionMatrix = Math::MatrixOrtho(range);
 	bakePointShadows = std::stack<UpdatePointShadow>();
 	shadows.resize(elements.size());
 
@@ -720,7 +720,7 @@ void PhaseComponent::CompleteUpdateLights(Engine& engine, std::vector<LightEleme
 
 		Float3 up(RandFloat(), RandFloat(), RandFloat());
 
-		shadow.viewProjectionMatrix = Math::LookAt(view, dir, up) * projectionMatrix;
+		shadow.viewProjectionMatrix = Math::MatrixLookAt(view, dir, up) * projectionMatrix;
 		UpdatePointShadow bakePointShadow;
 		bakePointShadow.shadowIndex = safe_cast<uint32_t>(i);
 		bakePointShadows.push(bakePointShadow);
@@ -815,7 +815,7 @@ void PhaseComponent::Update(Engine& engine, const Float3& center) {
 	camera.aspect = 1.0f;
 	camera.fov = PI / 2;
 
-	MatrixFloat4x4 projectionMatrix = Math::Perspective(camera.fov, camera.aspect, camera.nearPlane, camera.farPlane);
+	MatrixFloat4x4 projectionMatrix = Math::MatrixPerspective(camera.fov, camera.aspect, camera.nearPlane, camera.farPlane);
 
 	// Adjust phases?
 	for (size_t i = 0; i < phases.size(); i++) {
@@ -828,7 +828,7 @@ void PhaseComponent::Update(Engine& engine, const Float3& center) {
 
 		phases[i].camera = camera;
 		phases[i].projectionMatrix = projectionMatrix;
-		phases[i].viewProjectionMatrix = Math::LookAt(view + center, dir + center, up) * projectionMatrix;
+		phases[i].viewProjectionMatrix = Math::MatrixLookAt(view + center, dir + center, up) * projectionMatrix;
 	}
 
 	lightCollector.InvokeCollect(engine, rootEntity);

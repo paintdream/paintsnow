@@ -594,7 +594,7 @@ void VisibilityComponent::CoTaskAssembleTask(Engine& engine, TaskData& task, uin
 	Float3 viewPosition((intPosition.x() + 0.5f) * gridSize.x(), (intPosition.y() + 0.5f) * gridSize.y(), (intPosition.z() + 0.5f) * gridSize.z());
 	task.instanceGroups.resize(engine.GetKernel().GetWarpCount());
 	CaptureData captureData;
-	MatrixFloat4x4 viewMatrix = Math::LookAt(viewPosition, directions[face], ups[face]);
+	MatrixFloat4x4 viewMatrix = Math::MatrixLookAt(viewPosition, directions[face], ups[face]);
 	MatrixFloat4x4 viewProjectionMatrix = viewMatrix * projectionMatrix;
 
 	camera.UpdateCaptureData(captureData, Math::QuickInverse(viewMatrix));

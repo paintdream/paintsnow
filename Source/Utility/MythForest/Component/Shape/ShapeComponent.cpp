@@ -191,13 +191,14 @@ struct ShapeComponent::PatchRaycaster {
 				if (idx == ~(uint32_t)0) break;
 
 				const UInt3& index = indices[idx];
-				const Float3 points[3] = {
+				const TVector<float, 3> points[3] = {
 					vertices[index.x()], vertices[index.y()], vertices[index.z()]
 				};
 
 				Float3 res;
 				Float2 uv;
-				if (Math::Intersect3D(res, uv, points, ray)) {
+				Math::IntersectTriangle(res, uv, points, ray);
+				if (uv.x() >= 0.0f && uv.y() >= 0.0f && uv.x() + uv.y() <= 1.0f) {
 					float s = Math::SquareLength(res - ray.first);
 					if (s < distance) {
 						distance = s;

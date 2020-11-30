@@ -60,7 +60,7 @@ void CameraComponent::UpdateJitterMatrices(CameraComponentConfig::WorldGlobalDat
 }
 
 void CameraComponent::UpdateRootMatrices(const MatrixFloat4x4& cameraWorldMatrix) {
-	MatrixFloat4x4 projectionMatrix = (Flag().load(std::memory_order_relaxed) & CAMERACOMPONENT_PERSPECTIVE) ? Math::Perspective(fov, aspect, nearPlane, farPlane) : Math::Ortho(Float3(1, 1, 1));
+	MatrixFloat4x4 projectionMatrix = (Flag().load(std::memory_order_relaxed) & CAMERACOMPONENT_PERSPECTIVE) ? Math::MatrixPerspective(fov, aspect, nearPlane, farPlane) : Math::MatrixOrtho(Float3(1, 1, 1));
 
 	MatrixFloat4x4 viewMatrix = Math::QuickInverse(cameraWorldMatrix);
 	nextTaskData->worldGlobalData.inverseViewMatrix = cameraWorldMatrix;
