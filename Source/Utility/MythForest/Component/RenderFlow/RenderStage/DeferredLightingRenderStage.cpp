@@ -102,7 +102,7 @@ void DeferredLightingRenderStage::UpdatePass(Engine& engine, IRender::Queue* que
 
 		Float3 p(light.position.x(), light.position.y(), light.position.z());
 		if (light.position.w() != 0) {
-			p = Math::Transform3D(CameraView->viewMatrix, p);
+			p = Math::Transform(CameraView->viewMatrix, p);
 		} else {
 			p = Math::Normalize(p * normalMatrix);
 		}

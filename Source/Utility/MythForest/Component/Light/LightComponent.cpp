@@ -122,7 +122,7 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 	const MatrixFloat4x4& viewMatrix = shadowContext->lightTransformMatrix;
 	OrthoCamera::UpdateCaptureData(captureData, viewMatrix);
 	WorldInstanceData instanceData;
-	instanceData.worldMatrix = shadowGrid->shadowMatrix = Math::QuickInverse(Math::Scale(viewMatrix, Float4(1, -1, -1, 1)));
+	instanceData.worldMatrix = shadowGrid->shadowMatrix = Math::QuickInverse(Math::MatrixScale(Float4(1, -1, -1, 1)) * viewMatrix);
 	taskData->rootEntity = shadowContext->rootEntity; // in case of gc
 	taskData->shadowGrid = shadowGrid();
 	taskData->ReferenceObject();
@@ -528,7 +528,7 @@ TShared<LightComponent::ShadowGrid> LightComponent::ShadowLayer::UpdateShadow(En
 	Float3 position(cameraTransform(3, 0), cameraTransform(3, 1), cameraTransform(3, 2));
 
 	// project to ortho plane
-	Float3 lightCoord = Math::Transform3D(Math::QuickInverse(lightTransform), position);
+	Float3 lightCoord = Math::Transform(Math::QuickInverse(lightTransform), position);
 	const UShort3& dimension = streamComponent->GetDimension();
 
 	Int3 intPosition((int32_t)(lightCoord.x() / gridSize), (int32_t)(lightCoord.y() / gridSize), (int32_t)(lightCoord.z() / gridSize));
@@ -536,10 +536,10 @@ TShared<LightComponent::ShadowGrid> LightComponent::ShadowLayer::UpdateShadow(En
 
 	TShared<ShadowContext> shadowContext = TShared<ShadowContext>::From(new ShadowContext());
 	shadowContext->rootEntity = rootEntity;
-	shadowContext->lightTransformMatrix = Math::Scale(lightTransform, Float4(scale, scale, scale, 1));
+	shadowContext->lightTransformMatrix = Math::MatrixScale(Float4(scale, scale, scale, 1)) * lightTransform;
 
 	// Make alignment
-	Float3 alignedPosition = Math::Transform3D(lightTransform, Float3(intPosition.x() * gridSize, intPosition.y() * gridSize, intPosition.z() * gridSize));
+	Float3 alignedPosition = Math::Transform(lightTransform, Float3(intPosition.x() * gridSize, intPosition.y() * gridSize, intPosition.z() * gridSize));
 	shadowContext->lightTransformMatrix(3, 0) = alignedPosition.x();
 	shadowContext->lightTransformMatrix(3, 1) = alignedPosition.y();
 	shadowContext->lightTransformMatrix(3, 2) = alignedPosition.z();

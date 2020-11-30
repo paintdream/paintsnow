@@ -185,8 +185,8 @@ float TransformComponent::Raycast(RaycastTask& task, Float3Pair& ray, Unit* pare
 	Float3Pair oldRay = ray;
 	
 	ray.second += ray.first;
-	ray.first = Math::Transform3D(invTransform, ray.first);
-	ray.second = Math::Transform3D(invTransform, ray.second) - ray.first;
+	ray.first = Math::Transform(invTransform, ray.first);
+	ray.second = Math::Transform(invTransform, ray.second) - ray.first;
 
 	return ratio * Math::SquareLength(oldRay.second) / Math::SquareLength(ray.second);
 }
