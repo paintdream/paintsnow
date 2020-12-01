@@ -7,6 +7,7 @@
 #include "../../General/Interface/IShader.h"
 #include "../../Core/Interface/IReflect.h"
 #include "../../Core/Template/TEvent.h"
+#include "../../Core/Template/TCache.h"
 
 namespace PaintsNow {
 	// New version of PassBase !
@@ -98,7 +99,7 @@ namespace PaintsNow {
 		class PartialUpdater {
 		public:
 			Bytes ComputeHash() const;
-			void Snapshot(std::vector<Bytes>& buffers, std::vector<IRender::Resource::DrawCallDescription::BufferRange>& bufferResources, std::vector<IRender::Resource*>& textureResources, const PartialData& data) const;
+			void Snapshot(std::vector<Bytes>& buffers, std::vector<IRender::Resource::DrawCallDescription::BufferRange>& bufferResources, std::vector<IRender::Resource*>& textureResources, const PartialData& data, BytesCache* bytesCache = nullptr) const;
 			
 			std::vector<Parameter> parameters;
 		};

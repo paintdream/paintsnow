@@ -450,11 +450,10 @@ bool PassBase::FlushOptions() {
 
 PassBase::~PassBase() {}
 
-void PassBase::PartialUpdater::Snapshot(std::vector<Bytes>& bufferData, std::vector<IRender::Resource::DrawCallDescription::BufferRange>& bufferResources, std::vector<IRender::Resource*>& textureResources, const PassBase::PartialData& partialData) const {
+void PassBase::PartialUpdater::Snapshot(std::vector<Bytes>& bufferData, std::vector<IRender::Resource::DrawCallDescription::BufferRange>& bufferResources, std::vector<IRender::Resource*>& textureResources, const PassBase::PartialData& partialData, BytesCache* bytesCache) const {
 	singleton Unique uniqueBindBuffer = UniqueType<IShader::BindBuffer>::Get();
 	singleton Unique uniqueBindTexture = UniqueType<IShader::BindTexture>::Get();
-
-	std::vector<uint32_t> starts(bufferData.size(), ~(uint32_t)0);
+	std::vector<Bytes> currentBufferData;
 
 	for (uint32_t i = 0; i < parameters.size(); i++) {
 		const Parameter& parameter = parameters[i];
@@ -476,21 +475,37 @@ void PassBase::PartialUpdater::Snapshot(std::vector<Bytes>& bufferData, std::vec
 
 			textureResources[parameter.slot] = texture->resource;
 		} else {
-			if (bufferData.size() <= parameter.slot) {
-				bufferData.resize(parameter.slot + 1);
-				starts.resize(parameter.slot + 1, ~(uint32_t)0);
+			uint8_t bufferDataSize = safe_cast<uint8_t>(currentBufferData.size());
+			if (bufferDataSize <= parameter.slot) {
+				currentBufferData.resize(parameter.slot + 1);
 			}
 
-			assert(parameter.slot < bufferData.size());
-			Bytes& buffer = bufferData[parameter.slot];
+			assert(parameter.slot < currentBufferData.size());
+			Bytes& buffer = currentBufferData[parameter.slot];
 			const PassBase::Parameter& p = parameters[i];
-			uint32_t& start = starts[parameter.slot];
-			if (start == ~(uint32_t)0) {
-				start = safe_cast<uint32_t>(buffer.GetSize());
-				buffer.Resize(start + p.stride);
+			if (buffer.Empty()) {
+				if (bytesCache != nullptr) {
+					buffer = bytesCache->New(p.stride);
+				} else {
+					buffer.Resize(p.stride);
+				}
 			}
 
-			memcpy(buffer.GetData() + start + p.offset, (const char*)&partialData + (size_t)p.internalAddress, p.type->GetSize());
+			buffer.Import(p.offset, (const uint8_t*)&partialData + (size_t)p.internalAddress, p.type->GetSize());
+		}
+	}
+
+	if (currentBufferData.size() >= bufferData.size()) {
+		bufferData.resize(currentBufferData.size());
+	}
+
+	if (bytesCache != nullptr) {
+		for (size_t n = 0; n < currentBufferData.size(); n++) {
+			bytesCache->Link(bufferData[n], currentBufferData[n]);
+		}
+	} else {
+		for (size_t n = 0; n < currentBufferData.size(); n++) {
+			bufferData[n].Append(currentBufferData[n]);
 		}
 	}
 }

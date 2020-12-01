@@ -174,11 +174,14 @@ void CameraComponent::Instancing(Engine& engine, TaskData& taskData) {
 				if (!data.Empty()) {
 					// assign instanced buffer	
 					assert(group.drawCallDescription.bufferResources[k].buffer == nullptr);
+					size_t viewSize = data.GetViewSize();
 					IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[k];
 					bufferRange.buffer = policyData.instanceBuffer;
-					bufferRange.offset = safe_cast<uint32_t>(policyData.instanceData.GetSize()); // TODO: alignment
-					bufferRange.component = safe_cast<uint16_t>(data.GetSize() / (group.instanceCount * sizeof(float)));
-					policyData.instanceData.Append(data);
+					bufferRange.offset = safe_cast<uint32_t>(policyData.instanceOffset); // TODO: alignment
+					bufferRange.component = safe_cast<uint16_t>(viewSize / (group.instanceCount * sizeof(float)));
+					warpData.bytesCache.Link(policyData.instanceData, data);
+					policyData.instanceOffset += viewSize;
+					assert(policyData.instanceOffset == policyData.instanceData.GetViewSize());
 				}
 			}
 
@@ -199,12 +202,14 @@ void CameraComponent::Instancing(Engine& engine, TaskData& taskData) {
 			TaskData::PolicyData& policyData = warpData.renderPolicyMap[n].second;
 			if (!policyData.instanceData.Empty()) {
 				IRender::Resource::BufferDescription desc;
-				desc.data = std::move(policyData.instanceData);
+				policyData.instanceData.Export(desc.data);
+				assert(policyData.instanceOffset == desc.data.GetSize());
 				desc.format = IRender::Resource::BufferDescription::FLOAT;
 				desc.usage = IRender::Resource::BufferDescription::INSTANCED;
 				desc.component = 0; // will be overridden by drawcall.
 				render.UploadResource(policyData.portQueue, policyData.instanceBuffer, &desc);
 				policyData.instanceData.Clear();
+				policyData.instanceOffset = 0;
 			}
 		}
 	}
@@ -672,7 +677,10 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 
 		// process local instanced data
 		if (drawCall.localInstancedData.empty() && drawCall.localTransforms.empty()) {
-			group.instanceUpdater->Snapshot(group.instancedData, bufferResources, textureResources, instanceData);
+			group.instanceUpdater->Snapshot(group.instancedData, bufferResources, textureResources, instanceData, &warpData.bytesCache);
+			for (size_t i = 0; i < group.instancedData.size(); i++) {
+				assert(group.instancedData[i].Empty() || group.instancedData[i].IsViewStorage());
+			}
 			assert(!group.instanceUpdater->parameters.empty());
 			group.instanceCount++;
 		} else {
@@ -684,17 +692,24 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 					group.instancedData.resize(localInstancedData.first + 1);
 				}
 
-				group.instancedData[localInstancedData.first].Append(localInstancedData.second);
+				Bytes bytes = warpData.bytesCache.New(localInstancedData.second.GetSize());
+				memcpy(bytes.GetData(), localInstancedData.second.GetData(), localInstancedData.second.GetSize());
+				warpData.bytesCache.Link(group.instancedData[localInstancedData.first], bytes);
 			}
 
 			if (drawCall.localTransforms.empty()) {
 				std::vector<Bytes> s;
 				group.instanceUpdater->Snapshot(s, bufferResources, textureResources, instanceData);
-
+				assert(drawCall.drawCallDescription.instanceCounts.x() != 0);
 				for (size_t j = 0; j < s.size(); j++) {
+					size_t len = s[j].GetSize();
+					uint8_t* data = s[j].GetData();
+					Bytes view = warpData.bytesCache.New(len * drawCall.drawCallDescription.instanceCounts.x());
 					for (size_t n = 0; n < drawCall.drawCallDescription.instanceCounts.x(); n++) {
-						group.instancedData[j].Append(s[j]);
+						view.Import(n* len, data, len);
 					}
+
+					warpData.bytesCache.Link(group.instancedData[j], view);
 				}
 			} else {
 				assert(drawCall.drawCallDescription.instanceCounts.x() == drawCall.localTransforms.size());
@@ -704,7 +719,11 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 					if (isCameraViewSpace) {
 						subInstanceData.worldMatrix = subInstanceData.worldMatrix * taskData.worldGlobalData.viewMatrix;
 					}
-					group.instanceUpdater->Snapshot(group.instancedData, bufferResources, textureResources, subInstanceData);
+
+					group.instanceUpdater->Snapshot(group.instancedData, bufferResources, textureResources, subInstanceData, &warpData.bytesCache);
+					for (size_t i = 0; i < group.instancedData.size(); i++) {
+						assert(group.instancedData[i].Empty() || group.instancedData[i].IsViewStorage());
+					}
 				}
 			}
 
@@ -919,6 +938,7 @@ void CameraComponent::TaskData::Cleanup(IRender& render) {
 			policyData.runtimeResources.clear();
 		}
 
+		data.bytesCache.Reset();
 		data.renderStateMap.clear();
 		data.worldGlobalBufferMap.clear();
 		data.dataUpdaters.clear();
@@ -957,7 +977,7 @@ CameraComponent::TaskData::~TaskData() {
 	assert(warpData.empty());
 }
 
-CameraComponent::TaskData::PolicyData::PolicyData() : portQueue(nullptr) {}
+CameraComponent::TaskData::PolicyData::PolicyData() : portQueue(nullptr), instanceOffset(0) {}
 
 void CameraComponent::TaskData::Destroy(IRender& render) {
 	Cleanup(render);

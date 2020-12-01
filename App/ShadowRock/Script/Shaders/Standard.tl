@@ -2,6 +2,18 @@ return {
 	Template = "[Runtime]/ShaderResource/CustomMaterialPass",
 	Name = "PBR",
 	Inputs = {
+		-- VertexInstances
+		{
+			Name = "WorldMatrix",
+			Stages = { "VertexInstance" },
+			Value = {
+				1.0, 0.0, 0.0, 0.0
+				0.0, 1.0, 0.0, 0.0
+				0.0, 0.0, 1.0, 0.0
+				0.0, 0.0, 0.0, 1.0
+			},
+			Binding = "TRANSFORM_WORLD"
+		},
 		-- VertexInputs
 		{
 			Name = "Position"
@@ -35,17 +47,6 @@ return {
 		},
 
 		-- Uniforms
-		{
-			Name = "WorldMatrix",
-			Stages = { "VertexInstance" },
-			Value = {
-				1.0, 0.0, 0.0, 0.0
-				0.0, 1.0, 0.0, 0.0
-				0.0, 0.0, 1.0, 0.0
-				0.0, 0.0, 0.0, 1.0
-			},
-			Binding = "TRANSFORM_WORLD"
-		},
 		{
 			Name = "ViewMatrix",
 			Stages = { "VertexUniform" },

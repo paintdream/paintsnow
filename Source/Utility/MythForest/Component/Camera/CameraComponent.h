@@ -8,6 +8,7 @@
 #include "../../Component.h"
 #include "../../../../Core/Template/TBuffer.h"
 #include "../../../../Core/Template/TAlgorithm.h"
+#include "../../../../Core/Template/TCache.h"
 #include "../Animation/AnimationComponent.h"
 #include "../RenderFlow/RenderFlowComponent.h"
 #include "../RenderFlow/RenderPort/RenderPortCommandQueue.h"
@@ -103,6 +104,7 @@ namespace PaintsNow {
 				IRender::Queue* portQueue;
 				IRender::Resource* instanceBuffer;
 				Bytes instanceData;
+				size_t instanceOffset;
 				std::vector<IRender::Resource*> runtimeResources;
 			};
 
@@ -124,6 +126,7 @@ namespace PaintsNow {
 				std::vector<std::pair<TShared<RenderPolicy>, LightElement> > lightElements;
 				std::vector<std::pair<TShared<RenderPolicy>, EnvCubeElement> > envCubeElements;
 				std::vector<IDataUpdater*> dataUpdaters;
+				BytesCache bytesCache;
 				uint32_t entityCount;
 				uint32_t visibleEntityCount;
 				uint32_t triangleCount;
