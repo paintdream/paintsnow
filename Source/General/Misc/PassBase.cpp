@@ -453,6 +453,10 @@ PassBase::~PassBase() {}
 void PassBase::PartialUpdater::Snapshot(std::vector<Bytes>& bufferData, std::vector<IRender::Resource::DrawCallDescription::BufferRange>& bufferResources, std::vector<IRender::Resource*>& textureResources, const PassBase::PartialData& partialData, BytesCache* bytesCache) const {
 	singleton Unique uniqueBindBuffer = UniqueType<IShader::BindBuffer>::Get();
 	singleton Unique uniqueBindTexture = UniqueType<IShader::BindTexture>::Get();
+	typedef TCacheAllocator<Bytes, uint8_t> BytesCacheAllocator;
+	BytesCacheAllocator allocator(bytesCache);
+	std::vector<Bytes, BytesCacheAllocator> currentBufferDataCached(allocator);
+	// std::vector<Bytes> currentBufferDataCached;
 	std::vector<Bytes> currentBufferData;
 
 	for (uint32_t i = 0; i < parameters.size(); i++) {
@@ -477,11 +481,15 @@ void PassBase::PartialUpdater::Snapshot(std::vector<Bytes>& bufferData, std::vec
 		} else {
 			uint8_t bufferDataSize = safe_cast<uint8_t>(currentBufferData.size());
 			if (bufferDataSize <= parameter.slot) {
-				currentBufferData.resize(parameter.slot + 1);
+				if (bytesCache != nullptr) {
+					currentBufferDataCached.resize(parameter.slot + 1);
+				} else {
+					currentBufferData.resize(parameter.slot + 1);
+				}
 			}
 
-			assert(parameter.slot < currentBufferData.size());
-			Bytes& buffer = currentBufferData[parameter.slot];
+			assert(parameter.slot < (bytesCache != nullptr ? currentBufferDataCached.size() : currentBufferData.size()));
+			Bytes& buffer = bytesCache != nullptr ? currentBufferDataCached[parameter.slot] : currentBufferData[parameter.slot];
 			const PassBase::Parameter& p = parameters[i];
 			if (buffer.Empty()) {
 				if (bytesCache != nullptr) {
@@ -495,15 +503,20 @@ void PassBase::PartialUpdater::Snapshot(std::vector<Bytes>& bufferData, std::vec
 		}
 	}
 
-	if (currentBufferData.size() >= bufferData.size()) {
-		bufferData.resize(currentBufferData.size());
-	}
 
 	if (bytesCache != nullptr) {
-		for (size_t n = 0; n < currentBufferData.size(); n++) {
-			bytesCache->Link(bufferData[n], currentBufferData[n]);
+		if (currentBufferDataCached.size() >= bufferData.size()) {
+			bufferData.resize(currentBufferDataCached.size());
+		}
+
+		for (size_t n = 0; n < currentBufferDataCached.size(); n++) {
+			bytesCache->Link(bufferData[n], currentBufferDataCached[n]);
 		}
 	} else {
+		if (currentBufferData.size() >= bufferData.size()) {
+			bufferData.resize(currentBufferData.size());
+		}
+
 		for (size_t n = 0; n < currentBufferData.size(); n++) {
 			bufferData[n].Append(currentBufferData[n]);
 		}
