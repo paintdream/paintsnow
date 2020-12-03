@@ -67,6 +67,11 @@ namespace PaintsNow {
 
 			TaskData() : status(STATUS_IDLE), pendingCount(0), renderQueue(nullptr), renderTarget(nullptr) {}
 
+			struct WarpData {
+				BytesCache bytesCache;
+				std::unordered_map<size_t, InstanceGroup> instanceGroups;
+			};
+
 			uint32_t pendingCount;
 			uint32_t status;
 			TShared<Cell> cell;
@@ -76,7 +81,7 @@ namespace PaintsNow {
 			std::vector<IDataUpdater*> dataUpdaters;
 			Bytes data;
 			PerspectiveCamera camera;
-			std::vector<std::map<size_t, InstanceGroup> > instanceGroups;
+			std::vector<WarpData> warpData;
 		};
 	};
 

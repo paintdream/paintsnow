@@ -206,7 +206,6 @@ void LightComponent::ShadowLayer::CollectRenderableComponent(Engine& engine, Tas
 		assert((~((size_t)renderableComponent << 1) & k) == k); // assume k can be stored in renderComponent's lowest bits
 
 		TaskData::WarpData::InstanceGroupMap::iterator it = instanceGroups.find(key);
-		std::vector<Bytes> s;
 		std::vector<IRender::Resource*> textureResources;
 		std::vector<IRender::Resource::DrawCallDescription::BufferRange> bufferResources;
 		InstanceGroup& group = instanceGroups[key];
@@ -236,15 +235,8 @@ void LightComponent::ShadowLayer::CollectRenderableComponent(Engine& engine, Tas
 				}
 			}
 		} else {
-			InstanceGroup& group = (*it).second;
-			group.instanceUpdater->Snapshot(s, bufferResources, textureResources, instanceData, &warpData.bytesCache);
+			group.instanceUpdater->Snapshot(group.instancedData, bufferResources, textureResources, instanceData, &warpData.bytesCache);
 			assert(!group.instanceUpdater->parameters.empty());
-			assert(s.size() == group.instancedData.size());
-
-			// merge slice
-			for (size_t m = 0; m < group.instancedData.size(); m++) {
-				warpData.bytesCache.Link(group.instancedData[m], s[m]);
-			}
 		}
 
 		group.instanceCount++;

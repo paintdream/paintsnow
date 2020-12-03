@@ -111,6 +111,7 @@ void VisibilityComponent::Initialize(Engine& engine, Entity* entity) {
 
 		task.renderTarget = render.CreateResource(device, IRender::Resource::RESOURCE_RENDERTARGET);
 		render.UploadResource(renderQueue, task.renderTarget, &desc);
+		task.warpData.resize(engine.GetKernel().GetWarpCount());
 	}
 
 	streamComponent->SetLoadHandler(Wrap(this, &VisibilityComponent::StreamLoadHandler));
@@ -349,7 +350,9 @@ void VisibilityComponent::CollectRenderableComponent(Engine& engine, TaskData& t
 	const UChar4& encode = *reinterpret_cast<const UChar4*>(&identity);
 	instanceData.instancedColor = Float4((float)encode[0], (float)encode[1], (float)encode[2], (float)encode[3]) / 255.0f;
 	uint32_t currentWarpIndex = engine.GetKernel().GetCurrentWarpIndex();
-	std::map<size_t, InstanceGroup>& instanceGroups = task.instanceGroups[currentWarpIndex == ~(uint32_t)0 ? GetWarpIndex() : currentWarpIndex];
+	assert(currentWarpIndex != ~(uint32_t)0);
+	TaskData::WarpData& warpData = task.warpData[currentWarpIndex == ~(uint32_t)0 ? GetWarpIndex() : currentWarpIndex];
+	std::unordered_map<size_t, InstanceGroup>& instanceGroups = warpData.instanceGroups;
 	InstanceGroup& first = instanceGroups[(size_t)renderableComponent];
 
 	std::vector<IRender::Resource*> textureResources;
@@ -361,13 +364,7 @@ void VisibilityComponent::CollectRenderableComponent(Engine& engine, TaskData& t
 			InstanceGroup& group = instanceGroups[(size_t)renderableComponent + i++];
 			if (group.drawCallDescription.shaderResource == nullptr) break;
 	
-			std::vector<Bytes> s;
-			group.instanceUpdater.Snapshot(s, bufferResources, textureResources, instanceData);
-			assert(s.size() == group.instancedData.size());
-			for (size_t k = 0; k < s.size(); k++) {
-				group.instancedData[k].Append(s[k]);
-			}
-
+			group.instanceUpdater.Snapshot(group.instancedData, bufferResources, textureResources, instanceData, &warpData.bytesCache);
 			group.instanceCount++;
 		}
 	} else {
@@ -387,16 +384,9 @@ void VisibilityComponent::CollectRenderableComponent(Engine& engine, TaskData& t
 
 				instanceData.Export(group.instanceUpdater, pipeline->GetPassUpdater());
 				group.drawCallDescription = std::move(drawCalls[i].drawCallDescription);
-				group.instanceUpdater.Snapshot(group.instancedData, bufferResources, textureResources, instanceData);
-			} else {
-				std::vector<Bytes> s;
-				group.instanceUpdater.Snapshot(s, bufferResources, textureResources, instanceData);
-				assert(s.size() == group.instancedData.size());
-				for (size_t k = 0; k < s.size(); k++) {
-					group.instancedData[k].Append(s[k]);
-				}
 			}
 
+			group.instanceUpdater.Snapshot(group.instancedData, bufferResources, textureResources, instanceData, &warpData.bytesCache);
 			group.instanceCount++;
 		}
 	}
@@ -491,24 +481,30 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 
 				IRender::Resource* buffer = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_BUFFER);
 				Bytes bufferData;
+				uint32_t bufferSize = 0;
 				std::vector<IRender::Resource*> drawCallResources;
 
-				for (size_t i = 0; i < task.instanceGroups.size(); i++) {
-					std::map<size_t, InstanceGroup>& groups = task.instanceGroups[i];
-					for (std::map<size_t, InstanceGroup>::iterator it = groups.begin(); it != groups.end(); ++it) {
-						InstanceGroup& group = it->second;
+				for (size_t i = 0; i < task.warpData.size(); i++) {
+					TaskData::WarpData& warpData = task.warpData[i];
+					std::unordered_map<size_t, InstanceGroup>& groups = warpData.instanceGroups;
+					for (std::unordered_map<size_t, InstanceGroup>::iterator it = groups.begin(); it != groups.end(); ++it) {
+						InstanceGroup& group = (*it).second;
 						if (group.drawCallDescription.shaderResource == nullptr || group.instanceCount == 0) continue;
 
 						for (size_t k = 0; k < group.instancedData.size(); k++) {
 							Bytes& data = group.instancedData[k];
 							assert(!data.Empty());
 							if (!data.Empty()) {
+								assert(data.IsViewStorage());
 								// assign instanced buffer	
+								size_t viewSize = data.GetViewSize();
 								IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[k];
 								bufferRange.buffer = buffer;
-								bufferRange.offset = safe_cast<uint32_t>(bufferData.GetSize());
-								bufferRange.component = safe_cast<uint16_t>(data.GetSize() / (group.instanceCount * sizeof(float)));
-								bufferData.Append(data);
+								bufferRange.offset = bufferSize;
+								bufferRange.component = safe_cast<uint16_t>(viewSize / (group.instanceCount * sizeof(float)));
+								warpData.bytesCache.Link(bufferData, data);
+								bufferSize += safe_cast<uint32_t>(viewSize);
+								assert(bufferData.GetViewSize() == bufferSize);
 							}
 						}
 
@@ -524,7 +520,7 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 				}
 
 				IRender::Resource::BufferDescription desc;
-				desc.data = std::move(bufferData);
+				bufferData.Export(desc.data);
 				desc.format = IRender::Resource::BufferDescription::FLOAT;
 				desc.usage = IRender::Resource::BufferDescription::INSTANCED;
 				desc.component = 0;
@@ -592,7 +588,11 @@ void VisibilityComponent::CoTaskAssembleTask(Engine& engine, TaskData& task, uin
 
 	const Int3& intPosition = task.cell->intPosition;
 	Float3 viewPosition((intPosition.x() + 0.5f) * gridSize.x(), (intPosition.y() + 0.5f) * gridSize.y(), (intPosition.z() + 0.5f) * gridSize.z());
-	task.instanceGroups.resize(engine.GetKernel().GetWarpCount());
+
+	for (size_t i = 0; i < task.warpData.size(); i++) {
+		task.warpData[i].bytesCache.Reset();
+	}
+
 	CaptureData captureData;
 	MatrixFloat4x4 viewMatrix = Math::MatrixLookAt(viewPosition, directions[face], ups[face]);
 	MatrixFloat4x4 viewProjectionMatrix = viewMatrix * projectionMatrix;

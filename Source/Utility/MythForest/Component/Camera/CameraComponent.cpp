@@ -678,9 +678,6 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 		// process local instanced data
 		if (drawCall.localInstancedData.empty() && drawCall.localTransforms.empty()) {
 			group.instanceUpdater->Snapshot(group.instancedData, bufferResources, textureResources, instanceData, &warpData.bytesCache);
-			for (size_t i = 0; i < group.instancedData.size(); i++) {
-				assert(group.instancedData[i].Empty() || group.instancedData[i].IsViewStorage());
-			}
 			assert(!group.instanceUpdater->parameters.empty());
 			group.instanceCount++;
 		} else {
@@ -692,7 +689,7 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 					group.instancedData.resize(localInstancedData.first + 1);
 				}
 
-				Bytes bytes = warpData.bytesCache.New(localInstancedData.second.GetSize());
+				Bytes bytes = warpData.bytesCache.New(safe_cast<uint32_t>(localInstancedData.second.GetSize()));
 				bytes.Import(0, localInstancedData.second.GetData(), localInstancedData.second.GetSize());
 				warpData.bytesCache.Link(group.instancedData[localInstancedData.first], bytes);
 			}
@@ -702,7 +699,7 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 				group.instanceUpdater->Snapshot(s, bufferResources, textureResources, instanceData);
 				assert(drawCall.drawCallDescription.instanceCounts.x() != 0);
 				for (size_t j = 0; j < s.size(); j++) {
-					size_t len = s[j].GetSize();
+					uint32_t len = safe_cast<uint32_t>(s[j].GetSize());
 					uint8_t* data = s[j].GetData();
 					Bytes view = warpData.bytesCache.New(len * drawCall.drawCallDescription.instanceCounts.x());
 					for (size_t n = 0; n < drawCall.drawCallDescription.instanceCounts.x(); n++) {
@@ -721,9 +718,6 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 					}
 
 					group.instanceUpdater->Snapshot(group.instancedData, bufferResources, textureResources, subInstanceData, &warpData.bytesCache);
-					for (size_t i = 0; i < group.instancedData.size(); i++) {
-						assert(group.instancedData[i].Empty() || group.instancedData[i].IsViewStorage());
-					}
 				}
 			}
 

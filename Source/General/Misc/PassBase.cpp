@@ -454,65 +454,92 @@ void PassBase::PartialUpdater::Snapshot(std::vector<Bytes>& bufferData, std::vec
 	singleton Unique uniqueBindBuffer = UniqueType<IShader::BindBuffer>::Get();
 	singleton Unique uniqueBindTexture = UniqueType<IShader::BindTexture>::Get();
 	typedef TCacheAllocator<Bytes, uint8_t> BytesCacheAllocator;
-	BytesCacheAllocator allocator(bytesCache);
-	std::vector<Bytes, BytesCacheAllocator> currentBufferDataCached(allocator);
-	// std::vector<Bytes> currentBufferDataCached;
-	std::vector<Bytes> currentBufferData;
-
-	for (uint32_t i = 0; i < parameters.size(); i++) {
-		const Parameter& parameter = parameters[i];
-		if (parameter.type == uniqueBindBuffer) {
-			const IShader::BindBuffer* buffer = reinterpret_cast<const IShader::BindBuffer*>((const char*)&partialData + (size_t)parameter.internalAddress);
-			if (bufferResources.size() <= parameter.slot) {
-				bufferResources.resize(parameter.slot + 1);
-			}
-
-			IRender::Resource::DrawCallDescription::BufferRange& range = bufferResources[parameter.slot];
-			range.buffer = buffer->resource;
-			range.offset = 0;
-			range.length = 0;
-		} else if (parameter.type == uniqueBindTexture) {
-			const IShader::BindTexture* texture = reinterpret_cast<const IShader::BindTexture*>((const char*)&partialData + (size_t)parameter.internalAddress);
-			if (textureResources.size() <= parameter.slot) {
-				textureResources.resize(parameter.slot + 1);
-			}
-
-			textureResources[parameter.slot] = texture->resource;
-		} else {
-			uint8_t bufferDataSize = safe_cast<uint8_t>(currentBufferData.size());
-			if (bufferDataSize <= parameter.slot) {
-				if (bytesCache != nullptr) {
-					currentBufferDataCached.resize(parameter.slot + 1);
-				} else {
-					currentBufferData.resize(parameter.slot + 1);
-				}
-			}
-
-			assert(parameter.slot < (bytesCache != nullptr ? currentBufferDataCached.size() : currentBufferData.size()));
-			Bytes& buffer = bytesCache != nullptr ? currentBufferDataCached[parameter.slot] : currentBufferData[parameter.slot];
-			const PassBase::Parameter& p = parameters[i];
-			if (buffer.Empty()) {
-				if (bytesCache != nullptr) {
-					buffer = bytesCache->New(p.stride);
-				} else {
-					buffer.Resize(p.stride);
-				}
-			}
-
-			buffer.Import(p.offset, (const uint8_t*)&partialData + (size_t)p.internalAddress, p.type->GetSize());
-		}
-	}
-
 
 	if (bytesCache != nullptr) {
-		if (currentBufferDataCached.size() >= bufferData.size()) {
-			bufferData.resize(currentBufferDataCached.size());
+		BytesCacheAllocator allocator(bytesCache);
+		std::vector<Bytes, BytesCacheAllocator> currentBufferData(allocator);
+
+		for (uint32_t i = 0; i < parameters.size(); i++) {
+			const Parameter& parameter = parameters[i];
+			if (parameter.type == uniqueBindBuffer) {
+				const IShader::BindBuffer* buffer = reinterpret_cast<const IShader::BindBuffer*>((const char*)&partialData + (size_t)parameter.internalAddress);
+				if (bufferResources.size() <= parameter.slot) {
+					bufferResources.resize(parameter.slot + 1);
+				}
+
+				IRender::Resource::DrawCallDescription::BufferRange& range = bufferResources[parameter.slot];
+				range.buffer = buffer->resource;
+				range.offset = 0;
+				range.length = 0;
+			} else if (parameter.type == uniqueBindTexture) {
+				const IShader::BindTexture* texture = reinterpret_cast<const IShader::BindTexture*>((const char*)&partialData + (size_t)parameter.internalAddress);
+				if (textureResources.size() <= parameter.slot) {
+					textureResources.resize(parameter.slot + 1);
+				}
+
+				textureResources[parameter.slot] = texture->resource;
+			} else {
+				uint8_t bufferDataSize = safe_cast<uint8_t>(currentBufferData.size());
+				if (bufferDataSize <= parameter.slot) {
+					currentBufferData.resize(parameter.slot + 1);
+				}
+
+				assert(parameter.slot < currentBufferData.size());
+				Bytes& buffer = currentBufferData[parameter.slot];
+				const PassBase::Parameter& p = parameters[i];
+				if (buffer.Empty()) {
+					buffer = bytesCache->New(p.stride);
+				}
+
+				buffer.Import(p.offset, (const uint8_t*)&partialData + (size_t)p.internalAddress, p.type->GetSize());
+			}
 		}
 
-		for (size_t n = 0; n < currentBufferDataCached.size(); n++) {
-			bytesCache->Link(bufferData[n], currentBufferDataCached[n]);
+		if (currentBufferData.size() >= bufferData.size()) {
+			bufferData.resize(currentBufferData.size());
+		}
+
+		for (size_t n = 0; n < currentBufferData.size(); n++) {
+			bytesCache->Link(bufferData[n], currentBufferData[n]);
 		}
 	} else {
+		std::vector<Bytes> currentBufferData;
+		for (uint32_t i = 0; i < parameters.size(); i++) {
+			const Parameter& parameter = parameters[i];
+			if (parameter.type == uniqueBindBuffer) {
+				const IShader::BindBuffer* buffer = reinterpret_cast<const IShader::BindBuffer*>((const char*)&partialData + (size_t)parameter.internalAddress);
+				if (bufferResources.size() <= parameter.slot) {
+					bufferResources.resize(parameter.slot + 1);
+				}
+
+				IRender::Resource::DrawCallDescription::BufferRange& range = bufferResources[parameter.slot];
+				range.buffer = buffer->resource;
+				range.offset = 0;
+				range.length = 0;
+			} else if (parameter.type == uniqueBindTexture) {
+				const IShader::BindTexture* texture = reinterpret_cast<const IShader::BindTexture*>((const char*)&partialData + (size_t)parameter.internalAddress);
+				if (textureResources.size() <= parameter.slot) {
+					textureResources.resize(parameter.slot + 1);
+				}
+
+				textureResources[parameter.slot] = texture->resource;
+			} else {
+				uint8_t bufferDataSize = safe_cast<uint8_t>(currentBufferData.size());
+				if (bufferDataSize <= parameter.slot) {
+					currentBufferData.resize(parameter.slot + 1);
+				}
+
+				assert(parameter.slot < currentBufferData.size());
+				Bytes& buffer = currentBufferData[parameter.slot];
+				const PassBase::Parameter& p = parameters[i];
+				if (buffer.Empty()) {
+					buffer.Resize(p.stride);
+				}
+
+				memcpy(buffer.GetData() + p.offset, (const uint8_t*)&partialData + (size_t)p.internalAddress, p.type->GetSize());
+			}
+		}
+
 		if (currentBufferData.size() >= bufferData.size()) {
 			bufferData.resize(currentBufferData.size());
 		}
