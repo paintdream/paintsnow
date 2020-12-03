@@ -693,7 +693,7 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 				}
 
 				Bytes bytes = warpData.bytesCache.New(localInstancedData.second.GetSize());
-				memcpy(bytes.GetData(), localInstancedData.second.GetData(), localInstancedData.second.GetSize());
+				bytes.Import(0, localInstancedData.second.GetData(), localInstancedData.second.GetSize());
 				warpData.bytesCache.Link(group.instancedData[localInstancedData.first], bytes);
 			}
 
@@ -706,7 +706,7 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 					uint8_t* data = s[j].GetData();
 					Bytes view = warpData.bytesCache.New(len * drawCall.drawCallDescription.instanceCounts.x());
 					for (size_t n = 0; n < drawCall.drawCallDescription.instanceCounts.x(); n++) {
-						view.Import(n* len, data, len);
+						view.Import(n * len, data, len);
 					}
 
 					warpData.bytesCache.Link(group.instancedData[j], view);

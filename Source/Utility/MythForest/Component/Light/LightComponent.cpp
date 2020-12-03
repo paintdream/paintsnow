@@ -123,6 +123,10 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 	OrthoCamera::UpdateCaptureData(captureData, viewMatrix);
 	WorldInstanceData instanceData;
 	instanceData.worldMatrix = shadowGrid->shadowMatrix = Math::QuickInverse(Math::MatrixScale(Float4(1, -1, -1, 1)) * viewMatrix);
+	IRender& render = engine.interfaces.render;
+	for (size_t i = 0; i < taskData->warpData.size(); i++) {
+		taskData->warpData[i].bytesCache.Reset();
+	}
 	taskData->rootEntity = shadowContext->rootEntity; // in case of gc
 	taskData->shadowGrid = shadowGrid();
 	taskData->ReferenceObject();
@@ -139,7 +143,6 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 	desc.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 	desc.depthStorage.resource = shadowGrid->texture->GetRenderResource();
 
-	IRender& render = engine.interfaces.render;
 	render.UploadResource(taskData->renderQueue, taskData->renderTargetResource, &desc);
 	render.ExecuteResource(taskData->renderQueue, taskData->stateResource);
 	render.ExecuteResource(taskData->renderQueue, taskData->renderTargetResource);
@@ -221,7 +224,7 @@ void LightComponent::ShadowLayer::CollectRenderableComponent(Engine& engine, Tas
 			}
 
 			group.instanceUpdater = &ip->second.instanceUpdater;
-			group.instanceUpdater->Snapshot(group.instancedData, bufferResources, textureResources, instanceData);
+			group.instanceUpdater->Snapshot(group.instancedData, bufferResources, textureResources, instanceData, &warpData.bytesCache);
 
 			// skinning
 			if (animationComponent) {
@@ -234,13 +237,13 @@ void LightComponent::ShadowLayer::CollectRenderableComponent(Engine& engine, Tas
 			}
 		} else {
 			InstanceGroup& group = (*it).second;
-			group.instanceUpdater->Snapshot(s, bufferResources, textureResources, instanceData);
+			group.instanceUpdater->Snapshot(s, bufferResources, textureResources, instanceData, &warpData.bytesCache);
 			assert(!group.instanceUpdater->parameters.empty());
 			assert(s.size() == group.instancedData.size());
 
 			// merge slice
 			for (size_t m = 0; m < group.instancedData.size(); m++) {
-				group.instancedData[m].Append(s[m]);
+				warpData.bytesCache.Link(group.instancedData[m], s[m]);
 			}
 		}
 
@@ -279,8 +282,10 @@ void LightComponent::ShadowLayer::CompleteCollect(Engine& engine, TaskData& task
 	IRender& render = engine.interfaces.render;
 
 	IRender::Resource* buffer = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_BUFFER);
-	Bytes bufferData;
 	std::vector<IRender::Resource*> drawCallResources;
+
+	Bytes bufferData;
+	uint32_t bufferSize = 0;
 
 	for (size_t k = 0; k < task.warpData.size(); k++) {
 		TaskData::WarpData& warpData = task.warpData[k];
@@ -292,12 +297,15 @@ void LightComponent::ShadowLayer::CompleteCollect(Engine& engine, TaskData& task
 				Bytes& data = group.instancedData[k];
 				assert(!data.Empty());
 				if (!data.Empty()) {
-					// assign instanced buffer	
+					assert(data.IsViewStorage());
+					// assign instanced buffer
+					size_t viewSize = data.GetViewSize();
 					IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[k];
 					bufferRange.buffer = buffer;
-					bufferRange.offset = safe_cast<uint32_t>(bufferData.GetSize());
-					bufferRange.component = safe_cast<uint8_t>(data.GetSize() / (group.instanceCount * sizeof(float)));
-					bufferData.Append(data);
+					bufferRange.offset = bufferSize;
+					bufferRange.component = safe_cast<uint8_t>(viewSize / (group.instanceCount * sizeof(float)));
+					warpData.bytesCache.Link(bufferData, data); // it's safe to link different bytesCache's data for read.
+					bufferSize += safe_cast<uint32_t>(viewSize);
 				}
 			}
 
@@ -313,7 +321,8 @@ void LightComponent::ShadowLayer::CompleteCollect(Engine& engine, TaskData& task
 	}
 
 	IRender::Resource::BufferDescription desc;
-	desc.data = std::move(bufferData);
+	assert(bufferSize == bufferData.GetViewSize());
+	bufferData.Export(desc.data);
 	desc.format = IRender::Resource::BufferDescription::FLOAT;
 	desc.usage = IRender::Resource::BufferDescription::INSTANCED;
 	desc.component = 0;
@@ -444,6 +453,7 @@ ShadowLayerConfig::TaskData::TaskData(Engine& engine, uint32_t warpCount, const 
 }
 
 void ShadowLayerConfig::TaskData::Destroy(IRender& render) {
+	Cleanup(render);
 	for (size_t i = 0; i < warpData.size(); i++) {
 		render.DeleteQueue(warpData[i].renderQueue);
 	}

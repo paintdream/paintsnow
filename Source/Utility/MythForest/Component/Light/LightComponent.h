@@ -5,6 +5,7 @@
 
 #pragma once
 #include "../../Entity.h"
+#include "../../../../Core/Template/TCache.h"
 #include "../Renderable/RenderableComponent.h"
 #include "../Animation/AnimationComponent.h"
 #include "../Stream/StreamComponent.h"
@@ -66,6 +67,7 @@ namespace PaintsNow {
 				WarpData();
 				InstanceGroupMap instanceGroups;
 				IRender::Queue* renderQueue;
+				BytesCache bytesCache;
 
 				struct GlobalBufferItem {
 					PassBase::PartialUpdater instanceUpdater;
