@@ -63,13 +63,13 @@ String StandardLightingFS::GetShaderText() {
 		VoH[k] = saturate(dot(V, H));
 	}
 
-	float4 q = (NoH * p - NoH) * NoH + float4(1.0, 1.0, 1.0, 1.0);
-	float4 vl = clamp(NoL, float4(0.1, 0.1, 0.1, 0.1), float4(1, 1, 1, 1));
+	float4 q = (NoH.xyzw * p - NoH.xyzw) * NoH.xyzw + float4(1.0, 1.0, 1.0, 1.0);
+	float4 vl = clamp(NoL.xyzw, float4(0.1, 0.1, 0.1, 0.1), float4(1, 1, 1, 1));
 	float vlc = clamp(NoV, float(0.01), float(1.0));
-	float4 vls = vl * sqrt(saturate(-vlc * p + vlc) * vlc + p);
-	vls = vls + sqrt(saturate(-vl * p + vl) * vl + p) * vlc;
-	float4 DG = (float4(0.5, 0.5, 0.5, 0.5) / PI * p) / max(vls * q * q, float4(0.0001, 0.0001, 0.0001, 0.0001));
-	float4 e = exp2(VoH * (VoH * float(-5.55473) - float4(6.98316, 6.98316, 6.98316, 6.98316)));
+	float4 vls = vl.xyzw * sqrt(saturate(-vlc * p + vlc) * vlc + p);
+	vls = vls + sqrt(saturate(-vl.xyzw * p + vl.xyzw) * vl.xyzw + p) * vlc;
+	float4 DG = (float4(0.5, 0.5, 0.5, 0.5) / PI * p) / max(vls.xyzw * (q * q), float4(0.0001, 0.0001, 0.0001, 0.0001));
+	float4 e = exp2(VoH.xyzw * (VoH.xyzw * float(-5.55473) - float4(6.98316, 6.98316, 6.98316, 6.98316)));
 
 	for (int i = 0; i < k; i++) {
 		float3 F = spec + (float3(f, f, f) - spec) * e[i];

@@ -466,6 +466,7 @@ struct CachedSnapshotBase<true> {
 
 template <bool useBytesCache>
 struct CachedSnapshot : public CachedSnapshotBase<useBytesCache> {
+	using CachedSnapshotBase<useBytesCache>::currentBufferData;
 	CachedSnapshot(BytesCache* bytesCache) : CachedSnapshotBase<useBytesCache>(bytesCache) {}
 	void Snapshot(const std::vector<PassBase::Parameter>& parameters, std::vector<Bytes>& bufferData, std::vector<IRender::Resource::DrawCallDescription::BufferRange>& bufferResources, std::vector<IRender::Resource*>& textureResources, const PassBase::PartialData& partialData, BytesCache* bytesCache) {
 		singleton Unique uniqueBindBuffer = UniqueType<IShader::BindBuffer>::Get();
