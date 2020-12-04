@@ -450,103 +450,91 @@ bool PassBase::FlushOptions() {
 
 PassBase::~PassBase() {}
 
-void PassBase::PartialUpdater::Snapshot(std::vector<Bytes>& bufferData, std::vector<IRender::Resource::DrawCallDescription::BufferRange>& bufferResources, std::vector<IRender::Resource*>& textureResources, const PassBase::PartialData& partialData, BytesCache* bytesCache) const {
-	singleton Unique uniqueBindBuffer = UniqueType<IShader::BindBuffer>::Get();
-	singleton Unique uniqueBindTexture = UniqueType<IShader::BindTexture>::Get();
+template <bool useBytesCache>
+struct CachedSnapshotBase {
+	CachedSnapshotBase(BytesCache* bytesCache) {}
+	std::vector<Bytes> currentBufferData;
+};
+
+template <>
+struct CachedSnapshotBase<true> {
+	CachedSnapshotBase(BytesCache* bytesCache) : allocator(bytesCache), currentBufferData(allocator) {}
 	typedef TCacheAllocator<Bytes, uint8_t> BytesCacheAllocator;
+	BytesCacheAllocator allocator;
+	std::vector<Bytes, BytesCacheAllocator> currentBufferData;
+};
 
+template <bool useBytesCache>
+struct CachedSnapshot : public CachedSnapshotBase<useBytesCache> {
+	CachedSnapshot(BytesCache* bytesCache) : CachedSnapshotBase<useBytesCache>(bytesCache) {}
+	void Snapshot(const std::vector<PassBase::Parameter>& parameters, std::vector<Bytes>& bufferData, std::vector<IRender::Resource::DrawCallDescription::BufferRange>& bufferResources, std::vector<IRender::Resource*>& textureResources, const PassBase::PartialData& partialData, BytesCache* bytesCache) {
+		singleton Unique uniqueBindBuffer = UniqueType<IShader::BindBuffer>::Get();
+		singleton Unique uniqueBindTexture = UniqueType<IShader::BindTexture>::Get();
+		for (uint32_t i = 0; i < parameters.size(); i++) {
+			const PassBase::Parameter& parameter = parameters[i];
+			if (parameter.type == uniqueBindBuffer) {
+				const IShader::BindBuffer* buffer = reinterpret_cast<const IShader::BindBuffer*>((const char*)&partialData + (size_t)parameter.internalAddress);
+				if (bufferResources.size() <= parameter.slot) {
+					bufferResources.resize(parameter.slot + 1);
+				}
+
+				IRender::Resource::DrawCallDescription::BufferRange& range = bufferResources[parameter.slot];
+				range.buffer = buffer->resource;
+				range.offset = 0;
+				range.length = 0;
+			} else if (parameter.type == uniqueBindTexture) {
+				const IShader::BindTexture* texture = reinterpret_cast<const IShader::BindTexture*>((const char*)&partialData + (size_t)parameter.internalAddress);
+				if (textureResources.size() <= parameter.slot) {
+					textureResources.resize(parameter.slot + 1);
+				}
+
+				textureResources[parameter.slot] = texture->resource;
+			} else {
+				uint8_t bufferDataSize = safe_cast<uint8_t>(currentBufferData.size());
+				if (bufferDataSize <= parameter.slot) {
+					currentBufferData.resize(parameter.slot + 1);
+				}
+
+				assert(parameter.slot < currentBufferData.size());
+				Bytes& buffer = currentBufferData[parameter.slot];
+				const PassBase::Parameter& p = parameters[i];
+				if (buffer.Empty()) {
+					if (useBytesCache) {
+						buffer = bytesCache->New(p.stride);
+					} else {
+						buffer.Resize(p.stride);
+					}
+				}
+
+				if (useBytesCache) {
+					buffer.Import(p.offset, (const uint8_t*)&partialData + (size_t)p.internalAddress, p.type->GetSize());
+				} else {
+					memcpy(buffer.GetData() + p.offset, (const uint8_t*)&partialData + (size_t)p.internalAddress, p.type->GetSize());
+				}
+			}
+		}
+
+		if (currentBufferData.size() >= bufferData.size()) {
+			bufferData.resize(currentBufferData.size());
+		}
+
+		for (size_t n = 0; n < currentBufferData.size(); n++) {
+			if (useBytesCache) {
+				bytesCache->Link(bufferData[n], currentBufferData[n]);
+			} else {
+				bufferData[n].Append(currentBufferData[n]);
+			}
+		}
+	}
+};
+
+void PassBase::PartialUpdater::Snapshot(std::vector<Bytes>& bufferData, std::vector<IRender::Resource::DrawCallDescription::BufferRange>& bufferResources, std::vector<IRender::Resource*>& textureResources, const PassBase::PartialData& partialData, BytesCache* bytesCache) const {
 	if (bytesCache != nullptr) {
-		BytesCacheAllocator allocator(bytesCache);
-		std::vector<Bytes, BytesCacheAllocator> currentBufferData(allocator);
-
-		for (uint32_t i = 0; i < parameters.size(); i++) {
-			const Parameter& parameter = parameters[i];
-			if (parameter.type == uniqueBindBuffer) {
-				const IShader::BindBuffer* buffer = reinterpret_cast<const IShader::BindBuffer*>((const char*)&partialData + (size_t)parameter.internalAddress);
-				if (bufferResources.size() <= parameter.slot) {
-					bufferResources.resize(parameter.slot + 1);
-				}
-
-				IRender::Resource::DrawCallDescription::BufferRange& range = bufferResources[parameter.slot];
-				range.buffer = buffer->resource;
-				range.offset = 0;
-				range.length = 0;
-			} else if (parameter.type == uniqueBindTexture) {
-				const IShader::BindTexture* texture = reinterpret_cast<const IShader::BindTexture*>((const char*)&partialData + (size_t)parameter.internalAddress);
-				if (textureResources.size() <= parameter.slot) {
-					textureResources.resize(parameter.slot + 1);
-				}
-
-				textureResources[parameter.slot] = texture->resource;
-			} else {
-				uint8_t bufferDataSize = safe_cast<uint8_t>(currentBufferData.size());
-				if (bufferDataSize <= parameter.slot) {
-					currentBufferData.resize(parameter.slot + 1);
-				}
-
-				assert(parameter.slot < currentBufferData.size());
-				Bytes& buffer = currentBufferData[parameter.slot];
-				const PassBase::Parameter& p = parameters[i];
-				if (buffer.Empty()) {
-					buffer = bytesCache->New(p.stride);
-				}
-
-				buffer.Import(p.offset, (const uint8_t*)&partialData + (size_t)p.internalAddress, p.type->GetSize());
-			}
-		}
-
-		if (currentBufferData.size() >= bufferData.size()) {
-			bufferData.resize(currentBufferData.size());
-		}
-
-		for (size_t n = 0; n < currentBufferData.size(); n++) {
-			bytesCache->Link(bufferData[n], currentBufferData[n]);
-		}
+		CachedSnapshot<true> snapshot(bytesCache);
+		snapshot.Snapshot(parameters, bufferData, bufferResources, textureResources, partialData, bytesCache);
 	} else {
-		std::vector<Bytes> currentBufferData;
-		for (uint32_t i = 0; i < parameters.size(); i++) {
-			const Parameter& parameter = parameters[i];
-			if (parameter.type == uniqueBindBuffer) {
-				const IShader::BindBuffer* buffer = reinterpret_cast<const IShader::BindBuffer*>((const char*)&partialData + (size_t)parameter.internalAddress);
-				if (bufferResources.size() <= parameter.slot) {
-					bufferResources.resize(parameter.slot + 1);
-				}
-
-				IRender::Resource::DrawCallDescription::BufferRange& range = bufferResources[parameter.slot];
-				range.buffer = buffer->resource;
-				range.offset = 0;
-				range.length = 0;
-			} else if (parameter.type == uniqueBindTexture) {
-				const IShader::BindTexture* texture = reinterpret_cast<const IShader::BindTexture*>((const char*)&partialData + (size_t)parameter.internalAddress);
-				if (textureResources.size() <= parameter.slot) {
-					textureResources.resize(parameter.slot + 1);
-				}
-
-				textureResources[parameter.slot] = texture->resource;
-			} else {
-				uint8_t bufferDataSize = safe_cast<uint8_t>(currentBufferData.size());
-				if (bufferDataSize <= parameter.slot) {
-					currentBufferData.resize(parameter.slot + 1);
-				}
-
-				assert(parameter.slot < currentBufferData.size());
-				Bytes& buffer = currentBufferData[parameter.slot];
-				const PassBase::Parameter& p = parameters[i];
-				if (buffer.Empty()) {
-					buffer.Resize(p.stride);
-				}
-
-				memcpy(buffer.GetData() + p.offset, (const uint8_t*)&partialData + (size_t)p.internalAddress, p.type->GetSize());
-			}
-		}
-
-		if (currentBufferData.size() >= bufferData.size()) {
-			bufferData.resize(currentBufferData.size());
-		}
-
-		for (size_t n = 0; n < currentBufferData.size(); n++) {
-			bufferData[n].Append(currentBufferData[n]);
-		}
+		CachedSnapshot<false> snapshot(bytesCache);
+		snapshot.Snapshot(parameters, bufferData, bufferResources, textureResources, partialData, bytesCache);
 	}
 }
 
