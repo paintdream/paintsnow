@@ -520,7 +520,9 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 				}
 
 				IRender::Resource::BufferDescription desc;
-				bufferData.Export(desc.data);
+				assert(bufferSize == bufferData.GetViewSize());
+				desc.data.Resize(bufferSize);
+				desc.data.Import(0, bufferData);
 				desc.format = IRender::Resource::BufferDescription::FLOAT;
 				desc.usage = IRender::Resource::BufferDescription::INSTANCED;
 				desc.component = 0;

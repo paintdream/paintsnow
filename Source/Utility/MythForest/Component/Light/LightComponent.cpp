@@ -314,7 +314,8 @@ void LightComponent::ShadowLayer::CompleteCollect(Engine& engine, TaskData& task
 
 	IRender::Resource::BufferDescription desc;
 	assert(bufferSize == bufferData.GetViewSize());
-	bufferData.Export(desc.data);
+	desc.data.Resize(bufferSize);
+	desc.data.Import(0, bufferData);
 	desc.format = IRender::Resource::BufferDescription::FLOAT;
 	desc.usage = IRender::Resource::BufferDescription::INSTANCED;
 	desc.component = 0;

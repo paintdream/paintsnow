@@ -202,7 +202,8 @@ void CameraComponent::Instancing(Engine& engine, TaskData& taskData) {
 			TaskData::PolicyData& policyData = warpData.renderPolicyMap[n].second;
 			if (!policyData.instanceData.Empty()) {
 				IRender::Resource::BufferDescription desc;
-				policyData.instanceData.Export(desc.data);
+				desc.data.Resize(policyData.instanceOffset);
+				desc.data.Import(0, policyData.instanceData);
 				assert(policyData.instanceOffset == desc.data.GetSize());
 				desc.format = IRender::Resource::BufferDescription::FLOAT;
 				desc.usage = IRender::Resource::BufferDescription::INSTANCED;
@@ -696,16 +697,12 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 
 			if (drawCall.localTransforms.empty()) {
 				std::vector<Bytes> s;
-				group.instanceUpdater->Snapshot(s, bufferResources, textureResources, instanceData);
+				group.instanceUpdater->Snapshot(s, bufferResources, textureResources, instanceData, &warpData.bytesCache);
 				assert(drawCall.drawCallDescription.instanceCounts.x() != 0);
 				for (size_t j = 0; j < s.size(); j++) {
-					uint32_t len = safe_cast<uint32_t>(s[j].GetSize());
-					uint8_t* data = s[j].GetData();
-					Bytes view = warpData.bytesCache.New(len * drawCall.drawCallDescription.instanceCounts.x());
-					for (size_t n = 0; n < drawCall.drawCallDescription.instanceCounts.x(); n++) {
-						view.Import(n * len, data, len);
-					}
-
+					uint32_t viewSize = safe_cast<uint32_t>(s[j].GetViewSize());
+					Bytes view = warpData.bytesCache.New(viewSize * drawCall.drawCallDescription.instanceCounts.x());
+					view.Import(0, s[j], drawCall.drawCallDescription.instanceCounts.x());
 					warpData.bytesCache.Link(group.instancedData[j], view);
 				}
 			} else {
