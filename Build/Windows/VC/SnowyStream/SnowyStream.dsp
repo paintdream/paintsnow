@@ -181,6 +181,10 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\LightBufferPass.cp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\LightEncoderCS.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\LightEncoderFS.cpp
 # End Source File
 # Begin Source File
@@ -329,10 +333,6 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\TextureResource.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\TileBasedLightCS.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\VolumePass.cpp
 # End Source File
 # Begin Source File
@@ -454,6 +454,10 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\GraphicResourceBase.h
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\LightBufferPass.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\LightEncoderCS.h
 # End Source File
 # Begin Source File
 
@@ -602,10 +606,6 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\TextTransformVS.h
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\TextureResource.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\TileBasedLightCS.h
 # End Source File
 # Begin Source File
 

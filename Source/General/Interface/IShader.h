@@ -16,12 +16,12 @@ namespace PaintsNow {
 	class pure_interface IShader : public IReflectObjectComplex {
 	public:
 		virtual String GetShaderText();
-		static int WorkGroupSize;
-		static int NumWorkGroups;
-		static int LocalInvocationID;
-		static int WorkGroupID;
-		static int GlobalInvocationID;
-		static int LocalInvocationIndex;
+		static UInt3 WorkGroupSize;
+		static UInt3 NumWorkGroups;
+		static UInt3 LocalInvocationID;
+		static UInt3 WorkGroupID;
+		static UInt3 GlobalInvocationID;
+		static uint32_t LocalInvocationIndex;
 
 		class MetaShader : public TReflected<MetaShader, MetaNodeBase> {
 		public:

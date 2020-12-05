@@ -7,6 +7,8 @@ static const String frameCode = "#version 330\n\
 #define PI 3.1415926 \n\
 #define GAMMA 2.2 \n\
 #define clip(f) if (f < 0) discard; \n\
+#define uint32_t uint \n\
+#define UInt3 uvec3 \n\
 #define float2 vec2 \n\
 #define float3 vec3 \n\
 #define float4 vec4 \n\
@@ -51,9 +53,13 @@ void GLSLShaderGenerator::Complete() {
 			declaration += info.second;
 			break;
 		case IRender::Resource::BufferDescription::UNIFORM:
+			if (!info.second.empty()) {
+				declaration += String("uniform _") + info.first + " {\n" + info.second + "} " + info.first + ";\n";
+			}
+			break;
 		case IRender::Resource::BufferDescription::STORAGE:
 			if (!info.second.empty()) {
-				declaration += (buffer->description.usage == IRender::Resource::BufferDescription::STORAGE ? String("buffer _") : stage == IRender::Resource::ShaderDescription::COMPUTE ? String("shared _") : String("uniform _")) + info.first + " {\n" + info.second + "} " + info.first + ";\n";
+				declaration += String("buffer _") + info.first + " {\n" + info.second + "} " + info.first + ";\n";
 			}
 			break;
 		}

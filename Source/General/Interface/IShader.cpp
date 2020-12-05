@@ -20,9 +20,9 @@ String IShader::GetShaderText() {
 	return "";
 }
 
-int IShader::WorkGroupSize;
-int IShader::NumWorkGroups;
-int IShader::LocalInvocationID;
-int IShader::WorkGroupID;
-int IShader::GlobalInvocationID;
-int IShader::LocalInvocationIndex;
+UInt3 IShader::WorkGroupSize;
+UInt3 IShader::NumWorkGroups;
+UInt3 IShader::LocalInvocationID;
+UInt3 IShader::WorkGroupID;
+UInt3 IShader::GlobalInvocationID;
+uint32_t IShader::LocalInvocationIndex;
