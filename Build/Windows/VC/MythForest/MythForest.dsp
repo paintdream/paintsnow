@@ -133,7 +133,11 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\DeferredLightingRenderStage.cpp
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\DeferredLightingBufferEncodedRenderStage.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\DeferredLightingTextureEncodedRenderStage.cpp
 # End Source File
 # Begin Source File
 
@@ -237,7 +241,7 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Layout\LayoutComponentMod
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\LightBufferRenderStage.cpp
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\LightBufferEncodeRenderStage.cpp
 # End Source File
 # Begin Source File
 
@@ -246,6 +250,10 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Light\LightComponent.cpp
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Light\LightComponentModule.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\LightTextureEncodeRenderStage.cpp
 # End Source File
 # Begin Source File
 
@@ -350,6 +358,10 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderPort\Ren
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderPort\RenderPortRenderTarget.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderPort\RenderPortSharedBuffer.cpp
 # End Source File
 # Begin Source File
 
@@ -545,7 +557,11 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\DeferredLightingRenderStage.h
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\DeferredLightingBufferEncodedRenderStage.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\DeferredLightingTextureEncodedRenderStage.h
 # End Source File
 # Begin Source File
 
@@ -649,7 +665,7 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Layout\LayoutComponentMod
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\LightBufferRenderStage.h
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\LightBufferEncodeRenderStage.h
 # End Source File
 # Begin Source File
 
@@ -658,6 +674,10 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Light\LightComponent.h
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Light\LightComponentModule.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\LightTextureEncodeRenderStage.h
 # End Source File
 # Begin Source File
 
@@ -762,6 +782,10 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderPort\Ren
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderPort\RenderPortRenderTarget.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderPort\RenderPortSharedBuffer.h
 # End Source File
 # Begin Source File
 

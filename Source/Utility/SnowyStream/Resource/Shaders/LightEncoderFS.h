@@ -18,9 +18,8 @@ namespace PaintsNow {
 
 		// uniforms
 		MatrixFloat4x4 inverseProjectionMatrix;
-		Float2 invScreenSize;
+		Float3 reserved;
 		float lightCount;
-		float reserved;
 		std::vector<Float4> lightInfos;
 
 	protected:

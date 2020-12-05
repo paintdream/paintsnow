@@ -133,7 +133,11 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\DeferredCompactFS
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\DeferredLightingPass.cpp
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\DeferredLightingBufferEncodedPass.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\DeferredLightingTextureEncodedPass.cpp
 # End Source File
 # Begin Source File
 
@@ -177,7 +181,7 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\GraphicResourceBase.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\LightBufferPass.cpp
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\LightBufferEncodePass.cpp
 # End Source File
 # Begin Source File
 
@@ -186,6 +190,10 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\LightEncoderCS.cp
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\LightEncoderFS.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\LightTextureEncodePass.cpp
 # End Source File
 # Begin Source File
 
@@ -409,7 +417,11 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\DeferredCompactFS
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\DeferredLightingPass.h
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\DeferredLightingBufferEncodedPass.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\DeferredLightingTextureEncodedPass.h
 # End Source File
 # Begin Source File
 
@@ -453,7 +465,7 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\GraphicResourceBase.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\LightBufferPass.h
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\LightBufferEncodePass.h
 # End Source File
 # Begin Source File
 
@@ -462,6 +474,10 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\LightEncoderCS.h
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\LightEncoderFS.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\LightTextureEncodePass.h
 # End Source File
 # Begin Source File
 

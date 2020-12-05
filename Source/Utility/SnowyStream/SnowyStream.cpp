@@ -10,12 +10,12 @@
 #include "Resource/Passes/BloomPass.h"
 #include "Resource/Passes/ConstMapPass.h"
 #include "Resource/Passes/CustomMaterialPass.h"
-#include "Resource/Passes/DeferredLightingPass.h"
+#include "Resource/Passes/DeferredLightingTextureEncodedPass.h"
 #include "Resource/Passes/DepthResolvePass.h"
 #include "Resource/Passes/DepthBoundingPass.h"
 #include "Resource/Passes/DepthBoundingSetupPass.h"
 #include "Resource/Passes/ForwardLightingPass.h"
-#include "Resource/Passes/LightBufferPass.h"
+#include "Resource/Passes/LightTextureEncodePass.h"
 #include "Resource/Passes/MultiHashSetupPass.h"
 #include "Resource/Passes/MultiHashTracePass.h"
 #include "Resource/Passes/ParticlePass.h"
@@ -680,11 +680,11 @@ void SnowyStream::RegisterBuiltinPasses() {
 	RegisterPass(*resourceManager(), UniqueType<BloomPass>());
 	RegisterPass(*resourceManager(), UniqueType<ConstMapPass>());
 	RegisterPass(*resourceManager(), UniqueType<CustomMaterialPass>());
-	RegisterPass(*resourceManager(), UniqueType<DeferredLightingPass>());
+	RegisterPass(*resourceManager(), UniqueType<DeferredLightingTextureEncodedPass>());
 	RegisterPass(*resourceManager(), UniqueType<DepthResolvePass>());
 	RegisterPass(*resourceManager(), UniqueType<DepthBoundingPass>());
 	RegisterPass(*resourceManager(), UniqueType<DepthBoundingSetupPass>());
-	RegisterPass(*resourceManager(), UniqueType<LightBufferPass>());
+	RegisterPass(*resourceManager(), UniqueType<LightTextureEncodePass>());
 	RegisterPass(*resourceManager(), UniqueType<MultiHashSetupPass>());
 	RegisterPass(*resourceManager(), UniqueType<MultiHashTracePass>());
 	RegisterPass(*resourceManager(), UniqueType<ScreenPass>());

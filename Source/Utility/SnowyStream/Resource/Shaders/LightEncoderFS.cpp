@@ -54,9 +54,8 @@ TObject<IReflect>& LightEncoderFS::operator () (IReflect& reflect) {
 		ReflectProperty(rasterCoord)[BindInput(BindInput::TEXCOORD)];
 
 		ReflectProperty(inverseProjectionMatrix)[lightBuffer][BindInput(BindInput::TRANSFORM_VIEWPROJECTION_INV)];
-		ReflectProperty(invScreenSize)[lightBuffer][BindInput(BindInput::GENERAL)];
-		ReflectProperty(lightCount)[lightBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(reserved)[lightBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(lightCount)[lightBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(lightInfos)[lightBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(outputIndex)[BindOutput(BindOutput::COLOR)];
 	}

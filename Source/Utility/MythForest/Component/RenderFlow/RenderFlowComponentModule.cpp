@@ -4,13 +4,13 @@
 #include "RenderStage/BloomRenderStage.h"
 #include "RenderStage/FrameBarrierRenderStage.h"
 #include "RenderStage/ForwardLightingRenderStage.h"
-#include "RenderStage/DeferredLightingRenderStage.h"
+#include "RenderStage/DeferredLightingTextureEncodedRenderStage.h"
 #include "RenderStage/DepthBoundingRenderStage.h"
 #include "RenderStage/DepthBoundingSetupRenderStage.h"
 #include "RenderStage/DepthResolveRenderStage.h"
 #include "RenderStage/DeviceRenderStage.h"
 #include "RenderStage/GeometryBufferRenderStage.h"
-#include "RenderStage/LightBufferRenderStage.h"
+#include "RenderStage/LightTextureEncodeRenderStage.h"
 #include "RenderStage/PhaseLightRenderStage.h"
 #include "RenderStage/ScreenRenderStage.h"
 #include "RenderStage/ScreenSpaceTraceRenderStage.h"
@@ -38,10 +38,10 @@ RenderFlowComponentModule::RenderFlowComponentModule(Engine& engine) : BaseClass
 	REGISTER_TEMPLATE(DepthResolveRenderStage);
 	REGISTER_TEMPLATE(DepthBoundingRenderStage);
 	REGISTER_TEMPLATE(DepthBoundingSetupRenderStage);
-	REGISTER_TEMPLATE(DeferredLightingRenderStage);
+	REGISTER_TEMPLATE(DeferredLightingTextureEncodedRenderStage);
 	REGISTER_TEMPLATE(DeviceRenderStage);
 	REGISTER_TEMPLATE(GeometryBufferRenderStage);
-	REGISTER_TEMPLATE(LightBufferRenderStage);
+	REGISTER_TEMPLATE(LightTextureEncodeRenderStage);
 	REGISTER_TEMPLATE(PhaseLightRenderStage);
 	REGISTER_TEMPLATE(ScreenRenderStage);
 	REGISTER_TEMPLATE(ScreenSpaceTraceRenderStage);

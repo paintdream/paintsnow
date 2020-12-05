@@ -7,9 +7,9 @@
 #include "../../../../General/Interface/IShader.h"
 
 namespace PaintsNow {
-	class TileBasedLightCS : public TReflected<TileBasedLightCS, IShader> {
+	class LightEncoderCS : public TReflected<LightEncoderCS, IShader> {
 	public:
-		TileBasedLightCS();
+		LightEncoderCS();
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		String GetShaderText() override;
 
@@ -19,7 +19,7 @@ namespace PaintsNow {
 
 		// uniforms
 		MatrixFloat4x4 inverseProjectionMatrix;
-		Float2 invScreenSize;
+		Float2 screenSize;
 		float lightCount;
 		float reserved;
 		std::vector<Float4> lightInfos;
