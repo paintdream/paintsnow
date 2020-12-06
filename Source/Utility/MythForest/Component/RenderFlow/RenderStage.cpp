@@ -45,19 +45,23 @@ void RenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	IRender& render = engine.interfaces.render;
 	IRender::Device* device = engine.snowyStream.GetRenderDevice();
 
-	assert(renderState == nullptr);
-	assert(renderTarget == nullptr);
-	assert(!renderTargetDescription.colorStorages.empty());
+	if (!(Flag().load(std::memory_order_relaxed) & RENDERSTAGE_COMPUTE_PASS)) {
+		assert(renderState == nullptr);
+		assert(renderTarget == nullptr);
+		assert(!renderTargetDescription.colorStorages.empty());
 
-	renderState = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_RENDERSTATE);
-	render.UploadResource(queue, renderState, &renderStateDescription);
-	renderTarget = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_RENDERTARGET);
+		renderState = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_RENDERSTATE);
+		render.UploadResource(queue, renderState, &renderStateDescription);
+		renderTarget = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_RENDERTARGET);
+	}
 }
 
 void RenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
-	IRender::Resource::RenderTargetDescription desc = renderTargetDescription;
+	Tiny::FLAG flag = Flag().load(std::memory_order_acquire);
+	if (flag & RENDERSTAGE_COMPUTE_PASS) return; // no render targets
 
-	if (Flag().load(std::memory_order_acquire) & RENDERSTAGE_OUTPUT_TO_BACK_BUFFER) {
+	IRender::Resource::RenderTargetDescription desc = renderTargetDescription;
+	if (flag & RENDERSTAGE_OUTPUT_TO_BACK_BUFFER) {
 		desc.colorStorages.resize(1);
 		desc.colorStorages[0].backBuffer = 1;
 		desc.colorStorages[0].resource = nullptr;
@@ -156,37 +160,43 @@ const IRender::Resource::RenderTargetDescription& RenderStage::GetRenderTargetDe
 }
 
 void RenderStage::Commit(Engine& engine, std::vector<IRender::Queue*>& queues, std::vector<IRender::Queue*>& instantQueues, std::vector<IRender::Queue*>& deletedQueues, IRender::Queue* instantQueue) {
+	Tiny::FLAG flag = Flag().load(std::memory_order_relaxed);
 	assert(Flag().load(std::memory_order_acquire) & TINY_ACTIVATED);
 	for (size_t i = 0; i < nodePorts.size(); i++) {
 		nodePorts[i].port->Commit(queues, instantQueues, deletedQueues);
 	}
 
-	IRender& render = engine.interfaces.render;
-	render.ExecuteResource(instantQueue, renderState);
-	render.ExecuteResource(instantQueue, renderTarget);
+	if (!(flag & RENDERSTAGE_COMPUTE_PASS)) {
+		IRender& render = engine.interfaces.render;
+		render.ExecuteResource(instantQueue, renderState);
+		render.ExecuteResource(instantQueue, renderTarget);
+	}
 }
 
 void RenderStage::SetMainResolution(Engine& engine, IRender::Queue* resourceQueue, UShort2 res) {
-	if (!(Flag().load(std::memory_order_acquire) & RENDERSTAGE_ADAPT_MAIN_RESOLUTION)) return;	
-	// By default, create render buffer with resolution provided
-	// For some stages(e.g. cascaded bloom generator), we must override this function to adapt the new value
-	// by now we have no color-free render buffers
-	uint16_t width = res.x(), height = res.y();
-	IRender& render = engine.interfaces.render;
-	assert(width != 0 && height != 0);
-	width = safe_cast<uint16_t>(resolutionShift.x() > 0 ? Math::Max(width >> resolutionShift.x(), 2) : width << resolutionShift.x());
-	height = safe_cast<uint16_t>(resolutionShift.y() > 0 ? Math::Max(height >> resolutionShift.y(), 2) : height << resolutionShift.y());
+	if (!(Flag().load(std::memory_order_acquire) & RENDERSTAGE_ADAPT_MAIN_RESOLUTION)) return;
 
-	const std::vector<PortInfo>& portInfos = GetPorts();
-	for (size_t i = 0; i < portInfos.size(); i++) {
-		RenderPortRenderTargetStore* rt = portInfos[i].port->QueryInterface(UniqueType<RenderPortRenderTargetStore>());
-		if (rt != nullptr) {
-			rt->renderTargetDescription.dimension.x() = width;
-			rt->renderTargetDescription.dimension.y() = height;
+	if (!(flag & RENDERSTAGE_COMPUTE_PASS)) {
+		// By default, create render buffer with resolution provided
+		// For some stages(e.g. cascaded bloom generator), we must override this function to adapt the new value
+		// by now we have no color-free render buffers
+		uint16_t width = res.x(), height = res.y();
+		IRender& render = engine.interfaces.render;
+		assert(width != 0 && height != 0);
+		width = safe_cast<uint16_t>(resolutionShift.x() > 0 ? Math::Max(width >> resolutionShift.x(), 2) : width << resolutionShift.x());
+		height = safe_cast<uint16_t>(resolutionShift.y() > 0 ? Math::Max(height >> resolutionShift.y(), 2) : height << resolutionShift.y());
 
-			if (rt->attachedTexture) {
-				rt->attachedTexture->description.dimension = rt->renderTargetDescription.dimension;
-				render.UploadResource(resourceQueue, rt->attachedTexture->GetRenderResource(), &rt->attachedTexture->description);
+		const std::vector<PortInfo>& portInfos = GetPorts();
+		for (size_t i = 0; i < portInfos.size(); i++) {
+			RenderPortRenderTargetStore* rt = portInfos[i].port->QueryInterface(UniqueType<RenderPortRenderTargetStore>());
+			if (rt != nullptr) {
+				rt->renderTargetDescription.dimension.x() = width;
+				rt->renderTargetDescription.dimension.y() = height;
+
+				if (rt->attachedTexture) {
+					rt->attachedTexture->description.dimension = rt->renderTargetDescription.dimension;
+					render.UploadResource(resourceQueue, rt->attachedTexture->GetRenderResource(), &rt->attachedTexture->description);
+				}
 			}
 		}
 	}

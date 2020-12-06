@@ -293,7 +293,11 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\SnowyStream.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\StandardLightingFS.cpp
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\StandardLightingBufferEncodedFS.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\StandardLightingTextureEncodedFS.cpp
 # End Source File
 # Begin Source File
 
@@ -577,7 +581,11 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\SnowyStream.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\StandardLightingFS.h
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\StandardLightingBufferEncodedFS.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\StandardLightingTextureEncodedFS.h
 # End Source File
 # Begin Source File
 

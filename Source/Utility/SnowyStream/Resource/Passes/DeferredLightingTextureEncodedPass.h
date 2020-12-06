@@ -7,7 +7,7 @@
 #include "../../../../General/Misc/PassBase.h"
 #include "../Shaders/ScreenTransformVS.h"
 #include "../Shaders/DeferredCompactFS.h"
-#include "../Shaders/StandardLightingFS.h"
+#include "../Shaders/StandardLightingTextureEncodedFS.h"
 
 namespace PaintsNow {
 	// standard pbr deferred shading Pass using ggx brdf
@@ -20,6 +20,6 @@ namespace PaintsNow {
 		ScreenTransformVS screenTransform;
 		// Fragment shaders
 		DeferredCompactDecodeFS deferredCompactDecode;
-		StandardLightingFS standardLighting;
+		StandardLightingTextureEncodedFS standardLighting;
 	};
 }

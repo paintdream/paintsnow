@@ -20,7 +20,8 @@ namespace PaintsNow {
 			RENDERSTAGE_WEAK_LINKAGE = TINY_CUSTOM_BEGIN,
 			RENDERSTAGE_ADAPT_MAIN_RESOLUTION = TINY_CUSTOM_BEGIN << 1,
 			RENDERSTAGE_OUTPUT_TO_BACK_BUFFER = TINY_CUSTOM_BEGIN << 2,
-			RENDERSTAGE_CUSTOM_BEGIN = TINY_CUSTOM_BEGIN << 3
+			RENDERSTAGE_COMPUTE_PASS = TINY_CUSTOM_BEGIN << 3,
+			RENDERSTAGE_CUSTOM_BEGIN = TINY_CUSTOM_BEGIN << 4
 		};
 
 		virtual void PrepareResources(Engine& engine, IRender::Queue* resourceQueue);
@@ -60,6 +61,12 @@ namespace PaintsNow {
 			String path = ShaderResource::GetShaderPathPrefix() + UniqueType<T>::Get()->GetBriefName();
 			sharedShader = engine.snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), path, true, ResourceBase::RESOURCE_VIRTUAL);
 			shaderInstance.Reset(static_cast<ShaderResourceImpl<T>*>(sharedShader->Clone()));
+
+			// Process compute shader stage.
+			if (GetPass().ExportShaderStageMask() & (1 << IRender::Resource::ShaderDescription::COMPUTE)) {
+				BaseClass::Flag().fetch_or(BaseClass::RENDERSTAGE_COMPUTE_PASS, std::memory_order_relaxed);
+			}
+
 			BaseClass::PrepareResources(engine, queue);
 		}
 

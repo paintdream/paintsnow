@@ -65,7 +65,7 @@ void DeferredLightingTextureEncodedRenderStage::UpdatePass(Engine& engine, IRend
 		render.UploadResource(queue, renderState, &renderStateDescription);
 	}
 
-	StandardLightingFS& standardLighting = Pass.standardLighting;
+	StandardLightingTextureEncodedFS& standardLighting = Pass.standardLighting;
 	standardLighting.cubeLevelInv = 1.0f;
 	standardLighting.cubeStrength = 1.0f;
 
@@ -96,7 +96,7 @@ void DeferredLightingTextureEncodedRenderStage::UpdatePass(Engine& engine, IRend
 	}
 
 	const std::vector<RenderPortLightSource::LightElement>& lights = LightSource->lightElements;
-	uint32_t count = Math::Min((uint32_t)lights.size(), (uint32_t)StandardLightingFS::MAX_LIGHT_COUNT);
+	uint32_t count = Math::Min((uint32_t)lights.size(), (uint32_t)StandardLightingTextureEncodedFS::MAX_LIGHT_COUNT);
 	for (uint32_t i = 0; i < count; i++) {
 		const RenderPortLightSource::LightElement& light = lights[i];
 

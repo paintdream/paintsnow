@@ -6,7 +6,6 @@
 #pragma once
 #include "../../../../General/Misc/PassBase.h"
 #include "../Shaders/ScreenTransformVS.h"
-#include "../Shaders/LightEncoderFS.h"
 #include "../Shaders/LightEncoderCS.h"
 
 namespace PaintsNow {

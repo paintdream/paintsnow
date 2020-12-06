@@ -108,7 +108,7 @@ TShared<MaterialResource> ShaderComponent::ExportMaterial(Engine& engine, const 
 	// create anouymous material
 	TShared<MaterialResource> materialResource = engine.snowyStream.CreateReflectedResource(UniqueType<MaterialResource>(), "", false, ResourceBase::RESOURCE_VIRTUAL);
 
-	assert(materialTemplate->Flag() & ResourceBase::RESOURCE_UPLOADED);
+	assert(materialTemplate->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_UPLOADED);
 	assert(!materialTemplate->materialParams.variables.empty());
 
 	materialResource->materialParams = materialTemplate->materialParams;

@@ -363,6 +363,35 @@ Bytes PassBase::ExportHash() const {
 	return exporter.hashValue;
 }
 
+
+class ShaderStageMaskExporter : public IReflect {
+public:
+	uint32_t mask;
+	ShaderStageMaskExporter() : IReflect(true, false, false, false), mask(0) {}
+
+	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override {
+		if (!s.IsBasicObject()) {
+			for (const MetaChainBase* check = meta; check != nullptr; check = check->GetNext()) {
+				const MetaNodeBase* node = check->GetNode();
+				if (node->GetUnique() == UniqueType<IShader::MetaShader>::Get()) {
+					const IShader::MetaShader* metaShader = static_cast<const IShader::MetaShader*>(node);
+					mask |= 1 << metaShader->shaderType;
+				}
+			}
+		}
+	}
+
+	void Method(const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
+};
+
+
+uint32_t PassBase::ExportShaderStageMask() const {
+	ShaderStageMaskExporter exporter;
+	(const_cast<PassBase&>(*this))(exporter);
+
+	return exporter.mask;
+}
+
 class BindingCleaner : public IReflect {
 public:
 	BindingCleaner() : IReflect(true, false, false, false) {}

@@ -25,6 +25,7 @@ namespace PaintsNow {
 		void ClearBindings();
 		virtual bool FlushOptions();
 		Bytes ExportHash() const;
+		uint32_t ExportShaderStageMask() const;
 
 		struct Parameter {
 			Parameter();
