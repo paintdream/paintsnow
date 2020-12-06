@@ -116,7 +116,7 @@ void ModelComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTe
 	}
 }
 
-uint32_t ModelComponent::CollectDrawCalls(std::vector<OutputRenderData>& drawCalls, const InputRenderData& inputRenderData) {
+uint32_t ModelComponent::CollectDrawCalls(std::vector<OutputRenderData, DrawCallAllocator>& drawCalls, const InputRenderData& inputRenderData, BytesCache& bytesCache) {
 	if (drawCallTemplates.empty()) return 0;
 	assert(!(Flag().fetch_or(Tiny::TINY_PINNED) & Tiny::TINY_PINNED));
 

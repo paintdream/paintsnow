@@ -9,6 +9,7 @@
 #include "../../Core/Interface/IType.h"
 #include "../../Core/Template/TProxy.h"
 #include "../../Core/Template/TBuffer.h"
+#include "../../Core/Template/TCache.h"
 #include "../../Core/Interface/IDevice.h"
 #include <string>
 #include <map>
@@ -170,7 +171,7 @@ namespace PaintsNow {
 			};
 
 			struct RenderTargetDescription : public Description {
-				RenderTargetDescription() : range(UShort2(0, 0), UShort2(0, 0)){}
+				RenderTargetDescription() : range(UShort2(0, 0), UShort2(0, 0)) {}
 
 				// attachments
 				UShort2Pair range;
@@ -198,12 +199,12 @@ namespace PaintsNow {
 				std::vector<Storage> colorStorages; // 0 for backbuffer
 				std::vector<Resource*> depResources;
 			};
+
 			
 			struct DrawCallDescription : public Description {
 				DrawCallDescription() : shaderResource(nullptr), instanceCounts(0, 0, 0) {}
 				Resource* shaderResource;
 				UInt3 instanceCounts; // y/z for compute shaders
-				
 				struct BufferRange {
 					BufferRange() : buffer(nullptr), offset(0), length(0), component(0), type(0) {}
 

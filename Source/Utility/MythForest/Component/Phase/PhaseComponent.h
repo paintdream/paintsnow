@@ -4,6 +4,7 @@
 //
 
 #pragma once
+#include "../../../../Core/Template/TCache.h"
 #include "../../Component.h"
 #include "../../../SnowyStream/SnowyStream.h"
 #include "../../../SnowyStream/Resource/TextureResource.h"
@@ -78,6 +79,7 @@ namespace PaintsNow {
 				std::vector<IRender::Resource*> buffers;
 			};
 
+			BytesCache bytesCache;
 			std::map<ShaderResource*, GlobalBufferItem> worldGlobalBufferMap;
 			InstanceGroupMap instanceGroups;
 			std::vector<IRender::Resource*> runtimeResources;

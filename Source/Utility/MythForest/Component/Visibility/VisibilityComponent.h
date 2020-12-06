@@ -63,6 +63,7 @@ namespace PaintsNow {
 				STATUS_ASSEMBLED,
 				STATUS_BAKING,
 				STATUS_BAKED,
+				STATUS_POSTPROCESS,
 			};
 
 			TaskData() : status(STATUS_IDLE), pendingCount(0), renderQueue(nullptr), renderTarget(nullptr) {}
@@ -111,12 +112,11 @@ namespace PaintsNow {
 		void Setup(Engine& engine, float distance, const Float3& gridSize, uint32_t taskCount, const UShort2& resolution);
 
 	protected:
-
 		void TickRender(Engine& engine);
 		void RoutineTickTasks(Engine& engine);
 		void ResolveTasks(Engine& engine);
 		void DispatchTasks(Engine& engine);
-
+		void PostProcess(TaskData& task);
 
 		void CoTaskAssembleTask(Engine& engine, TaskData& task, uint32_t face);
 		void SetupIdentities(Engine& engine, Entity* hostEntity);

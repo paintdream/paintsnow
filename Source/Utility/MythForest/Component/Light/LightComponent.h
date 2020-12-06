@@ -106,7 +106,7 @@ namespace PaintsNow {
 
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		FLAG GetEntityFlagMask() const override;
-		uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) override;
+		uint32_t CollectDrawCalls(std::vector<OutputRenderData, DrawCallAllocator>& outputDrawCalls, const InputRenderData& inputRenderData, BytesCache& bytesCache) override;
 		void UpdateBoundingBox(Engine& engine, Float3Pair& box) override;
 		void Uninitialize(Engine& engine, Entity* entity) override;
 

@@ -405,7 +405,8 @@ void PhaseComponent::ResolveTasks(Engine& engine) {
 								desc.format = IRender::Resource::BufferDescription::FLOAT;
 								desc.usage = IRender::Resource::BufferDescription::INSTANCED;
 								desc.component = safe_cast<uint8_t>(data.GetSize() / (group.instanceCount * sizeof(float)));
-								desc.data = std::move(data);
+								desc.data.Resize(data.GetViewSize());
+								desc.data.Import(0, data);
 								render.UploadResource(queue, buffer, &desc);
 
 								// assign instanced buffer	
@@ -438,6 +439,7 @@ void PhaseComponent::ResolveTasks(Engine& engine) {
 					}
 
 					warpData.runtimeResources.clear();
+					warpData.bytesCache.Reset();
 				}
 
 				finalStatus.store(TaskData::STATUS_ASSEMBLED, std::memory_order_release);
@@ -602,21 +604,14 @@ void PhaseComponent::CollectRenderableComponent(Engine& engine, TaskData& taskDa
 			if (group.drawCallDescription.shaderResource == nullptr)
 				break;
 
-			std::vector<Bytes> s;
-			group.instanceUpdater->Snapshot(s, bufferResources, textureResources, instanceData);
-
-			assert(s.size() == group.instancedData.size());
-			for (size_t k = 0; k < s.size(); k++) {
-				assert(!s[k].Empty());
-				group.instancedData[k].Append(s[k]);
-			}
-
+			group.instanceUpdater->Snapshot(group.instancedData, bufferResources, textureResources, instanceData, &warpData.bytesCache);
 			group.instanceCount++;
 		}
 	} else {
 		IDrawCallProvider::InputRenderData inputRenderData(0.0f, taskData.pipeline);
-		std::vector<IDrawCallProvider::OutputRenderData> drawCalls;
-		renderableComponent->CollectDrawCalls(drawCalls, inputRenderData);
+		IDrawCallProvider::DrawCallAllocator allocator(&warpData.bytesCache);
+		std::vector<IDrawCallProvider::OutputRenderData, IDrawCallProvider::DrawCallAllocator> drawCalls(allocator);
+		renderableComponent->CollectDrawCalls(drawCalls, inputRenderData, warpData.bytesCache);
 		assert(drawCalls.size() < sizeof(RenderableComponent) - 1);
 
 		for (size_t i = 0; i < drawCalls.size(); i++) {
@@ -670,16 +665,9 @@ void PhaseComponent::CollectRenderableComponent(Engine& engine, TaskData& taskDa
 				}
 
 				group.instanceUpdater = &ip->second.instanceUpdater;
-				group.instanceUpdater->Snapshot(group.instancedData, bufferResources, textureResources, instanceData);
-			} else {
-				std::vector<Bytes> s;
-				group.instanceUpdater->Snapshot(s, bufferResources, textureResources, instanceData);
-				for (size_t k = 0; k < s.size(); k++) {
-					assert(!s[k].Empty());
-					group.instancedData[k].Append(s[k]);
-				}
 			}
 
+			group.instanceUpdater->Snapshot(group.instancedData, bufferResources, textureResources, instanceData, &warpData.bytesCache);
 			group.instanceCount++;
 		}
 	}

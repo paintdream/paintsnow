@@ -4,6 +4,7 @@
 //
 
 #pragma once
+#include "../../../../Core/Template/TCache.h"
 #include "../../Entity.h"
 #include "../../Component.h"
 #include "../../../SnowyStream/Resource/GraphicResourceBase.h"
@@ -32,7 +33,8 @@ namespace PaintsNow {
 			std::vector<std::pair<uint32_t, Bytes> > localInstancedData;
 		};
 
-		virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) = 0;
+		typedef TCacheAllocator<OutputRenderData, uint8_t> DrawCallAllocator;
+		virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData, DrawCallAllocator>& outputDrawCalls, const InputRenderData& inputRenderData, BytesCache& bytesCache) = 0;
 	};
 
 

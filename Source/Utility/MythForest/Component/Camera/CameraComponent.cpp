@@ -537,8 +537,9 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 	IRender& render = engine.interfaces.render;
 	IRender::Device* device = engine.snowyStream.GetRenderDevice();
 	IDrawCallProvider::InputRenderData inputRenderData(instanceData.viewReference, nullptr, renderFlowComponent->GetMainResolution());
-	std::vector<IDrawCallProvider::OutputRenderData> drawCalls;
-	renderableComponent->CollectDrawCalls(drawCalls, inputRenderData);
+	IDrawCallProvider::DrawCallAllocator allocator(&warpData.bytesCache);
+	std::vector<IDrawCallProvider::OutputRenderData, IDrawCallProvider::DrawCallAllocator> drawCalls(allocator);
+	renderableComponent->CollectDrawCalls(drawCalls, inputRenderData, warpData.bytesCache);
 	TaskData::WarpData::InstanceGroupMap& instanceGroups = warpData.instanceGroups;
 
 	bool isCameraViewSpace = !!(renderableComponent->Flag().load(std::memory_order_relaxed) & RenderableComponent::RENDERABLECOMPONENT_CAMERAVIEW);

@@ -369,10 +369,11 @@ void VisibilityComponent::CollectRenderableComponent(Engine& engine, TaskData& t
 		}
 	} else {
 		IDrawCallProvider::InputRenderData inputRenderData(0.0f, pipeline());
-		std::vector<IDrawCallProvider::OutputRenderData> drawCalls;
+		IDrawCallProvider::DrawCallAllocator allocator(&warpData.bytesCache);
+		std::vector<IDrawCallProvider::OutputRenderData, IDrawCallProvider::DrawCallAllocator> drawCalls(allocator);
 		IThread& thread = engine.interfaces.thread;
 		thread.DoLock(collectLock);
-		renderableComponent->CollectDrawCalls(drawCalls, inputRenderData);
+		renderableComponent->CollectDrawCalls(drawCalls, inputRenderData, warpData.bytesCache);
 		thread.UnLock(collectLock);
 		assert(drawCalls.size() < sizeof(RenderableComponent) - 1);
 
@@ -439,34 +440,40 @@ void VisibilityComponent::CollectComponents(Engine& engine, TaskData& task, cons
 	}
 }
 
+void VisibilityComponent::PostProcess(TaskData& task) {
+	assert(task.status == TaskData::STATUS_BAKED);
+	Cell& cell = *task.cell;
+	Bytes& encodedData = cell.payload;
+	const Bytes& data = task.data;
+	assert(data.GetSize() % sizeof(uint32_t) == 0);
+	uint32_t count = safe_cast<uint32_t>(data.GetSize()) / sizeof(uint32_t);
+	const uint32_t* p = reinterpret_cast<const uint32_t*>(data.GetData());
+	uint8_t* target = encodedData.GetData();
+
+	for (size_t m = 0; m < count; m++) {
+		uint32_t objectID = p[m];
+		uint32_t location = objectID >> 3;
+		if (location >= encodedData.GetSize()) {
+			encodedData.Resize(location + 1, 0);
+			target = encodedData.GetData();
+		}
+
+		target[location] |= 1 << (objectID & 7);
+	}
+
+	cell.finishCount++;
+	std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(task.status);
+	finalStatus.store(TaskData::STATUS_IDLE);
+}
+
 void VisibilityComponent::ResolveTasks(Engine& engine) {
 	// resolve finished tasks
 	for (size_t k = 0; k < tasks.size(); k++) {
 		TaskData& task = tasks[k];
 		std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(task.status);
 		if (task.status == TaskData::STATUS_BAKED) {
-			Cell& cell = *task.cell;
-			Bytes& encodedData = cell.payload;
-			const Bytes& data = task.data;
-			assert(data.GetSize() % sizeof(uint32_t) == 0);
-			uint32_t count = safe_cast<uint32_t>(data.GetSize()) / sizeof(uint32_t);
-			const uint32_t* p = reinterpret_cast<const uint32_t*>(data.GetData());
-			uint8_t* target = encodedData.GetData();
-
-			for (size_t m = 0; m < count; m++) {
-				uint32_t objectID = p[m];
-				uint32_t location = objectID >> 3;
-				if (location >= encodedData.GetSize()) {
-					encodedData.Resize(location + 1, 0);
-					target = encodedData.GetData();
-				}
-
-				target[location] |= 1 << (objectID & 7);
-			}
-
-			cell.finishCount++;
-			finalStatus.store(TaskData::STATUS_IDLE);
-			// printf("Bake task (%d, %d, %d) [Remains %d] .\n", coord.x(), coord.y(), coord.z(), cell.incompleteness);
+			finalStatus.store(TaskData::STATUS_POSTPROCESS);
+			engine.GetKernel().GetThreadPool().Push(CreateTaskContextFree(Wrap(this, &VisibilityComponent::PostProcess), std::ref(task)));
 		} else if (task.status == TaskData::STATUS_ASSEMBLING) {
 			if (task.pendingCount == 0) {
 				// Commit draw calls.

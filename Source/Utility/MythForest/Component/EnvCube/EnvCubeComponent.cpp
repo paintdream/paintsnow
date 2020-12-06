@@ -11,7 +11,7 @@ Tiny::FLAG EnvCubeComponent::GetEntityFlagMask() const {
 	return Entity::ENTITY_HAS_RENDERCONTROL | RenderableComponent::GetEntityFlagMask();
 }
 
-uint32_t EnvCubeComponent::CollectDrawCalls(std::vector<OutputRenderData>& outputDrawCalls, const InputRenderData& inputRenderData) {
+uint32_t EnvCubeComponent::CollectDrawCalls(std::vector<OutputRenderData, DrawCallAllocator>& outputDrawCalls, const InputRenderData& inputRenderData, BytesCache& bytesCache) {
 	return 0;
 }
 
