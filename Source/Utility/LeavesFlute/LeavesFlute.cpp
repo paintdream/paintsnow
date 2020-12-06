@@ -436,7 +436,7 @@ public:
 				ret = true;
 			}
 
-			stream->ReleaseObject();
+			stream->Destroy();
 		}
 
 		return ret;
@@ -567,7 +567,7 @@ struct InspectCustomStructure : public IReflect {
 			IReflectObject* obj = type->Create();
 			if (obj != nullptr) {
 				InspectCustomStructure(request, *obj);
-				obj->ReleaseObject();
+				obj->Destroy();
 			} else {
 				request << begintable;
 				request << key("Pointer") << false;

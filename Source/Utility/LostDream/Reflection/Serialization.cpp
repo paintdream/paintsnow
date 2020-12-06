@@ -127,13 +127,13 @@ struct MarshallInfo : public TReflected<MarshallInfo, IReflectObjectComplex, Met
 	MarshallInfo() : dynType(nullptr) {}
 	virtual ~MarshallInfo() {
 		if (dynType != nullptr) {
-			dynType->ReleaseObject();
+			dynType->Destroy();
 		}
 
 		for (size_t i = 0; i < dynVector.size(); i++) {
 			IReflectObjectComplex* c = dynVector[i];
 			if (c != nullptr) {
-				c->ReleaseObject();
+				c->Destroy();
 			}
 		}
 	}
@@ -313,7 +313,7 @@ bool Serialization::Run(int randomSeed, int length) {
 	finalStream << resource;
 
 #ifdef USE_FILTER
-	filter->ReleaseObject();
+	filter->Destroy();
 #endif
 
 	MarshallInfo target;
@@ -336,7 +336,7 @@ bool Serialization::Run(int randomSeed, int length) {
 	finalStreamAgain >> meshTarget;
 
 #ifdef USE_FILTER
-	filterAgain->ReleaseObject();
+	filterAgain->Destroy();
 #endif
 
 	return true;

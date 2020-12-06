@@ -214,7 +214,7 @@ void SnowyStream::RequestFetchFileData(IScript::Request& request, const String& 
 		buf.resize(len);
 
 		if (stream->Read(const_cast<char*>(buf.data()), len)) {
-			stream->ReleaseObject();
+			stream->Destroy();
 			request.DoLock();
 			request << buf;
 			request.UnLock();
@@ -832,8 +832,8 @@ bool SnowyStream::LoadResource(const TShared<ResourceBase>& resource, const Stri
 			result = *filter >> *resource();
 			resource->Flag().fetch_or(Tiny::TINY_MODIFIED);
 			SpinUnLock(resource->critical);
-			filter->ReleaseObject();
-			stream->ReleaseObject();
+			filter->Destroy();
+			stream->Destroy();
 
 			ResourceManager& resourceManager = *(*t).second();
 			resourceManager.InvokeRefresh(resource());
@@ -869,8 +869,8 @@ bool SnowyStream::SaveResource(const TShared<ResourceBase>& resource, const Stri
 			SpinLock(resource->critical);
 			result = *filter << *resource();
 			SpinUnLock(resource->critical);
-			filter->ReleaseObject();
-			stream->ReleaseObject();
+			filter->Destroy();
+			stream->Destroy();
 		}
 
 		return result;

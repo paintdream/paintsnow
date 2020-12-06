@@ -196,7 +196,7 @@ bool TextureResource::Compress(const String& compressionType) {
 			SpinUnLock(critical);
 		}
 
-		filter->ReleaseObject();
+		filter->Destroy();
 		return true;
 	} else {
 		return false;

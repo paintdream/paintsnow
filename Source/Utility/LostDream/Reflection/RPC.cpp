@@ -183,7 +183,7 @@ bool RPC::Run(int randomSeed, int length) {
 			break;
 		}
 
-		r->ReleaseObject();
+		r->Destroy();
 		r = clientProxy.NewRequest("127.0.0.1:16384");
 
 		IScript::Request& request = *r;
@@ -198,7 +198,7 @@ bool RPC::Run(int randomSeed, int length) {
 		getchar();
 
 		// Close connection
-		r->ReleaseObject();
+		r->Destroy();
 	}
 
 	return true;

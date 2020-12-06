@@ -30,7 +30,7 @@ uint64_t File::GetLastModifiedTime() const {
 
 void File::Close() {
 	if (stream != nullptr) {
-		stream->ReleaseObject();
+		stream->Destroy();
 		stream = nullptr;
 	}
 }

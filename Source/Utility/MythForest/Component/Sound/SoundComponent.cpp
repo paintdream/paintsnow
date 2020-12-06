@@ -21,7 +21,7 @@ void SoundComponent::Uninitialize(Engine& engine, Entity* entity) {
 	IAudio& audio = engine.interfaces.audio;
 	audio.DeleteSource(audioSource);
 	audio.DeleteBuffer(audioBuffer);
-	audioStream->ReleaseObject();
+	audioStream->Destroy();
 }
 
 void SoundComponent::ScriptUninitialize(IScript::Request& request) {

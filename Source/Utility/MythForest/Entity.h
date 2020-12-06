@@ -71,7 +71,7 @@ namespace PaintsNow {
 			}
 		}
 
-		void ReleaseObject() override;
+		void Destroy() override;
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		inline Entity* Left() const {

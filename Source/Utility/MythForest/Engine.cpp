@@ -59,7 +59,7 @@ void Engine::Clear() {
 	}
 
 	for (std::unordered_map<String, Module*>::iterator ip = modules.begin(); ip != modules.end(); ++ip) {
-		(*ip).second->ReleaseObject();
+		(*ip).second->Destroy();
 	}
 
 	modules.clear();

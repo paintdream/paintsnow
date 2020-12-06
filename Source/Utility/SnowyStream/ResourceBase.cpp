@@ -77,17 +77,16 @@ bool ResourceBase::IsPrepared() const {
 	return !(Flag().load(std::memory_order_acquire) & TINY_UPDATING);
 }
 
-void ResourceBase::ReleaseObject() {
+void ResourceBase::Destroy() {
 	// last?
-	if (referCount.fetch_sub(1, std::memory_order_release) == 1) {
-		resourceManager.DoLock();
-		if (!(Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_ORPHAN)) {
-			resourceManager.Remove(this);
-		}
-		resourceManager.UnLock();
-		if (referCount.load(std::memory_order_acquire) == 0) {
-			Tiny::ReleaseObject();
-		}
+	resourceManager.DoLock();
+	if (!(Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_ORPHAN)) {
+		resourceManager.Remove(this);
+	}
+	resourceManager.UnLock();
+
+	if (referCount.load(std::memory_order_acquire) == 0) {
+		BaseClass::Destroy();
 	}
 }
 

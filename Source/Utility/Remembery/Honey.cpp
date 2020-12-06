@@ -20,7 +20,7 @@ Honey::Honey(IDatabase::MetaData* data) : metaData(data) {
 }
 
 Honey::~Honey() {
-	metaData->ReleaseObject();
+	metaData->Destroy();
 }
 
 bool Honey::Step() {
@@ -57,7 +57,7 @@ HoneyData::~HoneyData() {
 	}
 
 	if (dynamicObject != nullptr) {
-		dynamicObject->ReleaseObject();
+		dynamicObject->Destroy();
 	}
 }
 

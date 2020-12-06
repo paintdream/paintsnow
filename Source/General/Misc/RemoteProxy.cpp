@@ -239,7 +239,7 @@ IScript::Request* RemoteProxy::NewRequest(const String& entry) {
 		request->Run();
 		return request;
 	} else {
-		request->ReleaseObject();
+		request->Destroy();
 		return nullptr;
 	}
 }
@@ -514,7 +514,7 @@ TObject<IReflect>& RemoteProxy::Request::operator () (IReflect& reflect) {
 }
 
 Variant::~Variant() {
-	ReleaseObject();
+	Destroy();
 }
 
 Variant::Variant(const Variant& var) : value(nullptr) {
@@ -525,7 +525,7 @@ Variant& Variant::operator = (const Variant& var) {
 	if (&var != this) {
 		// add reference
 		if (value != nullptr) {
-			ReleaseObject();
+			Destroy();
 		}
 
 		value = var.value;

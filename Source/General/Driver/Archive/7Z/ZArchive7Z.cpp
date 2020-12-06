@@ -332,7 +332,7 @@ int ZArchive7Z::main(int argc, char* argv[]) {
 			ZArchive7Z z(*base, safe_cast<size_t>(len));
 			PrintCallback pb;
 			z.Query("", Wrap(&pb, &PrintCallback::Print));
-			base->ReleaseObject();
+			base->Destroy();
 		}
 	}
 

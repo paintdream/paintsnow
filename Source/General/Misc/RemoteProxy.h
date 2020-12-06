@@ -174,7 +174,7 @@ namespace PaintsNow {
 			}
 		}
 
-		inline void ReleaseObject() override {
+		void Destroy() override {
 			if (value != nullptr) {
 				size_t* ref = (size_t*)((char*)value - sizeof(size_t));
 				assert(*ref < 0x100);

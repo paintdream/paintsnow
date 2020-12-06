@@ -60,7 +60,7 @@ DynamicObject::~DynamicObject() {
 #endif
 }
 
-void DynamicObject::ReleaseObject() {
+void DynamicObject::Destroy() {
 	// call destructor manually
 	this->~DynamicObject();
 	delete[] (char*)this;
@@ -256,7 +256,7 @@ DynamicObjectWrapper::DynamicObjectWrapper(DynamicUniqueAllocator& allocator) : 
 
 DynamicObjectWrapper::~DynamicObjectWrapper() {
 	if (dynamicObject != nullptr) {
-		dynamicObject->ReleaseObject();
+		dynamicObject->Destroy();
 	}
 }
 

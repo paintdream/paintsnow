@@ -67,7 +67,7 @@ IDatabase::Database* ZDatabaseSqlite::Connect(IArchive& archive, const String& t
 				fclose(fp);
 			}
 
-			f->ReleaseObject();
+			f->Destroy();
 			fullPath = tmpFileName;
 		}
 	}
@@ -199,7 +199,7 @@ public:
 
 	~QueryMetaData() override {
 		if (dynamicObject != nullptr)
-			dynamicObject->ReleaseObject();
+			dynamicObject->Destroy();
 		sqlite3_finalize(stmt);
 	}
 
@@ -452,7 +452,7 @@ IDatabase::MetaData* ZDatabaseSqlite::Execute(Database* database, const String& 
 		} else {
 			QueryMetaData* data = new QueryMetaData(impl->uniqueAllocator, impl->handle, stmt);
 			if (data->GetColumnCount() == 0) {
-				data->ReleaseObject();
+				data->Destroy();
 				return nullptr;
 			} else {
 				return data;

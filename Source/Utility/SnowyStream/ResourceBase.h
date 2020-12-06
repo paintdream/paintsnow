@@ -51,7 +51,7 @@ namespace PaintsNow {
 		virtual void GetDependencies(std::vector<Dependency>& deps) const;
 		virtual bool IsPrepared() const;
 		virtual std::pair<uint16_t, uint16_t> GetProgress() const;
-		void ReleaseObject() override;
+		void Destroy() override;
 		// override them derived from IReflectObject to change behaviors on serialization & deserialization
 		// virtual bool operator >> (IStreamBase& stream) const override;
 		// virtual bool operator << (IStreamBase& stream) override;

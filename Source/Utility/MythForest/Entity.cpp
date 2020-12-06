@@ -44,27 +44,23 @@ static void InvokeClearComponentsAndRelease(void* request, bool run, Engine& eng
 	}
 }
 
-void Entity::ReleaseObject() {
-	if (referCount.fetch_sub(1, std::memory_order_relaxed) == 1) {
-		if (Flag().load(std::memory_order_acquire) & ENTITY_STORE_ENGINE) {
-			if (!components.empty()) {
-				Engine& engine = GetEngineInternal();
-				Kernel& kernel = engine.GetKernel();
+void Entity::Destroy() {
+	if (Flag().load(std::memory_order_acquire) & ENTITY_STORE_ENGINE) {
+		if (!components.empty()) {
+			Engine& engine = GetEngineInternal();
+			Kernel& kernel = engine.GetKernel();
 
-				if (kernel.GetCurrentWarpIndex() == GetWarpIndex()) {
-					ClearComponents(engine);
-				} else {
-					ReferenceObject();
-					kernel.QueueRoutine(this, CreateTask(Wrap(InvokeClearComponentsAndRelease), std::ref(engine), this));
-					return;
-				}
+			if (kernel.GetCurrentWarpIndex() == GetWarpIndex()) {
+				ClearComponents(engine);
+			} else {
+				kernel.QueueRoutine(this, CreateTask(Wrap(InvokeClearComponentsAndRelease), std::ref(engine), this));
+				return;
 			}
-		} else {
-			assert(components.empty());
 		}
-
-		Tiny::ReleaseObject();
 	}
+
+	assert(components.empty());
+	BaseClass::Destroy();
 }
 
 void Entity::SetEngineInternal(Engine& engine) {

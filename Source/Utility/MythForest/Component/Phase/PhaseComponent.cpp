@@ -360,7 +360,7 @@ void PhaseComponent::CoTaskWriteDebugTexture(Engine& engine, uint32_t index, Byt
 		image.Save(png, *stream, "png");
 		image.Delete(png);
 		// write png
-		stream->ReleaseObject();
+		stream->Destroy();
 	}
 }
 

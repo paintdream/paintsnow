@@ -59,7 +59,7 @@ namespace PaintsNow {
 		DynamicInfo* GetDynamicInfo() const;
 		void Set(const DynamicInfo::Field& field, const void* value);
 		void* Get(const DynamicInfo::Field& field) const;
-		void ReleaseObject() override;
+		void Destroy() override;
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 	protected:
