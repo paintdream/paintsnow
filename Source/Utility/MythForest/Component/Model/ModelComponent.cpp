@@ -40,12 +40,13 @@ static void GenerateDrawCall(IDrawCallProvider::OutputRenderData& renderData, Sh
 		if (outputs[k]) {
 			uint8_t slot = outputs[k].slot;
 			assert(outputs[k].offset == 0);
-			assert(slot < drawCall.bufferResources.size());
+			assert(slot < drawCall.bufferCount);
 			assert(meshBuffers[k] != nullptr);
 
-			drawCall.bufferResources[slot].buffer = meshBuffers[k];
-			drawCall.bufferResources[slot].offset = offsets[k].first;
-			drawCall.bufferResources[slot].component = offsets[k].second;
+			IRender::Resource::DrawCallDescription::BufferRange& bufferRange = slot < sizeof(drawCall.bufferResources) / sizeof(drawCall.bufferResources[0]) ? drawCall.bufferResources[slot] : drawCall.extraBufferResources[slot - sizeof(drawCall.bufferResources) / sizeof(drawCall.bufferResources[0])];
+			bufferRange.buffer = meshBuffers[k];
+			bufferRange.offset = offsets[k].first;
+			bufferRange.component = offsets[k].second;
 		}
 	}
 
@@ -103,9 +104,10 @@ void ModelComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTe
 				drawCall.dataUpdater = batchComponent();
 
 				GenerateDrawCall(drawCall, shaderInstance(), meshBuffers, slice, meshResource->bufferCollection, meshResource->deviceElementSize);
-				std::vector<IRender::Resource::DrawCallDescription::BufferRange>& targetBufferRanges = drawCall.drawCallDescription.bufferResources;
-				for (size_t m = 0; m < Math::Min(bufferRanges.size(), targetBufferRanges.size()); m++) {
-					const IRender::Resource::DrawCallDescription::BufferRange& targetBufferRange = targetBufferRanges[m];
+				IRender::Resource::DrawCallDescription::BufferRange* targetBufferRanges = drawCall.drawCallDescription.bufferResources;
+				std::vector<IRender::Resource::DrawCallDescription::BufferRange>& targetExtraBufferRanges = drawCall.drawCallDescription.extraBufferResources;
+				for (size_t m = 0; m < Math::Min(bufferRanges.size(), (size_t)drawCall.drawCallDescription.bufferCount); m++) {
+					const IRender::Resource::DrawCallDescription::BufferRange& targetBufferRange = m < sizeof(drawCall.drawCallDescription.bufferResources) / sizeof(drawCall.drawCallDescription.bufferResources[0]) ? targetBufferRanges[m] : targetExtraBufferRanges[m - sizeof(drawCall.drawCallDescription.bufferResources) / sizeof(drawCall.drawCallDescription.bufferResources[0])];
 					if (bufferRanges[m].buffer != nullptr) {
 						assert(targetBufferRanges[m].buffer == nullptr);
 						targetBufferRanges[m] = bufferRanges[m];
@@ -142,7 +144,7 @@ uint32_t ModelComponent::CollectDrawCalls(std::vector<OutputRenderData, DrawCall
 	}
 
 	for (size_t i = 0; i < materialResources.size(); i++) {
-		drawCalls.emplace_back(drawCallTemplates[i + baseIndex]);
+		drawCalls.emplace_back(drawCallTemplates[i + baseIndex]); // TODO: optimize copy performance
 	}
 
 	assert(Flag().fetch_and(~Tiny::TINY_PINNED) & Tiny::TINY_PINNED);

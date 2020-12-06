@@ -1266,14 +1266,15 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> final : public R
 		depthInfo.minDepthBounds = 0;
 		depthInfo.maxDepthBounds = 1;
 
-		std::vector<IRender::Resource::DrawCallDescription::BufferRange>& bufferResources = drawCall->cacheDescription.bufferResources;
+		IRender::Resource::DrawCallDescription::BufferRange* bufferResources = drawCall->cacheDescription.bufferResources;
+		std::vector<IRender::Resource::DrawCallDescription::BufferRange>& extraBufferResources = drawCall->cacheDescription.extraBufferResources;
 		uint32_t binding = 0;
 		std::vector<VkVertexInputBindingDescription> inputBindingDescriptions;
 		std::vector<VkVertexInputAttributeDescription> inputAttributeDescriptions;
 		uint32_t location = 0;
 
-		for (size_t k = 0; k < bufferResources.size(); k++) {
-			IRender::Resource::DrawCallDescription::BufferRange& bufferRange = bufferResources[k];
+		for (size_t k = 0; k < drawCall->cacheDescription.bufferCount; k++) {
+			IRender::Resource::DrawCallDescription::BufferRange& bufferRange = k < sizeof(drawCall->cacheDescription.bufferResources) / sizeof(drawCall->cacheDescription.bufferResources[0]) ? bufferResources[k] : extraBufferResources[k - sizeof(drawCall->cacheDescription.bufferResources) / sizeof(drawCall->cacheDescription.bufferResources[0])];
 			ResourceImplVulkan<IRender::Resource::BufferDescription>* buffer = static_cast<ResourceImplVulkan<IRender::Resource::BufferDescription>*>(bufferRange.buffer);
 			IRender::Resource::BufferDescription& desc = buffer->cacheDescription;
 
@@ -1651,7 +1652,7 @@ inline VkBuffer GetBuffer(IRender::Resource::DrawCallDescription::BufferRange& r
 void ResourceImplVulkan<IRender::Resource::DrawCallDescription>::Upload(VulkanQueueImpl* queue, IRender::Resource::Description* d) {
 	// Compute signature
 	IRender::Resource::DrawCallDescription* description = static_cast<IRender::Resource::DrawCallDescription*>(d);
-	signature.Resize(description->bufferResources.size() * 3);
+	signature.Resize(description->bufferCount * 3);
 	uint8_t* data = signature.GetData();
 	ResourceImplVulkan<IRender::Resource::ShaderDescription>* shader = static_cast<ResourceImplVulkan<IRender::Resource::ShaderDescription>*>(cacheDescription.shaderResource);
 
@@ -1673,8 +1674,8 @@ void ResourceImplVulkan<IRender::Resource::DrawCallDescription>::Upload(VulkanQu
 	std::vector<VkDescriptorBufferInfo> storageBufferInfos;
 	std::vector<VkDescriptorImageInfo> imageInfos;
 
-	for (size_t i = 0; i < description->bufferResources.size(); i++) {
-		const IRender::Resource::DrawCallDescription::BufferRange& bufferRange = description->bufferResources[i];
+	for (size_t i = 0; i < description->bufferCount; i++) {
+		const IRender::Resource::DrawCallDescription::BufferRange& bufferRange = i < sizeof(description->bufferResources) / sizeof(description->bufferResources[0]) ? description->bufferResources[i] : description->extraBufferResources[i - sizeof(description->bufferResources) / sizeof(description->bufferResources[0])];
 		assert(bufferRange.buffer != nullptr);
 
 		ResourceImplVulkan<IRender::Resource::BufferDescription>* buffer = static_cast<ResourceImplVulkan<IRender::Resource::BufferDescription>*>(bufferRange.buffer);
@@ -1685,7 +1686,8 @@ void ResourceImplVulkan<IRender::Resource::DrawCallDescription>::Upload(VulkanQu
 
 			uint8_t sameIndex = safe_cast<uint8_t>(i);
 			for (size_t n = 0; n < i; n++) {
-				if (description->bufferResources[n].buffer == buffer) {
+				const IRender::Resource::DrawCallDescription::BufferRange& bufferRange = n < sizeof(description->bufferResources) / sizeof(description->bufferResources[0]) ? description->bufferResources[n] : description->extraBufferResources[n - sizeof(description->bufferResources) / sizeof(description->bufferResources[0])];
+				if (bufferRange.buffer == buffer) {
 					sameIndex = safe_cast<uint8_t>(n);
 					break;
 				}
@@ -1710,8 +1712,8 @@ void ResourceImplVulkan<IRender::Resource::DrawCallDescription>::Upload(VulkanQu
 		}
 	}
 
-	for (size_t i = 0; i < description->textureResources.size(); i++) {
-		ResourceImplVulkan<IRender::Resource::TextureDescription>* texture = static_cast<ResourceImplVulkan<IRender::Resource::TextureDescription>*>(description->textureResources[i]);
+	for (size_t i = 0; i < description->textureCount; i++) {
+		ResourceImplVulkan<IRender::Resource::TextureDescription>* texture = static_cast<ResourceImplVulkan<IRender::Resource::TextureDescription>*>(i < sizeof(description->textureResources) / sizeof(description->textureResources[0]) ? description->textureResources[i] : description->extraTextureResources[i - sizeof(description->textureResources) / sizeof(description->textureResources[0])]);
 
 		VkDescriptorImageInfo info = {};
 		info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -1785,8 +1787,8 @@ void ResourceImplVulkan<IRender::Resource::DrawCallDescription>::Execute(VulkanQ
 	vkCmdBindIndexBuffer(commandBuffer, static_cast<ResourceImplVulkan<IRender::Resource::BufferDescription>*>(cacheDescription.indexBufferResource.buffer)->buffer, cacheDescription.indexBufferResource.offset, VK_INDEX_TYPE_UINT32);
 
 	std::vector<VkBuffer> vertexBuffers;
-	for (size_t k = 0; k < cacheDescription.bufferResources.size(); k++) {
-		ResourceImplVulkan<IRender::Resource::BufferDescription>* p = static_cast<ResourceImplVulkan<IRender::Resource::BufferDescription>*>(cacheDescription.bufferResources[k].buffer);
+	for (size_t k = 0; k < cacheDescription.bufferCount; k++) {
+		ResourceImplVulkan<IRender::Resource::BufferDescription>* p = static_cast<ResourceImplVulkan<IRender::Resource::BufferDescription>*>(k < sizeof(cacheDescription.bufferResources) / sizeof(cacheDescription.bufferResources[0]) ? cacheDescription.bufferResources[k].buffer : cacheDescription.extraBufferResources[k - sizeof(cacheDescription.bufferResources) / sizeof(cacheDescription.bufferResources[0])].buffer);
 		if (p->cacheDescription.usage == IRender::Resource::BufferDescription::VERTEX) {
 			vertexBuffers.emplace_back(p->buffer);
 		}

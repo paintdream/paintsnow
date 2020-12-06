@@ -411,7 +411,8 @@ void PhaseComponent::ResolveTasks(Engine& engine) {
 
 								// assign instanced buffer	
 								// assert(group.drawCallDescription.bufferResources[output.slot].buffer == nullptr);
-								group.drawCallDescription.bufferResources[k].buffer = buffer;
+								IRender::Resource::DrawCallDescription::BufferRange& bufferRange = k < sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0]) ? group.drawCallDescription.bufferResources[k] : group.drawCallDescription.extraBufferResources[k - sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0])];
+								bufferRange.buffer = buffer;
 								buffers.emplace_back(buffer);
 							}
 						}
@@ -656,8 +657,8 @@ void PhaseComponent::CollectRenderableComponent(Engine& engine, TaskData& taskDa
 					}
 				}
 
-				for (size_t n = 0; n < group.drawCallDescription.bufferResources.size(); n++) {
-					IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[n];
+				for (size_t n = 0; n < group.drawCallDescription.bufferCount; n++) {
+					IRender::Resource::DrawCallDescription::BufferRange& bufferRange = n < sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0]) ? group.drawCallDescription.bufferResources[n] : group.drawCallDescription.extraBufferResources[n - sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0])];
 					if (ip->second.buffers[n] != nullptr) {
 						bufferRange.buffer = ip->second.buffers[n];
 						bufferRange.offset = bufferRange.length = 0;

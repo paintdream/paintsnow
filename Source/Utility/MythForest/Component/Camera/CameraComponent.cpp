@@ -173,9 +173,10 @@ void CameraComponent::Instancing(Engine& engine, TaskData& taskData) {
 				Bytes& data = group.instancedData[k];
 				if (!data.Empty()) {
 					// assign instanced buffer	
-					assert(group.drawCallDescription.bufferResources[k].buffer == nullptr);
 					size_t viewSize = data.GetViewSize();
-					IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[k];
+					IRender::Resource::DrawCallDescription::BufferRange& bufferRange = k < sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0]) ? group.drawCallDescription.bufferResources[k] : group.drawCallDescription.extraBufferResources[k - sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0])];
+
+					assert(bufferRange.buffer == nullptr);
 					bufferRange.buffer = policyData.instanceBuffer;
 					bufferRange.offset = safe_cast<uint32_t>(policyData.instanceOffset); // TODO: alignment
 					bufferRange.component = safe_cast<uint16_t>(viewSize / (group.instanceCount * sizeof(float)));
@@ -656,8 +657,8 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 				}
 			}
 
-			for (size_t n = 0; n < group.drawCallDescription.bufferResources.size(); n++) {
-				IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[n];
+			for (size_t n = 0; n < group.drawCallDescription.bufferCount; n++) {
+				IRender::Resource::DrawCallDescription::BufferRange& bufferRange = n < sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0]) ? group.drawCallDescription.bufferResources[n] : group.drawCallDescription.extraBufferResources[n - sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0])];
 				if (ig->second.buffers[n] != nullptr) {
 					bufferRange.buffer = ig->second.buffers[n];
 					bufferRange.offset = bufferRange.length = 0;
@@ -672,7 +673,9 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 				const PassBase::Parameter& parameter = updater[IShader::BindInput::BONE_TRANSFORMS];
 				if (parameter) {
 					group.animationComponent = animationComponent; // hold reference
-					group.drawCallDescription.bufferResources[parameter.slot].buffer = animationComponent->AcquireBoneMatrixBuffer(render, queue);
+					size_t k = parameter.slot;
+					IRender::Resource::DrawCallDescription::BufferRange& bufferRange = k < sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0]) ? group.drawCallDescription.bufferResources[k] : group.drawCallDescription.extraBufferResources[k - sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0])];
+					bufferRange.buffer = animationComponent->AcquireBoneMatrixBuffer(render, queue);
 				}
 			}
 		}

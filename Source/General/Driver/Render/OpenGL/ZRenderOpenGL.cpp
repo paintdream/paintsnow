@@ -1527,19 +1527,25 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> final : pu
 	GLuint clearMask;
 };
 
+#if defined(_MSC_VER) && _MSC_VER <= 1200
+template <>
+void MoveResource<IRender::Resource::DrawCallDescription>(IRender::Resource::DrawCallDescription& target, IRender::Resource::DrawCallDescription& source) {
+	target.shaderResource = source.shaderResource;
+	target.instanceCounts = source.instanceCounts;
+	target.bufferCount = source.bufferCount;
+	target.textureCount = source.textureCount;
+	target.indexBufferResource = source.indexBufferResource;
+	memcpy(target.bufferResources, source.bufferResources, sizeof(target.bufferResources));
+	memcpy(target.textureResources, source.textureResources, sizeof(target.textureResources));
+	std::swap(target.extraBufferResources, source.extraBufferResources);
+	std::swap(target.extraTextureResources, source.extraTextureResources);
+}
+#endif
+
 template <>
 struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> final : public ResourceBaseImplOpenGLDesc<IRender::Resource::DrawCallDescription> {
 	IRender::Resource::Type GetType() const override { return RESOURCE_DRAWCALL; }
 	void Upload(QueueImplOpenGL& queue) override {
-#ifdef _DEBUG
-		for (size_t i = 0; i < nextDescription.textureResources.size(); i++) {
-			assert(nextDescription.textureResources[i] != nullptr);
-		}
-
-		for (size_t k = 0; k < nextDescription.bufferResources.size(); k++) {
-			assert(nextDescription.bufferResources[k].buffer != nullptr);
-		}
-#endif
 		UpdateDescription();
 	}
 
@@ -1565,10 +1571,11 @@ struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> final : public
 		GLuint vertexBufferBindingCount = 0;
 		GLuint uniformBufferBindingCount = 0;
 		GLuint sharedBufferBindingCount = 0;
-		for (size_t i = 0; i < d.bufferResources.size(); i++) {
-			const BufferRange& bufferRange = d.bufferResources[i];
+		for (size_t i = 0; i < d.bufferCount; i++) {
+			const BufferRange& bufferRange = i < sizeof(d.bufferResources) / sizeof(d.bufferResources[0]) ? d.bufferResources[i] : d.extraBufferResources[i - sizeof(d.bufferResources) / sizeof(d.bufferResources[0])];
 			const Buffer* buffer = static_cast<const Buffer*>(bufferRange.buffer);
 			assert(buffer != nullptr);
+
 			uint32_t k;
 			GLuint bufferElementType = GL_FLOAT;
 			GLuint bufferElementSize = sizeof(float);
@@ -1643,10 +1650,10 @@ struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> final : public
 			}
 		}
 
-		assert(d.textureResources.size() == program.textureLocations.size());
-		for (uint32_t k = 0; k < d.textureResources.size(); k++) {
+		assert(d.textureCount == program.textureLocations.size());
+		for (uint32_t k = 0; k < d.textureCount; k++) {
 			GL_GUARD();
-			const Texture* texture = static_cast<const Texture*>(d.textureResources[k]);
+			const Texture* texture = static_cast<const Texture*>(k < sizeof(d.textureResources) / sizeof(d.textureResources[0]) ? d.textureResources[k] : d.extraTextureResources[k - sizeof(d.textureResources) / sizeof(d.textureResources[0])]);
 			assert(texture != nullptr);
 			assert(texture->textureID != 0);
 			glActiveTexture((GLsizei)(GL_TEXTURE0 + k));

@@ -115,12 +115,14 @@ namespace PaintsNow {
 			if (drawCall.indexBufferResource.buffer == nullptr) return false;
 			if (drawCall.shaderResource == nullptr) return false;
 
-			for (uint32_t i = 0; i < drawCall.textureResources.size(); i++) {
-				if (drawCall.textureResources[i] == nullptr) return false;
+			for (uint32_t i = 0; i < drawCall.bufferCount; i++) {
+				const IRender::Resource::DrawCallDescription::BufferRange& bufferRange = i < sizeof(drawCall.bufferResources) / sizeof(drawCall.bufferResources[0]) ? drawCall.bufferResources[i] : drawCall.extraBufferResources[i - sizeof(drawCall.bufferResources) / sizeof(drawCall.bufferResources[0])];
+				if (bufferRange.buffer == nullptr) return false;
 			}
 
-			for (uint32_t k = 0; k < drawCall.bufferResources.size(); k++) {
-				if (drawCall.bufferResources[k].buffer == nullptr) return false;
+			for (uint32_t j = 0; j < drawCall.textureCount; j++) {
+				const IRender::Resource* texture = j < sizeof(drawCall.textureResources) / sizeof(drawCall.textureResources[0]) ? drawCall.textureResources[j] : drawCall.extraTextureResources[j - sizeof(drawCall.textureResources) / sizeof(drawCall.textureResources[0])];
+				if (texture == nullptr) return false;
 			}
 
 			return true;

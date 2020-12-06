@@ -441,7 +441,7 @@ void VisibilityComponent::CollectComponents(Engine& engine, TaskData& task, cons
 }
 
 void VisibilityComponent::PostProcess(TaskData& task) {
-	assert(task.status == TaskData::STATUS_BAKED);
+	assert(task.status == TaskData::STATUS_POSTPROCESS);
 	Cell& cell = *task.cell;
 	Bytes& encodedData = cell.payload;
 	const Bytes& data = task.data;
@@ -463,7 +463,7 @@ void VisibilityComponent::PostProcess(TaskData& task) {
 
 	cell.finishCount++;
 	std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(task.status);
-	finalStatus.store(TaskData::STATUS_IDLE);
+	finalStatus.store(TaskData::STATUS_IDLE, std::memory_order_release);
 }
 
 void VisibilityComponent::ResolveTasks(Engine& engine) {
@@ -505,7 +505,7 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 								assert(data.IsViewStorage());
 								// assign instanced buffer	
 								size_t viewSize = data.GetViewSize();
-								IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[k];
+								IRender::Resource::DrawCallDescription::BufferRange& bufferRange = k < sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0]) ? group.drawCallDescription.bufferResources[k] : group.drawCallDescription.extraBufferResources[k - sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0])];
 								bufferRange.buffer = buffer;
 								bufferRange.offset = bufferSize;
 								bufferRange.component = safe_cast<uint16_t>(viewSize / (group.instanceCount * sizeof(float)));
