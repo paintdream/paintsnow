@@ -12,11 +12,11 @@
 #include "../../../../SnowyStream/Resource/Passes/LightBufferEncodePass.h"
 
 namespace PaintsNow {
-	class LightBufferEncodeRenderStage : public TReflected<LightBufferEncodeRenderStage, GeneralRenderStageMesh<LightBufferEncodePass> > {
+	class LightBufferEncodeRenderStage : public TReflected<LightBufferEncodeRenderStage, GeneralRenderStage<LightBufferEncodePass> > {
 	public:
 		LightBufferEncodeRenderStage(const String& config = "1");
-		void PrepareResources(Engine& engine, IRender::Queue* queue) override;
-		void UpdatePass(Engine& engine, IRender::Queue* queue) override;
+		void Prepare(Engine& engine, IRender::Queue* queue) override;
+		void Update(Engine& engine, IRender::Queue* queue) override;
 		void Uninitialize(Engine& engine, IRender::Queue* queue) override;
 
 		TObject<IReflect>& operator () (IReflect& reflect) override;

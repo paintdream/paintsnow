@@ -35,7 +35,7 @@ TObject<IReflect>& ShadowMaskRenderStage::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void ShadowMaskRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
+void ShadowMaskRenderStage::Prepare(Engine& engine, IRender::Queue* queue) {
 	SnowyStream& snowyStream = engine.snowyStream;
 
 	if (InputMask.GetLinks().empty()) {
@@ -55,10 +55,10 @@ void ShadowMaskRenderStage::PrepareResources(Engine& engine, IRender::Queue* que
 	meshResource = engine.snowyStream.CreateReflectedResource(UniqueType<MeshResource>(), path, true, ResourceBase::RESOURCE_VIRTUAL);
 	assert(meshResource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_UPLOADED);
 
-	BaseClass::PrepareResources(engine, queue);
+	BaseClass::Prepare(engine, queue);
 }
 
-void ShadowMaskRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
+void ShadowMaskRenderStage::Update(Engine& engine, IRender::Queue* queue) {
 	ShadowMaskPass& Pass = GetPass();
 	ScreenTransformVS& screenTransform = Pass.transform;
 	screenTransform.vertexBuffer.resource = meshResource->bufferCollection.positionBuffer;
@@ -91,5 +91,5 @@ void ShadowMaskRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 	}
 
 	// assert(LightSource->lightElements.empty() || mask.shadowTexture.resource != emptyShadowMask->GetTexture());
-	BaseClass::UpdatePass(engine, queue);
+	BaseClass::Update(engine, queue);
 }

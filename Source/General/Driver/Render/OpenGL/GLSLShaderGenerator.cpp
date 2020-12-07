@@ -7,8 +7,9 @@ static const String frameCode = "#version 330\n\
 #define PI 3.1415926 \n\
 #define GAMMA 2.2 \n\
 #define clip(f) if (f < 0) discard; \n\
-#define uint32_t uint \n\
-#define UInt3 uvec3 \n\
+#define uint2 uvec2 \n\
+#define uint3 uvec3 \n\
+#define uint4 uvec4 \n\
 #define float2 vec2 \n\
 #define float3 vec3 \n\
 #define float4 vec4 \n\

@@ -13,9 +13,9 @@ namespace PaintsNow {
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		String GetShaderText() override;
 
-		BindTexture lightTexture;
 		BindTexture specTexture;
-		BindBuffer lightBuffer;
+		BindBuffer lightInfoBuffer;
+		BindBuffer lightIndexBuffer;
 		BindBuffer paramBuffer;
 
 		Float3 viewPosition;
@@ -28,10 +28,12 @@ namespace PaintsNow {
 
 		enum { MAX_LIGHT_COUNT = 64 };
 		std::vector<Float4> lightInfos; // position & color
+		std::vector<UInt4> lightIndices;
 		uint32_t lightCount;
 		MatrixFloat4x4 invWorldNormalMatrix;
 		float cubeLevelInv;
 		float cubeStrength;
+		Float2 screenSize;
 		
 		Float2 rasterCoord; // imported
 		Float4 mainColor; // target

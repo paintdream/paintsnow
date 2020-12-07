@@ -25,7 +25,7 @@ TObject<IReflect>& ScreenRenderStage::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void ScreenRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
+void ScreenRenderStage::Prepare(Engine& engine, IRender::Queue* queue) {
 	IRender& render = engine.interfaces.render;
 	SnowyStream& snowyStream = engine.snowyStream;
 	OutputColor.renderTargetDescription.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
@@ -33,10 +33,10 @@ void ScreenRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) 
 	OutputColor.renderTargetDescription.state.immutable = false;
 	OutputColor.renderTargetDescription.state.attachment = true;
 
-	BaseClass::PrepareResources(engine, queue);
+	BaseClass::Prepare(engine, queue);
 }
 
-void ScreenRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
+void ScreenRenderStage::Update(Engine& engine, IRender::Queue* queue) {
 	ScreenPass& Pass = GetPass();
 	ScreenTransformVS& screenTransform = Pass.screenTransform;
 	screenTransform.vertexBuffer.resource = meshResource->bufferCollection.positionBuffer;
@@ -48,5 +48,5 @@ void ScreenRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 	ScreenFS.inputBloomTexture1.resource = BloomLayers.size() > 1 ? BloomLayers[1]->textureResource->GetRenderResource() : ScreenFS.inputBloomTexture0.resource;
 	ScreenFS.inputBloomTexture2.resource = BloomLayers.size() > 2 ? BloomLayers[2]->textureResource->GetRenderResource() : ScreenFS.inputBloomTexture1.resource;
 
-	BaseClass::UpdatePass(engine, queue);
+	BaseClass::Update(engine, queue);
 }

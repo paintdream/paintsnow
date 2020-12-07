@@ -23,7 +23,7 @@ TObject<IReflect>& LightTextureEncodeRenderStage::operator () (IReflect& reflect
 	return *this;
 }
 
-void LightTextureEncodeRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
+void LightTextureEncodeRenderStage::Prepare(Engine& engine, IRender::Queue* queue) {
 	SnowyStream& snowyStream = engine.snowyStream;
 	LightTexture.renderTargetDescription.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 	LightTexture.renderTargetDescription.state.layout = IRender::Resource::TextureDescription::RGBA;
@@ -31,7 +31,7 @@ void LightTextureEncodeRenderStage::PrepareResources(Engine& engine, IRender::Qu
 	LightTexture.renderTargetDescription.state.immutable = false;
 	LightTexture.renderTargetDescription.state.attachment = true;
 
-	BaseClass::PrepareResources(engine, queue);
+	BaseClass::Prepare(engine, queue);
 }
 
 void LightTextureEncodeRenderStage::Uninitialize(Engine& engine, IRender::Queue* queue) {
@@ -39,7 +39,7 @@ void LightTextureEncodeRenderStage::Uninitialize(Engine& engine, IRender::Queue*
 	BaseClass::Uninitialize(engine, queue);
 }
 
-void LightTextureEncodeRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
+void LightTextureEncodeRenderStage::Update(Engine& engine, IRender::Queue* queue) {
 	LightTextureEncodePass& Pass = GetPass();
 	ScreenTransformVS& screenTransform = Pass.transform;
 	screenTransform.vertexBuffer.resource = meshResource->bufferCollection.positionBuffer;
@@ -83,5 +83,5 @@ void LightTextureEncodeRenderStage::UpdatePass(Engine& engine, IRender::Queue* q
 	}
 
 	// assemble block data
-	BaseClass::UpdatePass(engine, queue);
+	BaseClass::Update(engine, queue);
 }

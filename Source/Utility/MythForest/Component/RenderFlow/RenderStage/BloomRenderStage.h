@@ -13,8 +13,8 @@ namespace PaintsNow {
 	class BloomRenderStage : public TReflected<BloomRenderStage, GeneralRenderStageMesh<BloomPass> > {
 	public:
 		BloomRenderStage(const String& config);
-		void PrepareResources(Engine& engine, IRender::Queue* queue) override;
-		void UpdatePass(Engine& engine, IRender::Queue* queue) override;
+		void Prepare(Engine& engine, IRender::Queue* queue) override;
+		void Update(Engine& engine, IRender::Queue* queue) override;
 
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 

@@ -6,7 +6,8 @@ using namespace PaintsNow;
 
 StandardLightingBufferEncodedFS::StandardLightingBufferEncodedFS() : lightCount(0), cubeLevelInv(0), cubeStrength(1.0f) {
 	specTexture.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D_CUBE;
-	lightBuffer.description.usage = IRender::Resource::BufferDescription::UNIFORM;
+	lightInfoBuffer.description.usage = IRender::Resource::BufferDescription::UNIFORM;
+	lightIndexBuffer.description.usage = IRender::Resource::BufferDescription::STORAGE;
 	paramBuffer.description.usage = IRender::Resource::BufferDescription::UNIFORM;
 
 	lightInfos.resize(MAX_LIGHT_COUNT * 2);
@@ -31,7 +32,6 @@ String StandardLightingBufferEncodedFS::GetShaderText() {
 	// mainColor.xyz += diff.xyz * float3(1.0, 1.0, 1.0); // ambient
 	mainColor.xyz = mainColor.xyz + env * spec * cubeStrength;
 
-	float4 idx = texture(lightTexture, rasterCoord.xy) * float(255.0);
 	float f = saturate(50.0 * spec.y);
 	float p = roughness * roughness;
 	p = p * p;
@@ -41,39 +41,46 @@ String StandardLightingBufferEncodedFS::GetShaderText() {
 	float4 VoH = float4(0, 0, 0, 0);
 	float3 lightColor[4];
 
-	int k;
-	for (k = 0; k < 4; k++) {
-		int i = int(idx[k]);
-		if (i == 0) break;
+	// float4 idx = texture(lightTexture, rasterCoord.xy) * float(255.0);
+	int offset = int(rasterCoord.x * screenSize.x) + int(rasterCoord.y * screenSize.y * screenSize.x);
+	for (int n = 0; n < 64; n++) {
+		uint4 idx = lightIndices[offset + n];
+		int k;
+		for (k = 0; k < 4; k++) {
+			int i = idx[k];
+			if (i == 0) break;
 
-		float4 pos = lightInfos[i * 2 - 2];
-		float4 color = lightInfos[i * 2 - 1];
+			float4 pos = lightInfos[i * 2 - 2];
+			float4 color = lightInfos[i * 2 - 1];
 
-		float nondirectional = step(0.025, pos.w);
-		float3 L = pos.xyz - viewPosition.xyz * nondirectional;
-		float dist = dot(L, L) * nondirectional;
-		float falloff = saturate(dist / max(0.025, pos.w));
-		float s = (1.0 - falloff * falloff) / (1.0 + dist * color.w) * step(-0.5, nondirectional - shadow);
-		L = normalize(L);
-		float3 H = normalize(L + V);
+			float nondirectional = step(0.025, pos.w);
+			float3 L = pos.xyz - viewPosition.xyz * nondirectional;
+			float dist = dot(L, L) * nondirectional;
+			float falloff = saturate(dist / max(0.025, pos.w));
+			float s = (1.0 - falloff * falloff) / (1.0 + dist * color.w) * step(-0.5, nondirectional - shadow);
+			L = normalize(L);
+			float3 H = normalize(L + V);
 
-		lightColor[k] = color.xyz * s;
-		NoH[k] = saturate(dot(N, H));
-		NoL[k] = saturate(dot(N, L));
-		VoH[k] = saturate(dot(V, H));
-	}
+			lightColor[k] = color.xyz * s;
+			NoH[k] = saturate(dot(N, H));
+			NoL[k] = saturate(dot(N, L));
+			VoH[k] = saturate(dot(V, H));
+		}
 
-	float4 q = (NoH.xyzw * p - NoH.xyzw) * NoH.xyzw + float4(1.0, 1.0, 1.0, 1.0);
-	float4 vl = clamp(NoL.xyzw, float4(0.1, 0.1, 0.1, 0.1), float4(1, 1, 1, 1));
-	float vlc = clamp(NoV, float(0.01), float(1.0));
-	float4 vls = vl.xyzw * sqrt(saturate(-vlc * p + vlc) * vlc + p);
-	vls = vls + sqrt(saturate(-vl.xyzw * p + vl.xyzw) * vl.xyzw + p) * vlc;
-	float4 DG = (float4(0.5, 0.5, 0.5, 0.5) / PI * p) / max(vls.xyzw * (q * q), float4(0.0001, 0.0001, 0.0001, 0.0001));
-	float4 e = exp2(VoH.xyzw * (VoH.xyzw * float(-5.55473) - float4(6.98316, 6.98316, 6.98316, 6.98316)));
+		if (k == 0) break; // end of lights
 
-	for (int i = 0; i < k; i++) {
-		float3 F = spec + (float3(f, f, f) - spec) * e[i];
-		mainColor.xyz = mainColor.xyz + (diff + F * DG[i]) * lightColor[i].xyz * NoL[i];
+		float4 q = (NoH.xyzw * p - NoH.xyzw) * NoH.xyzw + float4(1.0, 1.0, 1.0, 1.0);
+		float4 vl = clamp(NoL.xyzw, float4(0.1, 0.1, 0.1, 0.1), float4(1, 1, 1, 1));
+		float vlc = clamp(NoV, float(0.01), float(1.0));
+		float4 vls = vl.xyzw * sqrt(saturate(-vlc * p + vlc) * vlc + p);
+		vls = vls + sqrt(saturate(-vl.xyzw * p + vl.xyzw) * vl.xyzw + p) * vlc;
+		float4 DG = (float4(0.5, 0.5, 0.5, 0.5) / PI * p) / max(vls.xyzw * (q * q), float4(0.0001, 0.0001, 0.0001, 0.0001));
+		float4 e = exp2(VoH.xyzw * (VoH.xyzw * float(-5.55473) - float4(6.98316, 6.98316, 6.98316, 6.98316)));
+
+		for (int i = 0; i < k; i++) {
+			float3 F = spec + (float3(f, f, f) - spec) * e[i];
+			mainColor.xyz = mainColor.xyz + (diff + F * DG[i]) * lightColor[i].xyz * NoL[i];
+		}
 	}
 
 	mainColor.xyz = pow(max(mainColor.xyz, float3(0, 0, 0)), float3(1.0, 1.0, 1.0) / GAMMA);
@@ -85,9 +92,8 @@ TObject<IReflect>& StandardLightingBufferEncodedFS::operator () (IReflect& refle
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectProperty()) {
-		ReflectProperty(lightTexture);
 		ReflectProperty(specTexture);
-		ReflectProperty(lightBuffer);
+		ReflectProperty(lightInfoBuffer);
 		ReflectProperty(paramBuffer);
 
 		ReflectProperty(viewPosition)[BindInput(BindInput::LOCAL)];
@@ -100,7 +106,9 @@ TObject<IReflect>& StandardLightingBufferEncodedFS::operator () (IReflect& refle
 		ReflectProperty(invWorldNormalMatrix)[paramBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(cubeLevelInv)[paramBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(cubeStrength)[paramBuffer][BindInput(BindInput::GENERAL)];
-		ReflectProperty(lightInfos)[lightBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(screenSize)[paramBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(lightInfos)[lightInfoBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(lightIndices)[lightIndexBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(mainColor)[BindOutput(BindOutput::COLOR)];
 	}
 	

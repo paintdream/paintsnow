@@ -19,12 +19,12 @@ TObject<IReflect>& FrameBarrierRenderStage::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void FrameBarrierRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
+void FrameBarrierRenderStage::Prepare(Engine& engine, IRender::Queue* queue) {
 	IRender& render = engine.interfaces.render;
 	SnowyStream& snowyStream = engine.snowyStream;
 
 	// we do not have render targets
-	// RenderStage::PrepareResources(engine);
+	// RenderStage::Prepare(engine);
 }
 
 void FrameBarrierRenderStage::SetMainResolution(Engine& engine, IRender::Queue* queue, UShort2 res) {
@@ -41,7 +41,7 @@ void FrameBarrierRenderStage::SetMainResolution(Engine& engine, IRender::Queue* 
 	}
 }
 
-void FrameBarrierRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {}
+void FrameBarrierRenderStage::Update(Engine& engine, IRender::Queue* queue) {}
 void FrameBarrierRenderStage::Commit(Engine& engine, std::vector<IRender::Queue*>& queues, std::vector<IRender::Queue*>& instantQueues, std::vector<IRender::Queue*>& deletedQueues, IRender::Queue* instantQueue) {}
 
 void FrameBarrierRenderStage::Tick(Engine& engine, IRender::Queue* queue) {

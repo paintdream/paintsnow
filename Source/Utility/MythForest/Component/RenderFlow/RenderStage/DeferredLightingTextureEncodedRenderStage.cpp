@@ -34,7 +34,7 @@ TObject<IReflect>& DeferredLightingTextureEncodedRenderStage::operator () (IRefl
 	return *this;
 }
 
-void DeferredLightingTextureEncodedRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
+void DeferredLightingTextureEncodedRenderStage::Prepare(Engine& engine, IRender::Queue* queue) {
 	IRender& render = engine.interfaces.render;
 	SnowyStream& snowyStream = engine.snowyStream;
 	OutputColor.renderTargetDescription.state.format = IRender::Resource::TextureDescription::HALF;
@@ -42,10 +42,10 @@ void DeferredLightingTextureEncodedRenderStage::PrepareResources(Engine& engine,
 	OutputColor.renderTargetDescription.state.immutable = false;
 	OutputColor.renderTargetDescription.state.attachment = true;
 
-	BaseClass::PrepareResources(engine, queue);
+	BaseClass::Prepare(engine, queue);
 }
 
-void DeferredLightingTextureEncodedRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
+void DeferredLightingTextureEncodedRenderStage::Update(Engine& engine, IRender::Queue* queue) {
 	DeferredLightingTextureEncodedPass& Pass = GetPass();
 	ScreenTransformVS& screenTransform = Pass.screenTransform;
 	screenTransform.vertexBuffer.resource = meshResource->bufferCollection.positionBuffer;
@@ -114,5 +114,5 @@ void DeferredLightingTextureEncodedRenderStage::UpdatePass(Engine& engine, IRend
 	standardLighting.lightCount = count;
 	standardLighting.lightTexture.resource = LightTexture.textureResource->GetRenderResource();
 
-	BaseClass::UpdatePass(engine, queue);
+	BaseClass::Update(engine, queue);
 }

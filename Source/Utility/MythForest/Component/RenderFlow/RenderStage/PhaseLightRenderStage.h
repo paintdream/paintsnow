@@ -15,8 +15,8 @@ namespace PaintsNow {
 	class PhaseLightRenderStage : public TReflected<PhaseLightRenderStage, GeneralRenderStageMesh<MultiHashTracePass> > {
 	public:
 		PhaseLightRenderStage(const String& s);
-		void PrepareResources(Engine& engine, IRender::Queue* queue) override;
-		void UpdatePass(Engine& engine, IRender::Queue* queue) override;
+		void Prepare(Engine& engine, IRender::Queue* queue) override;
+		void Update(Engine& engine, IRender::Queue* queue) override;
 		void Tick(Engine& engine, IRender::Queue* queue) override;
 
 		TObject<IReflect>& operator () (IReflect& reflect) override;

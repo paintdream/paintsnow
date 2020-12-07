@@ -24,11 +24,11 @@ namespace PaintsNow {
 			RENDERSTAGE_CUSTOM_BEGIN = TINY_CUSTOM_BEGIN << 4
 		};
 
-		virtual void PrepareResources(Engine& engine, IRender::Queue* resourceQueue);
 		virtual void Initialize(Engine& engine, IRender::Queue* resourceQueue);
 		virtual void Uninitialize(Engine& engine, IRender::Queue* resourceQueue);
+		virtual void Prepare(Engine& engine, IRender::Queue* resourceQueue);
+		virtual void Update(Engine& engine, IRender::Queue* resourceQueue);
 		virtual void SetMainResolution(Engine& engine, IRender::Queue* resourceQueue, UShort2 res);
-		virtual void UpdatePass(Engine& engine, IRender::Queue* resourceQueue);
 		virtual void Tick(Engine& engine, IRender::Queue* resourceQueue);
 		virtual void Commit(Engine& engine, std::vector<IRender::Queue*>& queues, std::vector<IRender::Queue*>& instantQueues, std::vector<IRender::Queue*>& deletedQueues, IRender::Queue* instantQueue);
 
@@ -56,7 +56,7 @@ namespace PaintsNow {
 		// gcc do not support referencing base type in template class. manunaly specified here.
 		typedef TReflected<GeneralRenderStage<T>, RenderStage> BaseClass;
 		GeneralRenderStage(uint32_t colorAttachmentCount = 1) : BaseClass(colorAttachmentCount) {}
-		void PrepareResources(Engine& engine, IRender::Queue* queue) override {
+		void Prepare(Engine& engine, IRender::Queue* queue) override {
 			// create specified shader resource (if not exists)
 			String path = ShaderResource::GetShaderPathPrefix() + UniqueType<T>::Get()->GetBriefName();
 			sharedShader = engine.snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), path, true, ResourceBase::RESOURCE_VIRTUAL);
@@ -67,7 +67,7 @@ namespace PaintsNow {
 				BaseClass::Flag().fetch_or(BaseClass::RENDERSTAGE_COMPUTE_PASS, std::memory_order_relaxed);
 			}
 
-			BaseClass::PrepareResources(engine, queue);
+			BaseClass::Prepare(engine, queue);
 		}
 
 	protected:
@@ -95,7 +95,7 @@ namespace PaintsNow {
 		typedef TReflected<GeneralRenderStageMesh<T>, GeneralRenderStage<T> > BaseClass;
 		GeneralRenderStageMesh(uint32_t colorAttachmentCount = 1) : BaseClass(colorAttachmentCount) {}
 
-		void PrepareResources(Engine& engine, IRender::Queue* queue) override {
+		void Prepare(Engine& engine, IRender::Queue* queue) override {
 			// create specified shader resource (if not exists)
 			if (!meshResource) {
 				const String path = "[Runtime]/MeshResource/StandardQuad";
@@ -104,12 +104,12 @@ namespace PaintsNow {
 			}
 
 			assert(meshResource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_UPLOADED);
-			BaseClass::PrepareResources(engine, queue);
+			BaseClass::Prepare(engine, queue);
 		}
 
 		// Helper functions
-		void UpdatePass(Engine& engine, IRender::Queue* queue) override {
-			BaseClass::UpdatePass(engine, queue);
+		void Update(Engine& engine, IRender::Queue* queue) override {
+			BaseClass::Update(engine, queue);
 
 			IRender& render = engine.interfaces.render;
 			PassBase::Updater& updater = BaseClass::GetPassUpdater();

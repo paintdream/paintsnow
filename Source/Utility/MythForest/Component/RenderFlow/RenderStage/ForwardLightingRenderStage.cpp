@@ -19,7 +19,7 @@ TObject<IReflect>& ForwardLightingRenderStage::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void ForwardLightingRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
+void ForwardLightingRenderStage::Prepare(Engine& engine, IRender::Queue* queue) {
 	IRender& render = engine.interfaces.render;
 	SnowyStream& snowyStream = engine.snowyStream;
 	OutputColor.renderTargetDescription.state.format = IRender::Resource::TextureDescription::HALF;
@@ -27,9 +27,9 @@ void ForwardLightingRenderStage::PrepareResources(Engine& engine, IRender::Queue
 	OutputColor.renderTargetDescription.state.immutable = false;
 	OutputColor.renderTargetDescription.state.attachment = true;
 
-	BaseClass::PrepareResources(engine, queue);
+	BaseClass::Prepare(engine, queue);
 }
 
-void ForwardLightingRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
-	BaseClass::UpdatePass(engine, queue);
+void ForwardLightingRenderStage::Update(Engine& engine, IRender::Queue* queue) {
+	BaseClass::Update(engine, queue);
 }

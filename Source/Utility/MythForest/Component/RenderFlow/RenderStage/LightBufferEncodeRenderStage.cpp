@@ -23,16 +23,21 @@ TObject<IReflect>& LightBufferEncodeRenderStage::operator () (IReflect& reflect)
 	return *this;
 }
 
-void LightBufferEncodeRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
+void LightBufferEncodeRenderStage::Prepare(Engine& engine, IRender::Queue* queue) {
 	SnowyStream& snowyStream = engine.snowyStream;
-	/*
-	LightBufferEncode.renderTargetDescription.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
-	LightBufferEncode.renderTargetDescription.state.layout = IRender::Resource::TextureDescription::RGBA;
-	LightBufferEncode.renderTargetDescription.state.sample = IRender::Resource::TextureDescription::POINT;
-	LightBufferEncode.renderTargetDescription.state.immutable = false;
-	LightBufferEncode.renderTargetDescription.state.attachment = true;*/
 
-	BaseClass::PrepareResources(engine, queue);
+	assert(LightBuffer.sharedBufferResource == nullptr);
+	IRender& render = engine.interfaces.render;
+	IRender::Resource* resource = render.CreateResource(engine.snowyStream.GetRenderDevice(), IRender::Resource::RESOURCE_BUFFER);
+	IRender::Resource::BufferDescription description;
+	description.format = IRender::Resource::BufferDescription::UNSIGNED_INT;
+	description.component = 4;
+	description.dynamic = 1;
+	description.usage = IRender::Resource::BufferDescription::STORAGE; // shared storage
+	render.UploadResource(queue, resource, &description);
+
+	LightBuffer.sharedBufferResource = resource;
+	BaseClass::Prepare(engine, queue);
 }
 
 void LightBufferEncodeRenderStage::Uninitialize(Engine& engine, IRender::Queue* queue) {
@@ -40,12 +45,9 @@ void LightBufferEncodeRenderStage::Uninitialize(Engine& engine, IRender::Queue* 
 	BaseClass::Uninitialize(engine, queue);
 }
 
-void LightBufferEncodeRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
+void LightBufferEncodeRenderStage::Update(Engine& engine, IRender::Queue* queue) {
 	LightBufferEncodePass& Pass = GetPass();
-	/*
-	ScreenTransformVS& screenTransform = Pass.transform;
-	screenTransform.vertexBuffer.resource = meshResource->bufferCollection.positionBuffer;
-	LightEncoderFS& encoder = Pass.encoder;
+	LightEncoderCS& encoder = Pass.encoder;
 	encoder.depthTexture.resource = InputDepth.textureResource->GetRenderResource();
 	encoder.inverseProjectionMatrix = CameraView->inverseProjectionMatrix;
 
@@ -61,7 +63,7 @@ void LightBufferEncodeRenderStage::UpdatePass(Engine& engine, IRender::Queue* qu
 	// prepare soft rasterizer
 	Float4* lightInfos = &encoder.lightInfos[0];
 	int32_t gridWidth = (dim.x() + 7) >> 3, gridHeight = (dim.y() + 7) >> 3;
-	uint32_t count = Math::Min((uint32_t)lights.size(), (uint32_t)LightEncoderFS::MAX_LIGHT_COUNT);
+	uint32_t count = Math::Min((uint32_t)lights.size(), (uint32_t)LightEncoderCS::MAX_LIGHT_COUNT);
 	encoder.lightCount = (float)count;
 
 	MatrixFloat3x3 normalMatrix;
@@ -83,8 +85,8 @@ void LightBufferEncodeRenderStage::UpdatePass(Engine& engine, IRender::Queue* qu
 
 		lightInfos[i] = Float4(p.x(), p.y(), p.z(), light.position.w());
 	}
-	*/
 
+	encoder.lightBuffer.resource = LightBuffer.sharedBufferResource; // Binding output buffer.
 	// assemble block data
-	BaseClass::UpdatePass(engine, queue);
+	BaseClass::Update(engine, queue);
 }

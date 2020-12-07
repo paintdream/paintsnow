@@ -15,8 +15,8 @@ namespace PaintsNow {
 	public:
 		ForwardLightingRenderStage(const String& s);
 		TObject<IReflect>& operator () (IReflect& reflect) override;
-		void PrepareResources(Engine& engine, IRender::Queue* queue) override;
-		void UpdatePass(Engine& engine, IRender::Queue* queue) override;
+		void Prepare(Engine& engine, IRender::Queue* queue) override;
+		void Update(Engine& engine, IRender::Queue* queue) override;
 
 		RenderPortLightSource LightSource;
 		RenderPortCommandQueue Primitives; // input primitives

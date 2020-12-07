@@ -6,7 +6,7 @@ using namespace PaintsNow;
 
 StandardLightingTextureEncodedFS::StandardLightingTextureEncodedFS() : lightCount(0), cubeLevelInv(0), cubeStrength(1.0f) {
 	specTexture.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D_CUBE;
-	lightBuffer.description.usage = IRender::Resource::BufferDescription::UNIFORM;
+	lightInfoBuffer.description.usage = IRender::Resource::BufferDescription::UNIFORM;
 	paramBuffer.description.usage = IRender::Resource::BufferDescription::UNIFORM;
 
 	lightInfos.resize(MAX_LIGHT_COUNT * 2);
@@ -87,7 +87,7 @@ TObject<IReflect>& StandardLightingTextureEncodedFS::operator () (IReflect& refl
 	if (reflect.IsReflectProperty()) {
 		ReflectProperty(lightTexture);
 		ReflectProperty(specTexture);
-		ReflectProperty(lightBuffer);
+		ReflectProperty(lightInfoBuffer);
 		ReflectProperty(paramBuffer);
 
 		ReflectProperty(viewPosition)[BindInput(BindInput::LOCAL)];
@@ -100,7 +100,7 @@ TObject<IReflect>& StandardLightingTextureEncodedFS::operator () (IReflect& refl
 		ReflectProperty(invWorldNormalMatrix)[paramBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(cubeLevelInv)[paramBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(cubeStrength)[paramBuffer][BindInput(BindInput::GENERAL)];
-		ReflectProperty(lightInfos)[lightBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(lightInfos)[lightInfoBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(mainColor)[BindOutput(BindOutput::COLOR)];
 	}
 	

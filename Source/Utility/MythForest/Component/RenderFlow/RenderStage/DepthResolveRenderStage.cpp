@@ -18,22 +18,22 @@ TObject<IReflect>& DepthResolveRenderStage::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void DepthResolveRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
+void DepthResolveRenderStage::Prepare(Engine& engine, IRender::Queue* queue) {
 	SnowyStream& snowyStream = engine.snowyStream;
 	OutputDepth.renderTargetDescription.state.format = IRender::Resource::TextureDescription::FLOAT;
 	OutputDepth.renderTargetDescription.state.layout = IRender::Resource::TextureDescription::R;
 	OutputDepth.renderTargetDescription.state.immutable = false;
 	OutputDepth.renderTargetDescription.state.attachment = true;
 
-	BaseClass::PrepareResources(engine, queue);
+	BaseClass::Prepare(engine, queue);
 }
 
-void DepthResolveRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
+void DepthResolveRenderStage::Update(Engine& engine, IRender::Queue* queue) {
 	DepthResolvePass& Pass = GetPass();
 	ScreenTransformVS& screenTransform = Pass.transform;
 	screenTransform.vertexBuffer.resource = meshResource->bufferCollection.positionBuffer;
 	DepthResolveFS& resolve = Pass.resolve;
 	resolve.depthTexture.resource = InputDepth.textureResource->GetRenderResource();
 
-	BaseClass::UpdatePass(engine, queue);
+	BaseClass::Update(engine, queue);
 }

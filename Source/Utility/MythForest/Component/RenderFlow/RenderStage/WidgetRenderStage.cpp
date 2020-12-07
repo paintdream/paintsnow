@@ -19,13 +19,13 @@ TObject<IReflect>& WidgetRenderStage::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void WidgetRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
+void WidgetRenderStage::Prepare(Engine& engine, IRender::Queue* queue) {
 	OutputColor.renderTargetDescription.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 	OutputColor.renderTargetDescription.state.layout = IRender::Resource::TextureDescription::RGBA;
 
-	BaseClass::PrepareResources(engine, queue);
+	BaseClass::Prepare(engine, queue);
 }
 
-void WidgetRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
-	BaseClass::UpdatePass(engine, queue);
+void WidgetRenderStage::Update(Engine& engine, IRender::Queue* queue) {
+	BaseClass::Update(engine, queue);
 }

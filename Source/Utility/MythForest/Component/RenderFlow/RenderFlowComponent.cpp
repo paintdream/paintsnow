@@ -315,7 +315,7 @@ void RenderFlowComponent::Initialize(Engine& engine, Entity* entity) {
 	for (size_t n = 0; n < cachedRenderStages.size(); n++) {
 		RenderStage* renderStage = cachedRenderStages[n];
 		if (renderStage != nullptr) {
-			renderStage->PrepareResources(engine, resourceQueue);
+			renderStage->Prepare(engine, resourceQueue);
 		}
 	}
 

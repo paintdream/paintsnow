@@ -33,16 +33,16 @@ TObject<IReflect>& StencilMaskRenderStage::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void StencilMaskRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
+void StencilMaskRenderStage::Prepare(Engine& engine, IRender::Queue* queue) {
 	SnowyStream& snowyStream = engine.snowyStream;
 	// Do nothing
 
-	BaseClass::PrepareResources(engine, queue);
+	BaseClass::Prepare(engine, queue);
 }
 
-void StencilMaskRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
+void StencilMaskRenderStage::Update(Engine& engine, IRender::Queue* queue) {
 	ConstMapPass& Pass = GetPass();
 	// TODO: Bind Box Mesh ...
 
-	BaseClass::UpdatePass(engine, queue);
+	BaseClass::Update(engine, queue);
 }

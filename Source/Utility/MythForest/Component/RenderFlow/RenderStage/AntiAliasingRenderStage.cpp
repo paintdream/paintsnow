@@ -19,18 +19,18 @@ TObject<IReflect>& AntiAliasingRenderStage::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void AntiAliasingRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
+void AntiAliasingRenderStage::Prepare(Engine& engine, IRender::Queue* queue) {
 	SnowyStream& snowyStream = engine.snowyStream;
 	OutputColor.renderTargetDescription.state.format = IRender::Resource::TextureDescription::HALF;
 	OutputColor.renderTargetDescription.state.layout = IRender::Resource::TextureDescription::RGB10PACK;
 	OutputColor.renderTargetDescription.state.immutable = false;
 	OutputColor.renderTargetDescription.state.attachment = true;
 
-	BaseClass::PrepareResources(engine, queue);
+	BaseClass::Prepare(engine, queue);
 }
 
-void AntiAliasingRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
-	// Do not update pass in UpdatePass(engine)
+void AntiAliasingRenderStage::Update(Engine& engine, IRender::Queue* queue) {
+	// Do not update pass in Update(engine)
 	AntiAliasingPass& Pass = GetPass();
 	ScreenTransformVS& screenTransform = Pass.transform;
 	screenTransform.vertexBuffer.resource = meshResource->bufferCollection.positionBuffer;
@@ -48,6 +48,6 @@ void AntiAliasingRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) 
 	antiAliasing.invScreenSize = Float2(1.0f / dim.x(), 1.0f / dim.y());
 	// std::swap(antiAliasing.unjitter, antiAliasing.invScreenSize);
 
-	BaseClass::UpdatePass(engine, queue);
+	BaseClass::Update(engine, queue);
 }
 

@@ -15,7 +15,7 @@ namespace PaintsNow {
 
 		BindTexture lightTexture;
 		BindTexture specTexture;
-		BindBuffer lightBuffer;
+		BindBuffer lightInfoBuffer;
 		BindBuffer paramBuffer;
 
 		Float3 viewPosition;

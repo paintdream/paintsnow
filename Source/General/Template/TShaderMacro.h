@@ -30,6 +30,9 @@ namespace PaintsNow {
 	const float PI = 3.1415926f;
 	const float GAMMA = 2.2f;
 	typedef uint32_t uint;
+	typedef UInt2 uint2;
+	typedef UInt3 uint3;
+	typedef UInt4 uint4;
 	typedef Float4 float4;
 	typedef Float3 float3;
 	typedef Float2 float2;

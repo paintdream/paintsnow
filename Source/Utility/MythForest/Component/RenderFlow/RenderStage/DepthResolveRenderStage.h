@@ -13,8 +13,8 @@ namespace PaintsNow {
 	class DepthResolveRenderStage : public TReflected<DepthResolveRenderStage, GeneralRenderStageMesh<DepthResolvePass> > {
 	public:
 		DepthResolveRenderStage(const String& config = "1");
-		void PrepareResources(Engine& engine, IRender::Queue* queue) override;
-		void UpdatePass(Engine& engine, IRender::Queue* queue) override;
+		void Prepare(Engine& engine, IRender::Queue* queue) override;
+		void Update(Engine& engine, IRender::Queue* queue) override;
 
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 

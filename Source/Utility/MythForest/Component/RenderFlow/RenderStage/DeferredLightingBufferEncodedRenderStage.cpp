@@ -21,12 +21,12 @@ TObject<IReflect>& DeferredLightingBufferEncodedRenderStage::operator () (IRefle
 		ReflectProperty(CameraView);
 		ReflectProperty(LightSource);
 
-		ReflectProperty(LightTexture);
 		ReflectProperty(BaseColorOcclusion);
 		ReflectProperty(NormalRoughnessMetallic);
 		ReflectProperty(Depth);
 		ReflectProperty(ShadowTexture);
 
+		ReflectProperty(LightBuffer);
 		ReflectProperty(LoadDepth);
 		ReflectProperty(OutputColor);
 	}
@@ -34,7 +34,7 @@ TObject<IReflect>& DeferredLightingBufferEncodedRenderStage::operator () (IRefle
 	return *this;
 }
 
-void DeferredLightingBufferEncodedRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
+void DeferredLightingBufferEncodedRenderStage::Prepare(Engine& engine, IRender::Queue* queue) {
 	IRender& render = engine.interfaces.render;
 	SnowyStream& snowyStream = engine.snowyStream;
 	OutputColor.renderTargetDescription.state.format = IRender::Resource::TextureDescription::HALF;
@@ -42,10 +42,10 @@ void DeferredLightingBufferEncodedRenderStage::PrepareResources(Engine& engine, 
 	OutputColor.renderTargetDescription.state.immutable = false;
 	OutputColor.renderTargetDescription.state.attachment = true;
 
-	BaseClass::PrepareResources(engine, queue);
+	BaseClass::Prepare(engine, queue);
 }
 
-void DeferredLightingBufferEncodedRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
+void DeferredLightingBufferEncodedRenderStage::Update(Engine& engine, IRender::Queue* queue) {
 	DeferredLightingBufferEncodedPass& Pass = GetPass();
 	ScreenTransformVS& screenTransform = Pass.screenTransform;
 	screenTransform.vertexBuffer.resource = meshResource->bufferCollection.positionBuffer;
@@ -112,7 +112,8 @@ void DeferredLightingBufferEncodedRenderStage::UpdatePass(Engine& engine, IRende
 	}
 
 	standardLighting.lightCount = count;
-	standardLighting.lightTexture.resource = LightTexture.textureResource->GetRenderResource();
+	assert(LightBuffer.sharedBufferResource);
+	standardLighting.lightIndexBuffer.resource = LightBuffer.sharedBufferResource;
 
-	BaseClass::UpdatePass(engine, queue);
+	BaseClass::Update(engine, queue);
 }

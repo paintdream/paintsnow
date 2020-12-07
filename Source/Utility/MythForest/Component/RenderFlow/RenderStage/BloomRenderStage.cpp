@@ -17,17 +17,17 @@ TObject<IReflect>& BloomRenderStage::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void BloomRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
+void BloomRenderStage::Prepare(Engine& engine, IRender::Queue* queue) {
 	SnowyStream& snowyStream = engine.snowyStream;
 	OutputColor.renderTargetDescription.state.format = IRender::Resource::TextureDescription::HALF;
 	OutputColor.renderTargetDescription.state.layout = IRender::Resource::TextureDescription::RGB10PACK;
 	OutputColor.renderTargetDescription.state.immutable = false;
 	OutputColor.renderTargetDescription.state.attachment = true;
 
-	BaseClass::PrepareResources(engine, queue);
+	BaseClass::Prepare(engine, queue);
 }
 
-void BloomRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
+void BloomRenderStage::Update(Engine& engine, IRender::Queue* queue) {
 	BloomPass& Pass = GetPass();
 	ScreenTransformVS& screenTransform = Pass.screenTransform;
 	screenTransform.vertexBuffer.resource = meshResource->bufferCollection.positionBuffer;
@@ -37,5 +37,5 @@ void BloomRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
 	const UShort3& dim = OutputColor.renderTargetDescription.dimension;
 	bloom.invScreenSize = Float2(dim.x() == 0 ? 0 : 1.0f / dim.x(), dim.y() == 0 ? 0 : 1.0f / dim.y());
 
-	BaseClass::UpdatePass(engine, queue);
+	BaseClass::Update(engine, queue);
 }

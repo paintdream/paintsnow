@@ -5,7 +5,7 @@ using namespace PaintsNow;
 
 // RenderPortSharedBufferLoad
 
-RenderPortSharedBufferLoad::RenderPortSharedBufferLoad(bool write) {
+RenderPortSharedBufferLoad::RenderPortSharedBufferLoad(bool write) : sharedBufferResource(nullptr) {
 	if (write) {
 		Flag().fetch_or(Tiny::TINY_UNIQUE, std::memory_order_relaxed);
 	}
@@ -34,7 +34,7 @@ void RenderPortSharedBufferLoad::Tick(Engine& engine, IRender::Queue* queue) {
 
 // RenderPortSharedBufferStore
 
-RenderPortSharedBufferStore::RenderPortSharedBufferStore() {
+RenderPortSharedBufferStore::RenderPortSharedBufferStore() : sharedBufferResource(nullptr) {
 }
 
 TObject<IReflect>& RenderPortSharedBufferStore::operator () (IReflect& reflect) {
@@ -49,6 +49,10 @@ TObject<IReflect>& RenderPortSharedBufferStore::operator () (IReflect& reflect) 
 void RenderPortSharedBufferStore::Initialize(IRender& render, IRender::Queue* mainQueue) {}
 
 void RenderPortSharedBufferStore::Uninitialize(IRender& render, IRender::Queue* mainQueue) {
+	if (sharedBufferResource != nullptr) {
+		render.DeleteResource(mainQueue, sharedBufferResource);
+		sharedBufferResource = nullptr;
+	}
 }
 
 void RenderPortSharedBufferStore::Tick(Engine& engine, IRender::Queue* queue) {

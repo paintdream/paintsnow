@@ -12,8 +12,8 @@ namespace PaintsNow {
 	public:
 		DeviceRenderStage(const String& config = "1");
 		void SetMainResolution(Engine& engine, IRender::Queue* queue, UShort2 res) override;
-		void PrepareResources(Engine& engine, IRender::Queue* queue) override;
-		void UpdatePass(Engine& engine, IRender::Queue* queue) override;
+		void Prepare(Engine& engine, IRender::Queue* queue) override;
+		void Update(Engine& engine, IRender::Queue* queue) override;
 		void Tick(Engine& engine, IRender::Queue* queue) override;
 		void Commit(Engine& engine, std::vector<IRender::Queue*>& queues, std::vector<IRender::Queue*>& instantQueues, std::vector<IRender::Queue*>& deletedQueues, IRender::Queue* instantQueue) override;
 

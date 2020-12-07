@@ -6,6 +6,7 @@
 #pragma once
 #include "../RenderStage.h"
 #include "../RenderPort/RenderPortRenderTarget.h"
+#include "../RenderPort/RenderPortSharedBuffer.h"
 #include "../RenderPort/RenderPortTextureInput.h"
 #include "../RenderPort/RenderPortLightSource.h"
 #include "../RenderPort/RenderPortCameraView.h"
@@ -16,8 +17,8 @@ namespace PaintsNow {
 	public:
 		DeferredLightingBufferEncodedRenderStage(const String& s);
 		TObject<IReflect>& operator () (IReflect& reflect) override;
-		void PrepareResources(Engine& engine, IRender::Queue* queue) override;
-		void UpdatePass(Engine& engine, IRender::Queue* queue) override;
+		void Prepare(Engine& engine, IRender::Queue* queue) override;
+		void Update(Engine& engine, IRender::Queue* queue) override;
 
 		TRenderPortReference<RenderPortCameraView> CameraView;
 		TRenderPortReference<RenderPortLightSource> LightSource;
@@ -25,9 +26,9 @@ namespace PaintsNow {
 		RenderPortTextureInput BaseColorOcclusion;			// Base.x, Base.y, Base.z, Metallic
 		RenderPortTextureInput NormalRoughnessMetallic;		// N.x, N.y, Roughness, Occlusion
 		RenderPortTextureInput Depth;
-		RenderPortTextureInput LightTexture;
 		RenderPortTextureInput ShadowTexture;
 
+		RenderPortSharedBufferLoad LightBuffer;
 		RenderPortRenderTargetLoad LoadDepth;
 		RenderPortRenderTargetStore OutputColor;
 	};

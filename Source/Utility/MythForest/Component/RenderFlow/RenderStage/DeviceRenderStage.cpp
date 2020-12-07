@@ -16,14 +16,14 @@ TObject<IReflect>& DeviceRenderStage::operator () (IReflect& reflect) {
 }
 
 void DeviceRenderStage::SetMainResolution(Engine& engine, IRender::Queue* queue, UShort2 res) {}
-void DeviceRenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {}
+void DeviceRenderStage::Update(Engine& engine, IRender::Queue* queue) {}
 void DeviceRenderStage::Commit(Engine& engine, std::vector<IRender::Queue*>& queues, std::vector<IRender::Queue*>& instantQueues, std::vector<IRender::Queue*>& deletedQueues, IRender::Queue* instantQueue) {}
 
 void DeviceRenderStage::Tick(Engine& engine, IRender::Queue* queue) {
 	BaseClass::Tick(engine, queue);
 }
 
-void DeviceRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
+void DeviceRenderStage::Prepare(Engine& engine, IRender::Queue* queue) {
 	assert(InputColor.GetLinks().size() == 1);
 	RenderPort* renderPort = static_cast<RenderPort*>(InputColor.GetLinks()[0].port);
 	assert(renderPort != nullptr);
@@ -43,5 +43,5 @@ void DeviceRenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) 
 		(static_cast<RenderStage*>(input->GetNode()))->Flag().fetch_or(RenderStage::RENDERSTAGE_OUTPUT_TO_BACK_BUFFER, std::memory_order_relaxed);
 	}
 
-	// BaseClass::PrepareResources(engine, queue);
+	// BaseClass::Prepare(engine, queue);
 }

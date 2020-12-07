@@ -41,7 +41,7 @@ void RenderStage::SetFrameBarrierIndex(uint16_t index) {
 	frameBarrierIndex = index;
 }
 
-void RenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
+void RenderStage::Prepare(Engine& engine, IRender::Queue* queue) {
 	IRender& render = engine.interfaces.render;
 	IRender::Device* device = engine.snowyStream.GetRenderDevice();
 
@@ -56,7 +56,7 @@ void RenderStage::PrepareResources(Engine& engine, IRender::Queue* queue) {
 	}
 }
 
-void RenderStage::UpdatePass(Engine& engine, IRender::Queue* queue) {
+void RenderStage::Update(Engine& engine, IRender::Queue* queue) {
 	Tiny::FLAG flag = Flag().load(std::memory_order_acquire);
 	if (flag & RENDERSTAGE_COMPUTE_PASS) return; // no render targets
 
@@ -146,7 +146,7 @@ void RenderStage::Tick(Engine& engine, IRender::Queue* queue) {
 	}
 
 	if (flag & TINY_MODIFIED) {
-		UpdatePass(engine, queue);
+		Update(engine, queue);
 		Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release);
 	}
 }
