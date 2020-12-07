@@ -167,7 +167,6 @@ const TWrapper<IScript::Object*, const String&>& RemoteProxy::GetObjectCreator()
 }
 
 bool RemoteProxy::ThreadProc(IThread::Thread* thread, size_t context) {
-	return false;
 	ITunnel::Dispatcher* disp = dispatcher;
 	assert(!entry.empty());
 	ITunnel::Listener* listener = tunnel.OpenListener(disp, Wrap(this, &RemoteProxy::HandleEvent), Wrap(this, &RemoteProxy::OnConnection), entry);
@@ -423,7 +422,9 @@ void RemoteProxy::Request::ProcessPacket(Packet& packet) {
 		// write back?
 		if (!packet.response) {
 			packet.response = true;
+			UnLock();
 			PostPacket(packet);
+			DoLock();
 		}
 	}
 
@@ -543,7 +544,6 @@ Variant& Variant::operator = (const Variant& var) {
 // Request Apis
 
 RemoteProxy::Request::Request(RemoteProxy& h, ITunnel::Connection* c, const TWrapper<void, IScript::Request&, bool, STATUS, const String&>& sh) : host(h), threadApi(host.threadApi), stream(CHUNK_SIZE, true), statusHandler(sh), idx(0), initCount(0), tableLevel(0), connection(c), manually(false) {
-	requestLock = threadApi.NewLock();
 	syncCallEvent = threadApi.NewEvent();
 	MethodInspector inspector((IScript::Object*)UNIQUE_GLOBAL, globalRoutines);
 	(*this)(inspector);
@@ -583,7 +583,6 @@ RemoteProxy::Request::~Request() {
 	}
 
 	threadApi.DeleteEvent(syncCallEvent);
-	threadApi.DeleteLock(requestLock);
 }
 
 IScript* RemoteProxy::Request::GetScript() {
@@ -1030,7 +1029,7 @@ bool RemoteProxy::Request::Call(const AutoWrapperBase& wrapper, const Request::R
 	if (wrapper.IsSync()) {
 		// Must wait util return, timeout or error
 		// free locks
-		threadApi.Wait(syncCallEvent, requestLock);
+		threadApi.Wait(syncCallEvent, host.mutex);
 	}
 
 	return true;
@@ -1184,7 +1183,9 @@ void RemoteProxy::Request::QueryInterface(const TWrapper<void, IScript::Request&
 	assert(d != nullptr);
 	if (d->GetRaw() == (IScript::Object*)UNIQUE_GLOBAL) {
 		QueryObjectInterface(globalRoutines, *d, callback, target);
+		UnLock();
 		callback(*this, target, g);
+		DoLock();
 	} else if (!d->IsNative()) {
 		ObjectInfo& objectInfo = remoteActiveObjects[d->GetRaw()];
 		if (objectInfo.needQuery) {

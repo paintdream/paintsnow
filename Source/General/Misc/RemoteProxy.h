@@ -393,7 +393,6 @@ namespace PaintsNow {
 			std::map<IScript::Object*, ObjectInfo> remoteActiveObjects;
 			std::set<IScript::BaseDelegate*> localReferences;
 			TWrapper<void, IScript::Request&, bool, STATUS, const String&> statusHandler;
-			IThread::Lock* requestLock;
 			IThread::Event* syncCallEvent;
 			ITunnel::Packet state;
 			enum { CHUNK_SIZE = 0x1000 };

@@ -130,6 +130,7 @@ void OnQueryPrefab(IScript::Request& request, IReflectObject& inter, const IScri
 void OnQuery(IScript::Request& request, IReflectObject& inter, const IScript::Request::Ref& ref) {
 	RemoteFactory& testInterface = static_cast<RemoteFactory&>(inter);
 	IScript::Request::Ref prefab;
+	request.DoLock();
 	request.Push();
 
 	// You can choose either sync or async call.
@@ -138,6 +139,7 @@ void OnQuery(IScript::Request& request, IReflectObject& inter, const IScript::Re
 
 	request.QueryInterface(Wrap(OnQueryPrefab), myPrefab, prefab);
 	request.Pop();
+	request.UnLock();
 
 	/*
 	if (prefab) {

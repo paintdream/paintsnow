@@ -25,6 +25,11 @@ void RenderPortSharedBufferLoad::Uninitialize(IRender& render, IRender::Queue* m
 void RenderPortSharedBufferLoad::Tick(Engine& engine, IRender::Queue* queue) {
 	BaseClass::Tick(engine, queue);
 	if (GetLinks().empty()) return;
+
+	RenderPortSharedBufferStore* bufferStore = GetLinks().back().port->QueryInterface(UniqueType<RenderPortSharedBufferStore>());
+	if (bufferStore != nullptr) {
+		sharedBufferResource = bufferStore->sharedBufferResource;
+	}
 }
 
 // RenderPortSharedBufferStore

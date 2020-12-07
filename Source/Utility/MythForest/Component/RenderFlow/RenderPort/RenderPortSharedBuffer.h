@@ -17,6 +17,8 @@ namespace PaintsNow {
 		void Initialize(IRender& render, IRender::Queue* mainQueue) override;
 		void Uninitialize(IRender& render, IRender::Queue* mainQueue) override;
 		void Tick(Engine& engine, IRender::Queue* queue) override;
+
+		IRender::Resource* sharedBufferResource;
 	};
 
 	class RenderPortSharedBufferStore : public TReflected<RenderPortSharedBufferStore, RenderPort> {
@@ -27,6 +29,8 @@ namespace PaintsNow {
 		void Initialize(IRender& render, IRender::Queue* mainQueue) override;
 		void Uninitialize(IRender& render, IRender::Queue* mainQueue) override;
 		void Tick(Engine& engine, IRender::Queue* queue) override;
+
+		IRender::Resource* sharedBufferResource;
 	};
 }
 
