@@ -75,16 +75,27 @@ namespace PaintsNow {
 			M description;
 		};
 
+		enum MEMORY_SPEC {
+			DEFAULT,
+			COHERENT,
+			VOLATILE,
+			RESTRICT,
+			READONLY,
+			WRITEONLY
+		};
+
 		template <class M>
 		class TMetaBindingResource : public TReflected<TMetaBindingResource<M>, TMetaBinding<M> > {
 		public:
-			TMetaBindingResource() : resource(nullptr) {}
+			
+			TMetaBindingResource() : resource(nullptr), memorySpec(DEFAULT) {}
 
 			operator bool() {
 				return resource != nullptr;
 			}
 
 			IRender::Resource* resource;
+			MEMORY_SPEC memorySpec;
 		};
 
 		template <class M>

@@ -4,8 +4,11 @@
 
 using namespace PaintsNow;
 
-LightEncoderCS::LightEncoderCS() {
+LightEncoderCS::LightEncoderCS() : computeGroup(4, 4, 1) {
 	depthTexture.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
+	depthTexture.description.state.format = IRender::Resource::TextureDescription::HALF;
+	depthTexture.description.state.layout = IRender::Resource::TextureDescription::RG;
+	depthTexture.memorySpec = IShader::READONLY;
 	lightBuffer.description.usage = IRender::Resource::BufferDescription::UNIFORM;
 
 	lightInfos.resize(MAX_LIGHT_COUNT);
@@ -14,8 +17,8 @@ LightEncoderCS::LightEncoderCS() {
 
 String LightEncoderCS::GetShaderText() {
 	return UnifyShaderCode(
-		UInt3 id = WorkGroupID * WorkGroupSize + LocalInvocationID;
-		float2 depthRange = imageLoad(depthTexture, id).xy;
+		uint3 id = WorkGroupID * WorkGroupSize + LocalInvocationID;
+		float2 depthRange = imageLoad(depthTexture, int2(id.x, id.y)).xy;
 		float2 rasterCoord = float2((id.x + 0.5) * screenSize.x, (id.y + 0.5) * screenSize.y);
 		float4 farPosition = float4((rasterCoord.x + 0.5) * screenSize.x, (rasterCoord.y + 0.5) * screenSize.x, depthRange.x, 1) * float(2.0) - float4(1.0, 1.0, 1.0, 1.0);
 		farPosition = mult_vec(inverseProjectionMatrix, farPosition);
@@ -25,7 +28,7 @@ String LightEncoderCS::GetShaderText() {
 		nearPosition /= nearPosition.w;
 
 		uint offset = (id.x + id.y * NumWorkGroups.x) * 64;
-		uint count = min(int(lightCount), 255);
+		uint count = min(uint(lightCount), uint(255));
 		uint packedLightID = 0;
 		uint j = 0;
 		for (uint i = 0; i < count; i++) {
@@ -64,6 +67,7 @@ TObject<IReflect>& LightEncoderCS::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectProperty()) {
+		ReflectProperty(computeGroup)[BindInput(BindInput::COMPUTE_GROUP)];
 		ReflectProperty(depthTexture);
 		ReflectProperty(lightBuffer);
 		ReflectProperty(encodeBuffer);
@@ -74,7 +78,7 @@ TObject<IReflect>& LightEncoderCS::operator () (IReflect& reflect) {
 		ReflectProperty(reserved)[lightBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(lightInfos)[lightBuffer][BindInput(BindInput::GENERAL)];
 
-		ReflectProperty(encodeBufferData)[encodeBuffer][BindOutput(BindOutput::COLOR)];
+		ReflectProperty(encodeBufferData)[encodeBuffer][BindInput(BindInput::GENERAL)];
 	}
 
 	return *this;

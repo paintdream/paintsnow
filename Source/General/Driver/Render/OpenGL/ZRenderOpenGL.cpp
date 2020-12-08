@@ -1060,7 +1060,9 @@ struct ResourceImplOpenGL<IRender::Resource::ShaderDescription> final : public R
 
 			body += "\n}\n"; // make a call to our function
 
-			String fullShader = GLSLShaderGenerator::GetFrameCode() + common + head + body;
+			// String fullShader = k == Resource::ShaderDescription::COMPUTE ? "#version 450\r\n" : "#version 330\r\n";
+			String fullShader = "#version 450\r\n";
+			fullShader += GLSLShaderGenerator::GetFrameCode() + common + head + body;
 			const char* source[] = { fullShader.c_str() };
 			glShaderSource(shaderID, 1, source, nullptr);
 			glCompileShader(shaderID);

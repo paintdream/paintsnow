@@ -42,12 +42,12 @@ String StandardLightingBufferEncodedFS::GetShaderText() {
 	float3 lightColor[4];
 
 	// float4 idx = texture(lightTexture, rasterCoord.xy) * float(255.0);
-	int offset = int(rasterCoord.x * screenSize.x) + int(rasterCoord.y * screenSize.y * screenSize.x);
-	for (int n = 0; n < 64; n++) {
+	uint offset = uint(rasterCoord.x * screenSize.x) + int(rasterCoord.y * screenSize.y * screenSize.x);
+	for (uint n = 0; n < 64; n++) {
 		uint4 idx = lightIndices[offset + n];
-		int k;
+		uint k;
 		for (k = 0; k < 4; k++) {
-			int i = idx[k];
+			uint i = idx[k];
 			if (i == 0) break;
 
 			float4 pos = lightInfos[i * 2 - 2];
@@ -77,7 +77,7 @@ String StandardLightingBufferEncodedFS::GetShaderText() {
 		float4 DG = (float4(0.5, 0.5, 0.5, 0.5) / PI * p) / max(vls.xyzw * (q * q), float4(0.0001, 0.0001, 0.0001, 0.0001));
 		float4 e = exp2(VoH.xyzw * (VoH.xyzw * float(-5.55473) - float4(6.98316, 6.98316, 6.98316, 6.98316)));
 
-		for (int i = 0; i < k; i++) {
+		for (uint i = 0; i < k; i++) {
 			float3 F = spec + (float3(f, f, f) - spec) * e[i];
 			mainColor.xyz = mainColor.xyz + (diff + F * DG[i]) * lightColor[i].xyz * NoL[i];
 		}
@@ -94,6 +94,7 @@ TObject<IReflect>& StandardLightingBufferEncodedFS::operator () (IReflect& refle
 	if (reflect.IsReflectProperty()) {
 		ReflectProperty(specTexture);
 		ReflectProperty(lightInfoBuffer);
+		ReflectProperty(lightIndexBuffer);
 		ReflectProperty(paramBuffer);
 
 		ReflectProperty(viewPosition)[BindInput(BindInput::LOCAL)];

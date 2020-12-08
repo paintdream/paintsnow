@@ -3,13 +3,15 @@
 using namespace PaintsNow;
 
 // Shader Compilation
-static const String frameCode = "#version 330\n\
-#define PI 3.1415926 \n\
+static const String frameCode = "#define PI 3.1415926 \n\
 #define GAMMA 2.2 \n\
 #define clip(f) if (f < 0) discard; \n\
 #define uint2 uvec2 \n\
 #define uint3 uvec3 \n\
 #define uint4 uvec4 \n\
+#define int2 ivec2 \n\
+#define int3 ivec3 \n\
+#define int4 ivec4 \n\
 #define float2 vec2 \n\
 #define float3 vec3 \n\
 #define float4 vec4 \n\
@@ -20,6 +22,12 @@ static const String frameCode = "#version 330\n\
 #define lerp(a, b, v) mix(a, b, v) \n\
 #define ddx dFdx \n\
 #define ddy dFdy \n\
+#define WorkGroupSize gl_WorkGroupSize \n\
+#define NumWorkGroups gl_NumWorkGroups \n\
+#define LocalInvocationID gl_LocalInvocationID \n\
+#define WorkGroupID gl_WorkGroupID \n\
+#define GlobalInvocationID gl_GlobalInvocationID \n\
+#define LocalInvocationIndex gl_LocalInvocationIndex \n\
 #define textureShadow texture \n\
 float saturate(float x) { return clamp(x, 0.0, 1.0); } \n\
 float2 saturate(float2 x) { return clamp(x, float2(0.0, 0.0), float2(1.0, 1.0)); } \n\
@@ -27,16 +35,6 @@ float3 saturate(float3 x) { return clamp(x, float3(0.0, 0.0, 0.0), float3(1.0, 1
 float4 saturate(float4 x) { return clamp(x, float4(0.0, 0.0, 0.0, 0.0), float4(1.0, 1.0, 1.0, 1.0)); } \n\
 #define mult_mat(a, b) (a * b) \n\
 #define mult_vec(m, v) (m * v) \n";
-
-// Compute shader frame code
-static const String computeFrameCode = "\n\
-#define WorkGroupSize gl_WorkGroupSize \n\
-#define NumWorkGroups gl_NumWorkGroups \n\
-#define LocalInvocationID gl_LocalInvocationID \n\
-#define WorkGroupID gl_WorkGroupID \n\
-#define GlobalInvocationID gl_GlobalInvocationID \n\
-#define LocalInvocationIndex gl_LocalInvocationIndex \n\
-\n";
 
 GLSLShaderGenerator::GLSLShaderGenerator(IRender::Resource::ShaderDescription::Stage s, uint32_t& pinputIndex, uint32_t& poutputIndex, uint32_t& ptextureIndex) : IReflect(true, false), stage(s), debugVertexBufferIndex(0), inputIndex(pinputIndex), outputIndex(poutputIndex), textureIndex(ptextureIndex) {}
 
@@ -79,10 +77,10 @@ struct DeclareMap {
 		mapTypeNames[UniqueType<Float2>::Get()] = "float2";
 		mapTypeNames[UniqueType<Float3>::Get()] = "float3";
 		mapTypeNames[UniqueType<Float4>::Get()] = "float4";
-		mapTypeNames[UniqueType<float>::Get()] = "float";
-		mapTypeNames[UniqueType<Float2>::Get()] = "float2";
-		mapTypeNames[UniqueType<Float3>::Get()] = "float3";
-		mapTypeNames[UniqueType<Float4>::Get()] = "float4";
+		mapTypeNames[UniqueType<uint32_t>::Get()] = "uint";
+		mapTypeNames[UniqueType<UInt2>::Get()] = "uvec2";
+		mapTypeNames[UniqueType<UInt3>::Get()] = "uvec3";
+		mapTypeNames[UniqueType<UInt4>::Get()] = "uvec4";
 		mapTypeNames[UniqueType<MatrixFloat3x3>::Get()] = "float3x3";
 		mapTypeNames[UniqueType<MatrixFloat4x4>::Get()] = "float4x4";
 	}
@@ -99,6 +97,62 @@ struct DeclareMap {
 
 	std::map<Unique, String> mapTypeNames;
 };
+
+static String GetTextureFormatString(IRender::Resource::TextureDescription::State state) {
+	const char* prefixes[] = { "r", "rg", "rgb", "rgba" };
+	String p;
+	String bit = "32";
+	String f = "";
+	switch (state.format) {
+	case IRender::Resource::Description::UNSIGNED_BYTE:
+		bit = "8";
+		break;
+	case IRender::Resource::Description::UNSIGNED_SHORT:
+		bit = "16";
+		break;
+	case IRender::Resource::Description::HALF:
+		bit = "16";
+		f = "f";
+		break;
+	case IRender::Resource::Description::UNSIGNED_INT:
+		bit = "32";
+		break;
+	case IRender::Resource::Description::FLOAT:
+		bit = "32";
+		f = "f";
+		break;
+	}
+
+	if (state.layout <= IRender::Resource::TextureDescription::RGBA) {
+		p = prefixes[state.layout];
+		return String(p) + bit + f;
+	} else {
+		if (state.layout == IRender::Resource::TextureDescription::RGB10PACK) {
+			return f.empty() ? "rgb10_a2" : "r11f_g11f_b10f";
+		} else {
+			return String("r") + bit + f;
+		}
+	}
+}
+
+static String GetTextureMemorySpec(IShader::MEMORY_SPEC spec) {
+	switch (spec) {
+	case IShader::DEFAULT:
+		return "";
+	case IShader::COHERENT:
+		return "coherent";
+	case IShader::VOLATILE:
+		return "volatile";
+	case IShader::RESTRICT:
+		return "restrict";
+	case IShader::READONLY:
+		return "readonly";
+	case IShader::WRITEONLY:
+		return "writeonly";
+	default:
+		return "";
+	}
+}
 
 void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) {
 	// singleton Unique uniqueBindOffset = UniqueType<IShader::BindOffset>::Get();
@@ -146,9 +200,12 @@ void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refT
 
 		if (s.IsIterator()) {
 			IIterator& iterator = static_cast<IIterator&>(s);
-			std::stringstream ss;
-			ss << "[" << (int)iterator.GetTotalCount() << "]";
-			arr = StdToUtf8(ss.str());
+			int count = (int)iterator.GetTotalCount();
+			if (count == 0) {
+				arr = "[]";
+			} else {
+				arr = String("[") + ToString(count) + "]";
+			}
 			arrDef = "[]";
 
 			typeID = iterator.GetElementUnique();
@@ -259,11 +316,9 @@ void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refT
 					it->second.second += statement;
 					break;
 				case IRender::Resource::BufferDescription::UNIFORM:
+				case IRender::Resource::BufferDescription::STORAGE:
 					it->second.second += String("\t") + declareMap[typeID] + " _" + name + arr + ";\n";
-					if (stage != IRender::Resource::ShaderDescription::COMPUTE) {
-						// initialization += String("\t") + declareMap[typeID] + arrDef + " " + name + " = " + it->second.first + "." + name + ";\n";
-						initialization += String("#define ") + name + " " + it->second.first + "." + "_" + name + "\n";
-					}
+					initialization += String("#define ") + name + " " + it->second.first + "." + "_" + name + "\n";
 					break;
 				}
 			} else {
@@ -305,8 +360,27 @@ void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refT
 				"sampler1D", "sampler2D", "samplerCube", "sampler3D"
 			};
 
+			// TODO: support integer textures
+			static const char* samplerTypesCS[] = {
+				"image1D", "image2D", "imageCube", "image3D"
+			};
+
 			// declaration += String("layout(location = ") + ToString(textureIndex++) + ") uniform " + samplerTypes[bindTexture->description.state.type] + (bindTexture->description.dimension.z() != 0 && bindTexture->description.state.type != IRender::Resource::TextureDescription::TEXTURE_3D ? "Array " : " ") + name + ";\n";
-			declaration += String("uniform ") + samplerTypes[bindTexture->description.state.type] + (bindTexture->description.dimension.z() != 0 && bindTexture->description.state.type != IRender::Resource::TextureDescription::TEXTURE_3D ? "Array" : "") + (bindTexture->description.state.pcf ? "Shadow " : " ") + name + ";\n";
+			if (stage == IRender::Resource::ShaderDescription::COMPUTE) {
+				declaration += "layout(";
+				declaration += GetTextureFormatString(bindTexture->description.state);
+				declaration += ") ";
+				declaration += GetTextureMemorySpec(bindTexture->memorySpec);
+				declaration += " ";
+			}
+
+			declaration += "uniform ";
+			declaration += (stage == IRender::Resource::ShaderDescription::COMPUTE ? samplerTypesCS : samplerTypes)[bindTexture->description.state.type];
+			declaration += (bindTexture->description.dimension.z() != 0 && bindTexture->description.state.type != IRender::Resource::TextureDescription::TEXTURE_3D ? "Array" : "");
+			declaration += (bindTexture->description.state.pcf ? "Shadow " : " ");
+			declaration += name;
+			declaration += ";\n";
+
 			textureBindings.emplace_back(std::make_pair(bindTexture, name));
 			textureIndex++;
 		}

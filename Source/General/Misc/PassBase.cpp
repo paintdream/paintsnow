@@ -122,21 +122,22 @@ void PassBase::Updater::Property(IReflectObject& s, Unique typeID, Unique refTyp
 				if (it != bufferIDSize.end()) {
 					output.slot = safe_cast<uint8_t>(it->second.first);
 					output.offset = safe_cast<uint16_t>(it->second.second);
-					uint32_t size;
+					uint32_t size = 0;
 					if (s.IsIterator()) {
 						IIterator& iterator = static_cast<IIterator&>(s);
 						assert(iterator.IsLayoutLinear());
 						uint32_t count = safe_cast<uint32_t>(iterator.GetTotalCount());
-						assert(count != 0);
-						size = (uint32_t)safe_cast<uint32_t>(iterator.GetElementUnique()->GetSize()) * count;
+						if (count != 0) {
+							size = (uint32_t)safe_cast<uint32_t>(iterator.GetElementUnique()->GetSize()) * count;
 
-						iterator.Next();
-						output.internalAddress = iterator.Get();
+							iterator.Next();
+							output.internalAddress = iterator.Get();
 
-						if (subRange.y() != ~(uint32_t)0) {
-							output.internalAddress = (uint8_t*)output.internalAddress + subRange.x();
-							assert(subRange.x() + subRange.y() <= size);
-							size = subRange.y();
+							if (subRange.y() != ~(uint32_t)0) {
+								output.internalAddress = (uint8_t*)output.internalAddress + subRange.x();
+								assert(subRange.x() + subRange.y() <= size);
+								size = subRange.y();
+							}
 						}
 					} else {
 						size = safe_cast<uint32_t>(typeID->GetSize());

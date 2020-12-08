@@ -33,6 +33,9 @@ namespace PaintsNow {
 	typedef UInt2 uint2;
 	typedef UInt3 uint3;
 	typedef UInt4 uint4;
+	typedef Int2 int2;
+	typedef Int3 int3;
+	typedef Int4 int4;
 	typedef Float4 float4;
 	typedef Float3 float3;
 	typedef Float2 float2;
@@ -187,19 +190,19 @@ namespace PaintsNow {
 		return 0;
 	}
 
-	inline float4 imageLoad(const IShader::BindTexture& tex, const UInt2& v) {
+	inline float4 imageLoad(const IShader::BindTexture& tex, const Int2& v) {
 		return float4();
 	}
 
-	inline float4 imageLoad(const IShader::BindTexture& tex, const UInt3& v) {
+	inline float4 imageLoad(const IShader::BindTexture& tex, const Int3& v) {
 		return float4();
 	}
 
-	inline float4 imageStore(const IShader::BindTexture& tex, const UInt2& v) {
+	inline float4 imageStore(const IShader::BindTexture& tex, const Int2& v) {
 		return float4();
 	}
 
-	inline float4 imageStore(const IShader::BindTexture& tex, const UInt3& v) {
+	inline float4 imageStore(const IShader::BindTexture& tex, const Int3& v) {
 		return float4();
 	}
 
@@ -209,12 +212,12 @@ namespace PaintsNow {
 	}
 
 	template <class T>
-	T imageAtomicAdd(const IShader::BindTexture& tex, const UInt2& v, T data) {
+	T imageAtomicAdd(const IShader::BindTexture& tex, const Int2& v, T data) {
 		return data;
 	}
 
 	template <class T>
-	T imageAtomicAdd(const IShader::BindTexture& tex, const UInt3& v, T data) {
+	T imageAtomicAdd(const IShader::BindTexture& tex, const Int3& v, T data) {
 		return data;
 	}
 
@@ -224,12 +227,12 @@ namespace PaintsNow {
 	}
 
 	template <class T>
-	T imageAtomicMin(const IShader::BindTexture& tex, const UInt2& v, T data) {
+	T imageAtomicMin(const IShader::BindTexture& tex, const Int2& v, T data) {
 		return data;
 	}
 
 	template <class T>
-	T imageAtomicMin(const IShader::BindTexture& tex, const UInt3& v, T data) {
+	T imageAtomicMin(const IShader::BindTexture& tex, const Int3& v, T data) {
 		return data;
 	}
 
@@ -239,12 +242,12 @@ namespace PaintsNow {
 	}
 
 	template <class T>
-	T imageAtomicMax(const IShader::BindTexture& tex, const UInt2& v, T data) {
+	T imageAtomicMax(const IShader::BindTexture& tex, const Int2& v, T data) {
 		return data;
 	}
 
 	template <class T>
-	T imageAtomicMax(const IShader::BindTexture& tex, const UInt3& v, T data) {
+	T imageAtomicMax(const IShader::BindTexture& tex, const Int3& v, T data) {
 		return data;
 	}
 
@@ -254,12 +257,12 @@ namespace PaintsNow {
 	}
 
 	template <class T>
-	T imageAtomicAnd(const IShader::BindTexture& tex, const UInt2& v, T data) {
+	T imageAtomicAnd(const IShader::BindTexture& tex, const Int2& v, T data) {
 		return data;
 	}
 
 	template <class T>
-	T imageAtomicAnd(const IShader::BindTexture& tex, const UInt3& v, T data) {
+	T imageAtomicAnd(const IShader::BindTexture& tex, const Int3& v, T data) {
 		return data;
 	}
 
@@ -269,12 +272,12 @@ namespace PaintsNow {
 	}
 
 	template <class T>
-	T imageAtomicOr(const IShader::BindTexture& tex, const UInt2& v, T data) {
+	T imageAtomicOr(const IShader::BindTexture& tex, const Int2& v, T data) {
 		return data;
 	}
 
 	template <class T>
-	T imageAtomicOr(const IShader::BindTexture& tex, const UInt3& v, T data) {
+	T imageAtomicOr(const IShader::BindTexture& tex, const Int3& v, T data) {
 		return data;
 	}
 
@@ -284,12 +287,12 @@ namespace PaintsNow {
 	}
 
 	template <class T>
-	T imageAtomicXor(const IShader::BindTexture& tex, const UInt2& v, T data) {
+	T imageAtomicXor(const IShader::BindTexture& tex, const Int2& v, T data) {
 		return data;
 	}
 
 	template <class T>
-	T imageAtomicXor(const IShader::BindTexture& tex, const UInt3& v, T data) {
+	T imageAtomicXor(const IShader::BindTexture& tex, const Int3& v, T data) {
 		return data;
 	}
 
@@ -299,12 +302,12 @@ namespace PaintsNow {
 	}
 
 	template <class T>
-	T imageAtomicExchange(const IShader::BindTexture& tex, const UInt2& v, T data) {
+	T imageAtomicExchange(const IShader::BindTexture& tex, const Int2& v, T data) {
 		return data;
 	}
 
 	template <class T>
-	T imageAtomicExchange(const IShader::BindTexture& tex, const UInt3& v, T data) {
+	T imageAtomicExchange(const IShader::BindTexture& tex, const Int3& v, T data) {
 		return data;
 	}
 
@@ -314,12 +317,12 @@ namespace PaintsNow {
 	}
 
 	template <class T>
-	T imageAtomicCompSwap(const IShader::BindTexture& tex, const UInt2& v, T compare, T data) {
+	T imageAtomicCompSwap(const IShader::BindTexture& tex, const Int2& v, T compare, T data) {
 		return data;
 	}
 
 	template <class T>
-	T imageAtomicCompSwap(const IShader::BindTexture& tex, const UInt3& v, T compare, T data) {
+	T imageAtomicCompSwap(const IShader::BindTexture& tex, const Int3& v, T compare, T data) {
 		return data;
 	}
 
