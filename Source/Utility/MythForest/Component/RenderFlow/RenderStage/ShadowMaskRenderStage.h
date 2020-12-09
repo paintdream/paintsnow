@@ -12,7 +12,7 @@
 #include "../../../../SnowyStream/Resource/Passes/ShadowMaskPass.h"
 
 namespace PaintsNow {
-	class ShadowMaskRenderStage : public TReflected<ShadowMaskRenderStage, GeneralRenderStageMesh<ShadowMaskPass> > {
+	class ShadowMaskRenderStage : public TReflected<ShadowMaskRenderStage, GeneralRenderStageDraw<ShadowMaskPass> > {
 	public:
 		ShadowMaskRenderStage(const String& config = "1");
 		void Prepare(Engine& engine, IRender::Queue* queue) override;

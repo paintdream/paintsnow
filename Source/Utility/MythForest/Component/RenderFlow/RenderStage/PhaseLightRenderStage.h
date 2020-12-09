@@ -12,7 +12,7 @@
 #include "../../../../SnowyStream/Resource/Passes/MultiHashTracePass.h"
 
 namespace PaintsNow {
-	class PhaseLightRenderStage : public TReflected<PhaseLightRenderStage, GeneralRenderStageMesh<MultiHashTracePass> > {
+	class PhaseLightRenderStage : public TReflected<PhaseLightRenderStage, GeneralRenderStageDraw<MultiHashTracePass> > {
 	public:
 		PhaseLightRenderStage(const String& s);
 		void Prepare(Engine& engine, IRender::Queue* queue) override;

@@ -5,7 +5,7 @@
 
 using namespace PaintsNow;
 
-LightBufferEncodeRenderStage::LightBufferEncodeRenderStage(const String& config) {
+LightBufferEncodeRenderStage::LightBufferEncodeRenderStage(const String& config) : lastBufferLength(0) {
 	uint8_t shift = Math::Min((uint8_t)atoi(config.c_str()), (uint8_t)16);
 	resolutionShift = Char2((char)shift, (char)shift);
 }
@@ -55,14 +55,12 @@ void LightBufferEncodeRenderStage::Update(Engine& engine, IRender::Queue* queue)
 	const std::vector<RenderPortLightSource::LightElement>& lights = LightSource.lightElements;
 	// get depth texture size
 	const UShort3& dim = InputDepth.textureResource->description.dimension;
-	// assume Full Screen Size = 1920 * 1080
-	// and depth bounding with 8x8 grid
-	// then depth texture is 240 * 135
-	// then soft rasterizer size is 30 * 18 = 540
+	UInt3 computeGroup = GetPass().encoder.computeGroup;
+	assert(computeGroup.z() == 1);
 
 	// prepare soft rasterizer
 	Float4* lightInfos = &encoder.lightInfos[0];
-	int32_t gridWidth = (dim.x() + 7) >> 3, gridHeight = (dim.y() + 7) >> 3;
+	int32_t gridWidth = (dim.x() + computeGroup.x() - 1) / computeGroup.x(), gridHeight = (dim.y() + computeGroup.y() - 1) / computeGroup.y();
 	uint32_t count = Math::Min((uint32_t)lights.size(), (uint32_t)LightEncoderCS::MAX_LIGHT_COUNT);
 	encoder.lightCount = (float)count;
 
@@ -86,7 +84,23 @@ void LightBufferEncodeRenderStage::Update(Engine& engine, IRender::Queue* queue)
 		lightInfos[i] = Float4(p.x(), p.y(), p.z(), light.position.w());
 	}
 
+	// need update light buffer?
+	uint32_t length = gridWidth * gridHeight * computeGroup.x() * computeGroup.y() * sizeof(uint32_t);
+	if (length != lastBufferLength) {
+		IRender::Resource::BufferDescription bufferDescription;
+		bufferDescription.usage = IRender::Resource::BufferDescription::STORAGE;
+		bufferDescription.component = 1;
+		bufferDescription.dynamic = 1;
+		bufferDescription.format = IRender::Resource::BufferDescription::UNSIGNED_INT;
+		bufferDescription.length = length;
+		
+		engine.interfaces.render.UploadResource(queue, LightBuffer.sharedBufferResource, &bufferDescription);
+		lastBufferLength = length;
+	}
+
 	encoder.lightBuffer.resource = LightBuffer.sharedBufferResource; // Binding output buffer.
+	drawCallDescription.instanceCounts = UInt3(gridWidth, gridHeight, 1);
+
 	// assemble block data
 	BaseClass::Update(engine, queue);
 }

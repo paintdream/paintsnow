@@ -383,7 +383,7 @@ struct ResourceImplOpenGL final : public ResourceBaseImplOpenGLDesc<T> {
 
 template <>
 struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public ResourceBaseImplOpenGLDesc<IRender::Resource::TextureDescription> {
-	ResourceImplOpenGL() : textureID(0), textureType(GL_TEXTURE_2D), pixelBufferObjectID(0) {}
+	ResourceImplOpenGL() : textureID(0), textureType(GL_TEXTURE_2D), textureFormat(GL_RGBA8), pixelBufferObjectID(0) {}
 	IRender::Resource::Type GetType() const override { return RESOURCE_TEXTURE; }
 
 	inline void CreateMips(Resource::TextureDescription& d, uint32_t bitDepth, GLuint textureType, GLuint srcLayout, GLuint srcDataType, GLuint format, const void* buffer, size_t length) {
@@ -542,6 +542,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 		// Convert texture format
 		GLuint srcLayout, srcDataType, format;
 		uint32_t bitDepth = ParseFormatFromState(srcLayout, srcDataType, format, d.state);
+		textureFormat = format;
 		bool newTexture = textureID == 0;
 		if (newTexture) {
 			glGenTextures(1, &textureID);
@@ -854,6 +855,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 	};
 
 	GLuint textureType;
+	GLuint textureFormat;
 	GLuint pixelBufferObjectID;
 };
 
@@ -861,19 +863,21 @@ template <>
 struct ResourceImplOpenGL<IRender::Resource::BufferDescription> final : public ResourceBaseImplOpenGLDesc<IRender::Resource::BufferDescription> {
 	ResourceImplOpenGL() : bufferID(0) {}
 
-	IRender::Resource::Type GetType() const  override { return RESOURCE_BUFFER; }
+	IRender::Resource::Type GetType() const override { return RESOURCE_BUFFER; }
 	void Upload(QueueImplOpenGL& queue) override {
 		GL_GUARD();
+		bool create = bufferID == 0;
 
-		if (bufferID == 0) {
+		if (create) {
 			glGenBuffers(1, &bufferID);
 		}
 
 		Resource::BufferDescription& d = UpdateDescription();
-		if (d.data.Empty()) return; // Multi-updating in one frame takes effect only once
+		if (d.data.Empty() && d.length == 0) return; // Multi-updating in one frame takes effect only once
 		usage = d.usage;
 		format = d.format;
 		component = d.component;
+		length = d.length == 0 ? safe_cast<uint32_t>(d.data.GetSize()) : d.length;
 
 		GLuint bufferType = GL_ELEMENT_ARRAY_BUFFER;
 		switch (d.usage) {
@@ -896,11 +900,21 @@ struct ResourceImplOpenGL<IRender::Resource::BufferDescription> final : public R
 		}
 	
 		glBindBuffer(bufferType, bufferID);
-		if (!d.data.Empty()) {
+
+		if (!d.data.Empty() && d.offset == 0 && d.data.GetSize() == length) {
 			glBufferData(bufferType, d.data.GetSize(), d.data.GetData(), d.dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
+		} else {
+			// glBufferStorage?
+			if (create) {
+				glBufferData(bufferType, d.offset + length, nullptr, d.dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
+			}
+
+			if (!d.data.Empty()) {
+				glBufferSubData(bufferType, d.offset, length, d.data.GetData());
+			}
 		}
 
-		length = safe_cast<uint32_t>(d.data.GetSize());
+		d.offset = d.length = 0;
 		d.data.Clear();
 	}
 
@@ -1658,9 +1672,13 @@ struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> final : public
 			const Texture* texture = static_cast<const Texture*>(k < sizeof(d.textureResources) / sizeof(d.textureResources[0]) ? d.textureResources[k] : d.extraTextureResources[k - sizeof(d.textureResources) / sizeof(d.textureResources[0])]);
 			assert(texture != nullptr);
 			assert(texture->textureID != 0);
-			glActiveTexture((GLsizei)(GL_TEXTURE0 + k));
-			glBindTexture(texture->textureType, texture->textureID);
-			glUniform1i(program.textureLocations[k], (GLuint)k);
+			if (program.isComputeShader) {
+				glBindImageTexture(program.textureLocations[k], (GLuint)texture->textureID, 0, GL_FALSE, 0, GL_READ_ONLY, texture->textureFormat);
+			} else {
+				glActiveTexture((GLsizei)(GL_TEXTURE0 + k));
+				glBindTexture(texture->textureType, texture->textureID);
+				glUniform1i(program.textureLocations[k], (GLuint)k);
+			}
 		}
 
 		if (program.isComputeShader) {

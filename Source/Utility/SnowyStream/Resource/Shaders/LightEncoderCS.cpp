@@ -9,10 +9,10 @@ LightEncoderCS::LightEncoderCS() : computeGroup(4, 4, 1) {
 	depthTexture.description.state.format = IRender::Resource::TextureDescription::HALF;
 	depthTexture.description.state.layout = IRender::Resource::TextureDescription::RG;
 	depthTexture.memorySpec = IShader::READONLY;
-	lightBuffer.description.usage = IRender::Resource::BufferDescription::UNIFORM;
+	lightInfoBuffer.description.usage = IRender::Resource::BufferDescription::UNIFORM;
 
 	lightInfos.resize(MAX_LIGHT_COUNT);
-	encodeBuffer.description.usage = IRender::Resource::BufferDescription::STORAGE; // SSBO
+	lightBuffer.description.usage = IRender::Resource::BufferDescription::STORAGE; // SSBO
 }
 
 String LightEncoderCS::GetShaderText() {
@@ -51,14 +51,14 @@ String LightEncoderCS::GetShaderText() {
 
 			if (j == 4) {
 				// commit
-				encodeBufferData[offset++] = packedLightID;
+				lightBufferData[offset++] = packedLightID;
 				j = 0;
 			}
 		}
 
 		// last commit
 		if (j != 0) {
-			encodeBufferData[offset++] = packedLightID;
+			lightBufferData[offset++] = packedLightID;
 		}
 	);
 }
@@ -69,16 +69,16 @@ TObject<IReflect>& LightEncoderCS::operator () (IReflect& reflect) {
 	if (reflect.IsReflectProperty()) {
 		ReflectProperty(computeGroup)[BindInput(BindInput::COMPUTE_GROUP)];
 		ReflectProperty(depthTexture);
+		ReflectProperty(lightInfoBuffer);
 		ReflectProperty(lightBuffer);
-		ReflectProperty(encodeBuffer);
 
-		ReflectProperty(inverseProjectionMatrix)[lightBuffer][BindInput(BindInput::TRANSFORM_VIEWPROJECTION_INV)];
-		ReflectProperty(screenSize)[lightBuffer][BindInput(BindInput::GENERAL)];
-		ReflectProperty(lightCount)[lightBuffer][BindInput(BindInput::GENERAL)];
-		ReflectProperty(reserved)[lightBuffer][BindInput(BindInput::GENERAL)];
-		ReflectProperty(lightInfos)[lightBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(inverseProjectionMatrix)[lightInfoBuffer][BindInput(BindInput::TRANSFORM_VIEWPROJECTION_INV)];
+		ReflectProperty(screenSize)[lightInfoBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(lightCount)[lightInfoBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(reserved)[lightInfoBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(lightInfos)[lightInfoBuffer][BindInput(BindInput::GENERAL)];
 
-		ReflectProperty(encodeBufferData)[encodeBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(lightBufferData)[lightBuffer][BindInput(BindInput::GENERAL)];
 	}
 
 	return *this;

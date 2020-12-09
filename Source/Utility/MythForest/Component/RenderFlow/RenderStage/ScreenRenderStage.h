@@ -10,7 +10,7 @@
 #include "../../../../SnowyStream/Resource/Passes/ScreenPass.h"
 
 namespace PaintsNow {
-	class ScreenRenderStage : public TReflected<ScreenRenderStage, GeneralRenderStageMesh<ScreenPass> > {
+	class ScreenRenderStage : public TReflected<ScreenRenderStage, GeneralRenderStageDraw<ScreenPass> > {
 	public:
 		ScreenRenderStage(const String& config = "1");
 		void Prepare(Engine& engine, IRender::Queue* queue) override;

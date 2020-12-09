@@ -15,7 +15,7 @@ namespace PaintsNow {
 
 		UInt3 computeGroup;
 		BindTexture depthTexture;
-		BindBuffer lightBuffer;
+		BindBuffer lightInfoBuffer;
 		enum { MAX_LIGHT_COUNT = 120 };
 
 		// uniforms
@@ -26,8 +26,8 @@ namespace PaintsNow {
 		std::vector<Float4> lightInfos;
 
 		// outputs
-		IShader::BindBuffer encodeBuffer;
-		std::vector<uint32_t> encodeBufferData;
+		IShader::BindBuffer lightBuffer;
+		std::vector<uint32_t> lightBufferData;
 	};
 }
 

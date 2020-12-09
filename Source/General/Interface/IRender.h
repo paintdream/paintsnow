@@ -50,13 +50,15 @@ namespace PaintsNow {
 					INDEX, VERTEX, INSTANCED, CONSTANT, UNIFORM, STORAGE
 				};
 
-				BufferDescription() : usage(VERTEX), format(FLOAT), dynamic(0), component(4), stride(0) {}
+				BufferDescription() : usage(VERTEX), format(FLOAT), dynamic(0), component(4), stride(0), offset(0), length(0) {}
 
 				uint32_t usage : 4;
 				uint32_t format : 3;
 				uint32_t dynamic : 1;
 				uint8_t component;
 				uint16_t stride;
+				uint32_t offset;
+				uint32_t length;
 
 				Bytes data;
 			};

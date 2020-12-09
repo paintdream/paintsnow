@@ -51,14 +51,8 @@ void LightTextureEncodeRenderStage::Update(Engine& engine, IRender::Queue* queue
 	const std::vector<RenderPortLightSource::LightElement>& lights = LightSource.lightElements;
 	// get depth texture size
 	const UShort3& dim = InputDepth.textureResource->description.dimension;
-	// assume Full Screen Size = 1920 * 1080
-	// and depth bounding with 8x8 grid
-	// then depth texture is 240 * 135
-	// then soft rasterizer size is 30 * 18 = 540
-
 	// prepare soft rasterizer
 	Float4* lightInfos = &encoder.lightInfos[0];
-	int32_t gridWidth = (dim.x() + 7) >> 3, gridHeight = (dim.y() + 7) >> 3;
 	uint32_t count = Math::Min((uint32_t)lights.size(), (uint32_t)LightEncoderFS::MAX_LIGHT_COUNT);
 	encoder.lightCount = (float)count;
 

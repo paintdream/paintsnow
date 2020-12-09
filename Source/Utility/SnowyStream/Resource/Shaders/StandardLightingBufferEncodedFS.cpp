@@ -42,12 +42,13 @@ String StandardLightingBufferEncodedFS::GetShaderText() {
 	float3 lightColor[4];
 
 	// float4 idx = texture(lightTexture, rasterCoord.xy) * float(255.0);
-	uint offset = uint(rasterCoord.x * screenSize.x) + int(rasterCoord.y * screenSize.y * screenSize.x);
+	uint offset = uint(rasterCoord.x * lightBufferSize.x) + int(rasterCoord.y * lightBufferSize.y * lightBufferSize.x);
 	for (uint n = 0; n < 64; n++) {
-		uint4 idx = lightIndices[offset + n];
+		uint idx = lightIndices[offset + n];
 		uint k;
 		for (k = 0; k < 4; k++) {
-			uint i = idx[k];
+			uint i = idx & 0xff;
+			idx = idx >> 8;
 			if (i == 0) break;
 
 			float4 pos = lightInfos[i * 2 - 2];
@@ -107,7 +108,7 @@ TObject<IReflect>& StandardLightingBufferEncodedFS::operator () (IReflect& refle
 		ReflectProperty(invWorldNormalMatrix)[paramBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(cubeLevelInv)[paramBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(cubeStrength)[paramBuffer][BindInput(BindInput::GENERAL)];
-		ReflectProperty(screenSize)[paramBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(lightBufferSize)[paramBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(lightInfos)[lightInfoBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(lightIndices)[lightIndexBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(mainColor)[BindOutput(BindOutput::COLOR)];

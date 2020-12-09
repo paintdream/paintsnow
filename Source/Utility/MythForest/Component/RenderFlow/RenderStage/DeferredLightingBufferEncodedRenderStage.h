@@ -13,7 +13,7 @@
 #include "../../../../SnowyStream/Resource/Passes/DeferredLightingBufferEncodedPass.h"
 
 namespace PaintsNow {
-	class DeferredLightingBufferEncodedRenderStage : public TReflected<DeferredLightingBufferEncodedRenderStage, GeneralRenderStageMesh<DeferredLightingBufferEncodedPass> > {
+	class DeferredLightingBufferEncodedRenderStage : public TReflected<DeferredLightingBufferEncodedRenderStage, GeneralRenderStageDraw<DeferredLightingBufferEncodedPass> > {
 	public:
 		DeferredLightingBufferEncodedRenderStage(const String& s);
 		TObject<IReflect>& operator () (IReflect& reflect) override;

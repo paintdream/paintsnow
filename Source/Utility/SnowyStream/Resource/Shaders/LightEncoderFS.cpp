@@ -6,7 +6,7 @@ using namespace PaintsNow;
 
 LightEncoderFS::LightEncoderFS() {
 	depthTexture.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
-	lightBuffer.description.usage = IRender::Resource::BufferDescription::UNIFORM;
+	lightInfoBuffer.description.usage = IRender::Resource::BufferDescription::UNIFORM;
 
 	lightInfos.resize(MAX_LIGHT_COUNT);
 }
@@ -50,13 +50,13 @@ TObject<IReflect>& LightEncoderFS::operator () (IReflect& reflect) {
 	if (reflect.IsReflectProperty()) {
 		// inputs
 		ReflectProperty(depthTexture);
-		ReflectProperty(lightBuffer);
+		ReflectProperty(lightInfoBuffer);
 		ReflectProperty(rasterCoord)[BindInput(BindInput::TEXCOORD)];
 
-		ReflectProperty(inverseProjectionMatrix)[lightBuffer][BindInput(BindInput::TRANSFORM_VIEWPROJECTION_INV)];
-		ReflectProperty(reserved)[lightBuffer][BindInput(BindInput::GENERAL)];
-		ReflectProperty(lightCount)[lightBuffer][BindInput(BindInput::GENERAL)];
-		ReflectProperty(lightInfos)[lightBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(inverseProjectionMatrix)[lightInfoBuffer][BindInput(BindInput::TRANSFORM_VIEWPROJECTION_INV)];
+		ReflectProperty(reserved)[lightInfoBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(lightCount)[lightInfoBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(lightInfos)[lightInfoBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(outputIndex)[BindOutput(BindOutput::COLOR)];
 	}
 

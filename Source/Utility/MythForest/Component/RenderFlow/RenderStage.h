@@ -89,21 +89,25 @@ namespace PaintsNow {
 	};
 
 	template <class T>
-	class GeneralRenderStageMesh : public TReflected<GeneralRenderStageMesh<T>, GeneralRenderStage<T> > {
+	class GeneralRenderStageDraw : public TReflected<GeneralRenderStageDraw<T>, GeneralRenderStage<T> > {
 	public:
 		// gcc do not support referencing base type in template class. manunaly specified here.
-		typedef TReflected<GeneralRenderStageMesh<T>, GeneralRenderStage<T> > BaseClass;
-		GeneralRenderStageMesh(uint32_t colorAttachmentCount = 1) : BaseClass(colorAttachmentCount) {}
+		typedef TReflected<GeneralRenderStageDraw<T>, GeneralRenderStage<T> > BaseClass;
+		GeneralRenderStageDraw(uint32_t colorAttachmentCount = 1) : BaseClass(colorAttachmentCount) {}
 
 		void Prepare(Engine& engine, IRender::Queue* queue) override {
 			// create specified shader resource (if not exists)
-			if (!meshResource) {
-				const String path = "[Runtime]/MeshResource/StandardQuad";
-				meshResource = engine.snowyStream.CreateReflectedResource(UniqueType<MeshResource>(), path, true, ResourceBase::RESOURCE_VIRTUAL);
-				assert(meshResource);
+			if (!(BaseClass::Flag().load(std::memory_order_relaxed) & RENDERSTAGE_COMPUTE_PASS)) {
+				// prepare mesh
+				if (!meshResource) {
+					const String path = "[Runtime]/MeshResource/StandardQuad";
+					meshResource = engine.snowyStream.CreateReflectedResource(UniqueType<MeshResource>(), path, true, ResourceBase::RESOURCE_VIRTUAL);
+					assert(meshResource);
+				}
+
+				assert(meshResource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_UPLOADED);
 			}
 
-			assert(meshResource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_UPLOADED);
 			BaseClass::Prepare(engine, queue);
 		}
 
@@ -119,10 +123,15 @@ namespace PaintsNow {
 			if (BaseClass::drawCallResource == nullptr) {
 				assert(BaseClass::newResources.empty());
 				updater.Update(render, queue, drawCallDescription, BaseClass::newResources, bufferData,
-					(1 << IRender::Resource::BufferDescription::VERTEX) | (1 << IRender::Resource::BufferDescription::UNIFORM) | (1 << IRender::Resource::BufferDescription::INSTANCED));
-				drawCallDescription.indexBufferResource.buffer = meshResource->bufferCollection.indexBuffer;
+					(1 << IRender::Resource::BufferDescription::VERTEX) |
+					(1 << IRender::Resource::BufferDescription::UNIFORM) |
+					(1 << IRender::Resource::BufferDescription::STORAGE) |
+					(1 << IRender::Resource::BufferDescription::INSTANCED));
 				drawCallDescription.shaderResource = BaseClass::GetShaderResource();
 				BaseClass::drawCallResource = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_DRAWCALL);
+				if (!(BaseClass::Flag().load(std::memory_order_relaxed) & RENDERSTAGE_COMPUTE_PASS)) {
+					drawCallDescription.indexBufferResource.buffer = meshResource->bufferCollection.indexBuffer;
+				}
 			} else {
 				// recapture all data (uniforms by default)
 				size_t count = BaseClass::newResources.size();

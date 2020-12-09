@@ -6,10 +6,11 @@ function StandardRenderFlow.New(bloomLayerCount : number) : RenderFlowComponent
 	local renderFlowComponent = RenderFlowComponentModule.New()
 	bloomLayerCount = math.max(bloomLayerCount, 1) -- at least one bloom layer
 	local strBloomLayer = tostring(bloomLayerCount)
+	local computePass = false
 
 	-- Step 1: Setup Geometry stage
 	local stageGeometryBuffer : RenderStage = renderFlowComponent:NewRenderStage("GeometryBufferRenderStage", "")
-	local stageDeferredLighting : RenderStage = renderFlowComponent:NewRenderStage("DeferredLightingTextureEncodedRenderStage", "")
+	local stageDeferredLighting : RenderStage = renderFlowComponent:NewRenderStage(computePass and "DeferredLightingBufferEncodedRenderStage" or "DeferredLightingTextureEncodedRenderStage", "")
 	renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "BaseColorOcclusion", stageDeferredLighting, "BaseColorOcclusion")
 	renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "NormalRoughnessMetallic", stageDeferredLighting, "NormalRoughnessMetallic")
 	renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "Depth", stageDeferredLighting, "Depth")
@@ -27,10 +28,10 @@ function StandardRenderFlow.New(bloomLayerCount : number) : RenderFlowComponent
 		lastDepthStage = stageDepthBounding
 	end
 
-	local stageLightBuffer : RenderStage = renderFlowComponent:NewRenderStage("LightTextureEncodeRenderStage", tostring(tileLevel))
+	local stageLightBuffer : RenderStage = renderFlowComponent:NewRenderStage(computePass and "LightBufferEncodeRenderStage" or "LightTextureEncodeRenderStage", tostring(tileLevel))
 	renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "CameraView", stageLightBuffer, "CameraView")
 	renderFlowComponent:LinkRenderStagePort(lastDepthStage, "OutputDepth", stageLightBuffer, "InputDepth")
-	renderFlowComponent:LinkRenderStagePort(stageLightBuffer, "LightTexture", stageDeferredLighting, "LightTexture")
+	renderFlowComponent:LinkRenderStagePort(stageLightBuffer, computePass and "LightBuffer" or "LightTexture", stageDeferredLighting, computePass and "LightBuffer" or "LightTexture")
 	renderFlowComponent:LinkRenderStagePort(stageLightBuffer, "LightSource", stageDeferredLighting, "LightSource")
 	renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "CameraView", stageDeferredLighting, "CameraView")
 

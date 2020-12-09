@@ -28,12 +28,12 @@ namespace PaintsNow {
 
 		enum { MAX_LIGHT_COUNT = 64 };
 		std::vector<Float4> lightInfos; // position & color
-		std::vector<UInt4> lightIndices;
+		std::vector<uint32_t> lightIndices;
 		uint32_t lightCount;
 		MatrixFloat4x4 invWorldNormalMatrix;
 		float cubeLevelInv;
 		float cubeStrength;
-		Float2 screenSize;
+		Float2 lightBufferSize;
 		
 		Float2 rasterCoord; // imported
 		Float4 mainColor; // target

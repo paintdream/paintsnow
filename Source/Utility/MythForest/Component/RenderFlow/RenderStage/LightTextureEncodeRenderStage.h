@@ -12,7 +12,7 @@
 #include "../../../../SnowyStream/Resource/Passes/LightTextureEncodePass.h"
 
 namespace PaintsNow {
-	class LightTextureEncodeRenderStage : public TReflected<LightTextureEncodeRenderStage, GeneralRenderStageMesh<LightTextureEncodePass> > {
+	class LightTextureEncodeRenderStage : public TReflected<LightTextureEncodeRenderStage, GeneralRenderStageDraw<LightTextureEncodePass> > {
 	public:
 		LightTextureEncodeRenderStage(const String& config = "1");
 		void Prepare(Engine& engine, IRender::Queue* queue) override;

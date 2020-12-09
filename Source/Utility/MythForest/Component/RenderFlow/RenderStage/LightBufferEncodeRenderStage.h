@@ -12,7 +12,7 @@
 #include "../../../../SnowyStream/Resource/Passes/LightBufferEncodePass.h"
 
 namespace PaintsNow {
-	class LightBufferEncodeRenderStage : public TReflected<LightBufferEncodeRenderStage, GeneralRenderStage<LightBufferEncodePass> > {
+	class LightBufferEncodeRenderStage : public TReflected<LightBufferEncodeRenderStage, GeneralRenderStageDraw<LightBufferEncodePass> > {
 	public:
 		LightBufferEncodeRenderStage(const String& config = "1");
 		void Prepare(Engine& engine, IRender::Queue* queue) override;
@@ -25,6 +25,8 @@ namespace PaintsNow {
 		RenderPortLightSource LightSource;
 		RenderPortTextureInput InputDepth;
 		RenderPortSharedBufferStore LightBuffer;
+
+		uint32_t lastBufferLength;
 	};
 }
 

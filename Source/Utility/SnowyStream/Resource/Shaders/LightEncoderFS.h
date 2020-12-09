@@ -13,7 +13,7 @@ namespace PaintsNow {
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		String GetShaderText() override;
 		BindTexture depthTexture;
-		BindBuffer lightBuffer;
+		BindBuffer lightInfoBuffer;
 		enum { MAX_LIGHT_COUNT = 120 };
 
 		// uniforms

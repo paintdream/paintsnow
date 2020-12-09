@@ -10,7 +10,7 @@
 #include "../../../../SnowyStream/Resource/Passes/BloomPass.h"
 
 namespace PaintsNow {
-	class BloomRenderStage : public TReflected<BloomRenderStage, GeneralRenderStageMesh<BloomPass> > {
+	class BloomRenderStage : public TReflected<BloomRenderStage, GeneralRenderStageDraw<BloomPass> > {
 	public:
 		BloomRenderStage(const String& config);
 		void Prepare(Engine& engine, IRender::Queue* queue) override;

@@ -224,7 +224,7 @@ void PassBase::Updater::Flush() {
 		// Empty buffer?
 		fixBufferSlots[i] = safe_cast<uint32_t>(fixedBuffers.size());
 		std::vector<std::key_value<const IShader::BindBuffer*, std::pair<uint16_t, uint16_t> > >::iterator it = std::binary_find(bufferIDSize.begin(), bufferIDSize.end(), buffers[i]);
-		if (it->second.second != 0) {
+		if (it->second.second != 0 || it->first->description.usage == IRender::Resource::BufferDescription::STORAGE) {
 			fixedBuffers.push_back(buffers[i]);
 		}
 	}
@@ -294,6 +294,7 @@ void PassBase::Updater::Capture(IRender::Resource::DrawCallDescription& drawCall
 				drawCallDescription.textureResources[parameter.slot] = *reinterpret_cast<IRender::Resource**>(parameter.internalAddress);
 			}
 		} else if (parameter.resourceType == IRender::Resource::RESOURCE_BUFFER) {
+			assert(parameter.slot < buffers.size());
 			const IShader::BindBuffer* bindBuffer = buffers[parameter.slot];
 			if ((bufferMask & (1 << bindBuffer->description.usage)) && bindBuffer->resource == nullptr) {
 				if (bufferData.size() <= parameter.slot) {
