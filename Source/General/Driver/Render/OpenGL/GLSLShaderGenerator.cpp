@@ -226,7 +226,7 @@ void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refT
 						const UInt3& data = *reinterpret_cast<UInt3*>(ptr);
 						std::stringstream ss;
 						ss << "layout (local_size_x = " << data.x() << ", local_size_y = " << data.y() << ", local_size_z = " << data.z() << ") in;\n";
-						initialization += StdToUtf8(ss.str());
+						declaration += StdToUtf8(ss.str());
 					}
 				} else if (bindInput->description == IShader::BindInput::LOCAL) {
 					// Do not declare it here

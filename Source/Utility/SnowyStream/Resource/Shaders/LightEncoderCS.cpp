@@ -19,8 +19,8 @@ String LightEncoderCS::GetShaderText() {
 	return UnifyShaderCode(
 		uint3 id = WorkGroupID * WorkGroupSize + LocalInvocationID;
 		float2 depthRange = imageLoad(depthTexture, int2(id.x, id.y)).xy;
-		float2 rasterCoord = float2((id.x + 0.5) * screenSize.x, (id.y + 0.5) * screenSize.y);
-		float4 farPosition = float4((rasterCoord.x + 0.5) * screenSize.x, (rasterCoord.y + 0.5) * screenSize.x, depthRange.x, 1) * float(2.0) - float4(1.0, 1.0, 1.0, 1.0);
+		float2 rasterCoord = float2((float(id.x) + 0.5) * screenSize.x, (float(id.y) + 0.5) * screenSize.y);
+		float4 farPosition = float4(rasterCoord.x, rasterCoord.y, depthRange.x, 1) * float(2.0) - float4(1.0, 1.0, 1.0, 1.0);
 		farPosition = mult_vec(inverseProjectionMatrix, farPosition);
 		farPosition /= farPosition.w;
 		float4 nearPosition = float4(rasterCoord.x, rasterCoord.y, depthRange.y, 1) * float(2.0) - float4(1.0, 1.0, 1.0, 1.0);
