@@ -861,14 +861,12 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 
 template <>
 struct ResourceImplOpenGL<IRender::Resource::BufferDescription> final : public ResourceBaseImplOpenGLDesc<IRender::Resource::BufferDescription> {
-	ResourceImplOpenGL() : bufferID(0) {}
+	ResourceImplOpenGL() : bufferID(0), length(0) {}
 
 	IRender::Resource::Type GetType() const override { return RESOURCE_BUFFER; }
 	void Upload(QueueImplOpenGL& queue) override {
 		GL_GUARD();
-		bool create = bufferID == 0;
-
-		if (create) {
+		if (bufferID == 0) {
 			glGenBuffers(1, &bufferID);
 		}
 
@@ -877,7 +875,8 @@ struct ResourceImplOpenGL<IRender::Resource::BufferDescription> final : public R
 		usage = d.usage;
 		format = d.format;
 		component = d.component;
-		length = d.length == 0 ? safe_cast<uint32_t>(d.data.GetSize()) : d.length;
+		uint32_t orgLength = length;
+		length = d.length == 0 ? (uint32_t)safe_cast<uint32_t>(d.data.GetSize()) : (uint32_t)(d.offset + d.length);
 
 		GLuint bufferType = GL_ELEMENT_ARRAY_BUFFER;
 		switch (d.usage) {
@@ -905,12 +904,12 @@ struct ResourceImplOpenGL<IRender::Resource::BufferDescription> final : public R
 			glBufferData(bufferType, d.data.GetSize(), d.data.GetData(), d.dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
 		} else {
 			// glBufferStorage?
-			if (create) {
-				glBufferData(bufferType, d.offset + length, nullptr, d.dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
+			if (orgLength != length) {
+				glBufferData(bufferType, length, nullptr, d.dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
 			}
 
 			if (!d.data.Empty()) {
-				glBufferSubData(bufferType, d.offset, length, d.data.GetData());
+				glBufferSubData(bufferType, d.offset, d.length == 0 ? d.data.GetSize() : d.length, d.data.GetData());
 			}
 		}
 

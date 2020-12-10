@@ -114,7 +114,8 @@ void DeferredLightingBufferEncodedRenderStage::Update(Engine& engine, IRender::Q
 	standardLighting.lightCount = count;
 	assert(LightBuffer.sharedBufferResource);
 	standardLighting.lightIndexBuffer.resource = LightBuffer.sharedBufferResource;
-	// standardLighting.lightBufferSize = {}; // TODO: set buffer size.
+	standardLighting.lightBufferSize = Float2(LightBuffer.bufferSize.x(), LightBuffer.bufferSize.y());
+	standardLighting.depthTextureSize = Float2(LightBuffer.depthSize.x(), LightBuffer.depthSize.y());
 
 	BaseClass::Update(engine, queue);
 }

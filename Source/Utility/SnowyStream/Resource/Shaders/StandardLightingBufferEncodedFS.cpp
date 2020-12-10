@@ -15,7 +15,7 @@ StandardLightingBufferEncodedFS::StandardLightingBufferEncodedFS() : lightCount(
 
 String StandardLightingBufferEncodedFS::GetShaderText() {
 	return UnifyShaderCode(
-	baseColor = pow(baseColor, float3(GAMMA, GAMMA, GAMMA));
+		baseColor = pow(baseColor, float3(GAMMA, GAMMA, GAMMA));
 	float3 diff = (baseColor - baseColor * metallic) / PI;
 	float3 spec = lerp(float3(0.04, 0.04, 0.04), baseColor, metallic);
 	float3 V = -normalize(viewPosition);
@@ -42,7 +42,10 @@ String StandardLightingBufferEncodedFS::GetShaderText() {
 	float3 lightColor[4];
 
 	// float4 idx = texture(lightTexture, rasterCoord.xy) * float(255.0);
-	uint offset = uint(rasterCoord.x * lightBufferSize.x) + int(rasterCoord.y * lightBufferSize.y * lightBufferSize.x);
+	// uint offset = (uint(rasterCoord.x) * uint(lightBufferSize.x) + uint(rasterCoord.y) * uint(lightBufferSize.x) * uint(lightBufferSize.y)) * 64;
+	// uint offset = uint(rasterCoord.x * lightBufferSize.x + rasterCoord.y * lightBufferSize.x * lightBufferSize.y) * 64;
+	uint2 uv = uint2(uint(rasterCoord.x * depthTextureSize.x), uint(rasterCoord.y * depthTextureSize.y));
+	uint offset = (uv.x + uv.y * uint(lightBufferSize.x)) * 64;
 	for (uint n = 0; n < 64; n++) {
 		uint idx = lightIndices[offset + n];
 		uint k;
@@ -82,6 +85,8 @@ String StandardLightingBufferEncodedFS::GetShaderText() {
 			float3 F = spec + (float3(f, f, f) - spec) * e[i];
 			mainColor.xyz = mainColor.xyz + (diff + F * DG[i]) * lightColor[i].xyz * NoL[i];
 		}
+
+		if (k != 4) break;
 	}
 
 	mainColor.xyz = pow(max(mainColor.xyz, float3(0, 0, 0)), float3(1.0, 1.0, 1.0) / GAMMA);
@@ -108,7 +113,9 @@ TObject<IReflect>& StandardLightingBufferEncodedFS::operator () (IReflect& refle
 		ReflectProperty(invWorldNormalMatrix)[paramBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(cubeLevelInv)[paramBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(cubeStrength)[paramBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(depthTextureSize)[paramBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(lightBufferSize)[paramBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(reserved)[paramBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(lightInfos)[lightInfoBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(lightIndices)[lightIndexBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(mainColor)[BindOutput(BindOutput::COLOR)];

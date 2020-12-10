@@ -85,7 +85,7 @@ void LightBufferEncodeRenderStage::Update(Engine& engine, IRender::Queue* queue)
 	}
 
 	// need update light buffer?
-	uint32_t length = gridWidth * gridHeight * computeGroup.x() * computeGroup.y() * sizeof(uint32_t);
+	uint32_t length = gridWidth * gridHeight * computeGroup.x() * computeGroup.y() * sizeof(uint32_t) * 64;
 	if (length != lastBufferLength) {
 		IRender::Resource::BufferDescription bufferDescription;
 		bufferDescription.usage = IRender::Resource::BufferDescription::STORAGE;
@@ -100,6 +100,9 @@ void LightBufferEncodeRenderStage::Update(Engine& engine, IRender::Queue* queue)
 
 	encoder.lightBuffer.resource = LightBuffer.sharedBufferResource; // Binding output buffer.
 	drawCallDescription.instanceCounts = UInt3(gridWidth, gridHeight, 1);
+	LightBuffer.depthSize = UShort2(dim.x(), dim.y());
+	LightBuffer.bufferSize = UShort2(gridWidth * computeGroup.x(), gridHeight * computeGroup.y());
+	encoder.invScreenSize = Float2(1.0f / dim.x(), 1.0f / dim.y());
 
 	// assemble block data
 	BaseClass::Update(engine, queue);

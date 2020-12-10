@@ -29,6 +29,8 @@ void RenderPortSharedBufferLoad::Tick(Engine& engine, IRender::Queue* queue) {
 	RenderPortSharedBufferStore* bufferStore = GetLinks().back().port->QueryInterface(UniqueType<RenderPortSharedBufferStore>());
 	if (bufferStore != nullptr) {
 		sharedBufferResource = bufferStore->sharedBufferResource;
+		bufferSize = bufferStore->bufferSize;
+		depthSize = bufferStore->depthSize;
 	}
 }
 

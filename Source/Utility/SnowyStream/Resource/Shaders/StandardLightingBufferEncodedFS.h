@@ -33,7 +33,9 @@ namespace PaintsNow {
 		MatrixFloat4x4 invWorldNormalMatrix;
 		float cubeLevelInv;
 		float cubeStrength;
+		Float2 depthTextureSize;
 		Float2 lightBufferSize;
+		Float2 reserved;
 		
 		Float2 rasterCoord; // imported
 		Float4 mainColor; // target

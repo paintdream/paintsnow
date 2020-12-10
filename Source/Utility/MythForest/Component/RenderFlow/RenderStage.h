@@ -97,7 +97,7 @@ namespace PaintsNow {
 
 		void Prepare(Engine& engine, IRender::Queue* queue) override {
 			// create specified shader resource (if not exists)
-			if (!(BaseClass::Flag().load(std::memory_order_relaxed) & RENDERSTAGE_COMPUTE_PASS)) {
+			if (!(BaseClass::Flag().load(std::memory_order_relaxed) & BaseClass::RENDERSTAGE_COMPUTE_PASS)) {
 				// prepare mesh
 				if (!meshResource) {
 					const String path = "[Runtime]/MeshResource/StandardQuad";
@@ -129,7 +129,7 @@ namespace PaintsNow {
 					(1 << IRender::Resource::BufferDescription::INSTANCED));
 				drawCallDescription.shaderResource = BaseClass::GetShaderResource();
 				BaseClass::drawCallResource = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_DRAWCALL);
-				if (!(BaseClass::Flag().load(std::memory_order_relaxed) & RENDERSTAGE_COMPUTE_PASS)) {
+				if (!(BaseClass::Flag().load(std::memory_order_relaxed) & BaseClass::RENDERSTAGE_COMPUTE_PASS)) {
 					drawCallDescription.indexBufferResource.buffer = meshResource->bufferCollection.indexBuffer;
 				}
 			} else {

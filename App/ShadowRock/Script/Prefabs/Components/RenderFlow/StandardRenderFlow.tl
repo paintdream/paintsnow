@@ -6,7 +6,7 @@ function StandardRenderFlow.New(bloomLayerCount : number) : RenderFlowComponent
 	local renderFlowComponent = RenderFlowComponentModule.New()
 	bloomLayerCount = math.max(bloomLayerCount, 1) -- at least one bloom layer
 	local strBloomLayer = tostring(bloomLayerCount)
-	local computePass = false
+	local computePass = true
 
 	-- Step 1: Setup Geometry stage
 	local stageGeometryBuffer : RenderStage = renderFlowComponent:NewRenderStage("GeometryBufferRenderStage", "")

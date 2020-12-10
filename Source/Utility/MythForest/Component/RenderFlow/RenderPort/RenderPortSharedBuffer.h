@@ -19,6 +19,8 @@ namespace PaintsNow {
 		void Tick(Engine& engine, IRender::Queue* queue) override;
 
 		IRender::Resource* sharedBufferResource;
+		UShort2 bufferSize;
+		UShort2 depthSize;
 	};
 
 	class RenderPortSharedBufferStore : public TReflected<RenderPortSharedBufferStore, RenderPort> {
@@ -31,6 +33,8 @@ namespace PaintsNow {
 		void Tick(Engine& engine, IRender::Queue* queue) override;
 
 		IRender::Resource* sharedBufferResource;
+		UShort2 bufferSize;
+		UShort2 depthSize;
 	};
 }
 
