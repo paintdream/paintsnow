@@ -117,6 +117,7 @@ TObject<IReflect>& SnowyStream::operator () (IReflect& reflect) {
 
 		ReflectMethod(RequestMount)[ScriptMethod = "Mount"];
 		ReflectMethod(RequestUnmount)[ScriptMethod = "Unmount"];
+		ReflectMethod(RequestGetRenderProfile)[ScriptMethod = "GetRenderProfile"];
 	}
 
 	return *this;
@@ -191,6 +192,10 @@ void SnowyStream::RequestUnmount(IScript::Request& request, IScript::Delegate<Mo
 	CHECK_DELEGATE(mount);
 
 	mount->Unmount();
+}
+
+size_t SnowyStream::RequestGetRenderProfile(IScript::Request& request, const String& feature) {
+	return interfaces.render.GetProfile(renderDevice, feature);
 }
 
 void SnowyStream::RequestFileExists(IScript::Request& request, const String& path) {

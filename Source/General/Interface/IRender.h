@@ -242,7 +242,7 @@ namespace PaintsNow {
 		// Device
 		virtual std::vector<String> EnumerateDevices() = 0;
 		virtual Device* CreateDevice(const String& description) = 0;
-		virtual bool SupportParallelPresent(Device* device) = 0;
+		virtual size_t GetProfile(Device* device, const String& feature) = 0;
 		virtual Int2 GetDeviceResolution(Device* device) = 0;
 		virtual void SetDeviceResolution(Device* device, const Int2& resolution) = 0;
 		virtual void NextDeviceFrame(Device* device) = 0;

@@ -29,7 +29,7 @@ namespace PaintsNow {
 		virtual void DeleteDevice(Device* device) override;
 
 		virtual void PresentQueues(Queue** queues, uint32_t count, PresentOption option) override;
-		virtual bool SupportParallelPresent(Device* device) override;
+		virtual size_t GetProfile(Device* device, const String& feature) override;
 
 		// Queue
 		virtual Queue* CreateQueue(Device* device, uint32_t flag) override;

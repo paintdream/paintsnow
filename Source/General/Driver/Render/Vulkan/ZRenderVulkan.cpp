@@ -542,8 +542,8 @@ IRender::Device* ZRenderVulkan::GetQueueDevice(Queue* q) {
 	return queue->device;
 }
 
-bool ZRenderVulkan::SupportParallelPresent(Device* device) {
-	return true;
+size_t ZRenderVulkan::GetProfile(Device* device, const String& feature) {
+	return true; // by now all supported.
 }
 
 void ZRenderVulkan::PresentQueues(Queue** queues, uint32_t count, PresentOption option) {

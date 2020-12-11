@@ -51,7 +51,7 @@ public:
 		return &q; // Make asserts happy
 	}
 
-	bool SupportParallelPresent(Device* device) override { return false; }
+	size_t GetProfile(Device* device, const String&) override { return 0; }
 	void PresentQueues(Queue** queue, uint32_t count, PresentOption option) override {}
 	void DeleteQueue(Queue* queue) override {}
 	void FlushQueue(Queue* queue) override {}

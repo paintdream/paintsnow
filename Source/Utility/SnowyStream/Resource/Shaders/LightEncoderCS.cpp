@@ -53,6 +53,7 @@ String LightEncoderCS::GetShaderText() {
 				if (j == 4) {
 					// commit
 					lightBufferData[offset++] = packedLightID;
+					packedLightID = 0;
 					j = 0;
 				}
 			}

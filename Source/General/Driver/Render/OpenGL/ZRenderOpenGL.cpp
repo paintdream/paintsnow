@@ -1792,8 +1792,14 @@ void ZRenderOpenGL::PresentQueues(Queue** queues, uint32_t count, PresentOption 
 	}
 }
 
-bool ZRenderOpenGL::SupportParallelPresent(Device* device) {
-	return false;
+size_t ZRenderOpenGL::GetProfile(Device* device, const String& feature) {
+	if (feature == "ParallelQueue") {
+		return 0;
+	} else if (feature == "ComputeShader") {
+		return majorVersion >= 4 && minorVersion >= 5 ? 1 : 0;
+	} else {
+		return 0;
+	}
 }
 
 void ZRenderOpenGL::FlushQueue(Queue* queue) {
@@ -1909,8 +1915,18 @@ public:
 	}
 };
 
-ZRenderOpenGL::ZRenderOpenGL() {
+ZRenderOpenGL::ZRenderOpenGL() : majorVersion(3), minorVersion(3) {
 	static GlewInit init;
+	const char* version = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+	if (version != nullptr) {
+		sscanf(version, "%d.%d", &majorVersion, &minorVersion);
+	}
+
+	version = reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION));
+	if (version != nullptr) {
+		shaderVersion = version;
+	}
+
 	deletedQueueHead.store(nullptr, std::memory_order_relaxed);
 }
 

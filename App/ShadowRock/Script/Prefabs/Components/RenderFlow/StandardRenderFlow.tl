@@ -6,7 +6,10 @@ function StandardRenderFlow.New(bloomLayerCount : number) : RenderFlowComponent
 	local renderFlowComponent = RenderFlowComponentModule.New()
 	bloomLayerCount = math.max(bloomLayerCount, 1) -- at least one bloom layer
 	local strBloomLayer = tostring(bloomLayerCount)
-	local computePass = true
+	local computePass = SnowyStream.GetRenderProfile("ComputeShader") ~= 0
+	if not computePass then
+		print("StandardRenderFlow: ComputeShader not supported by this device, fallback to texture encoded light.")
+	end
 
 	-- Step 1: Setup Geometry stage
 	local stageGeometryBuffer : RenderStage = renderFlowComponent:NewRenderStage("GeometryBufferRenderStage", "")

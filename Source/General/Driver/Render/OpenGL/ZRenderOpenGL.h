@@ -24,7 +24,7 @@ namespace PaintsNow {
 		void DeleteDevice(Device* device) override;
 
 		void PresentQueues(Queue** queues, uint32_t count, PresentOption option) override;
-		bool SupportParallelPresent(Device* device) override;
+		size_t GetProfile(Device* device, const String& feature) override;
 
 		// Queue
 		Queue* CreateQueue(Device* device, uint32_t flag) override;
@@ -48,5 +48,8 @@ namespace PaintsNow {
 
 	protected:
 		std::atomic<Queue*> deletedQueueHead;
+		uint32_t majorVersion;
+		uint32_t minorVersion;
+		String shaderVersion;
 	};
 }

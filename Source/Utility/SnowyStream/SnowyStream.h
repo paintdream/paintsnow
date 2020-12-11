@@ -219,8 +219,15 @@ namespace PaintsNow {
 		/// <summary>
 		/// Umount an archive
 		/// </summary>
-		/// <param name="mount" Mount object ></param>
+		/// <param name="mount"> Mount object </param>
 		void RequestUnmount(IScript::Request& request, IScript::Delegate<Mount> mount);
+
+		/// <summary>
+		/// Get profile of render device
+		/// </summary>
+		/// <param name="feature"> the feature to get </param>
+		/// <returns> the profile information </returns>
+		size_t RequestGetRenderProfile(IScript::Request& request, const String& feature);
 
 	public:
 		void RegisterBuiltinPasses();
