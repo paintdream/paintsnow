@@ -39,12 +39,31 @@ function Test.Main()
 
 	-- CrossRoutine is running on another LuaVM
 	local upval = "~~~"
-	local rpc = CrossRoutine.New(function (value : string) : string
+	local cross = CrossRoutine.New(nil)
+	local rpc = cross(function (value : string) : string
 		return "Hello " .. value .. upval
 	end)
 
 	print("MSG " .. rpc("World!") as string)
 	print("MSG " .. rpc("NewWorld!") as string)
+
+	print("Testing CrossDispatcher~")
+	local CrossDispatcher = require("Engine/Controller/CrossDispatcher")
+	local dispatcher = CrossDispatcher.New(4)
+	print("Register dispatcher function ...")
+	dispatcher:Register("test", function (i)
+		print("Task " .. tostring(i) .. " finished.")
+	end)
+
+	print("Dispatching ...")
+	for i = 1, 1000 do
+		dispatcher:Dispatch("test", i)
+	end
+
+	print("Waiting ...")
+	dispatcher:Wait()
+
+	print("Finished.")
 end
 
 return Test

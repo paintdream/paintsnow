@@ -258,13 +258,16 @@ void RemoteComponent::Call(IScript::Request& fromRequest, const TShared<RemoteRo
 }
 
 void RemoteComponent::Complete(IScript::RequestPool* returnPool, IScript::Request& toRequest, IScript::Request::Ref callback, const TShared<RemoteRoutine>& remoteRoutine) {
+	toRequest.DoLock();
 	toRequest.Call(sync, remoteRoutine->ref);
+	toRequest.UnLock();
 
 	IScript::Request& returnRequest = *returnPool->AcquireSafe();
 	returnRequest.DoLock();
 	returnRequest.Push();
 
 	uint32_t flag = Flag().load(std::memory_order_relaxed);
+	toRequest.DoLock();
 	for (int i = 0; i < toRequest.GetCount(); i++) {
 		CopyVariable(flag, returnRequest, toRequest, toRequest.GetCurrentType());
 	}
@@ -294,6 +297,7 @@ void RemoteComponent::CallAsync(IScript::Request& fromRequest, IScript::Request:
 			CopyVariable(flag, toRequest, fromRequest, fromRequest.GetCurrentType());
 		}
 
+		toRequest.UnLock();
 		IScript::RequestPool* pool = fromRequest.GetRequestPool();
 		assert(&pool->GetScript() == fromRequest.GetScript());
 		fromRequest.UnLock();

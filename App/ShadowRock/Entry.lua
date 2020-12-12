@@ -37,6 +37,7 @@ local Bootstrap = require("Engine/Boot/Bootstrap")
 
 MakeConsole()
 print("Starting ...")
+-- local App = require("Script/Test/RemoteComponent")
 local App = require("Script/Main")
 print("Starting Main ...")
 local co = coroutine.create(App.Main)

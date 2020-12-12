@@ -35,7 +35,7 @@ TShared<RemoteComponent> RemoteComponentModule::RequestNew(IScript::Request& req
 TShared<RemoteRoutine> RemoteComponentModule::RequestLoad(IScript::Request& request, IScript::Delegate<RemoteComponent> remoteComponent, const String& code) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(remoteComponent);
-	CHECK_THREAD_IN_MODULE(remoteComponent);
+	// CHECK_THREAD_IN_MODULE(remoteComponent);
 
 	return remoteComponent->Load(code);
 }
@@ -44,7 +44,7 @@ void RemoteComponentModule::RequestCall(IScript::Request& request, IScript::Dele
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(remoteComponent);
 	CHECK_DELEGATE(remoteRoutine);
-	CHECK_THREAD_IN_MODULE(remoteComponent);
+	// CHECK_THREAD_IN_MODULE(remoteComponent);
 
 	remoteComponent->Call(request, remoteRoutine.Get(), args);
 }
@@ -53,7 +53,7 @@ void RemoteComponentModule::RequestCallAsync(IScript::Request& request, IScript:
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(remoteComponent);
 	CHECK_DELEGATE(remoteRoutine);
-	CHECK_THREAD_IN_MODULE(remoteComponent);
+	// CHECK_THREAD_IN_MODULE(remoteComponent);
 
 	remoteComponent->CallAsync(request, callback, remoteRoutine.Get(), args);
 }
@@ -61,7 +61,7 @@ void RemoteComponentModule::RequestCallAsync(IScript::Request& request, IScript:
 void RemoteComponentModule::RequestCleanup(IScript::Request& request, IScript::Delegate<RemoteComponent> remoteComponent) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(remoteComponent);
-	CHECK_THREAD_IN_MODULE(remoteComponent);
+	// CHECK_THREAD_IN_MODULE(remoteComponent);
 
 	remoteComponent->Clear();
 }
