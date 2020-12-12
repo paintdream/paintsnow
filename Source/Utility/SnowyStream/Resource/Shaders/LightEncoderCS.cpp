@@ -8,11 +8,12 @@ LightEncoderCS::LightEncoderCS() : computeGroup(4, 4, 1) {
 	depthTexture.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
 	depthTexture.description.state.format = IRender::Resource::TextureDescription::HALF;
 	depthTexture.description.state.layout = IRender::Resource::TextureDescription::RG;
-	depthTexture.memorySpec = IShader::READONLY;
+	depthTexture.memorySpec = IShader::MEMORY_READONLY;
 	lightInfoBuffer.description.usage = IRender::Resource::BufferDescription::UNIFORM;
 
 	lightInfos.resize(MAX_LIGHT_COUNT);
 	lightBuffer.description.usage = IRender::Resource::BufferDescription::STORAGE; // SSBO
+	lightBuffer.memorySpec = IShader::MEMORY_WRITEONLY;
 }
 
 String LightEncoderCS::GetShaderText() {

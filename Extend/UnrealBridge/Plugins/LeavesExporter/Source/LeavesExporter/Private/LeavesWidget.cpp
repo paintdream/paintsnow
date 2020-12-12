@@ -182,7 +182,7 @@ static void PostResource(PaintsNow::Service& service, PaintsNow::ResourceBase& r
 	static ZFilterPod filter;
 	IStreamBase* f = filter.CreateFilter(stream);
 	*f << resource;
-	f->ReleaseObject();
+	f->Destroy();
 
 	auto& request = service.GetMainRequest();
 	String extension = SnowyStream::GetReflectedExtension(resource.GetUnique());

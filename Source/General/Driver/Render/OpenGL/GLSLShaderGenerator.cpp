@@ -36,6 +36,25 @@ float4 saturate(float4 x) { return clamp(x, float4(0.0, 0.0, 0.0, 0.0), float4(1
 #define mult_mat(a, b) (a * b) \n\
 #define mult_vec(m, v) (m * v) \n";
 
+static String GetMemorySpec(IShader::MEMORY_SPEC spec) {
+	switch (spec) {
+	case IShader::MEMORY_DEFAULT:
+		return "";
+	case IShader::MEMORY_COHERENT:
+		return "coherent ";
+	case IShader::MEMORY_VOLATILE:
+		return "volatile ";
+	case IShader::MEMORY_RESTRICT:
+		return "restrict ";
+	case IShader::MEMORY_READONLY:
+		return "readonly ";
+	case IShader::MEMORY_WRITEONLY:
+		return "writeonly ";
+	default:
+		return "";
+	}
+}
+
 GLSLShaderGenerator::GLSLShaderGenerator(IRender::Resource::ShaderDescription::Stage s, uint32_t& pinputIndex, uint32_t& poutputIndex, uint32_t& ptextureIndex) : IReflect(true, false), stage(s), debugVertexBufferIndex(0), inputIndex(pinputIndex), outputIndex(poutputIndex), textureIndex(ptextureIndex) {}
 
 const String& GLSLShaderGenerator::GetFrameCode() {
@@ -58,7 +77,7 @@ void GLSLShaderGenerator::Complete() {
 			break;
 		case IRender::Resource::BufferDescription::STORAGE:
 			if (!info.second.empty()) {
-				declaration += String("buffer _") + info.first + " {\n" + info.second + "} " + info.first + ";\n";
+				declaration += GetMemorySpec(buffer->memorySpec) + String("buffer _") + info.first + " {\n" + info.second + "} " + info.first + ";\n";
 			}
 			break;
 		}
@@ -135,24 +154,6 @@ static String GetTextureFormatString(IRender::Resource::TextureDescription::Stat
 	}
 }
 
-static String GetTextureMemorySpec(IShader::MEMORY_SPEC spec) {
-	switch (spec) {
-	case IShader::DEFAULT:
-		return "";
-	case IShader::COHERENT:
-		return "coherent";
-	case IShader::VOLATILE:
-		return "volatile";
-	case IShader::RESTRICT:
-		return "restrict";
-	case IShader::READONLY:
-		return "readonly";
-	case IShader::WRITEONLY:
-		return "writeonly";
-	default:
-		return "";
-	}
-}
 
 void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) {
 	// singleton Unique uniqueBindOffset = UniqueType<IShader::BindOffset>::Get();
@@ -370,8 +371,7 @@ void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refT
 				declaration += "layout(";
 				declaration += GetTextureFormatString(bindTexture->description.state);
 				declaration += ") ";
-				declaration += GetTextureMemorySpec(bindTexture->memorySpec);
-				declaration += " ";
+				declaration += GetMemorySpec(bindTexture->memorySpec);
 			}
 
 			declaration += "uniform ";
