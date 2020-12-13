@@ -60,9 +60,7 @@ String LightEncoderCS::GetShaderText() {
 			}
 
 			// last commit
-			if (j != 0) {
-				lightBufferData[offset++] = packedLightID;
-			}
+			lightBufferData[offset++] = packedLightID;
 		}
 		/*
 		lightBufferData[offset++] = id.x;
