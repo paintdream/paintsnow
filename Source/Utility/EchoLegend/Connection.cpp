@@ -2,60 +2,7 @@
 
 using namespace PaintsNow;
 
-namespace PaintsNow {
-	IScript::Request& operator >> (IScript::Request& request, std::list<std::pair<String, String> >& mylist) {
-		request >> beginarray;
-		std::vector<IScript::Request::Key> keys = request.Enumerate();
-		for (size_t i = 0; i < keys.size(); i++) {
-			String value;
-			request >> keys[i];
-			if (keys[i].type == IScript::Request::STRING) {
-				request >> value;
-				mylist.emplace_back(std::make_pair(keys[i].name, value));
-			} else if (keys[i].type == IScript::Request::TABLE) {
-				IScript::Request::ArrayStart ts;
-				request >> ts;
-				for (size_t i = 0; i < ts.count; i++) {
-					request >> value;
-					mylist.emplace_back(std::make_pair(keys[i].name, value));
-				}
-				request >> endarray;
-			}
-		}
-
-		request >> endarray;
-		return request;
-	}
-
-	IScript::Request& operator << (IScript::Request& request, const std::list<std::pair<String, String> >& mylist) {
-		std::map<String, std::list<String> > data;
-		for (std::list<std::pair<String, String> >::const_iterator q = mylist.begin(); q != mylist.end(); ++q) {
-			data[(*q).first].emplace_back((*q).second);
-		}
-
-		request << beginarray;
-		for (std::map<String, std::list<String> >::const_iterator it = data.begin(); it != data.end(); ++it) {
-			request << key(it->first.c_str());
-			const std::list<String>& st = it->second;
-			if (st.size() > 1) {
-				request << beginarray;
-				for (std::list<String>::const_iterator p = st.begin(); p != st.end(); ++p) {
-					request << *p;
-				}
-				request << endarray;
-			} else if (st.size() == 1) {
-				request << *st.begin();
-			} else {
-				assert(false);
-			}
-		}
-		request << endarray;
-
-		return request;
-	}
-}
-
-Connection::Connection(BridgeSunset& bs, INetwork& nt, WorkDispatcher* disp, IScript::Request::Ref cb, const String& ip, INetwork::Connection* con, bool h, INetwork::HttpRequest* httpReq, bool ownReq, bool mode) : bridgeSunset(bs), network(nt),  dispatcher(disp), connection(con), httpRequest(httpReq), callback(cb) {
+Connection::Connection(BridgeSunset& bs, INetwork& nt, WorkDispatcher* disp, IScript::Request::Ref cb, const String& ip, INetwork::Connection* con, bool http, INetwork::HttpRequest* httpReq, bool ownReq, bool mode) : bridgeSunset(bs), network(nt),  dispatcher(disp), connection(con), httpRequest(httpReq), callback(cb) {
 	uint32_t bitMask = 0;
 	if (ownReq) {
 		bitMask |= CONNECTION_OWN_REQUEST;
@@ -63,6 +10,10 @@ Connection::Connection(BridgeSunset& bs, INetwork& nt, WorkDispatcher* disp, ISc
 
 	if (mode) {
 		bitMask |= CONNECTION_PACKET_MODE;
+	}
+
+	if (http) {
+		bitMask |= CONNECTION_HTTP;
 	}
 
 	if (connection == nullptr) {
@@ -77,7 +28,7 @@ Connection::Connection(BridgeSunset& bs, INetwork& nt, WorkDispatcher* disp, ISc
 	if (connection != nullptr) {
 		dispatcher->ReferenceObject();
 
-		if (Flag().load(std::memory_order_acquire) & CONNECTION_HTTP) {
+		if (Flag().load(std::memory_order_relaxed) & CONNECTION_HTTP) {
 			if (httpRequest == nullptr) {
 				httpRequest = network.OpenHttpRequest(connection, Wrap(this, &Connection::OnEventHttp));
 				Flag().fetch_or(CONNECTION_OWN_REQUEST, std::memory_order_relaxed);
@@ -124,7 +75,14 @@ IScript::Request::Ref Connection::GetCallback() const {
 }
 
 void Connection::OnEventHttp(int code) {
-	bridgeSunset.GetKernel().QueueRoutine(this, CreateTaskScript(callback, code));
+	IScript::Request& req = *bridgeSunset.AcquireSafe();
+	req.DoLock();
+	req.Push();
+	req.Call(sync, callback, this, code);
+	req.Pop();
+	req.UnLock();
+	bridgeSunset.ReleaseSafe(&req);
+//	bridgeSunset.GetKernel().QueueRoutine(this, CreateTaskScript(callback, this, code));
 }
 
 struct Header {
@@ -155,11 +113,16 @@ void Connection::OnEvent(INetwork::EVENT event) {
 }
 
 void Connection::DispatchEvent(INetwork::EVENT event) {
-	if (event == INetwork::READ && (Flag().load(std::memory_order_acquire) & CONNECTION_PACKET_MODE)) {
-		bridgeSunset.GetKernel().QueueRoutine(this, CreateTaskScript(callback, Looper::EventToString(event), currentData));
-	} else {
-		bridgeSunset.GetKernel().QueueRoutine(this, CreateTaskScript(callback, Looper::EventToString(event)));
+	IScript::Request& req = *bridgeSunset.AcquireSafe();
+	req.DoLock();
+	req.Push();
+	if ((Flag().load(std::memory_order_relaxed) & CONNECTION_PACKET_MODE)) {
+		req << currentData;
 	}
+	req.Call(sync, callback, this, Looper::EventToString(event));
+	req.Pop();
+	req.UnLock();
+	bridgeSunset.ReleaseSafe(&req);
 }
 
 void Connection::ScriptUninitialize(IScript::Request& request) {

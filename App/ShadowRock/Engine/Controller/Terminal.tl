@@ -19,15 +19,11 @@ end
 
 local Terminal = record
 	Peers : { Connection : ConnectionRecord }
+	Dispatcher : WorkDispatcher
 	__index : any
 end
 
 Terminal.__index = Terminal
-
--- uniform global dispatcher
-local dispatcher : WorkDispatcher = EchoLegend.OpenDispatcher()
--- currently we do not deactivate it manually, just let gc do it.
-dispatcher.ActivateDispatcher()
 
 function Terminal.StateHandler(connection : Connection, isConnect : boolean, src : string, dst : string) : boolean
 	return true
@@ -107,7 +103,7 @@ end
 
 function Terminal:HttpRequest(host : string, path : string, method : string,
 	options : { string : string }, header : { string : string }, callback : function (string) : (any) ) : Connection
-	local connection : Connection = dispatcher:OpenConnection(host, true, function (connection : Connection, status : any)
+	local connection : Connection = self.Dispatcher:OpenConnection(host, true, function (connection : Connection, status : any)
 		local statusCode = tonumber(status) or 0
 		if status == "Connected" then
 			local opts : { any } = {}
@@ -138,7 +134,7 @@ end
 
 function Terminal:Connect(ip : string) : Connection
 	local instance = coroutine.running()
-	local connection : Connection = dispatcher:OpenConnection(ip, false, function (connection : Connection, status : string)
+	local connection : Connection = self.Dispatcher:OpenConnection(ip, false, function (connection : Connection, status : string)
 		local success = self:EventHandler(connection, status)
 		if status == "Connected" then
 			coroutine.resume(instance, success)
@@ -161,13 +157,13 @@ function Terminal:Disconnect(connection : Connection)
 	connection:DeactivateConnection()
 end
 
-function Terminal.New(ip : string, 
+function Terminal.New(dispatcher : WorkDispatcher, ip : string, 
 			dataHandler : any,
 			stateHandler : function (any, boolean, string, string) : (boolean),
 			http : boolean) : Terminal
 	local instance = coroutine.running()
 	local eventHandler = http and Terminal.EventHandlerHttp or Terminal.EventHandler
-	local terminal = setmetatable({ IP = ip, Peers = {}, DataHandler = dataHandler, StateHandler = stateHandler }, Terminal as METATABLE) as Terminal
+	local terminal = setmetatable({ IP = ip, Peers = {}, DataHandler = dataHandler, StateHandler = stateHandler, Dispatcher = dispatcher }, Terminal as METATABLE) as Terminal
 
 	local listener : Listener = dispatcher:OpenListener(ip, http, function (listener : Listener, event : string)
 		if event == "Connected" then

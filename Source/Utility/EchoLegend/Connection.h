@@ -51,8 +51,5 @@ namespace PaintsNow {
 		String currentData;
 		INetwork::Packet currentState;
 	};
-
-	IScript::Request& operator >> (IScript::Request& request, std::list<std::pair<String, String> >& mylist);
-	IScript::Request& operator << (IScript::Request& request, const std::list<std::pair<String, String> >& mylist);
 }
 

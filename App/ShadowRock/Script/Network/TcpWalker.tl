@@ -101,22 +101,27 @@ function TcpWalker:Disconnect(id : string) : HttpResponseRecord
 end
 
 function TcpWalker:LoginCallback(instance : thread, connection : Connection, uri : string, method : string, header : { { string } }, data : string)
+	-- print("HEADER SIZE: " .. #header)
+	local allCookie = ""
 	for _, item in ipairs(header as {{ string }}) do
 		local key = item[1]
 		local cookie = item[2]
 		if key == "Set-Cookie" then
 			local c = string.sub(cookie, 1, (string.find(cookie, ";")))
-
-			if not string.find(c, "WP+Cookie+check", 1, true) then
-				self:Write(connection, { { "Action", "Login" } })
-				self.Cookie = c
-				self.Loggedin = true
-			else
-				print("TcpWalker connection established")
-				coroutine.resume(instance)
-				return
+			if not c:find("WP+Cookie+check;", 1, true) then
+				allCookie = allCookie .. c
 			end
 		end
+	end
+
+	if #allCookie ~= 0 then
+		-- print("Action login ... " .. allCookie)
+		self:Write(connection, { { "Action", "Login" } })
+		self.Cookie = allCookie
+		self.Loggedin = true
+	else
+		-- print("TcpWalker connection established, but not authorized.")
+		coroutine.resume(instance)
 	end
 end
 
@@ -127,7 +132,7 @@ end
 
 function TcpWalker:OnConnected(connection : Connection)
 	-- print(">>>> PORT " .. srcPort)
-	print("LOGIN Path: " .. self.LoginPath)
+	-- print("LOGIN Path: " .. self.LoginPath)
 	local data = "log=" .. self.Id .. "&pwd=" .. self.Password
 	local headers : { number : any } = {
 		{ "Content-Type", "application/x-www-form-urlencoded; charset=UTF-8" },
@@ -135,6 +140,7 @@ function TcpWalker:OnConnected(connection : Connection)
 		{ "Host", self.Host },
 	}
 
+	-- print("DATA: " .. data)
 	connection:WriteConnectionHttpRequest(self.LoginPath, "POST", headers, data)
 end
 
@@ -143,12 +149,16 @@ function TcpWalker:Login() : boolean
 
 	-- only 'Content-Type' and 'Connection' are required for php server
 	self.Loggedin = false
+	-- print("Connecting " .. self.Host)
 	local connection = self.Dispatcher:OpenConnection(self.Host, true, function (connection : Connection, status : string | number)
 		if status == "Connected" then
+			-- print("Connected")
 			self:OnConnected(connection)
 		elseif type(status) == "number" and status as number >= 200 and status as number <= 499 then
+			-- print("Status " .. tostring(status))
 			if not self.Loggedin then
 				local res = connection:ReadConnectionHttpRequest() as HttpRequestRecord
+				-- print("LOGIN! " .. res.Uri .. " | " .. res.Method .. " | " .. tostring(#res.Header))
 				self:LoginCallback(instance, connection, res.Uri, res.Method, res.Header, res.Data)
 			else
 				coroutine.resume(instance, self:Read(connection))
@@ -170,12 +180,12 @@ local UriInfo = record
 	Query : {{ string }}
 end
 
-function TcpWalker.New(dispatcher : WorkDispatcher, login : string, url : string, id, password) : TcpWalker
+function TcpWalker.New(dispatcher : WorkDispatcher, login : string, url : string, id : string, password : string) : TcpWalker
 	local part = EchoLegend.ParseUri(url) as UriInfo
 	local lg = EchoLegend.ParseUri(login) as UriInfo
 
 	return setmetatable({
-		WorkDispatcher = dispatcher,
+		Dispatcher = dispatcher,
 		LoginPath = lg.Path,
 		Host = part.Host,
 		Path = part.Path,
