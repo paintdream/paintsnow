@@ -91,6 +91,7 @@ namespace PaintsNow {
 	FILTER_FUNCTION(sign);
 	FILTER_FUNCTION(floor);
 	FILTER_FUNCTION(ceil);
+	FILTER_FUNCTION(round);
 	FILTER_FUNCTION(fract);
 
 #define FILTER_FUNCTION_RET_T(func) \

@@ -38,16 +38,22 @@ public:
 class ZRenderDummy : public IRender {
 public:
 	std::vector<String> EnumerateDevices() override { return std::vector<String>(); }
-	Device* CreateDevice(const String& description) override { return nullptr; }
+
+	struct_aligned(8) DeviceImpl : public IRender::Device {};
+	Device* CreateDevice(const String& description) override {
+		static DeviceImpl device;
+		return &device;
+	}
 	Int2 GetDeviceResolution(Device* device) override { return Int2(640, 480); }
 	void SetDeviceResolution(Device* device, const Int2& resolution) override {}
 	void NextDeviceFrame(Device* device) override {}
 	void DeleteDevice(Device* device) override {}
 
 	// Queue
+	struct_aligned(8) QueueImpl : public IRender::Queue {};
 	Device* GetQueueDevice(Queue* queue) override { return nullptr; }
 	Queue* CreateQueue(Device* device, uint32_t flag) override {
-		static Queue q;
+		static QueueImpl q;
 		return &q; // Make asserts happy
 	}
 
@@ -57,8 +63,9 @@ public:
 	void FlushQueue(Queue* queue) override {}
 
 	// Resource
+	struct_aligned(8) ResourceImpl : public IRender::Resource {};
 	Resource* CreateResource(Device* device, Resource::Type resourceType) override {
-		static Resource r;
+		static ResourceImpl r;
 		return &r;
 	}
 	void AcquireResource(Queue* queue, Resource* resource) override {}

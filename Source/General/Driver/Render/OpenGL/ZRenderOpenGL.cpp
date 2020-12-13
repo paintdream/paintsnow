@@ -1926,7 +1926,7 @@ ZRenderOpenGL::ZRenderOpenGL() : majorVersion(3), minorVersion(3) {
 	if (majorVersion >= 4) {
 		std::stringstream ss;
 		ss << majorVersion << minorVersion << "0";
-		shaderVersion = ss.str();
+		shaderVersion = StdToUtf8(ss.str());
 	} else {
 		shaderVersion = "330";
 	}
