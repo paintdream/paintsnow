@@ -42,6 +42,7 @@ namespace PaintsNow {
 		void ExecuteResource(Queue* queue, Resource* resource) override;
 		void DeleteResource(Queue* queue, Resource* resource) override;
 		void SetResourceNotation(Resource* lhs, const String& note) override;
+		const String& GetShaderVersion() const;
 
 	protected:
 		void ClearDeletedQueues();

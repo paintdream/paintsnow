@@ -1074,7 +1074,8 @@ struct ResourceImplOpenGL<IRender::Resource::ShaderDescription> final : public R
 			body += "\n}\n"; // make a call to our function
 
 			// String fullShader = k == Resource::ShaderDescription::COMPUTE ? "#version 450\r\n" : "#version 330\r\n";
-			String fullShader = "#version 450\r\n";
+			ZRenderOpenGL& render = static_cast<ZRenderOpenGL&>(queue.device->render);
+			String fullShader = String("#version ") + render.GetShaderVersion() + "\r\n";
 			fullShader += GLSLShaderGenerator::GetFrameCode() + common + head + body;
 			const char* source[] = { fullShader.c_str() };
 			glShaderSource(shaderID, 1, source, nullptr);
@@ -1922,12 +1923,19 @@ ZRenderOpenGL::ZRenderOpenGL() : majorVersion(3), minorVersion(3) {
 		sscanf(version, "%d.%d", &majorVersion, &minorVersion);
 	}
 
-	version = reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION));
-	if (version != nullptr) {
-		shaderVersion = version;
+	if (majorVersion >= 4) {
+		std::stringstream ss;
+		ss << majorVersion << minorVersion << "0";
+		shaderVersion = ss.str();
+	} else {
+		shaderVersion = "330";
 	}
 
 	deletedQueueHead.store(nullptr, std::memory_order_relaxed);
+}
+
+const String& ZRenderOpenGL::GetShaderVersion() const {
+	return shaderVersion;
 }
 
 void ZRenderOpenGL::ClearDeletedQueues() {
