@@ -1510,7 +1510,7 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> final : pu
 
 		UShort2Pair range = d.range;
 		if (range.second.x() == 0) {
-			if (d.colorStorages.empty() || (d.colorStorages.size() == 1 && d.colorStorages[0].backBuffer != 0)) {
+			if (d.colorStorages.size() == 1 && d.colorStorages[0].backBuffer != 0) {
 				range.second.x() = queue.device->resolution.x();
 			} else {
 				ResourceImplOpenGL<TextureDescription>* texture = static_cast<ResourceImplOpenGL<TextureDescription>*>(d.colorStorages.empty() ? d.depthStorage.resource : d.colorStorages[0].resource);

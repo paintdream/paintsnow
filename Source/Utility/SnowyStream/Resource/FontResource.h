@@ -47,10 +47,10 @@ namespace PaintsNow {
 			friend class FontResource;
 
 		protected:
-			typedef std::map<IFontBase::FONTCHAR, Char> hmap;
+			typedef std::map<IFontBase::FONTCHAR, Char> FontMap;
 
 			uint32_t critical;
-			hmap cache;
+			FontMap cache;
 			Short2Pair lastRect;
 			Bytes buffer;
 			uint16_t dim;

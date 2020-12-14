@@ -254,7 +254,6 @@ namespace PaintsNow {
 		LightCollector lightCollector;
 		Entity* rootEntity;
 		String debugPath;
-		TShared<TextureResource> emptyColorAttachment;
 	};
 }
 

@@ -199,7 +199,7 @@ uint32_t FontResource::Update(IRender& render, IRender::Queue* queue) {
 const FontResource::Char& FontResource::Slice::Get(IRender& render, IRender::Queue* queue, IFontBase& fontBase, IFontBase::FONTCHAR ch) {
 	std::atomic<uint32_t>& lock = reinterpret_cast<std::atomic<uint32_t>&>(critical);
 	SpinLock(lock);
-	hmap::iterator p = cache.find(ch);
+	FontMap::iterator p = cache.find(ch);
 	if (p != cache.end()) {
 		SpinUnLock(lock);
 		return (*p).second;

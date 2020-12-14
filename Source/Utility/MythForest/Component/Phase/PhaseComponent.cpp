@@ -66,21 +66,6 @@ void PhaseComponent::Initialize(Engine& engine, Entity* entity) {
 		assert(renderQueue == nullptr);
 		hostEntity = entity;
 
-		String location = ResourceBase::GenerateLocation("PhaseEmptyColorAttachment", (void*)(((size_t)resolution.x() << 16) | resolution.y()));
-		emptyColorAttachment = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), location, false, ResourceBase::RESOURCE_VIRTUAL);
-
-		if (!emptyColorAttachment) {
-			emptyColorAttachment = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), location, false, ResourceBase::RESOURCE_VIRTUAL);
-			emptyColorAttachment->description.state.attachment = true;
-			emptyColorAttachment->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
-			emptyColorAttachment->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
-			emptyColorAttachment->description.state.layout = IRender::Resource::TextureDescription::R;
-			emptyColorAttachment->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
-
-			IRender::Queue* queue = engine.snowyStream.GetResourceQueue();
-			emptyColorAttachment->GetResourceManager().InvokeUpload(emptyColorAttachment(), queue);
-		}
-
 		SnowyStream& snowyStream = engine.snowyStream;
 		const String path = "[Runtime]/MeshResource/StandardQuad";
 		meshResource = snowyStream.CreateReflectedResource(UniqueType<MeshResource>(), path, true, ResourceBase::RESOURCE_VIRTUAL);
@@ -400,12 +385,13 @@ void PhaseComponent::ResolveTasks(Engine& engine) {
 							Bytes& data = group.instancedData[k];
 							assert(!data.Empty());
 							if (!data.Empty()) {
+								size_t viewSize = data.GetViewSize();
 								IRender::Resource* buffer = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_BUFFER);
 								IRender::Resource::BufferDescription desc;
 								desc.format = IRender::Resource::BufferDescription::FLOAT;
 								desc.usage = IRender::Resource::BufferDescription::INSTANCED;
-								desc.component = safe_cast<uint8_t>(data.GetSize() / (group.instanceCount * sizeof(float)));
-								desc.data.Resize(data.GetViewSize());
+								desc.component = safe_cast<uint8_t>(viewSize / (group.instanceCount * sizeof(float)));
+								desc.data.Resize(viewSize);
 								desc.data.Import(0, data);
 								render.UploadResource(queue, buffer, &desc);
 
@@ -493,11 +479,6 @@ void PhaseComponent::CoTaskAssembleTaskShadow(Engine& engine, TaskData& task, co
 
 	const Shadow& shadow = shadows[bakePoint.shadowIndex];
 	desc.depthStorage.resource = shadow.shadow->GetRenderResource();
-	IRender::Resource::RenderTargetDescription::Storage color;
-	color.resource = emptyColorAttachment->GetRenderResource(); // Don't care
-	color.loadOp = IRender::Resource::RenderTargetDescription::DISCARD;
-	color.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
-	desc.colorStorages.emplace_back(color);
 	desc.depthStorage.loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
 	desc.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 
