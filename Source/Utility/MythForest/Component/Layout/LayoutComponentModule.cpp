@@ -53,7 +53,7 @@ Float4 LayoutComponentModule::RequestGetRect(IScript::Request& request, IScript:
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(layoutComponent);
 
-	return Float4(layoutComponent->rect);
+	return Float4(layoutComponent->rect.first.x(), layoutComponent->rect.first.y(), layoutComponent->rect.second.x(), layoutComponent->rect.second.y());
 }
 
 void LayoutComponentModule::RequestSetLayout(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent, const String& layout) {
@@ -131,7 +131,7 @@ Float4 LayoutComponentModule::RequestGetSize(IScript::Request& request, IScript:
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(layoutComponent);
 
-	return Float4(layoutComponent->size);
+	return Float4(layoutComponent->size.first.x(), layoutComponent->size.first.y(), layoutComponent->size.second.x(), layoutComponent->size.second.y());
 }
 
 void LayoutComponentModule::RequestSetSize(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent, const Float4& size) {
@@ -155,7 +155,7 @@ Float4 LayoutComponentModule::RequestGetPadding(IScript::Request& request, IScri
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(layoutComponent);
 
-	return Float4(layoutComponent->padding);
+	return Float4(Float4(layoutComponent->padding.first.x(), layoutComponent->padding.first.y(), layoutComponent->padding.second.x(), layoutComponent->padding.second.y()));
 }
 
 void LayoutComponentModule::RequestSetMargin(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent, const Float4& size) {
@@ -170,7 +170,7 @@ Float4 LayoutComponentModule::RequestGetMargin(IScript::Request& request, IScrip
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(layoutComponent);
 
-	return Float4(layoutComponent->margin);
+	return Float4(Float4(layoutComponent->margin.first.x(), layoutComponent->margin.first.y(), layoutComponent->margin.second.x(), layoutComponent->margin.second.y()));
 }
 
 void LayoutComponentModule::RequestSetIndexRange(IScript::Request& request, IScript::Delegate<LayoutComponent> layoutComponent, int start, int count) {

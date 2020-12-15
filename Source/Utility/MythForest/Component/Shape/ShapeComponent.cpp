@@ -94,7 +94,7 @@ void ShapeComponent::Cleanup() {
 }
 
 void ShapeComponent::Update(Engine& engine, const TShared<MeshResource>& resource) {
-	static_assert(sizeof(Patch) == 64, "Patch size must be 64.");
+	static_assert(alignof(Patch) == 8, "Patch align must be 8.");
 	if (resource == meshResource) return;
 
 	SnowyStream& snowyStream = engine.snowyStream;
@@ -181,31 +181,63 @@ void ShapeComponent::Update(Engine& engine, const TShared<MeshResource>& resourc
 }
 
 struct ShapeComponent::PatchRaycaster {
-	PatchRaycaster(const std::vector<Float3>& v, const std::vector<UInt3>& i, const Float3Pair& r) : vertices(v), indices(i), ray(r), hitPatch(nullptr), hitIndex(0), distance(FLT_MAX) {}
+	typedef TVector<TVector<float, 4>, 3> Group;
+	PatchRaycaster(const std::vector<Float3>& v, const std::vector<UInt3>& i, const Float3Pair& r) : vertices(v), indices(i), ray(r), hitPatch(nullptr), hitIndex(0), distance(FLT_MAX) {
+		Math::ExtendVector(rayGroup.first, TVector<float, 3>(r.first));
+		Math::ExtendVector(rayGroup.second, TVector<float, 3>(r.second));
+	}
 
 	bool operator () (const Float3Pair& box, const TKdTree<Float3Pair>& node) {
 		const Patch& patch = static_cast<const Patch&>(node);
+		TVector<TVector<float, 4>, 3> res;
+		TVector<TVector<float, 4>, 2> uv;
+		TVector<TVector<float, 4>, 3> points[3];
+
 		if (Math::IntersectBox(box, ray)) {
-			for (uint32_t i = 0; i < MAX_PATCH_COUNT; i++) {
+			static_assert(MAX_PATCH_COUNT % 4 == 0, "Must be 4n size");
+			uint32_t maxIndex = 0;
+			for (uint32_t w = 0; w < MAX_PATCH_COUNT; w += 4) {
+				if (patch.indices[w] != ~(uint32_t)0) {
+					maxIndex = w + 1;
+				} else {
+					break;
+				}
+			}
+
+			maxIndex = (maxIndex + 3) & ~3;
+
+			for (uint32_t i = 0, valid = 0; i < maxIndex; i++) {
 				uint32_t idx = patch.indices[i];
-				if (idx == ~(uint32_t)0) break;
-
-				const UInt3& index = indices[idx];
-				const TVector<float, 3> points[3] = {
-					vertices[index.x()], vertices[index.y()], vertices[index.z()]
-				};
-
-				Float3 res;
-				Float2 uv;
-				Math::IntersectTriangle(res, uv, points, ray);
-				if (uv.x() >= 0.0f && uv.y() >= 0.0f && uv.x() + uv.y() <= 1.0f) {
-					float s = Math::SquareLength(res - ray.first);
-					if (s < distance) {
-						distance = s;
-						hitPatch = &patch;
-						hitIndex = idx;
-						intersection = res;
+				uint32_t k = i & 3;
+				if (idx != ~(uint32_t)0) {
+					const UInt3& index = indices[idx];
+					for (size_t t = 0; t < 3; t++) {
+						for (size_t m = 0; m < 3; m++) {
+							points[t][m][k] = vertices[index[t]][m];
+							points[t][m][k] = vertices[index[t]][m];
+							points[t][m][k] = vertices[index[t]][m];
+						}
 					}
+
+					valid = k;
+				}
+
+				if (k == 3) {
+					Math::IntersectTriangle(res, uv, points, rayGroup);
+					for (uint32_t m = 0; m <= valid; m++) {
+						if (uv[0][m] >= 0.0f && uv[1][m] >= 0.0f && uv[0][m] + uv[1][m] <= 1.0f) {
+							Float3 hit(res[0][m], res[1][m], res[2][m]);
+							float s = Math::SquareLength(hit - ray.first);
+							if (s < distance) {
+								distance = s;
+								hitPatch = &patch;
+								hitIndex = patch.indices[i + m - 3];
+								intersection = hit;
+							}
+						}
+					}
+
+					k = 0;
 				}
 			}
 
@@ -217,6 +249,7 @@ struct ShapeComponent::PatchRaycaster {
 
 	const std::vector<Float3>& vertices;
 	const std::vector<UInt3>& indices;
+	std::pair<Group, Group> rayGroup;
 	const Float3Pair& ray;
 	Float3 intersection;
 	const Patch* hitPatch;

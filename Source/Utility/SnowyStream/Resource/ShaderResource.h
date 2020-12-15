@@ -39,7 +39,7 @@ namespace PaintsNow {
 	template <class T>
 	class ShaderResourceImpl : public TReflected<ShaderResourceImpl<T>, ShaderResource> {
 	public:
-		// gcc do not support referencing base type in template class. manunaly specified here.
+		// gcc do not support referencing base type in template class. manually specified here.
 		typedef TReflected<ShaderResourceImpl<T>, ShaderResource> BaseClass;
 		ShaderResourceImpl(ResourceManager& manager, const String& uniqueID, Tiny::FLAG f = 0) : BaseClass(manager, uniqueID) { BaseClass::Flag().fetch_or(f, std::memory_order_relaxed); }
 
