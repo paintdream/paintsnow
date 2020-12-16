@@ -4,7 +4,7 @@
 
 using namespace PaintsNow;
 
-LightEncoderCS::LightEncoderCS() : computeGroup(4, 4, 1) {
+LightEncoderCS::LightEncoderCS() : computeGroup(8, 8, 1) {
 	depthTexture.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
 	depthTexture.description.state.format = IRender::Resource::TextureDescription::HALF;
 	depthTexture.description.state.layout = IRender::Resource::TextureDescription::RG;
