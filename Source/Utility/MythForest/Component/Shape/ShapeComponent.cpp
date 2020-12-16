@@ -147,8 +147,10 @@ void ShapeComponent::Update(Engine& engine, const TShared<MeshResource>& resourc
 		for (uint32_t m = 0; m < codeIndices.size(); m++) {
 			const CodeIndex& codeIndex = codeIndices[m];
 			if (codeIndex.level != lastLevel || k == MAX_PATCH_COUNT) {
-				if (!linearPatches.empty() && k != MAX_PATCH_COUNT) {
-					linearPatches.back().indices[k] = ~(uint32_t)0;
+				if (!linearPatches.empty()) {
+					while (k != MAX_PATCH_COUNT) {
+						linearPatches.back().indices[k++] = ~(uint32_t)0;
+					}
 				}
 
 				lastLevel = codeIndex.level;
@@ -159,8 +161,10 @@ void ShapeComponent::Update(Engine& engine, const TShared<MeshResource>& resourc
 			linearPatches.back().indices[k++] = codeIndex.index;
 		}
 
-		if (!linearPatches.empty() && k != MAX_PATCH_COUNT) {
-			linearPatches.back().indices[k++] = ~(uint32_t)0;
+		if (!linearPatches.empty()) {
+			while (k != MAX_PATCH_COUNT) {
+				linearPatches.back().indices[k++] = ~(uint32_t)0;
+			}
 		}
 
 		// heap order
