@@ -27,7 +27,7 @@ namespace PaintsNow {
 
 	class DummyUniformResourceManager : public IUniformResourceManager {
 	public:
-		virtual TShared<ResourceBase> CreateResource(const String& location, const String& extension = "", bool openExisting = true, Tiny::FLAG flag = 0, IStreamBase* sourceStream = nullptr) override {
+		virtual TShared<ResourceBase> CreateResource(const String& location, const String& extension = "", bool openExisting = true, Tiny::FLAG flag = 0) override {
 			return nullptr;
 		}
 

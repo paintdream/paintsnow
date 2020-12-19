@@ -14,7 +14,7 @@ local function Main()
 
 	-- Then pack resources
 	local Packer = require("Engine/Model/Packer.lua")
-	Packer:Import("Assets/", "Packed/")
+	Packer:Import("Assets/", "/Packed/")
 	print("Build finished.")
 end
 

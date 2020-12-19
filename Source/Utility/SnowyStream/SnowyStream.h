@@ -28,7 +28,7 @@ namespace PaintsNow {
 		bool MountArchive(const String& mount);
 
 		virtual Interfaces& GetInterfaces() const;
-		TShared<ResourceBase> CreateResource(const String& location, const String& extension = "", bool openExisting = true, Tiny::FLAG flag = 0, IStreamBase* sourceStream = nullptr) override;
+		TShared<ResourceBase> CreateResource(const String& location, const String& extension = "", bool openExisting = true, Tiny::FLAG flag = 0) override;
 
 	protected:
 		bool SaveResource(const TShared<ResourceBase>& resource, const String& extension = "") override;
@@ -259,8 +259,8 @@ namespace PaintsNow {
 		}
 
 		template <class T>
-		TShared<T> CreateReflectedResource(UniqueType<T> type, const String& location, bool openExisting = true, Tiny::FLAG flag = 0, IStreamBase* sourceStream = nullptr) {
-			return static_cast<T*>(CreateResource(location, GetReflectedExtension(type.Get()), openExisting, flag, sourceStream)());
+		TShared<T> CreateReflectedResource(UniqueType<T> type, const String& location, bool openExisting = true, Tiny::FLAG flag = 0) {
+			return static_cast<T*>(CreateResource(location, GetReflectedExtension(type.Get()), openExisting, flag)());
 		}
 
 		void CreateBuiltinResources();

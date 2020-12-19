@@ -116,13 +116,20 @@ void Weaver::RpcPostResource(IScript::Request& request, const String& path, cons
 
 	memoryStream.Seek(IStreamBase::BEGIN, 0);
 	// Create resource from memory
-	TShared<ResourceBase> resource = snowyStream.CreateResource(path, extension, false, 0, &memoryStream);
+	TShared<ResourceBase> resource = snowyStream.CreateResource(path, extension, false, ResourceBase::RESOURCE_VIRTUAL);
 	resource->Map();
+	IStreamBase* filter = snowyStream.GetInterfaces().assetFilterBase.CreateFilter(memoryStream);
+	SpinLock(resource->critical);
+	*filter >> *resource;
+	SpinUnLock(resource->critical);
 
 	if (resource) {
 		// Serialize it to disk
 		success = resource->Persist();
 	}
+
+	resource->Unmap();
+	filter->Destroy();
 
 	if (rpcCallback) {
 		bridgeSunset.Dispatch(CreateTaskScript(rpcCallback, String("RpcPostResource"), path, extension));

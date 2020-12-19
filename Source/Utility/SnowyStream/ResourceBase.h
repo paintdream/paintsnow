@@ -111,7 +111,7 @@ namespace PaintsNow {
 
 	class IUniformResourceManager {
 	public:
-		virtual TShared<ResourceBase> CreateResource(const String& location, const String& extension = "", bool openExisting = true, Tiny::FLAG flag = 0, IStreamBase* sourceStream = nullptr) = 0;
+		virtual TShared<ResourceBase> CreateResource(const String& location, const String& extension = "", bool openExisting = true, Tiny::FLAG flag = 0) = 0;
 		virtual bool SaveResource(const TShared<ResourceBase>& resource, const String& extension = "") = 0;
 		virtual bool LoadResource(const TShared<ResourceBase>& resource, const String& extension = "") = 0;
 	};

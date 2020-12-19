@@ -191,6 +191,7 @@ TObject<IReflect>& MeshResource::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectProperty()) {
+		// ReflectProperty(deviceMemoryUsage);
 		ReflectProperty(meshCollection);
 		ReflectProperty(bufferCollection)[Runtime];
 	}

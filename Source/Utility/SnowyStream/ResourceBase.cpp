@@ -120,10 +120,7 @@ bool ResourceBase::Persist() {
 bool ResourceBase::Map() {
 	if (mapCount.fetch_add(1, std::memory_order_relaxed) == 0) {
 		bool ret = resourceManager.GetUniformResourceManager().LoadResource(this);
-			Flag().fetch_or(RESOURCE_MAPPED | (ret ? 0 : RESOURCE_INVALID), std::memory_order_release);
-		if (!ret) {
-			mapCount.fetch_sub(1, std::memory_order_release);
-		}
+		Flag().fetch_or(RESOURCE_MAPPED | (ret ? 0 : RESOURCE_INVALID), std::memory_order_release);
 		return ret;
 	} else {
 		ThreadPool& threadPool = resourceManager.GetThreadPool();
@@ -183,12 +180,11 @@ public:
 			if (s.IsIterator()) {
 				IIterator& iterator = static_cast<IIterator&>(s);
 				uint32_t index = 0;
-				const IReflectObject& prototype = iterator.GetElementPrototype();
 				while (iterator.Next()) {
 					std::stringstream ss;
 					ss << savedPath << "." << name << "[" << index++ << "]";
 					currentPath = StdToUtf8(ss.str());
-					if (!prototype.IsBasicObject()) {
+					if (!iterator.IsElementBasicObject()) {
 						IReflectObject* p = reinterpret_cast<IReflectObject*>(iterator.Get());
 						(*p)(*this);
 					} else if (resourcePersist != nullptr) {

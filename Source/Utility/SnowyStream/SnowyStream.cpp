@@ -750,7 +750,7 @@ bool SnowyStream::RegisterResourceSerializer(Unique unique, const String& extens
 	}
 }
 
-TShared<ResourceBase> SnowyStream::CreateResource(const String& path, const String& ext, bool openExisting, Tiny::FLAG flag, IStreamBase* sourceStream) {
+TShared<ResourceBase> SnowyStream::CreateResource(const String& path, const String& ext, bool openExisting, Tiny::FLAG flag) {
 	assert(!path.empty() || (!openExisting && !ext.empty()));
 	// try to parse extension from location if no ext provided
 	String location;
@@ -792,7 +792,7 @@ TShared<ResourceBase> SnowyStream::CreateResource(const String& path, const Stri
 			}
 		}
 
-		assert((path[0] != '/') == !!(flag & ResourceBase::RESOURCE_VIRTUAL));
+		// assert((path[0] != '/') == !!(flag & ResourceBase::RESOURCE_VIRTUAL));
 		resource = (*p).second.second->Create(resourceManager, location);
 		resource->Flag().fetch_or(flag, std::memory_order_relaxed);
 		resourceManager.Insert(resource());
@@ -857,7 +857,7 @@ bool SnowyStream::LoadResource(const TShared<ResourceBase>& resource, const Stri
 bool SnowyStream::SaveResource(const TShared<ResourceBase>& resource, const String& extension) {
 	// Find resource serializer
 	assert(resource);
-	assert(resource->IsMapped());
+	// assert(resource->IsMapped());
 	String typeExtension = extension.empty() ? GetReflectedExtension(resource->GetUnique()) : extension;
 	IArchive& archive = interfaces.archive;
 	IFilterBase& protocol = interfaces.assetFilterBase;
