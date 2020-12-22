@@ -100,6 +100,12 @@ namespace PaintsNow {
 		uint64_t RequestGetFrameTickTime(IScript::Request& request);
 
 		/// <summary>
+		/// Get bound of entity.
+		/// </summary>
+		/// <returns> bound </returns>
+		Float3Pair RequestGetEntityBoundingBox(IScript::Request& request, IScript::Delegate<Entity> entity);
+
+		/// <summary>
 		/// Add callback for next device frame
 		/// </summary>
 		/// <param name="entity"> the Entity that holds the callback </param>

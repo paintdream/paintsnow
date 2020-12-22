@@ -126,6 +126,7 @@ TObject<IReflect>& MythForest::operator () (IReflect& reflect) {
 		ReflectMethod(RequestGetComponentType)[ScriptMethod = "GetComponentType"];
 		ReflectMethod(RequestClearEntityComponents)[ScriptMethod = "ClearEntityComponents"];
 		ReflectMethod(RequestGetFrameTickTime)[ScriptMethod = "GetFrameTickTime"];
+		ReflectMethod(RequestGetEntityBoundingBox)[ScriptMethod = "GetEntityBoundingBox"];
 		ReflectMethod(RequestWaitForNextFrame)[ScriptMethod = "WaitForNextFrame"];
 		ReflectMethod(RequestRaycast)[ScriptMethod = "Raycast"];
 		ReflectMethod(RequestCaptureFrame)[ScriptMethod = "CaptureFrame"];
@@ -161,6 +162,14 @@ void MythForest::TickDevice(IDevice& device) {
 
 uint64_t MythForest::RequestGetFrameTickTime(IScript::Request& request) {
 	return currentFrameTime;
+}
+
+Float3Pair MythForest::RequestGetEntityBoundingBox(IScript::Request& request, IScript::Delegate<Entity> entity) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(entity);
+	CHECK_THREAD_IN_MODULE(entity);
+
+	return entity->GetKey();
 }
 
 void MythForest::RequestWaitForNextFrame(IScript::Request& request, IScript::Delegate<Entity> entity, IScript::Request::Ref callback) {

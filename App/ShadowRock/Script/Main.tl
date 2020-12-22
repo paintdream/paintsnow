@@ -44,6 +44,13 @@ local function SetFrameMonitorOnTitle(deltaTime : number, cameraComponent : Came
 	end
 end
 
+local function printbox(prefix : string, box : { { number } })
+	print(prefix .. " BOX: "
+	 .. tostring(box[1][1]) .. ", " .. tostring(box[1][2]) .. ", " .. tostring(box[1][3]) .. " - "
+	 .. tostring(box[1][1]) .. ", " .. tostring(box[1][2]) .. ", " .. tostring(box[1][3])
+	)
+end
+
 local function InitializeWorld(databasePath : string)
 	print("InitializeWorld: Loading repository " .. databasePath .. " ...")
 	local database = Database.New(databasePath)
@@ -68,29 +75,31 @@ local function InitializeWorld(databasePath : string)
 	local Scene = require("Script/Root/Scene")
 	local scene = Scene.New(database, clock)
 
+	print("\tCreating Camera ...")
+	local TpsCameraController = require("Script/Prefabs/Entities/CameraController/TpsCameraController")
+	local cameraController = TpsCameraController.New(eventComponent)
+	-- set camera transform
+	local cameraTranslation : float3 = { 5, 5, 8 }
+	local cameraRotation : float3 = { 0.25 * math.pi, 0, math.pi }
+	local cameraTransform = cameraController.transformComponent
+	cameraTransform:SetTranslation(cameraTranslation)
+	cameraTransform:SetRotation(cameraRotation)
+	cameraTransform:UpdateTransform()
+	local cameraComponent = cameraController.cameraComponent
+	cameraComponent:BindRootEntity(scene.rootEntity)
+	
+	cameraController.spaceComponent:InsertEntity(guiEntity)
+	cameraController.entity:UpdateEntity()
+
 	print("\tCreating Player ...")
 	local Player = require("Script/Prefabs/Entities/Player/StandardPlayer")
-	local player = Player.New(eventComponent)
+	local player = Player.New(eventComponent, cameraController)
 	print("InitializeWorld: Mounting entities...")
 
 	local spaceComponent = scene.spaceComponent
 	spaceComponent:InsertEntity(player.entity)
 
-	local cameraController = player.cameraController
-	cameraController.spaceComponent:InsertEntity(guiEntity)
 
-	local cameraComponent = cameraController.cameraComponent
-	cameraComponent:BindRootEntity(scene.rootEntity)
-
-	-- set camera transform
-	local cameraTranslation : float3 = { 5, 5, 8 }
-	local cameraRotation : float3 = { 0.25 * math.pi, 0, math.pi }
-	local cameraController = player.cameraController
-	local cameraTransform = cameraController.transformComponent
-	cameraTransform:SetTranslation(cameraTranslation)
-	cameraTransform:SetRotation(cameraRotation)
-	cameraTransform:UpdateTransform()
-	
 	local screenSize = System.GetScreenSize() as { number }
 	cameraController.aspect = screenSize[1] / screenSize[2]
 	cameraController:UpdatePerspective()
@@ -229,6 +238,8 @@ local function InitializeWorld(databasePath : string)
 		end
 
 		cameraController:Update()
+		-- player.cameraController.entity:UpdateEntity()
+		-- player.entity:UpdateEntity()
 		inOperation = false
 	end)
 

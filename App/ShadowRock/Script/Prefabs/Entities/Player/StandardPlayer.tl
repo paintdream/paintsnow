@@ -8,14 +8,13 @@ end
 
 StandardPlayer.__index = StandardPlayer
 
-function StandardPlayer.New(eventComponent : EventComponent) : StandardPlayer
+function StandardPlayer.New(eventComponent : EventComponent, tpsCameraController : TpsCameraController) : StandardPlayer
 	print("\tStardard Player selected.")
 	local player = MythForest.NewEntity(-1)
 	local spaceComponent = SpaceComponentModule.New(-1, false)
 	player:AddEntityComponent(spaceComponent as Component)
 
 	print("\tAttach camera to player ...")
-	local tpsCameraController = TpsCameraController.New(eventComponent)
 	spaceComponent:InsertEntity(tpsCameraController.entity)
 	
 	local meta = {} as StandardPlayer
