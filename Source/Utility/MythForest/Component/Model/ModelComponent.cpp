@@ -187,7 +187,7 @@ String ModelComponent::GetDescription() const {
 	return meshResource->GetLocation();
 }
 
-void ModelComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box) {
+void ModelComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box, bool recursive) {
 	const Float3Pair& sub = meshResource->GetBoundingBox();
 
 	assert(sub.first.x() > -FLT_MAX && sub.second.x() < FLT_MAX);

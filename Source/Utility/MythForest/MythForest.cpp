@@ -211,13 +211,13 @@ void MythForest::RequestAddEntityComponent(IScript::Request& request, IScript::D
 	entity->AddComponent(engine, component.Get());
 }
 
-void MythForest::RequestUpdateEntity(IScript::Request& request, IScript::Delegate<Entity> entity) {
+void MythForest::RequestUpdateEntity(IScript::Request& request, IScript::Delegate<Entity> entity, bool recursive) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(entity);
 	CHECK_THREAD_IN_MODULE(entity);
 
 	entity->UpdateEntityFlags();
-	entity->UpdateBoundingBox(engine);
+	entity->UpdateBoundingBox(engine, recursive);
 }
 
 void MythForest::RequestRemoveEntityComponent(IScript::Request& request, IScript::Delegate<Entity> entity, IScript::Delegate<Component> component) {

@@ -70,7 +70,7 @@ bool SpaceComponent::Insert(Engine& engine, Entity* entity) {
 #endif
 
 	// update bounding box
-	entity->UpdateBoundingBox(engine);
+	entity->UpdateBoundingBox(engine, false);
 	entity->ReferenceObject();
 	// cleanup has_engine flag
 	entity->CleanupEngineInternal();
@@ -229,11 +229,12 @@ void SpaceComponent::QueryEntities(std::vector<TShared<Entity> >& entityList, co
 	}
 }
 
-void SpaceComponent::RoutineUpdateBoundingBoxRecursive(Float3Pair& box, Entity* entity) {
+void SpaceComponent::RoutineUpdateBoundingBoxRecursive(Engine& engine, Float3Pair& box, Entity* entity, bool subEntity) {
 	while (entity != nullptr) {
-		// To avoid updating storm.
-		// Do not trigger entities' UpdateBoundingBox
-		// It should be updated manually by entity's owner
+		if (subEntity) {
+			entity->UpdateBoundingBox(engine, subEntity);
+		}
+
 		const Float3Pair& eb = entity->GetKey();
 
 		assert(eb.first.x() > -FLT_MAX && eb.second.x() < FLT_MAX);
@@ -245,7 +246,7 @@ void SpaceComponent::RoutineUpdateBoundingBoxRecursive(Float3Pair& box, Entity* 
 		assert(box.first.y() > -FLT_MAX && box.second.y() < FLT_MAX);
 		assert(box.first.z() > -FLT_MAX && box.second.z() < FLT_MAX);
 
-		RoutineUpdateBoundingBoxRecursive(box, entity->Left());
+		RoutineUpdateBoundingBoxRecursive(engine, box, entity->Left(), subEntity);
 		assert(box.first.x() > -FLT_MAX && box.second.x() < FLT_MAX);
 		assert(box.first.y() > -FLT_MAX && box.second.y() < FLT_MAX);
 		assert(box.first.z() > -FLT_MAX && box.second.z() < FLT_MAX);
@@ -253,9 +254,8 @@ void SpaceComponent::RoutineUpdateBoundingBoxRecursive(Float3Pair& box, Entity* 
 	}
 }
 
-void SpaceComponent::RoutineUpdateBoundingBox() {
-	Float3Pair box(Float3(FLT_MAX, FLT_MAX, FLT_MAX), Float3(-FLT_MAX, -FLT_MAX, -FLT_MAX));
-	RoutineUpdateBoundingBoxRecursive(box, rootEntity);
+void SpaceComponent::RoutineUpdateBoundingBox(Engine& engine, Float3Pair& box, bool subEntity) {
+	RoutineUpdateBoundingBoxRecursive(engine, box, rootEntity, subEntity);
 	assert(box.first.x() > -FLT_MAX && box.second.x() < FLT_MAX);
 	assert(box.first.y() > -FLT_MAX && box.second.y() < FLT_MAX);
 	assert(box.first.z() > -FLT_MAX && box.second.z() < FLT_MAX);
@@ -328,25 +328,41 @@ float SpaceComponent::Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, 
 	return ratio;
 }
 
-void SpaceComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box) {
+void SpaceComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box, bool recursive) {
+	if (rootEntity == nullptr) return;
+
 	Tiny::FLAG flag = Flag().load(std::memory_order_relaxed);
 
-	if (flag & TINY_MODIFIED) {
+	// only unordered space can update bounding box
+	if (!(flag & SPACECOMPONENT_ORDERED)) {
+		Float3Pair newBox(Float3(FLT_MAX, FLT_MAX, FLT_MAX), Float3(-FLT_MAX, -FLT_MAX, -FLT_MAX));
+
 		if (flag & COMPONENT_LOCALIZED_WARP) {
 			if (!(flag & TINY_UPDATING)) {
 				Flag().fetch_or(TINY_UPDATING, std::memory_order_acquire);
-				QueueRoutine(engine, CreateTaskContextFree(Wrap(this, &SpaceComponent::RoutineUpdateBoundingBox)));
+				QueueRoutine(engine, CreateTaskContextFree(Wrap(this, &SpaceComponent::RoutineUpdateBoundingBox), std::ref(engine), newBox, recursive));
+
+				// block until update finishes
+				Kernel& kernel = engine.bridgeSunset.GetKernel();
+				uint32_t warp = kernel.GetCurrentWarpIndex();
+				kernel.YieldCurrentWarp();
+				kernel.GetThreadPool().PollWait(Flag(), TINY_UPDATING, TINY_UPDATING, 5);
+				kernel.WaitWarp(warp);
 			}
 		} else {
-			RoutineUpdateBoundingBox();
+			RoutineUpdateBoundingBox(engine, newBox, recursive);
 		}
 
-		Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release);
-	}
-
-	if (boundingBox.first.x() <= boundingBox.second.x()) {
-		Math::Union(box, boundingBox.first);
-		Math::Union(box, boundingBox.second);
+		if (newBox.first.x() <= newBox.second.x()) {
+			Math::Union(box, newBox.first);
+			Math::Union(box, newBox.second);
+		}
+	} else {
+		// it's not thread safe but boundingBox is always larger than before after new elements inserted ...
+		if (boundingBox.first.x() <= boundingBox.second.x()) {
+			Math::Union(box, boundingBox.first);
+			Math::Union(box, boundingBox.second);
+		}
 	}
 }
 

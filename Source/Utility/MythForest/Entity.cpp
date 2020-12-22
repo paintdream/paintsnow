@@ -310,7 +310,7 @@ uint32_t Entity::GetPivotIndex() const {
 	return GetIndex();
 }
 
-void Entity::UpdateBoundingBox(Engine& engine) {
+void Entity::UpdateBoundingBox(Engine& engine, bool recursive) {
 	if (Flag().load(std::memory_order_acquire) & TINY_MODIFIED) {
 		// assert(IsOrphan());
 
@@ -324,7 +324,7 @@ void Entity::UpdateBoundingBox(Engine& engine) {
 					assert(box.first.x() > -FLT_MAX && box.second.x() < FLT_MAX);
 					assert(box.first.y() > -FLT_MAX && box.second.y() < FLT_MAX);
 					assert(box.first.z() > -FLT_MAX && box.second.z() < FLT_MAX);
-					component->UpdateBoundingBox(engine, box);
+					component->UpdateBoundingBox(engine, box, recursive);
 					assert(box.first.x() > -FLT_MAX && box.second.x() < FLT_MAX);
 					assert(box.first.y() > -FLT_MAX && box.second.y() < FLT_MAX);
 					assert(box.first.z() > -FLT_MAX && box.second.z() < FLT_MAX);

@@ -22,7 +22,7 @@ namespace PaintsNow {
 		ModelComponent(const TShared<MeshResource>& meshResource, const TShared<BatchComponent>& batch);
 
 		String GetDescription() const override;
-		void UpdateBoundingBox(Engine& engine, Float3Pair& box) override;
+		void UpdateBoundingBox(Engine& engine, Float3Pair& box, bool recursive) override;
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		void Initialize(Engine& engine, Entity* entity) override;
 		void Uninitialize(Engine& engine, Entity* entity) override;

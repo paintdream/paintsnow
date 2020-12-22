@@ -27,7 +27,7 @@ void Component::Uninitialize(Engine& engine, Entity* entity) {
 
 void Component::DispatchEvent(Event& event, Entity* entity) {}
 
-void Component::UpdateBoundingBox(Engine& engine, Float3Pair& box) {}
+void Component::UpdateBoundingBox(Engine& engine, Float3Pair& box, bool recursive) {}
 
 Tiny::FLAG Component::GetEntityFlagMask() const {
 	return 0;

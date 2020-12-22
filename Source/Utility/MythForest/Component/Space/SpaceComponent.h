@@ -31,7 +31,7 @@ namespace PaintsNow {
 		void SetRootEntity(Entity* entity);
 		FLAG GetEntityFlagMask() const override;
 		void DispatchEvent(Event& event, Entity* entity) override;
-		void UpdateBoundingBox(Engine& engine, Float3Pair& box) override;
+		void UpdateBoundingBox(Engine& engine, Float3Pair& box, bool recursive) override;
 		const Float3Pair& GetBoundingBox() const;
 		float Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const override;
 
@@ -39,8 +39,8 @@ namespace PaintsNow {
 		void Initialize(Engine& engine, Entity* entity) override;
 		void Uninitialize(Engine& engine, Entity* entity) override;
 		float RoutineRaycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const;
-		void RoutineUpdateBoundingBox();
-		void RoutineUpdateBoundingBoxRecursive(Float3Pair& box, Entity* entity);
+		void RoutineUpdateBoundingBoxRecursive(Engine& engine, Float3Pair& box, Entity* entity, bool subEntity);
+		void RoutineUpdateBoundingBox(Engine& engine, Float3Pair& box, bool subEntity);
 		void RoutineDispatchEvent(const Event& event);
 		void FastRemoveNode(Engine& engine, Entity* entity);
 		bool ValidateEntity(Entity* entity);

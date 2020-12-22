@@ -25,7 +25,7 @@ TObject<IReflect>& EnvCubeComponent::operator () (IReflect& reflect) {
 	return *this;
 }
 
-void EnvCubeComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box) {
+void EnvCubeComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box, bool recursive) {
 	Math::Union(box, Float3(-range));
 	Math::Union(box, range);
 }

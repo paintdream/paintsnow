@@ -39,7 +39,7 @@ namespace PaintsNow {
 		void AddComponent(Engine& engine, Component* component);
 		void RemoveComponent(Engine& engine, Component* component);
 		void ClearComponents(Engine& engine);
-		void UpdateBoundingBox(Engine& engine);
+		void UpdateBoundingBox(Engine& engine, bool recursive);
 		void Activate(Engine& engine);
 		void Deactivate(Engine& engine);
 

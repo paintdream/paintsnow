@@ -146,7 +146,7 @@ void TransformComponent::UpdateTransform() {
 	}
 }
 
-void TransformComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box) {
+void TransformComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box, bool recursive) {
 	UpdateTransform();
 
 	if (box.second.x() < box.first.x()) {

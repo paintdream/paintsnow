@@ -60,10 +60,10 @@ namespace PaintsNow {
 		void RequestRemoveEntityComponent(IScript::Request& request, IScript::Delegate<Entity> entity, IScript::Delegate<Component> component);
 
 		/// <summary>
-		/// Update entity mask
+		/// Update entity mask & boundingbox
 		/// </summary>
 		/// <param name="entity"> the Entity </param>
-		void RequestUpdateEntity(IScript::Request& request, IScript::Delegate<Entity> entity);
+		void RequestUpdateEntity(IScript::Request& request, IScript::Delegate<Entity> entity, bool recursive);
 
 		/// <summary>
 		/// Get all components of an entity

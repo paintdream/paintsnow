@@ -45,7 +45,7 @@ void LightComponent::Uninitialize(Engine& engine, Entity* entity) {
 	BaseClass::Uninitialize(engine, entity);
 }
 
-void LightComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box) {
+void LightComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box, bool recursive) {
 	Math::Union(box, Float3(-range));
 	Math::Union(box, range);
 }

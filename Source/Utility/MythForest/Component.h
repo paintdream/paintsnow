@@ -55,7 +55,7 @@ namespace PaintsNow {
 		virtual void DispatchEvent(Event& event, Entity* entity);
 		virtual Entity* GetHostEntity() const;
 		virtual const String& GetAliasedTypeName() const;
-		virtual void UpdateBoundingBox(Engine& engine, Float3Pair& boundingBox);
+		virtual void UpdateBoundingBox(Engine& engine, Float3Pair& boundingBox, bool recursive);
 		virtual float Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio = 1) const;
 		static void RaycastForEntity(RaycastTask& task, Float3Pair& ray, Entity* entity);
 		virtual FLAG GetEntityFlagMask() const;

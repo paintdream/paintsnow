@@ -15,7 +15,7 @@ namespace PaintsNow {
 		~EnvCubeComponent() override;
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		FLAG GetEntityFlagMask() const override;
-		void UpdateBoundingBox(Engine& engine, Float3Pair& box) override;
+		void UpdateBoundingBox(Engine& engine, Float3Pair& box, bool recursive) override;
 		uint32_t CollectDrawCalls(std::vector<OutputRenderData, DrawCallAllocator>& outputDrawCalls, const InputRenderData& inputRenderData, BytesCache& bytesCache) override;
 
 		TShared<TextureResource> cubeMapTexture; // pre-filterred specular texture

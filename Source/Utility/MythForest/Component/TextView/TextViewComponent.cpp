@@ -347,7 +347,7 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 	fontResource->Update(render, queue);
 }
 
-void TextViewComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box) {
+void TextViewComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box, bool recursive) {
 	Math::Union(box, Float3(-1.0f, -1.0f, -1.0f)); // TODO: be more precise
 	Math::Union(box, Float3(1.0f, 1.0f, 1.0f));
 }
