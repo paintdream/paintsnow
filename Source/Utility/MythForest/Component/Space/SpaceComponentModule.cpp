@@ -24,9 +24,15 @@ TObject<IReflect>& SpaceComponentModule::operator ()(IReflect& reflect) {
 
 TShared<SpaceComponent> SpaceComponentModule::RequestNew(IScript::Request& request, int32_t warpIndex, bool sorted) {
 	TShared<SpaceComponent> spaceComponent = TShared<SpaceComponent>::From(allocator->New(sorted));
-	spaceComponent->SetWarpIndex(warpIndex < 0 ? engine.GetKernel().GetCurrentWarpIndex() : warpIndex);
-	if (warpIndex != engine.GetKernel().GetCurrentWarpIndex()) {
-		spaceComponent->Flag().fetch_or(Component::COMPONENT_LOCALIZED_WARP);
+	uint32_t currentWarpIndex = engine.GetKernel().GetCurrentWarpIndex();
+	if (warpIndex < 0) {
+		assert(currentWarpIndex != ~(uint32_t)0);
+		spaceComponent->SetWarpIndex(currentWarpIndex);
+	} else {
+		spaceComponent->SetWarpIndex(warpIndex);
+		if (warpIndex != currentWarpIndex) {
+			spaceComponent->Flag().fetch_or(Component::COMPONENT_LOCALIZED_WARP);
+		}
 	}
 
 	return spaceComponent;

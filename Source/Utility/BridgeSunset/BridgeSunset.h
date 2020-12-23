@@ -82,6 +82,17 @@ namespace PaintsNow {
 		/// <returns> the warp index of source object </returns>
 		uint32_t RequestGetWarpIndex(IScript::Request& request, IScript::Delegate<WarpTiny> source);
 
+		/// <summary>
+		/// Pin tiny content
+		/// </summary>
+		/// <param name="source"> the source object </param>
+		void RequestPin(IScript::Request& request, IScript::Delegate<WarpTiny> source);
+
+		/// <summary>
+		/// Unpin tiny content
+		/// </summary>
+		/// <param name="source"> the source object </param>
+		void RequestUnpin(IScript::Request& request, IScript::Delegate<WarpTiny> source);
 
 		/// <summary>
 		/// Clone an object

@@ -350,7 +350,6 @@ void VisibilityComponent::CollectRenderableComponent(Engine& engine, TaskData& t
 	const UChar4& encode = *reinterpret_cast<const UChar4*>(&identity);
 	instanceData.instancedColor = Float4((float)encode[0], (float)encode[1], (float)encode[2], (float)encode[3]) / 255.0f;
 	uint32_t currentWarpIndex = engine.GetKernel().GetCurrentWarpIndex();
-	assert(currentWarpIndex != ~(uint32_t)0);
 	TaskData::WarpData& warpData = task.warpData[currentWarpIndex == ~(uint32_t)0 ? GetWarpIndex() : currentWarpIndex];
 	std::unordered_map<size_t, InstanceGroup>& instanceGroups = warpData.instanceGroups;
 	InstanceGroup& first = instanceGroups[(size_t)renderableComponent];

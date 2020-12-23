@@ -333,20 +333,18 @@ void SpaceComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box, bool rec
 
 	Tiny::FLAG flag = Flag().load(std::memory_order_relaxed);
 
-	// only unordered space can update bounding box
-	if (!(flag & SPACECOMPONENT_ORDERED)) {
+	if (!(flag & TINY_PINNED)) {
 		Float3Pair newBox(Float3(FLT_MAX, FLT_MAX, FLT_MAX), Float3(-FLT_MAX, -FLT_MAX, -FLT_MAX));
+		Kernel& kernel = engine.bridgeSunset.GetKernel();
+		uint32_t warp = kernel.GetCurrentWarpIndex();
 
-		if (flag & COMPONENT_LOCALIZED_WARP) {
-			if (!(flag & TINY_UPDATING)) {
-				Flag().fetch_or(TINY_UPDATING, std::memory_order_acquire);
-				QueueRoutine(engine, CreateTaskContextFree(Wrap(this, &SpaceComponent::RoutineUpdateBoundingBox), std::ref(engine), newBox, recursive));
+		if ((flag & COMPONENT_LOCALIZED_WARP) && warp != GetWarpIndex()) {
+			if (!(Flag().fetch_or(TINY_UPDATING, std::memory_order_acquire) & TINY_UPDATING)) {
+				QueueRoutine(engine, CreateTaskContextFree(Wrap(this, &SpaceComponent::RoutineUpdateBoundingBox), std::ref(engine), std::ref(newBox), recursive));
 
 				// block until update finishes
-				Kernel& kernel = engine.bridgeSunset.GetKernel();
-				uint32_t warp = kernel.GetCurrentWarpIndex();
 				kernel.YieldCurrentWarp();
-				kernel.GetThreadPool().PollWait(Flag(), TINY_UPDATING, TINY_UPDATING, 5);
+				kernel.GetThreadPool().PollWait(Flag(), TINY_UPDATING, 0, 5);
 				kernel.WaitWarp(warp);
 			}
 		} else {
@@ -358,7 +356,6 @@ void SpaceComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box, bool rec
 			Math::Union(box, newBox.second);
 		}
 	} else {
-		// it's not thread safe but boundingBox is always larger than before after new elements inserted ...
 		if (boundingBox.first.x() <= boundingBox.second.x()) {
 			Math::Union(box, boundingBox.first);
 			Math::Union(box, boundingBox.second);

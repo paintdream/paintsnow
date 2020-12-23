@@ -111,7 +111,6 @@ local function InitializeWorld(databasePath : string)
 	local lastMousePos = { 0, 0 }
 	local moveSpeed = 1.0
 	local inOperation = false
-	scene.rootEntity:UpdateEntity()
 
 	local stepPhase = false
 	local stepBounceCount : number = 16
@@ -238,13 +237,12 @@ local function InitializeWorld(databasePath : string)
 		end
 
 		cameraController:Update()
-		-- player.cameraController.entity:UpdateEntity()
-		-- player.entity:UpdateEntity()
+		scene.rootEntity:UpdateEntity(true)
 		inOperation = false
 	end)
 
 	player.cameraController.entity:AddEntityComponent(scriptComponent as Component)
-	player.cameraController.entity:UpdateEntity()
+	scene.rootEntity:UpdateEntity(true)
 
 	print("InitializeWorld: World initialization finished. Waiting for system command")
 

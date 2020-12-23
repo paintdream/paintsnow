@@ -47,6 +47,8 @@ TObject<IReflect>& BridgeSunset::operator () (IReflect& reflect) {
 		ReflectMethod(RequestGetWarpCount)[ScriptMethod = "GetWarpCount"];
 		ReflectMethod(RequestSetWarpIndex)[ScriptMethod = "UpdateWarpIndex"];
 		ReflectMethod(RequestGetWarpIndex)[ScriptMethod = "GetWarpIndex"];
+		ReflectMethod(RequestPin)[ScriptMethod = "Pin"];
+		ReflectMethod(RequestUnpin)[ScriptMethod = "Unpin"];
 		ReflectMethod(RequestClone)[ScriptMethod = "Clone"];
 	}
 
@@ -156,5 +158,19 @@ TShared<SharedTiny> BridgeSunset::RequestClone(IScript::Request& request, IScrip
 	CHECK_DELEGATE(source);
 
 	return static_cast<SharedTiny*>(source->Clone());
+}
+
+void BridgeSunset::RequestPin(IScript::Request& request, IScript::Delegate<WarpTiny> source) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(source);
+
+	source->Flag().fetch_or(Tiny::TINY_PINNED);
+}
+
+void BridgeSunset::RequestUnpin(IScript::Request& request, IScript::Delegate<WarpTiny> source) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(source);
+
+	source->Flag().fetch_and(~Tiny::TINY_PINNED);
 }
 

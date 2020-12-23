@@ -89,7 +89,7 @@ void Entity::InitializeComponent(Engine& engine, Component* component) {
 	component->Initialize(engine, this);
 
 	// add component mask
-	Flag().fetch_or((component->GetEntityFlagMask() | TINY_MODIFIED), std::memory_order_relaxed);
+	Flag().fetch_or(component->GetEntityFlagMask(), std::memory_order_relaxed);
 
 	if (Flag().load(std::memory_order_acquire) & ENTITY_HAS_TACH_EVENT) {
 		Event event(engine, Event::EVENT_ATTACH_COMPONENT, this, component);
@@ -311,36 +311,31 @@ uint32_t Entity::GetPivotIndex() const {
 }
 
 void Entity::UpdateBoundingBox(Engine& engine, bool recursive) {
-	if (Flag().load(std::memory_order_acquire) & TINY_MODIFIED) {
-		// assert(IsOrphan());
+	if (Flag().load(std::memory_order_relaxed) & TINY_PINNED)
+		return;
 
-		if (IsOrphan()) {
-			Float3Pair box(Float3(FLT_MAX, FLT_MAX, FLT_MAX), Float3(-FLT_MAX, -FLT_MAX, -FLT_MAX));
-			// Since Transform component is always the first component (if exists)
-			// We iterate components from end to begin
-			for (size_t i = components.size(); i > 0; i--) {
-				Component* component = components[i - 1];
-				if (component != nullptr) {
-					assert(box.first.x() > -FLT_MAX && box.second.x() < FLT_MAX);
-					assert(box.first.y() > -FLT_MAX && box.second.y() < FLT_MAX);
-					assert(box.first.z() > -FLT_MAX && box.second.z() < FLT_MAX);
-					component->UpdateBoundingBox(engine, box, recursive);
-					assert(box.first.x() > -FLT_MAX && box.second.x() < FLT_MAX);
-					assert(box.first.y() > -FLT_MAX && box.second.y() < FLT_MAX);
-					assert(box.first.z() > -FLT_MAX && box.second.z() < FLT_MAX);
-				}
-			}
-
-			if (box.second.x() - box.first.x() >= 0) {
-				assert(box.first.x() > -FLT_MAX && box.second.x() < FLT_MAX);
-				assert(box.first.y() > -FLT_MAX && box.second.y() < FLT_MAX);
-				assert(box.first.z() > -FLT_MAX && box.second.z() < FLT_MAX);
-
-				SetKey(box);
-			}
+	Float3Pair box(Float3(FLT_MAX, FLT_MAX, FLT_MAX), Float3(-FLT_MAX, -FLT_MAX, -FLT_MAX));
+	// Since Transform component is always the first component (if exists)
+	// We iterate components from end to begin
+	for (size_t i = components.size(); i > 0; i--) {
+		Component* component = components[i - 1];
+		if (component != nullptr) {
+			assert(box.first.x() > -FLT_MAX && box.second.x() < FLT_MAX);
+			assert(box.first.y() > -FLT_MAX && box.second.y() < FLT_MAX);
+			assert(box.first.z() > -FLT_MAX && box.second.z() < FLT_MAX);
+			component->UpdateBoundingBox(engine, box, recursive);
+			assert(box.first.x() > -FLT_MAX && box.second.x() < FLT_MAX);
+			assert(box.first.y() > -FLT_MAX && box.second.y() < FLT_MAX);
+			assert(box.first.z() > -FLT_MAX && box.second.z() < FLT_MAX);
 		}
+	}
 
-		Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release);
+	if (box.second.x() - box.first.x() >= 0) {
+		assert(box.first.x() > -FLT_MAX && box.second.x() < FLT_MAX);
+		assert(box.first.y() > -FLT_MAX && box.second.y() < FLT_MAX);
+		assert(box.first.z() > -FLT_MAX && box.second.z() < FLT_MAX);
+
+		SetKey(box);
 	}
 }
 

@@ -13,7 +13,7 @@ local Database = require("Engine/Model/Database")
 function Scene.New(database : Database, clock : Clock) : Scene
 	local meta = {} as Scene
 	local rootEntity = MythForest.NewEntity(-1)
-	local spaceComponent = SpaceComponentModule.New(-1, true)
+	local spaceComponent = SpaceComponentModule.New(-1, false)
 	rootEntity:AddEntityComponent(spaceComponent as Component)
 	meta.spaceComponent = spaceComponent
 	meta.rootEntity = rootEntity
@@ -198,7 +198,7 @@ function Scene.New(database : Database, clock : Clock) : Scene
 				end
 
 				for _, entity in ipairs(entities) do
-					entity:UpdateEntity()
+					entity:UpdateEntity(true)
 					if hugeEntity[entity] then
 						subSpaceComponentHuge:InsertEntity(entity)
 					else
@@ -213,6 +213,7 @@ function Scene.New(database : Database, clock : Clock) : Scene
 				subRootEntity:AddEntityComponent(visibilityComponent as Component)
 				subRootEntity:AddEntityComponent(batchComponent as Component)
 				interSpaceComponent:InsertEntity(subRootEntity)
+				BridgeSunset.Pin(interSpaceComponent) -- all changes applied, turn it to static
 
 				coroutine.resume(running)
 			end)
@@ -231,6 +232,9 @@ function Scene.New(database : Database, clock : Clock) : Scene
 		coroutine.yield()
 
 		print("\tAdding lights")
+		local staticSpaceComponent = SpaceComponentModule.New(-1, true)
+		rootEntity:AddEntityComponent(staticSpaceComponent as Component)
+
 		local sun = MythForest.NewEntity(-(1))
 		local sunTransformComponent : TransformComponent = TransformComponentModule.New()
 		sunTransformComponent:SetScale({ 8, 8, 8 })
@@ -252,7 +256,7 @@ function Scene.New(database : Database, clock : Clock) : Scene
 		lightComponent:BindLightShadowStream(2, streamComponent2, { 1024, 1024 }, 0.25, 5)
 
 		sun:AddEntityComponent(lightComponent as Component)
-		spaceComponent:InsertEntity(sun)
+		staticSpaceComponent:InsertEntity(sun)
 
 		print("\tAdding point lights")
 		math.randomseed(20)
@@ -286,8 +290,10 @@ function Scene.New(database : Database, clock : Clock) : Scene
 			lightComponent:SetLightDirectional(false)
 			lightComponent:SetRenderPolicy(lightPolicy)
 			light:AddEntityComponent(lightComponent as Component)
-			spaceComponent:InsertEntity(light)
+			staticSpaceComponent:InsertEntity(light)
 		end
+
+		-- BridgeSunset.Pin(staticSpaceComponent)
 	end
 
 	return setmetatable(meta, Scene as METATABLE) as Scene
