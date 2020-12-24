@@ -8,6 +8,7 @@ local Core = require("Engine/Core")
 local ConnectionRecord = record
 	Source : string
 	Destination : string
+	Storage : any
 end
 
 local HttpRequestRecord = record
@@ -49,37 +50,16 @@ function Terminal:Broadcast(data : string)
 end
 
 -- Add a connection terminal to current terminal
-function Terminal:AddConnection(connection : Connection)
-	self.Peers[connection] = connection:GetConnectionAddresses() as ConnectionRecord
+function Terminal:AddConnection(connection : Connection, storage : any)
+	local rec = connection:GetConnectionAddresses() as ConnectionRecord
+	rec.Storage = storage
+	self.Peers[connection] = rec
 end
 
 -- Remove a connection terminal from current terminal
 function Terminal:RemoveConnection(connection : Connection)
 	if connection then
 		self.Peers[connection] = nil
-	end
-end
-
--- Handle and dispatch http events, it's an internal function.
-function Terminal:EventHandlerHttp(connection : Connection, status : string) : boolean
-	if status == "Connected" then
-		local info = connection:GetConnectionAddresses() as ConnectionRecord
-		if self.StateHandler(connection, true, info.Source, info.Destination) then
-			self:AddConnection(connection)
-		end
-	end
-
-	if status == "Read" or status == "Connected" then
-		local request = connection:ReadConnectionHttpRequest() as HttpRequestRecord
-		local code, data, reason, header = self.DataHandler(connection, request.Uri, request.Method, request.Header, request.Data)
-		connection:WriteConnectionHttpResponse(code, reason, header as {any}, data)
-		return true
-	elseif status == "Close" or status == "Error" then
-		self.StateHandler(connection, false, "", "")
-		self:RemoveConnection(connection)
-		return false
-	else
-		return false
 	end
 end
 
@@ -100,6 +80,59 @@ function Terminal:EventHandler(connection : Connection, status : string) : boole
 		return false
 	end
 end
+
+function Terminal:Connect(ip : string) : Connection
+	local instance = coroutine.running()
+	local connection : Connection = self.Dispatcher:OpenConnection(ip, false, function (connection : Connection, status : string)
+		local success = self:EventHandler(connection, status)
+		if status == "Connected" then
+			coroutine.resume(instance, success)
+		end
+	end, true)
+
+	-- establishing
+	connection:ActivateConnection()
+
+	if coroutine.yield() then
+		self:AddConnection(connection)
+		return connection
+	else
+		connection:DeactivateConnection()
+		return nil
+	end
+end
+
+function Terminal:Disconnect(connection : Connection)
+	self:RemoveConnection(connection)
+	connection:DeactivateConnection()
+end
+
+-- Handle and dispatch http events, it's an internal function.
+function Terminal:EventHandlerHttp(connection : Connection, status : string) : boolean
+	if status == "Connected" then
+		local info = connection:GetConnectionAddresses() as ConnectionRecord
+		local storage = self.StateHandler(connection, true, info.Source, info.Destination)
+		if storage then
+			self:AddConnection(connection, storage)
+		else
+			self:Disconnect(connection)
+		end
+	end
+
+	if status == "Read" or status == "Connected" then
+		local request = connection:ReadConnectionHttpRequest() as HttpRequestRecord
+		local code, data, reason, header = self.DataHandler(connection, request.Uri, request.Method, request.Header, request.Data)
+		connection:WriteConnectionHttpResponse(code, reason, header as {any}, data)
+		return true
+	elseif status == "Close" or status == "Error" then
+		self.StateHandler(connection, false, "", "")
+		self:RemoveConnection(connection)
+		return false
+	else
+		return false
+	end
+end
+
 
 function Terminal:HttpRequest(host : string, path : string, method : string,
 	options : { string : string }, header : { string : string }, callback : function (string) : (any) ) : Connection
@@ -132,64 +165,43 @@ function Terminal:HttpRequest(host : string, path : string, method : string,
 	return connection
 end
 
-function Terminal:Connect(ip : string) : Connection
-	local instance = coroutine.running()
-	local connection : Connection = self.Dispatcher:OpenConnection(ip, false, function (connection : Connection, status : string)
-		local success = self:EventHandler(connection, status)
-		if status == "Connected" then
-			coroutine.resume(instance, success)
-		end
-	end, true)
-
-	-- establishing
-	connection:ActivateConnection()
-
-	if coroutine.yield() then
-		return connection
-	else
-		connection:DeactivateConnection()
-		return nil
-	end
-end
-
-function Terminal:Disconnect(connection : Connection)
-	self.Peers[connection] = nil
-	connection:DeactivateConnection()
-end
-
 function Terminal.New(dispatcher : WorkDispatcher, ip : string, 
 			dataHandler : any,
-			stateHandler : function (any, boolean, string, string) : (boolean),
+			stateHandler : function (Connection, boolean, string, string) : (any),
 			http : boolean) : Terminal
 	local instance = coroutine.running()
 	local eventHandler = http and Terminal.EventHandlerHttp or Terminal.EventHandler
 	local terminal = setmetatable({ IP = ip, Peers = {}, DataHandler = dataHandler, StateHandler = stateHandler, Dispatcher = dispatcher }, Terminal as METATABLE) as Terminal
 
-	local listener : Listener = dispatcher:OpenListener(ip, http, function (listener : Listener, event : string)
-		if event == "Connected" then
-			print("Listener created on IP: " .. listener:GetListenerAddress())
-			coroutine.resume(instance)
+	if ip then
+		local listener : Listener = dispatcher:OpenListener(ip, http, function (listener : Listener, event : string)
+			if event == "Connected" then
+				print("Listener created on IP: " .. listener:GetListenerAddress())
+				coroutine.resume(instance)
+			end
+		end, function (listener : Listener, connection : Connection)
+			-- do not add connection here
+			-- wait for actual event
+			-- EchoLegend.WriteConnectionRecord(connection, "Hello")
+			-- print("NEW CONNECTION")
+			eventHandler(terminal, connection, "Connected")
+		end, function (connection : Connection, status : string)
+			--print("SERVER GOT" .. status)
+			eventHandler(terminal, connection, status)
+		end, true)
+
+		if listener then
+			listener:ActivateListener()
+			print("Listener activated")
+
+			coroutine.yield()
+			return terminal
+		else
+			print("Create listener failed!")
+			return nil
 		end
-	end, function (listener : Listener, connection : Connection)
-		-- do not add connection here
-		-- wait for actual event
-		-- EchoLegend.WriteConnectionRecord(connection, "Hello")
-		-- print("NEW CONNECTION")
-		eventHandler(terminal, connection, "Connected")
-	end, function (connection : Connection, status : string)
-		--print("SERVER GOT" .. status)
-		eventHandler(terminal, connection, status)
-	end, true)
-
-	if listener then
-		listener:ActivateListener()
-		print("Listener activated")
-
-		coroutine.yield()
-		return terminal
 	else
-		print("Create listener failed!")
-		return nil
+		return terminal
 	end
 end
 
