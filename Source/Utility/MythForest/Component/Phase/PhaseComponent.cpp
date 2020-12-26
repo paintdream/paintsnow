@@ -55,7 +55,7 @@ void PhaseComponentConfig::InstanceGroup::Reset() {
 	instanceCount = 0;
 }
 
-PhaseComponent::PhaseComponent(const TShared<RenderFlowComponent>& renderFlow, const String& portName) : hostEntity(nullptr), maxTracePerTick(8), renderQueue(nullptr), stateResource(nullptr), stateShadowResource(nullptr), range(32, 32, 32), resolution(512, 512), lightCollector(this), renderFlowComponent(std::move(renderFlow)), lightPhaseViewPortName(portName), rootEntity(nullptr) {}
+PhaseComponent::PhaseComponent(const TShared<RenderFlowComponent>& renderFlow, const String& portName) : hostEntity(nullptr), maxTracePerTick(8), renderQueue(nullptr), stateSetupResource(nullptr), statePostResource(nullptr), stateShadowResource(nullptr), range(32, 32, 32), resolution(512, 512), lightCollector(this), renderFlowComponent(std::move(renderFlow)), lightPhaseViewPortName(portName), rootEntity(nullptr) {}
 
 PhaseComponent::~PhaseComponent() {}
 
@@ -78,7 +78,7 @@ void PhaseComponent::Initialize(Engine& engine, Entity* entity) {
 		IRender::Device* device = engine.snowyStream.GetRenderDevice();
 		renderQueue = render.CreateQueue(device);
 
-		stateResource = render.CreateResource(device, IRender::Resource::RESOURCE_RENDERSTATE);
+		statePostResource = render.CreateResource(device, IRender::Resource::RESOURCE_RENDERSTATE);
 		IRender::Resource::RenderStateDescription state;
 		state.cull = 1;
 		state.fill = 1;
@@ -88,8 +88,20 @@ void PhaseComponent::Initialize(Engine& engine, Entity* entity) {
 		state.depthWrite = 0;
 		state.stencilTest = IRender::Resource::RenderStateDescription::DISABLED;
 		state.stencilWrite = 0;
-		render.UploadResource(renderQueue, stateResource, &state);
+		render.UploadResource(renderQueue, statePostResource, &state);
 
+		stateSetupResource = render.CreateResource(device, IRender::Resource::RESOURCE_RENDERSTATE);
+		state.cull = 1;
+		state.fill = 1;
+		state.blend = 0;
+		state.colorWrite = 1;
+		state.depthTest = IRender::Resource::RenderStateDescription::GREATER_EQUAL;
+		state.depthWrite = 1;
+		state.stencilTest = IRender::Resource::RenderStateDescription::DISABLED;
+		state.stencilWrite = 0;
+		render.UploadResource(renderQueue, stateSetupResource, &state);
+
+		stateShadowResource = render.CreateResource(device, IRender::Resource::RESOURCE_RENDERSTATE);
 		state.cull = 1;
 		state.fill = 1;
 		state.blend = 0;
@@ -99,7 +111,6 @@ void PhaseComponent::Initialize(Engine& engine, Entity* entity) {
 		state.stencilTest = IRender::Resource::RenderStateDescription::DISABLED;
 		state.stencilWrite = 0;
 		state.cullFrontFace = 1;
-		stateShadowResource = render.CreateResource(device, IRender::Resource::RESOURCE_RENDERSTATE);
 		render.UploadResource(renderQueue, stateShadowResource, &state);
 	}
 }
@@ -133,11 +144,12 @@ void PhaseComponent::Uninitialize(Engine& engine, Entity* entity) {
 
 		phases.clear();
 
-		render.DeleteResource(queue, stateResource);
+		render.DeleteResource(queue, stateSetupResource);
+		render.DeleteResource(queue, statePostResource);
 		render.DeleteResource(queue, stateShadowResource);
 		render.DeleteQueue(renderQueue);
 
-		stateResource = stateShadowResource = nullptr;
+		stateSetupResource = statePostResource = stateShadowResource = nullptr;
 		renderQueue = nullptr;
 		hostEntity = nullptr;
 
@@ -197,6 +209,7 @@ void PhaseComponent::Setup(Engine& engine, uint32_t phaseCount, uint32_t taskCou
 
 		phase.depth = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseDepth", &phase), false, ResourceBase::RESOURCE_VIRTUAL);
 
+		phase.depth->description.state.immutable = false;
 		phase.depth->description.state.attachment = true;
 		phase.depth->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
 		phase.depth->description.state.format = IRender::Resource::TextureDescription::FLOAT;
@@ -205,6 +218,7 @@ void PhaseComponent::Setup(Engine& engine, uint32_t phaseCount, uint32_t taskCou
 		phase.depth->GetResourceManager().InvokeUpload(phase.depth(), renderQueue);
 
 		phase.irradiance = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseIrradiance", &phase), false, ResourceBase::RESOURCE_VIRTUAL);
+		phase.irradiance->description.state.immutable = false;
 		phase.irradiance->description.state.attachment = true;
 		phase.irradiance->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
 		phase.irradiance->description.state.format = IRender::Resource::TextureDescription::HALF;
@@ -213,6 +227,7 @@ void PhaseComponent::Setup(Engine& engine, uint32_t phaseCount, uint32_t taskCou
 		phase.irradiance->GetResourceManager().InvokeUpload(phase.irradiance(), renderQueue);
 
 		phase.baseColorOcclusion = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseBaseColorOcclusion", &phase), false, ResourceBase::RESOURCE_VIRTUAL);
+		phase.baseColorOcclusion->description.state.immutable = false;
 		phase.baseColorOcclusion->description.state.attachment = true;
 		phase.baseColorOcclusion->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
 		phase.baseColorOcclusion->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
@@ -221,6 +236,7 @@ void PhaseComponent::Setup(Engine& engine, uint32_t phaseCount, uint32_t taskCou
 		phase.baseColorOcclusion->GetResourceManager().InvokeUpload(phase.baseColorOcclusion(), renderQueue);
 
 		phase.normalRoughnessMetallic = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseNormalRoughness", &phase), false, ResourceBase::RESOURCE_VIRTUAL);
+		phase.normalRoughnessMetallic->description.state.immutable = false;
 		phase.normalRoughnessMetallic->description.state.attachment = true;
 		phase.normalRoughnessMetallic->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
 		phase.normalRoughnessMetallic->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
@@ -314,10 +330,18 @@ void PhaseComponent::TickRender(Engine& engine) {
 	}
 }
 
+static String ParseStageFromTexturePath(const String& path) {
+	char stage[256] = "Unknown";
+	const char* p = path.c_str() + 17;
+	while (*p != '/') p++;
+
+	return String(path.c_str() + 17, p);
+}
+
 void PhaseComponent::CoTaskWriteDebugTexture(Engine& engine, uint32_t index, Bytes& data, const TShared<TextureResource>& texture) {
 	if (!debugPath.empty()) {
 		std::stringstream ss;
-		ss << debugPath << "phase_" << index << ".png";
+		ss << debugPath << "phase_" << index << "_" << ParseStageFromTexturePath(texture->GetLocation()) << ".png";
 		uint64_t length;
 		IStreamBase* stream = engine.interfaces.archive.Open(StdToUtf8(ss.str()), true, length);
 		IRender::Resource::TextureDescription& description = texture->description;
@@ -457,7 +481,7 @@ void PhaseComponent::TaskAssembleTaskBounce(Engine& engine, TaskData& task, cons
 
 	// changing state
 	render.UploadResource(task.renderQueue, task.renderTarget, &desc);
-	render.ExecuteResource(task.renderQueue, stateResource);
+	render.ExecuteResource(task.renderQueue, statePostResource);
 	render.ExecuteResource(task.renderQueue, task.renderTarget);
 
 	// encode draw call
@@ -489,18 +513,18 @@ void PhaseComponent::CoTaskAssembleTaskShadow(Engine& engine, TaskData& task, co
 	task.pipeline = shadowPipeline();
 	task.texture = shadow.shadow;
 	// task.texture = nullptr;
-	Collect(engine, task, shadow.viewProjectionMatrix);
+	Collect(engine, task, shadow.viewMatrix, shadow.projectionMatrix);
 }
 
 void PhaseComponent::CompleteCollect(Engine& engine, TaskData& taskData) {}
 
-void PhaseComponent::Collect(Engine& engine, TaskData& taskData, const MatrixFloat4x4& viewProjectionMatrix) {
+void PhaseComponent::Collect(Engine& engine, TaskData& taskData, const MatrixFloat4x4& viewMatrix, const MatrixFloat4x4& projectionMatrix) {
 	PerspectiveCamera camera;
 	CaptureData captureData;
-	camera.UpdateCaptureData(captureData, viewProjectionMatrix);
+	camera.UpdateCaptureData(captureData, Math::QuickInverse(viewMatrix));
 	assert(rootEntity->GetWarpIndex() == GetWarpIndex());
 	WorldInstanceData instanceData;
-	instanceData.worldMatrix = viewProjectionMatrix;
+	instanceData.worldMatrix = viewMatrix;
 	std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(taskData.status);
 	finalStatus.store(TaskData::STATUS_ASSEMBLING, std::memory_order_release);
 
@@ -522,17 +546,24 @@ void PhaseComponent::CoTaskAssembleTaskSetup(Engine& engine, TaskData& task, con
 	for (size_t k = 0; k < sizeof(rt) / sizeof(rt[0]); k++) {
 		IRender::Resource::RenderTargetDescription::Storage storage;
 		storage.resource = rt[k]->GetRenderResource();
+		storage.loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
+		storage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 		desc.colorStorages.emplace_back(storage);
 	}
 
+	desc.depthStorage.resource = phase.depth->GetRenderResource();
+	desc.depthStorage.loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
+	desc.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
+
 	render.UploadResource(task.renderQueue, task.renderTarget, &desc);
-	render.ExecuteResource(task.renderQueue, stateResource);
+	render.ExecuteResource(task.renderQueue, stateSetupResource);
 	render.ExecuteResource(task.renderQueue, task.renderTarget);
 
 	task.texture = phase.baseColorOcclusion;
 	task.pipeline = setupPipeline();
 	task.camera = phase.camera;
-	Collect(engine, task, phase.viewProjectionMatrix);
+	task.worldGlobalData.noiseTexture.resource = phase.noiseTexture->GetRenderResource();
+	Collect(engine, task, phase.viewMatrix, phase.projectionMatrix);
 }
 
 void PhaseComponent::DispatchTasks(Engine& engine) {
@@ -544,22 +575,21 @@ void PhaseComponent::DispatchTasks(Engine& engine) {
 		TaskData& task = tasks[n];
 		std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(task.status);
 		if (task.status == TaskData::STATUS_START) {
-			finalStatus.store(TaskData::STATUS_DISPATCHED, std::memory_order_relaxed);
-
 			if (!bakePointShadows.empty()) {
+				finalStatus.store(TaskData::STATUS_DISPATCHED, std::memory_order_relaxed);
 				const UpdatePointShadow& shadow = bakePointShadows.top();
 				threadPool.Push(CreateCoTaskContextFree(kernel, Wrap(this, &PhaseComponent::CoTaskAssembleTaskShadow), std::ref(engine), std::ref(task), shadow));
 				bakePointShadows.pop();
 			} else if (!bakePointSetups.empty()) {
+				finalStatus.store(TaskData::STATUS_DISPATCHED, std::memory_order_relaxed);
 				const UpdatePointSetup& setup = bakePointSetups.top();
 				threadPool.Push(CreateCoTaskContextFree(kernel, Wrap(this, &PhaseComponent::CoTaskAssembleTaskSetup), std::ref(engine), std::ref(task), setup));
 				bakePointSetups.pop();
 			} else if (!bakePointBounces.empty()) {
+				finalStatus.store(TaskData::STATUS_DISPATCHED, std::memory_order_relaxed);
 				const UpdatePointBounce& bounce = bakePointBounces.top();
 				TaskAssembleTaskBounce(engine, task, bounce);
 				bakePointBounces.pop();
-			} else {
-				finalStatus.store(TaskData::STATUS_DISPATCHED, std::memory_order_relaxed);
 			}
 		}
 	}
@@ -632,17 +662,42 @@ void PhaseComponent::CollectRenderableComponent(Engine& engine, TaskData& taskDa
 							desc.data = std::move(data);
 							IRender::Resource* res = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_BUFFER);
 							render.UploadResource(queue, res, &desc);
-							ip->second.buffers[i] = res;
+							ip->second.buffers[i].buffer = res;
 							warpData.runtimeResources.emplace_back(res);
+						}
+					}
+
+					if (!textureResources.empty()) {
+						ip->second.textures.resize(updater.GetTextureCount());
+						for (size_t j = 0; j < textureResources.size(); j++) {
+							IRender::Resource* res = textureResources[j];
+							if (res != nullptr) {
+								ip->second.textures[j] = res;
+							}
+						}
+					}
+
+					for (size_t k = 0; k < bufferResources.size(); k++) {
+						IRender::Resource::DrawCallDescription::BufferRange& range = bufferResources[k];
+						if (range.buffer != nullptr) {
+							ip->second.buffers[k] = range;
+						}
+					}
+				}
+
+				if (!ip->second.textures.empty()) {
+					for (size_t m = 0; m < group.drawCallDescription.textureCount; m++) {
+						IRender::Resource*& texture = m < sizeof(group.drawCallDescription.textureResources) / sizeof(group.drawCallDescription.textureResources[0]) ? group.drawCallDescription.textureResources[m] : group.drawCallDescription.extraTextureResources[m - sizeof(group.drawCallDescription.textureResources) / sizeof(group.drawCallDescription.textureResources[0])];
+						if (ip->second.textures[m] != nullptr) {
+							texture = ip->second.textures[m];
 						}
 					}
 				}
 
 				for (size_t n = 0; n < group.drawCallDescription.bufferCount; n++) {
 					IRender::Resource::DrawCallDescription::BufferRange& bufferRange = n < sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0]) ? group.drawCallDescription.bufferResources[n] : group.drawCallDescription.extraBufferResources[n - sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0])];
-					if (ip->second.buffers[n] != nullptr) {
-						bufferRange.buffer = ip->second.buffers[n];
-						bufferRange.offset = bufferRange.length = 0;
+					if (ip->second.buffers[n].buffer != nullptr) {
+						bufferRange = ip->second.buffers[n];
 					}
 				}
 
@@ -666,6 +721,7 @@ void PhaseComponent::CompleteUpdateLights(Engine& engine, std::vector<LightEleme
 		const LightElement& lightElement = elements[i];
 		if (!shadow.shadow) {
 			shadow.shadow = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("PhaseShadow", &shadow), false, ResourceBase::RESOURCE_VIRTUAL);
+			shadow.shadow->description.state.immutable = false;
 			shadow.shadow->description.state.attachment = true;
 			shadow.shadow->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
 			shadow.shadow->description.state.format = IRender::Resource::TextureDescription::FLOAT;
@@ -690,7 +746,9 @@ void PhaseComponent::CompleteUpdateLights(Engine& engine, std::vector<LightEleme
 
 		Float3 up(RandFloat(), RandFloat(), RandFloat());
 
-		shadow.viewProjectionMatrix = Math::MatrixLookAt(view, dir, up) * projectionMatrix;
+		shadow.viewMatrix = Math::MatrixLookAt(view, dir, up);
+		shadow.projectionMatrix = projectionMatrix;
+
 		UpdatePointShadow bakePointShadow;
 		bakePointShadow.shadowIndex = safe_cast<uint32_t>(i);
 		bakePointShadows.push(bakePointShadow);
@@ -780,8 +838,8 @@ void PhaseComponent::Update(Engine& engine, const Float3& center) {
 	bakePointSetups = std::stack<UpdatePointSetup>();
 
 	PerspectiveCamera camera;
-	camera.nearPlane = 0.01f;
-	camera.farPlane = 1000.0f;
+	camera.nearPlane = 0.1f;
+	camera.farPlane = 100.0f;
 	camera.aspect = 1.0f;
 	camera.fov = PI / 2;
 
@@ -798,7 +856,7 @@ void PhaseComponent::Update(Engine& engine, const Float3& center) {
 
 		phases[i].camera = camera;
 		phases[i].projectionMatrix = projectionMatrix;
-		phases[i].viewProjectionMatrix = Math::MatrixLookAt(view + center, dir + center, up) * projectionMatrix;
+		phases[i].viewMatrix = Math::MatrixLookAt(view + center, dir, up);
 	}
 
 	lightCollector.InvokeCollect(engine, rootEntity);

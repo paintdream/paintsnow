@@ -71,7 +71,6 @@ namespace PaintsNow {
 
 				struct GlobalBufferItem {
 					PassBase::PartialUpdater instanceUpdater;
-					std::vector<IRender::Resource*> buffers;
 				};
 
 				std::map<ShaderResource*, GlobalBufferItem> worldGlobalBufferMap;

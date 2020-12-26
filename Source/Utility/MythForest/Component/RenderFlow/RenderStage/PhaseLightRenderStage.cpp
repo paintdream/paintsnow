@@ -49,7 +49,7 @@ void PhaseLightRenderStage::Update(Engine& engine, IRender::Queue* queue) {
 	for (size_t i = 0; i < phases.size(); i++) {
 		const RenderPortPhaseLightView::PhaseInfo& phase = phases[i];
 		// Set params
-		fs.srcProjection = CameraView->inverseViewMatrix * phase.viewProjectionMatrix;
+		fs.srcProjection = CameraView->inverseViewMatrix * phase.viewMatrix * phase.projectionMatrix;
 		fs.srcInverseProjection = Math::Inverse(fs.srcProjection);
 		UShort3& dim = phase.irradiance->description.dimension;
 		Float2 inv(1.0f / dim.x(), 1.0f / dim.y());

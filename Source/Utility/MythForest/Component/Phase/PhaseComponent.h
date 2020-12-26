@@ -76,7 +76,8 @@ namespace PaintsNow {
 			struct GlobalBufferItem {
 				PassBase::PartialUpdater globalUpdater;
 				PassBase::PartialUpdater instanceUpdater;
-				std::vector<IRender::Resource*> buffers;
+				std::vector<IRender::Resource::DrawCallDescription::BufferRange> buffers;
+				std::vector<IRender::Resource*> textures;
 			};
 
 			BytesCache bytesCache;
@@ -184,7 +185,8 @@ namespace PaintsNow {
 		};
 
 		struct Shadow {
-			MatrixFloat4x4 viewProjectionMatrix;
+			MatrixFloat4x4 viewMatrix;
+			MatrixFloat4x4 projectionMatrix;
 			TShared<TextureResource> shadow;
 			LightElement lightElement;
 		};
@@ -205,7 +207,7 @@ namespace PaintsNow {
 		void CoTaskAssembleTaskSetup(Engine& engine, TaskData& task, const UpdatePointSetup& bakePoint);
 		void CoTaskAssembleTaskShadow(Engine& engine, TaskData& task, const UpdatePointShadow& bakePoint);
 		void TaskAssembleTaskBounce(Engine& engine, TaskData& task, const UpdatePointBounce& bakePoint);
-		void Collect(Engine& engine, TaskData& taskData, const MatrixFloat4x4& viewProjectionMatrix);
+		void Collect(Engine& engine, TaskData& taskData, const MatrixFloat4x4& viewMatrix, const MatrixFloat4x4& projectionMatrix);
 
 		void CollectRenderableComponent(Engine& engine, TaskData& task, RenderableComponent* renderableComponent, WorldInstanceData& instanceData);
 		void CollectComponents(Engine& engine, TaskData& task, const WorldInstanceData& instanceData, const CaptureData& captureData, Entity* entity);
@@ -219,7 +221,8 @@ namespace PaintsNow {
 		UShort2 resolution;
 		Float3 range;
 		IRender::Queue* renderQueue;
-		IRender::Resource* stateResource;
+		IRender::Resource* stateSetupResource;
+		IRender::Resource* statePostResource;
 		IRender::Resource* stateShadowResource;
 
 		TShared<ShaderResourceImpl<MultiHashTracePass> > tracePipeline;

@@ -496,7 +496,7 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 							desc.dynamic = 1;
 							desc.format = IRender::Resource::BufferDescription::FLOAT;
 							desc.data = std::move(data);
-							render.UploadResource(queue, it->second.buffers[i], &desc);
+							render.UploadResource(queue, it->second.buffers[i].buffer, &desc);
 						}
 					}
 				}
@@ -651,17 +651,42 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 						desc.data = std::move(data);
 						IRender::Resource* res = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_BUFFER);
 						render.UploadResource(queue, res, &desc);
-						ig->second.buffers[i] = res;
+						ig->second.buffers[i].buffer = res;
 						policyData.runtimeResources.emplace_back(res);
+					}
+				}
+
+				if (!textureResources.empty()) {
+					ig->second.textures.resize(updater.GetTextureCount());
+					for (size_t j = 0; j < textureResources.size(); j++) {
+						IRender::Resource* res = textureResources[j];
+						if (res != nullptr) {
+							ig->second.textures[j] = res;
+						}
+					}
+				}
+
+				for (size_t k = 0; k < bufferResources.size(); k++) {
+					IRender::Resource::DrawCallDescription::BufferRange& range = bufferResources[k];
+					if (range.buffer != nullptr) {
+						ig->second.buffers[k] = range;
+					}
+				}
+			}
+
+			if (!ig->second.textures.empty()) {
+				for (size_t m = 0; m < group.drawCallDescription.textureCount; m++) {
+					IRender::Resource*& texture = m < sizeof(group.drawCallDescription.textureResources) / sizeof(group.drawCallDescription.textureResources[0]) ? group.drawCallDescription.textureResources[m] : group.drawCallDescription.extraTextureResources[m - sizeof(group.drawCallDescription.textureResources) / sizeof(group.drawCallDescription.textureResources[0])];
+					if (ig->second.textures[m] != nullptr) {
+						texture = ig->second.textures[m];
 					}
 				}
 			}
 
 			for (size_t n = 0; n < group.drawCallDescription.bufferCount; n++) {
 				IRender::Resource::DrawCallDescription::BufferRange& bufferRange = n < sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0]) ? group.drawCallDescription.bufferResources[n] : group.drawCallDescription.extraBufferResources[n - sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0])];
-				if (ig->second.buffers[n] != nullptr) {
-					bufferRange.buffer = ig->second.buffers[n];
-					bufferRange.offset = bufferRange.length = 0;
+				if (ig->second.buffers[n].buffer != nullptr) {
+					bufferRange = ig->second.buffers[n];
 				}
 			}
 

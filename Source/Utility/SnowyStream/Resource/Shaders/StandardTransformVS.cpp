@@ -116,7 +116,7 @@ TObject<IReflect>& StandardTransformVS::operator () (IReflect& reflect) {
 		ReflectProperty(vertexColor)[vertexColorBuffer][BindInput(BindInput::COLOR)];
 		ReflectProperty(vertexTexCoord)[vertexTexCoordBuffer][BindInput(BindInput::TEXCOORD)];
 
-		static std::vector<float4x4> boneMatries(128); // Just make reflection happy
+		singleton std::vector<float4x4> boneMatries(128); // Just make reflection happy
 		ReflectProperty(boneMatries)[BindEnable(enableSkinning)][boneMatricesBuffer][BindInput(BindInput::BONE_TRANSFORMS)];
 		ReflectProperty(boneIndex)[BindEnable(enableSkinning)][boneIndexBuffer][BindInput(BindInput::BONE_INDEX)];
 		ReflectProperty(boneWeight)[BindEnable(enableSkinning)][boneWeightBuffer][BindInput(BindInput::BONE_WEIGHT)];

@@ -16,7 +16,7 @@ namespace PaintsNow {
 		RenderPortPhaseLightView();
 
 		struct PhaseInfo {
-			MatrixFloat4x4 viewProjectionMatrix;
+			MatrixFloat4x4 viewMatrix;
 			MatrixFloat4x4 projectionMatrix;
 			TShared<TextureResource> irradiance;
 			TShared<TextureResource> depth;

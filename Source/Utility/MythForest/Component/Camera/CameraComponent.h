@@ -117,7 +117,8 @@ namespace PaintsNow {
 					IRender::Queue* renderQueue;
 					PassBase::PartialUpdater globalUpdater;
 					PassBase::PartialUpdater instanceUpdater;
-					std::vector<IRender::Resource*> buffers;
+					std::vector<IRender::Resource::DrawCallDescription::BufferRange> buffers;
+					std::vector<IRender::Resource*> textures;
 				};
 
 				std::vector<std::key_value<ShaderResource*, GlobalBufferItem> > worldGlobalBufferMap;

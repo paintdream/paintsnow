@@ -106,7 +106,7 @@ local function InitializeWorld(databasePath : string)
 	
 	local phaseComponent = cameraController.phaseComponent
 	phaseComponent:BindRootEntity(scene.rootEntity)
-	--phaseComponent:Update({ 5, 1.5, 5})
+	phaseComponent:SetDebugMode("./phases/")
 
 	local lastMousePos = { 0, 0 }
 	local moveSpeed = 1.0
@@ -243,6 +243,9 @@ local function InitializeWorld(databasePath : string)
 
 	player.cameraController.entity:AddEntityComponent(scriptComponent as Component)
 	scene.rootEntity:UpdateEntity(true)
+	Debug.StartPhase = function ()
+		phaseComponent:Update({ 5, 1.5, 5})
+	end
 
 	print("InitializeWorld: World initialization finished. Waiting for system command")
 

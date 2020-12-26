@@ -197,9 +197,19 @@ void PassBase::Updater::Property(IReflectObject& s, Unique typeID, Unique refTyp
 		}
 
 		if (typeID == UniqueType<IShader::BindBuffer>::Get()) {
-			const IShader::BindBuffer* buffer = static_cast<IShader::BindBuffer*>(&s);
+			IShader::BindBuffer* buffer = static_cast<IShader::BindBuffer*>(&s);
+			output.resourceType = safe_cast<uint8_t>(IRender::Resource::RESOURCE_BUFFER);
+			output.slot = safe_cast<uint8_t>(buffers.size());
+			output.offset = 0;
+			output.internalAddress = &buffer->resource;
+			output.type = UniqueType<IRender::Resource*>::Get();
+
+			std::binary_insert(mapParametersSchema, std::make_key_value(schema, (uint32_t)safe_cast<uint32_t>(parameters.size())));
+			std::binary_insert(mapParametersKey, std::make_key_value(byteName, (uint32_t)safe_cast<uint32_t>(parameters.size())));
+			parameters.emplace_back(output);
+
 			uint32_t id = safe_cast<uint32_t>(bufferIDSize.size());
-			std::binary_insert(bufferIDSize, std::make_key_value(buffer, std::make_pair((uint16_t)id, (uint16_t)0)));
+			std::binary_insert(bufferIDSize, std::make_key_value((const IShader::BindBuffer*)buffer, std::make_pair((uint16_t)id, (uint16_t)0)));
 			buffers.emplace_back(buffer);
 		} else if (typeID == UniqueType<IShader::BindTexture>::Get()) {
 			IShader::BindTexture* texture = static_cast<IShader::BindTexture*>(&s);
@@ -283,10 +293,12 @@ void PassBase::Updater::Capture(IRender::Resource::DrawCallDescription& drawCall
 
 	drawCallDescription.bufferCount = safe_cast<uint16_t>(buffers.size());
 	drawCallDescription.textureCount = safe_cast<uint16_t>(textureCount);
+	singleton Unique uniqueResource = UniqueType<IRender::Resource*>::Get();
 
 	for (uint32_t k = 0; k < quickUpdaters.size(); k++) {
 		const Parameter& parameter = parameters[quickUpdaters[k]];
 		if (parameter.resourceType == IRender::Resource::RESOURCE_TEXTURE) {
+			assert(parameter.type == uniqueResource);
 			if (parameter.slot >= sizeof(drawCallDescription.textureResources) / sizeof(drawCallDescription.textureResources[0])) {
 				drawCallDescription.extraTextureResources.resize(parameter.slot + 1 - sizeof(drawCallDescription.textureResources) / sizeof(drawCallDescription.textureResources[0]));
 				drawCallDescription.extraTextureResources[parameter.slot - sizeof(drawCallDescription.textureResources) / sizeof(drawCallDescription.textureResources[0])] = *reinterpret_cast<IRender::Resource**>(parameter.internalAddress);
@@ -294,16 +306,18 @@ void PassBase::Updater::Capture(IRender::Resource::DrawCallDescription& drawCall
 				drawCallDescription.textureResources[parameter.slot] = *reinterpret_cast<IRender::Resource**>(parameter.internalAddress);
 			}
 		} else if (parameter.resourceType == IRender::Resource::RESOURCE_BUFFER) {
-			assert(parameter.slot < buffers.size());
-			const IShader::BindBuffer* bindBuffer = buffers[parameter.slot];
-			if ((bufferMask & (1 << bindBuffer->description.usage)) && bindBuffer->resource == nullptr) {
-				if (bufferData.size() <= parameter.slot) {
-					bufferData.resize(parameter.slot + 1);
-				}
+			if (parameter.type != uniqueResource) {
+				assert(parameter.slot < buffers.size());
+				const IShader::BindBuffer* bindBuffer = buffers[parameter.slot];
+				if ((bufferMask & (1 << bindBuffer->description.usage)) && bindBuffer->resource == nullptr) {
+					if (bufferData.size() <= parameter.slot) {
+						bufferData.resize(parameter.slot + 1);
+					}
 
-				Bytes& s = bufferData[parameter.slot];
-				if (s.Empty()) s.Resize(parameter.stride);
-				memcpy(s.GetData() + parameter.offset, parameter.internalAddress, parameter.linearLayout ? parameter.stride : parameter.length);
+					Bytes& s = bufferData[parameter.slot];
+					if (s.Empty()) s.Resize(parameter.stride);
+					memcpy(s.GetData() + parameter.offset, parameter.internalAddress, parameter.linearLayout ? parameter.stride : parameter.length);
+				}
 			}
 		}
 	}
@@ -506,27 +520,30 @@ struct CachedSnapshot : public CachedSnapshotBase<useBytesCache> {
 	using CachedSnapshotBase<useBytesCache>::currentBufferData;
 	CachedSnapshot(BytesCache* bytesCache) : CachedSnapshotBase<useBytesCache>(bytesCache) {}
 	void Snapshot(const std::vector<PassBase::Parameter>& parameters, std::vector<Bytes>& bufferData, std::vector<IRender::Resource::DrawCallDescription::BufferRange>& bufferResources, std::vector<IRender::Resource*>& textureResources, const PassBase::PartialData& partialData, BytesCache* bytesCache) {
-		singleton Unique uniqueBindBuffer = UniqueType<IShader::BindBuffer>::Get();
-		singleton Unique uniqueBindTexture = UniqueType<IShader::BindTexture>::Get();
+		singleton Unique uniqueResource = UniqueType<IRender::Resource*>::Get();
 		for (uint32_t i = 0; i < parameters.size(); i++) {
 			const PassBase::Parameter& parameter = parameters[i];
-			if (parameter.type == uniqueBindBuffer) {
-				const IShader::BindBuffer* buffer = reinterpret_cast<const IShader::BindBuffer*>((const char*)&partialData + (size_t)parameter.internalAddress);
-				if (bufferResources.size() <= parameter.slot) {
-					bufferResources.resize(parameter.slot + 1);
-				}
+			if (parameter.type == uniqueResource) {
+				if (parameter.resourceType == IRender::Resource::RESOURCE_BUFFER) {
+					const IShader::BindBuffer* buffer = reinterpret_cast<const IShader::BindBuffer*>((const char*)&partialData + (size_t)parameter.internalAddress);
+					if (bufferResources.size() <= parameter.slot) {
+						bufferResources.resize(parameter.slot + 1);
+					}
 
-				IRender::Resource::DrawCallDescription::BufferRange& range = bufferResources[parameter.slot];
-				range.buffer = buffer->resource;
-				range.offset = 0;
-				range.length = 0;
-			} else if (parameter.type == uniqueBindTexture) {
-				const IShader::BindTexture* texture = reinterpret_cast<const IShader::BindTexture*>((const char*)&partialData + (size_t)parameter.internalAddress);
-				if (textureResources.size() <= parameter.slot) {
-					textureResources.resize(parameter.slot + 1);
-				}
+					IRender::Resource::DrawCallDescription::BufferRange& range = bufferResources[parameter.slot];
+					range.buffer = buffer->resource;
+					range.offset = 0;
+					range.length = 0;
+				} else if (parameter.resourceType == IRender::Resource::RESOURCE_TEXTURE) {
+					const IShader::BindTexture* texture = reinterpret_cast<const IShader::BindTexture*>((const char*)&partialData + (size_t)parameter.internalAddress);
+					if (textureResources.size() <= parameter.slot) {
+						textureResources.resize(parameter.slot + 1);
+					}
 
-				textureResources[parameter.slot] = texture->resource;
+					textureResources[parameter.slot] = texture->resource;
+				} else {
+					assert(false);
+				}
 			} else {
 				uint8_t bufferDataSize = safe_cast<uint8_t>(currentBufferData.size());
 				if (bufferDataSize <= parameter.slot) {
@@ -595,7 +612,9 @@ public:
 	ReflectPartial(PassBase::Updater& u) : IReflect(true), updater(u) {}
 
 	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override {
-		if (s.IsBasicObject()) {
+		singleton Unique uniqueBindBuffer = UniqueType<IShader::BindBuffer>::Get();
+		singleton Unique uniqueBindTexture = UniqueType<IShader::BindTexture>::Get();
+		if (s.IsBasicObject() || typeID == uniqueBindBuffer || typeID == uniqueBindTexture) {
 			const PassBase::Parameter* m = nullptr;
 			for (const MetaChainBase* p = meta; p != nullptr; p = p->GetNext()) {
 				const MetaNodeBase* node = p->GetNode();
@@ -625,16 +644,20 @@ void PassBase::PartialData::Export(PartialUpdater& particalUpdater, PassBase::Up
 	ReflectPartial reflector(updater);
 	(*const_cast<PassBase::PartialData*>(this))(reflector);
 
+#ifdef _DEBUG
 	if (!reflector.outputs.empty()) {
 		uint32_t sum = 0;
 		for (uint32_t i = 0; i < reflector.outputs.size(); i++) {
 			Parameter& parameter = reflector.outputs[i];
-			sum += (uint32_t)safe_cast<uint32_t>(parameter.type->GetSize());
+			if (parameter.type != UniqueType<IRender::Resource*>::Get()) {
+				sum += (uint32_t)safe_cast<uint32_t>(parameter.type->GetSize());
+			}
 		}
-	
+
 		// check completeness
 		assert(sum == reflector.outputs[0].stride); // must provide all segments by now
 	}
+#endif
 
 	particalUpdater.parameters = std::move(reflector.outputs);
 }
