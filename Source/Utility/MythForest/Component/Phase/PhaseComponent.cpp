@@ -79,8 +79,8 @@ void PhaseComponentConfig::TaskData::Cleanup(IRender& render) {
 #ifndef _DEBUG
 			group.drawCallDescription.bufferCount = 0;
 			group.drawCallDescription.textureCount = 0;
-			memset(group.drawCallDescription.bufferResources, sizeof(group.drawCallDescription.bufferResources), 0);
-			memset(group.drawCallDescription.textureResources, sizeof(group.drawCallDescription.textureResources), 0);
+			memset(group.drawCallDescription.bufferResources, 0, sizeof(group.drawCallDescription.bufferResources));
+			memset(group.drawCallDescription.textureResources, 0, sizeof(group.drawCallDescription.textureResources));
 			group.drawCallDescription.extraBufferResources.clear();
 			group.drawCallDescription.extraTextureResources.clear();
 #endif
@@ -911,8 +911,7 @@ void PhaseComponent::Update(Engine& engine, const Float3& center) {
 		float phi = RandFloat() * PI;
 		Float3 view = range * Float3(cos(theta), sin(theta), cos(phi));
 		Float3 dir = -view;
-		// Float3 up(RandFloat(), RandFloat(), RandFloat());
-		Float3 up(0, 0, 1);
+		Float3 up(RandFloat(), RandFloat(), RandFloat());
 
 		phases[i].camera = camera;
 		phases[i].projectionMatrix = projectionMatrix;

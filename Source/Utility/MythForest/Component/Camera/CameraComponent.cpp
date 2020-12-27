@@ -976,8 +976,8 @@ void CameraComponent::TaskData::Cleanup(IRender& render) {
 #ifndef _DEBUG
 			group.drawCallDescription.bufferCount = 0;
 			group.drawCallDescription.textureCount = 0;
-			memset(group.drawCallDescription.bufferResources, sizeof(group.drawCallDescription.bufferResources), 0);
-			memset(group.drawCallDescription.textureResources, sizeof(group.drawCallDescription.textureResources), 0);
+			memset(group.drawCallDescription.bufferResources, 0, sizeof(group.drawCallDescription.bufferResources));
+			memset(group.drawCallDescription.textureResources, 0, sizeof(group.drawCallDescription.textureResources));
 			group.drawCallDescription.extraBufferResources.clear();
 			group.drawCallDescription.extraTextureResources.clear();
 #endif
