@@ -2,7 +2,15 @@
 
 using namespace PaintsNow;
 
-MultiHashSetupPass::MultiHashSetupPass() {}
+MultiHashSetupPass::MultiHashSetupPass() {
+	standardTransform.enableViewProjectionMatrix = true;
+	standardTransform.enableVertexNormal = true;
+	standardTransform.enableVertexColor = false;
+	standardTransform.enableVertexTangent = true;
+	standardTransform.enableInstancedColor = true;
+
+	shaderParameter.enableBaseColorTint = false;
+}
 
 TObject<IReflect>& MultiHashSetupPass::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);

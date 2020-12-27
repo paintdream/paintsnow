@@ -38,6 +38,8 @@ namespace PaintsNow {
 		float roughness;
 		float occlusion;
 
+	public:
+		bool enableBaseColorTint;
 		bool enableBaseColorTexture;
 		bool enableNormalTexture;
 		bool enableMixtureTexture;

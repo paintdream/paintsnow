@@ -36,7 +36,7 @@ function TpsCameraController.New(eventComponent : EventComponent) : TpsCameraCon
 	entity:AddEntityComponent(spaceComponent as Component)
 
 	-- setup phase
-	phaseComponent:Setup(16, 8, { 10, 10, 10 }, { 256, 256 })
+	phaseComponent:Setup(16, 8, { 8, 8, 8 }, { 256, 256 })
 
 	local meta = {} as TpsCameraController
 	meta.cameraComponent = cameraComponent

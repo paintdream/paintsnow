@@ -244,7 +244,7 @@ local function InitializeWorld(databasePath : string)
 	player.cameraController.entity:AddEntityComponent(scriptComponent as Component)
 	scene.rootEntity:UpdateEntity(true)
 	Debug.StartPhase = function ()
-		phaseComponent:Update({ 5, 1.5, 5})
+		phaseComponent:Update({ 7, 3, 7 })
 	end
 
 	print("InitializeWorld: World initialization finished. Waiting for system command")

@@ -21,7 +21,7 @@ StandardTransformVS::StandardTransformVS() : enableInstancing(true), enableSkinn
 String StandardTransformVS::GetShaderText() {
 	std::vector<MatrixFloat4x4> boneMatries; // temp fix 
 	return UnifyShaderCode(
-		float4 position = float4(0, 0, 0, 1);
+	float4 position = float4(0, 0, 0, 1);
 	position.xyz = vertexPosition;
 	if (enableSkinning) {
 		// skinning

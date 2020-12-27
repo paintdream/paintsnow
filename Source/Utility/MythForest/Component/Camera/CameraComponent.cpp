@@ -972,6 +972,16 @@ void CameraComponent::TaskData::Cleanup(IRender& render) {
 		// data.instanceGroups.clear();
 		for (WarpData::InstanceGroupMap::iterator ip = data.instanceGroups.begin(); ip != data.instanceGroups.end();) {
 			InstanceGroup& group = (*ip).second;
+
+#ifndef _DEBUG
+			group.drawCallDescription.bufferCount = 0;
+			group.drawCallDescription.textureCount = 0;
+			memset(group.drawCallDescription.bufferResources, sizeof(group.drawCallDescription.bufferResources), 0);
+			memset(group.drawCallDescription.textureResources, sizeof(group.drawCallDescription.textureResources), 0);
+			group.drawCallDescription.extraBufferResources.clear();
+			group.drawCallDescription.extraTextureResources.clear();
+#endif
+
 			if (group.instanceCount == 0) {
 				// to be deleted.
 				data.instanceGroups.erase(ip++);

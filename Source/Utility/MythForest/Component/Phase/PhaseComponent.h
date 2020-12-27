@@ -61,7 +61,7 @@ namespace PaintsNow {
 
 		struct InstanceGroup {
 			InstanceGroup() : renderStateResource(nullptr), drawCallResource(nullptr), instanceCount(0) {}
-			void Reset();
+			void Cleanup();
 
 			std::vector<Bytes> instancedData;
 			IRender::Resource::DrawCallDescription drawCallDescription;
@@ -90,6 +90,9 @@ namespace PaintsNow {
 		struct TaskData {
 			TaskData();
 			virtual ~TaskData();
+			void Cleanup(IRender& render);
+			void Destroy(IRender& render);
+
 			enum {
 				STATUS_IDLE,
 				STATUS_START,
@@ -108,7 +111,7 @@ namespace PaintsNow {
 			IRender::Resource* renderTarget;
 			ShaderResource* pipeline;
 			PerspectiveCamera camera;
-			TShared<TextureResource> texture;
+			std::vector<TShared<TextureResource> > textures;
 		};
 	};
 
@@ -207,7 +210,7 @@ namespace PaintsNow {
 		void CoTaskAssembleTaskSetup(Engine& engine, TaskData& task, const UpdatePointSetup& bakePoint);
 		void CoTaskAssembleTaskShadow(Engine& engine, TaskData& task, const UpdatePointShadow& bakePoint);
 		void TaskAssembleTaskBounce(Engine& engine, TaskData& task, const UpdatePointBounce& bakePoint);
-		void Collect(Engine& engine, TaskData& taskData, const MatrixFloat4x4& viewMatrix, const MatrixFloat4x4& projectionMatrix);
+		void Collect(Engine& engine, TaskData& taskData, const MatrixFloat4x4& viewMatrix, const MatrixFloat4x4& worldMatrix);
 
 		void CollectRenderableComponent(Engine& engine, TaskData& task, RenderableComponent* renderableComponent, WorldInstanceData& instanceData);
 		void CollectComponents(Engine& engine, TaskData& task, const WorldInstanceData& instanceData, const CaptureData& captureData, Entity* entity);

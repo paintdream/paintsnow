@@ -45,14 +45,63 @@ TObject<IReflect>& PhaseComponentConfig::WorldInstanceData::operator () (IReflec
 PhaseComponentConfig::TaskData::TaskData() : status(STATUS_IDLE), pendingCount(0), renderQueue(nullptr), renderTarget(nullptr), pipeline(nullptr) {
 }
 
-PhaseComponentConfig::TaskData::~TaskData() {}
+PhaseComponentConfig::TaskData::~TaskData() {
+	assert(warpData.empty());
+}
 
-void PhaseComponentConfig::InstanceGroup::Reset() {
-	for (size_t k = 0; k < instancedData.size(); k++) {
-		instancedData[k].Clear();
+void PhaseComponentConfig::InstanceGroup::Cleanup() {
+	for (size_t i = 0; i < instancedData.size(); i++) {
+		instancedData[i].Clear();
 	}
 
+	drawCallDescription = IRender::Resource::DrawCallDescription();
+	drawCallResource = nullptr;
 	instanceCount = 0;
+}
+
+void PhaseComponentConfig::TaskData::Cleanup(IRender& render) {
+	for (size_t i = 0; i < warpData.size(); i++) {
+		WarpData& data = warpData[i];
+		for (size_t k = 0; k < data.runtimeResources.size(); k++) {
+			render.DeleteResource(renderQueue, data.runtimeResources[k]);
+		}
+
+		data.runtimeResources.clear();
+		data.bytesCache.Reset();
+		data.worldGlobalBufferMap.clear();
+		data.dataUpdaters.clear();
+
+		// to avoid frequently memory alloc/dealloc
+		// data.instanceGroups.clear();
+		for (WarpData::InstanceGroupMap::iterator ip = data.instanceGroups.begin(); ip != data.instanceGroups.end();) {
+			InstanceGroup& group = (*ip).second;
+
+#ifndef _DEBUG
+			group.drawCallDescription.bufferCount = 0;
+			group.drawCallDescription.textureCount = 0;
+			memset(group.drawCallDescription.bufferResources, sizeof(group.drawCallDescription.bufferResources), 0);
+			memset(group.drawCallDescription.textureResources, sizeof(group.drawCallDescription.textureResources), 0);
+			group.drawCallDescription.extraBufferResources.clear();
+			group.drawCallDescription.extraTextureResources.clear();
+#endif
+
+			if (group.instanceCount == 0) {
+				// to be deleted.
+				data.instanceGroups.erase(ip++);
+			} else {
+				group.Cleanup();
+				++ip;
+			}
+		}
+	}
+}
+
+void PhaseComponentConfig::TaskData::Destroy(IRender& render) {
+	Cleanup(render);
+	warpData.clear();
+
+	render.DeleteResource(renderQueue, renderTarget);
+	render.DeleteQueue(renderQueue);
 }
 
 PhaseComponent::PhaseComponent(const TShared<RenderFlowComponent>& renderFlow, const String& portName) : hostEntity(nullptr), maxTracePerTick(8), renderQueue(nullptr), stateSetupResource(nullptr), statePostResource(nullptr), stateShadowResource(nullptr), range(32, 32, 32), resolution(512, 512), lightCollector(this), renderFlowComponent(std::move(renderFlow)), lightPhaseViewPortName(portName), rootEntity(nullptr) {}
@@ -127,8 +176,7 @@ void PhaseComponent::Uninitialize(Engine& engine, Entity* entity) {
 		IRender& render = engine.interfaces.render;
 		for (size_t j = 0; j < tasks.size(); j++) {
 			TaskData& task = tasks[j];
-			render.DeleteResource(task.renderQueue, task.renderTarget);
-			render.DeleteQueue(task.renderQueue);
+			task.Destroy(render);
 		}
 
 		tasks.clear();
@@ -302,9 +350,11 @@ void PhaseComponent::TickRender(Engine& engine) {
 			finalStatus.store(TaskData::STATUS_START, std::memory_order_release);
 		} else if (task.status == TaskData::STATUS_ASSEMBLED) {
 			uint32_t status = TaskData::STATUS_BAKED;
-			if (!debugPath.empty() && task.texture) {
-				render.RequestDownloadResource(task.renderQueue, task.texture->GetRenderResource(), &task.texture->description);
-				status = TaskData::STATUS_DOWNLOADED;
+			if (!debugPath.empty()) {
+				for (size_t k = 0; k < task.textures.size(); k++) {
+					render.RequestDownloadResource(task.renderQueue, task.textures[k]->GetRenderResource(), &task.textures[k]->description);
+					status = TaskData::STATUS_DOWNLOADED;
+				}
 			}
 
 			// engine.mythForest.StartCaptureFrame("cap", "");
@@ -314,12 +364,18 @@ void PhaseComponent::TickRender(Engine& engine) {
 			// render.PresentQueues(&task.renderQueue, 1, IRender::PRESENT_EXECUTE_ALL);
 			// engine.mythForest.EndCaptureFrame();
 		} else if (task.status == TaskData::STATUS_DOWNLOADED) {
-			render.CompleteDownloadResource(task.renderQueue, task.texture->GetRenderResource());
+			for (size_t k = 0; k < task.textures.size(); k++) {
+				render.CompleteDownloadResource(task.renderQueue, task.textures[k]->GetRenderResource());
+			}
+
 			bakeQueues.emplace_back(task.renderQueue);
 
 			// Save data asynchronized
 			uint32_t frameIndex = engine.GetFrameIndex();
-			engine.GetKernel().QueueRoutine(this, CreateTaskContextFree(Wrap(this, &PhaseComponent::CoTaskWriteDebugTexture), std::ref(engine), (uint32_t)safe_cast<uint32_t>(frameIndex * tasks.size() + i), std::move(task.texture->description.data), task.texture));
+			for (size_t j = 0; j < task.textures.size(); j++) {
+				engine.GetKernel().QueueRoutine(this, CreateTaskContextFree(Wrap(this, &PhaseComponent::CoTaskWriteDebugTexture), std::ref(engine), (uint32_t)safe_cast<uint32_t>(frameIndex * tasks.size() + i), std::move(task.textures[j]->description.data), task.textures[j]));
+			}
+
 			finalStatus.store(TaskData::STATUS_BAKED, std::memory_order_release);
 		}
 	}
@@ -361,6 +417,15 @@ void PhaseComponent::CoTaskWriteDebugTexture(Engine& engine, uint32_t index, Byt
 			for (size_t i = 0; i < count; i++) {
 				target[i] = (uint8_t)(Math::Clamp(base[i], 0.f, 1.0f) * 0xff);
 			}
+		} else {
+			/*
+			assert(layout == IRender::Resource::TextureDescription::RGBA);
+			assert(format == IRender::Resource::TextureDescription::UNSIGNED_BYTE);
+			size_t count = description.dimension.x() * description.dimension.y();
+			uint8_t* target = (uint8_t*)data.GetData();
+			for (size_t i = 0; i < count; i++) {
+				std::swap(target[i * 4], target[i * 4 + 2]);
+			}*/
 		}
 		
 		IImage::Image* png = image.Create(description.dimension.x(), description.dimension.y(), layout, format);
@@ -402,9 +467,6 @@ void PhaseComponent::ResolveTasks(Engine& engine) {
 						InstanceGroup& group = (*it).second;
 						if (group.drawCallDescription.shaderResource == nullptr || group.instanceCount == 0) continue;
 
-						std::vector<IRender::Resource*> buffers;
-						buffers.reserve(group.instancedData.size());
-
 						for (size_t k = 0; k < group.instancedData.size(); k++) {
 							Bytes& data = group.instancedData[k];
 							assert(!data.Empty());
@@ -423,7 +485,7 @@ void PhaseComponent::ResolveTasks(Engine& engine) {
 								// assert(group.drawCallDescription.bufferResources[output.slot].buffer == nullptr);
 								IRender::Resource::DrawCallDescription::BufferRange& bufferRange = k < sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0]) ? group.drawCallDescription.bufferResources[k] : group.drawCallDescription.extraBufferResources[k - sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0])];
 								bufferRange.buffer = buffer;
-								buffers.emplace_back(buffer);
+								warpData.runtimeResources.emplace_back(buffer);
 							}
 						}
 
@@ -435,22 +497,9 @@ void PhaseComponent::ResolveTasks(Engine& engine) {
 						render.UploadResource(queue, drawCall, &dc);
 						render.ExecuteResource(queue, drawCall);
 
-						// cleanup at current frame
-						render.DeleteResource(queue, drawCall);
-
-						for (size_t n = 0; n < buffers.size(); n++) {
-							render.DeleteResource(queue, buffers[n]);
-						}
-
-						group.Reset(); // for next reuse
+						warpData.runtimeResources.emplace_back(drawCall);
+						group.Cleanup(); // for next reuse
 					}
-
-					for (size_t n = 0; n < warpData.runtimeResources.size(); n++) {
-						render.DeleteResource(queue, warpData.runtimeResources[n]);
-					}
-
-					warpData.runtimeResources.clear();
-					warpData.bytesCache.Reset();
 				}
 
 				finalStatus.store(TaskData::STATUS_ASSEMBLED, std::memory_order_release);
@@ -474,7 +523,7 @@ void PhaseComponent::TaskAssembleTaskBounce(Engine& engine, TaskData& task, cons
 	desc.depthStorage.loadOp = IRender::Resource::RenderTargetDescription::DISCARD; // TODO:
 	desc.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
 	// task.texture = toPhase.irradiance;
-	task.texture = nullptr;
+	task.textures.clear();
 
 	// TODO: fill params
 	MultiHashTraceFS& fs = static_cast<MultiHashTracePass&>(toPhase.tracePipeline->GetPass()).shaderMultiHashTrace;
@@ -511,22 +560,26 @@ void PhaseComponent::CoTaskAssembleTaskShadow(Engine& engine, TaskData& task, co
 	render.ExecuteResource(task.renderQueue, task.renderTarget);
 
 	task.pipeline = shadowPipeline();
-	task.texture = shadow.shadow;
+	task.textures.clear();
+	task.textures.emplace_back(shadow.shadow);
 	// task.texture = nullptr;
-	Collect(engine, task, shadow.viewMatrix, shadow.projectionMatrix);
+	Collect(engine, task, shadow.viewMatrix, shadow.viewMatrix * shadow.projectionMatrix);
 }
 
 void PhaseComponent::CompleteCollect(Engine& engine, TaskData& taskData) {}
 
-void PhaseComponent::Collect(Engine& engine, TaskData& taskData, const MatrixFloat4x4& viewMatrix, const MatrixFloat4x4& projectionMatrix) {
+void PhaseComponent::Collect(Engine& engine, TaskData& taskData, const MatrixFloat4x4& viewMatrix, const MatrixFloat4x4& worldMatrix) {
 	PerspectiveCamera camera;
 	CaptureData captureData;
 	camera.UpdateCaptureData(captureData, Math::QuickInverse(viewMatrix));
 	assert(rootEntity->GetWarpIndex() == GetWarpIndex());
 	WorldInstanceData instanceData;
-	instanceData.worldMatrix = viewMatrix;
+	instanceData.worldMatrix = worldMatrix;
+	instanceData.instancedColor.x() = 1.0f / resolution.x();
+	instanceData.instancedColor.y() = 1.0f / resolution.y();
 	std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(taskData.status);
 	finalStatus.store(TaskData::STATUS_ASSEMBLING, std::memory_order_release);
+	taskData.Cleanup(engine.interfaces.render);
 
 	std::atomic_thread_fence(std::memory_order_acquire);
 	CollectComponentsFromEntity(engine, taskData, instanceData, captureData, rootEntity);
@@ -559,11 +612,16 @@ void PhaseComponent::CoTaskAssembleTaskSetup(Engine& engine, TaskData& task, con
 	render.ExecuteResource(task.renderQueue, stateSetupResource);
 	render.ExecuteResource(task.renderQueue, task.renderTarget);
 
-	task.texture = phase.baseColorOcclusion;
+	task.textures.clear();
+	task.textures.emplace_back(phase.baseColorOcclusion);
+	task.textures.emplace_back(phase.normalRoughnessMetallic);
+
 	task.pipeline = setupPipeline();
 	task.camera = phase.camera;
 	task.worldGlobalData.noiseTexture.resource = phase.noiseTexture->GetRenderResource();
-	Collect(engine, task, phase.viewMatrix, phase.projectionMatrix);
+	task.worldGlobalData.viewMatrix = phase.viewMatrix;
+	task.worldGlobalData.viewProjectionMatrix = phase.viewMatrix * phase.projectionMatrix;
+	Collect(engine, task, phase.viewMatrix, phase.viewMatrix);
 }
 
 void PhaseComponent::DispatchTasks(Engine& engine) {
@@ -751,7 +809,7 @@ void PhaseComponent::CompleteUpdateLights(Engine& engine, std::vector<LightEleme
 
 		UpdatePointShadow bakePointShadow;
 		bakePointShadow.shadowIndex = safe_cast<uint32_t>(i);
-		bakePointShadows.push(bakePointShadow);
+		// bakePointShadows.push(bakePointShadow);
 	}
 
 	// generate setup tasks
@@ -779,6 +837,7 @@ void PhaseComponent::LightCollector::CollectComponents(Engine& engine, TaskData&
 
 	WorldInstanceData instanceData;
 	instanceData.worldMatrix = transformComponent != nullptr ? transformComponent->GetTransform() * inst.worldMatrix : inst.worldMatrix;
+	instanceData.boundingBox = inst.boundingBox;
 
 	for (size_t i = 0; i < components.size(); i++) {
 		Component* component = components[i];
@@ -826,6 +885,7 @@ void PhaseComponent::LightCollector::InvokeCollect(Engine& engine, Entity* entit
 	phaseComponent->ReferenceObject();
 	LightConfig::WorldInstanceData worldInstance;
 	worldInstance.worldMatrix = MatrixFloat4x4::Identity();
+	worldInstance.boundingBox = Float3Pair(Float3(FLT_MAX, FLT_MAX, FLT_MAX), Float3(-FLT_MAX, -FLT_MAX, -FLT_MAX));
 	LightConfig::CaptureData captureData;
 
 	std::atomic_thread_fence(std::memory_order_acquire);
@@ -849,10 +909,10 @@ void PhaseComponent::Update(Engine& engine, const Float3& center) {
 	for (size_t i = 0; i < phases.size(); i++) {
 		float theta = RandFloat() * 2 * PI;
 		float phi = RandFloat() * PI;
-
-		Float3 view = range * Float3(cos(theta), sin(theta), cos(phi)) * 4.0f;
+		Float3 view = range * Float3(cos(theta), sin(theta), cos(phi));
 		Float3 dir = -view;
-		Float3 up(RandFloat(), RandFloat(), RandFloat());
+		// Float3 up(RandFloat(), RandFloat(), RandFloat());
+		Float3 up(0, 0, 1);
 
 		phases[i].camera = camera;
 		phases[i].projectionMatrix = projectionMatrix;
@@ -869,6 +929,7 @@ void PhaseComponent::CollectComponents(Engine& engine, TaskData& task, const Wor
 		TransformComponent* transformComponent = entity->GetUniqueComponent(UniqueType<TransformComponent>());
 		WorldInstanceData instanceData;
 		instanceData.worldMatrix = transformComponent != nullptr ? transformComponent->GetTransform() * inst.worldMatrix : inst.worldMatrix;
+		instanceData.instancedColor = inst.instancedColor;
 
 		std::vector<Component*> exploredComponents;
 		ExplorerComponent* explorerComponent = entity->GetUniqueComponent(UniqueType<ExplorerComponent>());
@@ -887,6 +948,9 @@ void PhaseComponent::CollectComponents(Engine& engine, TaskData& task, const Wor
 				if (transformComponent != nullptr) {
 					RenderableComponent* renderableComponent = static_cast<RenderableComponent*>(component);
 					if (!(renderableComponent->Flag().load(std::memory_order_relaxed) & RenderableComponent::RENDERABLECOMPONENT_CAMERAVIEW)) {
+						// generate instance color
+						instanceData.instancedColor.z() = RandFloat();
+						instanceData.instancedColor.w() = RandFloat();
 						CollectRenderableComponent(engine, task, renderableComponent, instanceData);
 					}
 				}

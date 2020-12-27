@@ -4,7 +4,7 @@
 
 using namespace PaintsNow;
 
-StandardParameterFS::StandardParameterFS() : enableBaseColorTexture(true), enableNormalTexture(true), enableMixtureTexture(true) {
+StandardParameterFS::StandardParameterFS() : enableBaseColorTint(true), enableBaseColorTexture(true), enableNormalTexture(true), enableMixtureTexture(true) {
 	baseColorTexture.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
 	normalTexture.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
 	mixtureTexture.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
@@ -14,8 +14,12 @@ String StandardParameterFS::GetShaderText() {
 	return UnifyShaderCode(
 		if (enableBaseColorTexture) {
 			float4 color = texture(baseColorTexture, texCoord.xy);
-			outputColor = tintColor.xyz * color.xyz;
+			outputColor = color.xyz;
 			alpha = color.w;
+		}
+
+		if (enableBaseColorTint) {
+			outputColor.xyz = outputColor.xyz * tintColor.xyz;
 		}
 
 		if (enableNormalTexture) {
@@ -47,6 +51,7 @@ TObject<IReflect>& StandardParameterFS::operator () (IReflect& reflect) {
 		ReflectProperty(normalTexture);
 		ReflectProperty(mixtureTexture);
 
+		ReflectProperty(enableBaseColorTint)[BindConst<bool>(enableBaseColorTint)];
 		ReflectProperty(enableBaseColorTexture)[BindConst<bool>(baseColorTexture)];
 		ReflectProperty(enableNormalTexture)[BindConst<bool>(normalTexture)];
 		ReflectProperty(enableMixtureTexture)[BindConst<bool>(mixtureTexture)];

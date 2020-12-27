@@ -13,7 +13,7 @@ TObject<IReflect>& MultiHashSetupFS::operator () (IReflect& reflect) {
 		ReflectProperty(noiseTexture);
 
 		ReflectProperty(rasterCoord)[BindInput(BindInput::RASTERCOORD)];
-		ReflectProperty(tintColor)[BindOutput(BindOutput::LOCAL)];
+		ReflectProperty(tintColor)[BindInput(BindInput::LOCAL)];
 	}
 
 	return *this;
@@ -21,7 +21,7 @@ TObject<IReflect>& MultiHashSetupFS::operator () (IReflect& reflect) {
 
 String MultiHashSetupFS::GetShaderText() {
 	return UnifyShaderCode(
-		float noise = texture(noiseTexture, rasterCoord.xy * tintColor.z + tintColor.xy).x;
-		clip(noise - tintColor.w);
+		float noise = texture(noiseTexture, rasterCoord.xy * tintColor.xy + tintColor.zw).x;
+		clip(noise - 0.5);
 	);
 }
