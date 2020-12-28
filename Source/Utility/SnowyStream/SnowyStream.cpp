@@ -283,7 +283,9 @@ void SnowyStream::RequestReadFile(IScript::Request& request, IScript::Delegate<F
 		if (stream->Read(const_cast<char*>(content.data()), len)) {
 			request.DoLock();
 			if (callback) {
-				request.Call(deferred, callback, content);
+				request.Push();
+				request.Call(sync, callback, content);
+				request.Pop();
 			} else {
 				request << content;
 			}
@@ -308,7 +310,9 @@ void SnowyStream::RequestWriteFile(IScript::Request& request, IScript::Delegate<
 		if (stream->Write(content.data(), len)) {
 			request.DoLock();
 			if (callback) {
-				request.Call(deferred, callback, len);
+				request.Push();
+				request.Call(sync, callback, len);
+				request.Pop();
 			} else {
 				request << len;
 			}

@@ -43,7 +43,7 @@ TObject<IReflect>& BridgeSunset::operator () (IReflect& reflect) {
 		ReflectMethod(RequestQueueGraphRoutine)[ScriptMethod = "QueueGraphRoutine"];
 		ReflectMethod(RequestConnectGraphRoutine)[ScriptMethod = "ConnectGraphRoutine"];
 		ReflectMethod(RequestExecuteGraph)[ScriptMethod = "ExecuteGraph"];
-		ReflectMethod(RequestQueueRoutine)[ScriptMethod = "QueueRoutine"];
+		ReflectMethod(RequestQueueRoutine)[ScriptMethod = IScript::MetaMethod("QueueRoutine", true)]; // Auto-locked
 		ReflectMethod(RequestGetWarpCount)[ScriptMethod = "GetWarpCount"];
 		ReflectMethod(RequestSetWarpIndex)[ScriptMethod = "UpdateWarpIndex"];
 		ReflectMethod(RequestGetWarpIndex)[ScriptMethod = "GetWarpIndex"];
@@ -85,59 +85,21 @@ void BridgeSunset::ContinueScriptDispatcher(IScript::Request& request, IHost* ho
 	}
 }
 
-class DeferredScriptCallback : public ScriptTaskTemplate<true> {
-public:
-	typedef ScriptTaskTemplate<true> BaseClass;
-	DeferredScriptCallback(WarpTiny* t, Kernel& k, IScript::Request::Ref c) : tiny(t), kernel(k), BaseClass(c) {}
-
-	void Forward(IScript::Request& request) {
-		kernel.QueueRoutine(tiny(), this);
-	}
-
-	TShared<WarpTiny> tiny;
-	Kernel& kernel;
-};
-
 void BridgeSunset::RequestQueueRoutine(IScript::Request& request, IScript::Delegate<WarpTiny> unit, IScript::Request::Ref callback) {
-	CHECK_REFERENCES_WITH_TYPE(callback, IScript::Request::FUNCTION);
+	CHECK_REFERENCES_WITH_TYPE_LOCKED(callback, IScript::Request::FUNCTION);
 	CHECK_DELEGATE(unit);
 	GetKernel().YieldCurrentWarp();
 
 	if (GetKernel().GetCurrentWarpIndex() != unit->GetWarpIndex()) {
-		// Why not do it like this?
-		// GetKernel().QueueRoutine(unit.Get(), CreateTaskScriptOnce(callback));
-		// Think the following pseudo code:
-		//
-		// BridgeSunset.QueueRoutine(function () {
-		//     some_signal.post(); // L1
-		// });
-		// some_signal.wait(); // L2
-		// 
-		// It's possible that L1 happends before L2, so we will stuck into an infinite waiting.
-		// In order to solve this, we must do QueueRoutine AFTER the caller turned to be alertable.
-		// (e.g. yielded, waiting for singal that coherent with queued routine).
-		// So here we invoke a deferred script call, which assures that queued routine will be not executed EALIER than
-		// any waiting/yielding on caller.
-
-		DeferredScriptCallback* d = new DeferredScriptCallback(unit.Get(), GetKernel(), callback);
-		request.DoLock();
-		request.Push();
-		IScript::Request::Ref r;
-		request << request.Adapt(Wrap(d, &DeferredScriptCallback::Forward));
-		request >> r;
-		request.Pop();
-		request.Push();
-		request.Call(deferred, r); 
-		request.Dereference(r);
-		request.Pop();
-		request.UnLock();
+		GetKernel().QueueRoutine(unit.Get(), CreateTaskScriptOnce(callback));
 	} else {
-		request.DoLock();
+		// Already locked!
+		// request.DoLock();
 		request.Push();
-		request.Call(deferred, callback); // use async call to prevent stack depth increase
+		request.Call(sync, callback);
 		request.Dereference(callback);
 		request.Pop();
-		request.UnLock();
+		// request.UnLock();
 	}
 }
 

@@ -272,14 +272,6 @@ void LeavesFlute::RequestSetAppTitle(IScript::Request& request, const String& ti
 	UnLock();
 }
 
-void LeavesFlute::RequestForward(IScript::Request& request, IScript::Request::Ref ref) {
-	CHECK_REFERENCES_WITH_TYPE(ref, IScript::Request::FUNCTION);
-	request.DoLock();
-	request.Call(deferred, ref);
-	request.Dereference(ref);
-	request.UnLock();
-}
-
 bool LeavesFlute::IsRendering() const {
 	return interfaces.frame.IsRendering();
 }
@@ -841,7 +833,6 @@ TObject<IReflect>& LeavesFlute::operator () (IReflect& reflect) {
 		ReflectMethod(RequestInspect)[ScriptMethod = "Inspect"];
 		ReflectMethod(RequestExit)[ScriptMethod = "Exit"];
 		ReflectMethod(RequestPrint)[ScriptMethod = "Print"];
-		ReflectMethod(RequestForward)[ScriptMethod = "Forward"];
 		ReflectMethod(RequestSetAppTitle)[ScriptMethod = "SetAppTitle"];
 		ReflectMethod(RequestShowCursor)[ScriptMethod = "ShowCursor"];
 		ReflectMethod(RequestWarpCursor)[ScriptMethod = "WrapCursor"];
