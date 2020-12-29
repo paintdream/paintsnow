@@ -11,18 +11,18 @@ TObject<IReflect>& HeartVioliner::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectMethod()) {
-		ReflectMethod(RequestNewClock)[ScriptMethod = "NewClock"];
-		ReflectMethod(RequestSetClock)[ScriptMethod = "SetClock"];
-		ReflectMethod(RequestAttach)[ScriptMethod = "Attach"];
-		ReflectMethod(RequestDetach)[ScriptMethod = "Detach"];
-		ReflectMethod(RequestStart)[ScriptMethod = "Start"];
-		ReflectMethod(RequestPause)[ScriptMethod = "Pause"];
-		ReflectMethod(RequestNow)[ScriptMethod = "Now"];
-		ReflectMethod(RequestNewQueue)[ScriptMethod = "NewQueue"];
-		ReflectMethod(RequestListen)[ScriptMethod = "Listen"];
-		ReflectMethod(RequestPush)[ScriptMethod = "Push"];
-		ReflectMethod(RequestPop)[ScriptMethod = "Pop"];
-		ReflectMethod(RequestClear)[ScriptMethod = "Clear"];
+		ReflectMethod(RequestNewClock)[ScriptMethodLocked = "NewClock"];
+		ReflectMethod(RequestSetClock)[ScriptMethodLocked = "SetClock"];
+		ReflectMethod(RequestAttach)[ScriptMethodLocked = "Attach"];
+		ReflectMethod(RequestDetach)[ScriptMethodLocked = "Detach"];
+		ReflectMethod(RequestStart)[ScriptMethodLocked = "Start"];
+		ReflectMethod(RequestPause)[ScriptMethodLocked = "Pause"];
+		ReflectMethod(RequestNow)[ScriptMethodLocked = "Now"];
+		ReflectMethod(RequestNewQueue)[ScriptMethodLocked = "NewQueue"];
+		ReflectMethod(RequestListen)[ScriptMethodLocked = "Listen"];
+		ReflectMethod(RequestPush)[ScriptMethodLocked = "Push"];
+		ReflectMethod(RequestPop)[ScriptMethodLocked = "Pop"];
+		ReflectMethod(RequestClear)[ScriptMethodLocked = "Clear"];
 	}
 
 	return *this;
@@ -31,8 +31,6 @@ TObject<IReflect>& HeartVioliner::operator () (IReflect& reflect) {
 TShared<Queue> HeartVioliner::RequestNewQueue(IScript::Request& request) {
 	TShared<Queue> q = TShared<Queue>::From(new Queue());
 	q->SetWarpIndex(bridgeSunset.GetKernel().GetCurrentWarpIndex());
-	bridgeSunset.GetKernel().YieldCurrentWarp();
-
 	return q;
 }
 
@@ -59,7 +57,7 @@ int64_t HeartVioliner::RequestNow(IScript::Request& request, IScript::Delegate<C
 }
 
 void HeartVioliner::RequestPush(IScript::Request& request, IScript::Delegate<Queue> queue, int64_t timeStamp, IScript::Request::Ref obj) {
-	CHECK_REFERENCES(obj);
+	CHECK_REFERENCES_LOCKED(obj);
 	CHECK_DELEGATE(queue);
 	CHECK_THREAD_IN_LIBRARY(queue);
 
@@ -82,7 +80,7 @@ void HeartVioliner::RequestClear(IScript::Request& request, IScript::Delegate<Qu
 }
 
 void HeartVioliner::RequestListen(IScript::Request& request, IScript::Delegate<Queue> queue, IScript::Request::Ref listener) {
-	CHECK_REFERENCES_WITH_TYPE(listener, IScript::Request::FUNCTION);
+	CHECK_REFERENCES_WITH_TYPE_LOCKED(listener, IScript::Request::FUNCTION);
 	CHECK_DELEGATE(queue);
 	CHECK_THREAD_IN_LIBRARY(queue);
 	queue->Listen(request, listener);
@@ -91,7 +89,6 @@ void HeartVioliner::RequestListen(IScript::Request& request, IScript::Delegate<Q
 TShared<Clock> HeartVioliner::RequestNewClock(IScript::Request& request, int64_t interval, int64_t start) {
 	TShared<Clock> c = TShared<Clock>::From(new Clock(timerFactory, bridgeSunset, interval, start, true));
 	c->SetWarpIndex(bridgeSunset.GetKernel().GetCurrentWarpIndex());
-	bridgeSunset.GetKernel().YieldCurrentWarp();
 	return c;
 }
 

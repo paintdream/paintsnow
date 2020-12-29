@@ -12,7 +12,7 @@ TObject<IReflect>& FieldComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectMethod()) {
-		ReflectMethod(RequestNew)[ScriptMethod = "New"];
+		ReflectMethod(RequestNew)[ScriptMethodLocked = "New"];
 		ReflectMethod(RequestLoadSimplygon)[ScriptMethod = "LoadSimplygon"];
 		ReflectMethod(RequestLoadTexture)[ScriptMethod = "LoadTexture"];
 		ReflectMethod(RequestLoadMesh)[ScriptMethod = "LoadMesh"];

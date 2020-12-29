@@ -11,12 +11,12 @@ TObject<IReflect>& SpaceComponentModule::operator ()(IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectMethod()) {
-		ReflectMethod(RequestNew)[ScriptMethod = "New"];
-		ReflectMethod(RequestInsertEntity)[ScriptMethod = "InsertEntity"];
-		ReflectMethod(RequestRemoveEntity)[ScriptMethod = "RemoveEntity"];
+		ReflectMethod(RequestNew)[ScriptMethodLocked = "New"];
+		ReflectMethod(RequestInsertEntity)[ScriptMethodLocked = "InsertEntity"];
+		ReflectMethod(RequestRemoveEntity)[ScriptMethodLocked = "RemoveEntity"];
 		ReflectMethod(RequestQueryEntities)[ScriptMethod = "QueryEntities"];
-		ReflectMethod(RequestSetForwardMask)[ScriptMethod = "SetForwardMask"];
-		ReflectMethod(RequestGetEntityCount)[ScriptMethod = "GetEntityCount"];
+		ReflectMethod(RequestSetForwardMask)[ScriptMethodLocked = "SetForwardMask"];
+		ReflectMethod(RequestGetEntityCount)[ScriptMethodLocked = "GetEntityCount"];
 	}
 
 	return *this;

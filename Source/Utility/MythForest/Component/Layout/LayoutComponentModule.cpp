@@ -9,25 +9,25 @@ LayoutComponentModule::~LayoutComponentModule() {}
 TObject<IReflect>& LayoutComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 	if (reflect.IsReflectMethod()) {
-		ReflectMethod(RequestNew)[ScriptMethod = "New"];
-		ReflectMethod(RequestGetScrollSize)[ScriptMethod = "GetScrollSize"];
-		ReflectMethod(RequestGetScrollOffset)[ScriptMethod = "GetScrollOffset"];
-		ReflectMethod(RequestSetScrollOffset)[ScriptMethod = "SetScrollOffset"];
-		ReflectMethod(RequestSetLayout)[ScriptMethod = "SetLayout"];
-		ReflectMethod(RequestSetWeight)[ScriptMethod = "SetWeight"];
-		ReflectMethod(RequestGetWeight)[ScriptMethod = "GetWeight"];
-		ReflectMethod(RequestSetRect)[ScriptMethod = "SetRect"];
-		ReflectMethod(RequestGetRect)[ScriptMethod = "GetRect"];
-		ReflectMethod(RequestGetClippedRect)[ScriptMethod = "GetClippedRect"];
-		ReflectMethod(RequestSetSize)[ScriptMethod = "SetSize"];
-		ReflectMethod(RequestGetSize)[ScriptMethod = "GetSize"];
-		ReflectMethod(RequestSetPadding)[ScriptMethod = "SetPadding"];
-		ReflectMethod(RequestGetPadding)[ScriptMethod = "GetPadding"];
-		ReflectMethod(RequestSetMargin)[ScriptMethod = "SetMargin"];
-		ReflectMethod(RequestGetMargin)[ScriptMethod = "GetMargin"];
-		ReflectMethod(RequestSetFitContent)[ScriptMethod = "SetFitContent"];
-		ReflectMethod(RequestGetFitContent)[ScriptMethod = "GetFitContent"];
-		ReflectMethod(RequestSetIndexRange)[ScriptMethod = "SetIndexRange"];
+		ReflectMethod(RequestNew)[ScriptMethodLocked = "New"];
+		ReflectMethod(RequestGetScrollSize)[ScriptMethodLocked = "GetScrollSize"];
+		ReflectMethod(RequestGetScrollOffset)[ScriptMethodLocked = "GetScrollOffset"];
+		ReflectMethod(RequestSetScrollOffset)[ScriptMethodLocked = "SetScrollOffset"];
+		ReflectMethod(RequestSetLayout)[ScriptMethodLocked = "SetLayout"];
+		ReflectMethod(RequestSetWeight)[ScriptMethodLocked = "SetWeight"];
+		ReflectMethod(RequestGetWeight)[ScriptMethodLocked = "GetWeight"];
+		ReflectMethod(RequestSetRect)[ScriptMethodLocked = "SetRect"];
+		ReflectMethod(RequestGetRect)[ScriptMethodLocked = "GetRect"];
+		ReflectMethod(RequestGetClippedRect)[ScriptMethodLocked = "GetClippedRect"];
+		ReflectMethod(RequestSetSize)[ScriptMethodLocked = "SetSize"];
+		ReflectMethod(RequestGetSize)[ScriptMethodLocked = "GetSize"];
+		ReflectMethod(RequestSetPadding)[ScriptMethodLocked = "SetPadding"];
+		ReflectMethod(RequestGetPadding)[ScriptMethodLocked = "GetPadding"];
+		ReflectMethod(RequestSetMargin)[ScriptMethodLocked = "SetMargin"];
+		ReflectMethod(RequestGetMargin)[ScriptMethodLocked = "GetMargin"];
+		ReflectMethod(RequestSetFitContent)[ScriptMethodLocked = "SetFitContent"];
+		ReflectMethod(RequestGetFitContent)[ScriptMethodLocked = "GetFitContent"];
+		ReflectMethod(RequestSetIndexRange)[ScriptMethodLocked = "SetIndexRange"];
 	}
 
 	return *this;

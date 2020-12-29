@@ -171,12 +171,10 @@ void Connection::GetAddress(IScript::Request& request) {
 	String src, dst;
 	network.GetConnectionInfo(connection, src, dst);
 
-	request.DoLock();
 	request << begintable
 		<< key("Source") << src
 		<< key("Destination") << dst
 		<< endtable;
-	request.UnLock();
 }
 
 void Connection::ReadHttpRequest(IScript::Request& request) {

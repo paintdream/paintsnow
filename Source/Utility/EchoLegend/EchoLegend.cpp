@@ -17,19 +17,19 @@ TObject<IReflect>& EchoLegend::operator () (IReflect& reflect) {
 	if (reflect.IsReflectMethod()) {
 		ReflectMethod(RequestOpenListener)[ScriptMethod = "OpenListener"];
 		ReflectMethod(RequestActivateListener)[ScriptMethod = "ActivateListener"];
-		ReflectMethod(RequestGetListenerAddress)[ScriptMethod = "GetListenerAddress"];
+		ReflectMethod(RequestGetListenerAddress)[ScriptMethodLocked = "GetListenerAddress"];
 		ReflectMethod(RequestDeactivateListener)[ScriptMethod = "DeactivateListener"];
 		ReflectMethod(RequestOpenConnection)[ScriptMethod = "OpenConnection"];
 		ReflectMethod(RequestActivateConnection)[ScriptMethod = "ActivateConnection"];
 		ReflectMethod(RequestDeactivateConnection)[ScriptMethod = "DeactivateConnection"];
-		ReflectMethod(RequestGetConnectionAddresses)[ScriptMethod = "GetConnectionAddresses"];
+		ReflectMethod(RequestGetConnectionAddresses)[ScriptMethodLocked = "GetConnectionAddresses"];
 		ReflectMethod(RequestWriteConnection)[ScriptMethod = "WriteConnection"];
 		ReflectMethod(RequestReadConnection)[ScriptMethod = "ReadConnection"];
 		ReflectMethod(RequestWriteConnectionHttpRequest)[ScriptMethod = "WriteConnectionHttpRequest"];
 		ReflectMethod(RequestWriteConnectionHttpResponse)[ScriptMethod = "WriteConnectionHttpResponse"];
 		ReflectMethod(RequestReadConnectionHttpRequest)[ScriptMethod = "ReadConnectionHttpRequest"];
-		ReflectMethod(RequestParseUri)[ScriptMethod = "ParseUri"];
-		ReflectMethod(RequestMakeUri)[ScriptMethod = "MakeUri"];
+		ReflectMethod(RequestParseUri)[ScriptMethodLocked = "ParseUri"];
+		ReflectMethod(RequestMakeUri)[ScriptMethodLocked = "MakeUri"];
 		ReflectMethod(RequestOpenDispatcher)[ScriptMethod = "OpenDispatcher"];
 		ReflectMethod(RequestActivateDispatcher)[ScriptMethod = "ActivateDispatcher"];
 		ReflectMethod(RequestDeactivateDispatcher)[ScriptMethod = "DeactivateDispatcher"];
@@ -48,8 +48,6 @@ TShared<Listener> EchoLegend::RequestOpenListener(IScript::Request& request, ISc
 
 	if (p->IsValid()) {
 		p->SetWarpIndex(bridgeSunset.GetKernel().GetCurrentWarpIndex());
-		bridgeSunset.GetKernel().YieldCurrentWarp();
-
 		return p;
 	} else {
 		return nullptr;
@@ -88,8 +86,6 @@ TShared<Connection> EchoLegend::RequestOpenConnection(IScript::Request& request,
 
 	if (c->IsValid()) {
 		c->SetWarpIndex(bridgeSunset.GetKernel().GetCurrentWarpIndex());
-		bridgeSunset.GetKernel().YieldCurrentWarp();
-
 		return c;
 	} else {
 		return nullptr;
@@ -152,11 +148,9 @@ void EchoLegend::RequestParseUri(IScript::Request& request, const String& url) {
 	int port;
 	std::list<std::pair<String, String> > query;
 	network.ParseUri(url, user, host, port, path, query, fragment);
-	bridgeSunset.GetKernel().YieldCurrentWarp();
 	std::stringstream ss;
 	ss << host << ":" << port;
 
-	request.DoLock();
 	request << begintable
 		<< key("User") << user
 		<< key("Host") << StdToUtf8(ss.str())
@@ -169,7 +163,6 @@ void EchoLegend::RequestParseUri(IScript::Request& request, const String& url) {
 	}
 
 	request << endarray << endtable;
-	request.UnLock();
 }
 
 String EchoLegend::RequestMakeUri(IScript::Request& request, const String& user, const String& host, const String& path, std::list<std::pair<String, String> >& query, const String& fragment) {
@@ -181,7 +174,6 @@ TShared<WorkDispatcher> EchoLegend::RequestOpenDispatcher(IScript::Request& requ
 	if (disp != nullptr) {
 		TShared<WorkDispatcher> dispatcher = TShared<WorkDispatcher>::From(new WorkDispatcher(bridgeSunset, network, disp));
 		dispatcher->SetWarpIndex(bridgeSunset.GetKernel().GetCurrentWarpIndex());
-		bridgeSunset.GetKernel().YieldCurrentWarp();
 		return dispatcher;
 	} else {
 		return nullptr;

@@ -8,12 +8,12 @@ TObject<IReflect>& LightComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectMethod()) {
-		ReflectMethod(RequestNew)[ScriptMethod = "New"];
-		ReflectMethod(RequestSetLightColor)[ScriptMethod = "SetLightColor"];
-		ReflectMethod(RequestSetLightAttenuation)[ScriptMethod = "SetLightAttenuation"];
-		ReflectMethod(RequestSetLightDirectional)[ScriptMethod = "SetLightDirectional"];
-		ReflectMethod(RequestSetLightRange)[ScriptMethod = "SetLightRange"];
-		ReflectMethod(RequestBindLightShadowStream)[ScriptMethod = "BindLightShadowStream"];
+		ReflectMethod(RequestNew)[ScriptMethodLocked = "New"];
+		ReflectMethod(RequestSetLightColor)[ScriptMethodLocked = "SetLightColor"];
+		ReflectMethod(RequestSetLightAttenuation)[ScriptMethodLocked = "SetLightAttenuation"];
+		ReflectMethod(RequestSetLightDirectional)[ScriptMethodLocked = "SetLightDirectional"];
+		ReflectMethod(RequestSetLightRange)[ScriptMethodLocked = "SetLightRange"];
+		ReflectMethod(RequestBindLightShadowStream)[ScriptMethodLocked = "BindLightShadowStream"];
 		// ReflectMethod(RequestSetLightSpotAngle)[ScriptMethod = "SetLightSpotAngle"];
 	}
 

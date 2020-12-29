@@ -760,11 +760,7 @@ void LeavesFlute::RequestInspect(IScript::Request& request, IScript::BaseDelegat
 	CHECK_REFERENCES_NONE();
 
 	if (d.GetRaw() != nullptr) {
-		bridgeSunset.GetKernel().YieldCurrentWarp();
-
-		request.DoLock();
 		InspectProcs procs(request, *d.GetRaw());
-		request.UnLock();
 	}
 }
 
@@ -830,14 +826,14 @@ TObject<IReflect>& LeavesFlute::operator () (IReflect& reflect) {
 	}
 
 	if (reflect.IsReflectMethod()) {
-		ReflectMethod(RequestInspect)[ScriptMethod = "Inspect"];
+		ReflectMethod(RequestInspect)[ScriptMethodLocked = "Inspect"];
 		ReflectMethod(RequestExit)[ScriptMethod = "Exit"];
 		ReflectMethod(RequestPrint)[ScriptMethod = "Print"];
 		ReflectMethod(RequestSetAppTitle)[ScriptMethod = "SetAppTitle"];
 		ReflectMethod(RequestShowCursor)[ScriptMethod = "ShowCursor"];
 		ReflectMethod(RequestWarpCursor)[ScriptMethod = "WrapCursor"];
-		ReflectMethod(RequestSetScreenSize)[ScriptMethod = "SetScreenSize"];
-		ReflectMethod(RequestGetScreenSize)[ScriptMethod = "GetScreenSize"];
+		ReflectMethod(RequestSetScreenSize)[ScriptMethodLocked = "SetScreenSize"];
+		ReflectMethod(RequestGetScreenSize)[ScriptMethodLocked = "GetScreenSize"];
 		ReflectMethod(RequestListenConsole)[ScriptMethod = "ListenConsole"];
 		ReflectMethod(RequestSearchMemory)[ScriptMethod = "SearchMemory"];
 	}

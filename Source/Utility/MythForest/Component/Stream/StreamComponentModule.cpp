@@ -9,7 +9,7 @@ StreamComponentModule::~StreamComponentModule() {}
 TObject<IReflect>& StreamComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 	if (reflect.IsReflectMethod()) {
-		ReflectMethod(RequestNew)[ScriptMethod = "New"];
+		ReflectMethod(RequestNew)[ScriptMethodLocked = "New"];
 		ReflectMethod(RequestSetStreamLoadHandler)[ScriptMethod = "SetStreamLoadHandler"];
 		ReflectMethod(RequestSetStreamUnloadHandler)[ScriptMethod = "SetStreamUnloadHandler"];
 	}

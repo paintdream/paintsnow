@@ -9,8 +9,8 @@ TObject<IReflect>& BatchComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectMethod()) {
-		ReflectMethod(RequestNew)[ScriptMethod = "New"];
-		ReflectMethod(RequestGetCaptureStatistics)[ScriptMethod = "GetCaptureStatistics"];
+		ReflectMethod(RequestNew)[ScriptMethodLocked = "New"];
+		ReflectMethod(RequestGetCaptureStatistics)[ScriptMethodLocked = "GetCaptureStatistics"];
 	}
 
 	return *this;

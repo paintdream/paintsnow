@@ -9,10 +9,10 @@ EnvCubeComponentModule::~EnvCubeComponentModule() {}
 TObject<IReflect>& EnvCubeComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 	if (reflect.IsReflectMethod()) {
-		ReflectMethod(RequestNew)[ScriptMethod = "New"];
-		ReflectMethod(RequestSetTexture)[ScriptMethod = "SetTexture"];
-		ReflectMethod(RequestSetRange)[ScriptMethod = "SetRange"];
-		ReflectMethod(RequestSetStrength)[ScriptMethod = "SetStrength"];
+		ReflectMethod(RequestNew)[ScriptMethodLocked = "New"];
+		ReflectMethod(RequestSetTexture)[ScriptMethodLocked = "SetTexture"];
+		ReflectMethod(RequestSetRange)[ScriptMethodLocked = "SetRange"];
+		ReflectMethod(RequestSetStrength)[ScriptMethodLocked = "SetStrength"];
 	}
 
 	return *this;

@@ -13,17 +13,17 @@ TObject<IReflect>& CameraComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectMethod()) {
-		ReflectMethod(RequestNew)[ScriptMethod = "New"];
-		ReflectMethod(RequestBindRootEntity)[ScriptMethod = "BindRootEntity"];
-		ReflectMethod(RequestSetPerspective)[ScriptMethod = "SetPerspective"];
-		ReflectMethod(RequestGetPerspective)[ScriptMethod = "GetPerspective"];
-		ReflectMethod(RequestSetVisibleDistance)[ScriptMethod = "SetVisibleDistance"];
-		ReflectMethod(RequestGetVisibleDistance)[ScriptMethod = "GetVisibleDistance"];
-		ReflectMethod(RequestGetCollectedEntityCount)[ScriptMethod = "GetCollectedEntityCount"];
-		ReflectMethod(RequestGetCollectedVisibleEntityCount)[ScriptMethod = "GetCollectedVisibleEntityCount"];
-		ReflectMethod(RequestGetCollectedTriangleCount)[ScriptMethod = "GetCollectedTriangleCount"];
-		ReflectMethod(RequestSetProjectionJitter)[ScriptMethod = "SetProjectionJitter"];
-		ReflectMethod(RequestSetSmoothTrack)[ScriptMethod = "SetSmoothTrack"];
+		ReflectMethod(RequestNew)[ScriptMethodLocked = "New"];
+		ReflectMethod(RequestBindRootEntity)[ScriptMethodLocked = "BindRootEntity"];
+		ReflectMethod(RequestSetPerspective)[ScriptMethodLocked = "SetPerspective"];
+		ReflectMethod(RequestGetPerspective)[ScriptMethodLocked = "GetPerspective"];
+		ReflectMethod(RequestSetVisibleDistance)[ScriptMethodLocked = "SetVisibleDistance"];
+		ReflectMethod(RequestGetVisibleDistance)[ScriptMethodLocked = "GetVisibleDistance"];
+		ReflectMethod(RequestGetCollectedEntityCount)[ScriptMethodLocked = "GetCollectedEntityCount"];
+		ReflectMethod(RequestGetCollectedVisibleEntityCount)[ScriptMethodLocked = "GetCollectedVisibleEntityCount"];
+		ReflectMethod(RequestGetCollectedTriangleCount)[ScriptMethodLocked = "GetCollectedTriangleCount"];
+		ReflectMethod(RequestSetProjectionJitter)[ScriptMethodLocked = "SetProjectionJitter"];
+		ReflectMethod(RequestSetSmoothTrack)[ScriptMethodLocked = "SetSmoothTrack"];
 	}
 
 	return *this;
@@ -90,15 +90,12 @@ void CameraComponentModule::RequestGetPerspective(IScript::Request& request, ISc
 	CHECK_DELEGATE(camera);
 	CHECK_THREAD_IN_MODULE(camera);
 
-	engine.GetKernel().YieldCurrentWarp();
-	request.DoLock();
 	request << begintable
 		<< key("Fov") << camera->fov
 		<< key("Near") << camera->nearPlane
 		<< key("Far") << camera->farPlane
 		<< key("Aspect") << camera->aspect
 		<< endtable;
-	request.UnLock();
 }
 
 void CameraComponentModule::RequestSetVisibleDistance(IScript::Request& request, IScript::Delegate<CameraComponent> camera, float distance) {

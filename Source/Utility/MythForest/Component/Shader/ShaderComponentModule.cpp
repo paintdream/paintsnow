@@ -8,10 +8,10 @@ TObject<IReflect>& ShaderComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectMethod()) {
-		ReflectMethod(RequestNew)[ScriptMethod = "New"];
-		ReflectMethod(RequestSetCode)[ScriptMethod = "SetCode"];
-		ReflectMethod(RequestSetInput)[ScriptMethod = "SetInput"];
-		ReflectMethod(RequestSetCallback)[ScriptMethod = "SetCallback"];
+		ReflectMethod(RequestNew)[ScriptMethodLocked = "New"];
+		ReflectMethod(RequestSetCode)[ScriptMethodLocked = "SetCode"];
+		ReflectMethod(RequestSetInput)[ScriptMethodLocked = "SetInput"];
+		ReflectMethod(RequestSetCallback)[ScriptMethodLocked = "SetCallback"];
 		ReflectMethod(RequestSetComplete)[ScriptMethod = "SetComplete"];
 		ReflectMethod(RequestExportMaterial)[ScriptMethod = "ExportMaterial"];
 	}

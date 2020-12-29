@@ -9,11 +9,11 @@ TObject<IReflect>& FormComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectMethod()) {
-		ReflectMethod(RequestNew)[ScriptMethod = "New"];
-		ReflectMethod(RequestGetData)[ScriptMethod = "GetData"];
-		ReflectMethod(RequestGetName)[ScriptMethod = "GetName"];
-		ReflectMethod(RequestResize)[ScriptMethod = "Resize"];
-		ReflectMethod(RequestSetData)[ScriptMethod = "SetData"];
+		ReflectMethod(RequestNew)[ScriptMethodLocked = "New"];
+		ReflectMethod(RequestGetData)[ScriptMethodLocked = "GetData"];
+		ReflectMethod(RequestGetName)[ScriptMethodLocked = "GetName"];
+		ReflectMethod(RequestResize)[ScriptMethodLocked = "Resize"];
+		ReflectMethod(RequestSetData)[ScriptMethodLocked = "SetData"];
 	}
 
 	return *this;

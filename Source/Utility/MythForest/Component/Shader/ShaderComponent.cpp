@@ -23,9 +23,7 @@ ShaderComponent::~ShaderComponent() {
 void ShaderComponent::SetCallback(IScript::Request& request, IScript::Request::Ref callback) {
 	assert(Flag().load(std::memory_order_acquire) & TINY_ACTIVATED);
 	if (compileCallbackRef) {
-		request.DoLock();
 		request.Dereference(compileCallbackRef);
-		request.UnLock();
 	}
 
 	compileCallbackRef = callback;

@@ -21,9 +21,7 @@ void Weaver::ScriptUninitialize(IScript::Request& request) {
 
 static void ReplaceCallback(IScript::Request& request, IScript::Request::Ref& target, const IScript::Request::Ref& ref) {
 	if (target) {
-		request.DoLock();
 		request.Dereference(target);
-		request.UnLock();
 	}
 
 	target = ref;

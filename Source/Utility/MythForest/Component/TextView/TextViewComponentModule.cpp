@@ -18,10 +18,10 @@ TextViewComponentModule::~TextViewComponentModule() {}
 TObject<IReflect>& TextViewComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 	if (reflect.IsReflectMethod()) {
-		ReflectMethod(RequestNew)[ScriptMethod = "New"];
-		ReflectMethod(RequestSetFontSize)[ScriptMethod = "SetFontSize"];
-		ReflectMethod(RequestGetText)[ScriptMethod = "GetText"];
-		ReflectMethod(RequestSetText)[ScriptMethod = "SetText"];
+		ReflectMethod(RequestNew)[ScriptMethodLocked = "New"];
+		ReflectMethod(RequestSetFontSize)[ScriptMethodLocked = "SetFontSize"];
+		ReflectMethod(RequestGetText)[ScriptMethodLocked = "GetText"];
+		ReflectMethod(RequestSetText)[ScriptMethodLocked = "SetText"];
 		ReflectMethod(RequestLocateText)[ScriptMethod = "LocateText"];
 	}
 

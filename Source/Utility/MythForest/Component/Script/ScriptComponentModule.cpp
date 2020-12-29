@@ -26,8 +26,8 @@ ScriptComponentModule::~ScriptComponentModule() {}
 TObject<IReflect>& ScriptComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 	if (reflect.IsReflectMethod()) {
-		ReflectMethod(RequestNew)[ScriptMethod = "New"];
-		ReflectMethod(RequestSetHandler)[ScriptMethod = "SetHandler"];
+		ReflectMethod(RequestNew)[ScriptMethodLocked = "New"];
+		ReflectMethod(RequestSetHandler)[ScriptMethodLocked = "SetHandler"];
 	}
 
 	return *this;
@@ -42,15 +42,13 @@ TShared<ScriptComponent> ScriptComponentModule::RequestNew(IScript::Request& req
 
 void ScriptComponentModule::RequestSetHandler(IScript::Request& request, IScript::Delegate<ScriptComponent> scriptComponent, const String& event, IScript::Request::Ref handler) {
 	if (handler) {
-		CHECK_REFERENCES_WITH_TYPE(handler, IScript::Request::FUNCTION);
+		CHECK_REFERENCES_WITH_TYPE_LOCKED(handler, IScript::Request::FUNCTION);
 	}
 
 	std::unordered_map<String, size_t>::iterator it = mapEventNameToID.find(event);
 	if (it == mapEventNameToID.end()) {
 		if (handler) {
-			request.DoLock();
 			request.Dereference(handler);
-			request.UnLock();
 		}
 
 		request.Error(String("Unable to find event: ") + event);

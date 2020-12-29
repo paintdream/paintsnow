@@ -9,8 +9,8 @@ TObject<IReflect>& GalaxyWeaver::operator () (IReflect& reflect) {
 
 	if (reflect.IsReflectMethod()) {
 		ReflectMethod(RequestNewWeaver)[ScriptMethod = "NewWeaver"];
-		ReflectMethod(RequestSetWeaverRpcCallback)[ScriptMethod = "SetWeaverRpcCallback"];
-		ReflectMethod(RequestSetWeaverConnectionCallback)[ScriptMethod = "SetWeaverConnectionCallback"];
+		ReflectMethod(RequestSetWeaverRpcCallback)[ScriptMethodLocked = "SetWeaverRpcCallback"];
+		ReflectMethod(RequestSetWeaverConnectionCallback)[ScriptMethodLocked = "SetWeaverConnectionCallback"];
 		ReflectMethod(RequestStartWeaver)[ScriptMethod = "StartWeaver"];
 		ReflectMethod(RequestStopWeaver)[ScriptMethod = "StopWeaver"];
 	}
@@ -19,7 +19,7 @@ TObject<IReflect>& GalaxyWeaver::operator () (IReflect& reflect) {
 }
 
 void GalaxyWeaver::RequestSetWeaverRpcCallback(IScript::Request& request, IScript::Delegate<Weaver> weaver, IScript::Request::Ref callback) {
-	CHECK_REFERENCES_WITH_TYPE(callback, IScript::Request::FUNCTION);
+	CHECK_REFERENCES_WITH_TYPE_LOCKED(callback, IScript::Request::FUNCTION);
 	CHECK_DELEGATE(weaver);
 	CHECK_THREAD_IN_LIBRARY(weaver);
 
@@ -27,7 +27,7 @@ void GalaxyWeaver::RequestSetWeaverRpcCallback(IScript::Request& request, IScrip
 }
 
 void GalaxyWeaver::RequestSetWeaverConnectionCallback(IScript::Request& request, IScript::Delegate<Weaver> weaver, IScript::Request::Ref callback) {
-	CHECK_REFERENCES_WITH_TYPE(callback, IScript::Request::FUNCTION);
+	CHECK_REFERENCES_WITH_TYPE_LOCKED(callback, IScript::Request::FUNCTION);
 	CHECK_DELEGATE(weaver);
 	CHECK_THREAD_IN_LIBRARY(weaver);
 
@@ -37,8 +37,6 @@ void GalaxyWeaver::RequestSetWeaverConnectionCallback(IScript::Request& request,
 TShared<Weaver> GalaxyWeaver::RequestNewWeaver(IScript::Request& request, const String& config) {
 	TShared<Weaver> weaver = TShared<Weaver>::From(new Weaver(bridgeSunset, snowyStream, mythForest, network, config));
 	weaver->SetWarpIndex(bridgeSunset.GetKernel().GetCurrentWarpIndex());
-	bridgeSunset.GetKernel().YieldCurrentWarp();
-
 	return weaver;
 }
 

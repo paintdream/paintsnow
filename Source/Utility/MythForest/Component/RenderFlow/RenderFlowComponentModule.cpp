@@ -57,15 +57,15 @@ TObject<IReflect>& RenderFlowComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectMethod()) {
-		ReflectMethod(RequestNew)[ScriptMethod = "New"];
-		ReflectMethod(RequestNewRenderPolicy)[ScriptMethod = "NewRenderPolicy"];
-		ReflectMethod(RequestNewRenderStage)[ScriptMethod = "NewRenderStage"];
-		ReflectMethod(RequestEnumerateRenderStagePorts)[ScriptMethod = "EnumerateRenderStagePorts"];
-		ReflectMethod(RequestLinkRenderStagePort)[ScriptMethod = "LinkRenderStagePort"];
-		ReflectMethod(RequestUnlinkRenderStagePort)[ScriptMethod = "UnlinkRenderStagePort"];
-		ReflectMethod(RequestExportRenderStagePort)[ScriptMethod = "ExportRenderStagePort"];
-		ReflectMethod(RequestBindRenderTargetTexture)[ScriptMethod = "BindRenderTargetTexture"];
-		ReflectMethod(RequestDeleteRenderStage)[ScriptMethod = "DeleteRenderStage"];
+		ReflectMethod(RequestNew)[ScriptMethodLocked = "New"];
+		ReflectMethod(RequestNewRenderPolicy)[ScriptMethodLocked = "NewRenderPolicy"];
+		ReflectMethod(RequestNewRenderStage)[ScriptMethodLocked = "NewRenderStage"];
+		ReflectMethod(RequestEnumerateRenderStagePorts)[ScriptMethodLocked = "EnumerateRenderStagePorts"];
+		ReflectMethod(RequestLinkRenderStagePort)[ScriptMethodLocked = "LinkRenderStagePort"];
+		ReflectMethod(RequestUnlinkRenderStagePort)[ScriptMethodLocked = "UnlinkRenderStagePort"];
+		ReflectMethod(RequestExportRenderStagePort)[ScriptMethodLocked = "ExportRenderStagePort"];
+		ReflectMethod(RequestBindRenderTargetTexture)[ScriptMethodLocked = "BindRenderTargetTexture"];
+		ReflectMethod(RequestDeleteRenderStage)[ScriptMethodLocked = "DeleteRenderStage"];
 	}
 
 	return *this;
@@ -105,9 +105,6 @@ void RenderFlowComponentModule::RequestEnumerateRenderStagePorts(IScript::Reques
 	CHECK_DELEGATE(renderFlowComponent);
 	CHECK_DELEGATE(renderStage);
 
-	engine.GetKernel().YieldCurrentWarp();
-
-	request.DoLock();
 	RenderStage* s = renderStage.Get();
 	request << beginarray;
 	for (size_t i = 0; i < s->GetPorts().size(); i++) {
@@ -140,7 +137,6 @@ void RenderFlowComponentModule::RequestEnumerateRenderStagePorts(IScript::Reques
 	}
 	
 	request << endarray;
-	request.UnLock();
 }
 
 void RenderFlowComponentModule::RequestLinkRenderStagePort(IScript::Request& request, IScript::Delegate<RenderFlowComponent> renderFlowComponent, IScript::Delegate<RenderStage> from, const String& fromPortName, IScript::Delegate<RenderStage> to, const String& toPortName) {

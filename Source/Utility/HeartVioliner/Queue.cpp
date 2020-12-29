@@ -18,13 +18,11 @@ void Queue::Detach() {
 }
 
 void Queue::Clear(IScript::Request& request) {
-	request.DoLock();
 	while (!q.empty()) {
 		Task task = q.top();
 		request.Dereference(task.ref);
 		q.pop();
 	}
-	request.UnLock();
 }
 
 void Queue::ScriptUninitialize(IScript::Request& request) {
@@ -46,9 +44,7 @@ void Queue::Listen(IScript::Request& request, const IScript::Request::Ref& liste
 }
 
 void Queue::Push(IScript::Request& request, IScript::Request::Ref& ref, int64_t timeStamp) {
-	request.DoLock();
 	q.push(Task(ref, timeStamp));
-	request.UnLock();
 }
 
 void Queue::Execute(void* context) {
@@ -62,8 +58,6 @@ void Queue::Execute(void* context) {
 void Queue::Abort(void* context) {}
 
 void Queue::ExecuteWithTimeStamp(IScript::Request& request, int64_t timeStamp) {
-	request.DoLock();
-
 	while (!q.empty()) {
 		Task task = q.top();
 		if (task.timeStamp > timeStamp) break;
@@ -71,8 +65,6 @@ void Queue::ExecuteWithTimeStamp(IScript::Request& request, int64_t timeStamp) {
 		q.pop();
 		Post(request, task.ref, timeStamp);
 	}
-
-	request.UnLock();
 }
 
 void Queue::Post(IScript::Request& request, IScript::Request::Ref ref, int64_t timeStamp) {

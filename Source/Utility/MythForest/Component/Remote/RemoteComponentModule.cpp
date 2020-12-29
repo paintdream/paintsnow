@@ -9,7 +9,7 @@ RemoteComponentModule::~RemoteComponentModule() {}
 TObject<IReflect>& RemoteComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 	if (reflect.IsReflectMethod()) {
-		ReflectMethod(RequestNew)[ScriptMethod = "New"];
+		ReflectMethod(RequestNew)[ScriptMethodLocked = "New"];
 		ReflectMethod(RequestLoad)[ScriptMethod = "Load"];
 		ReflectMethod(RequestCall)[ScriptMethod = "Call"];
 		ReflectMethod(RequestCallAsync)[ScriptMethod = "CallAsync"];

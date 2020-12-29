@@ -10,7 +10,7 @@ TObject<IReflect>& ShapeComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectMethod()) {
-		ReflectMethod(RequestNew)[ScriptMethod = "New"];
+		ReflectMethod(RequestNew)[ScriptMethodLocked = "New"];
 	}
 
 	return *this;
@@ -19,8 +19,6 @@ TObject<IReflect>& ShapeComponentModule::operator () (IReflect& reflect) {
 TShared<ShapeComponent> ShapeComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<MeshResource> mesh) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(mesh);
-
-	engine.GetKernel().YieldCurrentWarp();
 
 	TShared<ShapeComponent> shapeComponent = TShared<ShapeComponent>::From(allocator->New());
 	shapeComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());

@@ -9,8 +9,8 @@ ExplorerComponentModule::~ExplorerComponentModule() {}
 TObject<IReflect>& ExplorerComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 	if (reflect.IsReflectMethod()) {
-		ReflectMethod(RequestNew)[ScriptMethod = "New"];
-		ReflectMethod(RequestSetProxyConfig)[ScriptMethod = "SetProxyConfig"];
+		ReflectMethod(RequestNew)[ScriptMethodLocked = "New"];
+		ReflectMethod(RequestSetProxyConfig)[ScriptMethodLocked = "SetProxyConfig"];
 	}
 
 	return *this;

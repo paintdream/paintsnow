@@ -40,15 +40,15 @@ TObject<IReflect>& BridgeSunset::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 	if (reflect.IsReflectMethod()) {
 		ReflectMethod(RequestNewGraph)[ScriptMethod = "NewGraph"];
-		ReflectMethod(RequestQueueGraphRoutine)[ScriptMethod = "QueueGraphRoutine"];
-		ReflectMethod(RequestConnectGraphRoutine)[ScriptMethod = "ConnectGraphRoutine"];
+		ReflectMethod(RequestQueueGraphRoutine)[ScriptMethodLocked = "QueueGraphRoutine"];
+		ReflectMethod(RequestConnectGraphRoutine)[ScriptMethodLocked = "ConnectGraphRoutine"];
 		ReflectMethod(RequestExecuteGraph)[ScriptMethod = "ExecuteGraph"];
-		ReflectMethod(RequestQueueRoutine)[ScriptMethod = IScript::MetaMethod("QueueRoutine", true)]; // Auto-locked
-		ReflectMethod(RequestGetWarpCount)[ScriptMethod = "GetWarpCount"];
-		ReflectMethod(RequestSetWarpIndex)[ScriptMethod = "UpdateWarpIndex"];
-		ReflectMethod(RequestGetWarpIndex)[ScriptMethod = "GetWarpIndex"];
-		ReflectMethod(RequestPin)[ScriptMethod = "Pin"];
-		ReflectMethod(RequestUnpin)[ScriptMethod = "Unpin"];
+		ReflectMethod(RequestQueueRoutine)[ScriptMethodLocked = "QueueRoutine"]; // Auto-locked
+		ReflectMethod(RequestGetWarpCount)[ScriptMethodLocked = "GetWarpCount"];
+		ReflectMethod(RequestSetWarpIndex)[ScriptMethodLocked = "UpdateWarpIndex"];
+		ReflectMethod(RequestGetWarpIndex)[ScriptMethodLocked = "GetWarpIndex"];
+		ReflectMethod(RequestPin)[ScriptMethodLocked = "Pin"];
+		ReflectMethod(RequestUnpin)[ScriptMethodLocked = "Unpin"];
 		ReflectMethod(RequestClone)[ScriptMethod = "Clone"];
 	}
 
@@ -88,7 +88,6 @@ void BridgeSunset::ContinueScriptDispatcher(IScript::Request& request, IHost* ho
 void BridgeSunset::RequestQueueRoutine(IScript::Request& request, IScript::Delegate<WarpTiny> unit, IScript::Request::Ref callback) {
 	CHECK_REFERENCES_WITH_TYPE_LOCKED(callback, IScript::Request::FUNCTION);
 	CHECK_DELEGATE(unit);
-	GetKernel().YieldCurrentWarp();
 
 	if (GetKernel().GetCurrentWarpIndex() != unit->GetWarpIndex()) {
 		GetKernel().QueueRoutine(unit.Get(), CreateTaskScriptOnce(callback));
@@ -110,22 +109,15 @@ uint32_t BridgeSunset::RequestGetWarpCount(IScript::Request& request) {
 
 TShared<TaskGraph> BridgeSunset::RequestNewGraph(IScript::Request& request, int32_t startupWarp) {
 	CHECK_REFERENCES_NONE();
-
-	TShared<TaskGraph> graph = TShared<TaskGraph>::From(new TaskGraph(kernel));
-	GetKernel().YieldCurrentWarp();
-
-	return graph;
+	return TShared<TaskGraph>::From(new TaskGraph(kernel));
 }
 
-void BridgeSunset::RequestQueueGraphRoutine(IScript::Request& request, IScript::Delegate<TaskGraph> graph, IScript::Delegate<WarpTiny> unit, IScript::Request::Ref callback) {
-	CHECK_REFERENCES_WITH_TYPE(callback, IScript::Request::FUNCTION);
+size_t BridgeSunset::RequestQueueGraphRoutine(IScript::Request& request, IScript::Delegate<TaskGraph> graph, IScript::Delegate<WarpTiny> unit, IScript::Request::Ref callback) {
+	CHECK_REFERENCES_WITH_TYPE_LOCKED(callback, IScript::Request::FUNCTION);
 	CHECK_DELEGATE(graph);
 	CHECK_DELEGATE(unit);
 
-	size_t id = graph->Insert(unit.Get(), CreateTaskScriptOnce(callback));
-	request.DoLock();
-	request << id;
-	request.UnLock();
+	return graph->Insert(unit.Get(), CreateTaskScriptOnce(callback));
 }
 
 void BridgeSunset::RequestConnectGraphRoutine(IScript::Request& request, IScript::Delegate<TaskGraph> graph, int32_t prev, int32_t next) {

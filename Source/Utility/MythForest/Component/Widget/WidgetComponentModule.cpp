@@ -23,9 +23,9 @@ TObject<IReflect>& WidgetComponentModule::operator () (IReflect& reflect) {
 
 	if (reflect.IsReflectMethod()) {
 		ReflectMethod(RequestNew)[ScriptMethod = "New"];
-		ReflectMethod(RequestSetWidgetTexture)[ScriptMethod = "SetWidgetTexture"];
-		ReflectMethod(RequestSetWidgetCoord)[ScriptMethod = "SetWidgetCoord"];
-		ReflectMethod(RequestSetWidgetRepeatMode)[ScriptMethod = "SetWidgetRepeatMode"];
+		ReflectMethod(RequestSetWidgetTexture)[ScriptMethodLocked = "SetWidgetTexture"];
+		ReflectMethod(RequestSetWidgetCoord)[ScriptMethodLocked = "SetWidgetCoord"];
+		ReflectMethod(RequestSetWidgetRepeatMode)[ScriptMethodLocked = "SetWidgetRepeatMode"];
 	}
 
 	return *this;

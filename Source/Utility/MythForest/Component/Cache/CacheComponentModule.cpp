@@ -9,9 +9,9 @@ TObject<IReflect>& CacheComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectMethod()) {
-		ReflectMethod(RequestNew)[ScriptMethod = "New"];
-		ReflectMethod(RequestPushObjects)[ScriptMethod = "PushObjects"];
-		ReflectMethod(RequestClearObjects)[ScriptMethod = "ClearObjects"];
+		ReflectMethod(RequestNew)[ScriptMethodLocked = "New"];
+		ReflectMethod(RequestPushObjects)[ScriptMethodLocked = "PushObjects"];
+		ReflectMethod(RequestClearObjects)[ScriptMethodLocked = "ClearObjects"];
 	}
 
 	return *this;

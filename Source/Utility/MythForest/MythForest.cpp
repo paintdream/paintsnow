@@ -116,17 +116,17 @@ TObject<IReflect>& MythForest::operator () (IReflect& reflect) {
 	}
 
 	if (reflect.IsReflectMethod()) {
-		ReflectMethod(RequestEnumerateComponentModules)[ScriptMethod = "EnumerateComponentModules"];
-		ReflectMethod(RequestNewEntity)[ScriptMethod = "NewEntity"];
+		ReflectMethod(RequestEnumerateComponentModules)[ScriptMethodLocked = "EnumerateComponentModules"];
+		ReflectMethod(RequestNewEntity)[ScriptMethodLocked = "NewEntity"];
 		ReflectMethod(RequestUpdateEntity)[ScriptMethod = "UpdateEntity"];
-		ReflectMethod(RequestAddEntityComponent)[ScriptMethod = "AddEntityComponent"];
-		ReflectMethod(RequestRemoveEntityComponent)[ScriptMethod = "RemoveEntityComponent"];
-		ReflectMethod(RequestGetUniqueEntityComponent)[ScriptMethod = "GetUniqueEntityComponent"];
-		ReflectMethod(RequestGetEntityComponents)[ScriptMethod = "GetEntityComponents"];
-		ReflectMethod(RequestGetComponentType)[ScriptMethod = "GetComponentType"];
+		ReflectMethod(RequestAddEntityComponent)[ScriptMethodLocked = "AddEntityComponent"];
+		ReflectMethod(RequestRemoveEntityComponent)[ScriptMethodLocked = "RemoveEntityComponent"];
+		ReflectMethod(RequestGetUniqueEntityComponent)[ScriptMethodLocked = "GetUniqueEntityComponent"];
+		ReflectMethod(RequestGetEntityComponents)[ScriptMethodLocked = "GetEntityComponents"];
+		ReflectMethod(RequestGetComponentType)[ScriptMethodLocked = "GetComponentType"];
 		ReflectMethod(RequestClearEntityComponents)[ScriptMethod = "ClearEntityComponents"];
-		ReflectMethod(RequestGetFrameTickTime)[ScriptMethod = "GetFrameTickTime"];
-		ReflectMethod(RequestGetEntityBoundingBox)[ScriptMethod = "GetEntityBoundingBox"];
+		ReflectMethod(RequestGetFrameTickTime)[ScriptMethodLocked = "GetFrameTickTime"];
+		ReflectMethod(RequestGetEntityBoundingBox)[ScriptMethodLocked = "GetEntityBoundingBox"];
 		ReflectMethod(RequestWaitForNextFrame)[ScriptMethod = "WaitForNextFrame"];
 		ReflectMethod(RequestRaycast)[ScriptMethod = "Raycast"];
 		ReflectMethod(RequestCaptureFrame)[ScriptMethod = "CaptureFrame"];
@@ -185,9 +185,6 @@ TShared<Entity> MythForest::RequestNewEntity(IScript::Request& request, int32_t 
 }
 
 void MythForest::RequestEnumerateComponentModules(IScript::Request& request) {
-	engine.GetKernel().YieldCurrentWarp();
-
-	request.DoLock();
 	request << begintable;
 	const std::unordered_map<String, Module*>& subModules = engine.GetModuleMap();
 	for (std::unordered_map<String, Module*>::const_iterator it = subModules.begin(); it != subModules.end(); ++it) {
@@ -195,7 +192,6 @@ void MythForest::RequestEnumerateComponentModules(IScript::Request& request) {
 	}
 
 	request << endtable;
-	request.UnLock();
 }
 
 void MythForest::RequestAddEntityComponent(IScript::Request& request, IScript::Delegate<Entity> entity, IScript::Delegate<Component> component) {
@@ -262,7 +258,6 @@ void MythForest::RequestGetEntityComponents(IScript::Request& request, IScript::
 
 	std::vector<Component*> components = entity->GetComponents();
 
-	request.DoLock();
 	request << beginarray;
 
 	for (size_t i = 0; i < components.size(); i++) {
@@ -273,7 +268,6 @@ void MythForest::RequestGetEntityComponents(IScript::Request& request, IScript::
 	}
 
 	request << endarray;
-	request.UnLock();
 }
 
 String MythForest::RequestGetComponentType(IScript::Request& request, IScript::Delegate<Component> component) {

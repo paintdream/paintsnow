@@ -11,8 +11,8 @@ TObject<IReflect>& ModelComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectMethod()) {
-		ReflectMethod(RequestNew)[ScriptMethod = "New"];
-		ReflectMethod(RequestSetMaterial)[ScriptMethod = "SetMaterial"];
+		ReflectMethod(RequestNew)[ScriptMethodLocked = "New"];
+		ReflectMethod(RequestSetMaterial)[ScriptMethodLocked = "SetMaterial"];
 	}
 
 	return *this;

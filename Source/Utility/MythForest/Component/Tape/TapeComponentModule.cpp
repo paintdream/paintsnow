@@ -11,7 +11,7 @@ TObject<IReflect>& TapeComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectMethod()) {
-		ReflectMethod(RequestNew)[ScriptMethod = "New"];
+		ReflectMethod(RequestNew)[ScriptMethodLocked = "New"];
 		ReflectMethod(RequestRead)[ScriptMethod = "Read"];
 		ReflectMethod(RequestWrite)[ScriptMethod = "Write"];
 		ReflectMethod(RequestSeek)[ScriptMethod = "Seek"];
@@ -68,7 +68,5 @@ bool TapeComponentModule::RequestSeek(IScript::Request& request, IScript::Delega
 bool TapeComponentModule::RequestFlush(IScript::Request& request, IScript::Delegate<TapeComponent> tapeComponent, IScript::Request::Ref asyncCallback) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(tapeComponent);
-	engine.GetKernel().YieldCurrentWarp();
-
 	return tapeComponent->Flush(engine, asyncCallback);
 }

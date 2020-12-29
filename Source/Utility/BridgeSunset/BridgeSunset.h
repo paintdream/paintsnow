@@ -36,7 +36,7 @@ namespace PaintsNow {
 		/// <param name="tiny"> task tiny object </param>
 		/// <param name="callback"> task callback </param>
 		/// <returns> Queued task id </returns>
-		void RequestQueueGraphRoutine(IScript::Request& request, IScript::Delegate<TaskGraph> graph, IScript::Delegate<WarpTiny> tiny, IScript::Request::Ref callback);
+		size_t RequestQueueGraphRoutine(IScript::Request& request, IScript::Delegate<TaskGraph> graph, IScript::Delegate<WarpTiny> tiny, IScript::Request::Ref callback);
 
 		/// <summary>
 		/// Set execution dependency between two tasks.

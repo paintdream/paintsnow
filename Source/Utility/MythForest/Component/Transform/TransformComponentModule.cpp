@@ -8,18 +8,18 @@ TObject<IReflect>& TransformComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectMethod()) {
-		ReflectMethod(RequestNew)[ScriptMethod = "New"];
+		ReflectMethod(RequestNew)[ScriptMethodLocked = "New"];
 
-		ReflectMethod(RequestEditorRotate)[ScriptMethod = "EditorRotate"];
-		ReflectMethod(RequestSetTranslation)[ScriptMethod = "SetTranslation"];
-		ReflectMethod(RequestGetTranslation)[ScriptMethod = "GetTranslation"];
-		ReflectMethod(RequestGetQuickTranslation)[ScriptMethod = "GetQuickTranslation"];
-		ReflectMethod(RequestSetRotation)[ScriptMethod = "SetRotation"];
-		ReflectMethod(RequestGetRotation)[ScriptMethod = "GetRotation"];
-		ReflectMethod(RequestSetScale)[ScriptMethod = "SetScale"];
-		ReflectMethod(RequestGetScale)[ScriptMethod = "GetScale"];
-		ReflectMethod(RequestGetAxises)[ScriptMethod = "GetAxises"];
-		ReflectMethod(RequestUpdateTransform)[ScriptMethod = "UpdateTransform"];
+		ReflectMethod(RequestEditorRotate)[ScriptMethodLocked = "EditorRotate"];
+		ReflectMethod(RequestSetTranslation)[ScriptMethodLocked = "SetTranslation"];
+		ReflectMethod(RequestGetTranslation)[ScriptMethodLocked = "GetTranslation"];
+		ReflectMethod(RequestGetQuickTranslation)[ScriptMethodLocked = "GetQuickTranslation"];
+		ReflectMethod(RequestSetRotation)[ScriptMethodLocked = "SetRotation"];
+		ReflectMethod(RequestGetRotation)[ScriptMethodLocked = "GetRotation"];
+		ReflectMethod(RequestSetScale)[ScriptMethodLocked = "SetScale"];
+		ReflectMethod(RequestGetScale)[ScriptMethodLocked = "GetScale"];
+		ReflectMethod(RequestGetAxises)[ScriptMethodLocked = "GetAxises"];
+		ReflectMethod(RequestUpdateTransform)[ScriptMethodLocked = "UpdateTransform"];
 	}
 
 	return *this;
@@ -99,10 +99,7 @@ void TransformComponentModule::RequestGetAxises(IScript::Request& request, IScri
 
 	Float3 x, y, z;
 	transformComponent->GetAxises(x, y, z);
-
-	request.DoLock();
 	request << beginarray << x << y << z << endarray;
-	request.UnLock();
 }
 
 void TransformComponentModule::RequestUpdateTransform(IScript::Request& request, IScript::Delegate<TransformComponent> transformComponent) {

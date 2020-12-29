@@ -8,8 +8,8 @@ TObject<IReflect>& ProfileComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectMethod()) {
-		ReflectMethod(RequestNew)[ScriptMethod = "New"];
-		ReflectMethod(RequestGetInterval)[ScriptMethod = "GetInterval"];
+		ReflectMethod(RequestNew)[ScriptMethodLocked = "New"];
+		ReflectMethod(RequestGetInterval)[ScriptMethodLocked = "GetInterval"];
 	}
 
 	return *this;

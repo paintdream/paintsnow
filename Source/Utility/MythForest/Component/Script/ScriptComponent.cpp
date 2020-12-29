@@ -33,9 +33,7 @@ void ScriptComponent::SetHandler(IScript::Request& request, Event::EVENT_ID even
 	std::swap(handlers[event], handler);
 
 	if (handler) {
-		request.DoLock();
 		request.Dereference(handler);
-		request.UnLock();
 	}
 
 	UpdateEntityFlagMask();

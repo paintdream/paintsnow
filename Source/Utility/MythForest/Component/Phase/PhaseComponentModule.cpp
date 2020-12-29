@@ -9,13 +9,13 @@ PhaseComponentModule::~PhaseComponentModule() {}
 TObject<IReflect>& PhaseComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 	if (reflect.IsReflectMethod()) {
-		ReflectMethod(RequestNew)[ScriptMethod = "New"];
+		ReflectMethod(RequestNew)[ScriptMethodLocked = "New"];
 		ReflectMethod(RequestSetup)[ScriptMethod = "Setup"];
 		ReflectMethod(RequestUpdate)[ScriptMethod = "Update"];
 		ReflectMethod(RequestStep)[ScriptMethod = "Step"];
 		ReflectMethod(RequestResample)[ScriptMethod = "Resample"];
-		ReflectMethod(RequestBindRootEntity)[ScriptMethod = "BindRootEntity"];
-		ReflectMethod(RequestSetDebugMode)[ScriptMethod = "SetDebugMode"];
+		ReflectMethod(RequestBindRootEntity)[ScriptMethodLocked = "BindRootEntity"];
+		ReflectMethod(RequestSetDebugMode)[ScriptMethodLocked = "SetDebugMode"];
 	}
 
 	return *this;

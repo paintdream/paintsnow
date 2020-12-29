@@ -8,8 +8,8 @@ TObject<IReflect>& VisibilityComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectMethod()) {
-		ReflectMethod(RequestNew)[ScriptMethod = "New"];
-		ReflectMethod(RequestSetup)[ScriptMethod = "Setup"];
+		ReflectMethod(RequestNew)[ScriptMethodLocked = "New"];
+		ReflectMethod(RequestSetup)[ScriptMethodLocked = "Setup"];
 	}
 
 	return *this;

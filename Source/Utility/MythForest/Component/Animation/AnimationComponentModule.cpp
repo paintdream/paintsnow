@@ -10,12 +10,12 @@ TObject<IReflect>& AnimationComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectMethod()) {
-		ReflectMethod(RequestNew)[ScriptMethod = "New"];
-		ReflectMethod(RequestAttach)[ScriptMethod = "Attach"];
-		ReflectMethod(RequestDetach)[ScriptMethod = "Detach"];
-		ReflectMethod(RequestPlay)[ScriptMethod = "Play"];
-		ReflectMethod(RequestSetSpeed)[ScriptMethod = "SetSpeed"];
-		ReflectMethod(RequestRegisterEvent)[ScriptMethod = "RegisterEvent"];
+		ReflectMethod(RequestNew)[ScriptMethodLocked = "New"];
+		ReflectMethod(RequestAttach)[ScriptMethodLocked = "Attach"];
+		ReflectMethod(RequestDetach)[ScriptMethodLocked = "Detach"];
+		ReflectMethod(RequestPlay)[ScriptMethodLocked = "Play"];
+		ReflectMethod(RequestSetSpeed)[ScriptMethodLocked = "SetSpeed"];
+		ReflectMethod(RequestRegisterEvent)[ScriptMethodLocked = "RegisterEvent"];
 	}
 
 	return *this;
@@ -27,8 +27,6 @@ TShared<AnimationComponent> AnimationComponentModule::RequestNew(IScript::Reques
 	TShared<SkeletonResource> res = skeletonResource.Get();
 	TShared<AnimationComponent> animationComponent = TShared<AnimationComponent>::From(allocator->New(res));
 	animationComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
-	engine.GetKernel().YieldCurrentWarp();
-
 	return animationComponent;
 }
 

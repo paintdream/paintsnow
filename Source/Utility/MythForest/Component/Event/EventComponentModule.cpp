@@ -15,11 +15,11 @@ TObject<IReflect>& EventComponentModule::operator () (IReflect& reflect) {
 
 	if (reflect.IsReflectMethod()) {
 		ReflectMethod(RequestNew)[ScriptMethod = "New"];
-		ReflectMethod(RequestBindEventTick)[ScriptMethod = "BindEventTick"];
-		ReflectMethod(RequestBindEventFrame)[ScriptMethod = "BindEventFrame"];
-		ReflectMethod(RequestBindEventUserInput)[ScriptMethod = "BindEventUserInput"];
-		ReflectMethod(RequestBindEventNetwork)[ScriptMethod = "BindEventNetwork"];
-		ReflectMethod(RequestFilterEvent)[ScriptMethod = "FilterEvent"];
+		ReflectMethod(RequestBindEventTick)[ScriptMethodLocked = "BindEventTick"];
+		ReflectMethod(RequestBindEventFrame)[ScriptMethodLocked = "BindEventFrame"];
+		ReflectMethod(RequestBindEventUserInput)[ScriptMethodLocked = "BindEventUserInput"];
+		ReflectMethod(RequestBindEventNetwork)[ScriptMethodLocked = "BindEventNetwork"];
+		ReflectMethod(RequestFilterEvent)[ScriptMethodLocked = "FilterEvent"];
 	}
 
 	if (reflect.IsReflectProperty()) {
@@ -39,8 +39,6 @@ TShared<EventComponent> EventComponentModule::RequestNew(IScript::Request& reque
 
 	TShared<EventComponent> eventComponent = TShared<EventComponent>::From(allocator->New());
 	eventComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
-	engine.GetKernel().YieldCurrentWarp();
-
 	return eventComponent;
 }
 
