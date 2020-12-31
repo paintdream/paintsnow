@@ -1381,6 +1381,21 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> final : public R
 		Clear(queue->device);
 	}
 
+	static VkSamplerAddressMode ConvertAddressMode(uint32_t addressMode) {
+		switch (addressMode) {
+		case IRender::Resource::TextureDescription::REPEAT:
+			return VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		case IRender::Resource::TextureDescription::CLAMP:
+			return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+		case IRender::Resource::TextureDescription::MIRROR_REPEAT:
+			return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+		case IRender::Resource::TextureDescription::MIRROR_CLAMP:
+			return VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE;
+		}
+
+		return VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	}
+
 	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* d) override {
 		IRender::Resource::ShaderDescription& pass = *static_cast<IRender::Resource::ShaderDescription*>(d);
 		VulkanDeviceImpl* device = queue->device;
@@ -1470,7 +1485,9 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> final : public R
 					info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 					info.minFilter = info.magFilter = state.sample == IRender::Resource::TextureDescription::POINT ? VK_FILTER_NEAREST : VK_FILTER_LINEAR;
 					info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST; // not tri-filter
-					info.addressModeV = info.addressModeU = info.addressModeW = state.wrap ? VK_SAMPLER_ADDRESS_MODE_REPEAT : VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+					info.addressModeU = ConvertAddressMode(info.addressModeU);
+					info.addressModeV = ConvertAddressMode(info.addressModeV);
+					info.addressModeW = ConvertAddressMode(info.addressModeW);
 					info.minLod = -1000;
 					info.maxLod = 1000;
 					info.maxAnisotropy = 4.0f;

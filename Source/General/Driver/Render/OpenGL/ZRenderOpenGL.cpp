@@ -536,6 +536,21 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 		return bitDepth;
 	}
 	
+	static GLuint ConvertAddressMode(uint32_t addressMode) {
+		switch (addressMode) {
+		case IRender::Resource::TextureDescription::Address::REPEAT:
+			return GL_REPEAT;
+		case IRender::Resource::TextureDescription::Address::CLAMP:
+			return GL_CLAMP_TO_EDGE;
+		case IRender::Resource::TextureDescription::Address::MIRROR_REPEAT:
+			return GL_MIRRORED_REPEAT;
+		case IRender::Resource::TextureDescription::Address::MIRROR_CLAMP:
+			return GL_MIRROR_CLAMP_TO_EDGE_EXT;
+		default:
+			return GL_REPEAT;
+		}
+	}
+	
 	void Upload(QueueImplOpenGL& queue) override {
 		GL_GUARD();
 		Resource::TextureDescription& d = UpdateDescription();
@@ -765,12 +780,12 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 			}
 		}
 
-		glTexParameteri(textureType, GL_TEXTURE_WRAP_S, d.state.wrap ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+		glTexParameteri(textureType, GL_TEXTURE_WRAP_S, ConvertAddressMode(d.state.addressU));
 		if (textureType != GL_TEXTURE_1D) {
-			glTexParameteri(textureType, GL_TEXTURE_WRAP_T, d.state.wrap ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+			glTexParameteri(textureType, GL_TEXTURE_WRAP_T, ConvertAddressMode(d.state.addressV));
 
 			if (textureType == GL_TEXTURE_3D) {
-				glTexParameteri(textureType, GL_TEXTURE_WRAP_R, d.state.wrap ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+				glTexParameteri(textureType, GL_TEXTURE_WRAP_R, ConvertAddressMode(d.state.addressW));
 			}
 		}
 

@@ -290,9 +290,22 @@ static inline FVector ToVector3(const FVector4& vec) {
 	return FVector(vec.X, vec.Y, vec.Z);
 }
 
-void DefaultPixel(uint8_t* pixel) {}
-void SRMHToMixture(uint8_t* pixel) {
+static void DefaultPixel(uint8_t* pixel) {}
+static void SRMHToMixture(uint8_t* pixel) {
 	std::swap(pixel[0], pixel[3]);
+}
+
+static uint32_t ConvertAddress(TextureAddress address) {
+	switch (address) {
+	case TextureAddress::TA_Wrap:
+		return PaintsNow::IRender::Resource::TextureDescription::REPEAT;
+	case TextureAddress::TA_Mirror:
+		return PaintsNow::IRender::Resource::TextureDescription::MIRROR_REPEAT;
+	case TextureAddress::TA_Clamp:
+		return PaintsNow::IRender::Resource::TextureDescription::CLAMP;
+	}
+
+	return PaintsNow::IRender::Resource::TextureDescription::REPEAT;
 }
 
 template <class T>
@@ -337,7 +350,10 @@ void SLeavesWidget::OnExportTextureResource(UTexture* t, T op) {
 			break;
 		}
 
-		state.wrap = texture->AddressX == TextureAddress::TA_Wrap;
+		state.addressU = ConvertAddress(texture->AddressX);
+		state.addressV = ConvertAddress(texture->AddressY);
+		state.addressW = ConvertAddress(texture->AddressX);
+
 		switch (texture->Filter) {
 		case TextureFilter::TF_Nearest:
 			state.sample = IRender::Resource::TextureDescription::POINT;

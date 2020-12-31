@@ -86,11 +86,38 @@ namespace PaintsNow {
 					NOMIP, AUTOMIP, SPECMIP
 				};
 
+				enum Compress {
+					NONE, BPTC, ASTC, DXT
+				};
+
+				enum Address {
+					REPEAT, CLAMP, MIRROR_REPEAT, MIRROR_CLAMP
+				};
+
+				enum Block {
+					BLOCK_4X4,
+					BLOCK_5X4,
+					BLOCK_5X5,
+					BLOCK_6X5,
+					BLOCK_6X6,
+					BLOCK_8X5,
+					BLOCK_8X6,
+					BLOCK_10X5,
+					BLOCK_10X6,
+					BLOCK_8X8,
+					BLOCK_10X8,
+					BLOCK_10X10,
+					BLOCK_12X10,
+					BLOCK_12X12,
+				};
+
 				TextureDescription() : dimension(0, 0, 0), frameBarrierIndex(0) {}
 				
 				struct State {
-					State() : type(TEXTURE_2D), format(UNSIGNED_BYTE), 
-						wrap(1), immutable(1), attachment(0), layout(RGBA), sample(LINEAR), mip(NOMIP), compress(0), media(TEXTURE_RESOURCE), pcf(0), reserved(0) {}
+					State() : type(TEXTURE_2D), format(UNSIGNED_BYTE), sample(LINEAR), 
+						layout(RGBA), addressU(REPEAT), addressV(REPEAT), addressW(REPEAT),
+						mip(NOMIP), media(TEXTURE_RESOURCE), immutable(1), attachment(0), pcf(0), 
+						compress(NONE), block(BLOCK_4X4) {}
 
 					inline bool operator == (const State& rhs) const {
 						return memcmp(this, &rhs, sizeof(*this)) == 0;
@@ -104,18 +131,20 @@ namespace PaintsNow {
 						return memcmp(this, &rhs, sizeof(*this)) < 0;
 					}
 
-					uint32_t type : 2;
-					uint32_t format : 2;
-					uint32_t wrap : 1;
-					uint32_t immutable : 1;
-					uint32_t attachment : 1;
-					uint32_t compress : 1;
-					uint32_t layout : 4;
+					uint32_t type : 3;
+					uint32_t format : 3;
 					uint32_t sample : 2;
+					uint32_t layout : 4;
+					uint32_t addressU : 2;
+					uint32_t addressV : 2;
+					uint32_t addressW : 2;
 					uint32_t mip : 2;
 					uint32_t media : 2;
+					uint32_t immutable : 1;
+					uint32_t attachment : 1;
 					uint32_t pcf : 1;
-					uint32_t reserved : 13;
+					uint32_t compress : 3;
+					uint32_t block : 4;
 				};
 
 				Bytes data;

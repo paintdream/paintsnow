@@ -53,7 +53,6 @@ void TextureResource::Upload(IRender& render, void* deviceContext) {
 	if (Flag().fetch_and(~TINY_MODIFIED) & TINY_MODIFIED) {
 		ThreadPool& threadPool = resourceManager.GetThreadPool();
 		if (threadPool.PollExchange(critical, 1u) == 0u) {
-			description.state.reserved = 0;
 			description.state.media = 0;
 			if (description.state.compress || GetLocation()[0] == '/') {
 				assert(!description.data.Empty());

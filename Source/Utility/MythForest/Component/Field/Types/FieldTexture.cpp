@@ -20,15 +20,19 @@ Bytes FieldTexture::operator [] (const Float3& position) const {
 	assert(!data.Empty());
 	const UShort3& dimension = textureResource->description.dimension;
 	Int3 uvInt((int)(uv.x() / dimension.x() + 0.5f), (int)(uv.y() / dimension.y() + 0.5f), (int)(uv.z() / dimension.z() + 0.5f));
-	if (textureResource->description.state.wrap) {
-		// wrap
-		for (uint32_t i = 0; i < 3; i++) {
+	// wrap or clamp
+	IRender::Resource::TextureDescription::State state = textureResource->description.state;
+	uint32_t addressUVW[] = { state.addressU, state.addressV, state.addressW };
+	for (uint32_t i = 0; i < 3; i++) {
+		switch (addressUVW[i]) {
+		case IRender::Resource::TextureDescription::REPEAT:
 			uvInt[i] = (uvInt[i] % dimension[i] + dimension[i]) % dimension[i];
-		}
-	} else {
-		// clamp
-		for (uint32_t i = 0; i < 3; i++) {
+			break;
+		case IRender::Resource::TextureDescription::CLAMP:
 			uvInt[i] = Math::Clamp(uvInt[i], 0, dimension[i] - 1);
+			break;
+		default:
+			assert(false); // not supported
 		}
 	}
 
