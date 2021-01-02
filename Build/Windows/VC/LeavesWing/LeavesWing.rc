@@ -75,7 +75,7 @@ BEGIN
             VALUE "FileDescription", "LeavesWing Application Platform\0"
             VALUE "FileVersion", "0, 20, 7, 16\0"
             VALUE "InternalName", "LeavesWing\0"
-            VALUE "LegalCopyright", "Copyright (C) 2014-2020 PaintDream (paintdream@paintdream.com)\0"
+            VALUE "LegalCopyright", "Copyright (C) 2014-2021 PaintDream (paintdream@paintdream.com)\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "LeavesWing\0"
             VALUE "PrivateBuild", "\0"

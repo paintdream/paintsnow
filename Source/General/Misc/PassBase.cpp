@@ -620,7 +620,9 @@ public:
 				const MetaNodeBase* node = p->GetNode();
 				if (node->GetUnique() == UniqueType<IShader::BindInput>::Get()) {
 					const IShader::BindInput* bindInput = static_cast<const IShader::BindInput*>(node);
-					m = &updater[IShader::BindInput::SCHEMA(bindInput->description)];
+					if (bindInput->description != IShader::BindInput::GENERAL) {
+						m = &updater[IShader::BindInput::SCHEMA(bindInput->description)];
+					}
 				}
 			}
 
@@ -646,16 +648,20 @@ void PassBase::PartialData::Export(PartialUpdater& particalUpdater, PassBase::Up
 
 #ifdef _DEBUG
 	if (!reflector.outputs.empty()) {
-		uint32_t sum = 0;
+		std::map<IShader::BindBuffer*, std::pair<size_t, size_t> > sizeMap;
 		for (uint32_t i = 0; i < reflector.outputs.size(); i++) {
 			Parameter& parameter = reflector.outputs[i];
 			if (parameter.type != UniqueType<IRender::Resource*>::Get()) {
-				sum += (uint32_t)safe_cast<uint32_t>(parameter.type->GetSize());
+				std::pair<size_t, size_t>& p = sizeMap[parameter.bindBuffer];
+				p.first = i;
+				p.second += (uint32_t)safe_cast<uint32_t>(parameter.type->GetSize());
 			}
 		}
 
 		// check completeness
-		assert(sum == reflector.outputs[0].stride); // must provide all segments by now
+		for (std::map<IShader::BindBuffer*, std::pair<size_t, size_t> >::iterator it = sizeMap.begin(); it != sizeMap.end(); ++it) {
+			assert((*it).second.second == reflector.outputs[(*it).second.first].stride); // must provide all segments by now
+		}
 	}
 #endif
 

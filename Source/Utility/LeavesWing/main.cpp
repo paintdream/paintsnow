@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
 	cmdLine.Process(argc, argv);
 #endif
 
-	printf("LeavesWing %s\nPaintDream (paintdream@paintdream.com) (C) 2014-2020\nBased on PaintsNow [https://github.com/paintdream/paintsnow]\n", PAINTSNOW_VERSION_MINOR);
+	printf("LeavesWing %s\nPaintDream (paintdream@paintdream.com) (C) 2014-2021\nBased on PaintsNow [https://github.com/paintdream/paintsnow]\n", PAINTSNOW_VERSION_MINOR);
 
 	Loader loader;
 	loader.Load(cmdLine);

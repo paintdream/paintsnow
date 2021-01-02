@@ -19,13 +19,20 @@ PhaseComponent::LightConfig::TaskData::TaskData(uint32_t warpCount) : pendingCou
 	warpData.resize(warpCount);
 }
 
+PhaseComponent::Phase::Phase() : shadowIndex(0), drawCallResource(nullptr) {}
+
 TObject<IReflect>& PhaseComponentConfig::WorldGlobalData::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectProperty()) {
 		ReflectProperty(viewProjectionMatrix)[IShader::BindInput(IShader::BindInput::TRANSFORM_VIEWPROJECTION)];
 		ReflectProperty(viewMatrix)[IShader::BindInput(IShader::BindInput::TRANSFORM_VIEW)];
+		ReflectProperty(lightReprojectionMatrix)[IShader::BindInput(IShader::BindInput::GENERAL)];
+		ReflectProperty(lightColor)[IShader::BindInput(IShader::BindInput::GENERAL)];
+		ReflectProperty(lightPosition)[IShader::BindInput(IShader::BindInput::GENERAL)];
+		ReflectProperty(invScreenSize)[IShader::BindInput(IShader::BindInput::GENERAL)];
 		ReflectProperty(noiseTexture);
+		ReflectProperty(lightDepthTexture);
 	}
 
 	return *this;
@@ -76,7 +83,7 @@ void PhaseComponentConfig::TaskData::Cleanup(IRender& render) {
 		for (WarpData::InstanceGroupMap::iterator ip = data.instanceGroups.begin(); ip != data.instanceGroups.end();) {
 			InstanceGroup& group = (*ip).second;
 
-#ifndef _DEBUG
+#ifdef _DEBUG
 			group.drawCallDescription.bufferCount = 0;
 			group.drawCallDescription.textureCount = 0;
 			memset(group.drawCallDescription.bufferResources, 0, sizeof(group.drawCallDescription.bufferResources));
@@ -159,7 +166,7 @@ void PhaseComponent::Initialize(Engine& engine, Entity* entity) {
 		state.depthWrite = 1;
 		state.stencilTest = IRender::Resource::RenderStateDescription::DISABLED;
 		state.stencilWrite = 0;
-		state.cullFrontFace = 1;
+		state.cullFrontFace = 0; // It's not the same with shadow map, we must not cull front face since some internal pixels may be incorrectly lighted.
 		render.UploadResource(renderQueue, stateShadowResource, &state);
 	}
 }
@@ -270,7 +277,7 @@ void PhaseComponent::Setup(Engine& engine, uint32_t phaseCount, uint32_t taskCou
 		phase.irradiance->description.state.attachment = true;
 		phase.irradiance->description.dimension = UShort3(resolution.x(), resolution.y(), 1);
 		phase.irradiance->description.state.format = IRender::Resource::TextureDescription::HALF;
-		phase.irradiance->description.state.layout = IRender::Resource::TextureDescription::RGBA;
+		phase.irradiance->description.state.layout = IRender::Resource::TextureDescription::RGB10PACK;
 		phase.irradiance->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
 		phase.irradiance->GetResourceManager().InvokeUpload(phase.irradiance(), renderQueue);
 
@@ -524,6 +531,7 @@ void PhaseComponent::TaskAssembleTaskBounce(Engine& engine, TaskData& task, cons
 	desc.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
 	// task.texture = toPhase.irradiance;
 	task.textures.clear();
+	task.textures.emplace_back(toPhase.irradiance);
 
 	// TODO: fill params
 	MultiHashTraceFS& fs = static_cast<MultiHashTracePass&>(toPhase.tracePipeline->GetPass()).shaderMultiHashTrace;
@@ -589,7 +597,7 @@ void PhaseComponent::CoTaskAssembleTaskSetup(Engine& engine, TaskData& task, con
 	IRender& render = engine.interfaces.render;
 	assert(task.status == TaskData::STATUS_DISPATCHED);
 	IRender::Resource::RenderTargetDescription desc;
-	const Phase& phase = phases[bakePoint.phaseIndex];
+	Phase& phase = phases[bakePoint.phaseIndex];
 
 	TextureResource* rt[] = {
 		phase.baseColorOcclusion(),
@@ -621,6 +629,17 @@ void PhaseComponent::CoTaskAssembleTaskSetup(Engine& engine, TaskData& task, con
 	task.worldGlobalData.noiseTexture.resource = phase.noiseTexture->GetRenderResource();
 	task.worldGlobalData.viewMatrix = phase.viewMatrix;
 	task.worldGlobalData.viewProjectionMatrix = phase.viewMatrix * phase.projectionMatrix;
+
+	// shadow
+	phase.shadowIndex = bakePoint.shadowIndex;
+	Shadow& shadow = shadows[phase.shadowIndex];
+	const UShort3& dim = shadow.shadow->description.dimension;
+	task.worldGlobalData.lightReprojectionMatrix = Math::InverseProjection(phase.projectionMatrix) * Math::QuickInverse(phase.viewMatrix) * shadow.viewMatrix * shadow.projectionMatrix;
+	task.worldGlobalData.lightColor = shadow.lightElement.colorAttenuation;
+	task.worldGlobalData.lightPosition = shadow.lightElement.position;
+	task.worldGlobalData.invScreenSize = Float2(1.0f / dim.x(), 1.0f / dim.y());
+	task.worldGlobalData.lightDepthTexture.resource = shadow.shadow->GetRenderResource();
+
 	Collect(engine, task, phase.viewMatrix, MatrixFloat4x4::Identity());
 }
 
@@ -814,14 +833,17 @@ void PhaseComponent::CompleteUpdateLights(Engine& engine, std::vector<LightEleme
 
 	// generate setup tasks
 	bakePointSetups = std::stack<UpdatePointSetup>();
-	for (size_t j = 0; j < phases.size(); j++) {
-		UpdatePointSetup bakePoint;
-		bakePoint.phaseIndex = safe_cast<uint32_t>(j);
-		bakePointSetups.push(bakePoint);
+	if (!elements.empty()) {
+		for (size_t j = 0; j < phases.size(); j++) {
+			UpdatePointSetup bakePoint;
+			bakePoint.phaseIndex = safe_cast<uint32_t>(j);
+			bakePoint.shadowIndex = safe_cast<uint32_t>(rand() % elements.size());
+			bakePointSetups.push(bakePoint);
+		}
 	}
 
 	// stop all bounces
-	bakePointBounces = std::stack<UpdatePointBounce>();
+	// bakePointBounces = std::stack<UpdatePointBounce>();
 }
 
 PhaseComponent::LightCollector::LightCollector(PhaseComponent* component) : phaseComponent(component) {}

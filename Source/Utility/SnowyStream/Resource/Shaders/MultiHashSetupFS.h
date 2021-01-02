@@ -13,10 +13,20 @@ namespace PaintsNow {
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		String GetShaderText() override;
 
+		BindBuffer setupParamBuffer;
 		BindTexture noiseTexture;
+
+		BindTexture lightDepthTexture;
+		MatrixFloat4x4 lightReprojectionMatrix;
+		Float4 lightColor;
+		Float4 lightPosition;
+		Float2 invScreenSize;
 
 		Float4 rasterCoord;
 		Float4 tintColor;
+
+		// output
+		Float4 outputIrradiance;
 	};
 }
 

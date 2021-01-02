@@ -973,7 +973,7 @@ void CameraComponent::TaskData::Cleanup(IRender& render) {
 		for (WarpData::InstanceGroupMap::iterator ip = data.instanceGroups.begin(); ip != data.instanceGroups.end();) {
 			InstanceGroup& group = (*ip).second;
 
-#ifndef _DEBUG
+#ifdef _DEBUG
 			group.drawCallDescription.bufferCount = 0;
 			group.drawCallDescription.textureCount = 0;
 			memset(group.drawCallDescription.bufferResources, 0, sizeof(group.drawCallDescription.bufferResources));

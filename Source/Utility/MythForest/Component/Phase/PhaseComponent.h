@@ -34,7 +34,12 @@ namespace PaintsNow {
 			TObject<IReflect>& operator () (IReflect& reflect) override;
 			MatrixFloat4x4 viewProjectionMatrix;
 			MatrixFloat4x4 viewMatrix;
+			MatrixFloat4x4 lightReprojectionMatrix;
+			Float4 lightColor;
+			Float4 lightPosition;
+			Float2 invScreenSize;
 			IShader::BindTexture noiseTexture;
+			IShader::BindTexture lightDepthTexture;
 		};
 
 		struct WorldInstanceData : public TReflected<WorldInstanceData, PassBase::PartialData> {
@@ -138,9 +143,11 @@ namespace PaintsNow {
 		void SetDebugMode(const String& debugPath);
 
 		struct Phase : public RenderPortPhaseLightView::PhaseInfo {
+			Phase();
 			TShared<TextureResource> baseColorOcclusion;
 			TShared<TextureResource> normalRoughnessMetallic;
 			TShared<TextureResource> noiseTexture;
+			uint32_t shadowIndex;
 
 			// for tracing
 			TShared<ShaderResourceImpl<MultiHashTracePass> > tracePipeline;
@@ -196,6 +203,7 @@ namespace PaintsNow {
 
 		struct UpdatePointSetup {
 			uint32_t phaseIndex;
+			uint32_t shadowIndex;
 		};
 
 		struct UpdatePointShadow {
