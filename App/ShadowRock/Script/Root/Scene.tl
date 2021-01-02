@@ -275,7 +275,6 @@ function Scene.New(database : Database, clock : Clock) : Scene
 
 			table.insert(radius, { r / 12, r / 12, r / 12 })
 		end
-
 		for i = 1, 32 do 
 			local light = MythForest.NewEntity(-(((1))))
 			local lightTransformComponent = TransformComponentModule.New()

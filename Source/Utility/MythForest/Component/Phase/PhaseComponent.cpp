@@ -621,7 +621,7 @@ void PhaseComponent::CoTaskAssembleTaskSetup(Engine& engine, TaskData& task, con
 	task.worldGlobalData.noiseTexture.resource = phase.noiseTexture->GetRenderResource();
 	task.worldGlobalData.viewMatrix = phase.viewMatrix;
 	task.worldGlobalData.viewProjectionMatrix = phase.viewMatrix * phase.projectionMatrix;
-	Collect(engine, task, phase.viewMatrix, phase.viewMatrix);
+	Collect(engine, task, phase.viewMatrix, MatrixFloat4x4::Identity());
 }
 
 void PhaseComponent::DispatchTasks(Engine& engine) {
@@ -809,7 +809,7 @@ void PhaseComponent::CompleteUpdateLights(Engine& engine, std::vector<LightEleme
 
 		UpdatePointShadow bakePointShadow;
 		bakePointShadow.shadowIndex = safe_cast<uint32_t>(i);
-		// bakePointShadows.push(bakePointShadow);
+		bakePointShadows.push(bakePointShadow);
 	}
 
 	// generate setup tasks
@@ -894,7 +894,7 @@ void PhaseComponent::LightCollector::InvokeCollect(Engine& engine, Entity* entit
 
 void PhaseComponent::Update(Engine& engine, const Float3& center) {
 	// generate bake points
-	srand((int)time(nullptr));
+	srand(0);
 	bakePointSetups = std::stack<UpdatePointSetup>();
 
 	PerspectiveCamera camera;
