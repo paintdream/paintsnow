@@ -38,7 +38,7 @@
 #define _COMPILER_INTERFACE_INCLUDED_
 
 #include "../glslang/Include/ResourceLimits.h"
-#include "../MachineIndependent/Versions.h"
+#include "../glslang/MachineIndependent/Versions.h"
 
 #include <cstring>
 #include <vector>

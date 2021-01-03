@@ -8,6 +8,7 @@
 #include "../../../../Core/Template/TQueue.h"
 #include "../../../../Core/Template/TPool.h"
 #include "../OpenGL/GLSLShaderGenerator.h"
+#include "SPIRVCompiler.h"
 #include "ZRenderVulkan.h"
 // #include <glslang/Public/ShaderLang.h>
 #include <cstdio>
@@ -1512,8 +1513,9 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> final : public R
 			body += "\n}\n"; // make a call to our function
 
 			String fullShader = GLSLShaderGenerator::GetFrameCode() + common + head + body;
+			// Vulkan only support SPIRV shader
+			fullShader = SPIRVCompiler::Compile((IRender::Resource::ShaderDescription::Stage)k, fullShader);
 
-			// TODO: fill spirv
 			VkShaderModuleCreateInfo createInfo = {};
 			createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 			createInfo.codeSize = fullShader.size();
