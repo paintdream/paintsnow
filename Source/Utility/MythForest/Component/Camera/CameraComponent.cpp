@@ -846,18 +846,31 @@ void CameraComponent::CollectComponents(Engine& engine, TaskData& taskData, cons
 		// optional animation
 		subWorldInstancedData.animationComponent = entity->GetUniqueComponent(UniqueType<AnimationComponent>());
 
-		std::vector<Component*> exploredComponents;
+		ExplorerComponent::ComponentPointerAllocator allocator(&warpData.bytesCache);
+		std::vector<Component*, ExplorerComponent::ComponentPointerAllocator> exploredComponents(allocator);
 		ExplorerComponent* explorerComponent = entity->GetUniqueComponent(UniqueType<ExplorerComponent>());
+		Component* const* componentBegin = nullptr;
+		Component* const* componentEnd = nullptr;
+
 		if (explorerComponent != nullptr) {
 			// Use nearest refValue for selecting most detailed components
 			explorerComponent->SelectComponents(engine, entity, subWorldInstancedData.viewReference, exploredComponents);
+			if (!exploredComponents.empty()) {
+				componentBegin = &exploredComponents[0];
+				componentEnd = componentBegin + exploredComponents.size();
+			}
+		} else {
+			const std::vector<Component*>& components = entity->GetComponents();
+			if (!components.empty()) {
+				componentBegin = &components[0];
+				componentEnd = componentBegin + components.size();
+			}
 		}
 
-		const std::vector<Component*>& components = explorerComponent != nullptr ? exploredComponents : entity->GetComponents();
-
-		for (size_t i = 0; i < components.size(); i++) {
-			Component* component = components[i];
+		for (Component* const* c = componentBegin; c != componentEnd; ++c) {
+			Component* component = *c;
 			if (component == nullptr) continue;
+
 			assert(component->Flag().load(std::memory_order_relaxed) & Tiny::TINY_ACTIVATED);
 			if (!(component->Flag().load(std::memory_order_relaxed) & Tiny::TINY_ACTIVATED)) continue;
 

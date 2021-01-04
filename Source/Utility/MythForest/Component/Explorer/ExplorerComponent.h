@@ -4,6 +4,7 @@
 //
 
 #pragma once
+#include "../../../../Core/Template/TCache.h"
 #include "../../Component.h"
 #include "../../../SnowyStream/SnowyStream.h"
 #include "../Space/SpaceComponent.h"
@@ -27,7 +28,8 @@ namespace PaintsNow {
 
 		void SetProxyConfig(Component* component, const ProxyConfig& config);
 		Unique GetExploredComponentType() const;
-		void SelectComponents(Engine& engine, Entity* entity, float refValue, std::vector<Component*>& collectedComponents);
+		typedef TCacheAllocator<Component*, uint8_t> ComponentPointerAllocator;
+		void SelectComponents(Engine& engine, Entity* entity, float refValue, std::vector<Component*, ComponentPointerAllocator>& collectedComponents);
 
 	protected:
 		struct Proxy {

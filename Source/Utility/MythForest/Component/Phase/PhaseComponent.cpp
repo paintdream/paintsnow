@@ -380,6 +380,7 @@ void PhaseComponent::TickRender(Engine& engine) {
 			// Save data asynchronized
 			uint32_t frameIndex = engine.GetFrameIndex();
 			for (size_t j = 0; j < task.textures.size(); j++) {
+				assert(!task.textures[j]->GetLocation().empty());
 				engine.GetKernel().QueueRoutine(this, CreateTaskContextFree(Wrap(this, &PhaseComponent::CoTaskWriteDebugTexture), std::ref(engine), (uint32_t)safe_cast<uint32_t>(frameIndex * tasks.size() + i), std::move(task.textures[j]->description.data), task.textures[j]));
 			}
 
@@ -952,17 +953,31 @@ void PhaseComponent::CollectComponents(Engine& engine, TaskData& task, const Wor
 		instanceData.worldMatrix = transformComponent != nullptr ? transformComponent->GetTransform() * inst.worldMatrix : inst.worldMatrix;
 		instanceData.instancedColor = inst.instancedColor;
 
-		std::vector<Component*> exploredComponents;
+		uint32_t currentWarpIndex = engine.GetKernel().GetCurrentWarpIndex();
+		WarpData& warpData = task.warpData[currentWarpIndex == ~(uint32_t)0 ? GetWarpIndex() : currentWarpIndex];
+		ExplorerComponent::ComponentPointerAllocator allocator(&warpData.bytesCache);
+		std::vector<Component*, ExplorerComponent::ComponentPointerAllocator> exploredComponents(allocator);
 		ExplorerComponent* explorerComponent = entity->GetUniqueComponent(UniqueType<ExplorerComponent>());
+		Component* const* componentBegin = nullptr;
+		Component* const* componentEnd = nullptr;
+
 		if (explorerComponent != nullptr) {
 			// Use nearest refValue for selecting most detailed components
 			explorerComponent->SelectComponents(engine, entity, 0.0f, exploredComponents);
+			if (!exploredComponents.empty()) {
+				componentBegin = &exploredComponents[0];
+				componentEnd = componentBegin + exploredComponents.size();
+			}
+		} else {
+			const std::vector<Component*>& components = entity->GetComponents();
+			if (!components.empty()) {
+				componentBegin = &components[0];
+				componentEnd = componentBegin + components.size();
+			}
 		}
 
-		const std::vector<Component*>& components = explorerComponent != nullptr ? exploredComponents : entity->GetComponents();
-
-		for (size_t i = 0; i < components.size(); i++) {
-			Component* component = components[i];
+		for (Component* const* c = componentBegin; c != componentEnd; ++c) {
+			Component* component = *c;
 			if (component == nullptr) continue;
 
 			if (component->GetEntityFlagMask() & Entity::ENTITY_HAS_RENDERABLE) {
