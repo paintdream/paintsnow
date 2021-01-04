@@ -56,11 +56,9 @@ void SkeletonResource::PrepareOffsetTransform(size_t k) {
 	offsetMatricesInv[k] = Math::QuickInverse(offsetMatrices[k]);
 }
 
-template <class T>
-uint32_t LocateFrame(const std::vector<T>& frames, float time) {
-	T t;
-	t.time = time;
-	size_t frame = std::lower_bound(frames.begin(), frames.end(), t) - frames.begin();
+static uint32_t LocateFrame(const std::vector<float>& frames, float time) {
+	assert(!frames.empty());
+	size_t frame = std::lower_bound(frames.begin(), frames.end(), time) - frames.begin();
 	return safe_cast<uint32_t>(Math::Min(frame, frames.size() - 1));
 }
 
@@ -105,17 +103,18 @@ float SkeletonResource::Snapshot(std::vector<MatrixFloat4x4>& transforms, uint32
 
 		if (channel.transSequence.frames.size() != 0) {
 			// interpolate between this frame and the next one.
-			uint32_t frame = LocateFrame(channel.transSequence.frames, time);
+			uint32_t frame = LocateFrame(channel.transSequence.timestamps, time);
 			uint32_t nextFrame = (frame + 1) % (int)channel.transSequence.frames.size();
-			const IAsset::TransSequence::Frame& key = channel.transSequence.frames[frame];
-			const IAsset::TransSequence::Frame& nextKey = channel.transSequence.frames[nextFrame];
-			float diffTime = nextKey.time - key.time;
+			const Float3& key = channel.transSequence.frames[frame];
+			const Float3& nextKey = channel.transSequence.frames[nextFrame];
+			float keyTime = channel.transSequence.timestamps[frame];
+			float diffTime = channel.transSequence.timestamps[nextFrame] - keyTime;
 
 			if (diffTime < 0)
 				diffTime += clip.duration;
 
 			if (diffTime > 0) {
-				float factor = ((float)time - key.time) / diffTime;
+				float factor = ((float)time - keyTime) / diffTime;
 				// linear interpolation
 				float factor1;
 				float factor2;
@@ -128,21 +127,26 @@ float SkeletonResource::Snapshot(std::vector<MatrixFloat4x4>& transforms, uint32
 
 				switch (channel.transSequence.interpolate) {
 					case IAsset::INTERPOLATE_NONE:
-						presentPosition = key.value;
+						presentPosition = key;
 						break;
 					case IAsset::INTERPOLATE_LINEAR:
-						presentPosition = key.value + (nextKey.value - key.value) * factor;
+						presentPosition = key + (nextKey - key) * factor;
 						break;
 					case IAsset::INTERPOLATE_HERMITE:
+					{
 						factorTimesTwo = factor * factor;
 
 						factor1 = factorTimesTwo * (2.0f * factor - 3.0f) + 1;
 						factor2 = factorTimesTwo * (factor - 2.0f) + factor;
 						factor3 = factorTimesTwo * (factor - 1.0f);
 						factor4 = factorTimesTwo * (3.0f - 2.0f * factor);
-						presentPosition = key.value * factor1 + key.outTan * factor2 + nextKey.inTan * factor3 + nextKey.outTan * factor4;
+						const std::pair<Float3, Float3>& tangents = channel.transSequence.frameTangents[frame];
+						const std::pair<Float3, Float3>& nextTangents = channel.transSequence.frameTangents[nextFrame];
+						presentPosition = key * factor1 + tangents.second * factor2 + nextKey * factor3 + nextTangents.first * factor4;
 						break;
+					}
 					case IAsset::INTERPOLATE_BEZIER:
+					{
 						factorTimesTwo = factor * factor;
 						inverseFactorTimesTwo = inverseFactor * inverseFactor;
 
@@ -151,11 +155,14 @@ float SkeletonResource::Snapshot(std::vector<MatrixFloat4x4>& transforms, uint32
 						factor3 = 3.0f * factorTimesTwo * inverseFactor;
 						factor4 = factorTimesTwo * factor;
 
-						presentPosition = key.value * factor1 + key.outTan * factor2 + nextKey.inTan * factor3 + nextKey.outTan * factor4;
+						const std::pair<Float3, Float3>& tangents = channel.transSequence.frameTangents[frame];
+						const std::pair<Float3, Float3>& nextTangents = channel.transSequence.frameTangents[nextFrame];
+						presentPosition = key * factor1 + tangents.second * factor2 + nextKey * factor3 + nextTangents.first * factor4;
 						break;
+					}
 				}
 			} else {
-				presentPosition = key.value;
+				presentPosition = key;
 			}
 		}
 
@@ -164,32 +171,37 @@ float SkeletonResource::Snapshot(std::vector<MatrixFloat4x4>& transforms, uint32
 
 		if (channel.rotSequence.frames.size() != 0) {
 			// interpolate between this frame and the next one.
-			uint32_t frame = LocateFrame(channel.rotSequence.frames, time);
+			uint32_t frame = LocateFrame(channel.rotSequence.timestamps, time);
 			uint32_t nextFrame = (frame + 1) % (int)channel.rotSequence.frames.size();
-			const IAsset::RotSequence::Frame& key = channel.rotSequence.frames[frame];
-			const IAsset::RotSequence::Frame& nextKey = channel.rotSequence.frames[nextFrame];
-			float diffTime = nextKey.time - key.time;
+			const Float4& key = channel.rotSequence.frames[frame];
+			const Float4& nextKey = channel.rotSequence.frames[nextFrame];
+			float keyTime = channel.rotSequence.timestamps[frame];
+			float diffTime = channel.rotSequence.timestamps[nextFrame] - keyTime;
 
 			if (diffTime < 0)
 				diffTime += clip.duration;
 
 			if (diffTime > EPSILON) {
-				float factor = ((float)time - key.time) / diffTime;
+				float factor = ((float)time - keyTime) / diffTime;
 				// linear interpolation
 				switch (channel.rotSequence.interpolate) {
 					case IAsset::INTERPOLATE_NONE:
-						presentRotation = key.value;
+						presentRotation = key;
 						break;
 					case IAsset::INTERPOLATE_LINEAR:
-						Quater::Interpolate(presentRotation, Quater(key.value), Quater(nextKey.value), factor);
+						Quater::Interpolate(presentRotation, Quater(key), Quater(nextKey), factor);
 						break;
 					case IAsset::INTERPOLATE_HERMITE:
 					case IAsset::INTERPOLATE_BEZIER:
-						Quater::InterpolateSquad(presentRotation, Quater(key.value), Quater(key.outTan), Quater(nextKey.value), Quater(nextKey.inTan), factor);
+					{
+						const std::pair<Float4, Float4>& tangents = channel.rotSequence.frameTangents[frame];
+						const std::pair<Float4, Float4>& nextTangents = channel.rotSequence.frameTangents[nextFrame];
+						Quater::InterpolateSquad(presentRotation, Quater(key), Quater(tangents.second), Quater(nextKey), Quater(nextTangents.first), factor);
 						break;
+					}
 				}
 			} else {
-				presentRotation = key.value;
+				presentRotation = key;
 			}
 		}
 
@@ -197,21 +209,65 @@ float SkeletonResource::Snapshot(std::vector<MatrixFloat4x4>& transforms, uint32
 		Float3 presentScaling(1, 1, 1);
 
 		if (channel.scalingSequence.frames.size() != 0) {
-			uint32_t frame = LocateFrame(channel.scalingSequence.frames, time);
+			uint32_t frame = LocateFrame(channel.scalingSequence.timestamps, time);
 			uint32_t nextFrame = (frame + 1) % (int)channel.scalingSequence.frames.size();
-			const IAsset::ScalingSequence::Frame& key = channel.scalingSequence.frames[frame];
-			const IAsset::ScalingSequence::Frame& nextKey = channel.scalingSequence.frames[nextFrame];
-			float diffTime = nextKey.time - key.time;
+			const Float3& key = channel.scalingSequence.frames[frame];
+			const Float3& nextKey = channel.scalingSequence.frames[nextFrame];
+			float keyTime = channel.scalingSequence.timestamps[frame];
+			float diffTime = channel.scalingSequence.timestamps[nextFrame] - keyTime;
 
 			if (diffTime < 0)
 				diffTime += clip.duration;
 
 			if (diffTime > EPSILON) {
-				float factor = ((float)time - key.time) / diffTime;
-				// only support linear blend ...
-				presentScaling = key.value + (nextKey.value - key.value) * factor;
+				float factor = ((float)time - keyTime) / diffTime;
+				float factor1;
+				float factor2;
+				float factor3;
+				float factor4;
+				float factorTimesTwo;
+				float inverseFactorTimesTwo;
+
+				float inverseFactor = 1.0f - factor;
+				
+				switch (channel.scalingSequence.interpolate) {
+					case IAsset::INTERPOLATE_NONE:
+						presentScaling = key;
+						break;
+					case IAsset::INTERPOLATE_LINEAR:
+						presentScaling = key + (nextKey - key) * factor;
+						break;
+					case IAsset::INTERPOLATE_HERMITE:
+					{
+						factorTimesTwo = factor * factor;
+
+						factor1 = factorTimesTwo * (2.0f * factor - 3.0f) + 1;
+						factor2 = factorTimesTwo * (factor - 2.0f) + factor;
+						factor3 = factorTimesTwo * (factor - 1.0f);
+						factor4 = factorTimesTwo * (3.0f - 2.0f * factor);
+						const std::pair<Float3, Float3>& tangents = channel.scalingSequence.frameTangents[frame];
+						const std::pair<Float3, Float3>& nextTangents = channel.scalingSequence.frameTangents[nextFrame];
+						presentScaling = key * factor1 + tangents.second * factor2 + nextKey * factor3 + nextTangents.first * factor4;
+						break;
+					}
+					case IAsset::INTERPOLATE_BEZIER:
+					{
+						factorTimesTwo = factor * factor;
+						inverseFactorTimesTwo = inverseFactor * inverseFactor;
+
+						factor1 = inverseFactorTimesTwo * inverseFactor;
+						factor2 = 3.0f * factor * inverseFactorTimesTwo;
+						factor3 = 3.0f * factorTimesTwo * inverseFactor;
+						factor4 = factorTimesTwo * factor;
+
+						const std::pair<Float3, Float3>& tangents = channel.scalingSequence.frameTangents[frame];
+						const std::pair<Float3, Float3>& nextTangents = channel.scalingSequence.frameTangents[nextFrame];
+						presentScaling = key * factor1 + tangents.second * factor2 + nextKey * factor3 + nextTangents.first * factor4;
+						break;
+					}
+				}
 			} else {
-				presentScaling = channel.scalingSequence.frames[frame].value;
+				presentScaling = key;
 			}
 		}
 

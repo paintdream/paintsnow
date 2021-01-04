@@ -86,39 +86,24 @@ namespace PaintsNow {
 		enum FILTER { FILTER_NONE, FILTER_TRANSPARENT, FILTER_BLEND, FILTER_ADDITIVE, FILTER_ADD_ALPHA, FILTER_MODULATE };
 
 		template <class T>
-		class InterpolateValue {
-		public:
-			bool operator < (const InterpolateValue& rhs) const {
-				return time < rhs.time;
-			}
-
-			T value;
-			T inTan;
-			T outTan;
-			float time;
-		};
-
-		template <class T>
 		class Sequence : public TReflected<Sequence<T>, IReflectObjectComplex> {
 		public:
 			typedef TReflected<Sequence<T>, IReflectObjectComplex> BaseClass;
 			TObject<IReflect>& operator () (IReflect& reflect) override {
 				BaseClass::operator () (reflect);
 				if (reflect.IsReflectProperty()) {
+					ReflectProperty(timestamps);
 					ReflectProperty(frames);
+					ReflectProperty(frameTangents);
 					ReflectProperty(interpolate);
 				}
 
 				return *this;
 			}
 
-#ifdef _MSC_VER
-			typedef typename InterpolateValue<T> Frame;
-#else
-			typedef InterpolateValue<T> Frame;
-#endif
-			std::vector<Frame> frames;
-			Frame staticFrame;
+			std::vector<float> timestamps;
+			std::vector<T> frames;
+			std::vector<std::pair<T, T> > frameTangents;
 			INTERPOLATE interpolate;
 		};
 
