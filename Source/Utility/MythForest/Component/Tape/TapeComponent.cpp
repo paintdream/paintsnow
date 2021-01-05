@@ -1,8 +1,8 @@
 #include "TapeComponent.h"
-
-#include <utility>
 #include "../../../../Core/System/StringStream.h"
 #include "../../../BridgeSunset/BridgeSunset.h"
+#include "../../../../Core/Driver/Profiler/Optick/optick.h"
+#include <utility>
 
 using namespace PaintsNow;
 
@@ -60,6 +60,7 @@ bool TapeComponent::Seek(int64_t seq) {
 }
 
 void TapeComponent::OnAsyncFlush(Engine& engine, IScript::Request::Ref callback) {
+	OPTICK_EVENT();
 	bool result = FlushInternal();
 
 	IScript::Request& request = *engine.bridgeSunset.AcquireSafe();

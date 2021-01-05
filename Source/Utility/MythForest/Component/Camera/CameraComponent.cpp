@@ -18,6 +18,7 @@
 #include "../../Engine.h"
 #include "../../../BridgeSunset/BridgeSunset.h"
 #include "../../../SnowyStream/SnowyStream.h"
+#include "../../../../Core/Driver/Profiler/Optick/optick.h"
 #include <cmath>
 #include <iterator>
 #include <utility>
@@ -143,6 +144,7 @@ void CameraComponent::DispatchEvent(Event& event, Entity* entity) {
 }
 
 void CameraComponent::Instancing(Engine& engine, TaskData& taskData) {
+	OPTICK_EVENT();
 	// instancing
 	// do not sort at this moment.
 	IRender& render = engine.interfaces.render;
@@ -238,6 +240,7 @@ MatrixFloat4x4 CameraComponent::ComputeSmoothTrackTransform() const {
 }
 
 void CameraComponent::UpdateTaskData(Engine& engine, Entity* hostEntity) {
+	OPTICK_EVENT();
 	// Next collection ready? 
 	if (!(Flag().fetch_and(~CAMERACOMPONENT_UPDATE_COMMITTED, std::memory_order_relaxed) & CAMERACOMPONENT_UPDATE_COMMITTED)) {
 		return;
@@ -301,6 +304,7 @@ T* QueryPort(IRender& render, std::map<RenderPolicy*, RenderStage::Port*>& polic
 }
 
 void CameraComponent::CommitRenderRequests(Engine& engine, TaskData& taskData, IRender::Queue* queue) {
+	OPTICK_EVENT();
 	// commit to RenderFlowComponent
 	// update data updaters
 	if (renderFlowComponent) {
@@ -442,6 +446,7 @@ void CameraComponent::CommitRenderRequests(Engine& engine, TaskData& taskData, I
 }
 
 void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPort, IRender::Queue* queue) {
+	OPTICK_EVENT();
 	std::atomic_thread_fence(std::memory_order_acquire);
 
 	TShared<TaskData> taskData;
@@ -535,6 +540,7 @@ void CameraComponent::OnTickHost(Engine& engine, Entity* hostEntity) {
 }
 
 void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskData, RenderableComponent* renderableComponent, TaskData::WarpData& warpData, const WorldInstanceData& instanceData) {
+	OPTICK_EVENT();
 	IRender& render = engine.interfaces.render;
 	IRender::Device* device = engine.snowyStream.GetRenderDevice();
 	IDrawCallProvider::InputRenderData inputRenderData(instanceData.viewReference, nullptr, renderFlowComponent->GetMainResolution());
@@ -753,6 +759,7 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 }
 
 void CameraComponent::CollectEnvCubeComponent(EnvCubeComponent* envCubeComponent, std::vector<std::pair<TShared<RenderPolicy>, EnvCubeElement> >& envCubeElements, const MatrixFloat4x4& worldMatrix) const {
+	OPTICK_EVENT();
 	EnvCubeElement element;
 	element.position = Float3(worldMatrix(3, 0), worldMatrix(3, 1), worldMatrix(3, 2));
 	element.cubeMapTexture = envCubeComponent->cubeMapTexture;
@@ -773,6 +780,7 @@ void CameraComponent::CompleteCollect(Engine& engine, TaskData& taskData) {
 }
 
 void CameraComponent::CollectLightComponent(Engine& engine, LightComponent* lightComponent, std::vector<std::pair<TShared<RenderPolicy>, LightElement> >& lightElements, const MatrixFloat4x4& worldMatrix, const TaskData& taskData) const {
+	OPTICK_EVENT();
 	LightElement element;
 	if (lightComponent->Flag().load(std::memory_order_relaxed) & LightComponent::LIGHTCOMPONENT_DIRECTIONAL) {
 		element.position = Float4(-worldMatrix(2, 0), -worldMatrix(2, 1), -worldMatrix(2, 2), 0);
@@ -809,6 +817,7 @@ uint32_t CameraComponent::GetCollectedTriangleCount() const {
 }
 
 void CameraComponent::CollectComponents(Engine& engine, TaskData& taskData, const WorldInstanceData& instanceData, const CaptureData& captureData, Entity* entity) {
+	OPTICK_EVENT();
 	Tiny::FLAG rootFlag = entity->Flag().load(std::memory_order_relaxed);
 	uint32_t warpIndex = entity->GetWarpIndex();
 	assert(warpIndex == engine.GetKernel().GetCurrentWarpIndex());

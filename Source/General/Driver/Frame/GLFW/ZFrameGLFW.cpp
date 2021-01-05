@@ -1,4 +1,5 @@
 #include "ZFrameGLFW.h"
+#include "../../../../Core/Driver/Profiler/Optick/optick.h"
 
 #if USE_STATIC_THIRDPARTY_LIBRARIES
 #define GLFW_STATIC
@@ -200,6 +201,7 @@ void ZFrameGLFW::OnCustomRender() {}
 
 void ZFrameGLFW::EnterMainLoop() {
 	while (!glfwWindowShouldClose(window)) 		{
+		OPTICK_FRAME("MainThread");
 		if (callback != nullptr) {
 			glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 			glClearDepth(0.0f);

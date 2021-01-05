@@ -1,5 +1,6 @@
 #include "Component.h"
 #include "Entity.h"
+#include "../../Core/Driver/Profiler/Optick/optick.h"
 
 using namespace PaintsNow;
 
@@ -114,6 +115,7 @@ bool Component::RaycastTask::EmplaceResult(rvalue<Component::RaycastResult> item
 float Component::Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const { return ratio; }
 
 void Component::RaycastForEntity(RaycastTask& task, Float3Pair& ray, Entity* entity) {
+	OPTICK_EVENT();
 	assert(!(entity->Flag().load(std::memory_order_acquire) & TINY_MODIFIED));
 	if (!Math::IntersectBox(entity->GetKey(), ray))
 		return;

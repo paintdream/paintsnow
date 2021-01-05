@@ -30,6 +30,7 @@
 #include "Resource/Passes/WaterPass.h"
 #include "Resource/Passes/WidgetPass.h"
 #include "../../Core/System/MemoryStream.h"
+#include "../../Core/Driver/Profiler/Optick/optick.h"
 #include "../../General/Driver/Filter/Json/Core/json.h"
 
 using namespace PaintsNow;
@@ -66,6 +67,7 @@ void SnowyStream::Initialize() {
 
 void SnowyStream::TickDevice(IDevice& device) {
 	if (&device == &interfaces.render) {
+		OPTICK_EVENT();
 		if (resourceQueue != nullptr) {
 			interfaces.render.PresentQueues(&resourceQueue, 1, IRender::PRESENT_EXECUTE_ALL);
 		}
@@ -582,6 +584,8 @@ void SnowyStream::RequestPersistResource(IScript::Request& request, IScript::Del
 struct CompressTask : public TaskOnce {
 	CompressTask(SnowyStream& s) : snowyStream(s) {}
 	void Execute(void* context) override {
+		OPTICK_EVENT();
+
 		resource->Map();
 		bool success = resource->Compress(compressType);
 		if (callback) {
@@ -755,6 +759,7 @@ bool SnowyStream::RegisterResourceSerializer(Unique unique, const String& extens
 }
 
 TShared<ResourceBase> SnowyStream::CreateResource(const String& path, const String& ext, bool openExisting, Tiny::FLAG flag) {
+	OPTICK_EVENT();
 	assert(!path.empty() || (!openExisting && !ext.empty()));
 	// try to parse extension from location if no ext provided
 	String location;
@@ -822,6 +827,7 @@ String SnowyStream::GetReflectedExtension(Unique unique) {
 }
 
 bool SnowyStream::LoadResource(const TShared<ResourceBase>& resource, const String& extension) {
+	OPTICK_EVENT();
 	// Find resource serializer
 	assert(resource);
 	String typeExtension = extension.empty() ? GetReflectedExtension(resource->GetUnique()) : extension;
@@ -859,6 +865,7 @@ bool SnowyStream::LoadResource(const TShared<ResourceBase>& resource, const Stri
 }
 
 bool SnowyStream::SaveResource(const TShared<ResourceBase>& resource, const String& extension) {
+	OPTICK_EVENT();
 	// Find resource serializer
 	assert(resource);
 	// assert(resource->IsMapped());

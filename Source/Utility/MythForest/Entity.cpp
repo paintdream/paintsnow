@@ -177,6 +177,10 @@ void Entity::AddComponent(Engine& engine, Component* component) {
 	}
 }
 
+void Entity::ReserveComponents(size_t size) {
+	components.reserve(size);
+}
+
 void Entity::RemoveComponent(Engine& engine, Component* component) {
 	assert(component != nullptr);
 	uint32_t id = component->GetQuickUniqueID();

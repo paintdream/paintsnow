@@ -60,6 +60,19 @@ namespace PaintsNow {
 		void RequestRemoveEntityComponent(IScript::Request& request, IScript::Delegate<Entity> entity, IScript::Delegate<Component> component);
 
 		/// <summary>
+		/// Reserve component slots of entity
+		/// </summary>
+		/// <param name="entity"> the Entity </param>
+		/// <param name="size"> the reserved size of component slots </param>
+		void RequestReserveEntityComponents(IScript::Request& request, IScript::Delegate<Entity> entity, size_t size);
+
+		/// <summary>
+		/// Remove all components from entity
+		/// </summary>
+		/// <param name="entity"> the Entity </param>
+		void RequestClearEntityComponents(IScript::Request& request, IScript::Delegate<Entity> entity);
+
+		/// <summary>
 		/// Update entity mask & boundingbox
 		/// </summary>
 		/// <param name="entity"> the Entity </param>
@@ -86,12 +99,6 @@ namespace PaintsNow {
 		/// <param name="componentType"> component type name</param>
 		/// <returns> Component if exists, otherwise null would be returned </returns>
 		TShared<Component> RequestGetUniqueEntityComponent(IScript::Request& request, IScript::Delegate<Entity> entity, const String& componentType);
-
-		/// <summary>
-		/// Remove all components from an entity
-		/// </summary>
-		/// <param name="entity"> the Entity </param>
-		void RequestClearEntityComponents(IScript::Request& request, IScript::Delegate<Entity> entity);
 
 		/// <summary>
 		/// Get last tick time of render device

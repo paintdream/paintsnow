@@ -1,5 +1,5 @@
 #include "RemoteComponent.h"
-
+#include "../../../../Core/Driver/Profiler/Optick/optick.h"
 #include <utility>
 
 using namespace PaintsNow;
@@ -258,6 +258,8 @@ void RemoteComponent::Call(IScript::Request& fromRequest, const TShared<RemoteRo
 }
 
 void RemoteComponent::Complete(IScript::RequestPool* returnPool, IScript::Request& toRequest, IScript::Request::Ref callback, const TShared<RemoteRoutine>& remoteRoutine) {
+	OPTICK_EVENT();
+
 	toRequest.DoLock();
 	toRequest.Call(sync, remoteRoutine->ref);
 	toRequest.UnLock();

@@ -121,6 +121,7 @@ TObject<IReflect>& MythForest::operator () (IReflect& reflect) {
 		ReflectMethod(RequestUpdateEntity)[ScriptMethod = "UpdateEntity"];
 		ReflectMethod(RequestAddEntityComponent)[ScriptMethodLocked = "AddEntityComponent"];
 		ReflectMethod(RequestRemoveEntityComponent)[ScriptMethodLocked = "RemoveEntityComponent"];
+		ReflectMethod(RequestReserveEntityComponents)[ScriptMethodLocked = "ReserveEntityComponents"];
 		ReflectMethod(RequestGetUniqueEntityComponent)[ScriptMethodLocked = "GetUniqueEntityComponent"];
 		ReflectMethod(RequestGetEntityComponents)[ScriptMethodLocked = "GetEntityComponents"];
 		ReflectMethod(RequestGetComponentType)[ScriptMethodLocked = "GetComponentType"];
@@ -223,6 +224,14 @@ void MythForest::RequestRemoveEntityComponent(IScript::Request& request, IScript
 	CHECK_THREAD_IN_MODULE(entity);
 
 	entity->RemoveComponent(engine, component.Get());
+}
+
+void MythForest::RequestReserveEntityComponents(IScript::Request& request, IScript::Delegate<Entity> entity, size_t size) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(entity);
+	CHECK_THREAD_IN_MODULE(entity);
+
+	entity->ReserveComponents(size);
 }
 
 TShared<Component> MythForest::RequestGetUniqueEntityComponent(IScript::Request& request, IScript::Delegate<Entity> entity, const String& componentName) {

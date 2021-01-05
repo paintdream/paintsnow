@@ -3,6 +3,7 @@
 #include "../../Core/Driver/Filter/Pod/ZFilterPod.h"
 #include "../../General/Driver/Filter/Json/ZFilterJson.h"
 #include "../../General/Driver/Filter/LZMA/ZFilterLZMA.h"
+#include "../../Core/Driver/Profiler/Optick/optick.h"
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -38,6 +39,8 @@ LeavesFlute::LeavesFlute(bool ng, Interfaces& inters, const TWrapper<IArchive*, 
 					galaxyWeaver(inters.thread, inters.tunnel, bridgeSunset, snowyStream, mythForest),
 					consoleThread(nullptr)
 {
+	OPTICK_APP("PaintsNow");
+
 	ScanModules scanModules;
 	(*this)(scanModules);
 	std::swap(modules, scanModules.modules);
@@ -157,6 +160,8 @@ bool LeavesFlute::ProcessCommand(const String& command) {
 }
 
 bool LeavesFlute::ConsoleProc(IThread::Thread* thread, size_t index) {
+	OPTICK_THREAD("Console");
+
 #ifndef WIN32
 	pollfd cinfd[1];
 	cinfd[0].fd = fileno(stdin);

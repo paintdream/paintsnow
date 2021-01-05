@@ -7,6 +7,7 @@
 #include "../Transform/TransformComponent.h"
 #include "../Explorer/ExplorerComponent.h"
 #include "../../../../Core/Interface/IMemory.h"
+#include "../../../../Core/Driver/Profiler/Optick/optick.h"
 
 using namespace PaintsNow;
 
@@ -455,6 +456,8 @@ void VisibilityComponent::CollectComponents(Engine& engine, TaskData& task, cons
 }
 
 void VisibilityComponent::PostProcess(TaskData& task) {
+	OPTICK_EVENT();
+
 	assert(task.status == TaskData::STATUS_POSTPROCESS);
 	Cell& cell = *task.cell;
 	Bytes& encodedData = cell.payload;
@@ -564,6 +567,7 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 }
 
 void VisibilityComponent::CoTaskAssembleTask(Engine& engine, TaskData& task, uint32_t face) {
+	OPTICK_EVENT();
 	if (hostEntity == nullptr) return;
 
 	IRender& render = engine.interfaces.render;

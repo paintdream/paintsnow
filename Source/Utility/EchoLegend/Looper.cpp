@@ -1,4 +1,5 @@
 #include "Looper.h"
+#include "../../Core/Driver/Profiler/Optick/optick.h"
 
 using namespace PaintsNow;
 
@@ -14,6 +15,8 @@ struct AsyncInfo {
 };
 
 bool Looper::ActivateRoutine(IThread::Thread* thread, size_t context) {
+	OPTICK_THREAD("Network Looper");
+
 	AsyncInfo* info = reinterpret_cast<AsyncInfo*>(context);
 	Activate();
 	IScript::Request& request = info->script.GetDefaultRequest();

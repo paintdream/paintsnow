@@ -6,6 +6,7 @@
 #include "../../../Interface/IShader.h"
 #include "../../../../Core/Interface/IMemory.h"
 #include "../../../../Core/Template/TQueue.h"
+#include "../../../../Core/Driver/Profiler/Optick/optick.h"
 #include "ZRenderOpenGL.h"
 #include "GLSLShaderGenerator.h"
 #include <cstdio>
@@ -1209,6 +1210,7 @@ struct ResourceImplOpenGL<IRender::Resource::RenderStateDescription> final : pub
 	}
 
 	void Execute(QueueImplOpenGL& queue) override {
+		OPTICK_EVENT();
 		GL_GUARD();
 
 		IRender::Resource::RenderStateDescription& d = GetDescription();
@@ -1417,6 +1419,7 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> final : pu
 	}
 
 	void Execute(QueueImplOpenGL& queue) override {
+		OPTICK_EVENT();
 		Resource::RenderTargetDescription& d = GetDescription();
 		GL_GUARD();
 
@@ -1582,6 +1585,7 @@ struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> final : public
 
 	void Download(QueueImplOpenGL& queue) override {}
 	void Execute(QueueImplOpenGL& queue) override {
+		OPTICK_EVENT();
 		GL_GUARD();
 
 		typedef ResourceImplOpenGL<ShaderDescription> Shader;

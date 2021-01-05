@@ -1,5 +1,6 @@
 #include "../../Core/Template/TBuffer.h"
 #include "../../Core/System/MemoryStream.h"
+#include "../../Core/Driver/Profiler/Optick/optick.h"
 #include "RemoteProxy.h"
 #include <iterator>
 
@@ -167,6 +168,8 @@ const TWrapper<IScript::Object*, const String&>& RemoteProxy::GetObjectCreator()
 }
 
 bool RemoteProxy::ThreadProc(IThread::Thread* thread, size_t context) {
+	OPTICK_THREAD("Network RemoteProxy");
+
 	ITunnel::Dispatcher* disp = dispatcher;
 	assert(!entry.empty());
 	ITunnel::Listener* listener = tunnel.OpenListener(disp, Wrap(this, &RemoteProxy::HandleEvent), Wrap(this, &RemoteProxy::OnConnection), entry);

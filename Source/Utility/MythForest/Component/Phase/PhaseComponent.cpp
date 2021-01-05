@@ -4,6 +4,7 @@
 #include "../Renderable/RenderableComponent.h"
 #include "../Transform/TransformComponent.h"
 #include "../Explorer/ExplorerComponent.h"
+#include "../../../../Core/Driver/Profiler/Optick/optick.h"
 #include <cmath>
 #include <ctime>
 #include <utility>
@@ -342,6 +343,7 @@ void PhaseComponent::DispatchEvent(Event& event, Entity* entity) {
 // #include "../../../MythForest/MythForest.h"
 
 void PhaseComponent::TickRender(Engine& engine) {
+	OPTICK_EVENT();
 	// check pipeline state
 	if (renderQueue == nullptr) return; // not inited.
 
@@ -403,6 +405,7 @@ static String ParseStageFromTexturePath(const String& path) {
 }
 
 void PhaseComponent::CoTaskWriteDebugTexture(Engine& engine, uint32_t index, Bytes& data, const TShared<TextureResource>& texture) {
+	OPTICK_EVENT();
 	if (!debugPath.empty()) {
 		std::stringstream ss;
 		ss << debugPath << "phase_" << index << "_" << ParseStageFromTexturePath(texture->GetLocation()) << ".png";
@@ -447,6 +450,7 @@ void PhaseComponent::CoTaskWriteDebugTexture(Engine& engine, uint32_t index, Byt
 }
 
 void PhaseComponent::ResolveTasks(Engine& engine) {
+	OPTICK_EVENT();
 	// resolve finished tasks
 	for (size_t k = 0; k < tasks.size(); k++) {
 		TaskData& task = tasks[k];
@@ -517,6 +521,7 @@ void PhaseComponent::ResolveTasks(Engine& engine) {
 }
 
 void PhaseComponent::TaskAssembleTaskBounce(Engine& engine, TaskData& task, const UpdatePointBounce& bakePoint) {
+	OPTICK_EVENT();
 	IRender& render = engine.interfaces.render;
 	assert(task.status == TaskData::STATUS_DISPATCHED);
 	IRender::Resource::RenderTargetDescription desc;
@@ -555,6 +560,8 @@ void PhaseComponent::TaskAssembleTaskBounce(Engine& engine, TaskData& task, cons
 }
 
 void PhaseComponent::CoTaskAssembleTaskShadow(Engine& engine, TaskData& task, const UpdatePointShadow& bakePoint) {
+	OPTICK_EVENT();
+
 	IRender& render = engine.interfaces.render;
 	assert(task.status == TaskData::STATUS_DISPATCHED);
 	IRender::Resource::RenderTargetDescription desc;
@@ -578,6 +585,7 @@ void PhaseComponent::CoTaskAssembleTaskShadow(Engine& engine, TaskData& task, co
 void PhaseComponent::CompleteCollect(Engine& engine, TaskData& taskData) {}
 
 void PhaseComponent::Collect(Engine& engine, TaskData& taskData, const MatrixFloat4x4& viewMatrix, const MatrixFloat4x4& worldMatrix) {
+	OPTICK_EVENT();
 	PerspectiveCamera camera;
 	CaptureData captureData;
 	camera.UpdateCaptureData(captureData, Math::QuickInverse(viewMatrix));
@@ -595,6 +603,8 @@ void PhaseComponent::Collect(Engine& engine, TaskData& taskData, const MatrixFlo
 }
 
 void PhaseComponent::CoTaskAssembleTaskSetup(Engine& engine, TaskData& task, const UpdatePointSetup& bakePoint) {
+	OPTICK_EVENT();
+
 	IRender& render = engine.interfaces.render;
 	assert(task.status == TaskData::STATUS_DISPATCHED);
 	IRender::Resource::RenderTargetDescription desc;

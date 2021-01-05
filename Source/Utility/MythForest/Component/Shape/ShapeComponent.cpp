@@ -1,4 +1,5 @@
 #include "ShapeComponent.h"
+#include "../../../../Core/Driver/Profiler/Optick/optick.h"
 
 using namespace PaintsNow;
 
@@ -262,6 +263,7 @@ struct ShapeComponent::PatchRaycaster {
 };
 
 float ShapeComponent::Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const {
+	OPTICK_EVENT();
 	if (!patches.empty()) {
 		Float3Pair box(ray.first, ray.first);
 		Math::Union(box, ray.second);

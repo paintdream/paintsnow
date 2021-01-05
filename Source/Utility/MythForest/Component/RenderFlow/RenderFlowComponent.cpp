@@ -3,6 +3,7 @@
 #include "../../../SnowyStream/SnowyStream.h"
 #include "RenderPort/RenderPortRenderTarget.h"
 #include "RenderStage/FrameBarrierRenderStage.h"
+#include "../../../../Core/Driver/Profiler/Optick/optick.h"
 #include <vector>
 
 using namespace PaintsNow;
@@ -132,6 +133,7 @@ void RenderFlowComponent::Compile() {
 
 // Notice that this function is called in render device thread
 void RenderFlowComponent::Render(Engine& engine) {
+	OPTICK_EVENT();
 	if (Flag().load(std::memory_order_acquire) & TINY_ACTIVATED) {
 		Flag().fetch_or(RENDERFLOWCOMPONENT_RENDERING, std::memory_order_acquire);
 
@@ -388,6 +390,7 @@ void RenderFlowComponent::SetMainResolution(Engine& engine) {
 }
 
 void RenderFlowComponent::RenderSyncTick(Engine& engine) {
+	OPTICK_EVENT();
 	if (Flag().load(std::memory_order_acquire) & TINY_ACTIVATED) {
 		SetMainResolution(engine);
 

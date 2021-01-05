@@ -2,6 +2,7 @@
 #include "../../Entity.h"
 #include "../../../BridgeSunset/BridgeSunset.h"
 #include "../../../../Core/Interface/IMemory.h"
+#include "../../../../Core/Driver/Profiler/Optick/optick.h"
 
 using namespace PaintsNow;
 
@@ -310,6 +311,8 @@ float SpaceComponent::RoutineRaycast(RaycastTask& task, Float3Pair& ray, Unit* p
 }
 
 float SpaceComponent::Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const {
+	OPTICK_EVENT();
+
 	if (!(Flag().load(std::memory_order_relaxed) & COMPONENT_LOCALIZED_WARP) || task.GetEngine().GetKernel().GetCurrentWarpIndex() == GetWarpIndex()) {
 		if (Flag().load(std::memory_order_relaxed) & SPACECOMPONENT_ORDERED) {
 			RaycastInternal(rootEntity, task, ray, parent, ratio, boundingBox, std::true_type());
