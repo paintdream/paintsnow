@@ -3,6 +3,7 @@
 #include "../../Engine.h"
 #include "../../../BridgeSunset/BridgeSunset.h"
 #include "../Event/EventComponent.h"
+#include "../../../../Core/Driver/Profiler/Optick/optick.h"
 
 using namespace PaintsNow;
 
@@ -78,6 +79,7 @@ void ScriptComponent::UpdateEntityFlagMask() {
 }
 
 void ScriptComponent::DispatchEvent(Event& event, Entity* entity) {
+	OPTICK_EVENT();
 	IScript::Request::Ref handler = handlers[event.eventID];
 	if (handler) {
 		Engine& engine = event.engine;

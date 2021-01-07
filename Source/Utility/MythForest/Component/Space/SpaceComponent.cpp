@@ -115,10 +115,12 @@ inline void DispatchEventRecursive(Event& event, Entity* entity) {
 }
 
 void SpaceComponent::RoutineDispatchEvent(const Event& event) {
+	OPTICK_EVENT();
 	DispatchEventRecursive(const_cast<Event&>(event), GetRootEntity());
 }
 
 void SpaceComponent::DispatchEvent(Event& event, Entity* entity) {
+	OPTICK_EVENT();
 	// forward tick only
 	if ((Flag().load(std::memory_order_relaxed) & SPACECOMPONENT_FORWARD_EVENT_TICK) && event.eventID == Event::EVENT_TICK) {
 		if (Flag().load(std::memory_order_relaxed) & COMPONENT_LOCALIZED_WARP) {

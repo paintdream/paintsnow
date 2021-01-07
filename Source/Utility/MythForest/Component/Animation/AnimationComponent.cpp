@@ -2,6 +2,7 @@
 #include "../Transform/TransformComponent.h"
 #include "../Event/EventComponent.h"
 #include "../../MythForest.h"
+#include "../../../../Core/Driver/Profiler/Optick/optick.h"
 
 using namespace PaintsNow;
 
@@ -90,6 +91,7 @@ IRender::Resource* AnimationComponent::AcquireBoneMatrixBuffer(IRender& render, 
 }
 
 void AnimationComponent::DispatchEvent(Event& event, Entity* entity) {
+	OPTICK_EVENT();
 	if (event.eventID == Event::EVENT_TICK) {
 		EventComponent* eventComponent = static_cast<EventComponent*>(event.sender());
 		assert(eventComponent != nullptr);

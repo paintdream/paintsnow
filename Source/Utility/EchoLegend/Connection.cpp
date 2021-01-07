@@ -1,4 +1,5 @@
 #include "Connection.h"
+#include "../../Core/Driver/Profiler/Optick/optick.h"
 
 using namespace PaintsNow;
 
@@ -75,6 +76,8 @@ IScript::Request::Ref Connection::GetCallback() const {
 }
 
 void Connection::OnEventHttp(int code) {
+	OPTICK_EVENT();
+
 	IScript::Request& req = *bridgeSunset.AcquireSafe();
 	req.DoLock();
 	req.Push();
@@ -91,6 +94,7 @@ struct Header {
 };
 
 void Connection::OnEvent(INetwork::EVENT event) {
+	OPTICK_EVENT();
 	if (event == INetwork::READ && (Flag().load(std::memory_order_acquire) & CONNECTION_PACKET_MODE)) {
 		String segment;
 		INetwork::PacketSizeType blockSize = 0x1000;
@@ -113,6 +117,7 @@ void Connection::OnEvent(INetwork::EVENT event) {
 }
 
 void Connection::DispatchEvent(INetwork::EVENT event) {
+	OPTICK_EVENT();
 	IScript::Request& req = *bridgeSunset.AcquireSafe();
 	req.DoLock();
 	req.Push();
@@ -136,6 +141,7 @@ void Connection::ScriptUninitialize(IScript::Request& request) {
 }
 
 String Connection::Read() {
+	OPTICK_EVENT();
 	if (!(Flag().load(std::memory_order_acquire) & TINY_ACTIVATED)) {
 		assert(!(Flag().load(std::memory_order_acquire) & CONNECTION_PACKET_MODE));
 
@@ -152,6 +158,7 @@ String Connection::Read() {
 }
 
 void Connection::Write(const String& data) {
+	OPTICK_EVENT();
 	if (!(Flag().load(std::memory_order_acquire) & TINY_ACTIVATED)) {
 		if (Flag().load(std::memory_order_relaxed) & CONNECTION_PACKET_MODE) {
 			INetwork::Packet packet;

@@ -1,6 +1,7 @@
 #include "Clock.h"
 #include <ctime>
 #include <iterator>
+#include "../../Core/Driver/Profiler/Optick/optick.h"
 using namespace PaintsNow;
 
 Clock::Clock(ITimer& base, BridgeSunset& b, int64_t interval, int64_t start, bool mergeTicks) : bridgeSunset(b), timerBase(base), now(start), offset(0) {
@@ -84,6 +85,8 @@ void Clock::Stop() {
 }
 
 void Clock::Execute(void* context) {
+	OPTICK_EVENT();
+
 	int64_t last = now;
 	now = GetFullClock() - offset;
 	std::vector<std::pair<ITask*, void*> > readyList;

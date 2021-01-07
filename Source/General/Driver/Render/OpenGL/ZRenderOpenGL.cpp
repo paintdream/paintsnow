@@ -226,6 +226,7 @@ struct QueueImplOpenGL final : public IRender::Queue {
 	};
 
 	void Repeat() {
+		OPTICK_EVENT();
 		while (flushCount.load(std::memory_order_acquire) > 1) {
 			while (!queuedCommands.Empty()) {
 				ResourceCommandImplOpenGL& command = queuedCommands.Top();
@@ -245,6 +246,7 @@ struct QueueImplOpenGL final : public IRender::Queue {
 	}
 
 	void ExecuteAll() {
+		OPTICK_EVENT();
 		while (!queuedCommands.Empty()) {
 			ResourceCommandImplOpenGL command = queuedCommands.Top();
 			queuedCommands.Pop();
@@ -255,6 +257,7 @@ struct QueueImplOpenGL final : public IRender::Queue {
 	}
 
 	void ClearAll() {
+		OPTICK_EVENT();
 		while (!queuedCommands.Empty()) {
 			ResourceCommandImplOpenGL command = queuedCommands.Top();
 			queuedCommands.Pop();
@@ -266,6 +269,7 @@ struct QueueImplOpenGL final : public IRender::Queue {
 	}
 
 	void Execute() {
+		OPTICK_EVENT();
 		while (!queuedCommands.Empty()) {
 			ResourceCommandImplOpenGL command = queuedCommands.Top();
 			queuedCommands.Pop();
@@ -1210,7 +1214,6 @@ struct ResourceImplOpenGL<IRender::Resource::RenderStateDescription> final : pub
 	}
 
 	void Execute(QueueImplOpenGL& queue) override {
-		OPTICK_EVENT();
 		GL_GUARD();
 
 		IRender::Resource::RenderStateDescription& d = GetDescription();
@@ -1419,7 +1422,6 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> final : pu
 	}
 
 	void Execute(QueueImplOpenGL& queue) override {
-		OPTICK_EVENT();
 		Resource::RenderTargetDescription& d = GetDescription();
 		GL_GUARD();
 
@@ -1585,7 +1587,6 @@ struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> final : public
 
 	void Download(QueueImplOpenGL& queue) override {}
 	void Execute(QueueImplOpenGL& queue) override {
-		OPTICK_EVENT();
 		GL_GUARD();
 
 		typedef ResourceImplOpenGL<ShaderDescription> Shader;

@@ -1,6 +1,4 @@
 #include "VisibilityComponent.h"
-
-#include <cmath>
 #include "../../../SnowyStream/SnowyStream.h"
 #include "../Space/SpaceComponent.h"
 #include "../Renderable/RenderableComponent.h"
@@ -8,6 +6,7 @@
 #include "../Explorer/ExplorerComponent.h"
 #include "../../../../Core/Interface/IMemory.h"
 #include "../../../../Core/Driver/Profiler/Optick/optick.h"
+#include <cmath>
 
 using namespace PaintsNow;
 
@@ -154,6 +153,7 @@ Entity* VisibilityComponent::GetHostEntity() const {
 }
 
 void VisibilityComponent::DispatchEvent(Event& event, Entity* entity) {
+	OPTICK_EVENT();
 	if (event.eventID == Event::EVENT_FRAME) {
 		// DoBake
 		TickRender(event.engine);

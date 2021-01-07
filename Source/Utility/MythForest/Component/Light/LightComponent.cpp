@@ -4,6 +4,7 @@
 #include "../Visibility/VisibilityComponent.h"
 #include "../../../SnowyStream/SnowyStream.h"
 #include "../../../MythForest/MythForest.h"
+#include "../../../../Core/Driver/Profiler/Optick/optick.h"
 #include <utility>
 
 using namespace PaintsNow;
@@ -51,6 +52,7 @@ void LightComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box, bool rec
 }
 
 std::vector<TShared<LightComponent::ShadowGrid> > LightComponent::UpdateShadow(Engine& engine, const MatrixFloat4x4& cameraTransform, const MatrixFloat4x4& lightTransform, Entity* rootEntity) {
+	OPTICK_EVENT();
 	std::vector<TShared<ShadowGrid> > grids(shadowLayers.size());
 	for (size_t i = 0; i < shadowLayers.size(); i++) {
 		TShared<ShadowLayer>& shadowLayer = shadowLayers[i];
@@ -78,6 +80,7 @@ void LightComponent::BindShadowStream(Engine& engine, uint32_t layer, const TSha
 LightComponent::ShadowLayer::ShadowLayer(Engine& engine) : gridSize(1), scale(1) {}
 
 TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engine, const UShort3& coord, const TShared<SharedTiny>& tiny, const TShared<SharedTiny>& context) {
+	OPTICK_EVENT();
 	assert(context);
 
 	// Do nothing by now
@@ -248,6 +251,7 @@ void LightComponent::InstanceGroup::Reset() {
 }
 
 void ShadowLayerConfig::TaskData::RenderFrame(Engine& engine) {
+	OPTICK_EVENT();
 	// engine.mythForest.StartCaptureFrame("lightdebug", "");
 	std::vector<IRender::Queue*> renderQueues;
 	renderQueues.emplace_back(renderQueue);
@@ -266,6 +270,7 @@ void ShadowLayerConfig::TaskData::RenderFrame(Engine& engine) {
 }
 
 void LightComponent::ShadowLayer::CompleteCollect(Engine& engine, TaskData& task) {
+	OPTICK_EVENT();
 	// assemble 
 	IRender::Queue* queue = task.renderQueue;
 	IRender& render = engine.interfaces.render;
@@ -537,6 +542,7 @@ void LightComponent::ShadowLayer::Uninitialize(Engine& engine) {
 }
 
 TShared<LightComponent::ShadowGrid> LightComponent::ShadowLayer::UpdateShadow(Engine& engine, const MatrixFloat4x4& cameraTransform, const MatrixFloat4x4& lightTransform, Entity* rootEntity) {
+	OPTICK_EVENT();
 	// compute grid id
 	Float3 position(cameraTransform(3, 0), cameraTransform(3, 1), cameraTransform(3, 2));
 

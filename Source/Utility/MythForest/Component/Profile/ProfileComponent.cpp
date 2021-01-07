@@ -1,5 +1,6 @@
 #include "ProfileComponent.h"
 #include "../../Entity.h"
+#include "../../../../Core/Driver/Profiler/Optick/optick.h"
 
 using namespace PaintsNow;
 
@@ -14,6 +15,7 @@ float ProfileComponent::GetTickInterval() const {
 }
 
 void ProfileComponent::DispatchEvent(Event& event, Entity* entity) {
+	OPTICK_EVENT();
 	Engine& engine = event.engine;
 	/*
 	if (event.eventID == Event::EVENT_PRETICK) {

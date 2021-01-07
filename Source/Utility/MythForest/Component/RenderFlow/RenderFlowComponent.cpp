@@ -417,6 +417,7 @@ void RenderFlowComponent::RenderSyncTick(Engine& engine) {
 }
 
 void RenderFlowComponent::DispatchEvent(Event& event, Entity* entity) {
+	OPTICK_EVENT();
 	if (event.eventID == Event::EVENT_FRAME) {
 		if (Flag().load(std::memory_order_acquire) & TINY_ACTIVATED) {
 			Engine& engine = event.engine;

@@ -1,5 +1,6 @@
 #include "Listener.h"
 #include "Connection.h"
+#include "../../Core/Driver/Profiler/Optick/optick.h"
 
 using namespace PaintsNow;
 

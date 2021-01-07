@@ -1,6 +1,7 @@
 #include "EventComponent.h"
 #include "../../Entity.h"
 #include "../../../HeartVioliner/Clock.h"
+#include "../../../../Core/Driver/Profiler/Optick/optick.h"
 
 using namespace PaintsNow;
 
@@ -128,6 +129,7 @@ void EventComponent::RoutineOnSize(Engine& engine, const Int2& size) {
 }
 
 void EventComponent::OnKeyboard(Engine& engine, const IFrame::EventKeyboard& keyboard) {
+	OPTICK_EVENT();
 	if (Flag().load(std::memory_order_relaxed) & TINY_ACTIVATED) {
 		if (rootEntity->Flag().load(std::memory_order_relaxed) & Entity::ENTITY_HAS_SPECIAL_EVENT) {
 			Event event(engine, Event::EVENT_INPUT, this, TShared<SharedTiny>::From(new Event::Wrapper<IFrame::EventKeyboard>(keyboard)));
@@ -137,6 +139,7 @@ void EventComponent::OnKeyboard(Engine& engine, const IFrame::EventKeyboard& key
 }
 
 void EventComponent::OnMouse(Engine& engine, const IFrame::EventMouse& mouse) {
+	OPTICK_EVENT();
 	if (Flag().load(std::memory_order_relaxed) & TINY_ACTIVATED) {
 		if (rootEntity->Flag().load(std::memory_order_relaxed) & Entity::ENTITY_HAS_SPECIAL_EVENT) {
 			Event event(engine, Event::EVENT_INPUT, this, TShared<SharedTiny>::From(new Event::Wrapper<IFrame::EventMouse>(mouse)));
@@ -146,6 +149,7 @@ void EventComponent::OnMouse(Engine& engine, const IFrame::EventMouse& mouse) {
 }
 
 void EventComponent::OnSize(Engine& engine, const IFrame::EventSize& size) {
+	OPTICK_EVENT();
 	if (Flag().load(std::memory_order_relaxed) & TINY_ACTIVATED) {
 		if (rootEntity->Flag().load(std::memory_order_relaxed) & Entity::ENTITY_HAS_SPECIAL_EVENT) {
 			Event event(engine, Event::EVENT_INPUT, this, TShared<SharedTiny>::From(new Event::Wrapper<IFrame::EventSize>(size)));
@@ -156,6 +160,7 @@ void EventComponent::OnSize(Engine& engine, const IFrame::EventSize& size) {
 
 void EventComponent::RoutineTickFrame(Engine& engine) {
 	if (!(Flag().load(std::memory_order_relaxed) & TINY_ACTIVATED)) return;
+	OPTICK_EVENT();
 
 	Event event(engine, Event::EVENT_FRAME, rootEntity);
 	// Do not post them directly because we are in render thread
