@@ -286,7 +286,7 @@ void SnowyStream::RequestReadFile(IScript::Request& request, IScript::Delegate<F
 			request.DoLock();
 			if (callback) {
 				request.Push();
-				request.Call(sync, callback, content);
+				request.Call(callback, content);
 				request.Pop();
 			} else {
 				request << content;
@@ -313,7 +313,7 @@ void SnowyStream::RequestWriteFile(IScript::Request& request, IScript::Delegate<
 			request.DoLock();
 			if (callback) {
 				request.Push();
-				request.Call(sync, callback, len);
+				request.Call(callback, len);
 				request.Pop();
 			} else {
 				request << len;
@@ -429,7 +429,7 @@ private:
 		request.DoLock();
 		if (callbackComplete) {
 			request.Push();
-			request.Call(sync, callbackComplete, resourceList);
+			request.Call(callbackComplete, resourceList);
 			request.Pop();
 			request.Dereference(callbackComplete);
 		}
@@ -449,7 +449,7 @@ private:
 			IScript::Request& request = *bridgeSunset.AcquireSafe();
 			request.DoLock();
 			request.Push();
-			request.Call(sync, callbackStep, pathList[index], resourceList[index]);
+			request.Call(callbackStep, pathList[index], resourceList[index]);
 			request.Pop();
 			request.UnLock();
 			bridgeSunset.ReleaseSafe(&request);
@@ -593,7 +593,7 @@ struct CompressTask : public TaskOnce {
 			IScript::Request& request = *bridgeSunset.AcquireSafe();
 			request.DoLock();
 			request.Push();
-			request.Call(sync, callback, success);
+			request.Call(callback, success);
 			request.Pop();
 			request.Dereference(callback);
 			request.UnLock();

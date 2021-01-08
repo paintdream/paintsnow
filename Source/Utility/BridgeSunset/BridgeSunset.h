@@ -8,6 +8,7 @@
 #include "../../Core/Interface/IScript.h"
 #include "../../Core/System/Kernel.h"
 #include "../../Core/System/TaskGraph.h"
+#include "../../Core/Driver/Profiler/Optick/optick.h"
 
 namespace PaintsNow {
 	class BridgeSunset : public TReflected<BridgeSunset, IScript::Library>, public IScript::RequestPool, public ISyncObject {
@@ -146,7 +147,7 @@ namespace PaintsNow {
 			IScript::Request& req = *bridgeSunset.AcquireSafe();
 			req.DoLock();
 			req.Push();
-			req.Call(sync, callback);
+			req.Call(callback);
 			req.Pop();
 			if (deref) {
 				req.Dereference(callback);
@@ -176,7 +177,7 @@ namespace PaintsNow {
 			IScript::Request& req = *bridgeSunset.AcquireSafe();
 			req.DoLock();
 			req.Push();
-			req.Call(sync, callback, pa);
+			req.Call(callback, pa);
 			req.Pop();
 			if (deref) {
 				req.Dereference(callback);
@@ -211,7 +212,7 @@ namespace PaintsNow {
 			IScript::Request& req = *bridgeSunset.AcquireSafe();
 			req.DoLock();
 			req.Push();
-			req.Call(sync, callback, pa, pb);
+			req.Call(callback, pa, pb);
 			req.Pop();
 			if (deref) {
 				req.Dereference(callback);
@@ -246,7 +247,7 @@ namespace PaintsNow {
 			IScript::Request& req = *bridgeSunset.AcquireSafe();
 			req.DoLock();
 			req.Push();
-			req.Call(sync, callback, pa, pb, pc);
+			req.Call(callback, pa, pb, pc);
 			req.Pop();
 			if (deref) {
 				req.Dereference(callback);
@@ -281,7 +282,7 @@ namespace PaintsNow {
 			IScript::Request& req = *bridgeSunset.AcquireSafe();
 			req.DoLock();
 			req.Push();
-			req.Call(sync, callback, pa, pb, pc, pd);
+			req.Call(callback, pa, pb, pc, pd);
 			req.Pop();
 			if (deref) {
 				req.Dereference(callback);
@@ -317,7 +318,7 @@ namespace PaintsNow {
 			IScript::Request& req = *bridgeSunset.AcquireSafe();
 			req.DoLock();
 			req.Push();
-			req.Call(sync, callback, pa, pb, pc, pd, pe);
+			req.Call(callback, pa, pb, pc, pd, pe);
 			req.Pop();
 			if (deref) {
 				req.Dereference(callback);
@@ -354,7 +355,7 @@ namespace PaintsNow {
 			IScript::Request& req = *bridgeSunset.AcquireSafe();
 			req.DoLock();
 			req.Push();
-			req.Call(sync, callback, pa, pb, pc, pd, pe, pf);
+			req.Call(callback, pa, pb, pc, pd, pe, pf);
 			req.Pop();
 			if (deref) {
 				req.Dereference(callback);
@@ -394,7 +395,7 @@ namespace PaintsNow {
 			IScript::Request& req = *bridgeSunset.AcquireSafe();
 			req.DoLock();
 			req.Push();
-			req.Call(sync, callback, pa, pb, pc, pd, pe, pf, pg);
+			req.Call(callback, pa, pb, pc, pd, pe, pf, pg);
 			req.Pop();
 			if (deref) {
 				req.Dereference(callback);
@@ -653,12 +654,14 @@ namespace PaintsNow {
 		};
 
 		void Execute(void* context) override {
+			OPTICK_EVENT();
+
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 			IScript::Request& req = *bridgeSunset.AcquireSafe();
 			req.DoLock();
 			req.Push();
 			Writer<decltype(arguments), sizeof...(Args)>()(req, arguments);
-			req.Call(sync, BaseClass::callback);
+			req.Call(BaseClass::callback);
 			if (deref) {
 				req.Dereference(BaseClass::callback);
 			}
@@ -694,6 +697,8 @@ namespace PaintsNow {
 		}
 
 		void Execute(void* context) override {
+			OPTICK_EVENT();
+
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 			IScript::Request& req = *bridgeSunset.AcquireSafe();
 			Apply(req, gen_seq<sizeof...(Args)>());

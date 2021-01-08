@@ -1,6 +1,6 @@
-#include "SPIRVCompiler.h"
 #include "Core/Public/ShaderLang.h"
 #include "Core/SPIRV/GlslangToSpv.h"
+#include "SPIRVCompiler.h"
 using namespace PaintsNow;
 
 static EShLanguage ConvertShaderStage(IRender::Resource::ShaderDescription::Stage stage) {

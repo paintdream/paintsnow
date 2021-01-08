@@ -81,7 +81,7 @@ void Connection::OnEventHttp(int code) {
 	IScript::Request& req = *bridgeSunset.AcquireSafe();
 	req.DoLock();
 	req.Push();
-	req.Call(sync, callback, this, code);
+	req.Call(callback, this, code);
 	req.Pop();
 	req.UnLock();
 	bridgeSunset.ReleaseSafe(&req);
@@ -124,7 +124,7 @@ void Connection::DispatchEvent(INetwork::EVENT event) {
 	if ((Flag().load(std::memory_order_relaxed) & CONNECTION_PACKET_MODE)) {
 		req << currentData;
 	}
-	req.Call(sync, callback, this, Looper::EventToString(event));
+	req.Call(callback, this, Looper::EventToString(event));
 	req.Pop();
 	req.UnLock();
 	bridgeSunset.ReleaseSafe(&req);

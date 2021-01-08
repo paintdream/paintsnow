@@ -95,7 +95,7 @@ void BridgeSunset::RequestQueueRoutine(IScript::Request& request, IScript::Deleg
 		// Already locked!
 		// request.DoLock();
 		request.Push();
-		request.Call(sync, callback);
+		request.Call(callback);
 		request.Dereference(callback);
 		request.Pop();
 		// request.UnLock();

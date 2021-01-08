@@ -323,7 +323,7 @@ public:
 				<< endtable;
 		}
 		request << endarray;
-		request.Call(sync, callback);
+		request.Call(callback);
 		request.Pop();
 		request.Dereference(callback);
 		request.UnLock();

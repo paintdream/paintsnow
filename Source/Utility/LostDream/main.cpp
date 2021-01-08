@@ -1,9 +1,5 @@
 // LostDream Test Entry
 #include "../../Core/PaintsNow.h"
-#if defined(_WIN32) || defined(WIN32)
-#include <comdef.h>
-// #include <vld.h>
-#endif
 #include "../LeavesFlute/LeavesFlute.h"
 
 #if !defined(CMAKE_PAINTSNOW) || ADD_THREAD_PTHREAD

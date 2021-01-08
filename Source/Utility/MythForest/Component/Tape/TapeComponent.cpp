@@ -65,7 +65,7 @@ void TapeComponent::OnAsyncFlush(Engine& engine, IScript::Request::Ref callback)
 
 	IScript::Request& request = *engine.bridgeSunset.AcquireSafe();
 	request.DoLock();
-	request.Call(sync, callback, result);
+	request.Call(callback, result);
 	request.UnLock();
 	engine.bridgeSunset.ReleaseSafe(&request);
 

@@ -74,7 +74,7 @@ void SoundComponent::Step(IScript::Request& request) {
 			request.DoLock();
 			request.Push();
 			request << (t == (size_t)-1 ? (int64_t)0 : (int64_t)t);
-			request.Call(sync, callback);
+			request.Call(callback);
 			request.Pop();
 			request.UnLock();
 		}

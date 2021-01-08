@@ -290,6 +290,8 @@ Kernel& LeavesFlute::GetKernel() {
 }
 
 void LeavesFlute::Require(IScript::Request& request) {
+	OPTICK_EVENT();
+
 	// disable extra libs
 	// request << global << key("package") << nil << endtable;
 	request << global << key("io") << nil << endtable;
@@ -376,19 +378,24 @@ void LeavesFlute::Print(const String& str) {
 }
 
 void LeavesFlute::OnWindowSize(const IFrame::EventSize& size) {
+	OPTICK_EVENT();
 	interfaces.render.SetDeviceResolution(snowyStream.GetRenderDevice(), size.size);
 	mythForest.OnSize(size.size);
 }
 
 void LeavesFlute::OnMouse(const IFrame::EventMouse& mouse) {
+	OPTICK_EVENT();
 	mythForest.OnMouse(mouse);
 }
 
 void LeavesFlute::OnKeyboard(const IFrame::EventKeyboard& keyboard) {
+	OPTICK_EVENT();
 	mythForest.OnKeyboard(keyboard);
 }
 
 void LeavesFlute::OnRender() {
+	OPTICK_CATEGORY("Render", Optick::Category::Rendering);
+
 	bool titleChanged = false;
 	DoLock();
 	if (!(appTitle == newAppTitle)) {
@@ -414,6 +421,8 @@ public:
 	ExpandParamsScriptTask(Kernel& k, const String& p, const std::vector<String>& params, Interfaces& inters) : kernel(k), path(p), value(params), interfaces(inters) {}
 
 	bool LoadScriptText(const String& path, String& text) {
+		OPTICK_EVENT();
+
 		uint64_t length = 0;
 		bool ret = false;
 		IStreamBase* stream = interfaces.archive.Open(path + "." + interfaces.script.GetFileExt(), false, length);
@@ -444,6 +453,8 @@ public:
 	}
 
 	void Execute(void* context) override {
+		OPTICK_EVENT();
+
 		BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 		IScript::Request& request = *bridgeSunset.AcquireSafe();
 		String text;
@@ -455,7 +466,7 @@ public:
 				for (size_t i = 0; i < value.size(); i++) {
 					request << value[i];
 				}
-				request.Call(sync, ref);
+				request.Call(ref);
 				request.Dereference(ref);
 				printf("=> ");
 				request.Pop();
@@ -762,6 +773,7 @@ struct InspectProcs : public IReflect {
 };
 
 void LeavesFlute::RequestInspect(IScript::Request& request, IScript::BaseDelegate d) {
+	OPTICK_EVENT();
 	CHECK_REFERENCES_NONE();
 
 	if (d.GetRaw() != nullptr) {
@@ -780,6 +792,7 @@ void LeavesFlute::RequestInspect(IScript::Request& request, IScript::BaseDelegat
 #endif
 
 void LeavesFlute::RequestSearchMemory(IScript::Request& request, const String& memory, size_t start, size_t end, uint32_t alignment, uint32_t maxResult) {
+	OPTICK_EVENT();
 	bridgeSunset.GetKernel().YieldCurrentWarp();
 #ifdef _MSC_VER
 	SYSTEM_INFO systemInfo;

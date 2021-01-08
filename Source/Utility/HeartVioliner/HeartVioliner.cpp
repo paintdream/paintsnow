@@ -144,7 +144,7 @@ int HeartVioliner::main(int argc, char* argv[]) {
 	request << global << key("io") << nil << endtable;
 	request << global << key("debug") << nil << endtable;
 	request.Push();
-	request.Call(sync, ref);
+	request.Call(ref);
 	request.Pop();
 	request.Dereference(ref);
 	return 0;

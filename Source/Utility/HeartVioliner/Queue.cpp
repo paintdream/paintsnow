@@ -71,7 +71,7 @@ void Queue::Post(IScript::Request& request, IScript::Request::Ref ref, int64_t t
 	// make a function call directly
 	for (std::list<IScript::Request::Ref>::reverse_iterator it = listeners.rbegin(); !(it == listeners.rend()); ++it) {
 		request.Push();
-		request.Call(sync, *it, timeStamp, ref);
+		request.Call(*it, timeStamp, ref);
 		request.Pop();
 		assert(request.GetScript()->IsLocked());
 	}

@@ -41,7 +41,7 @@ void Weaver::OnConnectionStatus(IScript::Request& request, bool isAuto, RemotePr
 		if (connectionCallback) {
 			request.DoLock();
 			request.Push();
-			request.Call(sync, connectionCallback, code, message);
+			request.Call(connectionCallback, code, message);
 			request.Pop();
 			request.UnLock();
 		}

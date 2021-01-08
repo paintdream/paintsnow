@@ -82,7 +82,7 @@ void Then(IScript::Request& request) {
 void After(IScript::Request& request, IScript::Request::Ref prefab) {
 	request.DoLock();
 	request.Push();
-	request.Call(sync, prefab, 0, String("abcasdfwhaodkjfo;asld;asdgihaosdfi"));
+	request.Call(prefab, 0, String("abcasdfwhaodkjfo;asld;asdgihaosdfi"));
 	request.Pop();
 	request.UnLock();
 }
@@ -122,7 +122,7 @@ void OnQueryPrefab(IScript::Request& request, IReflectObject& inter, const IScri
 	/*
 	request.DoLock();
 	request.Push();
-	request.Call(sync, ref, 0, "abcasdfwhaodkjfo;asld;asdgihaosdfi");
+	request.Call(ref, 0, "abcasdfwhaodkjfo;asld;asdgihaosdfi");
 	request.Pop();
 	request.UnLock();*/
 }
@@ -134,7 +134,7 @@ void OnQuery(IScript::Request& request, IReflectObject& inter, const IScript::Re
 	request.Push();
 
 	// You can choose either sync or async call.
-	testInterface.NewObject(sync, request, "Prefab");
+	testInterface.NewObject(IScript::Request::Sync(), request, "Prefab");
 	request >> prefab;
 
 	request.QueryInterface(Wrap(OnQueryPrefab), myPrefab, prefab);
@@ -144,7 +144,7 @@ void OnQuery(IScript::Request& request, IReflectObject& inter, const IScript::Re
 	/*
 	if (prefab) {
 	request.Push();
-	request.Call(sync, prefab, 0, "abcasdfwhaodkjfo;asld;asdgihaosdfi");
+	request.Call(prefab, 0, "abcasdfwhaodkjfo;asld;asdgihaosdfi");
 	request.Pop();
 	}*/
 }

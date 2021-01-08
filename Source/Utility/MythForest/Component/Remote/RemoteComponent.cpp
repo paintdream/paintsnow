@@ -240,7 +240,7 @@ void RemoteComponent::Call(IScript::Request& fromRequest, const TShared<RemoteRo
 			CopyVariable(flag, toRequest, fromRequest, fromRequest.GetCurrentType());
 		}
 		fromRequest.UnLock();
-		toRequest.Call(sync, remoteRoutine->ref);
+		toRequest.Call(remoteRoutine->ref);
 
 		fromRequest.DoLock();
 		for (int k = 0; k < toRequest.GetCount(); k++) {
@@ -261,7 +261,7 @@ void RemoteComponent::Complete(IScript::RequestPool* returnPool, IScript::Reques
 	OPTICK_EVENT();
 
 	toRequest.DoLock();
-	toRequest.Call(sync, remoteRoutine->ref);
+	toRequest.Call(remoteRoutine->ref);
 	toRequest.UnLock();
 
 	IScript::Request& returnRequest = *returnPool->AcquireSafe();
@@ -277,7 +277,7 @@ void RemoteComponent::Complete(IScript::RequestPool* returnPool, IScript::Reques
 	toRequest.Pop();
 	toRequest.UnLock();
 
-	returnRequest.Call(sync, callback);
+	returnRequest.Call(callback);
 	returnRequest.Dereference(callback);
 	returnRequest.Pop();
 	returnRequest.UnLock();

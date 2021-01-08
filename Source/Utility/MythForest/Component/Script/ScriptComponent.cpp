@@ -136,7 +136,7 @@ void ScriptComponent::DispatchEvent(Event& event, Entity* entity) {
 			}
 		}
 
-		request.Call(sync, handler);
+		request.Call(handler);
 		request.Pop();
 		request.UnLock();
 		requestPool.ReleaseSafe(&request);

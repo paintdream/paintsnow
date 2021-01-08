@@ -40,7 +40,7 @@ void StreamComponent::UnloadInternal(Engine& engine, Grid& grid, const TShared<S
 
 		request.DoLock();
 		request.Push();
-		request.Call(sync, unloadHandler.script, grid.coord, grid.object, context);
+		request.Call(unloadHandler.script, grid.coord, grid.object, context);
 		request >> w;
 		request.Pop();
 		request.UnLock();
@@ -76,7 +76,7 @@ SharedTiny* StreamComponent::Load(Engine& engine, const UShort3& coord, const TS
 
 			request.DoLock();
 			request.Push();
-			request.Call(sync, loadHandler.script, coord, last, context);
+			request.Call(loadHandler.script, coord, last, context);
 			request >> w;
 			request.Pop();
 			request.UnLock();
