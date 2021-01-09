@@ -39,8 +39,6 @@ LeavesFlute::LeavesFlute(bool ng, Interfaces& inters, const TWrapper<IArchive*, 
 					galaxyWeaver(inters.thread, inters.tunnel, bridgeSunset, snowyStream, mythForest),
 					consoleThread(nullptr)
 {
-	OPTICK_APP("PaintsNow");
-
 	ScanModules scanModules;
 	(*this)(scanModules);
 	std::swap(modules, scanModules.modules);

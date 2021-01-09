@@ -2,72 +2,72 @@ CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
 OPTION (CMAKE_WARN_VS6 "Allow compilation under Visual C++ 6.0" OFF)
 OPTION (STATIC_VC_RUNTIME "Use dynamic VC runtime" ON)
 
-if (NOT WIN32)
+IF (NOT WIN32)
   	find_program(CLANG-TIDY-EXE "/usr/bin/clang-tidy")
-endif()
+ENDIF ()
 
-if (EXISTS "${CLANG-TIDY-EXE}")
-	# message(STATUS "use clang-tidy to check")	
-  	# set(CMAKE_CXX_CLANG_TIDY "${CLANG-TIDY-EXE};--header-filter=.*;-checks=-*,modernize-use-override;modernize-pass-by-value;-p=${CMAKE_BUILD_DIR};-fix;-fix-errors")
-endif()
+IF (EXISTS "${CLANG-TIDY-EXE}")
+	# MESSAGE(STATUS "use clang-tidy to check")	
+  	# SET (CMAKE_CXX_CLANG_TIDY "${CLANG-TIDY-EXE};--header-filter=.*;-checks=-*,modernize-use-override;modernize-pass-by-value;-p=${CMAKE_BUILD_DIR};-fix;-fix-errors")
+ENDIF ()
 
-if (CMAKE_SYSTEM_PROCESSOR MATCHES "(ARM)|(ARM64)")
-    set (IS_X86_64 0)
-else ()
-    set (IS_X86_64 1)
-endif ()
+IF (CMAKE_SYSTEM_PROCESSOR MATCHES "(ARM)|(ARM64)")
+    SET (IS_X86_64 0)
+ELSE ()
+    SET (IS_X86_64 1)
+ENDIF ()
 
-message( STATUS "Is x86/amd64: ${IS_X86_64}" )
+MESSAGE( STATUS "Is x86/amd64: ${IS_X86_64}" )
 
 # ================================================================ #
 PROJECT (PaintsNow)
 
-macro(configure_msvc_runtime)
-	if(MSVC)
-		# Default to statically-linked runtime.
-		if(STATIC_VC_RUNTIME)
-			set(MSVC_RUNTIME "static")
-		else()
-			set(MSVC_RUNTIME "dynamic")
-		endif()
-		# Set compiler options.
-		set(variables
-			CMAKE_C_FLAGS_DEBUG
-			CMAKE_C_FLAGS_MINSIZEREL
-			CMAKE_C_FLAGS_RELEASE
-			CMAKE_C_FLAGS_RELWITHDEBINFO
-			CMAKE_CXX_FLAGS_DEBUG
-			CMAKE_CXX_FLAGS_MINSIZEREL
-			CMAKE_CXX_FLAGS_RELEASE
-			CMAKE_CXX_FLAGS_RELWITHDEBINFO
-		)
-		add_definitions(-D_HAS_EXCEPTIONS=0)
-		if(${MSVC_RUNTIME} STREQUAL "static")
-			# disable RTTI & Exceptions
-			set(CMAKE_CXX_FLAGS, "/DWIN32 /D_WINDOWS /W3")
-			message(STATUS
-				"MSVC -> forcing use of statically-linked runtime."
-			)
-			foreach(variable ${variables})
-				if(${variable} MATCHES "/MD")
-					string(REGEX REPLACE "/MD" "/MT" ${variable} "${${variable}}")
-				endif()
-			endforeach()
-		else()
-			message(STATUS
-				"MSVC -> forcing use of dynamically-linked runtime."
-			)
-			foreach(variable ${variables})
-				if(${variable} MATCHES "/MT")
-					string(REGEX REPLACE "/MT" "/MD" ${variable} "${${variable}}")
-				endif()
-			endforeach()
-		endif()
-	endif()
-endmacro()
+IF (MSVC)
+	# Default to statically-linked runtime.
+	IF (STATIC_VC_RUNTIME)
+		SET (MSVC_RUNTIME "static")
+	ELSE()
+		SET (MSVC_RUNTIME "dynamic")
+	ENDIF ()
+	# SET compiler options.
+	SET (variables
+		CMAKE_C_FLAGS_DEBUG
+		CMAKE_C_FLAGS_MINSIZEREL
+		CMAKE_C_FLAGS_RELEASE
+		CMAKE_C_FLAGS_RELWITHDEBINFO
+		CMAKE_CXX_FLAGS_DEBUG
+		CMAKE_CXX_FLAGS_MINSIZEREL
+		CMAKE_CXX_FLAGS_RELEASE
+		CMAKE_CXX_FLAGS_RELWITHDEBINFO
+	)
 
-configure_msvc_runtime()
-set(variables
+	ADD_DEFINITIONS (-D_HAS_EXCEPTIONS=0)
+	IF (${MSVC_RUNTIME} STREQUAL "static")
+		# disable RTTI & Exceptions
+		SET (CMAKE_CXX_FLAGS, "/DWIN32 /D_WINDOWS /W3")
+		MESSAGE (STATUS
+			"MSVC -> forcing use of statically-linked runtime."
+		)
+		FOREACH (variable ${variables})
+			IF (${variable} MATCHES "/MD")
+				string(REGEX REPLACE "/MD" "/MT" ${variable} "${${variable}}")
+			ENDIF ()
+		ENDFOREACH ()
+	ELSE()
+		MESSAGE(STATUS
+			"MSVC -> forcing use of dynamically-linked runtime."
+		)
+		FOREACH (variable ${variables})
+			IF (${variable} MATCHES "/MT")
+				string(REGEX REPLACE "/MT" "/MD" ${variable} "${${variable}}")
+			ENDIF ()
+		ENDFOREACH ()
+	ENDIF ()
+ENDIF ()
+
+SET (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DPAINTSNOW_RELEASE=1")
+
+SET (variables
 	CMAKE_C_FLAGS_DEBUG
 	CMAKE_C_FLAGS_MINSIZEREL
 	CMAKE_C_FLAGS_RELEASE
@@ -77,32 +77,31 @@ set(variables
 	CMAKE_CXX_FLAGS_RELEASE
 	CMAKE_CXX_FLAGS_RELWITHDEBINFO
 )
-message(STATUS "Initial build flags:")
-foreach(variable ${variables})
-	message(STATUS " '${variable}': ${${variable}}")
-endforeach()
-message(STATUS "")
+MESSAGE(STATUS "Initial build flags:")
+FOREACH (variable ${variables})
+	MESSAGE(STATUS " '${variable}': ${${variable}}")
+ENDFOREACH ()
+MESSAGE(STATUS "")
 
 INCLUDE(CheckIncludeFiles)
 
+ADD_DEFINITIONS (-D_7ZIP_ST)
+ADD_DEFINITIONS (-DCMAKE_PAINTSNOW)
 
-add_definitions(-D_7ZIP_ST)
-add_definitions(-DCMAKE_PAINTSNOW)
-
-set(CMAKE_CXX_STANDARD 11)
+SET (CMAKE_CXX_STANDARD 11)
 
 IF (MSVC)
 		# ADD_COMPILE_OPTIONS ("/doc")
 		STRING(REGEX REPLACE "/EH[a-z]+" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHs-c-")
+		SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHs-c-")
 		STRING(REGEX REPLACE "/GR" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
+		SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
 
-		SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Ob2 /Oi /Ot")
-		# SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /GL")
-		# SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /LTCG /INCREMENTAL:NO /OPT:REF")
-		# SET(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /LTCG /INCREMENTAL:NO /OPT:REF")
-		# SET(CMAKE_MODULE_LINKER_FLAGS_RELEASE "${CMAKE_MODULE_LINKER_FLAGS_RELEASE} /LTCG /INCREMENTAL:NO /OPT:REF")
+		SET (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Ob2 /Oi /Ot")
+		# SET (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /GL")
+		# SET (CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /LTCG /INCREMENTAL:NO /OPT:REF")
+		# SET (CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} /LTCG /INCREMENTAL:NO /OPT:REF")
+		# SET (CMAKE_MODULE_LINKER_FLAGS_RELEASE "${CMAKE_MODULE_LINKER_FLAGS_RELEASE} /LTCG /INCREMENTAL:NO /OPT:REF")
 
 		OPTION (USE_STATIC_THIRDPARTY_LIBRARIES "Use statically-linked third-party libraries" ON)
 		IF (USE_STATIC_THIRDPARTY_LIBRARIES)
@@ -113,18 +112,18 @@ IF (MSVC)
 ELSE (MSVC)
 	SET (FLAG_USE_STATIC_THIRDPARTY_LIBRARIES 0)
 	IF (IS_X86_64)
-		add_definitions(-msse4.1)
-		add_definitions(-msse3)
+		ADD_DEFINITIONS (-msse4.1)
+		ADD_DEFINITIONS (-msse3)
 	ENDIF (IS_X86_64)
 
 	IF (CMAKE_COMPILER_IS_GNUCXX)
-		add_definitions(-std=c++11)
-		add_definitions(-lstdc++)
+		ADD_DEFINITIONS (-std=c++11)
+		ADD_DEFINITIONS (-lstdc++)
 	ENDIF (CMAKE_COMPILER_IS_GNUCXX)
 	
-	add_definitions(-fno-exceptions)
-	add_definitions(-O3)
-	add_definitions(-Wno-unused-command-line-argument)
+	ADD_DEFINITIONS (-fno-exceptions)
+	ADD_DEFINITIONS (-O3)
+	ADD_DEFINITIONS (-Wno-unused-command-line-argument)
 ENDIF (MSVC)
 
 INCLUDE_DIRECTORIES ("${PROJECT_BINARY_DIR}")
@@ -142,7 +141,7 @@ FILE (GLOB_RECURSE PAINTSNOW_SRC
 		"${PROJECT_SOURCE_DIR}/Source/General/Template/*.cpp"
 )
 
-# Platform specific
+# Platform specIFic
 
 IF (MSVC)
 	FILE (GLOB_RECURSE PLATFORM_WINDOWS_SRC
@@ -162,7 +161,7 @@ IF (ADD_ARCHIVE_DIRENT_BUILTIN)
 	IF (NOT WIN32)
 		CHECK_INCLUDE_FILES(dirent.h HAVE_DIRENT_H)
 		IF (NOT HAVE_DIRENT_H)
-			MESSAGE (FINAL_ERROR "Could not find direct.h for Direct Archive Driver")
+			MESSAGE (FINAL_ERROR "Could not find direct.h FOR Direct Archive Driver")
 		ENDIF (NOT HAVE_DIRENT_H)
 	ENDIF (NOT WIN32)
 ELSE (ADD_ARCHIVE_DIRENT_BUILTIN)
@@ -214,7 +213,7 @@ IF (ADD_AUDIO_LAME)
 	CHECK_INCLUDE_FILES(lame.h HAVE_LAME_H)
 	CHECK_INCLUDE_FILES(lame/lame.h HAVE_LAME_OTHER_H)
 	IF (NOT HAVE_LAME_H AND NOT HAVE_LAME_OTHER_H)
-		MESSAGE (FINAL_ERROR "Could not find lame.h for LAME Decoder Audio Driver")
+		MESSAGE (FINAL_ERROR "Could not find lame.h FOR LAME Decoder Audio Driver")
 	ENDIF (NOT HAVE_LAME_H AND NOT HAVE_LAME_OTHER_H)
 
 	FILE (GLOB_RECURSE LAME_SRC
@@ -232,7 +231,7 @@ IF (ADD_AUDIO_OPENAL)
 	SET (FLAG_ADD_AUDIO_OPENAL 1)
 	CHECK_INCLUDE_FILES(AL/al.h HAVE_AL_H)
 	IF (NOT HAVE_AL_H)
-		MESSAGE (FATAL_ERROR "Could not find AL/al.h for OpenAL Audio Driver")
+		MESSAGE (FATAL_ERROR "Could not find AL/al.h FOR OpenAL Audio Driver")
 	ENDIF (NOT HAVE_AL_H)
 
 	FILE (GLOB_RECURSE OPENAL_SRC
@@ -386,12 +385,12 @@ IF (ADD_FONT_FREETYPE)
 	CHECK_INCLUDE_FILES(ftglyph.h HAVE_FREETYPE_H)
 	CHECK_INCLUDE_FILES(freetype/ftglyph.h HAVE_FREETYPE_OTHER_H)
 	IF (NOT HAVE_FREETYPE_H AND NOT HAVE_FREETYPE_OTHER_H)
-		# MESSAGE (FATAL_ERROR "Could not find ftglyph.h for Freetype Font Driver")
+		# MESSAGE (FATAL_ERROR "Could not find ftglyph.h FOR Freetype Font Driver")
 	ENDIF (NOT HAVE_FREETYPE_H AND NOT HAVE_FREETYPE_OTHER_H)
 
 	CHECK_INCLUDE_FILES(iconv.h HAVE_ICONV_H)
 	IF (NOT HAVE_ICONV_H)
-		MESSAGE (FATAL_ERROR "Could not find iconv.h for Freetype Font Driver")
+		MESSAGE (FATAL_ERROR "Could not find iconv.h FOR Freetype Font Driver")
 	ENDIF (NOT HAVE_ICONV_H)
 
 	FILE (GLOB_RECURSE FREETYPE_SRC
@@ -430,7 +429,7 @@ IF (ADD_IMAGE_FREEIMAGE)
 	SET (FLAG_ADD_IMAGE_FREEIMAGE 1)
 	CHECK_INCLUDE_FILES(FreeImage.h HAVE_FREEIMAGE_H)
 	IF (NOT HAVE_FREEIMAGE_H)
-		MESSAGE (FATAL_ERROR "Could not find FreeImage.h for Freeimage Image Driver")
+		MESSAGE (FATAL_ERROR "Could not find FreeImage.h FOR Freeimage Image Driver")
 	ENDIF (NOT HAVE_FREEIMAGE_H)
 
 	FILE (GLOB_RECURSE FREEIMAGE_SRC
@@ -448,7 +447,7 @@ IF (ADD_NETWORK_LIBEVENT)
 	SET (FLAG_ADD_NETWORK_LIBEVENT 1)
 	CHECK_INCLUDE_FILES(event2/event.h HAVE_EVENT_H)
 	IF (NOT HAVE_EVENT_H)
-		MESSAGE (FATAL_ERROR "Could not find event2/event.h for Libevent Network Driver")
+		MESSAGE (FATAL_ERROR "Could not find event2/event.h FOR Libevent Network Driver")
 	ENDIF (NOT HAVE_EVENT_H)
 
 	FILE (GLOB_RECURSE LIBEVENT_SRC
@@ -466,7 +465,7 @@ IF (ADD_RENDER_OPENGL)
 	SET (FLAG_ADD_RENDER_OPENGL 1)
 	CHECK_INCLUDE_FILES(GL/glew.h HAVE_GLEW_H)
 	IF (NOT HAVE_GLEW_H)
-		MESSAGE (FATAL_ERROR "Could not find GL/glew.h for OpenGL Render Driver")
+		MESSAGE (FATAL_ERROR "Could not find GL/glew.h FOR OpenGL Render Driver")
 	ENDIF (NOT HAVE_GLEW_H)
 
 	FILE (GLOB_RECURSE OPENGL_SRC
@@ -485,7 +484,7 @@ IF (ADD_RENDER_VULKAN)
 	SET (FLAG_ADD_RENDER_VULKAN 1)
 	CHECK_INCLUDE_FILES(vulkan/vulkan.h HAVE_VULKAN_H)
 	IF (NOT HAVE_VULKAN_H)
-		MESSAGE (FATAL_ERROR "Could not find vulkan/vulkan.h for Vulkan Render Driver")
+		MESSAGE (FATAL_ERROR "Could not find vulkan/vulkan.h FOR Vulkan Render Driver")
 	ENDIF (NOT HAVE_VULKAN_H)
 
 	FILE (GLOB_RECURSE VULKAN_SRC
@@ -551,7 +550,7 @@ IF (ADD_TIMER_POSIX_BUILTIN)
 	SET (FLAG_ADD_TIMER_POSIX_BUILTIN 1)
 	CHECK_INCLUDE_FILES(sys/time.h HAVE_SYSTIME_H)
 	IF (NOT HAVE_SYSTIME_H)
-		MESSAGE (FATAL_ERROR "Could not find sys/time.h for Posix Timer Driver")
+		MESSAGE (FATAL_ERROR "Could not find sys/time.h FOR Posix Timer Driver")
 	ENDIF (NOT HAVE_SYSTIME_H)
 
 	FILE (GLOB_RECURSE POSIX_TIMER_SRC
@@ -842,10 +841,9 @@ ADD_EXECUTABLE (LeavesWine ${LEAVESWINE_SRC} )
 
 TARGET_LINK_LIBRARIES (LeavesWine ${PAINTSNOW_LIBRARIES})
 
-
 IF (MSVC)
 ELSE (MSVC)
-ADD_DEFINITIONS(-fPIC)
+ADD_DEFINITIONS (-fPIC)
 ENDIF (MSVC)
 
 # ---------------------------------------------------------------- #
@@ -874,7 +872,7 @@ IF (MSVC)
 
 ELSE (MSVC)
 
-ADD_DEFINITIONS(-fPIC)
+ADD_DEFINITIONS (-fPIC)
 
 ENDIF (MSVC)
 

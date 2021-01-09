@@ -603,12 +603,12 @@ struct CompressTask : public TaskOnce {
 		}
 
 		resource->Unmap();
-		delete this;
+		ITask::Delete(this);
 	}
 
 	void Abort(void* context) override {
 		Finalize(context);
-		TaskOnce::Abort(context);
+		ITask::Delete(this);
 	}
 
 	void Finalize(void* context) {
@@ -632,7 +632,8 @@ void SnowyStream::RequestCompressResourceAsync(IScript::Request& request, IScrip
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(resource);
 	bridgeSunset.GetKernel().YieldCurrentWarp();
-	CompressTask* task = new CompressTask(*this);
+	void* p = ITask::Allocate(sizeof(CompressTask));
+	CompressTask* task = new (p) CompressTask(*this);
 	task->resource = resource.Get();
 	task->compressType = std::move(compressType);
 	task->callback = callback;

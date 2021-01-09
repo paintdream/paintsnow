@@ -118,9 +118,13 @@ namespace PaintsNow {
 	template <bool deref>
 	class ScriptTaskTemplateBase : public TaskOnce {
 	public:
+#if defined(_MSC_VER) && _MSC_VER <= 1200
+		typedef ScriptTaskTemplateBase<deref> BaseClass;
+#endif
 		ScriptTaskTemplateBase(IScript::Request::Ref ref) : callback(ref) {}
 
-		void Abort(void* context) override {
+		template <class T>
+		void Delete(void* context, T* t) {
 			if (deref) {
 				BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
@@ -130,7 +134,7 @@ namespace PaintsNow {
 				req.UnLock();
 			}
 
-			TaskOnce::Abort(context);
+			ITask::Delete(t);
 		}
 
 		IScript::Request::Ref callback;
@@ -141,7 +145,7 @@ namespace PaintsNow {
 	class ScriptTaskTemplate : public ScriptTaskTemplateBase<deref> {
 	public:
 		ScriptTaskTemplate(IScript::Request::Ref ref) : ScriptTaskTemplateBase<deref>(ref) {}
-		virtual void Execute(void* context) override {
+		void Execute(void* context) override {
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
 			IScript::Request& req = *bridgeSunset.AcquireSafe();
@@ -155,23 +159,27 @@ namespace PaintsNow {
 			req.UnLock();
 
 			bridgeSunset.ReleaseSafe(&req);
-			delete this;
+			BaseClass::Delete(context, this);
+		}
+
+		void Abort(void* context) override {
+			BaseClass::Delete(context, this);
 		}
 	};
 
 	inline ITask* CreateTaskScript(IScript::Request::Ref ref) {
-		return new ScriptTaskTemplate<false>(ref);
+		return new (ITask::Allocate(sizeof(ScriptTaskTemplate<false>))) ScriptTaskTemplate<false>(ref);
 	}
 
 	inline ITask* CreateTaskScriptOnce(IScript::Request::Ref ref) {
-		return new ScriptTaskTemplate<true>(ref);
+		return new (ITask::Allocate(sizeof(ScriptTaskTemplate<true>))) ScriptTaskTemplate<true>(ref);
 	}
 
 	template <bool deref, class A>
 	class ScriptTaskTemplateA : public ScriptTaskTemplateBase<deref> {
 	public:
 		ScriptTaskTemplateA(IScript::Request::Ref ref, const A& a) : ScriptTaskTemplateBase<deref>(ref) { pa = const_cast<A&>(a); }
-		virtual void Execute(void* context) override {
+		void Execute(void* context) override {
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
 			IScript::Request& req = *bridgeSunset.AcquireSafe();
@@ -186,27 +194,30 @@ namespace PaintsNow {
 
 
 			bridgeSunset.ReleaseSafe(&req);
-			delete this;
+			BaseClass::Delete(context, this);
 		}
 
+		void Abort(void* context) override {
+			BaseClass::Delete(context, this);
+		}
 		typename std::decay<A>::type pa;
 	};
 
 	template <class A>
 	ITask* CreateTaskScript(IScript::Request::Ref ref, const A& a) {
-		return new ScriptTaskTemplateA<false, A>(ref, a);
+		return new (ITask::Allocate(sizeof(ScriptTaskTemplateA<false, A>))) ScriptTaskTemplateA<false, A>(ref, a);
 	}
 
 	template <class A>
 	ITask* CreateTaskScriptOnce(IScript::Request::Ref ref, const A& a) {
-		return new ScriptTaskTemplateA<true, A>(ref, a);
+		return new (ITask::Allocate(sizeof(ScriptTaskTemplateA<true, A>))) ScriptTaskTemplateA<true, A>(ref, a);
 	}
 
 	template <bool deref, class A, class B>
 	class ScriptTaskTemplateB : public ScriptTaskTemplateBase<deref> {
 	public:
 		ScriptTaskTemplateB(IScript::Request::Ref ref, const A& a, const B& b) : ScriptTaskTemplateBase<deref>(ref) { pa = const_cast<A&>(a); pb = const_cast<B&>(b); }
-		virtual void Execute(void* context) override {
+		void Execute(void* context) override {
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
 			IScript::Request& req = *bridgeSunset.AcquireSafe();
@@ -221,7 +232,10 @@ namespace PaintsNow {
 
 
 			bridgeSunset.ReleaseSafe(&req);
-			delete this;
+			BaseClass::Delete(context, this);
+		}
+		void Abort(void* context) override {
+			BaseClass::Delete(context, this);
 		}
 		typename std::decay<A>::type pa;
 		typename std::decay<B>::type pb;
@@ -229,19 +243,19 @@ namespace PaintsNow {
 
 	template <class A, class B>
 	ITask* CreateTaskScript(IScript::Request::Ref ref, const A& a, const B& b) {
-		return new ScriptTaskTemplateB<false, A, B>(ref, a, b);
+		return new (ITask::Allocate(sizeof(ScriptTaskTemplateB<false, A, B>))) ScriptTaskTemplateB<false, A, B>(ref, a, b);
 	}
 
 	template <class A, class B>
 	ITask* CreateTaskScriptOnce(IScript::Request::Ref ref, const A& a, const B& b) {
-		return new ScriptTaskTemplateB<true, A, B>(ref, a, b);
+		return new (ITask::Allocate(sizeof(ScriptTaskTemplateB<true, A, B>))) ScriptTaskTemplateB<true, A, B>(ref, a, b);
 	}
 
 	template <bool deref, class A, class B, class C>
 	class ScriptTaskTemplateC : public ScriptTaskTemplateBase<deref> {
 	public:
 		ScriptTaskTemplateC(IScript::Request::Ref ref, const A& a, const B& b, const C& c) : ScriptTaskTemplateBase<deref>(ref) { pa = const_cast<A&>(a); pb = const_cast<B&>(b); pc = const_cast<C&>(c); }
-		virtual void Execute(void* context) override {
+		void Execute(void* context) override {
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
 			IScript::Request& req = *bridgeSunset.AcquireSafe();
@@ -255,7 +269,10 @@ namespace PaintsNow {
 			req.UnLock();
 
 			bridgeSunset.ReleaseSafe(&req);
-			delete this;
+			BaseClass::Delete(context, this);
+		}
+		void Abort(void* context) override {
+			BaseClass::Delete(context, this);
 		}
 		typename std::decay<A>::type pa;
 		typename std::decay<B>::type pb;
@@ -264,19 +281,19 @@ namespace PaintsNow {
 
 	template <class A, class B, class C>
 	ITask* CreateTaskScript(IScript::Request::Ref ref, const A& a, const B& b, const C& c) {
-		return new ScriptTaskTemplateC<false, A, B, C>(ref, a, b, c);
+		return new (ITask::Allocate(sizeof(ScriptTaskTemplateC<false, A, B, C>))) ScriptTaskTemplateC<false, A, B, C>(ref, a, b, c);
 	}
 
 	template <class A, class B, class C>
 	ITask* CreateTaskScriptOnce(IScript::Request::Ref ref, const A& a, const B& b, const C& c) {
-		return new ScriptTaskTemplateC<true, A, B, C>(ref, a, b, c);
+		return new (ITask::Allocate(sizeof(ScriptTaskTemplateC<true, A, B, C>))) ScriptTaskTemplateC<true, A, B, C>(ref, a, b, c);
 	}
 
 	template <bool deref, class A, class B, class C, class D>
 	class ScriptTaskTemplateD : public ScriptTaskTemplateBase<deref> {
 	public:
 		ScriptTaskTemplateD(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d) : ScriptTaskTemplateBase<deref>(ref) { pa = const_cast<A&>(a); pb = const_cast<B&>(b); pc = const_cast<C&>(c); pd = const_cast<D&>(d); }
-		virtual void Execute(void* context) override {
+		void Execute(void* context) override {
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
 			IScript::Request& req = *bridgeSunset.AcquireSafe();
@@ -290,7 +307,10 @@ namespace PaintsNow {
 			req.UnLock();
 
 			bridgeSunset.ReleaseSafe(&req);
-			delete this;
+			BaseClass::Delete(context, this);
+		}
+		void Abort(void* context) override {
+			BaseClass::Delete(context, this);
 		}
 		typename std::decay<A>::type pa;
 		typename std::decay<B>::type pb;
@@ -300,19 +320,19 @@ namespace PaintsNow {
 
 	template <class A, class B, class C, class D>
 	ITask* CreateTaskScript(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d) {
-		return new ScriptTaskTemplateD<false, A, B, C, D>(ref, a, b, c, d);
+		return new (ITask::Allocate(sizeof(ScriptTaskTemplateD<false, A, B, C, D>))) ScriptTaskTemplateD<false, A, B, C, D>(ref, a, b, c, d);
 	}
 
 	template <class A, class B, class C, class D>
 	ITask* CreateTaskScriptOnce(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d) {
-		return new ScriptTaskTemplateD<true, A, B, C, D>(ref, a, b, c, d);
+		return new (ITask::Allocate(sizeof(ScriptTaskTemplateD<true, A, B, C, D>))) ScriptTaskTemplateD<true, A, B, C, D>(ref, a, b, c, d);
 	}
 
 	template <bool deref, class A, class B, class C, class D, class E>
 	class ScriptTaskTemplateE : public ScriptTaskTemplateBase<deref> {
 	public:
 		ScriptTaskTemplateE(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d, const E& e) : ScriptTaskTemplateBase<deref>(ref) { pa = const_cast<A&>(a); pb = const_cast<B&>(b); pc = const_cast<C&>(c); pd = const_cast<D&>(d); pe = const_cast<E&>(e); }
-		virtual void Execute(void* context) override {
+		void Execute(void* context) override {
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
 			IScript::Request& req = *bridgeSunset.AcquireSafe();
@@ -326,7 +346,10 @@ namespace PaintsNow {
 			req.UnLock();
 
 			bridgeSunset.ReleaseSafe(&req);
-			delete this;
+			BaseClass::Delete(context, this);
+		}
+		void Abort(void* context) override {
+			BaseClass::Delete(context, this);
 		}
 		typename std::decay<A>::type pa;
 		typename std::decay<B>::type pb;
@@ -337,19 +360,19 @@ namespace PaintsNow {
 
 	template <class A, class B, class C, class D, class E>
 	ITask* CreateTaskScript(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d, const E& e) {
-		return new ScriptTaskTemplateE<false, A, B, C, D, E>(ref, a, b, c, d, e);
+		return new (ITask::Allocate(sizeof(ScriptTaskTemplateE<false, A, B, C, D, E>))) ScriptTaskTemplateE<false, A, B, C, D, E>(ref, a, b, c, d, e);
 	}
 
 	template <class A, class B, class C, class D, class E>
 	ITask* CreateTaskScriptOnce(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d, const E& e) {
-		return new ScriptTaskTemplateE<true, A, B, C, D, E>(ref, a, b, c, d, e);
+		return new (ITask::Allocate(sizeof(ScriptTaskTemplateE<true, A, B, C, D, E>))) ScriptTaskTemplateE<true, A, B, C, D, E>(ref, a, b, c, d, e);
 	}
 
 	template <bool deref, class A, class B, class C, class D, class E, class F>
 	class ScriptTaskTemplateF : public ScriptTaskTemplateBase<deref> {
 	public:
 		ScriptTaskTemplateF(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d, const E& e, const F& f) : ScriptTaskTemplateBase<deref>(ref) { pa = const_cast<A&>(a); pb = const_cast<B&>(b); pc = const_cast<C&>(c); pd = const_cast<D&>(d); pe = const_cast<E&>(e); pf = const_cast<F&>(f); }
-		virtual void Execute(void* context) override {
+		void Execute(void* context) override {
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
 			IScript::Request& req = *bridgeSunset.AcquireSafe();
@@ -363,7 +386,10 @@ namespace PaintsNow {
 			req.UnLock();
 
 			bridgeSunset.ReleaseSafe(&req);
-			delete this;
+			BaseClass::Delete(context, this);
+		}
+		void Abort(void* context) override {
+			BaseClass::Delete(context, this);
 		}
 		typename std::decay<A>::type pa;
 		typename std::decay<B>::type pb;
@@ -375,12 +401,12 @@ namespace PaintsNow {
 
 	template <class A, class B, class C, class D, class E, class F>
 	ITask* CreateTaskScript(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d, const E& e, const F& f) {
-		return new ScriptTaskTemplateF<false, A, B, C, D, E, F>(ref, a, b, c, d, e, f);
+		return new (ITask::Allocate(sizeof(ScriptTaskTemplateF<false, A, B, C, D, E, F>))) ScriptTaskTemplateF<false, A, B, C, D, E, F>(ref, a, b, c, d, e, f);
 	}
 
 	template <class A, class B, class C, class D, class E, class F>
 	ITask* CreateTaskScriptOnce(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d, const E& e, const F& f) {
-		return new ScriptTaskTemplateF<true, A, B, C, D, E, F>(ref, a, b, c, d, e, f);
+		return new (ITask::Allocate(sizeof(ScriptTaskTemplateF<true, A, B, C, D, E, F>))) ScriptTaskTemplateF<true, A, B, C, D, E, F>(ref, a, b, c, d, e, f);
 	}
 
 	template <bool deref, class A, class B, class C, class D, class E, class F, class G>
@@ -389,7 +415,7 @@ namespace PaintsNow {
 		ScriptTaskTemplateG(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d, const E& e, const F& f, const G& g) : ScriptTaskTemplateBase<deref>(ref) {
 			pa = const_cast<A&>(a); pb = const_cast<B&>(b); pc = const_cast<C&>(c); pd = const_cast<D&>(d); pe = const_cast<E&>(e); pf = const_cast<F&>(f); pg = const_cast<G&>(g);
 		}
-		virtual void Execute(void* context) override {
+		void Execute(void* context) override {
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
 			IScript::Request& req = *bridgeSunset.AcquireSafe();
@@ -403,7 +429,10 @@ namespace PaintsNow {
 			req.UnLock();
 
 			bridgeSunset.ReleaseSafe(&req);
-			delete this;
+			BaseClass::Delete(context, this);
+		}
+		void Abort(void* context) override {
+			BaseClass::Delete(context, this);
 		}
 		typename std::decay<A>::type pa;
 		typename std::decay<B>::type pb;
@@ -416,12 +445,12 @@ namespace PaintsNow {
 
 	template <class A, class B, class C, class D, class E, class F, class G>
 	ITask* CreateTaskScript(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d, const E& e, const F& f, const G& g) {
-		return new ScriptTaskTemplateG<false, A, B, C, D, E, F, G>(ref, a, b, c, d, e, f, g);
+		return new (ITask::Allocate(sizeof(ScriptTaskTemplateG<false, A, B, C, D, E, F, G>))) ScriptTaskTemplateG<false, A, B, C, D, E, F, G>(ref, a, b, c, d, e, f, g);
 	}
 
 	template <class A, class B, class C, class D, class E, class F, class G>
 	ITask* CreateTaskScriptOnce(IScript::Request::Ref ref, const A& a, const B& b, const C& c, const D& d, const E& e, const F& f, const G& g) {
-		return new ScriptTaskTemplateG<true, A, B, C, D, E, F, G>(ref, a, b, c, d, e, f, g);
+		return new (ITask::Allocate(sizeof(ScriptTaskTemplateG<true, A, B, C, D, E, F, G>))) ScriptTaskTemplateG<true, A, B, C, D, E, F, G>(ref, a, b, c, d, e, f, g);
 	}
 
 	// Routine tasks
@@ -430,16 +459,19 @@ namespace PaintsNow {
 	class ScriptHandlerTemplate : public TaskOnce {
 	public:
 		ScriptHandlerTemplate(T ref) : callback(ref) {}
-		virtual void Execute(void* context) override {
+		void Execute(void* context) override {
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
 			IScript::Request& req = *bridgeSunset.AcquireSafe();
 			callback(req);
 
 			bridgeSunset.ReleaseSafe(&req);
-			delete this;
+			ITask::Delete(this);
 		}
 
+		void Abort(void* context) override {
+			ITask::Delete(this);
+		}
 		T callback;
 	};
 
@@ -452,39 +484,45 @@ namespace PaintsNow {
 	class ScriptHandlerTemplateA : public TaskOnce {
 	public:
 		ScriptHandlerTemplateA(T ref, const A& a) : callback(ref) { pa = const_cast<A&>(a); }
-		virtual void Execute(void* context) override {
+		void Execute(void* context) override {
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
 			IScript::Request& req = *bridgeSunset.AcquireSafe();
 			callback(req, pa);
 
 			bridgeSunset.ReleaseSafe(&req);
-			delete this;
+			ITask::Delete(this);
 		}
 
+		void Abort(void* context) override {
+			ITask::Delete(this);
+		}
 		T callback;
 		typename std::decay<A>::type pa;
 	};
 
 	template <class T, class A>
 	ITask* CreateTaskScriptHandler(T ref, const A& a) {
-		return new ScriptHandlerTemplateA<T, A>(ref, a);
+		return new (ITask::Allocate(sizeof(ScriptHandlerTemplateA<T, A>))) ScriptHandlerTemplateA<T, A>(ref, a);
 	}
 
 	template <class T, class A, class B>
 	class ScriptHandlerTemplateB : public TaskOnce {
 	public:
 		ScriptHandlerTemplateB(T ref, const A& a, const B& b) : callback(ref) { pa = const_cast<A&>(a); pb = const_cast<B&>(b); }
-		virtual void Execute(void* context) override {
+		void Execute(void* context) override {
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
 			IScript::Request& req = *bridgeSunset.AcquireSafe();
 			callback(req, pa, pb);
 
 			bridgeSunset.ReleaseSafe(&req);
-			delete this;
+			ITask::Delete(this);
 		}
 
+		void Abort(void* context) override {
+			ITask::Delete(this);
+		}
 		T callback;
 		typename std::decay<A>::type pa;
 		typename std::decay<B>::type pb;
@@ -492,23 +530,26 @@ namespace PaintsNow {
 
 	template <class T, class A, class B>
 	ITask* CreateTaskScriptHandler(T ref, const A& a, const B& b) {
-		return new ScriptHandlerTemplateB<T, A, B>(ref, a, b);
+		return new (ITask::Allocate(sizeof(ScriptHandlerTemplateB<T, A, B>))) ScriptHandlerTemplateB<T, A, B>(ref, a, b);
 	}
 
 	template <class T, class A, class B, class C>
 	class ScriptHandlerTemplateC : public TaskOnce {
 	public:
 		ScriptHandlerTemplateC(T ref, const A& a, const B& b, const C& c) : callback(ref) { pa = const_cast<A&>(a); pb = const_cast<B&>(b); pc = const_cast<C&>(c); }
-		virtual void Execute(void* context) override {
+		void Execute(void* context) override {
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
 			IScript::Request& req = *bridgeSunset.AcquireSafe();
 			callback(req, pa, pb, pc);
 
 			bridgeSunset.ReleaseSafe(&req);
-			delete this;
+			ITask::Delete(this);
 		}
 
+		void Abort(void* context) override {
+			ITask::Delete(this);
+		}
 		T callback;
 		typename std::decay<A>::type pa;
 		typename std::decay<B>::type pb;
@@ -517,23 +558,26 @@ namespace PaintsNow {
 
 	template <class T, class A, class B, class C>
 	ITask* CreateTaskScriptHandler(T ref, const A& a, const B& b, const C& c) {
-		return new ScriptHandlerTemplateC<T, A, B, C>(ref, a, b, c);
+		return new (ITask::Allocate(sizeof(ScriptHandlerTemplateC<T, A, B, C>))) ScriptHandlerTemplateC<T, A, B, C>(ref, a, b, c);
 	}
 
 	template <class T, class A, class B, class C, class D>
 	class ScriptHandlerTemplateD : public TaskOnce {
 	public:
 		ScriptHandlerTemplateD(T ref, const A& a, const B& b, const C& c, const D& d) : callback(ref) { pa = const_cast<A&>(a); pb = const_cast<B&>(b); pc = const_cast<C&>(c); pd = const_cast<D&>(d); }
-		virtual void Execute(void* context) override {
+		void Execute(void* context) override {
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
 			IScript::Request& req = *bridgeSunset.AcquireSafe();
 			callback(pa, pb, pc, pd);
 
 			bridgeSunset.ReleaseSafe(&req);
-			delete this;
+			ITask::Delete(this);
 		}
 
+		void Abort(void* context) override {
+			ITask::Delete(this);
+		}
 		T callback;
 		typename std::decay<A>::type pa;
 		typename std::decay<B>::type pb;
@@ -543,23 +587,26 @@ namespace PaintsNow {
 
 	template <class T, class A, class B, class C, class D>
 	ITask* CreateTaskScriptHandler(T ref, const A& a, const B& b, const C& c, const D& d) {
-		return new ScriptHandlerTemplateD<T, A, B, C, D>(ref, a, b, c, d);
+		return new (ITask::Allocate(sizeof(ScriptHandlerTemplateD<T, A, B, C, D>))) ScriptHandlerTemplateD<T, A, B, C, D>(ref, a, b, c, d);
 	}
 
 	template <class T, class A, class B, class C, class D, class E>
 	class ScriptHandlerTemplateE : public TaskOnce {
 	public:
 		ScriptHandlerTemplateE(T ref, const A& a, const B& b, const C& c, const D& d, const E& e) : callback(ref) { pa = const_cast<A&>(a); pb = const_cast<B&>(b); pc = const_cast<C&>(c); pd = const_cast<D&>(d); pe = const_cast<E&>(e); }
-		virtual void Execute(void* context) override {
+		void Execute(void* context) override {
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
 			IScript::Request& req = *bridgeSunset.AcquireSafe();
 			callback(req, pa, pb, pc, pd, pe);
 
 			bridgeSunset.ReleaseSafe(&req);
-			delete this;
+			ITask::Delete(this);
 		}
 
+		void Abort(void* context) override {
+			ITask::Delete(this);
+		}
 		T callback;
 		typename std::decay<A>::type pa;
 		typename std::decay<B>::type pb;
@@ -570,23 +617,26 @@ namespace PaintsNow {
 
 	template <class T, class A, class B, class C, class D, class E>
 	ITask* CreateTaskScriptHandler(T ref, const A& a, const B& b, const C& c, const D& d, const E& e) {
-		return new ScriptHandlerTemplateE<T, A, B, C, D, E>(ref, a, b, c, d, e);
+		return new (ITask::Allocate(sizeof(ScriptHandlerTemplateE<T, A, B, C, D, E>))) ScriptHandlerTemplateE<T, A, B, C, D, E>(ref, a, b, c, d, e);
 	}
 
 	template <class T, class A, class B, class C, class D, class E, class F>
 	class ScriptHandlerTemplateF : public TaskOnce {
 	public:
 		ScriptHandlerTemplateF(T ref, const A& a, const B& b, const C& c, const D& d, const E& e, const F& f) : callback(ref) { pa = const_cast<A&>(a); pb = const_cast<B&>(b); pc = const_cast<C&>(c); pd = const_cast<D&>(d); pe = const_cast<E&>(e); pf = f; }
-		virtual void Execute(void* context) override {
+		void Execute(void* context) override {
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
 			IScript::Request& req = *bridgeSunset.AcquireSafe();
 			callback(req, pa, pb, pc, pd, pe, pf);
 
 			bridgeSunset.ReleaseSafe(&req);
-			delete this;
+			ITask::Delete(this);
 		}
 
+		void Abort(void* context) override {
+			ITask::Delete(this);
+		}
 		T callback;
 		typename std::decay<A>::type pa;
 		typename std::decay<B>::type pb;
@@ -598,7 +648,7 @@ namespace PaintsNow {
 
 	template <class T, class A, class B, class C, class D, class E, class F>
 	ITask* CreateTaskScriptHandler(T ref, const A& a, const B& b, const C& c, const D& d, const E& e, const F& f) {
-		return new ScriptHandlerTemplateF<T, A, B, C, D, E, F>(ref, a, b, c, d, e, f);
+		return new (ITask::Allocate(sizeof(ScriptHandlerTemplateF<T, A, B, C, D, E, F>))) ScriptHandlerTemplateF<T, A, B, C, D, E, F>(ref, a, b, c, d, e, f);
 	}
 
 	template <class T, class A, class B, class C, class D, class E, class F, class G>
@@ -607,16 +657,19 @@ namespace PaintsNow {
 		ScriptHandlerTemplateG(T ref, const A& a, const B& b, const C& c, const D& d, const E& e, const F& f, const G& g) : callback(ref) {
 			pa = const_cast<A&>(a); pb = const_cast<B&>(b); pc = const_cast<C&>(c); pd = const_cast<D&>(d); pe = const_cast<E&>(e); pf = const_cast<F&>(f); pg = const_cast<G&>(g);
 		}
-		virtual void Execute(void* context) override {
+		void Execute(void* context) override {
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 
 			IScript::Request& req = *bridgeSunset.AcquireSafe();
 			callback(req, pa, pb, pc, pd, pe, pf, pg);
 
 			bridgeSunset.ReleaseSafe(&req);
-			delete this;
+			ITask::Delete(this);
 		}
 
+		void Abort(void* context) override {
+			ITask::Delete(this);
+		}
 		T callback;
 		typename std::decay<A>::type pa;
 		typename std::decay<B>::type pb;
@@ -629,7 +682,7 @@ namespace PaintsNow {
 
 	template <class T, class A, class B, class C, class D, class E, class F, class G>
 	ITask* CreateTaskScriptHandler(T ref, const A& a, const B& b, const C& c, const D& d, const E& e, const F& f, const G& g) {
-		return new ScriptHandlerTemplateG<T, A, B, C, D, E, F, G>(ref, a, b, c, d, e, f, g);
+		return new (ITask::Allocate(sizeof(ScriptHandlerTemplateG<T, A, B, C, D, E, F, G>))) ScriptHandlerTemplateG<T, A, B, C, D, E, F, G>(ref, a, b, c, d, e, f, g);
 	}
 
 #else
@@ -669,7 +722,11 @@ namespace PaintsNow {
 			req.UnLock();
 			bridgeSunset.ReleaseSafe(&req);
 
-			delete this;
+			BaseClass::Delete(context, this);
+		}
+
+		void Abort(void* context) override {
+			BaseClass::Delete(context, this);
 		}
 
 		std::tuple<typename std::decay<Args>::type...> arguments;
@@ -677,12 +734,14 @@ namespace PaintsNow {
 
 	template <typename... Args>
 	ITask* CreateTaskScript(IScript::Request::Ref ref, Args&&... args) {
-		return new ScriptTaskTemplate<false, Args...>(ref, std::forward<Args>(args)...);
+		void* p = ITask::Allocate(sizeof(ScriptTaskTemplate<false, Args...>));
+		return new (p) ScriptTaskTemplate<false, Args...>(ref, std::forward<Args>(args)...);
 	}
 
 	template <typename... Args>
 	ITask* CreateTaskScriptOnce(IScript::Request::Ref ref, Args&&... args) {
-		return new ScriptTaskTemplate<true, Args...>(ref, std::forward<Args>(args)...);
+		void* p = ITask::Allocate(sizeof(ScriptTaskTemplate<true, Args...>));
+		return new (p) ScriptTaskTemplate<true, Args...>(ref, std::forward<Args>(args)...);
 	}
 
 	template <typename T, typename... Args>
@@ -703,8 +762,11 @@ namespace PaintsNow {
 			IScript::Request& req = *bridgeSunset.AcquireSafe();
 			Apply(req, gen_seq<sizeof...(Args)>());
 			bridgeSunset.ReleaseSafe(&req);
+			ITask::Delete(this);
+		}
 
-			delete this;
+		void Abort(void* context) override {
+			ITask::Delete(this);
 		}
 
 		T callback;
@@ -713,7 +775,8 @@ namespace PaintsNow {
 
 	template <typename T, typename... Args>
 	ITask* CreateTaskScriptHandler(T t, Args&&... args) {
-		return new ScriptHandlerTemplate<T, Args...>(t, std::forward<Args>(args)...);
+		void* p = ITask::Allocate(sizeof(ScriptHandlerTemplate<T, Args...>));
+		return new (p) ScriptHandlerTemplate<T, Args...>(t, std::forward<Args>(args)...);
 	}
 
 #endif		
