@@ -11,16 +11,16 @@ IF (EXISTS "${CLANG-TIDY-EXE}")
   	# SET (CMAKE_CXX_CLANG_TIDY "${CLANG-TIDY-EXE};--header-filter=.*;-checks=-*,modernize-use-override;modernize-pass-by-value;-p=${CMAKE_BUILD_DIR};-fix;-fix-errors")
 ENDIF ()
 
-IF (CMAKE_SYSTEM_PROCESSOR MATCHES "(ARM)|(ARM64)")
-    SET (IS_X86_64 0)
-ELSE ()
-    SET (IS_X86_64 1)
-ENDIF ()
-
-MESSAGE( STATUS "Is x86/amd64: ${IS_X86_64}" )
-
 # ================================================================ #
 PROJECT (PaintsNow)
+
+IF (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
+    SET (IS_X86_64 1)
+ELSE ()
+    SET (IS_X86_64 0)
+ENDIF ()
+
+MESSAGE (STATUS "IS x86/amd64: ${IS_X86_64} (${CMAKE_SYSTEM_PROCESSOR})" )
 
 IF (MSVC)
 	# Default to statically-linked runtime.
