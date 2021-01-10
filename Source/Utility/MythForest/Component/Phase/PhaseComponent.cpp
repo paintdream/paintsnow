@@ -68,6 +68,7 @@ void PhaseComponentConfig::InstanceGroup::Cleanup() {
 }
 
 void PhaseComponentConfig::TaskData::Cleanup(IRender& render) {
+	OPTICK_EVENT();
 	for (size_t i = 0; i < warpData.size(); i++) {
 		WarpData& data = warpData[i];
 		for (size_t k = 0; k < data.runtimeResources.size(); k++) {
@@ -105,6 +106,7 @@ void PhaseComponentConfig::TaskData::Cleanup(IRender& render) {
 }
 
 void PhaseComponentConfig::TaskData::Destroy(IRender& render) {
+	OPTICK_EVENT();
 	Cleanup(render);
 	warpData.clear();
 
@@ -117,6 +119,7 @@ PhaseComponent::PhaseComponent(const TShared<RenderFlowComponent>& renderFlow, c
 PhaseComponent::~PhaseComponent() {}
 
 void PhaseComponent::Initialize(Engine& engine, Entity* entity) {
+	OPTICK_EVENT();
 	if (rootEntity != entity) { // Set Host?
 		Component::Initialize(engine, entity);
 		assert(hostEntity == nullptr);
@@ -177,6 +180,7 @@ Tiny::FLAG PhaseComponent::GetEntityFlagMask() const {
 }
 
 void PhaseComponent::Uninitialize(Engine& engine, Entity* entity) {
+	OPTICK_EVENT();
 	if (rootEntity == entity) {
 		rootEntity = nullptr;
 	} else {
@@ -236,6 +240,7 @@ void PhaseComponent::Step(Engine& engine, uint32_t bounceCount) {
 }
 
 void PhaseComponent::Setup(Engine& engine, uint32_t phaseCount, uint32_t taskCount, const Float3& r, const UShort2& res) {
+	OPTICK_EVENT();
 	assert(tasks.empty() && phases.empty());
 	IRender& render = engine.interfaces.render;
 	IRender::Device* device = engine.snowyStream.GetRenderDevice();
@@ -327,6 +332,7 @@ void PhaseComponent::Setup(Engine& engine, uint32_t phaseCount, uint32_t taskCou
 }
 
 void PhaseComponent::DispatchEvent(Event& event, Entity* entity) {
+	OPTICK_EVENT();
 	if (entity != rootEntity) {
 		if (event.eventID == Event::EVENT_FRAME) {
 			// DoUpdate
@@ -799,6 +805,7 @@ void PhaseComponent::CollectRenderableComponent(Engine& engine, TaskData& taskDa
 }
 
 void PhaseComponent::CompleteUpdateLights(Engine& engine, std::vector<LightElement>& elements) {
+	OPTICK_EVENT();
 	MatrixFloat4x4 projectionMatrix = Math::MatrixOrtho(range);
 	bakePointShadows = std::stack<UpdatePointShadow>();
 	shadows.resize(elements.size());
@@ -902,6 +909,7 @@ void PhaseComponent::LightCollector::CollectComponents(Engine& engine, TaskData&
 }
 
 void PhaseComponent::LightCollector::CompleteCollect(Engine& engine, TaskData& taskData) {
+	OPTICK_EVENT();
 	std::vector<LightElement> lightElements;
 	for (size_t i = 0; i < taskData.warpData.size(); i++) {
 		LightConfig::WarpData& warpData = taskData.warpData[i];
@@ -926,6 +934,7 @@ void PhaseComponent::LightCollector::InvokeCollect(Engine& engine, Entity* entit
 }
 
 void PhaseComponent::Update(Engine& engine, const Float3& center) {
+	OPTICK_EVENT();
 	// generate bake points
 	srand(0);
 	bakePointSetups = std::stack<UpdatePointSetup>();
@@ -1021,6 +1030,7 @@ const std::vector<PhaseComponent::Phase>& PhaseComponent::GetPhases() const {
 }
 
 void PhaseComponent::UpdateRenderFlow(Engine& engine) {
+	OPTICK_EVENT();
 	RenderPort* renderPort = renderFlowComponent->BeginPort(lightPhaseViewPortName);
 	if (renderPort != nullptr) {
 		RenderPortPhaseLightView* phaseLightView = renderPort->QueryInterface(UniqueType<RenderPortPhaseLightView>());

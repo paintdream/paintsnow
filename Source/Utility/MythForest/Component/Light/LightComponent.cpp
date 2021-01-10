@@ -36,6 +36,7 @@ TObject<IReflect>& LightComponent::operator () (IReflect& reflect) {
 }
 
 void LightComponent::Uninitialize(Engine& engine, Entity* entity) {
+	OPTICK_EVENT();
 	for (size_t i = 0; i < shadowLayers.size(); i++) {
 		TShared<ShadowLayer>& shadowLayer = shadowLayers[i];
 		if (shadowLayer) {
@@ -65,6 +66,7 @@ std::vector<TShared<LightComponent::ShadowGrid> > LightComponent::UpdateShadow(E
 }
 
 void LightComponent::BindShadowStream(Engine& engine, uint32_t layer, const TShared<StreamComponent>& streamComponent, const UShort2& res, float size, float scale) {
+	OPTICK_EVENT();
 	if (shadowLayers.size() <= layer) {
 		shadowLayers.resize(layer + 1);
 	}
@@ -496,6 +498,7 @@ TObject<IReflect>& ShadowLayerConfig::WorldInstanceData::operator () (IReflect& 
 	return *this;
 }
 void LightComponent::ShadowLayer::Initialize(Engine& engine, const TShared<StreamComponent>& component, const UShort2& res, float size, float s) {
+	OPTICK_EVENT();
 	Uninitialize(engine);
 
 	streamComponent = component;
@@ -530,6 +533,7 @@ void LightComponent::ShadowLayer::Initialize(Engine& engine, const TShared<Strea
 }
 
 void LightComponent::ShadowLayer::Uninitialize(Engine& engine) {
+	OPTICK_EVENT();
 	if (streamComponent) {
 		streamComponent->SetLoadHandler(TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, const TShared<SharedTiny>&, const TShared<SharedTiny>&>());
 		streamComponent->SetUnloadHandler(TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, const TShared<SharedTiny>&, const TShared<SharedTiny>&>());

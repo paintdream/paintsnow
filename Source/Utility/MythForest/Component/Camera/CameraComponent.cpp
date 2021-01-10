@@ -42,6 +42,7 @@ CameraComponent::CameraComponent(const TShared<RenderFlowComponent>& prenderFlow
 }
 
 void CameraComponent::UpdateJitterMatrices(CameraComponentConfig::WorldGlobalData& worldGlobalData) {
+	OPTICK_EVENT();
 	if (Flag().load(std::memory_order_relaxed) & CAMERACOMPONENT_SUBPIXEL_JITTER) {
 		jitterIndex = (jitterIndex + 1) % 9;
 
@@ -85,6 +86,7 @@ Tiny::FLAG CameraComponent::GetEntityFlagMask() const {
 }
 
 void CameraComponent::Initialize(Engine& engine, Entity* entity) {
+	OPTICK_EVENT();
 	if (rootEntity != entity) { // Set Host?
 		BaseClass::Initialize(engine, entity);
 		RenderPort* port = renderFlowComponent->BeginPort(cameraViewPortName);
@@ -105,6 +107,7 @@ void CameraComponent::Initialize(Engine& engine, Entity* entity) {
 }
 
 void CameraComponent::Uninitialize(Engine& engine, Entity* entity) {
+	OPTICK_EVENT();
 	if (rootEntity == entity) {
 		rootEntity = nullptr;
 	} else {
@@ -225,6 +228,7 @@ void CameraComponent::Instancing(Engine& engine, TaskData& taskData) {
 }
 
 MatrixFloat4x4 CameraComponent::ComputeSmoothTrackTransform() const {
+	OPTICK_EVENT();
 	MatrixFloat4x4 transform;
 	currentState.rotation.WriteMatrix(transform);
 	const Float3& scale = currentState.scale;
@@ -535,6 +539,7 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 }
 
 void CameraComponent::OnTickHost(Engine& engine, Entity* hostEntity) {
+	OPTICK_EVENT();
 	if (rootEntity != nullptr && (rootEntity->Flag().load(std::memory_order_acquire) & Entity::ENTITY_HAS_SPACE)) {
 		UpdateTaskData(engine, hostEntity);
 	}
@@ -767,6 +772,8 @@ void CameraComponent::CollectEnvCubeComponent(EnvCubeComponent* envCubeComponent
 }
 
 void CameraComponent::CompleteCollect(Engine& engine, TaskData& taskData) {
+	OPTICK_EVENT();
+
 	Kernel& kernel = engine.GetKernel();
 	Flag().fetch_and(~CAMERACOMPONENT_UPDATE_COLLECTING, std::memory_order_release);
 
@@ -964,6 +971,7 @@ TObject<IReflect>& CameraComponent::TaskData::operator () (IReflect& reflect) {
 }
 
 void CameraComponent::TaskData::Cleanup(IRender& render) {
+	OPTICK_EVENT();
 	for (size_t i = 0; i < warpData.size(); i++) {
 		WarpData& data = warpData[i];
 		for (std::vector<std::key_value<RenderPolicy*, PolicyData> >::iterator it = data.renderPolicyMap.begin(); it != data.renderPolicyMap.end(); ++it) {

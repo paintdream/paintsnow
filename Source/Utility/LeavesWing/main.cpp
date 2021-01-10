@@ -9,6 +9,8 @@
 #include "../LeavesFlute/Loader.h"
 #include <ctime>
 
+#include "../../Core/Template/TAllocator.h"
+
 using namespace PaintsNow;
 
 static bool DumpHandler() {

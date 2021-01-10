@@ -35,6 +35,7 @@ TObject<IReflect>& VisibilityComponent::operator () (IReflect& reflect) {
 }
 
 void VisibilityComponent::Initialize(Engine& engine, Entity* entity) {
+	OPTICK_EVENT();
 	assert(hostEntity == nullptr);
 	assert(renderQueue == nullptr);
 	hostEntity = entity;
@@ -121,6 +122,7 @@ void VisibilityComponent::Initialize(Engine& engine, Entity* entity) {
 }
 
 void VisibilityComponent::Uninitialize(Engine& engine, Entity* entity) {
+	OPTICK_EVENT();
 	// TODO: wait for all download tasks to finish.
 	assert(hostEntity != nullptr);
 	streamComponent->SetLoadHandler(TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, const TShared<SharedTiny>&, const TShared<SharedTiny>&>());
@@ -211,6 +213,7 @@ static inline void MergeSample(Bytes& dst, const Bytes& src) {
 VisibilityComponentConfig::Cell::Cell() : finishCount(0) {}
 
 const Bytes& VisibilityComponent::QuerySample(Engine& engine, const Float3& position) {
+	OPTICK_EVENT();
 	Int3 intPosition(int32_t(position.x() / gridSize.x()), int32_t(position.y() / gridSize.y()), int32_t(position.z() / gridSize.z()));
 	const UShort3& dimension = streamComponent->GetDimension();
 	assert(dimension.x() >= 4 && dimension.y() >= 4 && dimension.z() >= 4);
@@ -266,6 +269,7 @@ const Bytes& VisibilityComponent::QuerySample(Engine& engine, const Float3& posi
 }
 
 TShared<SharedTiny> VisibilityComponent::StreamLoadHandler(Engine& engine, const UShort3& coord, const TShared<SharedTiny>& tiny, const TShared<SharedTiny>& context) {
+	OPTICK_EVENT();
 	return tiny ? tiny->QueryInterface(UniqueType<Cell>()) : TShared<SharedTiny>::From(cellAllocator->New());
 }
 
@@ -295,6 +299,7 @@ bool VisibilityComponent::IsVisible(const Bytes& s, TransformComponent* transfor
 // Baker
 
 void VisibilityComponent::TickRender(Engine& engine) {
+	OPTICK_EVENT();
 	// check pipeline state
 	if (renderQueue == nullptr) return; // not inited.
 	IRender& render = engine.interfaces.render;
@@ -484,6 +489,7 @@ void VisibilityComponent::PostProcess(TaskData& task) {
 }
 
 void VisibilityComponent::ResolveTasks(Engine& engine) {
+	OPTICK_EVENT();
 	// resolve finished tasks
 	for (size_t k = 0; k < tasks.size(); k++) {
 		TaskData& task = tasks[k];
@@ -635,6 +641,7 @@ void VisibilityComponent::CoTaskAssembleTask(Engine& engine, TaskData& task, uin
 }
 
 void VisibilityComponent::DispatchTasks(Engine& engine) {
+	OPTICK_EVENT();
 	Kernel& kernel = engine.GetKernel();
 	ThreadPool& threadPool = kernel.GetThreadPool();
 
@@ -673,6 +680,7 @@ void VisibilityComponent::DispatchTasks(Engine& engine) {
 }
 
 void VisibilityComponent::RoutineTickTasks(Engine& engine) {
+	OPTICK_EVENT();
 	ResolveTasks(engine);
 	DispatchTasks(engine);
 }
