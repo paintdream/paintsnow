@@ -2,6 +2,7 @@
 #include "../../../Core/Template/TAlgorithm.h"
 #include <cassert>
 #include <cmath>
+#include "../../../Core/Driver/Profiler/Optick/optick.h"
 
 using namespace PaintsNow;
 
@@ -79,6 +80,7 @@ void SkeletonResource::ClearBoneMatrixBuffer(IRender& render, IRender::Queue* qu
 }
 
 float SkeletonResource::Snapshot(std::vector<MatrixFloat4x4>& transforms, uint32_t clipIndex, float time, bool repeat) {
+	OPTICK_EVENT();
 	assert(transforms.size() == boneAnimation.joints.size());
 	if (boneAnimation.clips.size() == 0) {
 		return time;

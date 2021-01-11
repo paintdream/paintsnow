@@ -1,6 +1,7 @@
 #include "MeshResource.h"
 #include "../ResourceManager.h"
 #include "../../../General/Interface/IShader.h"
+#include "../../../Core/Driver/Profiler/Optick/optick.h"
 
 using namespace PaintsNow;
 
@@ -24,6 +25,7 @@ static inline void ClearBuffer(IRender& render, IRender::Queue* queue, IRender::
 }
 
 void MeshResource::Refresh(IRender& render, void* deviceContext) {
+	OPTICK_EVENT();
 	// Compute boundingBox
 	std::vector<Float3>& positionBuffer = meshCollection.vertices;
 	if (!positionBuffer.empty()) {
@@ -59,6 +61,7 @@ void MeshResource::Upload(IRender& render, void* deviceContext) {
 
 	// Update buffers ...
 	if (Flag().fetch_and(~TINY_MODIFIED) & TINY_MODIFIED) {
+		OPTICK_EVENT();
 		ThreadPool& threadPool = resourceManager.GetThreadPool();
 		if (threadPool.PollExchange(critical, 1u) == 0u) {
 			IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(deviceContext);
@@ -149,6 +152,7 @@ void MeshResource::Upload(IRender& render, void* deviceContext) {
 }
 
 void MeshResource::Unmap() {
+	OPTICK_EVENT();
 	GraphicResourceBase::Unmap();
 
 	ThreadPool& threadPool = resourceManager.GetThreadPool();
@@ -164,6 +168,7 @@ void MeshResource::Unmap() {
 }
 
 void MeshResource::Detach(IRender& render, void* deviceContext) {
+	OPTICK_EVENT();
 	IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(deviceContext);
 	assert(queue != nullptr);
 

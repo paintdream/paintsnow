@@ -1,5 +1,6 @@
 #include "MaterialResource.h"
 #include "../ResourceManager.h"
+#include "../../../Core/Driver/Profiler/Optick/optick.h"
 #include <sstream>
 
 using namespace PaintsNow;
@@ -7,6 +8,7 @@ using namespace PaintsNow;
 MaterialResource::MaterialResource(ResourceManager& manager, const String& uniqueID) : BaseClass(manager, uniqueID) {}
 
 TShared<ShaderResource> MaterialResource::Instantiate(const TShared<MeshResource>& mesh, IRender::Resource::DrawCallDescription& drawCallTemplate, std::vector<Bytes>& bufferData) {
+	OPTICK_EVENT();
 	assert(mesh);
 
 	TShared<ShaderResource> shaderTemplateResource = originalShaderResource;
@@ -136,6 +138,7 @@ TShared<MaterialResource> MaterialResource::CloneWithOverrideShader(const TShare
 	if (overrideShaderResource == originalShaderResource) {
 		return this;
 	} else {
+		OPTICK_EVENT();
 		assert(overrideShaderResource);
 		// create overrider
 		TShared<MaterialResource> clone;

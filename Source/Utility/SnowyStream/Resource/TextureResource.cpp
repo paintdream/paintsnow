@@ -2,6 +2,7 @@
 #include "../ResourceManager.h"
 #include "../../../General/Interface/IImage.h"
 #include "../../../Core/System/MemoryStream.h"
+#include "../../../Core/Driver/Profiler/Optick/optick.h"
 
 #if !defined(CMAKE_PAINTSNOW) || ADD_FILTER_BPTC_BUILTIN
 #include "../../../General/Driver/Filter/BPTC/ZFilterBPTC.h"
@@ -45,6 +46,7 @@ void TextureResource::Unmap() {
 void TextureResource::Upload(IRender& render, void* deviceContext) {
 	if (Flag().load(std::memory_order_acquire) & RESOURCE_UPLOADED)
 		return;
+	OPTICK_EVENT();
 
 	// if (description.data.size() == 0) return;
 	//	assert(description.data.size() == (size_t)description.dimension.x() * description.dimension.y() * IImage::GetPixelSize((IRender::Resource::TextureDescription::Format)description.state.format, (IRender::Resource::TextureDescription::Layout)description.state.layout));
@@ -113,6 +115,7 @@ size_t TextureResource::ReportDeviceMemoryUsage() const {
 
 bool TextureResource::Compress(const String& compressionType) {
 #if !defined(CMAKE_PAINTSNOW) || ADD_FILTER_BPTC_BUILTIN
+	OPTICK_EVENT();
 	if (compressionType == "BPTC") { // BC7
 		static ZFilterBPTC factory;
 		const UShort3& dimension = description.dimension;

@@ -1,4 +1,5 @@
 #include "StreamResource.h"
+#include "../../../Core/Driver/Profiler/Optick/optick.h"
 
 using namespace PaintsNow;
 
@@ -17,6 +18,7 @@ IStreamBase& StreamResource::GetStream() {
 }
 
 bool StreamResource::operator << (IStreamBase& base) {
+	OPTICK_EVENT();
 	if (!(BaseClass::operator << (base))) {
 		return false;
 	}
@@ -26,6 +28,7 @@ bool StreamResource::operator << (IStreamBase& base) {
 }
 
 bool StreamResource::operator >> (IStreamBase& base) const {
+	OPTICK_EVENT();
 	if (!(BaseClass::operator >> (base))) {
 		return false;
 	}
@@ -34,6 +37,7 @@ bool StreamResource::operator >> (IStreamBase& base) const {
 }
 
 IReflectObject* StreamResource::Clone() const {
+	OPTICK_EVENT();
 	StreamResource* clone = new StreamResource(resourceManager, "");
 	clone->shadowStream = shadowStream;
 	return clone;

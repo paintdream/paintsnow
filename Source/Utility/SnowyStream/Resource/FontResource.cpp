@@ -2,6 +2,7 @@
 #include "../../../Core/Interface/IArchive.h"
 #include "../../../Core/System/MemoryStream.h"
 #include "../../SnowyStream/SnowyStream.h"
+#include "../../../Core/Driver/Profiler/Optick/optick.h"
 
 using namespace PaintsNow;
 
@@ -39,6 +40,7 @@ void FontResource::Detach(IFontBase& fontBase, void* deviceContext) {
 
 void FontResource::Upload(IFontBase& fontBase, void* deviceContext) {
 	if (font == nullptr && !rawFontData.empty()) {
+		OPTICK_EVENT();
 		// load font resource from memory
 		MemoryStream ms(rawFontData.size());
 		size_t len = rawFontData.size();
