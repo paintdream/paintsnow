@@ -23,6 +23,8 @@ namespace PaintsNow {
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		IRender::Resource* GetRenderResource() const;
 		IRender::Resource::TextureDescription description;
+
+	private:
 		IRender::Resource* instance;
 		size_t deviceMemoryUsage;
 	};
