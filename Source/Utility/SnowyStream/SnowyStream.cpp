@@ -701,6 +701,7 @@ void SnowyStream::RegisterBuiltinPasses() {
 	RegisterPass(*resourceManager(), UniqueType<DepthResolvePass>());
 	RegisterPass(*resourceManager(), UniqueType<DepthBoundingPass>());
 	RegisterPass(*resourceManager(), UniqueType<DepthBoundingSetupPass>());
+	RegisterPass(*resourceManager(), UniqueType<ForwardLightingPass>());
 	RegisterPass(*resourceManager(), UniqueType<LightBufferEncodePass>());
 	RegisterPass(*resourceManager(), UniqueType<LightTextureEncodePass>());
 	RegisterPass(*resourceManager(), UniqueType<MultiHashSetupPass>());
@@ -715,7 +716,6 @@ void SnowyStream::RegisterBuiltinPasses() {
 	RegisterPass(*resourceManager(), UniqueType<WidgetPass>(), "Widget", state);
 
 	/*
-	RegisterPass(*resourceManager(), UniqueType<ForwardLightingPass>());
 	RegisterPass(*resourceManager(), UniqueType<ParticlePass>());
 	RegisterPass(*resourceManager(), UniqueType<TerrainPass>());
 	RegisterPass(*resourceManager(), UniqueType<VolumePass>());

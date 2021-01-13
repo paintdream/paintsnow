@@ -47,6 +47,7 @@ namespace PaintsNow {
 		Float3 viewNormal;
 		Float3 viewTangent;
 		Float3 viewBinormal;
+		Float3 viewPosition;
 		Float4 tintColor;
 
 	public:
@@ -59,6 +60,7 @@ namespace PaintsNow {
 		bool enableVertexTangent;
 		bool enableClampedNear;
 		bool enableClampedFar;
+		bool enableViewPosition;
 	};
 }
 

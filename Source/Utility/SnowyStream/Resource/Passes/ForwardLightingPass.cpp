@@ -2,7 +2,9 @@
 
 using namespace PaintsNow;
 
-ForwardLightingPass::ForwardLightingPass() {}
+ForwardLightingPass::ForwardLightingPass() {
+	standardTransform.enableViewPosition = true;
+}
 
 TObject<IReflect>& ForwardLightingPass::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);

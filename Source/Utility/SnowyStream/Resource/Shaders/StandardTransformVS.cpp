@@ -4,7 +4,7 @@
 
 using namespace PaintsNow;
 
-StandardTransformVS::StandardTransformVS() : enableInstancing(true), enableSkinning(true), enableViewProjectionMatrix(true), enableVertexColor(true), enableVertexNormal(true), enableInstancedColor(false), enableVertexTangent(true), enableClampedNear(false), enableClampedFar(false) {
+StandardTransformVS::StandardTransformVS() : enableInstancing(true), enableSkinning(true), enableViewProjectionMatrix(true), enableVertexColor(true), enableVertexNormal(true), enableInstancedColor(false), enableVertexTangent(true), enableClampedNear(false), enableClampedFar(false), enableViewPosition(false) {
 	instanceBuffer.description.usage = IRender::Resource::BufferDescription::INSTANCED;
 	vertexPositionBuffer.description.usage = IRender::Resource::BufferDescription::VERTEX;
 	vertexNormalBuffer.description.usage = IRender::Resource::BufferDescription::VERTEX;
@@ -45,9 +45,18 @@ String StandardTransformVS::GetShaderText() {
 	viewTangent = float3(1, 0, 0);
 	viewBinormal = float3(0, 1, 0);
 	texCoord = vertexTexCoord;
+
+	float4x4 viewWorldMatrix;
+	if (enableVertexNormal || enableViewPosition) {
+		viewWorldMatrix = mult_mat(viewMatrix, worldMatrix);
+	}
+
+	if (enableViewPosition) {
+		viewPosition = mult_vec(viewWorldMatrix, position).xyz;
+	}
+
 	if (enableVertexNormal) {
 		float4 normal = vertexNormal * float(2.0 / 255.0) - float4(1.0, 1.0, 1.0, 1.0);
-		float4x4 viewWorldMatrix = mult_mat(viewMatrix, worldMatrix);
 		if (enableVertexTangent) {
 			float4 tangent = vertexTangent * float(2.0 / 255.0) - float4(1.0, 1.0, 1.0, 1.0);
 			viewTangent = mult_vec(float3x3(viewWorldMatrix), tangent.xyz);
@@ -92,6 +101,7 @@ TObject<IReflect>& StandardTransformVS::operator () (IReflect& reflect) {
 		ReflectProperty(enableInstancedColor)[BindConst<bool>(enableInstancedColor)];
 		ReflectProperty(enableClampedNear)[BindConst<bool>(enableClampedNear)];
 		ReflectProperty(enableClampedFar)[BindConst<bool>(enableClampedFar)];
+		ReflectProperty(enableViewPosition)[BindConst<bool>(enableViewPosition)];
 
 		ReflectProperty(instanceBuffer)[BindEnable(enableInstancing)];
 		ReflectProperty(globalBuffer);
@@ -126,6 +136,7 @@ TObject<IReflect>& StandardTransformVS::operator () (IReflect& reflect) {
 		ReflectProperty(viewNormal)[BindEnable(enableVertexNormal)][BindOutput(BindOutput::TEXCOORD + 1)];
 		ReflectProperty(viewTangent)[BindEnable(enableVertexTangent)][BindOutput(BindOutput::TEXCOORD + 2)];
 		ReflectProperty(viewBinormal)[BindEnable(enableVertexTangent)][BindOutput(BindOutput::TEXCOORD + 3)];
+		ReflectProperty(viewPosition)[BindEnable(enableViewPosition)][BindOutput(BindOutput::TEXCOORD + 4)];
 		ReflectProperty(tintColor)[BindOutput(BindOutput::COLOR)];
 	}
 

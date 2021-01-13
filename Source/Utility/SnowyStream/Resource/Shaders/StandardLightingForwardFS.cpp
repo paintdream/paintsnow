@@ -4,7 +4,7 @@
 
 using namespace PaintsNow;
 
-StandardLightingForwardFS::StandardLightingForwardFS() : lightCount(0), cubeLevelInv(0), cubeStrength(1.0f) {
+StandardLightingForwardFS::StandardLightingForwardFS() : shadow(0.0f), lightCount(0), cubeLevelInv(0), cubeStrength(1.0f) {
 	specTexture.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D_CUBE;
 	lightInfoBuffer.description.usage = IRender::Resource::BufferDescription::UNIFORM;
 	paramBuffer.description.usage = IRender::Resource::BufferDescription::UNIFORM;
@@ -12,11 +12,14 @@ StandardLightingForwardFS::StandardLightingForwardFS() : lightCount(0), cubeLeve
 	lightInfos.resize(MAX_LIGHT_COUNT * 2);
 }
 
-static const uint32_t maxLightCount = StandardLightingForwardFS::MAX_LIGHT_COUNT;
+static const int maxLightCount = StandardLightingForwardFS::MAX_LIGHT_COUNT;
 
 String StandardLightingForwardFS::GetShaderText() {
 	return UnifyShaderCode(
-		baseColor = pow(baseColor, float3(GAMMA, GAMMA, GAMMA));
+	float3 baseColor = outputColor;
+	float3 viewNormal = outputNormal;
+
+	baseColor = pow(baseColor, float3(GAMMA, GAMMA, GAMMA));
 	float3 diff = (baseColor - baseColor * metallic) / PI;
 	float3 spec = lerp(float3(0.04, 0.04, 0.04), baseColor, metallic);
 	float3 V = -normalize(viewPosition);
@@ -84,6 +87,7 @@ String StandardLightingForwardFS::GetShaderText() {
 	}
 
 	mainColor.xyz = pow(max(mainColor.xyz, float3(0, 0, 0)), float3(1.0, 1.0, 1.0) / GAMMA);
+	mainColor.w = alpha;
 	// mainColor.xyz = mainColor.xyz * float(0.0001) + float3(1 - shadow, 1 - shadow, 1 - shadow);
 );
 }
@@ -95,14 +99,16 @@ TObject<IReflect>& StandardLightingForwardFS::operator () (IReflect& reflect) {
 		ReflectProperty(specTexture);
 		ReflectProperty(lightInfoBuffer);
 		ReflectProperty(paramBuffer);
-		ReflectProperty(maxLightCount)[BindConst<uint32_t>(MAX_LIGHT_COUNT)];
+		ReflectProperty(maxLightCount)[BindConst<int>(MAX_LIGHT_COUNT)];
 
-		ReflectProperty(viewPosition)[BindInput(BindInput::LOCAL)];
-		ReflectProperty(viewNormal)[BindInput(BindInput::LOCAL)];
-		ReflectProperty(baseColor)[BindInput(BindInput::LOCAL)];
+		ReflectProperty(viewPosition)[BindInput(BindInput::TEXCOORD)];
+		ReflectProperty(outputNormal)[BindInput(BindInput::LOCAL)];
+		ReflectProperty(outputColor)[BindInput(BindInput::LOCAL)];
 		ReflectProperty(metallic)[BindInput(BindInput::LOCAL)];
 		ReflectProperty(roughness)[BindInput(BindInput::LOCAL)];
-		ReflectProperty(shadow)[BindInput(BindInput::LOCAL)];
+		ReflectProperty(alpha)[BindInput(BindInput::LOCAL)];
+		// ReflectProperty(shadow)[BindInput(BindInput::LOCAL)];
+		ReflectProperty(shadow)[BindConst<float>(0.0f)];
 		ReflectProperty(occlusion)[BindInput(BindInput::LOCAL)];
 		ReflectProperty(invWorldNormalMatrix)[paramBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(cubeLevelInv)[paramBuffer][BindInput(BindInput::GENERAL)];

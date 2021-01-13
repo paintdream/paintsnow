@@ -18,11 +18,12 @@ namespace PaintsNow {
 		BindBuffer paramBuffer;
 
 		Float3 viewPosition;
-		Float3 viewNormal;
-		Float3 baseColor;
+		Float3 outputNormal;
+		Float3 outputColor;
 		float metallic;
 		float roughness;
 		float occlusion;
+		float alpha;
 		float shadow;
 
 		enum { MAX_LIGHT_COUNT = 4 };

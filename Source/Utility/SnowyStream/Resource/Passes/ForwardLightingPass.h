@@ -7,7 +7,7 @@
 #include "../../../../General/Misc/PassBase.h"
 #include "../Shaders/StandardTransformVS.h"
 #include "../Shaders/StandardParameterFS.h"
-#include "../Shaders/StandardLightingTextureEncodedFS.h"
+#include "../Shaders/StandardLightingForwardFS.h"
 
 namespace PaintsNow {
 	// standard pbr deferred shading Pass using ggx prdf
@@ -19,6 +19,6 @@ namespace PaintsNow {
 		StandardTransformVS standardTransform;
 		// Fragment shaders
 		StandardParameterFS standardParameter;
-		StandardLightingTextureEncodedFS standardLighting; // TODO: use forward lighting
+		StandardLightingForwardFS standardLighting; // TODO: use forward lighting
 	};
 }
