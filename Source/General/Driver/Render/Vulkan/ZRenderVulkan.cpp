@@ -891,8 +891,8 @@ struct ResourceImplVulkan<IRender::Resource::DrawCallDescription> final : public
 		return signature.GetData()[index * 3];
 	}
 
-	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* d) override;
-	virtual void Execute(VulkanQueueImpl* queue) override;
+	void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* d) override;
+	void Execute(VulkanQueueImpl* queue) override;
 	virtual void Delete(VulkanQueueImpl* queue) override {
 		if (descriptorSetTexture.second != VK_NULL_HANDLE) {
 			queue->device->descriptorAllocators[VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER].FreeDescriptorSet(descriptorSetTexture);

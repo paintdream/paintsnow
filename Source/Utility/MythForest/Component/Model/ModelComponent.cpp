@@ -170,11 +170,11 @@ void ModelComponent::Initialize(Engine& engine, Entity* entity) {
 		Expand(engine);
 	}
 
-	RenderableComponent::Initialize(engine, entity);
+	BaseClass::Initialize(engine, entity);
 }
 
 void ModelComponent::Uninitialize(Engine& engine, Entity* entity) {
-	RenderableComponent::Uninitialize(engine, entity);
+	BaseClass::Uninitialize(engine, entity);
 	batchComponent->InstanceUninitialize(engine);
 
 	// fully detached?

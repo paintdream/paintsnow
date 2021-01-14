@@ -15,7 +15,7 @@ namespace PaintsNow {
 	class Repository : public TReflected<Repository, WarpTiny>, public IWidget {
 	public:
 		Repository();
-		virtual void TickRender(LeavesFlute& leavesFlute) override;
+		void TickRender(LeavesFlute& leavesFlute) override;
 
 		struct Item final : public TAllocatedTiny<Item, SharedTiny> {
 			enum { ITEM_DIRECTORY = SharedTiny::TINY_CUSTOM_BEGIN };

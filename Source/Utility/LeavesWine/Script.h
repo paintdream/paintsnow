@@ -9,7 +9,7 @@
 namespace PaintsNow {
 	class Script : public IWidget {
 	public:
-		virtual void TickRender(LeavesFlute& leavesFlute) override;
+		void TickRender(LeavesFlute& leavesFlute) override;
 	};
 }
 

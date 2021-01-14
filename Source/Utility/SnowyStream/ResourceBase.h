@@ -53,8 +53,8 @@ namespace PaintsNow {
 		virtual std::pair<uint16_t, uint16_t> GetProgress() const;
 		void Destroy() override;
 		// override them derived from IReflectObject to change behaviors on serialization & deserialization
-		// virtual bool operator >> (IStreamBase& stream) const override;
-		// virtual bool operator << (IStreamBase& stream) override;
+		// bool operator >> (IStreamBase& stream) const override;
+		// bool operator << (IStreamBase& stream) override;
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		std::atomic<uint32_t> critical;
 

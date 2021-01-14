@@ -16,9 +16,9 @@ namespace PaintsNow {
 	class ComDispatch : public TReflected<ComDispatch, IReflectObjectComplex> {
 	public:
 		ComDispatch(IScript::Request& request, ComBridge* bridge, IDispatch* disp);
-		virtual ~ComDispatch();
+		~ComDispatch() override;
 		virtual void Call(const TProxy<>* p, IScript::Request& request);
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		struct Method {
 			DISPID id;

@@ -11,13 +11,13 @@ namespace PaintsNow {
 	class System : public IWidget {
 	public:
 		System();
-		virtual void TickRender(LeavesFlute& leavesFlute) override;
+		void TickRender(LeavesFlute& leavesFlute) override;
 
 		struct WarpStat : public WarpTiny, public TaskRepeat {
 			WarpStat(Kernel& kernel, int& stat);
-			virtual ~WarpStat();
-			virtual void Execute(void* context) override;
-			virtual void Abort(void* context) override;
+			~WarpStat() override;
+			void Execute(void* context) override;
+			void Abort(void* context) override;
 
 			Kernel& kernel;
 			int& statWindowDuration;

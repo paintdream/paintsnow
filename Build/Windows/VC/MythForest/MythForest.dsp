@@ -409,6 +409,14 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Shape\ShapeComponentModul
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Sky\SkyComponent.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Sky\SkyComponentModule.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Sound\SoundComponent.cpp
 # End Source File
 # Begin Source File
@@ -838,6 +846,14 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Shape\ShapeComponent.h
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Shape\ShapeComponentModule.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Sky\SkyComponent.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Sky\SkyComponentModule.h
 # End Source File
 # Begin Source File
 

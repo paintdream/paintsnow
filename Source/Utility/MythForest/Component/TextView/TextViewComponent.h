@@ -47,7 +47,6 @@ namespace PaintsNow {
 
 	public:
 		TShared<FontResource> fontResource;
-		TShared<MaterialResource> materialResource;
 		uint32_t fontSize;
 		String text;
 
