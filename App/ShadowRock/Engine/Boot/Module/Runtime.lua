@@ -1,6 +1,6 @@
 local methodMap = {}
 local dependMap = {}
-
+local Inspect = PurpleTrail.Inspect
 local function CollectIndexersRecursive(modname, collection)
 	if type(collection) == "table" then
 		if collection.__delegate__ then

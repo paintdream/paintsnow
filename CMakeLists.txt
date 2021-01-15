@@ -582,6 +582,25 @@ ADD_LIBRARY (PaintsNow ${PAINTSNOW_SRC})
 
 # ---------------------------------------------------------------- #
 
+FILE (GLOB_RECURSE PURPLETRAIL_SRC
+		"${PROJECT_SOURCE_DIR}/Source/Utility/PurpleTrail/*.h"
+		"${PROJECT_SOURCE_DIR}/Source/Utility/PurpleTrail/*.cpp"
+)
+
+FOREACH (FILE ${PURPLETRAIL_SRC}) 
+	GET_FILENAME_COMPONENT(PARENT_DIR "${FILE}" PATH)
+
+	# skip src or include and changes /'s to \\'s
+	STRING(REGEX REPLACE "(\\./)?(src|include)/?" "" GROUP "${PARENT_DIR}")
+	STRING(REPLACE "/" "\\" GROUP "${GROUP}")
+	STRING(REPLACE "${LOCAL_SOURCE_DIR}" "" GROUP "${GROUP}")
+	SOURCE_GROUP("${GROUP}" FILES "${FILE}")
+ENDFOREACH (FILE ${PURPLETRAIL_SRC})
+
+ADD_LIBRARY (PurpleTrail ${PURPLETRAIL_SRC})
+
+# ---------------------------------------------------------------- #
+
 FILE (GLOB_RECURSE BRIDGESUNSET_SRC
 		"${PROJECT_SOURCE_DIR}/Source/Utility/BridgeSunset/*.h"
 		"${PROJECT_SOURCE_DIR}/Source/Utility/BridgeSunset/*.cpp"
@@ -759,7 +778,7 @@ ENDFOREACH (FILE ${LEAVESWING_SRC})
 ADD_EXECUTABLE (LeavesWing ${LEAVESWING_SRC})
 
 SET (PAINTSNOW_LIBRARIES
-	LeavesFlute Remembery MythForest SnowyStream BridgeSunset HeartVioliner EchoLegend GalaxyWeaver PaintsNow
+	LeavesFlute Remembery MythForest SnowyStream BridgeSunset PurpleTrail HeartVioliner EchoLegend GalaxyWeaver PaintsNow
 )
 
 IF (MSVC)

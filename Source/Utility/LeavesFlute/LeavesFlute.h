@@ -8,6 +8,7 @@
 #include "../../Core/PaintsNow.h"
 #include "../../General/Interface/Interfaces.h"
 #include "../../Core/Interface/IType.h"
+#include "../../Utility/PurpleTrail/PurpleTrail.h"
 #include "../../Utility/BridgeSunset/BridgeSunset.h"
 #include "../../Utility/HeartVioliner/HeartVioliner.h"
 #include "../../Utility/SnowyStream/SnowyStream.h"
@@ -36,7 +37,6 @@ namespace PaintsNow {
 		void RequestSetAppTitle(IScript::Request& request, const String& title);
 		void RequestSetScreenSize(IScript::Request& request, Int2& size);
 		Int2 RequestGetScreenSize(IScript::Request& request);
-		void RequestInspect(IScript::Request& request, IScript::BaseDelegate d);
 		void RequestSearchMemory(IScript::Request& request, const String& data, size_t start, size_t end, uint32_t alignment, uint32_t maxResult);
 
 		void EnterMainLoop();
@@ -62,6 +62,7 @@ namespace PaintsNow {
 		std::vector<IScript::Library*> modules;
 
 	public:
+		PurpleTrail purpleTrail;
 		BridgeSunset bridgeSunset;
 		EchoLegend echoLegend;
 		SnowyStream snowyStream;

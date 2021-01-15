@@ -3,6 +3,19 @@ Microsoft Developer Studio Workspace File, Format Version 6.00
 
 ###############################################################################
 
+Project: "PurpleTrail"=.\PurpleTrail\PurpleTrail.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+
+###############################################################################
+
 Project: "BridgeSunset"=.\BridgeSunset\BridgeSunset.dsp - Package Owner=<4>
 
 Package=<5>
@@ -59,6 +72,9 @@ Package=<5>
 
 Package=<4>
 {{{
+    Begin Project Dependency
+    Project_Dep_Name PurpleTrail
+    End Project Dependency
     Begin Project Dependency
     Project_Dep_Name BridgeSunset
     End Project Dependency
