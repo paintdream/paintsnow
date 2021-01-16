@@ -29,14 +29,70 @@ namespace PaintsNow {
 
 		// Script interfaces
 		void Require(IScript::Request& request) override;
+
+		/// <summary>
+		/// Listen console input
+		/// </summary>
+		/// <param name="callback"> callback </param>
+		/// <returns></returns>
 		void RequestListenConsole(IScript::Request& request, IScript::Request::Ref callback);
+
+		/// <summary>
+		/// Prints a string
+		/// </summary>
+		/// <param name="text"> string to print </param>
+		/// <returns></returns>
 		void RequestPrint(IScript::Request& request, const String& text);
+
+		/// <summary>
+		/// Exit the program normally.
+		/// </summary>
+		/// <returns></returns>
 		void RequestExit(IScript::Request& request);
+
+		/// <summary>
+		/// Set position of cursor
+		/// </summary>
+		/// <param name="position"> target position </param>
+		/// <returns></returns>
 		void RequestWarpCursor(IScript::Request& request, Int2 position);
+
+		/// <summary>
+		/// Change cursor type
+		/// </summary>
+		/// <param name="type"> target cursor type </param>
+		/// <returns></returns>
 		void RequestShowCursor(IScript::Request& request, const String& type);
+
+		/// <summary>
+		/// Set title of current application
+		/// </summary>
+		/// <param name="title"> the title</param>
+		/// <returns></returns>
 		void RequestSetAppTitle(IScript::Request& request, const String& title);
+
+		/// <summary>
+		/// Set screen size
+		/// </summary>
+		/// <param name="size"> new screen size </param>
+		/// <returns></returns>
 		void RequestSetScreenSize(IScript::Request& request, Int2& size);
+
+		/// <summary>
+		/// Get screen size
+		/// </summary>
+		/// <returns> the screen size </returns>
 		Int2 RequestGetScreenSize(IScript::Request& request);
+
+		/// <summary>
+		/// Search data in current process memory (win32 only)
+		/// </summary>
+		/// <param name="data"> data to search </param>
+		/// <param name="start"> start address </param>
+		/// <param name="end"> end address </param>
+		/// <param name="alignment"> address alignment </param>
+		/// <param name="maxResult"> result count </param>
+		/// <returns> list of results </returns>
 		void RequestSearchMemory(IScript::Request& request, const String& data, size_t start, size_t end, uint32_t alignment, uint32_t maxResult);
 
 		void EnterMainLoop();

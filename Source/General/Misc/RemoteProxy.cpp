@@ -883,6 +883,18 @@ IScript::Request& RemoteProxy::Request::operator >> (String& str) {
 	return *this;
 }
 
+IScript::Request& RemoteProxy::Request::operator << (const Bytes& str) {
+	Write(*this, str);
+
+	return *this;
+}
+
+IScript::Request& RemoteProxy::Request::operator >> (Bytes& str) {
+	Read(*this, str);
+
+	return *this;
+}
+
 IScript::Request& RemoteProxy::Request::operator << (const char* str) {
 	assert(str != nullptr);
 	return *this << String(str);
