@@ -209,8 +209,7 @@ namespace PaintsNow {
 				enum {
 					DEFAULT,
 					DISCARD,
-					CLEAR,
-					AUTO
+					CLEAR
 				};
 
 				struct Storage {

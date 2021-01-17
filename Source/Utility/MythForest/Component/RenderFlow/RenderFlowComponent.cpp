@@ -119,8 +119,8 @@ void RenderFlowComponent::Compile() {
 
 	// set barrier stages
 	uint16_t index = 0;
-	for (size_t n = 0; n < cachedRenderStages.size(); n++) {
-		RenderStage* renderStage = cachedRenderStages[n];
+	for (size_t n = 0; n < result.size(); n++) {
+		RenderStage* renderStage = result[n];
 		if (renderStage == nullptr) {
 			index++;
 		} else {

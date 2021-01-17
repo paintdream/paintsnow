@@ -30,7 +30,7 @@ RenderStage::RenderStage(uint32_t colorAttachmentCount) : renderState(nullptr), 
 	}
 
 	t.depthStorage.loadOp = IRender::Resource::RenderTargetDescription::DISCARD;
-	t.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
+	t.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 }
 
 uint16_t RenderStage::GetFrameBarrierIndex() const {

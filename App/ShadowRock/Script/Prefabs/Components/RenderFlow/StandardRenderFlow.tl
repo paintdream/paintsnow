@@ -59,22 +59,27 @@ function StandardRenderFlow.New(bloomLayerCount : number) : RenderFlowComponent
 		lastShadowMask = stageShadowMask
 	end
 
-	-- Step 3: Anti-Aliasing
+	-- Step 3: Forward shading
+	local stageForwardLighting = renderFlowComponent:NewRenderStage("ForwardLightingRenderStage", "")
+	renderFlowComponent:LinkRenderStagePort(stageDeferredLighting, "OutputColor", stageForwardLighting, "InputColor")
+	renderFlowComponent:LinkRenderStagePort(lastShadowMask, "MoveDepth", stageForwardLighting, "InputDepth")
+
+	-- Step 4: Anti-Aliasing
 	local stageColorBarrier : RenderStage = renderFlowComponent:NewRenderStage("FrameBarrierRenderStage", "")
 
 	local stageAntiAliasing : RenderStage = renderFlowComponent:NewRenderStage("AntiAliasingRenderStage", "")
 	renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "CameraView", stageAntiAliasing, "CameraView")
-	renderFlowComponent:LinkRenderStagePort(stageDeferredLighting, "OutputColor", stageAntiAliasing, "InputColor")
+	renderFlowComponent:LinkRenderStagePort(stageForwardLighting, "OutputColor", stageAntiAliasing, "InputColor")
 	renderFlowComponent:LinkRenderStagePort(stageAntiAliasing, "OutputColor", stageColorBarrier, "Front") -- chain
 	renderFlowComponent:LinkRenderStagePort(stageColorBarrier, "Next", stageAntiAliasing, "LastInputColor")
-	renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "Depth", stageAntiAliasing, "Depth")
+	renderFlowComponent:LinkRenderStagePort(stageForwardLighting, "OutputDepth", stageAntiAliasing, "Depth")
 
-	-- Step 4: Apply HDR effects
+	-- Step 5: Apply HDR effects
 	local stageScreen : RenderStage = renderFlowComponent:NewRenderStage("ScreenRenderStage", strBloomLayer)
 	renderFlowComponent:LinkRenderStagePort(stageAntiAliasing, "OutputColor", stageScreen, "InputColor")
 
-	-- Step 5: Prepare Bloom
-	local lastStage = stageDeferredLighting
+	-- Step 6: Prepare Bloom
+	local lastStage = stageAntiAliasing
 	for i = 0, bloomLayerCount - 1 do
 		local stageBloom : RenderStage = renderFlowComponent:NewRenderStage("BloomRenderStage", tostring(i + 1))
 		renderFlowComponent:LinkRenderStagePort(lastStage, "OutputColor", stageBloom, "InputColor")
@@ -87,15 +92,15 @@ function StandardRenderFlow.New(bloomLayerCount : number) : RenderFlowComponent
 		lastStage = stageBloom
 	end
 
-	-- Step 6: Adding UIs
+	-- Step 7: Adding UIs
 	local stageWidget : RenderStage = renderFlowComponent:NewRenderStage("WidgetRenderStage", "")
 	renderFlowComponent:LinkRenderStagePort(stageScreen, "OutputColor", stageWidget, "InputColor")
 
-	-- Step 7: Write to output device
+	-- Step 8: Write to output device
 	local stageDevice : RenderStage = renderFlowComponent:NewRenderStage("DeviceRenderStage", "")
 	renderFlowComponent:LinkRenderStagePort(stageWidget, "OutputColor", stageDevice, "InputColor")
 
-	-- Step 8: Export symbols, notice that we only care abount scenes
+	-- Step 9: Export symbols, notice that we only care abount scenes
 	renderFlowComponent:ExportRenderStagePort(stageLightBuffer, "LightSource", "LightSource")
 	renderFlowComponent:ExportRenderStagePort(stageGeometryBuffer, "Primitives", "Primitives")
 	renderFlowComponent:ExportRenderStagePort(stageGeometryBuffer, "CameraView", "CameraView")

@@ -13,8 +13,8 @@ StencilMaskRenderStage::StencilMaskRenderStage(const String& config) : InputDept
 	renderStateDescription.stencilValue = atoi(config.c_str());
 	renderStateDescription.stencilMask = 0xff;
 
-	renderTargetDescription.colorStorages[0].loadOp = IRender::Resource::RenderTargetDescription::DISCARD;
-	renderTargetDescription.colorStorages[0].storeOp = IRender::Resource::RenderTargetDescription::DISCARD;
+	renderTargetDescription.colorStorages[0].loadOp = IRender::Resource::RenderTargetDescription::DEFAULT;
+	renderTargetDescription.colorStorages[0].storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 	renderTargetDescription.depthStorage.loadOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 	renderTargetDescription.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 	renderTargetDescription.stencilStorage.loadOp = IRender::Resource::RenderTargetDescription::DEFAULT;

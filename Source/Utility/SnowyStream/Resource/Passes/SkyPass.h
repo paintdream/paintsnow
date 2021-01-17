@@ -6,6 +6,8 @@
 
 #pragma once
 #include "../../../../General/Misc/PassBase.h"
+#include "../Shaders/SkyTransformVS.h"
+#include "../Shaders/SkyShadingFS.h"
 
 namespace PaintsNow {
 	class SkyPass : public TReflected<SkyPass, PassBase> {
