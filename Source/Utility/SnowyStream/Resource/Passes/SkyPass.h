@@ -13,6 +13,11 @@ namespace PaintsNow {
 	class SkyPass : public TReflected<SkyPass, PassBase> {
 	public:
 		SkyPass();
+		TObject<IReflect>& operator () (IReflect& reflect) override;
+
+	protected:
+		SkyTransformVS transform;
+		SkyShadingFS shading;
 	};
 }
 

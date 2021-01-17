@@ -23,6 +23,7 @@
 #include "Resource/Passes/ParticlePass.h"
 #include "Resource/Passes/ScreenPass.h"
 #include "Resource/Passes/ShadowMaskPass.h"
+#include "Resource/Passes/SkyPass.h"
 #include "Resource/Passes/StandardPass.h"
 #include "Resource/Passes/TerrainPass.h"
 #include "Resource/Passes/TextPass.h"
@@ -708,6 +709,7 @@ void SnowyStream::RegisterBuiltinPasses() {
 	RegisterPass(*resourceManager(), UniqueType<MultiHashTracePass>());
 	RegisterPass(*resourceManager(), UniqueType<ScreenPass>());
 	RegisterPass(*resourceManager(), UniqueType<ShadowMaskPass>());
+	RegisterPass(*resourceManager(), UniqueType<SkyPass>());
 	RegisterPass(*resourceManager(), UniqueType<StandardPass>());
 
 	IRender::Resource::RenderStateDescription state;
@@ -996,7 +998,7 @@ static void SpherifiedCube(uint32_t divisions, std::vector<UInt3>& indices, std:
 			}
 		}
 	}
-
+	
 	indices.reserve(6 * divisions * divisions);
 	const uint32_t k = divisions + 1;
 	for (face = 0; face < 6; ++face) {
