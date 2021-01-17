@@ -216,11 +216,11 @@ void RenderFlowComponentModule::RequestDeleteRenderStage(IScript::Request& reque
 	renderFlowComponent->RemoveNode(stage.Get());
 }
 
-TShared<RenderPolicy> RenderFlowComponentModule::RequestNewRenderPolicy(IScript::Request& request, const String& name, uint32_t priority) {
+TShared<RenderPolicy> RenderFlowComponentModule::RequestNewRenderPolicy(IScript::Request& request, const String& name, uint16_t priorityBegin, uint16_t priorityEnd) {
 	CHECK_REFERENCES_NONE();
 
 	TShared<RenderPolicy> policy = TShared<RenderPolicy>::From(new RenderPolicy());
 	policy->renderPortName = name;
-	policy->priority = priority;
+	policy->priorityRange = std::make_pair(priorityBegin, priorityEnd);
 	return policy;
 }

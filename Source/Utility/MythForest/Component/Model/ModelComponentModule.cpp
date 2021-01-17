@@ -37,11 +37,11 @@ TShared<ModelComponent> ModelComponentModule::RequestNew(IScript::Request& reque
 	return modelComponent;
 }
 
-void ModelComponentModule::RequestSetMaterial(IScript::Request& request, IScript::Delegate<ModelComponent> modelComponent, uint32_t meshGroupIndex, IScript::Delegate<MaterialResource> materialResource) {
+void ModelComponentModule::RequestSetMaterial(IScript::Request& request, IScript::Delegate<ModelComponent> modelComponent, uint16_t meshGroupIndex, uint16_t priority,  IScript::Delegate<MaterialResource> materialResource) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(modelComponent);
 	CHECK_DELEGATE(materialResource);
 
 	TShared<MaterialResource> mat = materialResource.Get();
-	modelComponent->SetMaterial(meshGroupIndex, mat);
+	modelComponent->SetMaterial(meshGroupIndex, priority, mat);
 }

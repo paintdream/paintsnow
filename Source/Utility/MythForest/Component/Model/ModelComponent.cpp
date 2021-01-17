@@ -10,9 +10,9 @@ ModelComponent::ModelComponent(const TShared<MeshResource>& res, const TShared<B
 	Flag().fetch_or(COMPONENT_SHARED, std::memory_order_relaxed); // can be shared among different entities
 }
 
-void ModelComponent::SetMaterial(uint32_t meshGroupIndex, const TShared<MaterialResource>& materialResource) {
+void ModelComponent::SetMaterial(uint16_t meshGroupIndex, uint16_t priority, const TShared<MaterialResource>& materialResource) {
 	assert(shaderOverriders.empty());
-	materialResources.emplace_back(std::make_pair(meshGroupIndex, materialResource));
+	materialResources.emplace_back(std::make_pair(((uint32_t)priority << 16) | meshGroupIndex, materialResource));
 }
 
 uint32_t ModelComponent::CreateOverrider(const TShared<ShaderResource>& shaderResourceTemplate) {
@@ -24,12 +24,14 @@ uint32_t ModelComponent::CreateOverrider(const TShared<ShaderResource>& shaderRe
 	return safe_cast<uint32_t>((it - shaderOverriders.begin() + 1) * materialResources.size());
 }
 
-static void GenerateDrawCall(IDrawCallProvider::OutputRenderData& renderData, ShaderResource* shaderResource, std::vector<IRender::Resource*>& meshBuffers, const IAsset::MeshGroup& slice, const MeshResource::BufferCollection& bufferCollection, uint32_t deviceElementSize) {
+static void GenerateDrawCall(IDrawCallProvider::OutputRenderData& renderData, ShaderResource* shaderResource, std::vector<IRender::Resource*>& meshBuffers, const IAsset::MeshGroup& slice, const MeshResource::BufferCollection& bufferCollection, uint32_t deviceElementSize, uint16_t priority, uint16_t index) {
 	assert(deviceElementSize != 0);
 	IRender::Resource::DrawCallDescription& drawCall = renderData.drawCallDescription;
 	PassBase::Updater& updater = shaderResource->GetPassUpdater();
 	assert(updater.GetBufferCount() != 0);
 	assert(drawCall.shaderResource == shaderResource->GetShaderResource());
+	renderData.priority = priority;
+	renderData.groupIndex = index;
 
 	std::vector<PassBase::Parameter> outputs;
 	std::vector<std::pair<uint32_t, uint32_t> > offsets;
@@ -78,7 +80,9 @@ void ModelComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTe
 
 	for (size_t i = 0; i < materialResources.size(); i++) {
 		std::pair<uint32_t, TShared<MaterialResource> >& mat = materialResources[i];
-		uint32_t meshGroupIndex = mat.first;
+		uint16_t meshGroupIndex = safe_cast<uint16_t>(mat.first & 0xFFFF);
+		uint16_t priority = safe_cast<uint16_t>(mat.first >> 16);
+
 		if (meshGroupIndex < meshResource->meshCollection.groups.size()) {
 			IAsset::MeshGroup& slice = meshResource->meshCollection.groups[meshGroupIndex];
 			TShared<MaterialResource>& materialResource = mat.second;
@@ -103,7 +107,7 @@ void ModelComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTe
 
 				drawCall.dataUpdater = batchComponent();
 
-				GenerateDrawCall(drawCall, shaderInstance(), meshBuffers, slice, meshResource->bufferCollection, meshResource->deviceElementSize);
+				GenerateDrawCall(drawCall, shaderInstance(), meshBuffers, slice, meshResource->bufferCollection, meshResource->deviceElementSize, priority, meshGroupIndex);
 				IRender::Resource::DrawCallDescription::BufferRange* targetBufferRanges = drawCall.drawCallDescription.bufferResources;
 				std::vector<IRender::Resource::DrawCallDescription::BufferRange>& targetExtraBufferRanges = drawCall.drawCallDescription.extraBufferResources;
 				for (size_t m = 0; m < Math::Min(bufferRanges.size(), (size_t)drawCall.drawCallDescription.bufferCount); m++) {
@@ -144,6 +148,7 @@ uint32_t ModelComponent::CollectDrawCalls(std::vector<OutputRenderData, DrawCall
 	}
 
 	for (size_t i = 0; i < materialResources.size(); i++) {
+		uint16_t priority = materialResources[i].first >> 16;
 		drawCalls.emplace_back(drawCallTemplates[i + baseIndex]); // TODO: optimize copy performance
 	}
 

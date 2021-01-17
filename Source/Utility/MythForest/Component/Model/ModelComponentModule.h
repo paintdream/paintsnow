@@ -31,7 +31,7 @@ namespace PaintsNow {
 		/// <param name="modelComponent"> the ModelComponent </param>
 		/// <param name="meshGroupIndex"> index of mesh group </param>
 		/// <param name="materialResource"> the MaterialResource </param>
-		void RequestSetMaterial(IScript::Request& request, IScript::Delegate<ModelComponent> modelComponent, uint32_t meshGroupIndex, IScript::Delegate<MaterialResource> materialResource);
+		void RequestSetMaterial(IScript::Request& request, IScript::Delegate<ModelComponent> modelComponent, uint16_t meshGroupIndex, uint16_t priority, IScript::Delegate<MaterialResource> materialResource);
 
 	protected:
 		BatchComponentModule* batchComponentModule;

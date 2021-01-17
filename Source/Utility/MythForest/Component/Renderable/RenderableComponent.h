@@ -18,6 +18,7 @@ namespace PaintsNow {
 	public:
 		struct InputRenderData {
 			InputRenderData(float ref = 0.0f, ShaderResource* res = nullptr, const UShort2 resolution = UShort2(0, 0)) : overrideShaderTemplate(res), viewResolution(resolution), viewReference(ref) {}
+
 			ShaderResource* overrideShaderTemplate;
 			UShort2 viewResolution;
 			float viewReference;
@@ -29,6 +30,8 @@ namespace PaintsNow {
 			IDataUpdater* dataUpdater;
 			TShared<ShaderResource> shaderResource;
 			TShared<SharedTiny> host;
+			uint16_t priority;
+			uint16_t groupIndex;
 			std::vector<MatrixFloat4x4> localTransforms;
 			std::vector<std::pair<uint32_t, Bytes> > localInstancedData;
 		};
@@ -49,7 +52,11 @@ namespace PaintsNow {
 
 		Tiny::FLAG GetEntityFlagMask() const override;
 		virtual size_t ReportGraphicMemoryUsage() const;
+		const std::vector<TShared<RenderPolicy> >& GetRenderPolicies() const;
+		void AddRenderPolicy(const TShared<RenderPolicy>& renderPolicy);
+		void RemoveRenderPolicy(const TShared<RenderPolicy>& renderPolicy);
 
-		TShared<RenderPolicy> renderPolicy;
+	private:
+		std::vector<TShared<RenderPolicy> > renderPolicies;
 	};
 }

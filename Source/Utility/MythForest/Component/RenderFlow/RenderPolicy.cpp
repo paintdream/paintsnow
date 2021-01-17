@@ -2,14 +2,14 @@
 
 using namespace PaintsNow;
 
-RenderPolicy::RenderPolicy() : priority(0) {}
+RenderPolicy::RenderPolicy() : priorityRange(0, 1) {}
 
 TObject<IReflect>& RenderPolicy::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectProperty()) {
 		ReflectProperty(renderPortName);
-		ReflectProperty(priority);
+		ReflectProperty(priorityRange);
 	}
 
 	return *this;

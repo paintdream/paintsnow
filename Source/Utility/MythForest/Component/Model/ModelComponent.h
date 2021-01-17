@@ -27,7 +27,7 @@ namespace PaintsNow {
 		void Initialize(Engine& engine, Entity* entity) override;
 		void Uninitialize(Engine& engine, Entity* entity) override;
 
-		void SetMaterial(uint32_t meshGroupIndex, const TShared<MaterialResource>& materialResource);
+		void SetMaterial(uint16_t meshGroupIndex, uint16_t policy, const TShared<MaterialResource>& materialResource);
 		uint32_t CreateOverrider(const TShared<ShaderResource>& shaderResourceTemplate);
 		size_t ReportGraphicMemoryUsage() const override;
 

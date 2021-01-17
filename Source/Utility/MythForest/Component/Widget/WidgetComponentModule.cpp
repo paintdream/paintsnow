@@ -40,7 +40,7 @@ TShared<WidgetComponent> WidgetComponentModule::RequestNew(IScript::Request& req
 	TShared<BatchComponent> batchUniform = batchComponent.Get();
 	TShared<BatchComponent> batchInstanced = batchInstancedDataComponent.Get();
 	TShared<WidgetComponent> widgetComponent = TShared<WidgetComponent>::From(allocator->New(widgetMesh, batchUniform, batchInstanced));
-	widgetComponent->SetMaterial(0, materialResource ? TShared<MaterialResource>(materialResource.Get()) : defaultWidgetMaterial);
+	widgetComponent->SetMaterial(0, 0, materialResource ? TShared<MaterialResource>(materialResource.Get()) : defaultWidgetMaterial);
 	widgetComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
 	return widgetComponent;
 }

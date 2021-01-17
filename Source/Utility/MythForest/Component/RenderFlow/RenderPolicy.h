@@ -14,7 +14,7 @@ namespace PaintsNow {
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		String renderPortName;
-		uint32_t priority;
+		std::pair<uint16_t, uint16_t> priorityRange;
 		IRender::Resource::RenderStateDescription renderStateTemplate;
 		IRender::Resource::RenderStateDescription renderStateMask;
 	};

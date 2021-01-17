@@ -22,23 +22,37 @@ namespace PaintsNow {
 		}
 
 		/// <summary>
-		/// Set render policy of RenderableComponent or its derivations
+		/// Add render policy of RenderableComponent or its derivations
 		/// </summary>
 		/// <param name="renderableComponent"> the RenderableComponent </param>
 		/// <param name="renderPolicy"> the RenderPolicy </param>
-		void RequestSetRenderPolicy(IScript::Request& request, IScript::Delegate<T> renderableComponent, IScript::Delegate<RenderPolicy> renderPolicy) {
+		void RequestAddRenderPolicy(IScript::Request& request, IScript::Delegate<T> renderableComponent, IScript::Delegate<RenderPolicy> renderPolicy) {
 			CHECK_REFERENCES_NONE();
 			CHECK_DELEGATE(renderableComponent);
 			CHECK_DELEGATE(renderPolicy);
 
-			renderableComponent->renderPolicy = renderPolicy.Get();
+			renderableComponent->AddRenderPolicy(renderPolicy.Get());
+		}
+
+		/// <summary>
+		/// Remove render policy of RenderableComponent or its derivations
+		/// </summary>
+		/// <param name="renderableComponent"> the RenderableComponent </param>
+		/// <param name="renderPolicy"> the RenderPolicy </param>
+		void RequestRemoveRenderPolicy(IScript::Request& request, IScript::Delegate<T> renderableComponent, IScript::Delegate<RenderPolicy> renderPolicy) {
+			CHECK_REFERENCES_NONE();
+			CHECK_DELEGATE(renderableComponent);
+			CHECK_DELEGATE(renderPolicy);
+
+			renderableComponent->RemoveRenderPolicy(renderPolicy.Get());
 		}
 
 		TObject<IReflect>& operator () (IReflect& reflect) override {
 			BaseClass::operator () (reflect);
 
 			if (reflect.IsReflectMethod()) {
-				ReflectMethod(RequestSetRenderPolicy)[ScriptMethod = "SetRenderPolicy"];
+				ReflectMethod(RequestAddRenderPolicy)[ScriptMethod = "AddRenderPolicy"];
+				ReflectMethod(RequestRemoveRenderPolicy)[ScriptMethod = "RemoveRenderPolicy"];
 			}
 
 			return *this;

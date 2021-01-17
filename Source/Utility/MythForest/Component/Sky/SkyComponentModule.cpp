@@ -36,7 +36,7 @@ TShared<SkyComponent> SkyComponentModule::RequestNew(IScript::Request& request, 
 	assert(batchComponent->GetWarpIndex() == engine.GetKernel().GetCurrentWarpIndex());
 	TShared<MeshResource> res = meshResource.Get();
 	TShared<SkyComponent> skyComponent = TShared<SkyComponent>::From(allocator->New(meshResource ? meshResource.Get() : defaultSkyMesh, batchComponent));
-	skyComponent->SetMaterial(0, materialResource ? materialResource.Get() : defaultSkyMaterial);
+	skyComponent->SetMaterial(0, 0, materialResource ? materialResource.Get() : defaultSkyMaterial);
 	skyComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
 
 	return skyComponent;

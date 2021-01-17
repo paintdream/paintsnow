@@ -556,209 +556,217 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 
 	bool isCameraViewSpace = !!(renderableComponent->Flag().load(std::memory_order_relaxed) & RenderableComponent::RENDERABLECOMPONENT_CAMERAVIEW);
 
-	for (size_t k = 0; k < drawCalls.size(); k++) {
-		// PassBase& Pass = provider->GetPass(k);
-		IDrawCallProvider::OutputRenderData& drawCall = drawCalls[k];
-		uint32_t div;
-		switch (drawCall.drawCallDescription.indexBufferResource.type) {
-		case IRender::Resource::BufferDescription::Format::UNSIGNED_BYTE:
-			div = 3;
-			break;
-		case IRender::Resource::BufferDescription::Format::UNSIGNED_SHORT:
-			div = 6;
-			break;
-		default:
-			div = 12;
-			break;
-		}
+	const std::vector<TShared<RenderPolicy> >& renderPolicies = renderableComponent->GetRenderPolicies();
 
-		warpData.triangleCount += drawCall.drawCallDescription.indexBufferResource.length / div * Math::Max(1u, drawCall.drawCallDescription.instanceCounts.x());
+	for (size_t j = 0; j < renderPolicies.size(); j++) {
+		RenderPolicy* renderPolicy = renderPolicies[j]();
 
-		const IRender::Resource::DrawCallDescription& drawCallTemplate = drawCall.drawCallDescription;
-		AnimationComponent* animationComponent = instanceData.animationComponent();
-
-		// Add Lighting stencil
-		assert(!(drawCall.renderStateDescription.stencilValue & STENCIL_LIGHTING));
-		drawCall.renderStateDescription.stencilValue |= STENCIL_LIGHTING;
-		drawCall.renderStateDescription.stencilMask |= STENCIL_LIGHTING;
-
-		// Generate key
-		InstanceKey key;
-		key.renderStateDescription = drawCall.renderStateDescription;
-		assert((((size_t)renderableComponent << 1) & k) == 0);
-		key.renderKey = ((size_t)renderableComponent << 1) | k;
-		key.animationKey = (size_t)animationComponent;
-
-		assert((~((size_t)renderableComponent << 1) & k) == k); // assume k can be stored in renderComponent's lowest bits
-
-		TaskData::WarpData::InstanceGroupMap::iterator it = instanceGroups.find(key);
-		std::vector<Bytes> s;
-		std::vector<IRender::Resource*> textureResources;
-		std::vector<IRender::Resource::DrawCallDescription::BufferRange> bufferResources;
-		InstanceGroup& group = instanceGroups[key];
-		if (group.instanceCount == 0) {
-			std::binary_insert(warpData.dataUpdaters, drawCall.dataUpdater);
-
-			RenderPolicy* renderPolicy = renderableComponent->renderPolicy();
-			group.renderPolicy = renderPolicy;
-
-			std::vector<std::key_value<RenderPolicy*, TaskData::PolicyData> >::iterator ip = std::binary_find(warpData.renderPolicyMap.begin(), warpData.renderPolicyMap.end(), group.renderPolicy());
-			if (ip == warpData.renderPolicyMap.end()) {
-				ip = std::binary_insert(warpData.renderPolicyMap, group.renderPolicy());
+		for (size_t k = 0; k < drawCalls.size(); k++) {
+			// PassBase& Pass = provider->GetPass(k);
+			IDrawCallProvider::OutputRenderData& drawCall = drawCalls[k];
+			if (drawCall.priority < renderPolicy->priorityRange.first || drawCall.priority >= renderPolicy->priorityRange.second) {
+				continue;
 			}
 
-			TaskData::PolicyData& policyData = ip->second;
-			IRender::Queue*& queue = policyData.portQueue;
-			if (queue == nullptr) {
-				queue = render.CreateQueue(device);
-				policyData.instanceBuffer = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_BUFFER);
+			uint32_t div;
+			switch (drawCall.drawCallDescription.indexBufferResource.type) {
+			case IRender::Resource::BufferDescription::Format::UNSIGNED_BYTE:
+				div = 3;
+				break;
+			case IRender::Resource::BufferDescription::Format::UNSIGNED_SHORT:
+				div = 6;
+				break;
+			default:
+				div = 12;
+				break;
 			}
 
-			// add renderstate if exists
-			std::vector<std::key_value<IRender::Resource::RenderStateDescription, IRender::Resource*> >::iterator is = std::binary_find(warpData.renderStateMap.begin(), warpData.renderStateMap.end(), drawCall.renderStateDescription);
-			if (is == warpData.renderStateMap.end()) {
-				is = std::binary_insert(warpData.renderStateMap, drawCall.renderStateDescription);
-			}
+			warpData.triangleCount += drawCall.drawCallDescription.indexBufferResource.length / div * Math::Max(1u, drawCall.drawCallDescription.instanceCounts.x());
 
-			IRender::Resource*& state = is->second;
-			if (state == nullptr) {
-				state = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_RENDERSTATE);
-				render.UploadResource(queue, state, &drawCall.renderStateDescription);
-				policyData.runtimeResources.emplace_back(state);
-			}
+			const IRender::Resource::DrawCallDescription& drawCallTemplate = drawCall.drawCallDescription;
+			AnimationComponent* animationComponent = instanceData.animationComponent();
 
-			group.renderStateResource = state;
-			group.drawCallDescription = drawCallTemplate;
+			// Add Lighting stencil
+			assert(!(drawCall.renderStateDescription.stencilValue & STENCIL_LIGHTING));
+			drawCall.renderStateDescription.stencilValue |= STENCIL_LIGHTING;
+			drawCall.renderStateDescription.stencilMask |= STENCIL_LIGHTING;
 
-#ifdef _DEBUG
-			group.description = renderableComponent->GetDescription();
-#endif // _DEBUG
+			// Generate key
+			InstanceKey key;
+			key.renderStateDescription = drawCall.renderStateDescription;
+			assert((((size_t)renderableComponent << 1) & k) == 0);
+			key.renderKey = ((size_t)renderableComponent << 1) | k;
+			key.animationKey = (size_t)animationComponent;
 
-			PassBase::Updater& updater = drawCall.shaderResource->GetPassUpdater();
-			std::vector<std::key_value<ShaderResource*, TaskData::WarpData::GlobalBufferItem> >::iterator ig = std::binary_find(warpData.worldGlobalBufferMap.begin(), warpData.worldGlobalBufferMap.end(), drawCall.shaderResource());
-			if (ig == warpData.worldGlobalBufferMap.end()) {
-				ig = std::binary_insert(warpData.worldGlobalBufferMap, drawCall.shaderResource());
+			assert((~((size_t)renderableComponent << 1) & k) == k); // assume k can be stored in renderComponent's lowest bits
 
-				ig->second.renderQueue = queue;
-				taskData.worldGlobalData.Export(ig->second.globalUpdater, updater);
-				// assert(!ig->second.globalUpdater.parameters.empty());
-				instanceData.Export(ig->second.instanceUpdater, updater);
-				// assert(!ig->second.instanceUpdater.parameters.empty());
+			TaskData::WarpData::InstanceGroupMap::iterator it = instanceGroups.find(key);
+			std::vector<Bytes> s;
+			std::vector<IRender::Resource*> textureResources;
+			std::vector<IRender::Resource::DrawCallDescription::BufferRange> bufferResources;
+			InstanceGroup& group = instanceGroups[key];
+			if (group.instanceCount == 0) {
+				std::binary_insert(warpData.dataUpdaters, drawCall.dataUpdater);
+				group.renderPolicy = renderPolicy;
 
-				std::vector<Bytes> s;
-				std::vector<IRender::Resource::DrawCallDescription::BufferRange> bufferResources;
-				std::vector<IRender::Resource*> textureResources;
-				ig->second.globalUpdater.Snapshot(s, bufferResources, textureResources, taskData.worldGlobalData);
-				ig->second.buffers.resize(updater.GetBufferCount());
-
-				for (size_t i = 0; i < s.size(); i++) {
-					Bytes& data = s[i];
-					if (!data.Empty()) {
-						IRender::Resource::BufferDescription desc;
-						desc.usage = IRender::Resource::BufferDescription::UNIFORM;
-						desc.component = 4;
-						desc.dynamic = 1;
-						desc.format = IRender::Resource::BufferDescription::FLOAT;
-						desc.data = std::move(data);
-						IRender::Resource* res = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_BUFFER);
-						render.UploadResource(queue, res, &desc);
-						ig->second.buffers[i].buffer = res;
-						policyData.runtimeResources.emplace_back(res);
-					}
+				std::vector<std::key_value<RenderPolicy*, TaskData::PolicyData> >::iterator ip = std::binary_find(warpData.renderPolicyMap.begin(), warpData.renderPolicyMap.end(), group.renderPolicy());
+				if (ip == warpData.renderPolicyMap.end()) {
+					ip = std::binary_insert(warpData.renderPolicyMap, group.renderPolicy());
 				}
 
-				if (!textureResources.empty()) {
-					ig->second.textures.resize(updater.GetTextureCount());
-					for (size_t j = 0; j < textureResources.size(); j++) {
-						IRender::Resource* res = textureResources[j];
-						if (res != nullptr) {
-							ig->second.textures[j] = res;
+				TaskData::PolicyData& policyData = ip->second;
+				IRender::Queue*& queue = policyData.portQueue;
+				if (queue == nullptr) {
+					queue = render.CreateQueue(device);
+					policyData.instanceBuffer = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_BUFFER);
+				}
+
+				// add renderstate if exists
+				std::vector<std::key_value<IRender::Resource::RenderStateDescription, IRender::Resource*> >::iterator is = std::binary_find(warpData.renderStateMap.begin(), warpData.renderStateMap.end(), drawCall.renderStateDescription);
+				if (is == warpData.renderStateMap.end()) {
+					is = std::binary_insert(warpData.renderStateMap, drawCall.renderStateDescription);
+				}
+
+				IRender::Resource*& state = is->second;
+				if (state == nullptr) {
+					state = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_RENDERSTATE);
+					render.UploadResource(queue, state, &drawCall.renderStateDescription);
+					policyData.runtimeResources.emplace_back(state);
+				}
+
+				group.renderStateResource = state;
+				group.drawCallDescription = drawCallTemplate;
+
+#ifdef _DEBUG
+				group.description = renderableComponent->GetDescription();
+#endif // _DEBUG
+
+				PassBase::Updater& updater = drawCall.shaderResource->GetPassUpdater();
+				std::vector<std::key_value<ShaderResource*, TaskData::WarpData::GlobalBufferItem> >::iterator ig = std::binary_find(warpData.worldGlobalBufferMap.begin(), warpData.worldGlobalBufferMap.end(), drawCall.shaderResource());
+				if (ig == warpData.worldGlobalBufferMap.end()) {
+					ig = std::binary_insert(warpData.worldGlobalBufferMap, drawCall.shaderResource());
+
+					ig->second.renderQueue = queue;
+					taskData.worldGlobalData.Export(ig->second.globalUpdater, updater);
+					// assert(!ig->second.globalUpdater.parameters.empty());
+					instanceData.Export(ig->second.instanceUpdater, updater);
+					// assert(!ig->second.instanceUpdater.parameters.empty());
+
+					std::vector<Bytes> s;
+					std::vector<IRender::Resource::DrawCallDescription::BufferRange> bufferResources;
+					std::vector<IRender::Resource*> textureResources;
+					ig->second.globalUpdater.Snapshot(s, bufferResources, textureResources, taskData.worldGlobalData);
+					ig->second.buffers.resize(updater.GetBufferCount());
+
+					for (size_t i = 0; i < s.size(); i++) {
+						Bytes& data = s[i];
+						if (!data.Empty()) {
+							IRender::Resource::BufferDescription desc;
+							desc.usage = IRender::Resource::BufferDescription::UNIFORM;
+							desc.component = 4;
+							desc.dynamic = 1;
+							desc.format = IRender::Resource::BufferDescription::FLOAT;
+							desc.data = std::move(data);
+							IRender::Resource* res = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_BUFFER);
+							render.UploadResource(queue, res, &desc);
+							ig->second.buffers[i].buffer = res;
+							policyData.runtimeResources.emplace_back(res);
+						}
+					}
+
+					if (!textureResources.empty()) {
+						ig->second.textures.resize(updater.GetTextureCount());
+						for (size_t j = 0; j < textureResources.size(); j++) {
+							IRender::Resource* res = textureResources[j];
+							if (res != nullptr) {
+								ig->second.textures[j] = res;
+							}
+						}
+					}
+
+					for (size_t k = 0; k < bufferResources.size(); k++) {
+						IRender::Resource::DrawCallDescription::BufferRange& range = bufferResources[k];
+						if (range.buffer != nullptr) {
+							ig->second.buffers[k] = range;
 						}
 					}
 				}
 
-				for (size_t k = 0; k < bufferResources.size(); k++) {
-					IRender::Resource::DrawCallDescription::BufferRange& range = bufferResources[k];
-					if (range.buffer != nullptr) {
-						ig->second.buffers[k] = range;
+				if (!ig->second.textures.empty()) {
+					for (size_t m = 0; m < group.drawCallDescription.textureCount; m++) {
+						IRender::Resource*& texture = m < sizeof(group.drawCallDescription.textureResources) / sizeof(group.drawCallDescription.textureResources[0]) ? group.drawCallDescription.textureResources[m] : group.drawCallDescription.extraTextureResources[m - sizeof(group.drawCallDescription.textureResources) / sizeof(group.drawCallDescription.textureResources[0])];
+						if (ig->second.textures[m] != nullptr) {
+							texture = ig->second.textures[m];
+						}
+					}
+				}
+
+				for (size_t n = 0; n < group.drawCallDescription.bufferCount; n++) {
+					IRender::Resource::DrawCallDescription::BufferRange& bufferRange = n < sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0]) ? group.drawCallDescription.bufferResources[n] : group.drawCallDescription.extraBufferResources[n - sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0])];
+					if (ig->second.buffers[n].buffer != nullptr) {
+						bufferRange = ig->second.buffers[n];
+					}
+				}
+
+				group.instanceUpdater = &ig->second.instanceUpdater;
+
+				// skinning
+				if (animationComponent) {
+					assert(animationComponent->GetWarpIndex() == renderableComponent->GetWarpIndex());
+					const PassBase::Parameter& parameter = updater[IShader::BindInput::BONE_TRANSFORMS];
+					if (parameter) {
+						group.animationComponent = animationComponent; // hold reference
+						size_t k = parameter.slot;
+						IRender::Resource::DrawCallDescription::BufferRange& bufferRange = k < sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0]) ? group.drawCallDescription.bufferResources[k] : group.drawCallDescription.extraBufferResources[k - sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0])];
+						bufferRange.buffer = animationComponent->AcquireBoneMatrixBuffer(render, queue);
 					}
 				}
 			}
 
-			if (!ig->second.textures.empty()) {
-				for (size_t m = 0; m < group.drawCallDescription.textureCount; m++) {
-					IRender::Resource*& texture = m < sizeof(group.drawCallDescription.textureResources) / sizeof(group.drawCallDescription.textureResources[0]) ? group.drawCallDescription.textureResources[m] : group.drawCallDescription.extraTextureResources[m - sizeof(group.drawCallDescription.textureResources) / sizeof(group.drawCallDescription.textureResources[0])];
-					if (ig->second.textures[m] != nullptr) {
-						texture = ig->second.textures[m];
-					}
-				}
-			}
-
-			for (size_t n = 0; n < group.drawCallDescription.bufferCount; n++) {
-				IRender::Resource::DrawCallDescription::BufferRange& bufferRange = n < sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0]) ? group.drawCallDescription.bufferResources[n] : group.drawCallDescription.extraBufferResources[n - sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0])];
-				if (ig->second.buffers[n].buffer != nullptr) {
-					bufferRange = ig->second.buffers[n];
-				}
-			}
-
-			group.instanceUpdater = &ig->second.instanceUpdater;
-
-			// skinning
-			if (animationComponent) {
-				assert(animationComponent->GetWarpIndex() == renderableComponent->GetWarpIndex());
-				const PassBase::Parameter& parameter = updater[IShader::BindInput::BONE_TRANSFORMS];
-				if (parameter) {
-					group.animationComponent = animationComponent; // hold reference
-					size_t k = parameter.slot;
-					IRender::Resource::DrawCallDescription::BufferRange& bufferRange = k < sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0]) ? group.drawCallDescription.bufferResources[k] : group.drawCallDescription.extraBufferResources[k - sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0])];
-					bufferRange.buffer = animationComponent->AcquireBoneMatrixBuffer(render, queue);
-				}
-			}
-		}
-
-		// process local instanced data
-		if (drawCall.localInstancedData.empty() && drawCall.localTransforms.empty()) {
-			group.instanceUpdater->Snapshot(group.instancedData, bufferResources, textureResources, instanceData, &warpData.bytesCache);
-			assert(!group.instanceUpdater->parameters.empty());
-			group.instanceCount++;
-		} else {
-			assert(drawCall.drawCallDescription.instanceCounts.x() != 0);
-
-			for (size_t i = 0; i < drawCall.localInstancedData.size(); i++) {
-				std::pair<uint32_t, Bytes>& localInstancedData = drawCall.localInstancedData[i];
-				if (group.instancedData.size() <= localInstancedData.first) {
-					group.instancedData.resize(localInstancedData.first + 1);
-				}
-
-				Bytes bytes = warpData.bytesCache.New(safe_cast<uint32_t>(localInstancedData.second.GetSize()));
-				bytes.Import(0, localInstancedData.second.GetData(), localInstancedData.second.GetSize());
-				warpData.bytesCache.Link(group.instancedData[localInstancedData.first], bytes);
-			}
-
-			if (drawCall.localTransforms.empty()) {
-				std::vector<Bytes> s;
-				group.instanceUpdater->Snapshot(s, bufferResources, textureResources, instanceData, &warpData.bytesCache);
-				assert(drawCall.drawCallDescription.instanceCounts.x() != 0);
-				for (size_t j = 0; j < s.size(); j++) {
-					uint32_t viewSize = safe_cast<uint32_t>(s[j].GetViewSize());
-					Bytes view = warpData.bytesCache.New(viewSize * drawCall.drawCallDescription.instanceCounts.x());
-					view.Import(0, s[j], drawCall.drawCallDescription.instanceCounts.x());
-					warpData.bytesCache.Link(group.instancedData[j], view);
-				}
+			// process local instanced data
+			if (drawCall.localInstancedData.empty() && drawCall.localTransforms.empty()) {
+				group.instanceUpdater->Snapshot(group.instancedData, bufferResources, textureResources, instanceData, &warpData.bytesCache);
+				assert(!group.instanceUpdater->parameters.empty());
+				group.instanceCount++;
 			} else {
-				assert(drawCall.drawCallDescription.instanceCounts.x() == drawCall.localTransforms.size());
-				for (size_t n = 0; n < drawCall.drawCallDescription.instanceCounts.x(); n++) {
-					WorldInstanceData subInstanceData = instanceData;
-					subInstanceData.worldMatrix = drawCall.localTransforms[n] * instanceData.worldMatrix;
-					if (isCameraViewSpace) {
-						subInstanceData.worldMatrix = subInstanceData.worldMatrix * taskData.worldGlobalData.viewMatrix;
+				assert(drawCall.drawCallDescription.instanceCounts.x() != 0);
+
+				for (size_t i = 0; i < drawCall.localInstancedData.size(); i++) {
+					std::pair<uint32_t, Bytes>& localInstancedData = drawCall.localInstancedData[i];
+					if (group.instancedData.size() <= localInstancedData.first) {
+						group.instancedData.resize(localInstancedData.first + 1);
 					}
 
-					group.instanceUpdater->Snapshot(group.instancedData, bufferResources, textureResources, subInstanceData, &warpData.bytesCache);
+					Bytes bytes = warpData.bytesCache.New(safe_cast<uint32_t>(localInstancedData.second.GetSize()));
+					bytes.Import(0, localInstancedData.second.GetData(), localInstancedData.second.GetSize());
+					warpData.bytesCache.Link(group.instancedData[localInstancedData.first], bytes);
 				}
-			}
 
-			group.instanceCount += drawCall.drawCallDescription.instanceCounts.x();
+				if (drawCall.localTransforms.empty()) {
+					std::vector<Bytes> s;
+					group.instanceUpdater->Snapshot(s, bufferResources, textureResources, instanceData, &warpData.bytesCache);
+					assert(drawCall.drawCallDescription.instanceCounts.x() != 0);
+					for (size_t j = 0; j < s.size(); j++) {
+						uint32_t viewSize = safe_cast<uint32_t>(s[j].GetViewSize());
+						Bytes view = warpData.bytesCache.New(viewSize * drawCall.drawCallDescription.instanceCounts.x());
+						view.Import(0, s[j], drawCall.drawCallDescription.instanceCounts.x());
+						warpData.bytesCache.Link(group.instancedData[j], view);
+					}
+				} else {
+					assert(drawCall.drawCallDescription.instanceCounts.x() == drawCall.localTransforms.size());
+					for (size_t n = 0; n < drawCall.drawCallDescription.instanceCounts.x(); n++) {
+						WorldInstanceData subInstanceData = instanceData;
+						subInstanceData.worldMatrix = drawCall.localTransforms[n] * instanceData.worldMatrix;
+						if (isCameraViewSpace) {
+							subInstanceData.worldMatrix = subInstanceData.worldMatrix * taskData.worldGlobalData.viewMatrix;
+						}
+
+						group.instanceUpdater->Snapshot(group.instancedData, bufferResources, textureResources, subInstanceData, &warpData.bytesCache);
+					}
+				}
+
+				group.instanceCount += drawCall.drawCallDescription.instanceCounts.x();
+			}
 		}
 	}
 }
@@ -768,7 +776,11 @@ void CameraComponent::CollectEnvCubeComponent(EnvCubeComponent* envCubeComponent
 	element.position = Float3(worldMatrix(3, 0), worldMatrix(3, 1), worldMatrix(3, 2));
 	element.cubeMapTexture = envCubeComponent->cubeMapTexture;
 	element.cubeStrength = envCubeComponent->strength;
-	envCubeElements.emplace_back(std::make_pair(envCubeComponent->renderPolicy, std::move(element)));
+
+	const std::vector<TShared<RenderPolicy> >& renderPolicies = envCubeComponent->GetRenderPolicies();
+	for (size_t i = 0; i < renderPolicies.size(); i++) {
+		envCubeElements.emplace_back(std::make_pair(renderPolicies[i], std::move(element)));
+	}
 }
 
 void CameraComponent::CompleteCollect(Engine& engine, TaskData& taskData) {
@@ -806,7 +818,11 @@ void CameraComponent::CollectLightComponent(Engine& engine, LightComponent* ligh
 
 	const Float3& color = lightComponent->GetColor();
 	element.colorAttenuation = Float4(color.x(), color.y(), color.z(), lightComponent->GetAttenuation());
-	lightElements.emplace_back(std::make_pair(lightComponent->renderPolicy, std::move(element)));
+	const std::vector<TShared<RenderPolicy> >& renderPolicies = lightComponent->GetRenderPolicies();
+
+	for (size_t i = 0; i < renderPolicies.size(); i++) {
+		lightElements.emplace_back(std::make_pair(renderPolicies[i], std::move(element)));
+	}
 }
 
 uint32_t CameraComponent::GetCollectedEntityCount() const {

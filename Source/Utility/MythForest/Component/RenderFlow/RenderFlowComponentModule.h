@@ -29,7 +29,7 @@ namespace PaintsNow {
 		/// <param name="name"> name </param>
 		/// <param name="priority"> priority </param>
 		/// <returns> RenderPolicy object </returns>
-		TShared<RenderPolicy> RequestNewRenderPolicy(IScript::Request& request, const String& name, uint32_t priority);
+		TShared<RenderPolicy> RequestNewRenderPolicy(IScript::Request& request, const String& name, uint16_t priorityBegin, uint16_t priorityEnd);
 
 		/// <summary>
 		/// Create RenderStage

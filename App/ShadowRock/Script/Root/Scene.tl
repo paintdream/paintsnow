@@ -24,8 +24,8 @@ function Scene.New(database : Database, clock : Clock) : Scene
 	eventComponent:BindEventFrame(true)
 	rootEntity:AddEntityComponent(eventComponent as Component)
 
-	local renderPolicy = RenderFlowComponentModule.NewRenderPolicy("Primitives", 0)
-	local lightPolicy = RenderFlowComponentModule.NewRenderPolicy("LightSource", 0)
+	local renderPolicy = RenderFlowComponentModule.NewRenderPolicy("Primitives", 0, 1)
+	local lightPolicy = RenderFlowComponentModule.NewRenderPolicy("LightSource", 0, 1)
 
 	local CustomShader = require("Script/Prefabs/Components/Shader/CustomShader")
 	local StandardShader = require("Script/Shaders/Standard") as ShaderDescription
@@ -119,7 +119,12 @@ function Scene.New(database : Database, clock : Clock) : Scene
 						if not meshResource then
 							print("\tUnable to load mesh resource: " .. path as string)
 						else
-							components[componentID as number] = components[componentID as number] or ModelComponentModule.New(meshResource, batchComponent) as Component
+							if not components[componentID as number] then
+								local modelComponent = ModelComponentModule.New(meshResource, batchComponent) as ModelComponent
+								modelComponent:AddRenderPolicy(renderPolicy)
+								components[componentID as number] = modelComponent as Component
+							end
+
 							shapeComponents[componentID as number] = shapeComponents[componentID as number] or ShapeComponentModule.New(meshResource) 
 							formComponents[componentID as number] = formComponents[componentID as number] or FormComponentModule.New(path as string)
 						end
@@ -135,10 +140,9 @@ function Scene.New(database : Database, clock : Clock) : Scene
 					else
 						local modelComponent = components[componentID as number] as ModelComponent
 						if modelComponent then
-							modelComponent:SetRenderPolicy(renderPolicy)
 							-- override material
 							materialResource = customShaderComponent:ExportMaterial(materialResource)
-							modelComponent:SetMaterial(meshGroupID as number, materialResource)
+							modelComponent:SetMaterial(meshGroupID as number, 0, materialResource)
 						end
 					end
 
@@ -166,7 +170,7 @@ function Scene.New(database : Database, clock : Clock) : Scene
 						local component = components[componentID as number] as EnvCubeComponent
 						hugeComponent[component as Component] = true
 						component:SetTexture(textureResource as TextureResource)
-						component:SetRenderPolicy(lightPolicy)
+						component:AddRenderPolicy(lightPolicy)
 						component:SetRange({1000, 1000, 1000})
 						component:SetStrength(0.25)
 					else
@@ -247,7 +251,7 @@ function Scene.New(database : Database, clock : Clock) : Scene
 		lightComponent:SetLightRange({1000, 1000, 1000})
 		lightComponent:SetLightAttenuation(0.1)
 		lightComponent:SetLightDirectional(true)
-		lightComponent:SetRenderPolicy(lightPolicy)
+		lightComponent:AddRenderPolicy(lightPolicy)
 		local streamComponent0 = StreamComponentModule.New({4, 4, 4}, 4)
 		lightComponent:BindLightShadowStream(0, streamComponent0, { 1024, 1024 }, 0.25, 1)
 		local streamComponent1 = StreamComponentModule.New({4, 4, 4}, 3)
@@ -287,7 +291,7 @@ function Scene.New(database : Database, clock : Clock) : Scene
 			lightComponent:SetLightRange(radius[((i + 1) % 8) + 1])
 			lightComponent:SetLightAttenuation(math.random(100,400) * 0.2)
 			lightComponent:SetLightDirectional(false)
-			lightComponent:SetRenderPolicy(lightPolicy)
+			lightComponent:AddRenderPolicy(lightPolicy)
 			light:AddEntityComponent(lightComponent as Component)
 			staticSpaceComponent:InsertEntity(light)
 		end
