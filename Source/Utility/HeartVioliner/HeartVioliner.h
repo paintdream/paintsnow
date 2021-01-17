@@ -1,5 +1,5 @@
 // HeartVioliner.h -- Operation queue
-// By PaintDream (paintdream@paintdream.com)
+// PaintDream (paintdream@paintdream.com)
 // 2015-1-3
 //
 

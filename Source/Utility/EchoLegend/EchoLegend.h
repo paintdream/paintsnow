@@ -1,5 +1,5 @@
 // EchoLegend.h -- multi-player client/server support
-// By PaintDream (paintdream@paintdream.com)
+// PaintDream (paintdream@paintdream.com)
 // 2015-5-29
 // This project will be started at .... I don't know.
 //

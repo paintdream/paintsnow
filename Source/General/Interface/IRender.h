@@ -1,5 +1,5 @@
 // IRender.h - Basic render interface
-// By PaintDream (paintdream@paintdream.com)
+// PaintDream (paintdream@paintdream.com)
 // 2019-9-19
 //
 

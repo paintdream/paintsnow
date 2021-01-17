@@ -1,6 +1,6 @@
 // TextPass.h
-// Text Physical Based Shader
-// By PaintDream (paintdream@paintdream.com)
+// PaintDream (paintdream@paintdream.com)
+// 2021-1-17
 //
 
 #pragma once

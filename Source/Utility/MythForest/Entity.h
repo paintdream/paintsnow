@@ -1,5 +1,5 @@
 // Entity.h
-// By PaintDream (paintdream@paintdream.com)
+// PaintDream (paintdream@paintdream.com)
 // 2017-12-27
 //
 

@@ -943,6 +943,83 @@ void SnowyStream::CreateBuiltinMesh(const String& path, const Float3* vertices, 
 	}
 }
 
+// https://github.com/caosdoar/spheres/blob/master/src/spheres.cpp
+static void SpherifiedCube(uint32_t divisions, std::vector<UInt3>& indices, std::vector<Float3>& vertices) {
+	static const Float3 origins[6] = {
+		Float3(-1.0, -1.0, -1.0),
+		Float3(1.0, -1.0, -1.0),
+		Float3(1.0, -1.0, 1.0),
+		Float3(-1.0, -1.0, 1.0),
+		Float3(-1.0, 1.0, -1.0),
+		Float3(-1.0, -1.0, 1.0)
+	};
+
+	static const Float3 rights[6] = {
+		Float3(2.0, 0.0, 0.0),
+		Float3(0.0, 0.0, 2.0),
+		Float3(-2.0, 0.0, 0.0),
+		Float3(0.0, 0.0, -2.0),
+		Float3(2.0, 0.0, 0.0),
+		Float3(2.0, 0.0, 0.0)
+	};
+
+	static const Float3 ups[6] =
+	{
+		Float3(0.0, 2.0, 0.0),
+		Float3(0.0, 2.0, 0.0),
+		Float3(0.0, 2.0, 0.0),
+		Float3(0.0, 2.0, 0.0),
+		Float3(0.0, 0.0, 2.0),
+		Float3(0.0, 0.0, -2.0)
+	};
+
+	const float step = 1.0f / divisions;
+	vertices.reserve(6 * (divisions + 1) * (divisions + 1));
+
+	uint32_t face;
+	for (face = 0; face < 6; face++) {
+		const Float3 origin = origins[face];
+		const Float3 right = rights[face];
+		const Float3 up = ups[face];
+		for (uint32_t j = 0; j < divisions + 1; j++) {
+			for (uint32_t i = 0; i < divisions + 1; i++) {
+				const Float3 p = origin + (right * (float)i + up * (float)j) * step;
+				const Float3 p2 = p * p;
+				const Float3 n
+				(
+					p.x() * (float)sqrt(1.0f - 0.5f * (p2.y() + p2.z()) + p2.y() * p2.z() / 3.0f),
+					p.y() * (float)sqrt(1.0f - 0.5f * (p2.z() + p2.x()) + p2.z() * p2.x() / 3.0f),
+					p.z() * (float)sqrt(1.0f - 0.5f * (p2.x() + p2.y()) + p2.x() * p2.y() / 3.0f)
+				);
+
+				vertices.emplace_back(n);
+			}
+		}
+	}
+
+	indices.reserve(6 * divisions * divisions);
+	const uint32_t k = divisions + 1;
+	for (face = 0; face < 6; ++face) {
+		for (uint32_t j = 0; j < divisions; ++j) {
+			const bool bottom = j < (divisions / 2);
+			for (uint32_t i = 0; i < divisions; ++i) {
+				const bool left = i < (divisions / 2);
+				const uint32_t a = (face * k + j) * k + i;
+				const uint32_t b = (face * k + j) * k + i + 1;
+				const uint32_t c = (face * k + j + 1) * k + i;
+				const uint32_t d = (face * k + j + 1) * k + i + 1;
+				if (bottom != left) {
+					indices.emplace_back(UInt3(a, c, b));
+					indices.emplace_back(UInt3(c, d, b));
+				} else {
+					indices.emplace_back(UInt3(a, c, d));
+					indices.emplace_back(UInt3(a, d, b));
+				}
+			}
+		}
+	}
+}
+
 void SnowyStream::CreateBuiltinResources() {
 	// MeshResource for widget rendering and deferred rendering ...
 	static const Float3 quadVertices[] = {
@@ -977,6 +1054,11 @@ void SnowyStream::CreateBuiltinResources() {
 	};
 
 	CreateBuiltinMesh("[Runtime]/MeshResource/StandardCube", cubeVertices, sizeof(cubeVertices) / sizeof(cubeVertices[0]), cubeIndices, sizeof(cubeIndices) / sizeof(cubeIndices[0]));
+
+	std::vector<UInt3> sphereIndices;
+	std::vector<Float3> sphereVertices;
+	SpherifiedCube(5, sphereIndices, sphereVertices);
+	CreateBuiltinMesh("[Runtime]/MeshResource/StandardSphere", &sphereVertices[0], sphereVertices.size(), &sphereIndices[0], sphereIndices.size());
 
 	CreateBuiltinSolidTexture("[Runtime]/TextureResource/Black", UChar4(0, 0, 0, 0));
 	CreateBuiltinSolidTexture("[Runtime]/TextureResource/White", UChar4(255, 255, 255, 255));

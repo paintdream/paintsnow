@@ -1,5 +1,5 @@
 // ParticleComponentModule.h
-// By PaintDream (paintdream@paintdream.com)
+// PaintDream (paintdream@paintdream.com)
 // 2015-5-5
 //
 

@@ -1,5 +1,5 @@
 // RandomQuery.h
-// By PaintDream (paintdream@paintdream.com)
+// PaintDream (paintdream@paintdream.com)
 // 2018-2-10
 //
 

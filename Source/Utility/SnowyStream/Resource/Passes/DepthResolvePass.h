@@ -1,6 +1,6 @@
 // DepthResolvePass.h
 // DepthResolveFS Pass
-// By PaintDream (paintdream@paintdream.com)
+// PaintDream (paintdream@paintdream.com)
 //
 
 #pragma once

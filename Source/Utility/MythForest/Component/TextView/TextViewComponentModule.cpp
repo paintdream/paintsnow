@@ -28,7 +28,7 @@ TObject<IReflect>& TextViewComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-TShared<TextViewComponent> TextViewComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<FontResource> fontResource, IScript::Delegate<BatchComponent> batch, IScript::Delegate<MeshResource> meshResource, IScript::Delegate<MaterialResource> materialResource) {
+TShared<TextViewComponent> TextViewComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<FontResource> fontResource, IScript::Delegate<MeshResource> meshResource, IScript::Delegate<MaterialResource> materialResource, IScript::Delegate<BatchComponent> batch) {
 	CHECK_REFERENCES_NONE();
 
 	TShared<BatchComponent> batchComponent;

@@ -1,5 +1,5 @@
 // StandardLightingForwardFS.h
-// By PaintDream (paintdream@paintdream.com)
+// PaintDream (paintdream@paintdream.com)
 // 2018-4-13
 //
 

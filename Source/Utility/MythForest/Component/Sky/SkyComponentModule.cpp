@@ -1,10 +1,16 @@
 #include "SkyComponentModule.h"
+#include "../../../SnowyStream/SnowyStream.h"
 
 using namespace PaintsNow;
 
 SkyComponentModule::SkyComponentModule(Engine& engine) : BaseClass(engine) {
 	batchComponentModule = (engine.GetComponentModuleFromName("BatchComponent")->QueryInterface(UniqueType<BatchComponentModule>()));
 	assert(batchComponentModule != nullptr);
+}
+
+void SkyComponentModule::Initialize() {
+	defaultSkyMaterial = engine.snowyStream.CreateReflectedResource(UniqueType<MaterialResource>(), "[Runtime]/MaterialResource/Sky", true, ResourceBase::RESOURCE_VIRTUAL);
+	defaultSkyMesh = engine.snowyStream.CreateReflectedResource(UniqueType<MeshResource>(), "[Runtime]/MeshResource/StandardSphere", true, ResourceBase::RESOURCE_VIRTUAL);
 }
 
 TObject<IReflect>& SkyComponentModule::operator () (IReflect& reflect) {
@@ -17,9 +23,8 @@ TObject<IReflect>& SkyComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-TShared<SkyComponent> SkyComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<MeshResource> meshResource,  IScript::Delegate<BatchComponent> batch) {
+TShared<SkyComponent> SkyComponentModule::RequestNew(IScript::Request& request, IScript::Delegate<MeshResource> meshResource, IScript::Delegate<MaterialResource> materialResource, IScript::Delegate<BatchComponent> batch) {
 	CHECK_REFERENCES_NONE();
-	CHECK_DELEGATE(meshResource);
 
 	TShared<BatchComponent> batchComponent;
 	if (batch.Get() == nullptr) {
@@ -30,8 +35,9 @@ TShared<SkyComponent> SkyComponentModule::RequestNew(IScript::Request& request, 
 
 	assert(batchComponent->GetWarpIndex() == engine.GetKernel().GetCurrentWarpIndex());
 	TShared<MeshResource> res = meshResource.Get();
-	TShared<SkyComponent> modelComponent = TShared<SkyComponent>::From(allocator->New(res, batchComponent));
-	modelComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
+	TShared<SkyComponent> skyComponent = TShared<SkyComponent>::From(allocator->New(meshResource ? meshResource.Get() : defaultSkyMesh, batchComponent));
+	skyComponent->SetMaterial(0, materialResource ? materialResource.Get() : defaultSkyMaterial);
+	skyComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
 
-	return modelComponent;
+	return skyComponent;
 }

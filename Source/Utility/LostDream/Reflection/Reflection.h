@@ -1,5 +1,5 @@
 // Reflection.h -- reflection related testing
-// By PaintDream (paintdream@paintdream.com)
+// PaintDream (paintdream@paintdream.com)
 // 2018-2-10
 //
 

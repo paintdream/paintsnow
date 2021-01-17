@@ -1,5 +1,5 @@
 // BridgeSunset.h -- Asynchronous routine dispatching module for script
-// By PaintDream (paintdream@paintdream.com)
+// PaintDream (paintdream@paintdream.com)
 // 2015-1-2
 //
 

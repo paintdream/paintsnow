@@ -1,5 +1,5 @@
 // ZFilterJson.h
-// By PaintDream (paintdream@paintdream.com)
+// PaintDream (paintdream@paintdream.com)
 // 2015-6-10
 //
 

@@ -1,5 +1,5 @@
 // Component.h
-// By PaintDream (paintdream@paintdream.com)
+// PaintDream (paintdream@paintdream.com)
 // 2018-1-4
 //
 

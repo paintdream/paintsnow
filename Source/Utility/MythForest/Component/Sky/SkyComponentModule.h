@@ -1,5 +1,5 @@
 // SkyComponent.h
-// By PaintDream (paintdream@paintdream.com)
+// PaintDream (paintdream@paintdream.com)
 // 2018-1-19
 //
 
@@ -15,6 +15,7 @@ namespace PaintsNow {
 	public:
 		SkyComponentModule(Engine& engine);
 
+		void Initialize() override;
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		/// <summary>
@@ -23,9 +24,11 @@ namespace PaintsNow {
 		/// <param name="meshResource"> MeshResource object </param>
 		/// <param name="batchComponentHost"> BatchComponent object </param>
 		/// <returns> SkyComponent object </returns>
-		TShared<SkyComponent> RequestNew(IScript::Request& request, IScript::Delegate<MeshResource> meshResource, IScript::Delegate<BatchComponent> batchComponentHost);
+		TShared<SkyComponent> RequestNew(IScript::Request& request, IScript::Delegate<MeshResource> meshResource, IScript::Delegate<MaterialResource> materialResource, IScript::Delegate<BatchComponent> batchComponentHost);
 
 	protected:
 		BatchComponentModule* batchComponentModule;
+		TShared<MaterialResource> defaultSkyMaterial;
+		TShared<MeshResource> defaultSkyMesh;
 	};
 }

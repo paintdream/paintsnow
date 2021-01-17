@@ -1,5 +1,5 @@
 // Config.h
-// By PaintDream (paintdream@paintdream.com)
+// PaintDream (paintdream@paintdream.com)
 // 2016-1-1
 //
 

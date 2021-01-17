@@ -1,6 +1,6 @@
 // ComBridge.h
 // But not cambridge :D
-// By PaintDream (paintdream@paintdream.com)
+// PaintDream (paintdream@paintdream.com)
 // 2015-7-4
 //
 

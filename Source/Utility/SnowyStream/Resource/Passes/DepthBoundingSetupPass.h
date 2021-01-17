@@ -1,6 +1,6 @@
 // DepthBoundingSetupPass.h
 // DepthBoundingSetupFS Pass
-// By PaintDream (paintdream@paintdream.com)
+// PaintDream (paintdream@paintdream.com)
 //
 
 #pragma once

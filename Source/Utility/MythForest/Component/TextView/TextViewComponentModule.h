@@ -1,5 +1,5 @@
 // TextViewComponentModule.h
-// By PaintDream (paintdream@paintdream.com)
+// PaintDream (paintdream@paintdream.com)
 // 2015-5-5
 //
 
@@ -23,11 +23,11 @@ namespace PaintsNow {
 		/// Create TextViewComponent
 		/// </summary>
 		/// <param name="fontResource"> the FontResource</param>
-		/// <param name="batchComponent"> the BatchComponent</param>
 		/// <param name="meshResource"> the TextView mesh, can be empty (quad mesh default) </param>
 		/// <param name="materialResource"> the TextView material, can be empty </param>
+		/// <param name="batchComponent"> the BatchComponent</param>
 		/// <returns> TextViewComponent object </returns>
-		TShared<TextViewComponent> RequestNew(IScript::Request& request, IScript::Delegate<FontResource> fontResource, IScript::Delegate<BatchComponent> batchComponent, IScript::Delegate<MeshResource> meshResource, IScript::Delegate<MaterialResource> materialResource);
+		TShared<TextViewComponent> RequestNew(IScript::Request& request, IScript::Delegate<FontResource> fontResource, IScript::Delegate<MeshResource> meshResource, IScript::Delegate<MaterialResource> materialResource, IScript::Delegate<BatchComponent> batchComponent);
 
 		/// <summary>
 		/// Set font size of TextViewComponent

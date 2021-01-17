@@ -1,5 +1,5 @@
 // IFrame.h -- Basic interface for app frame
-// By PaintDream (paintdream@paintdream.com)
+// PaintDream (paintdream@paintdream.com)
 // 2014-12-1
 //
 

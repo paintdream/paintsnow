@@ -1,5 +1,5 @@
 // ILayout.h
-// By PaintDream (paintdream@paintdream.com)
+// PaintDream (paintdream@paintdream.com)
 // 2015-1-21
 //
 

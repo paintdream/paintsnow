@@ -417,6 +417,18 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Sky\SkyComponentModule.cp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\SkyPass.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SkyShadingFS.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SkyTransformVS.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Sound\SoundComponent.cpp
 # End Source File
 # Begin Source File
@@ -854,6 +866,18 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Sky\SkyComponent.h
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Sky\SkyComponentModule.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\SkyPass.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SkyShadingFS.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SkyTransformVS.h
 # End Source File
 # Begin Source File
 

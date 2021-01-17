@@ -1,5 +1,5 @@
 // ZFrameGLFW.h -- App frame based on GLFW
-// By PaintDream (paintdream@paintdream.com)
+// PaintDream (paintdream@paintdream.com)
 // 2014-12-1
 //
 
