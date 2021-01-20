@@ -304,7 +304,6 @@ public:
 								finished = true;
 							}
 						}
-
 					} else { // element assignment
 						level++;
 						size_t index = (size_t)atoi(path[level].c_str());

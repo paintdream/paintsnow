@@ -14,11 +14,17 @@ namespace PaintsNow {
 		String GetShaderText() override;
 
 	protected:
+		BindTexture baseColorTexture;
 		// varyings
 		Float4 tintColor;
+		Float4 texCoord;
 
 		// targets
 		Float4 target;
+
+		bool enableBaseColorTint;
+		bool enableBaseColorTexture;
+		bool enableAlphaTest;
 	};
 }
 

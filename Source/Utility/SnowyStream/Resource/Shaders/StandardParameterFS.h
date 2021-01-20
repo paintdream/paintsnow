@@ -43,6 +43,7 @@ namespace PaintsNow {
 		bool enableBaseColorTexture;
 		bool enableNormalTexture;
 		bool enableMixtureTexture;
+		bool enableAlphaTest;
 	};
 }
 

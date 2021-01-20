@@ -3,7 +3,6 @@
 // 2015-1-2
 //
 
-
 #pragma once
 #include "../../Core/Interface/IScript.h"
 

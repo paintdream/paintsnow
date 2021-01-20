@@ -19,6 +19,6 @@ namespace PaintsNow {
 		StandardTransformVS standardTransform;
 		// Fragment shaders
 		StandardParameterFS standardParameter;
-		StandardLightingForwardFS standardLighting; // TODO: use forward lighting
+		StandardLightingForwardFS standardLighting;
 	};
 }

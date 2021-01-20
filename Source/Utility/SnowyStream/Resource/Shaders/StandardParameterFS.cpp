@@ -4,7 +4,7 @@
 
 using namespace PaintsNow;
 
-StandardParameterFS::StandardParameterFS() : enableBaseColorTint(true), enableBaseColorTexture(true), enableNormalTexture(true), enableMixtureTexture(true) {
+StandardParameterFS::StandardParameterFS() : enableBaseColorTint(true), enableBaseColorTexture(true), enableNormalTexture(true), enableMixtureTexture(true), enableAlphaTest(false) {
 	baseColorTexture.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
 	normalTexture.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
 	mixtureTexture.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
@@ -16,6 +16,10 @@ String StandardParameterFS::GetShaderText() {
 			float4 color = texture(baseColorTexture, texCoord.xy);
 			outputColor = color.xyz;
 			alpha = color.w;
+
+			if (enableAlphaTest) {
+				clip(alpha - 0.5);
+			}
 		}
 
 		if (enableBaseColorTint) {
@@ -55,6 +59,7 @@ TObject<IReflect>& StandardParameterFS::operator () (IReflect& reflect) {
 		ReflectProperty(enableBaseColorTexture)[BindConst<bool>(baseColorTexture)];
 		ReflectProperty(enableNormalTexture)[BindConst<bool>(normalTexture)];
 		ReflectProperty(enableMixtureTexture)[BindConst<bool>(mixtureTexture)];
+		ReflectProperty(enableAlphaTest)[BindConst<bool>(enableAlphaTest)];
 
 		/*
 		ReflectProperty(paramBuffer);
