@@ -385,11 +385,23 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\AntiAliasingPass.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Filter\Operator\BinaryConverageOperator.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Filter\Operator\BinaryDitherOperator.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\BloomFS.h
 # End Source File
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\BloomPass.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Filter\Sampler\BoxSampler.h
 # End Source File
 # Begin Source File
 
@@ -453,6 +465,10 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\DepthResolvePass.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Filter\Sampler\DistributeSampler.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\File.h
 # End Source File
 # Begin Source File
@@ -462,6 +478,10 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\FontResource.h
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\ForwardLightingPass.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Filter\Sampler\GaussianSampler.h
 # End Source File
 # Begin Source File
 
@@ -537,6 +557,10 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\ParticleResource.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Filter\Operator\RegressionOperator.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\ResourceBase.h
 # End Source File
 # Begin Source File
@@ -606,6 +630,10 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\StreamResource.h
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SurfaceVS.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Filter\Model\TensorModel.h
 # End Source File
 # Begin Source File
 
