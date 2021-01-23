@@ -37,7 +37,7 @@ enum {
 CameraComponent::TaskData::WarpData::WarpData() : entityCount(0), visibleEntityCount(0), triangleCount(0) {}
 
 CameraComponent::CameraComponent(const TShared<RenderFlowComponent>& prenderFlowComponent, const String& name)
-: collectedEntityCount(0), collectedVisibleEntityCount(0), collectedTriangleCount(0), viewDistance(256), rootEntity(nullptr), jitterIndex(0), renderFlowComponent(std::move(prenderFlowComponent)), cameraViewPortName(name) {
+: collectedEntityCount(0), collectedVisibleEntityCount(0), collectedTriangleCount(0), viewDistance(256), jitterIndex(0), renderFlowComponent(std::move(prenderFlowComponent)), cameraViewPortName(name) {
 	Flag().fetch_or(CAMERACOMPONENT_PERSPECTIVE | CAMERACOMPONENT_UPDATE_COMMITTED, std::memory_order_relaxed);
 }
 
@@ -87,62 +87,60 @@ Tiny::FLAG CameraComponent::GetEntityFlagMask() const {
 
 void CameraComponent::Initialize(Engine& engine, Entity* entity) {
 	OPTICK_EVENT();
-	if (rootEntity != entity) { // Set Host?
-		BaseClass::Initialize(engine, entity);
-		RenderPort* port = renderFlowComponent->BeginPort(cameraViewPortName);
-		if (port != nullptr) {
-			RenderPortCameraView* cameraViewPort = port->QueryInterface(UniqueType<RenderPortCameraView>());
-			if (cameraViewPort != nullptr) {
-				cameraViewPort->eventTickHooks += Wrap(this, &CameraComponent::OnTickCameraViewPort);
-			}
 
-			renderFlowComponent->EndPort(port);
+	BaseClass::Initialize(engine, entity);
+	RenderPort* port = renderFlowComponent->BeginPort(cameraViewPortName);
+	if (port != nullptr) {
+		RenderPortCameraView* cameraViewPort = port->QueryInterface(UniqueType<RenderPortCameraView>());
+		if (cameraViewPort != nullptr) {
+			cameraViewPort->eventTickHooks += Wrap(this, &CameraComponent::OnTickCameraViewPort);
 		}
 
-		IRender::Device* device = engine.snowyStream.GetRenderDevice();
-		uint32_t warpCount = engine.bridgeSunset.GetKernel().GetWarpCount();
-		prevTaskData = TShared<TaskData>::From(new TaskData(warpCount));
-		nextTaskData = TShared<TaskData>::From(new TaskData(warpCount));
+		renderFlowComponent->EndPort(port);
 	}
+
+	IRender::Device* device = engine.snowyStream.GetRenderDevice();
+	uint32_t warpCount = engine.bridgeSunset.GetKernel().GetWarpCount();
+	prevTaskData = TShared<TaskData>::From(new TaskData(warpCount));
+	nextTaskData = TShared<TaskData>::From(new TaskData(warpCount));
 }
 
 void CameraComponent::Uninitialize(Engine& engine, Entity* entity) {
 	OPTICK_EVENT();
-	if (rootEntity == entity) {
-		rootEntity = nullptr;
-	} else {
-		if (Flag().load(std::memory_order_acquire) & CAMERACOMPONENT_UPDATE_COLLECTING) {
-			Kernel& kernel = engine.GetKernel();
-			ThreadPool& threadPool = kernel.GetThreadPool();
-			if (threadPool.GetThreadCount() != 0) {
-				Wait(threadPool, CAMERACOMPONENT_UPDATE_COLLECTING, 0);
-			}
+	bridgeComponent->Clear(engine);
+	bridgeComponent = nullptr;
+
+	if (Flag().load(std::memory_order_acquire) & CAMERACOMPONENT_UPDATE_COLLECTING) {
+		Kernel& kernel = engine.GetKernel();
+		ThreadPool& threadPool = kernel.GetThreadPool();
+		if (threadPool.GetThreadCount() != 0) {
+			Wait(threadPool, CAMERACOMPONENT_UPDATE_COLLECTING, 0);
 		}
-
-		RenderPort* port = renderFlowComponent->BeginPort(cameraViewPortName);
-		if (port != nullptr) {
-			RenderPortCameraView* cameraViewPort = port->QueryInterface(UniqueType<RenderPortCameraView>());
-			if (cameraViewPort != nullptr) {
-				cameraViewPort->eventTickHooks -= Wrap(this, &CameraComponent::OnTickCameraViewPort);
-			}
-
-			renderFlowComponent->EndPort(port);
-		}
-
-		IRender& render = engine.interfaces.render;
-		prevTaskData->Destroy(render);
-		prevTaskData = nullptr;
-		nextTaskData->Destroy(render);
-		nextTaskData = nullptr;
-
-		BaseClass::Uninitialize(engine, entity);
 	}
+
+	RenderPort* port = renderFlowComponent->BeginPort(cameraViewPortName);
+	if (port != nullptr) {
+		RenderPortCameraView* cameraViewPort = port->QueryInterface(UniqueType<RenderPortCameraView>());
+		if (cameraViewPort != nullptr) {
+			cameraViewPort->eventTickHooks -= Wrap(this, &CameraComponent::OnTickCameraViewPort);
+		}
+
+		renderFlowComponent->EndPort(port);
+	}
+
+	IRender& render = engine.interfaces.render;
+	prevTaskData->Destroy(render);
+	prevTaskData = nullptr;
+	nextTaskData->Destroy(render);
+	nextTaskData = nullptr;
+
+	BaseClass::Uninitialize(engine, entity);
 }
 
 // Event Dispatcher
 void CameraComponent::DispatchEvent(Event& event, Entity* entity) {
 	OPTICK_EVENT();
-	if (event.eventID == Event::EVENT_TICK && entity != rootEntity) {
+	if (event.eventID == Event::EVENT_TICK) {
 		OnTickHost(event.engine, entity);
 	}
 }
@@ -281,6 +279,7 @@ void CameraComponent::UpdateTaskData(Engine& engine, Entity* hostEntity) {
 	UpdateCaptureData(captureData, localTransform);
 
 	// Must called from entity thread
+	Entity* rootEntity = bridgeComponent->GetHostEntity();
 	assert(engine.GetKernel().GetCurrentWarpIndex() == rootEntity->GetWarpIndex());
 	VisibilityComponent* visibilityComponent = rootEntity->GetUniqueComponent(UniqueType<VisibilityComponent>());
 	const Bytes& visData = visibilityComponent != nullptr ? visibilityComponent->QuerySample(engine, Float3(localTransform(3, 0), localTransform(3, 1), localTransform(3, 2))) : Bytes::Null();
@@ -540,8 +539,12 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 
 void CameraComponent::OnTickHost(Engine& engine, Entity* hostEntity) {
 	OPTICK_EVENT();
-	if (rootEntity != nullptr && (rootEntity->Flag().load(std::memory_order_acquire) & Entity::ENTITY_HAS_SPACE)) {
-		UpdateTaskData(engine, hostEntity);
+
+	if (bridgeComponent) {
+		Entity* rootEntity = bridgeComponent->GetHostEntity();
+		if (rootEntity != nullptr && (rootEntity->Flag().load(std::memory_order_acquire) & Entity::ENTITY_HAS_SPACE)) {
+			UpdateTaskData(engine, hostEntity);
+		}
 	}
 }
 
@@ -799,6 +802,7 @@ void CameraComponent::CompleteCollect(Engine& engine, TaskData& taskData) {
 
 void CameraComponent::CollectLightComponent(Engine& engine, LightComponent* lightComponent, std::vector<std::pair<TShared<RenderPolicy>, LightElement> >& lightElements, const MatrixFloat4x4& worldMatrix, const TaskData& taskData) const {
 	LightElement element;
+	Entity* rootEntity = bridgeComponent->GetHostEntity();
 	if (lightComponent->Flag().load(std::memory_order_relaxed) & LightComponent::LIGHTCOMPONENT_DIRECTIONAL) {
 		element.position = Float4(-worldMatrix(2, 0), -worldMatrix(2, 1), -worldMatrix(2, 2), 0);
 
@@ -958,17 +962,11 @@ void CameraComponent::CollectComponents(Engine& engine, TaskData& taskData, cons
 	}
 }
 
-void CameraComponent::BindRootEntity(Engine& engine, Entity* entity) {
-	if (rootEntity != nullptr) {
-		// free last listener
-		rootEntity->RemoveComponent(engine, this);
-	}
-
-	rootEntity = entity;
-
-	if (entity != nullptr) {
-		entity->AddComponent(engine, this); // weak component
-	}
+void CameraComponent::BindRootEntity(Engine& engine, BridgeComponentModule& bridgeComponentModule, Entity* entity) {
+	assert(!bridgeComponent);
+	assert(entity != nullptr);
+	bridgeComponent = bridgeComponentModule.New(this);
+	entity->AddComponent(engine, bridgeComponent());
 }
 
 CameraComponentConfig::TaskData::TaskData(uint32_t warpCount) {
@@ -1072,7 +1070,7 @@ TObject<IReflect>& CameraComponent::operator () (IReflect& reflect) {
 		ReflectProperty(prevTaskData)[Runtime];
 		ReflectProperty(nextTaskData)[Runtime];
 		ReflectProperty(renderFlowComponent)[Runtime];
-		ReflectProperty(rootEntity)[Runtime];
+		ReflectProperty(bridgeComponent)[Runtime];
 
 		ReflectProperty(collectedEntityCount);
 		ReflectProperty(collectedVisibleEntityCount);

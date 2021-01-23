@@ -63,6 +63,11 @@ bool SpaceComponent::Insert(Engine& engine, Entity* entity) {
 		return false;
 	}
 
+	if (!ValidateCycleReferences(entity)) {
+		assert(false);
+		return false; // cycle reference detected!
+	}
+
 	assert(GetWarpIndex() == entity->GetWarpIndex());
 
 #ifdef _DEBUG
@@ -137,6 +142,48 @@ Entity* SpaceComponent::GetRootEntity() const {
 
 void SpaceComponent::SetRootEntity(Entity* root) {
 	rootEntity = root;
+}
+
+bool SpaceComponent::RecursiveValidateCycleReferences(Entity* entity) {
+	if (entity == nullptr) {
+		return true;
+	}
+
+	for (Entity* p = entity; p != nullptr; p = p->Right()) {
+		if (!ValidateCycleReferences(p)) {
+			return false;
+		}
+
+		if (!RecursiveValidateCycleReferences(p->Left())) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool SpaceComponent::ValidateCycleReferences(Entity* entity) {
+#ifdef _DEBUG
+	// only checks in debug version.
+	const std::vector<Component*>& components = entity->GetComponents();
+	for (size_t i = 0; i < components.size(); i++) {
+		Component* component = components[i];
+		if (component != nullptr) {
+			if (component == this) {
+				return false; // cycle detected!!
+			}
+
+			SpaceComponent* subSpaceComponent = component->QueryInterface(UniqueType<SpaceComponent>());
+			if (subSpaceComponent != nullptr) {
+				if (!RecursiveValidateCycleReferences(subSpaceComponent->GetRootEntity())) {
+					return false;
+				}
+			}
+		}
+	}
+#endif
+
+	return true;
 }
 
 bool SpaceComponent::ValidateEntity(Entity* entity) {

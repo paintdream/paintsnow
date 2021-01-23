@@ -1,6 +1,7 @@
 #include "MythForest.h"
 #include "Component/Animation/AnimationComponentModule.h"
 #include "Component/Batch/BatchComponentModule.h"
+#include "Component/Bridge/BridgeComponentModule.h"
 #include "Component/Cache/CacheComponentModule.h"
 #include "Component/Camera/CameraComponentModule.h"
 #include "Component/EnvCube/EnvCubeComponentModule.h"
@@ -52,6 +53,7 @@ void MythForest::Initialize() {
 	// add builtin modules
 	engine.InstallModule(new AnimationComponentModule(engine));
 	engine.InstallModule(new BatchComponentModule(engine));
+	engine.InstallModule(new BridgeComponentModule(engine));
 	engine.InstallModule(new CacheComponentModule(engine));
 	engine.InstallModule(new CameraComponentModule(engine));
 	engine.InstallModule(new EnvCubeComponentModule(engine));

@@ -109,6 +109,14 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\Bl
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Bridge\BridgeComponent.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Bridge\BridgeComponentModule.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Cache\CacheComponent.cpp
 # End Source File
 # Begin Source File
@@ -554,6 +562,14 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Batch\BatchComponentModul
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\BloomRenderStage.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Bridge\BridgeComponent.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Bridge\BridgeComponentModule.h
 # End Source File
 # Begin Source File
 

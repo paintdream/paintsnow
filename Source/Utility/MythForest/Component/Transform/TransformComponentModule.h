@@ -1,4 +1,4 @@
-// TranformComponent.h
+// TranformComponentModule.h
 // PaintDream (paintdream@paintdream.com)
 // 2018-1-4
 //

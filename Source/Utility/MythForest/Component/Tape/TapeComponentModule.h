@@ -1,4 +1,4 @@
-// TapeComponent.h
+// TapeComponentModule.h
 // PaintDream (paintdream@paintdream.com)
 // 2018-1-4
 //

@@ -1,4 +1,4 @@
-// RenderFlowComponent.h
+// RenderFlowComponentModule.h
 // PaintDream (paintdream@paintdream.com)
 // 2018-1-19
 //

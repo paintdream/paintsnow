@@ -1,4 +1,4 @@
-// FormComponent.h
+// FormComponentModule.h
 // PaintDream (paintdream@paintdream.com)
 // 2018-1-4
 //

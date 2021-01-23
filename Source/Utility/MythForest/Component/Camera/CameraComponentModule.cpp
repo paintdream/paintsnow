@@ -7,7 +7,10 @@
 
 using namespace PaintsNow;
 
-CameraComponentModule::CameraComponentModule(Engine& engine) : BaseClass(engine) {}
+CameraComponentModule::CameraComponentModule(Engine& engine) : BaseClass(engine) {
+	bridgeComponentModule = (engine.GetComponentModuleFromName("BridgeComponent")->QueryInterface(UniqueType<BridgeComponentModule>()));
+	assert(bridgeComponentModule != nullptr);
+}
 
 TObject<IReflect>& CameraComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
@@ -71,7 +74,7 @@ void CameraComponentModule::RequestBindRootEntity(IScript::Request& request, ISc
 	CHECK_DELEGATE(entity);
 	CHECK_THREAD_IN_MODULE(camera);
 
-	camera->BindRootEntity(engine, entity.Get());
+	camera->BindRootEntity(engine, *bridgeComponentModule, entity.Get());
 }
 
 void CameraComponentModule::RequestSetPerspective(IScript::Request& request, IScript::Delegate<CameraComponent> camera, float d, float n, float f, float r) {

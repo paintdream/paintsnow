@@ -1,4 +1,4 @@
-// BatchComponentModule.h
+// BatchComponentModuleModule.h
 // PaintDream (paintdream@paintdream.com)
 // 2018-1-19
 //

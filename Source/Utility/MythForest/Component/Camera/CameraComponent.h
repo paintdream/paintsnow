@@ -10,6 +10,7 @@
 #include "../../../../Core/Template/TAlgorithm.h"
 #include "../../../../Core/Template/TCache.h"
 #include "../Animation/AnimationComponent.h"
+#include "../Bridge/BridgeComponentModule.h"
 #include "../RenderFlow/RenderFlowComponent.h"
 #include "../RenderFlow/RenderPort/RenderPortCommandQueue.h"
 #include "../RenderFlow/RenderPort/RenderPortLightSource.h"
@@ -163,7 +164,7 @@ namespace PaintsNow {
 		Tiny::FLAG GetEntityFlagMask() const override;
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 
-		void BindRootEntity(Engine& engine, Entity* entity);
+		void BindRootEntity(Engine& engine, BridgeComponentModule& bridgeComponentModule, Entity* entity);
 		uint32_t GetCollectedEntityCount() const;
 		uint32_t GetCollectedVisibleEntityCount() const;
 		uint32_t GetCollectedTriangleCount() const;
@@ -197,8 +198,8 @@ namespace PaintsNow {
 
 		// Runtime Resource
 		TShared<RenderFlowComponent> renderFlowComponent;
+		TShared<BridgeComponent> bridgeComponent;
 		String cameraViewPortName;
-		Entity* rootEntity;
 		uint32_t collectedEntityCount;
 		uint32_t collectedVisibleEntityCount;
 		uint32_t collectedTriangleCount;

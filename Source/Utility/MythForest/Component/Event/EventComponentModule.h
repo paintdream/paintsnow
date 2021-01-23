@@ -1,4 +1,4 @@
-// EventComponent.h
+// EventComponentModule.h
 // PaintDream (paintdream@paintdream.com)
 // 2018-1-16
 //
@@ -59,9 +59,9 @@ namespace PaintsNow {
 		/// <summary>
 		/// Set event filter for EventComponent
 		/// </summary>
-		/// <param name="eventListnerComponent"> the EventComponent </param>
+		/// <param name="eventComponent"> the EventComponent </param>
 		/// <param name="idMask"> event mask </param>
-		void RequestFilterEvent(IScript::Request& request, IScript::Delegate<EventComponent> eventListnerComponent, uint32_t idMask);
+		void RequestFilterEvent(IScript::Request& request, IScript::Delegate<EventComponent> eventComponent, uint32_t idMask);
 
 	protected:
 		std::vector<TShared<EventComponent> > frameTickers;

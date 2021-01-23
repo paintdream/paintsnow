@@ -44,6 +44,8 @@ namespace PaintsNow {
 		void RoutineDispatchEvent(const Event& event);
 		void FastRemoveNode(Engine& engine, Entity* entity);
 		bool ValidateEntity(Entity* entity);
+		bool ValidateCycleReferences(Entity* entity);
+		bool RecursiveValidateCycleReferences(Entity* entity);
 
 	protected:
 		Float3Pair boundingBox;

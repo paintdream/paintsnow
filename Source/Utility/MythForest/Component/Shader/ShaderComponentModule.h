@@ -1,4 +1,4 @@
-// ShaderComponent.h
+// ShaderComponentModule.h
 // PaintDream (paintdream@paintdream.com)
 // 2018-1-19
 //

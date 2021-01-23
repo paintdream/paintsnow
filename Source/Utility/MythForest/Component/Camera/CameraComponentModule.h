@@ -1,4 +1,4 @@
-// CameraComponent.h
+// CameraComponentModule.h
 // PaintDream (paintdream@paintdream.com)
 // 2018-1-19
 //
@@ -96,5 +96,8 @@ namespace PaintsNow {
 		/// <param name="cameraComponent"> the CameraComponent </param>
 		/// <param name="smoothTrack"> enable smooth track or not </param>
 		void RequestSetSmoothTrack(IScript::Request& request, IScript::Delegate<CameraComponent> cameraComponent, bool smoothTrack);
+
+	protected:
+		BridgeComponentModule* bridgeComponentModule;
 	};
 }

@@ -1,4 +1,4 @@
-// SpaceComponent.h
+// SpaceComponentModule.h
 // PaintDream (paintdream@paintdream.com)
 // 2018-1-10
 //
