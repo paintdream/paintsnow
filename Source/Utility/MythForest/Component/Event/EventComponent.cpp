@@ -31,6 +31,8 @@ void EventComponent::Execute(void* context) {
 
 		if (rootEntity->Flag().load(std::memory_order_relaxed) & Entity::ENTITY_HAS_TICK_EVENT) {
 			Event event(*reinterpret_cast<Engine*>(context), Event::EVENT_TICK, this, nullptr);
+			event.counter = safe_cast<uint32_t>(tickTimeDelta);
+			event.timestamp = tickTimeStamp;
 			rootEntity->PostEvent(event, Entity::ENTITY_HAS_TICK_EVENT);
 		}
 
@@ -95,7 +97,7 @@ void EventComponent::Uninitialize(Engine& engine, Entity* entity) {
 void EventComponent::RoutineSetupFrameTickers(Engine& engine) {
 	if (!(Flag().load(std::memory_order_relaxed) & EVENTCOMPONENT_INSTALLED_FRAME)) return;
 
-	std::vector<TShared<Component> > nextTickerCollection;
+	nextTickerCollection.clear();
 	if (rootEntity != nullptr) {
 		Event eventSyncTickFrame(engine, Event::EVENT_FRAME_SYNC_TICK, this);
 		const std::vector<Component*>& components = rootEntity->GetComponents();

@@ -92,8 +92,7 @@ void ScriptComponent::DispatchEvent(Event& event, Entity* entity) {
 		switch (event.eventID) {
 			case Event::EVENT_TICK:
 			{
-				EventComponent* eventComponent = event.sender->QueryInterface(UniqueType<EventComponent>());
-				request << eventComponent->GetTickDeltaTime();
+				request << event.counter << event.timestamp;
 				break;
 			}
 			case Event::EVENT_UPDATE:

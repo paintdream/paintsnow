@@ -63,14 +63,11 @@ namespace PaintsNow {
 		Event();
 #endif
 		std::reference_wrapper<Engine> engine;	// (0/0)
-		uint16_t eventID;
-		uint16_t stage;
-		uint32_t deferredIndex;
-		uint32_t deferredEnd;
-		uint32_t deferredNext;
+		uint32_t eventID;
+		uint32_t counter;
+		uint64_t timestamp;
 		TShared<SharedTiny> sender;
 		TShared<SharedTiny> detail;
-		std::vector<Component*> deferredTargets;
 	};
 }
 

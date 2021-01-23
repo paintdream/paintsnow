@@ -54,6 +54,7 @@ namespace PaintsNow {
 
 	protected:
 		std::vector<TShared<Component> > frameTickerCollection;
+		std::vector<TShared<Component> > nextTickerCollection;
 		TShared<Clock> clock;
 		std::atomic<int32_t> critical;
 		Entity* rootEntity;
