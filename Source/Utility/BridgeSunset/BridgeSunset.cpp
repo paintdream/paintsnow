@@ -45,7 +45,7 @@ TObject<IReflect>& BridgeSunset::operator () (IReflect& reflect) {
 		ReflectMethod(RequestExecuteGraph)[ScriptMethod = "ExecuteGraph"];
 		ReflectMethod(RequestQueueRoutine)[ScriptMethodLocked = "QueueRoutine"]; // Auto-locked
 		ReflectMethod(RequestGetWarpCount)[ScriptMethodLocked = "GetWarpCount"];
-		ReflectMethod(RequestSetWarpIndex)[ScriptMethodLocked = "UpdateWarpIndex"];
+		ReflectMethod(RequestSetWarpIndex)[ScriptMethodLocked = "SetWarpIndex"];
 		ReflectMethod(RequestGetWarpIndex)[ScriptMethodLocked = "GetWarpIndex"];
 		ReflectMethod(RequestPin)[ScriptMethodLocked = "Pin"];
 		ReflectMethod(RequestUnpin)[ScriptMethodLocked = "Unpin"];
