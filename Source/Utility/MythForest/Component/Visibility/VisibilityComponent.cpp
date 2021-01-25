@@ -528,7 +528,7 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 								assert(data.IsViewStorage());
 								// assign instanced buffer	
 								size_t viewSize = data.GetViewSize();
-								IRender::Resource::DrawCallDescription::BufferRange& bufferRange = k < sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0]) ? group.drawCallDescription.bufferResources[k] : group.drawCallDescription.extraBufferResources[k - sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0])];
+								IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[k];
 								bufferRange.buffer = buffer;
 								bufferRange.offset = bufferSize;
 								bufferRange.component = safe_cast<uint16_t>(viewSize / (group.instanceCount * sizeof(float)));

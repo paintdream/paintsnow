@@ -20,6 +20,10 @@ String IShader::GetShaderText() {
 	return "";
 }
 
+String IShader::GetPredefines() {
+	return "";
+}
+
 UInt3 IShader::WorkGroupSize;
 UInt3 IShader::NumWorkGroups;
 UInt3 IShader::LocalInvocationID;

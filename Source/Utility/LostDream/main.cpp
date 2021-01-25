@@ -1,11 +1,6 @@
 // LostDream Test Entry
 #include "../../Core/PaintsNow.h"
 #include "../LeavesFlute/LeavesFlute.h"
-
-#if !defined(CMAKE_PAINTSNOW) || ADD_THREAD_PTHREAD
-#include "../../Core/Driver/Thread/Pthread/ZThreadPthread.h"
-#endif
-
 #include "LostDream.h"
 #include "Spatial/Spatial.h"
 #include "Reflection/Reflection.h"

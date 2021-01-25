@@ -6,6 +6,7 @@
 #pragma once
 #include "../../Entity.h"
 #include "../Model/ModelComponent.h"
+#include "../../../SnowyStream/Resource/Shaders/SkyCommonDef.h"
 
 namespace PaintsNow {
 	class SkyComponent : public TAllocatedTiny<SkyComponent, ModelComponent> {
@@ -16,5 +17,8 @@ namespace PaintsNow {
 		void Initialize(Engine& engine, Entity* entity) override;
 		void Uninitialize(Engine& engine, Entity* entity) override;
 		size_t ReportGraphicMemoryUsage() const override;
+
+	protected:
+		AtmosphereParameters atmosphereParameters;
 	};
 }

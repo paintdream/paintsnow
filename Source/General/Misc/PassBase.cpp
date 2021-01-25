@@ -287,24 +287,19 @@ void PassBase::Updater::Initialize(PassBase& pass) {
 }
 
 void PassBase::Updater::Capture(IRender::Resource::DrawCallDescription& drawCallDescription, std::vector<Bytes>& bufferData, uint32_t bufferMask) {
-	if (buffers.size() > sizeof(drawCallDescription.bufferResources) / sizeof(drawCallDescription.bufferResources[0])) {
-		drawCallDescription.extraBufferResources.resize(buffers.size() - sizeof(drawCallDescription.bufferResources) / sizeof(drawCallDescription.bufferResources[0]));
-	}
-
-	drawCallDescription.bufferCount = safe_cast<uint16_t>(buffers.size());
-	drawCallDescription.textureCount = safe_cast<uint16_t>(textureCount);
+	drawCallDescription.bufferResources.resize(buffers.size());
 	singleton Unique uniqueResource = UniqueType<IRender::Resource*>::Get();
 
 	for (uint32_t k = 0; k < quickUpdaters.size(); k++) {
 		const Parameter& parameter = parameters[quickUpdaters[k]];
 		if (parameter.resourceType == IRender::Resource::RESOURCE_TEXTURE) {
 			assert(parameter.type == uniqueResource);
-			if (parameter.slot >= sizeof(drawCallDescription.textureResources) / sizeof(drawCallDescription.textureResources[0])) {
-				drawCallDescription.extraTextureResources.resize(parameter.slot + 1 - sizeof(drawCallDescription.textureResources) / sizeof(drawCallDescription.textureResources[0]));
-				drawCallDescription.extraTextureResources[parameter.slot - sizeof(drawCallDescription.textureResources) / sizeof(drawCallDescription.textureResources[0])] = *reinterpret_cast<IRender::Resource**>(parameter.internalAddress);
-			} else {
-				drawCallDescription.textureResources[parameter.slot] = *reinterpret_cast<IRender::Resource**>(parameter.internalAddress);
+
+			if (parameter.slot >= drawCallDescription.textureResources.size()) {
+				drawCallDescription.textureResources.resize(parameter.slot + 1);
 			}
+
+			drawCallDescription.textureResources[parameter.slot] = *reinterpret_cast<IRender::Resource**>(parameter.internalAddress);
 		} else if (parameter.resourceType == IRender::Resource::RESOURCE_BUFFER) {
 			if (parameter.type != uniqueResource) {
 				assert(parameter.slot < buffers.size());
@@ -327,8 +322,8 @@ void PassBase::Updater::Update(IRender& render, IRender::Queue* queue, IRender::
 	for (uint32_t i = 0; i < buffers.size(); i++) {
 		const IShader::BindBuffer* bindBuffer = buffers[i];
 		if ((bufferMask & (1 << bindBuffer->description.usage))) {
-			assert(i < drawCallDescription.bufferCount);
-			IRender::Resource*& buffer = i < sizeof(drawCallDescription.bufferResources) / sizeof(drawCallDescription.bufferResources[0]) ? drawCallDescription.bufferResources[i].buffer : drawCallDescription.extraBufferResources[i - sizeof(drawCallDescription.bufferResources) / sizeof(drawCallDescription.bufferResources[0])].buffer;
+			assert(i < drawCallDescription.bufferResources.size());
+			IRender::Resource*& buffer = drawCallDescription.bufferResources[i].buffer;
 			if (bindBuffer->resource != nullptr) {
 				buffer = bindBuffer->resource;
 			} else {

@@ -55,7 +55,7 @@ static String GetMemorySpec(IShader::MEMORY_SPEC spec) {
 	}
 }
 
-GLSLShaderGenerator::GLSLShaderGenerator(IRender::Resource::ShaderDescription::Stage s, uint32_t& pinputIndex, uint32_t& poutputIndex, uint32_t& ptextureIndex) : IReflect(true, false), stage(s), debugVertexBufferIndex(0), inputIndex(pinputIndex), outputIndex(poutputIndex), textureIndex(ptextureIndex) {}
+GLSLShaderGenerator::GLSLShaderGenerator(IRender::Resource::ShaderDescription::Stage s, uint32_t& pinputIndex, uint32_t& poutputIndex, uint32_t& ptextureIndex) : IReflect(true, true), stage(s), debugVertexBufferIndex(0), inputIndex(pinputIndex), outputIndex(poutputIndex), textureIndex(ptextureIndex), propertyLevel(0) {}
 
 const String& GLSLShaderGenerator::GetFrameCode() {
 	return frameCode;
@@ -92,6 +92,7 @@ static inline String ToString(uint32_t value) {
 
 struct DeclareMap {
 	DeclareMap() {
+		mapTypeNames[UniqueType<int>::Get()] = "int";
 		mapTypeNames[UniqueType<float>::Get()] = "float";
 		mapTypeNames[UniqueType<Float2>::Get()] = "float2";
 		mapTypeNames[UniqueType<Float3>::Get()] = "float3";
@@ -109,12 +110,15 @@ struct DeclareMap {
 		if (it != mapTypeNames.end()) {
 			return it->second;
 		} else {
-			assert(false); // unrecognized
-			return "float4";
+			return id->GetBriefName();
 		}
 	}
 
 	std::map<Unique, String> mapTypeNames;
+
+	static DeclareMap& GetInstance() {
+		return TSingleton<DeclareMap>::Get();
+	}
 };
 
 static String GetTextureFormatString(IRender::Resource::TextureDescription::State state) {
@@ -154,6 +158,22 @@ static String GetTextureFormatString(IRender::Resource::TextureDescription::Stat
 	}
 }
 
+static String GetSamplerTypeDeclaration(IRender::Resource::ShaderDescription::Stage stage, const IShader::BindTexture* bindTexture) {
+	static const char* samplerTypes[] = {
+		"sampler1D", "sampler2D", "samplerCube", "sampler3D"
+	};
+
+	// TODO: support integer textures
+	static const char* samplerTypesCS[] = {
+		"image1D", "image2D", "imageCube", "image3D"
+	};
+
+	String declaration = (stage == IRender::Resource::ShaderDescription::COMPUTE ? samplerTypesCS : samplerTypes)[bindTexture->description.state.type];
+	declaration += (bindTexture->description.dimension.z() != 0 && bindTexture->description.state.type != IRender::Resource::TextureDescription::TEXTURE_3D ? "Array" : "");
+	declaration += (bindTexture->description.state.pcf ? "Shadow " : " ");
+
+	return declaration;
+}
 
 void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) {
 	// singleton Unique uniqueBindOffset = UniqueType<IShader::BindOffset>::Get();
@@ -164,7 +184,7 @@ void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refT
 	singleton Unique uniqueBindConstBool = UniqueType<IShader::BindConst<bool> >::Get();
 	singleton Unique uniqueBindConstInt = UniqueType<IShader::BindConst<int> >::Get();
 	singleton Unique uniqueBindConstFloat = UniqueType<IShader::BindConst<float> >::Get();
-	static DeclareMap declareMap;
+	DeclareMap& declareMap = DeclareMap::GetInstance();
 
 	if (s.IsBasicObject() || s.IsIterator()) {
 		String statement;
@@ -329,10 +349,15 @@ void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refT
 				declaration += statement;
 			}
 		} else {
-			declaration += statement;
+			if (propertyLevel != 0) {
+				declaration += String("\t") + declareMap[typeID] + " " + name + ";\n";
+			} else {
+				declaration += statement;
+			}
 		}
 	} else {
 		bool enabled = true;
+		const IShader::BindBuffer* bindBuffer = nullptr;
 		for (const MetaChainBase* check = meta; check != nullptr; check = check->GetNext()) {
 			const MetaNodeBase* node = check->GetNode();
 			if (node->GetUnique() == UniqueType<IShader::BindEnable>::Get()) {
@@ -340,6 +365,8 @@ void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refT
 				if (!*bind->description) {
 					enabled = false;
 				}
+			} else if (node->GetUnique() == uniqueBindBuffer) {
+				bindBuffer = static_cast<const IShader::BindBuffer*>(check->GetRawNode());
 			}
 		}
 
@@ -357,16 +384,7 @@ void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refT
 		} else if (typeID == uniqueBindTexture) {
 			assert(enabled);
 			const IShader::BindTexture* bindTexture = static_cast<const IShader::BindTexture*>(&s);
-			static const char* samplerTypes[] = {
-				"sampler1D", "sampler2D", "samplerCube", "sampler3D"
-			};
-
-			// TODO: support integer textures
-			static const char* samplerTypesCS[] = {
-				"image1D", "image2D", "imageCube", "image3D"
-			};
-
-			// declaration += String("layout(location = ") + ToString(textureIndex++) + ") uniform " + samplerTypes[bindTexture->description.state.type] + (bindTexture->description.dimension.z() != 0 && bindTexture->description.state.type != IRender::Resource::TextureDescription::TEXTURE_3D ? "Array " : " ") + name + ";\n";
+			
 			if (stage == IRender::Resource::ShaderDescription::COMPUTE) {
 				declaration += "layout(";
 				declaration += GetTextureFormatString(bindTexture->description.state);
@@ -375,16 +393,120 @@ void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refT
 			}
 
 			declaration += "uniform ";
-			declaration += (stage == IRender::Resource::ShaderDescription::COMPUTE ? samplerTypesCS : samplerTypes)[bindTexture->description.state.type];
-			declaration += (bindTexture->description.dimension.z() != 0 && bindTexture->description.state.type != IRender::Resource::TextureDescription::TEXTURE_3D ? "Array" : "");
-			declaration += (bindTexture->description.state.pcf ? "Shadow " : " ");
+			declaration += GetSamplerTypeDeclaration(stage, bindTexture);
 			declaration += name;
 			declaration += ";\n";
 
 			textureBindings.emplace_back(std::make_pair(bindTexture, name));
 			textureIndex++;
+		} else {
+			String typeName = typeID->GetBriefName();
+			std::map<String, String>::iterator it = mapStructureDefinition.find(typeName);
+			if (it == mapStructureDefinition.end()) {
+				// custom structure?
+				propertyLevel++;
+
+				// save current state
+				String structDeclaration;
+				String structInitialization;
+				String structFinalization;
+
+				std::swap(structDeclaration, declaration);
+				std::swap(structInitialization, initialization);
+				std::swap(structFinalization, finalization);
+
+				s(*this);
+
+				std::swap(structDeclaration, declaration);
+				std::swap(structInitialization, initialization);
+				std::swap(structFinalization, finalization);
+
+				propertyLevel--;
+
+				// merge declaration
+				// add a struct
+				String def = "struct ";
+				def += typeName;
+				def += " {\n";
+				def += structDeclaration;
+				def += "};\n\n";
+
+				mapStructureDefinition[typeName] = std::move(def);
+				structures.emplace_back(typeName);
+			}
+
+			if (propertyLevel == 0) {
+				assert(bindBuffer != nullptr);
+				std::map<const IShader::BindBuffer*, std::pair<String, String> >::iterator it = mapBufferDeclaration.find(bindBuffer);
+				assert(it != mapBufferDeclaration.end());
+				if (it != mapBufferDeclaration.end()) {
+					switch (bindBuffer->description.usage) {
+					case IRender::Resource::BufferDescription::VERTEX:
+					case IRender::Resource::BufferDescription::INSTANCED:
+						assert(false); // not supported
+						break;
+					case IRender::Resource::BufferDescription::UNIFORM:
+					case IRender::Resource::BufferDescription::STORAGE:
+						it->second.second += String("\t") + declareMap[typeID] + " _" + name + ";\n";
+						initialization += String("#define ") + name + " " + it->second.first + "." + "_" + name + "\n";
+						break;
+					}
+				}
+			} else {
+				declaration += String("\t") + typeName + " " + name + ";\n";
+			}
 		}
 	}
 }
 
-void GLSLShaderGenerator::Method(const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) {}
+void GLSLShaderGenerator::Method(const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) {
+	std::vector<String> names;
+	std::vector<void*> protos;
+	String codeString;
+
+	while (meta != nullptr) {
+		MetaNodeBase* node = const_cast<MetaNodeBase*>(meta->GetNode());
+		MetaParameter* parameter = node->QueryInterface(UniqueType<MetaParameter>());
+		if (parameter != nullptr) {
+			names.emplace_back(parameter->value);
+			protos.emplace_back(parameter->prototype);
+		} else {
+			IShader::BindFunction* bindFunction = node->QueryInterface(UniqueType<IShader::BindFunction>());
+			if (bindFunction != nullptr) {
+				codeString = bindFunction->codeString;
+			}
+		}
+
+		meta = meta->GetNext();
+	}
+
+	if (!codeString.empty()) {
+		DeclareMap& declareMap = DeclareMap::GetInstance();
+
+		String functionDeclaration;
+		functionDeclaration += "void ";
+		functionDeclaration += name;
+		functionDeclaration += "(";
+
+		assert(names.size() == params.size()); // must provide all names!
+
+		for (size_t i = 0; i < params.size(); i++) {
+			const Param& param = params[i];
+			if (i != 0) functionDeclaration += ", ";
+
+			if (param.decayType == UniqueType<IShader::BindTexture>::Get()) {
+				IShader::BindTexture* bindTexture = reinterpret_cast<IShader::BindTexture*>(protos[protos.size() - 1 - i]);
+				assert(bindTexture != nullptr);
+				functionDeclaration += GetSamplerTypeDeclaration(stage, bindTexture) + names[params.size() - 1 - i];
+			} else {
+				functionDeclaration += (param.isReference && !param.isConst ? String("inout ") : String("")) + declareMap[param.decayType] + " " + names[params.size() - 1 - i];
+			}
+		}
+
+		functionDeclaration += ") {\n";
+		functionDeclaration += codeString;
+		functionDeclaration += "\n}\n\n";
+
+		declaration += functionDeclaration;
+	}
+}

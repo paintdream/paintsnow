@@ -18,17 +18,21 @@ namespace PaintsNow {
 		void Method(const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override;
 
 		IRender::Resource::ShaderDescription::Stage stage;
+
 		String declaration;
 		String initialization;
 		String finalization;
 
 		uint32_t debugVertexBufferIndex;
+		uint32_t propertyLevel;
 		uint32_t& inputIndex;
 		uint32_t& outputIndex;
 		uint32_t& textureIndex;
 
 		std::vector<std::pair<const IShader::BindBuffer*, String> > bufferBindings;
 		std::vector<std::pair<const IShader::BindTexture*, String> > textureBindings;
+		std::map<String, String> mapStructureDefinition;
+		std::vector<String> structures;
 
 	protected:
 		std::map<const IShader::BindBuffer*, std::pair<String, String> > mapBufferDeclaration;

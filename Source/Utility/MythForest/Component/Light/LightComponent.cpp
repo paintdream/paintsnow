@@ -232,7 +232,7 @@ void LightComponent::ShadowLayer::CollectRenderableComponent(Engine& engine, Tas
 				if (parameter) {
 					group.animationComponent = animationComponent; // hold reference
 					size_t k = parameter.slot;
-					IRender::Resource::DrawCallDescription::BufferRange& bufferRange = k < sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0]) ? group.drawCallDescription.bufferResources[k] : group.drawCallDescription.extraBufferResources[k - sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0])];
+					IRender::Resource::DrawCallDescription::BufferRange& bufferRange =  group.drawCallDescription.bufferResources[k];
 					bufferRange.buffer = animationComponent->AcquireBoneMatrixBuffer(render, warpData.renderQueue);
 				}
 			}
@@ -296,7 +296,7 @@ void LightComponent::ShadowLayer::CompleteCollect(Engine& engine, TaskData& task
 					assert(data.IsViewStorage());
 					// assign instanced buffer
 					size_t viewSize = data.GetViewSize();
-					IRender::Resource::DrawCallDescription::BufferRange& bufferRange = k < sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0]) ? group.drawCallDescription.bufferResources[k] : group.drawCallDescription.extraBufferResources[k - sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0])];
+					IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[k];
 					bufferRange.buffer = buffer;
 					bufferRange.offset = bufferSize;
 					bufferRange.component = safe_cast<uint8_t>(viewSize / (group.instanceCount * sizeof(float)));

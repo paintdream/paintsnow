@@ -14,6 +14,7 @@ namespace PaintsNow {
 		TerrainComponent();
 		uint32_t CollectDrawCalls(std::vector<OutputRenderData, DrawCallAllocator>& outputDrawCalls, const InputRenderData& inputRenderData, BytesCache& bytesCache) override;
 
+	protected:
 		TShared<TerrainResource> terrainResource;
 	};
 }

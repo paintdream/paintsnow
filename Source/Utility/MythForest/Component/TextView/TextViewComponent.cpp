@@ -408,7 +408,7 @@ uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData, DrawC
 			}
 
 			size_t k = paramMainTexture.slot;
-			IRender::Resource*& texture = k < sizeof(drawCall.textureResources) / sizeof(drawCall.textureResources[0]) ? drawCall.textureResources[k] : drawCall.extraTextureResources[k - sizeof(drawCall.textureResources) / sizeof(drawCall.textureResources[0])];
+			IRender::Resource*& texture = drawCall.textureResources[k];
 			texture = renderInfo.texture;
 			Float4 texRect = Float4(
 				renderInfo.texRect.first.x() * invTexSize,

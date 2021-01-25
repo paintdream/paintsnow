@@ -1,4 +1,4 @@
-// SkyShadingFS.h
+// SkyIndirectIrradianceFS.h
 // PaintDream (paintdream@paintdream.com)
 // 2018-4-13
 //
@@ -38,46 +38,26 @@ namespace PaintsNow {
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-	class SkyShadingFS : public TReflected<SkyShadingFS, SkyCommonFS> {
+	class SkyIndirectIrradianceFS : public TReflected<SkyIndirectIrradianceFS, SkyCommonFS> {
 	public:
-		SkyShadingFS();
+		SkyIndirectIrradianceFS();
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		String GetShaderText() override;
 
-		String GetSolarRadiance(RadianceSpectrum& retValue, const AtmosphereParameters& atmosphere);
-		String GetSkyRadianceShading(RadianceSpectrum& retValue, const AtmosphereParameters& atmosphere,
-			Position camera, Direction view_ray, Length shadow_length,
-			Direction sun_direction, DimensionlessSpectrum& transmittance);
-		String GetSkyRadianceToPointShading(RadianceSpectrum& retValue, const AtmosphereParameters& atmosphere,
-			Position camera, Position point, Length shadow_length,
-			Direction sun_direction, DimensionlessSpectrum& transmittance);
-		String GetSunAndSkyIrradianceShading(IrradianceSpectrum& retValue, const AtmosphereParameters& atmosphere,
-			Position p, Direction normal, Direction sun_direction,
-			IrradianceSpectrum& sky_irradiance);
-		String GetSolarLuminance(Luminance3& retValue, const AtmosphereParameters& atmosphere);
-		String GetSkyLuminanceShading(Luminance3& retValue, const AtmosphereParameters& atmosphere, Position camera, Direction view_ray, Length shadow_length,
-			Direction sun_direction, DimensionlessSpectrum& transmittance);
-		String GetSkyLuminanceToPointShading(Luminance3& retValue, const AtmosphereParameters& atmosphere,
-			Position camera, Position point, Length shadow_length,
-			Direction sun_direction, DimensionlessSpectrum& transmittance);
-		String GetSunAndSkyIlluminance(Illuminance3& retValue, const AtmosphereParameters& atmosphere,
-			Position p, Direction normal, Direction sun_direction,
-			IrradianceSpectrum& sky_irradiance);
+		IShader::BindTexture single_rayleigh_scattering_texture;
+		IShader::BindTexture single_mie_scattering_texture;
+		IShader::BindTexture multiple_scattering_texture;
 
-		TransmittanceTexture transmittance_texture;
-		ScatteringTexture scattering_texture;
-		ReducedScatteringTexture single_mie_scattering_texture;
-		IrradianceTexture irradiance_texture;
-		
-		// Uniforms
-		Float3 SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
-		Float3 SUN_SPECTRAL_RADIANCE_TO_LUMINANCE;
+		// Params
+		MatrixFloat3x3 luminance_from_radiance;
+		int scattering_order;
 
 		// Input
-		Float3 worldPosition;
+		Float4 rasterCoord;
 
 		// Output
-		Float4 outputColor;
+		Float4 delta_irradiance;
+		Float4 irradiance;
 	};
 }
 

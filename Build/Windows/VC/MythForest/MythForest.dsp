@@ -64,7 +64,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
-# ADD CPP /nologo /G6 /MT /W3 /Zi /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /Zm800 /c
+# ADD CPP /nologo /G6 /MT /W3 /Zd /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /Zm800 /c
 # ADD BASE RSC /l 0x804 /d "_DEBUG"
 # ADD RSC /l 0x804 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -94,6 +94,10 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Animation\AnimationCompon
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\AntiAliasingRenderStage.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Sky\AtmosphereModel.cpp
 # End Source File
 # Begin Source File
 
@@ -425,18 +429,6 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Sky\SkyComponentModule.cp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\SkyPass.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SkyShadingFS.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SkyTransformVS.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Sound\SoundComponent.cpp
 # End Source File
 # Begin Source File
@@ -450,10 +442,6 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Space\SpaceComponent.cpp
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Space\SpaceComponentModule.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\StandardLightingForwardFS.cpp
 # End Source File
 # Begin Source File
 
@@ -550,6 +538,10 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Animation\AnimationCompon
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\AntiAliasingRenderStage.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Sky\AtmosphereModel.h
 # End Source File
 # Begin Source File
 
@@ -885,18 +877,6 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Sky\SkyComponentModule.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\SkyPass.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SkyShadingFS.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SkyTransformVS.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Sound\SoundComponent.h
 # End Source File
 # Begin Source File
@@ -914,10 +894,6 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Space\SpaceComponentModul
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Explorer\SpaceTraversal.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\StandardLightingForwardFS.h
 # End Source File
 # Begin Source File
 

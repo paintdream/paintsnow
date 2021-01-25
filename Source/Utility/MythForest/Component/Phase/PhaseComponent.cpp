@@ -86,12 +86,8 @@ void PhaseComponentConfig::TaskData::Cleanup(IRender& render) {
 			InstanceGroup& group = (*ip).second;
 
 #ifdef _DEBUG
-			group.drawCallDescription.bufferCount = 0;
-			group.drawCallDescription.textureCount = 0;
-			memset(group.drawCallDescription.bufferResources, 0, sizeof(group.drawCallDescription.bufferResources));
-			memset(group.drawCallDescription.textureResources, 0, sizeof(group.drawCallDescription.textureResources));
-			group.drawCallDescription.extraBufferResources.clear();
-			group.drawCallDescription.extraTextureResources.clear();
+			group.drawCallDescription.bufferResources.clear();
+			group.drawCallDescription.textureResources.clear();
 #endif
 
 			if (group.instanceCount == 0) {
@@ -501,7 +497,7 @@ void PhaseComponent::ResolveTasks(Engine& engine) {
 
 								// assign instanced buffer	
 								// assert(group.drawCallDescription.bufferResources[output.slot].buffer == nullptr);
-								IRender::Resource::DrawCallDescription::BufferRange& bufferRange = k < sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0]) ? group.drawCallDescription.bufferResources[k] : group.drawCallDescription.extraBufferResources[k - sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0])];
+								IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[k];
 								bufferRange.buffer = buffer;
 								warpData.runtimeResources.emplace_back(buffer);
 							}
@@ -780,16 +776,16 @@ void PhaseComponent::CollectRenderableComponent(Engine& engine, TaskData& taskDa
 				}
 
 				if (!ip->second.textures.empty()) {
-					for (size_t m = 0; m < group.drawCallDescription.textureCount; m++) {
-						IRender::Resource*& texture = m < sizeof(group.drawCallDescription.textureResources) / sizeof(group.drawCallDescription.textureResources[0]) ? group.drawCallDescription.textureResources[m] : group.drawCallDescription.extraTextureResources[m - sizeof(group.drawCallDescription.textureResources) / sizeof(group.drawCallDescription.textureResources[0])];
+					for (size_t m = 0; m < group.drawCallDescription.textureResources.size(); m++) {
+						IRender::Resource*& texture = group.drawCallDescription.textureResources[m];
 						if (ip->second.textures[m] != nullptr) {
 							texture = ip->second.textures[m];
 						}
 					}
 				}
 
-				for (size_t n = 0; n < group.drawCallDescription.bufferCount; n++) {
-					IRender::Resource::DrawCallDescription::BufferRange& bufferRange = n < sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0]) ? group.drawCallDescription.bufferResources[n] : group.drawCallDescription.extraBufferResources[n - sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0])];
+				for (size_t n = 0; n < group.drawCallDescription.bufferResources.size(); n++) {
+					IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[n];
 					if (ip->second.buffers[n].buffer != nullptr) {
 						bufferRange = ip->second.buffers[n];
 					}

@@ -64,7 +64,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
-# ADD CPP /nologo /G6 /MT /W3 /Zi /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /Zm800 /c
+# ADD CPP /nologo /G6 /MT /W3 /Zd /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /Zm800 /c
 # ADD BASE RSC /l 0x804 /d "_DEBUG"
 # ADD RSC /l 0x804 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -289,11 +289,83 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\SkeletonResource.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SkyCommonDef.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SkyCommonFS.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SkyDirectIrradianceFS.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\SkyDirectIrradiancePass.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SkyIndirectIrradianceFS.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\SkyIndirectIrradiancePass.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SkyMultipleScatteringFS.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\SkyMultipleScatteringPass.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\SkyPass.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SkyScatteringDensityFS.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\SkyScatteringDensityPass.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SkyShadingFS.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SkySingleScatteringFS.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\SkySingleScatteringPass.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SkyTransformVS.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SkyTransmittanceFS.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\SkyTransmittancePass.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\SnowyStream.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\StandardLightingBufferEncodedFS.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\StandardLightingForwardFS.cpp
 # End Source File
 # Begin Source File
 
@@ -601,11 +673,83 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\SkeletonResource.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SkyCommonDef.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SkyCommonFS.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SkyDirectIrradianceFS.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\SkyDirectIrradiancePass.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SkyIndirectIrradianceFS.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\SkyIndirectIrradiancePass.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SkyMultipleScatteringFS.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\SkyMultipleScatteringPass.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\SkyPass.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SkyScatteringDensityFS.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\SkyScatteringDensityPass.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SkyShadingFS.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SkySingleScatteringFS.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\SkySingleScatteringPass.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SkyTransformVS.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\SkyTransmittanceFS.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\SkyTransmittancePass.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\SnowyStream.h
 # End Source File
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\StandardLightingBufferEncodedFS.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\StandardLightingForwardFS.h
 # End Source File
 # Begin Source File
 

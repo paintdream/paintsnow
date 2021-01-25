@@ -12,6 +12,7 @@ namespace PaintsNow {
 		StandardLightingBufferEncodedFS();
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		String GetShaderText() override;
+		String GetEnvironmentLighting(float& retValue, float intensity);
 
 		BindTexture specTexture;
 		BindBuffer lightInfoBuffer;

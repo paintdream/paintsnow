@@ -178,7 +178,7 @@ void CameraComponent::Instancing(Engine& engine, TaskData& taskData) {
 				if (!data.Empty()) {
 					// assign instanced buffer	
 					size_t viewSize = data.GetViewSize();
-					IRender::Resource::DrawCallDescription::BufferRange& bufferRange = k < sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0]) ? group.drawCallDescription.bufferResources[k] : group.drawCallDescription.extraBufferResources[k - sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0])];
+					IRender::Resource::DrawCallDescription::BufferRange& bufferRange =  group.drawCallDescription.bufferResources[k];
 
 					assert(bufferRange.buffer == nullptr);
 					bufferRange.buffer = policyData.instanceBuffer;
@@ -696,16 +696,16 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 				}
 
 				if (!ig->second.textures.empty()) {
-					for (size_t m = 0; m < group.drawCallDescription.textureCount; m++) {
-						IRender::Resource*& texture = m < sizeof(group.drawCallDescription.textureResources) / sizeof(group.drawCallDescription.textureResources[0]) ? group.drawCallDescription.textureResources[m] : group.drawCallDescription.extraTextureResources[m - sizeof(group.drawCallDescription.textureResources) / sizeof(group.drawCallDescription.textureResources[0])];
+					for (size_t m = 0; m < group.drawCallDescription.textureResources.size(); m++) {
+						IRender::Resource*& texture = group.drawCallDescription.textureResources[m];
 						if (ig->second.textures[m] != nullptr) {
 							texture = ig->second.textures[m];
 						}
 					}
 				}
 
-				for (size_t n = 0; n < group.drawCallDescription.bufferCount; n++) {
-					IRender::Resource::DrawCallDescription::BufferRange& bufferRange = n < sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0]) ? group.drawCallDescription.bufferResources[n] : group.drawCallDescription.extraBufferResources[n - sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0])];
+				for (size_t n = 0; n < group.drawCallDescription.bufferResources.size(); n++) {
+					IRender::Resource::DrawCallDescription::BufferRange& bufferRange =  group.drawCallDescription.bufferResources[n];
 					if (ig->second.buffers[n].buffer != nullptr) {
 						bufferRange = ig->second.buffers[n];
 					}
@@ -720,7 +720,7 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 					if (parameter) {
 						group.animationComponent = animationComponent; // hold reference
 						size_t k = parameter.slot;
-						IRender::Resource::DrawCallDescription::BufferRange& bufferRange = k < sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0]) ? group.drawCallDescription.bufferResources[k] : group.drawCallDescription.extraBufferResources[k - sizeof(group.drawCallDescription.bufferResources) / sizeof(group.drawCallDescription.bufferResources[0])];
+						IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[k];
 						bufferRange.buffer = animationComponent->AcquireBoneMatrixBuffer(render, queue);
 					}
 				}
@@ -1015,12 +1015,8 @@ void CameraComponent::TaskData::Cleanup(IRender& render) {
 			InstanceGroup& group = (*ip).second;
 
 #ifdef _DEBUG
-			group.drawCallDescription.bufferCount = 0;
-			group.drawCallDescription.textureCount = 0;
-			memset(group.drawCallDescription.bufferResources, 0, sizeof(group.drawCallDescription.bufferResources));
-			memset(group.drawCallDescription.textureResources, 0, sizeof(group.drawCallDescription.textureResources));
-			group.drawCallDescription.extraBufferResources.clear();
-			group.drawCallDescription.extraTextureResources.clear();
+			group.drawCallDescription.bufferResources.clear();
+			group.drawCallDescription.textureResources.clear();
 #endif
 
 			if (group.instanceCount == 0) {

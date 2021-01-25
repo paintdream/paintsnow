@@ -14,6 +14,7 @@ TObject<IReflect>& SkyComponent::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectProperty()) {
+		ReflectProperty(atmosphereParameters);
 	}
 
 	return *this;

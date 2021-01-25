@@ -69,7 +69,7 @@ TShared<ShaderResource> MaterialResource::Instantiate(const TShared<MeshResource
 		if (templateHash == shaderHash) { // matched!
 			updater.Capture(drawCallTemplate, bufferData, 1 << IRender::Resource::BufferDescription::UNIFORM);
 			for (size_t k = 0; k < descs.size(); k++) {
-				assert(descs[k].slot < drawCallTemplate.bufferCount);
+				assert(descs[k].slot < drawCallTemplate.bufferResources.size());
 			}
 
 			drawCallTemplate.shaderResource = shaderTemplateResource->GetShaderResource();

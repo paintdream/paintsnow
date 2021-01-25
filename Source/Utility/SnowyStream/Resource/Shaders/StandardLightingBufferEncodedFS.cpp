@@ -13,6 +13,12 @@ StandardLightingBufferEncodedFS::StandardLightingBufferEncodedFS() : lightCount(
 	lightInfos.resize(MAX_LIGHT_COUNT * 2);
 }
 
+String StandardLightingBufferEncodedFS::GetEnvironmentLighting(float& retValue, float intensity) {
+	return UnifyShaderCode(
+		retValue = intensity;
+	);
+}
+
 String StandardLightingBufferEncodedFS::GetShaderText() {
 	return UnifyShaderCode(
 		baseColor = pow(baseColor, float3(GAMMA, GAMMA, GAMMA));
@@ -119,6 +125,10 @@ TObject<IReflect>& StandardLightingBufferEncodedFS::operator () (IReflect& refle
 		ReflectProperty(lightInfos)[lightInfoBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(lightIndices)[lightIndexBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(mainColor)[BindOutput(BindOutput::COLOR)];
+	}
+
+	if (reflect.IsReflectMethod()) {
+		ReflectMethod(GetEnvironmentLighting)[BindFunction()][MetaParameter("retValue")][MetaParameter("intensity")];
 	}
 	
 	return *this;

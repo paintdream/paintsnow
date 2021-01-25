@@ -56,6 +56,40 @@ bool GLErrorGuard::enableGuard = true;
 
 #define GL_GUARD() GLErrorGuard guard;
 
+
+class ResourceAligned : public IRender::Resource {};
+struct QueueImplOpenGL;
+struct ResourceBaseImplOpenGL : public ResourceAligned {
+	ResourceBaseImplOpenGL() : next(nullptr) {}
+	virtual ~ResourceBaseImplOpenGL() {}
+
+	virtual IRender::Resource::Type GetType() const = 0;
+	virtual void SetUploadDescription(IRender::Resource::Description* description) = 0;
+	virtual void SetDownloadDescription(IRender::Resource::Description* description) = 0;
+
+	virtual void Nop(QueueImplOpenGL& queue) {}
+	virtual void Execute(QueueImplOpenGL& queue) = 0;
+	virtual void Upload(QueueImplOpenGL& queue) = 0;
+	virtual void Download(QueueImplOpenGL& queue) = 0;
+	virtual void SyncDownload(QueueImplOpenGL& queue) = 0;
+	virtual void Delete(QueueImplOpenGL& queue) = 0;
+
+#ifdef _DEBUG
+	String note;
+#endif
+	ResourceBaseImplOpenGL* next;
+};
+
+// Pooled allocator for drawcall resources
+class DrawCallPool : public TRefPool<DrawCallPool, ResourceBaseImplOpenGL> {
+public:
+	// recycle for 4096 drawcalls
+	DrawCallPool() : TRefPool<DrawCallPool, ResourceBaseImplOpenGL>(4096) {}
+
+	ResourceBaseImplOpenGL* New();
+	void Delete(ResourceBaseImplOpenGL* resource);
+};
+
 class DeviceImplOpenGL final : public IRender::Device {
 public:
 	DeviceImplOpenGL(IRender& r) : lastProgramID(0), lastFrameBufferID(0), render(r), resolution(640, 480) {}
@@ -73,27 +107,7 @@ public:
 	GLuint lastProgramID;
 	GLuint lastFrameBufferID;
 	std::vector<GLuint> storeInvalidates;
-};
-
-class ResourceAligned : public IRender::Resource {};
-struct QueueImplOpenGL;
-struct ResourceBaseImplOpenGL : public ResourceAligned {
-	virtual ~ResourceBaseImplOpenGL() {}
-
-	virtual IRender::Resource::Type GetType() const = 0;
-	virtual void SetUploadDescription(IRender::Resource::Description* description) = 0;
-	virtual void SetDownloadDescription(IRender::Resource::Description* description) = 0;
-
-	virtual void Nop(QueueImplOpenGL& queue) {}
-	virtual void Execute(QueueImplOpenGL& queue) = 0;
-	virtual void Upload(QueueImplOpenGL& queue) = 0;
-	virtual void Download(QueueImplOpenGL& queue) = 0;
-	virtual void SyncDownload(QueueImplOpenGL& queue) = 0;
-	virtual void Delete(QueueImplOpenGL& queue) = 0;
-
-#ifdef _DEBUG
-	String note;
-#endif
+	DrawCallPool drawCallPool;
 };
 
 struct ResourceCommandImplOpenGL {
@@ -320,13 +334,19 @@ template <class T>
 struct ResourceBaseImplOpenGLDesc : public ResourceBaseImplOpenGL {
 	typedef ResourceBaseImplOpenGLDesc<T> Base;
 	ResourceBaseImplOpenGLDesc() : downloadDescription(nullptr) {
-		critical.store(0, std::memory_order_relaxed);
+		critical.store(3u, std::memory_order_relaxed); // 3u -- uninitialized
 	}
 
 	void SetUploadDescription(IRender::Resource::Description* d) override {
-		SpinLock(critical);
-		MoveResource(nextDescription, *static_cast<T*>(d));
-		SpinUnLock(critical, 2u);
+		if (critical.load(std::memory_order_relaxed) == 3u) {
+			// firstly upload
+			MoveResource(currentDescription, *static_cast<T*>(d));
+			critical.store(0, std::memory_order_release);
+		} else {
+			SpinLock(critical);
+			MoveResource(nextDescription, *static_cast<T*>(d));
+			SpinUnLock(critical, 2u);
+		}
 	}
 
 	T& UpdateDescription() {
@@ -368,12 +388,9 @@ struct ResourceBaseImplOpenGLDesc : public ResourceBaseImplOpenGL {
 protected:
 	T* downloadDescription;
 
-private:
+public:
 	std::atomic<uint32_t> critical;
 	T currentDescription;
-#ifdef _DEBUG
-public:
-#endif
 	T nextDescription;
 };
 
@@ -1066,14 +1083,21 @@ struct ResourceImplOpenGL<IRender::Resource::ShaderDescription> final : public R
 			String body = "void main(void) {\n";
 			String head = "";
 			uint32_t inputIndex = 0, outputIndex = 0, textureIndex = 0;
+			String predefines;
 			for (size_t n = 0; n < pieces.size(); n++) {
 				IShader* shader = pieces[n];
 				// Generate declaration
 				GLSLShaderGenerator declaration((Resource::ShaderDescription::Stage)k, inputIndex, outputIndex, textureIndex);
 				(*shader)(declaration);
 				declaration.Complete();
+				predefines += shader->GetPredefines();
 
 				body += declaration.initialization + FormatCode(shader->GetShaderText()) + declaration.finalization + "\n";
+
+				for (size_t i = 0; i < declaration.structures.size(); i++) {
+					head += declaration.mapStructureDefinition[declaration.structures[i]];
+				}
+
 				head += declaration.declaration;
 
 				for (size_t k = 0; k < declaration.bufferBindings.size(); k++) {
@@ -1096,7 +1120,7 @@ struct ResourceImplOpenGL<IRender::Resource::ShaderDescription> final : public R
 			// String fullShader = k == Resource::ShaderDescription::COMPUTE ? "#version 450\r\n" : "#version 330\r\n";
 			ZRenderOpenGL& render = static_cast<ZRenderOpenGL&>(queue.device->render);
 			String fullShader = String("#version ") + render.GetShaderVersion() + "\r\n";
-			fullShader += GLSLShaderGenerator::GetFrameCode() + common + head + body;
+			fullShader += GLSLShaderGenerator::GetFrameCode() + predefines + common + head + body;
 			const char* source[] = { fullShader.c_str() };
 			glShaderSource(shaderID, 1, source, nullptr);
 			glCompileShader(shaderID);
@@ -1299,8 +1323,13 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> final : pu
 		for (size_t i = 0; i < t->colorStorages.size(); i++) {
 			ResourceImplOpenGL<IRender::Resource::TextureDescription>* x = static_cast<ResourceImplOpenGL<IRender::Resource::TextureDescription>*>(t->colorStorages[i].resource);
 			if (x != nullptr) {
-				assert(x->GetNextDescription().dimension.x() != 0 && x->GetNextDescription().dimension.y() != 0);
-				assert(x->GetNextDescription().state.attachment);
+				if (x->critical.load(std::memory_order_acquire) == 2u) {
+					assert(x->GetNextDescription().dimension.x() != 0 && x->GetNextDescription().dimension.y() != 0);
+					assert(x->GetNextDescription().state.attachment);
+				} else {
+					assert(x->GetDescription().dimension.x() != 0 && x->GetDescription().dimension.y() != 0);
+					assert(x->GetDescription().state.attachment);
+				}
 			}
 		}
 		ResourceBaseImplOpenGLDesc<IRender::Resource::RenderTargetDescription>::SetUploadDescription(d);
@@ -1354,22 +1383,28 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> final : pu
 					assert(s == nullptr || t == s);
 					if (desc.state.media == IRender::Resource::TextureDescription::RENDERBUFFER) {
 						glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, t->renderbufferID);
-					} else {
+					} else if (t->textureType == GL_TEXTURE_2D) {
 						glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, t->textureID, d.depthStorage.mipLevel);
+					} else if (t->textureType == GL_TEXTURE_3D) {
+						glFramebufferTexture3D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_3D, t->textureID, d.depthStorage.mipLevel, d.depthStorage.layer);
 					}
 				} else { // may not be supported on all platforms
 					if (desc.state.media == IRender::Resource::TextureDescription::RENDERBUFFER) {
 						glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, t->renderbufferID);
-					} else {
+					} else if (t->textureType == GL_TEXTURE_2D) {
 						glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, t->textureID, d.depthStorage.mipLevel);
+					} else if (t->textureType == GL_TEXTURE_3D) {
+						glFramebufferTexture3D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_3D, t->textureID, d.depthStorage.mipLevel, d.depthStorage.layer);
 					}
 
 					if (s != nullptr) {
 						IRender::Resource::TextureDescription& descs = s->GetDescription();
 						if (descs.state.media == IRender::Resource::TextureDescription::RENDERBUFFER) {
 							glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, s->renderbufferID);
-						} else {
-							glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, t->textureID, d.depthStorage.mipLevel);
+						} else if (t->textureType == GL_TEXTURE_2D) {
+							glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, t->textureID, d.stencilStorage.mipLevel);
+						} else if (t->textureType == GL_TEXTURE_3D) {
+							glFramebufferTexture3D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_3D, t->textureID, d.stencilStorage.mipLevel, d.stencilStorage.layer);
 						}
 					} else {
 						glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, 0);
@@ -1387,8 +1422,10 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> final : pu
 				assert(t->textureID != 0);
 				if (t->GetDescription().state.media == IRender::Resource::TextureDescription::RENDERBUFFER) {
 					glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + (GLsizei)i, GL_RENDERBUFFER, t->renderbufferID);
-				} else {
+				} else if (t->textureType == GL_TEXTURE_2D) {
 					glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + (GLsizei)i, GL_TEXTURE_2D, t->textureID, storage.mipLevel);
+				} else if (t->textureType == GL_TEXTURE_3D) {
+					glFramebufferTexture3D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + (GLsizei)i, GL_TEXTURE_3D, t->textureID, storage.mipLevel, storage.layer);
 				}
 #ifdef LOG_OPENGL
 				printf("[OpenGL ColorAttach] %d = %p from %p\n", i, t, this);
@@ -1568,13 +1605,9 @@ template <>
 void MoveResource<IRender::Resource::DrawCallDescription>(IRender::Resource::DrawCallDescription& target, IRender::Resource::DrawCallDescription& source) {
 	target.shaderResource = source.shaderResource;
 	target.instanceCounts = source.instanceCounts;
-	target.bufferCount = source.bufferCount;
-	target.textureCount = source.textureCount;
 	target.indexBufferResource = source.indexBufferResource;
-	memcpy(target.bufferResources, source.bufferResources, sizeof(target.bufferResources));
-	memcpy(target.textureResources, source.textureResources, sizeof(target.textureResources));
-	std::swap(target.extraBufferResources, source.extraBufferResources);
-	std::swap(target.extraTextureResources, source.extraTextureResources);
+	std::swap(target.bufferResources, source.bufferResources);
+	std::swap(target.textureResources, source.textureResources);
 }
 #endif
 
@@ -1607,8 +1640,8 @@ struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> final : public
 		GLuint vertexBufferBindingCount = 0;
 		GLuint uniformBufferBindingCount = 0;
 		GLuint sharedBufferBindingCount = 0;
-		for (size_t i = 0; i < d.bufferCount; i++) {
-			const BufferRange& bufferRange = i < sizeof(d.bufferResources) / sizeof(d.bufferResources[0]) ? d.bufferResources[i] : d.extraBufferResources[i - sizeof(d.bufferResources) / sizeof(d.bufferResources[0])];
+		for (size_t i = 0; i < d.bufferResources.size(); i++) {
+			const BufferRange& bufferRange = d.bufferResources[i];
 			const Buffer* buffer = static_cast<const Buffer*>(bufferRange.buffer);
 			assert(buffer != nullptr);
 
@@ -1686,10 +1719,10 @@ struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> final : public
 			}
 		}
 
-		assert(d.textureCount == program.textureLocations.size());
-		for (uint32_t k = 0; k < d.textureCount; k++) {
+		assert(d.textureResources.size() == program.textureLocations.size());
+		for (uint32_t k = 0; k < d.textureResources.size(); k++) {
 			GL_GUARD();
-			const Texture* texture = static_cast<const Texture*>(k < sizeof(d.textureResources) / sizeof(d.textureResources[0]) ? d.textureResources[k] : d.extraTextureResources[k - sizeof(d.textureResources) / sizeof(d.textureResources[0])]);
+			const Texture* texture = static_cast<const Texture*>(d.textureResources[k]);
 			assert(texture != nullptr);
 			assert(texture->textureID != 0);
 			if (program.isComputeShader) {
@@ -1739,8 +1772,19 @@ struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> final : public
 		}
 	}
 
+	void Cleanup(IRender::Resource::DrawCallDescription& desc) {
+		desc.shaderResource = nullptr;
+		desc.instanceCounts = UInt3(0, 0, 0);
+	}
+
 	void Delete(QueueImplOpenGL& queue) override {
-		delete this;
+		// delete this;
+		// clear containers?
+		downloadDescription = nullptr;
+		Cleanup(nextDescription);
+		Cleanup(currentDescription);
+
+		static_cast<DeviceImplOpenGL*>(queue.device)->drawCallPool.ReleaseSafe(this);
 	}
 };
 
@@ -1835,9 +1879,15 @@ void ZRenderOpenGL::DeleteQueue(Queue* queue) {
 	assert(q->next == nullptr);
 
 	q->next = (QueueImplOpenGL*)deletedQueueHead.load(std::memory_order_acquire);
-	while (!deletedQueueHead.compare_exchange_weak((Queue*&)q->next, q, std::memory_order_release)) {
-		YieldThreadFast();
-	}
+	while (!deletedQueueHead.compare_exchange_weak((Queue*&)q->next, q, std::memory_order_release)) {}
+}
+
+ResourceBaseImplOpenGL* DrawCallPool::New() {
+	return new ResourceImplOpenGL<IRender::Resource::DrawCallDescription>();
+}
+
+void DrawCallPool::Delete(ResourceBaseImplOpenGL* resource) {
+	delete static_cast<ResourceImplOpenGL<IRender::Resource::DrawCallDescription>*>(resource);
 }
 
 // Resource
@@ -1857,7 +1907,7 @@ IRender::Resource* ZRenderOpenGL::CreateResource(Device* device, Resource::Type 
 	case Resource::RESOURCE_RENDERTARGET:
 		return new ResourceImplOpenGL<Resource::RenderTargetDescription>();
 	case Resource::RESOURCE_DRAWCALL:
-		return new ResourceImplOpenGL<Resource::DrawCallDescription>();
+		return static_cast<DeviceImplOpenGL*>(device)->drawCallPool.AcquireSafe();
 	}
 
 	assert(false);

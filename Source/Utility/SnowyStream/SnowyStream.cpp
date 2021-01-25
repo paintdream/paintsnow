@@ -23,7 +23,13 @@
 #include "Resource/Passes/ParticlePass.h"
 #include "Resource/Passes/ScreenPass.h"
 #include "Resource/Passes/ShadowMaskPass.h"
+#include "Resource/Passes/SkyDirectIrradiancePass.h"
+#include "Resource/Passes/SkyIndirectIrradiancePass.h"
+#include "Resource/Passes/SkyMultipleScatteringPass.h"
 #include "Resource/Passes/SkyPass.h"
+#include "Resource/Passes/SkyScatteringDensityPass.h"
+#include "Resource/Passes/SkySingleScatteringPass.h"
+#include "Resource/Passes/SkyTransmittancePass.h"
 #include "Resource/Passes/StandardPass.h"
 #include "Resource/Passes/TerrainPass.h"
 #include "Resource/Passes/TextPass.h"
@@ -709,7 +715,13 @@ void SnowyStream::RegisterBuiltinPasses() {
 	RegisterPass(*resourceManager(), UniqueType<MultiHashTracePass>());
 	RegisterPass(*resourceManager(), UniqueType<ScreenPass>());
 	RegisterPass(*resourceManager(), UniqueType<ShadowMaskPass>());
+	RegisterPass(*resourceManager(), UniqueType<SkyDirectIrradiancePass>());
+	RegisterPass(*resourceManager(), UniqueType<SkyIndirectIrradiancePass>());
+	RegisterPass(*resourceManager(), UniqueType<SkyMultipleScatteringPass>());
 	RegisterPass(*resourceManager(), UniqueType<SkyPass>());
+	RegisterPass(*resourceManager(), UniqueType<SkyScatteringDensityPass>());
+	RegisterPass(*resourceManager(), UniqueType<SkySingleScatteringPass>());
+	RegisterPass(*resourceManager(), UniqueType<SkyTransmittancePass>());
 	RegisterPass(*resourceManager(), UniqueType<StandardPass>());
 
 	IRender::Resource::RenderStateDescription state;

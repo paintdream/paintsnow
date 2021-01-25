@@ -213,11 +213,12 @@ namespace PaintsNow {
 				};
 
 				struct Storage {
-					Storage() : loadOp(DEFAULT), storeOp(DEFAULT), mipLevel(0), backBuffer(0), resource(nullptr), clearColor(0, 0, 0, 0) {}
+					Storage() : loadOp(DEFAULT), storeOp(DEFAULT), mipLevel(0), backBuffer(0), layer(0), resource(nullptr), clearColor(0, 0, 0, 0) {}
 
-					uint8_t loadOp;
-					uint8_t storeOp;
+					uint8_t loadOp : 4;
+					uint8_t storeOp : 4;
 					uint8_t mipLevel; // used for render to mip
+					uint8_t layer; // used for render to 3d texture layer
 					uint8_t backBuffer;
 					Resource* resource;
 					Float4 clearColor;
@@ -230,14 +231,10 @@ namespace PaintsNow {
 			};
 			
 			struct DrawCallDescription : public Description {
-				DrawCallDescription() : shaderResource(nullptr), instanceCounts(0, 0, 0), bufferCount(0), textureCount(0) {
-					memset(textureResources, 0, sizeof(textureResources));
-				}
+				DrawCallDescription() : shaderResource(nullptr), instanceCounts(0, 0, 0) {}
 
 				Resource* shaderResource;
 				UInt3 instanceCounts; // y/z for compute shaders
-				uint16_t bufferCount;
-				uint16_t textureCount;
 				
 				struct BufferRange {
 					BufferRange() : buffer(nullptr), offset(0), length(0), component(0), type(0) {}
@@ -250,10 +247,8 @@ namespace PaintsNow {
 				};
 
 				BufferRange indexBufferResource;
-				BufferRange bufferResources[8]; // to avoid dynamic memory allocation
-				Resource* textureResources[16];
-				std::vector<BufferRange> extraBufferResources;
-				std::vector<Resource*> extraTextureResources;
+				std::vector<BufferRange> bufferResources;
+				std::vector<Resource*> textureResources;
 			};
 		};
 

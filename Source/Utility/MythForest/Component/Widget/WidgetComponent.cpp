@@ -22,7 +22,7 @@ void WidgetComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallT
 		const PassBase::Parameter& mainTextureParam = updater[IShader::BindInput::MAINTEXTURE];
 		if (mainTextureParam) {
 			size_t k = mainTextureParam.slot;
-			IRender::Resource*& texture = k < sizeof(drawCall.textureResources) / sizeof(drawCall.textureResources[0]) ? drawCall.textureResources[k] : drawCall.extraTextureResources[k - sizeof(drawCall.textureResources) / sizeof(drawCall.textureResources[0])];
+			IRender::Resource*& texture = drawCall.textureResources[k];
 			texture = mainTexture()->GetRenderResource();
 		}
 
@@ -30,14 +30,14 @@ void WidgetComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallT
 		const PassBase::Parameter& inTexCoordRectParam = updater[StaticBytes(subTexMark)];
 		if (inTexCoordRectParam) {
 			size_t k = inTexCoordRectParam.slot;
-			IRender::Resource::DrawCallDescription::BufferRange& bufferRange = k < sizeof(drawCall.bufferResources) / sizeof(drawCall.bufferResources[0]) ? drawCall.bufferResources[k] : drawCall.extraBufferResources[k - sizeof(drawCall.bufferResources) / sizeof(drawCall.bufferResources[0])];
+			IRender::Resource::DrawCallDescription::BufferRange& bufferRange = drawCall.bufferResources[k];
 			bufferRange = batchInstancedDataComponent->Allocate(inTexCoordRect);
 		}
 
 		const PassBase::Parameter& outTexCoordRectParam = updater[StaticBytes(mainCoordRect)];
 		if (outTexCoordRectParam) {
 			size_t k = outTexCoordRectParam.slot;
-			IRender::Resource::DrawCallDescription::BufferRange& bufferRange = k < sizeof(drawCall.bufferResources) / sizeof(drawCall.bufferResources[0]) ? drawCall.bufferResources[k] : drawCall.extraBufferResources[k - sizeof(drawCall.bufferResources) / sizeof(drawCall.bufferResources[0])];
+			IRender::Resource::DrawCallDescription::BufferRange& bufferRange = drawCall.bufferResources[k];
 			bufferRange = batchInstancedDataComponent->Allocate(outTexCoordRect);
 		}
 	}
