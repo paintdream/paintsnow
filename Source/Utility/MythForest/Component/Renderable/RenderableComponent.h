@@ -40,7 +40,6 @@ namespace PaintsNow {
 		virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData, DrawCallAllocator>& outputDrawCalls, const InputRenderData& inputRenderData, BytesCache& bytesCache) = 0;
 	};
 
-
 	class RenderableComponent : public TAllocatedTiny<RenderableComponent, Component>, public IDrawCallProvider {
 	public:
 		enum {

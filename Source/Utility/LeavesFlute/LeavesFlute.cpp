@@ -455,7 +455,7 @@ public:
 		OPTICK_EVENT();
 
 		BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
-		IScript::Request& request = *bridgeSunset.AcquireSafe();
+		IScript::Request& request = *bridgeSunset.requestPool.AcquireSafe();
 		String text;
 		if (LoadScriptText(path, text)) {
 			request.DoLock();
@@ -474,7 +474,7 @@ public:
 			request.UnLock();
 		}
 
-		bridgeSunset.ReleaseSafe(&request);
+		bridgeSunset.requestPool.ReleaseSafe(&request);
 		ReleaseObject();
 	}
 

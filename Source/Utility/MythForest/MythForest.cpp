@@ -310,7 +310,7 @@ public:
 	void Finish(rvalue<std::vector<Component::RaycastResult> > r) override {
 		std::vector<Component::RaycastResult>& results = r;
 		engine.GetKernel().YieldCurrentWarp();
-		IScript::Request& request = *engine.bridgeSunset.AcquireSafe();
+		IScript::Request& request = *engine.bridgeSunset.requestPool.AcquireSafe();
 
 		request.DoLock();
 		request.Push();
@@ -332,7 +332,7 @@ public:
 		request.Dereference(callback);
 		request.UnLock();
 
-		engine.bridgeSunset.ReleaseSafe(&request);
+		engine.bridgeSunset.requestPool.ReleaseSafe(&request);
 	}
 
 protected:

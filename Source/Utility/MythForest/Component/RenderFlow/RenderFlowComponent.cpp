@@ -422,11 +422,15 @@ void RenderFlowComponent::DispatchEvent(Event& event, Entity* entity) {
 		if (Flag().load(std::memory_order_acquire) & TINY_ACTIVATED) {
 			Engine& engine = event.engine;
 			const Tiny::FLAG condition = RENDERFLOWCOMPONENT_RENDER_SYNC_TICKING | TINY_ACTIVATED;
+			OPTICK_PUSH("Wait for sync ticking");
 			while ((Flag().load(std::memory_order_acquire) & condition) == condition) {
 				YieldThread();
 			}
+			OPTICK_POP();
 
+			OPTICK_PUSH("Render");
 			Render(event.engine);
+			OPTICK_POP();
 
 			Flag().fetch_or(RENDERFLOWCOMPONENT_RENDER_SYNC_TICKING, std::memory_order_release);
 			engine.GetKernel().QueueRoutine(this, CreateTaskContextFree(Wrap(this, &RenderFlowComponent::RenderSyncTick), std::ref(engine)));

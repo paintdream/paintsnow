@@ -78,13 +78,13 @@ IScript::Request::Ref Connection::GetCallback() const {
 void Connection::OnEventHttp(int code) {
 	OPTICK_EVENT();
 
-	IScript::Request& req = *bridgeSunset.AcquireSafe();
+	IScript::Request& req = *bridgeSunset.requestPool.AcquireSafe();
 	req.DoLock();
 	req.Push();
 	req.Call(callback, this, code);
 	req.Pop();
 	req.UnLock();
-	bridgeSunset.ReleaseSafe(&req);
+	bridgeSunset.requestPool.ReleaseSafe(&req);
 //	bridgeSunset.GetKernel().QueueRoutine(this, CreateTaskScript(callback, this, code));
 }
 
@@ -118,7 +118,7 @@ void Connection::OnEvent(INetwork::EVENT event) {
 
 void Connection::DispatchEvent(INetwork::EVENT event) {
 	OPTICK_EVENT();
-	IScript::Request& req = *bridgeSunset.AcquireSafe();
+	IScript::Request& req = *bridgeSunset.requestPool.AcquireSafe();
 	req.DoLock();
 	req.Push();
 	if ((Flag().load(std::memory_order_relaxed) & CONNECTION_PACKET_MODE)) {
@@ -127,7 +127,7 @@ void Connection::DispatchEvent(INetwork::EVENT event) {
 	req.Call(callback, this, Looper::EventToString(event));
 	req.Pop();
 	req.UnLock();
-	bridgeSunset.ReleaseSafe(&req);
+	bridgeSunset.requestPool.ReleaseSafe(&req);
 }
 
 void Connection::ScriptUninitialize(IScript::Request& request) {

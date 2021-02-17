@@ -50,9 +50,9 @@ void Queue::Push(IScript::Request& request, IScript::Request::Ref& ref, int64_t 
 void Queue::Execute(void* context) {
 	int64_t timeStamp = clock->Now();
 	BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
-	IScript::Request& request = *bridgeSunset.AcquireSafe();
+	IScript::Request& request = *bridgeSunset.requestPool.AcquireSafe();
 	ExecuteWithTimeStamp(request, timeStamp);
-	bridgeSunset.ReleaseSafe(&request);
+	bridgeSunset.requestPool.ReleaseSafe(&request);
 }
 
 void Queue::Abort(void* context) {}

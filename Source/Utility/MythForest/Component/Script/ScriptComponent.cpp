@@ -84,7 +84,7 @@ void ScriptComponent::DispatchEvent(Event& event, Entity* entity) {
 	if (handler) {
 		Engine& engine = event.engine;
 		IScript::RequestPool& requestPool = engine.bridgeSunset;
-		IScript::Request& request = *requestPool.AcquireSafe();
+		IScript::Request& request = *requestPool.requestPool.AcquireSafe();
 		request.DoLock();
 		request.Push();
 
@@ -138,6 +138,6 @@ void ScriptComponent::DispatchEvent(Event& event, Entity* entity) {
 		request.Call(handler);
 		request.Pop();
 		request.UnLock();
-		requestPool.ReleaseSafe(&request);
+		requestPool.requestPool.ReleaseSafe(&request);
 	}
 }

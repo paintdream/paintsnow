@@ -63,5 +63,5 @@ void RemoteComponentModule::RequestCleanup(IScript::Request& request, IScript::D
 	CHECK_DELEGATE(remoteComponent);
 	// CHECK_THREAD_IN_MODULE(remoteComponent);
 
-	remoteComponent->Clear();
+	remoteComponent->requestPool.Clear();
 }

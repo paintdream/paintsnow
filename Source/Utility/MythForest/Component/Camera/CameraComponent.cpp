@@ -484,6 +484,7 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 	if (renderFlowComponent) {
 		// update buffers
 		if (Flag().load(std::memory_order_relaxed) & (CAMERACOMPONENT_SMOOTH_TRACK | CAMERACOMPONENT_SUBPIXEL_JITTER)) {
+			OPTICK_PUSH("Updating render data");
 			for (size_t i = 0; i < warpData.size(); i++) {
 				TaskData::WarpData& w = warpData[i];
 				typedef std::vector<std::key_value<ShaderResource*, TaskData::WarpData::GlobalBufferItem> > GlobalMap;
@@ -510,6 +511,7 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 					}
 				}
 			}
+			OPTICK_POP();
 		}
 
 		// CameraView settings

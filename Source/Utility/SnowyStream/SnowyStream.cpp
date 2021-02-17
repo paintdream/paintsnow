@@ -453,22 +453,22 @@ private:
 
 		if (callbackStep) {
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
-			IScript::Request& request = *bridgeSunset.AcquireSafe();
+			IScript::Request& request = *bridgeSunset.requestPool.AcquireSafe();
 			request.DoLock();
 			request.Push();
 			request.Call(callbackStep, pathList[index], resourceList[index]);
 			request.Pop();
 			request.UnLock();
-			bridgeSunset.ReleaseSafe(&request);
+			bridgeSunset.requestPool.ReleaseSafe(&request);
 		}
 
 		// is abount to finish
 		if (completed.fetch_add(1, std::memory_order_release) + 1 == pathList.size()) {
 			assert(context != nullptr);
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
-			IScript::Request& request = *bridgeSunset.AcquireSafe();
+			IScript::Request& request = *bridgeSunset.requestPool.AcquireSafe();
 			Finalize(request);
-			bridgeSunset.ReleaseSafe(&request);
+			bridgeSunset.requestPool.ReleaseSafe(&request);
 
 			ReleaseObject();
 		}
@@ -597,14 +597,14 @@ struct CompressTask : public TaskOnce {
 		bool success = resource->Compress(compressType);
 		if (callback) {
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
-			IScript::Request& request = *bridgeSunset.AcquireSafe();
+			IScript::Request& request = *bridgeSunset.requestPool.AcquireSafe();
 			request.DoLock();
 			request.Push();
 			request.Call(callback, success);
 			request.Pop();
 			request.Dereference(callback);
 			request.UnLock();
-			bridgeSunset.ReleaseSafe(&request);
+			bridgeSunset.requestPool.ReleaseSafe(&request);
 		} else {
 			Finalize(context);
 		}
@@ -621,11 +621,11 @@ struct CompressTask : public TaskOnce {
 	void Finalize(void* context) {
 		if (callback) {
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
-			IScript::Request& request = *bridgeSunset.AcquireSafe();
+			IScript::Request& request = *bridgeSunset.requestPool.AcquireSafe();
 			request.DoLock();
 			request.Dereference(callback);
 			request.UnLock();
-			bridgeSunset.ReleaseSafe(&request);
+			bridgeSunset.requestPool.ReleaseSafe(&request);
 		}
 	}
 

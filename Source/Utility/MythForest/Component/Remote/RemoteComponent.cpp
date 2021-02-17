@@ -55,7 +55,7 @@ RemoteComponent::RemoteComponent(Engine& e) : RequestPool(*e.interfaces.script.N
 }
 
 RemoteComponent::~RemoteComponent() {
-	RequestPool::Clear();
+	requestPool.Clear();
 	script.ReleaseDevice();	
 }
 
@@ -229,7 +229,7 @@ static void CopyTable(uint32_t flag, IScript::Request& request, IScript::Request
 
 void RemoteComponent::Call(IScript::Request& fromRequest, const TShared<RemoteRoutine>& remoteRoutine, IScript::Request::Arguments& args) {
 	if (remoteRoutine->pool == this && remoteRoutine->ref) {
-		IScript::Request& toRequest = *AcquireSafe();
+		IScript::Request& toRequest = *requestPool.AcquireSafe();
 		toRequest.DoLock();
 		fromRequest.DoLock();
 
@@ -251,7 +251,7 @@ void RemoteComponent::Call(IScript::Request& fromRequest, const TShared<RemoteRo
 		fromRequest.UnLock();
 		toRequest.UnLock();
 
-		ReleaseSafe(&toRequest);
+		requestPool.ReleaseSafe(&toRequest);
 	} else {
 		fromRequest.Error("Invalid ref.");
 	}
@@ -264,7 +264,7 @@ void RemoteComponent::Complete(IScript::RequestPool* returnPool, IScript::Reques
 	toRequest.Call(remoteRoutine->ref);
 	toRequest.UnLock();
 
-	IScript::Request& returnRequest = *returnPool->AcquireSafe();
+	IScript::Request& returnRequest = *returnPool->requestPool.AcquireSafe();
 	returnRequest.DoLock();
 	returnRequest.Push();
 
@@ -282,13 +282,13 @@ void RemoteComponent::Complete(IScript::RequestPool* returnPool, IScript::Reques
 	returnRequest.Pop();
 	returnRequest.UnLock();
 
-	ReleaseSafe(&toRequest);
-	returnPool->ReleaseSafe(&returnRequest);
+	requestPool.ReleaseSafe(&toRequest);
+	returnPool->requestPool.ReleaseSafe(&returnRequest);
 }
 
 void RemoteComponent::CallAsync(IScript::Request& fromRequest, IScript::Request::Ref callback, const TShared<RemoteRoutine>&remoteRoutine, IScript::Request::Arguments& args) {
 	if (remoteRoutine->pool == this && remoteRoutine->ref) {
-		IScript::Request& toRequest = *AcquireSafe();
+		IScript::Request& toRequest = *requestPool.AcquireSafe();
 		fromRequest.DoLock();
 		toRequest.DoLock();
 

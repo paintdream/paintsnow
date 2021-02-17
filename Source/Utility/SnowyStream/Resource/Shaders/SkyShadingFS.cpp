@@ -27,6 +27,7 @@ String SkyShadingFS::GetSkyRadianceShading(RadianceSpectrum& retValue, const Atm
 			camera, view_ray, shadow_length, sun_direction, transmittance);
 	);
 }
+
 String SkyShadingFS::GetSkyRadianceToPointShading(RadianceSpectrum& retValue, const AtmosphereParameters& atmosphere,
 	Position camera, Position point, Length shadow_length,
 	Direction sun_direction, DimensionlessSpectrum& transmittance) {
@@ -36,6 +37,7 @@ String SkyShadingFS::GetSkyRadianceToPointShading(RadianceSpectrum& retValue, co
 			camera, point, shadow_length, sun_direction, transmittance);
 	);
 }
+
 String SkyShadingFS::GetSunAndSkyIrradianceShading(IrradianceSpectrum& retValue, const AtmosphereParameters& atmosphere,
 	Position p, Direction normal, Direction sun_direction,
 	IrradianceSpectrum& sky_irradiance) {
@@ -62,6 +64,7 @@ String SkyShadingFS::GetSkyLuminanceShading(Luminance3& retValue, const Atmosphe
 	retValue = retValue * SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
 	);
 }
+
 String SkyShadingFS::GetSkyLuminanceToPointShading(Luminance3& retValue, const AtmosphereParameters& atmosphere,
 	Position camera, Position point, Length shadow_length,
 	Direction sun_direction, DimensionlessSpectrum& transmittance) {
@@ -69,19 +72,19 @@ String SkyShadingFS::GetSkyLuminanceToPointShading(Luminance3& retValue, const A
 		GetSkyRadianceToPoint(retValue, atmosphere, transmittance_texture,
 			scattering_texture, single_mie_scattering_texture,
 			camera, point, shadow_length, sun_direction, transmittance);
-	retValue = retValue * SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
+		retValue = retValue * SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
 	);
 }
-String SkyShadingFS::GetSunAndSkyIlluminance(Illuminance3& retValue, const AtmosphereParameters& atmosphere,
-	Position p, Direction normal, Direction sun_direction,
+
+String SkyShadingFS::GetSunAndSkyIlluminance(Illuminance3& retValue, const AtmosphereParameters& atmosphere, Position p, Direction normal, Direction sun_direction,
 	IrradianceSpectrum& sky_irradiance) {
 	return UnifyShaderCode(
 		IrradianceSpectrum sun_irradiance;
-	GetSunAndSkyIrradiance(sun_irradiance,
-		atmosphere, transmittance_texture, irradiance_texture, p, normal,
-		sun_direction, sky_irradiance);
-	sky_irradiance *= SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
-	retValue = sun_irradiance * SUN_SPECTRAL_RADIANCE_TO_LUMINANCE;
+		GetSunAndSkyIrradiance(sun_irradiance,
+			atmosphere, transmittance_texture, irradiance_texture, p, normal,
+			sun_direction, sky_irradiance);
+			sky_irradiance *= SKY_SPECTRAL_RADIANCE_TO_LUMINANCE;
+		retValue = sun_irradiance * SUN_SPECTRAL_RADIANCE_TO_LUMINANCE;
 	);
 }
 

@@ -25,7 +25,7 @@ BridgeSunset::~BridgeSunset() {
 	IScript::Request& mainRequest = script.GetDefaultRequest();
 	assert(script.GetDispatcher() == Wrap(this, &BridgeSunset::ContinueScriptDispatcher));
 	script.SetDispatcher(origDispatcher);
-	Clear(); // clear request pool
+	requestPool.Clear(); // clear request pool
 }
 
 void BridgeSunset::ScriptInitialize(IScript::Request& request) {

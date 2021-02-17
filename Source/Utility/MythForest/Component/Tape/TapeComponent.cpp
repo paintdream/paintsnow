@@ -63,11 +63,11 @@ void TapeComponent::OnAsyncFlush(Engine& engine, IScript::Request::Ref callback)
 	OPTICK_EVENT();
 	bool result = FlushInternal();
 
-	IScript::Request& request = *engine.bridgeSunset.AcquireSafe();
+	IScript::Request& request = *engine.bridgeSunset.requestPool.AcquireSafe();
 	request.DoLock();
 	request.Call(callback, result);
 	request.UnLock();
-	engine.bridgeSunset.ReleaseSafe(&request);
+	engine.bridgeSunset.requestPool.ReleaseSafe(&request);
 
 	Flag().fetch_and(~TINY_UPDATING);
 	ReleaseObject();

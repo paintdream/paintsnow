@@ -81,13 +81,17 @@ struct ResourceBaseImplOpenGL : public ResourceAligned {
 };
 
 // Pooled allocator for drawcall resources
-class DrawCallPool : public TRefPool<DrawCallPool, ResourceBaseImplOpenGL> {
+class DrawCallPool {
 public:
 	// recycle for 4096 drawcalls
-	DrawCallPool() : TRefPool<DrawCallPool, ResourceBaseImplOpenGL>(4096) {}
+	DrawCallPool() : pool(*this, 4096) {}
 
-	ResourceBaseImplOpenGL* New();
-	void Delete(ResourceBaseImplOpenGL* resource);
+	ResourceBaseImplOpenGL* allocate(size_t n);
+	void construct(ResourceBaseImplOpenGL*);
+	void destroy(ResourceBaseImplOpenGL*);
+	void deallocate(ResourceBaseImplOpenGL* resource, size_t n);
+
+	TPool<ResourceBaseImplOpenGL, DrawCallPool> pool;
 };
 
 class DeviceImplOpenGL final : public IRender::Device {
@@ -1784,7 +1788,7 @@ struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> final : public
 		Cleanup(nextDescription);
 		Cleanup(currentDescription);
 
-		static_cast<DeviceImplOpenGL*>(queue.device)->drawCallPool.ReleaseSafe(this);
+		static_cast<DeviceImplOpenGL*>(queue.device)->drawCallPool.pool.ReleaseSafe(this);
 	}
 };
 
@@ -1882,11 +1886,16 @@ void ZRenderOpenGL::DeleteQueue(Queue* queue) {
 	while (!deletedQueueHead.compare_exchange_weak((Queue*&)q->next, q, std::memory_order_release)) {}
 }
 
-ResourceBaseImplOpenGL* DrawCallPool::New() {
+ResourceBaseImplOpenGL* DrawCallPool::allocate(size_t n) {
+	assert(n == 1);
 	return new ResourceImplOpenGL<IRender::Resource::DrawCallDescription>();
 }
 
-void DrawCallPool::Delete(ResourceBaseImplOpenGL* resource) {
+void DrawCallPool::construct(ResourceBaseImplOpenGL*) {}
+void DrawCallPool::destroy(ResourceBaseImplOpenGL*) {}
+
+void DrawCallPool::deallocate(ResourceBaseImplOpenGL* resource, size_t n) {
+	assert(n == 1);
 	delete static_cast<ResourceImplOpenGL<IRender::Resource::DrawCallDescription>*>(resource);
 }
 
@@ -1907,7 +1916,7 @@ IRender::Resource* ZRenderOpenGL::CreateResource(Device* device, Resource::Type 
 	case Resource::RESOURCE_RENDERTARGET:
 		return new ResourceImplOpenGL<Resource::RenderTargetDescription>();
 	case Resource::RESOURCE_DRAWCALL:
-		return static_cast<DeviceImplOpenGL*>(device)->drawCallPool.AcquireSafe();
+		return static_cast<DeviceImplOpenGL*>(device)->drawCallPool.pool.AcquireSafe();
 	}
 
 	assert(false);
