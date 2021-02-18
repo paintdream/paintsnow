@@ -5,7 +5,6 @@
 
 #pragma once
 #include "../../../Interface/IFontBase.h"
-#include <iconv.h>
 
 namespace PaintsNow {
 	class ZFontFreetype final : public IFontBase {

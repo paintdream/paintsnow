@@ -24,21 +24,22 @@ public:
 class FreeImageImpl : public IImage::Image {
 public:
 	FreeImageImpl(IRender::Resource::TextureDescription::Layout layout = IRender::Resource::TextureDescription::RGBA, IRender::Resource::TextureDescription::Format dt = IRender::Resource::TextureDescription::UNSIGNED_BYTE);
-	virtual ~FreeImageImpl();
-	virtual bool New(size_t width, size_t height, IRender::Resource::TextureDescription::Layout layout, IRender::Resource::TextureDescription::Format dataType);
-	virtual IRender::Resource::TextureDescription::Layout GetLayoutType() const;
-	virtual IRender::Resource::TextureDescription::Format GetDataType() const;
-	virtual bool Load(IStreamBase& streamBase, size_t length);
-	virtual bool Save(IStreamBase& streamBase, const String& type) const;
-	virtual size_t GetBPP() const;
+	~FreeImageImpl();
+
+	bool New(size_t width, size_t height, IRender::Resource::TextureDescription::Layout layout, IRender::Resource::TextureDescription::Format dataType);
+	IRender::Resource::TextureDescription::Layout GetLayoutType() const;
+	IRender::Resource::TextureDescription::Format GetDataType() const;
+	bool Load(IStreamBase& streamBase, size_t length);
+	bool Save(IStreamBase& streamBase, const String& type) const;
+	size_t GetBPP() const;
 	bool IsValid() const;
 	void Inverse();
-	virtual size_t GetWidth() const;
-	virtual size_t GetHeight() const;
-	virtual void* GetBuffer();
+	size_t GetWidth() const;
+	size_t GetHeight() const;
+	void* GetBuffer();
 
-	const Float4 Get(int i, int j) const;
-	void Set(int i, int j, const Float4& color);
+	const Float4 Get(size_t i, size_t j) const;
+	void Set(size_t i, size_t j, const Float4& color);
 
 private:
 	PFIBITMAP bitmap;
@@ -218,14 +219,14 @@ bool FreeImageImpl::IsValid() const {
 	return bitmap != nullptr;
 }
 
-const Float4 FreeImageImpl::Get(int i, int j) const {
+const Float4 FreeImageImpl::Get(size_t i, size_t j) const {
 	int step = layout == IRender::Resource::TextureDescription::RGB ? 3 : 4;
 	const unsigned char* p = (const unsigned char*)FreeImage_GetBits(bitmap);
 	const unsigned char* s = p + step * (i * width + j);
 	return Float4((float)s[0] / 255.0f, (float)s[1] / 255.0f, (float)s[2] / 255.0f, layout == IRender::Resource::TextureDescription::RGB ? 1 : (float)s[3] / 255.0f);
 }
 
-void FreeImageImpl::Set(int i, int j, const Float4& color) {
+void FreeImageImpl::Set(size_t i, size_t j, const Float4& color) {
 	int step = layout == IRender::Resource::TextureDescription::RGB ? 3 : 4;
 	unsigned char* p = (unsigned char*)GetBuffer();
 	unsigned char* s = p + step * (i * width + j);

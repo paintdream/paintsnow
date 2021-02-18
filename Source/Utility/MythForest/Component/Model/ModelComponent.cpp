@@ -147,7 +147,6 @@ uint32_t ModelComponent::CollectDrawCalls(std::vector<OutputRenderData, DrawCall
 	}
 
 	for (size_t i = 0; i < materialResources.size(); i++) {
-		uint16_t priority = materialResources[i].first >> 16;
 		drawCalls.emplace_back(drawCallTemplates[i + baseIndex]); // TODO: optimize copy performance
 	}
 
