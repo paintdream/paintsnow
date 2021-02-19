@@ -1,5 +1,5 @@
 #include "TransformComponent.h"
-
+#include "../../../../Core/Driver/Profiler/Optick/optick.h"
 #include <cmath>
 
 using namespace PaintsNow;
@@ -147,6 +147,7 @@ void TransformComponent::UpdateTransform() {
 }
 
 void TransformComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box, bool recursive) {
+	OPTICK_EVENT();
 	UpdateTransform();
 
 	if (box.second.x() < box.first.x()) {

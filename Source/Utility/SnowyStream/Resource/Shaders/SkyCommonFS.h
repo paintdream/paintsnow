@@ -43,12 +43,6 @@ namespace PaintsNow {
 	public:
 		SkyCommonFS();
 		String GetPredefines() override;
-		typedef IShader::BindTexture TransmittanceTexture;
-		typedef IShader::BindTexture AbstractSpectrumTexture;
-		typedef IShader::BindTexture ReducedScatteringTexture;
-		typedef IShader::BindTexture ScatteringTexture;
-		typedef IShader::BindTexture IrradianceTexture;
-		typedef IShader::BindTexture ScatteringDensityTexture;
 
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		IShader::BindBuffer paramBuffer;

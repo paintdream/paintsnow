@@ -1,5 +1,5 @@
 #include "FieldComponent.h"
-
+#include "../../../../Core/Driver/Profiler/Optick/optick.h"
 using namespace PaintsNow;
 
 FieldComponent::FieldComponent() {
@@ -37,6 +37,7 @@ void FieldComponent::PostEvent(SpaceComponent* spaceComponent, Event& event, FLA
 }
 
 void FieldComponent::QueryEntities(SpaceComponent* spaceComponent, std::vector<TShared<Entity> >& entities) const {
+	OPTICK_EVENT();
 	assert(spaceComponent != nullptr);
 	assert(fieldImpl);
 	assert(spaceComponent->GetWarpIndex() == GetWarpIndex());

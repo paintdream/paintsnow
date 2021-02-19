@@ -14,7 +14,7 @@
 
 namespace PaintsNow {
 	namespace IAsset {
-		enum Type { TYPE_CONST, TYPE_FLOAT, TYPE_FLOAT2, TYPE_FLOAT3, TYPE_FLOAT4, TYPE_MATRIX3, TYPE_MATRIX4, TYPE_TEXTURE };
+		enum Type { TYPE_CONST, TYPE_FLOAT, TYPE_FLOAT2, TYPE_FLOAT3, TYPE_FLOAT4, TYPE_MATRIX3, TYPE_MATRIX4, TYPE_TEXTURE, TYPE_STRUCTURE };
 		struct TextureIndex {
 			TextureIndex(uint32_t i = 0) : index(i) {}
 			uint32_t index;

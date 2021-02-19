@@ -17,6 +17,7 @@ void BridgeComponent::Clear(Engine& engine) {
 }
 
 void BridgeComponent::DispatchEvent(Event& event, Entity* entity) {
+	OPTICK_EVENT();
 	// broadcast all events.
 	targetComponent->DispatchEvent(event, entity);
 }

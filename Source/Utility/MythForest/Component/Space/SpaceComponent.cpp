@@ -53,6 +53,7 @@ void SpaceComponent::QueueRoutine(Engine& engine, ITask* task) {
 }
 
 bool SpaceComponent::Insert(Engine& engine, Entity* entity) {
+	OPTICK_EVENT();
 	assert(Flag().load(std::memory_order_relaxed) & TINY_ACTIVATED);
 	if (!(Flag().load(std::memory_order_relaxed) & TINY_ACTIVATED)) {
 		return false;
@@ -205,6 +206,7 @@ struct SelectRemove {
 };
 
 bool SpaceComponent::Remove(Engine& engine, Entity* entity) {
+	OPTICK_EVENT();
 	if (!ValidateEntity(entity)) {
 		return false;
 	}
@@ -382,6 +384,7 @@ float SpaceComponent::Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, 
 
 void SpaceComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box, bool recursive) {
 	if (rootEntity == nullptr) return;
+	OPTICK_EVENT();
 
 	Tiny::FLAG flag = Flag().load(std::memory_order_relaxed);
 

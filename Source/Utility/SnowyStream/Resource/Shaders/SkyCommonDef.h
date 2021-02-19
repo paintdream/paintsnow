@@ -6,6 +6,7 @@
 #pragma once
 
 #include "../../../../Core/Interface/IReflect.h"
+#include "../../../../General/Interface/IShader.h"
 
 namespace PaintsNow {
 	// [Precomputed Atmospheric Scattering](https://hal.inria.fr/inria-00288758/en)
@@ -152,4 +153,11 @@ namespace PaintsNow {
 		// Earth case, 102 degrees is a good choice - yielding mu_s_min = -0.2).
 		Number mu_s_min;
 	};
+
+	typedef IShader::BindTexture TransmittanceTexture;
+	typedef IShader::BindTexture AbstractSpectrumTexture;
+	typedef IShader::BindTexture ReducedScatteringTexture;
+	typedef IShader::BindTexture ScatteringTexture;
+	typedef IShader::BindTexture IrradianceTexture;
+	typedef IShader::BindTexture ScatteringDensityTexture;
 }

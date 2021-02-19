@@ -1,7 +1,7 @@
 #include "StreamComponent.h"
-
-#include <utility>
 #include "../../../BridgeSunset/BridgeSunset.h"
+#include "../../../../Core/Driver/Profiler/Optick/optick.h"
+#include <utility>
 
 using namespace PaintsNow;
 
@@ -34,6 +34,7 @@ void StreamComponent::Unload(Engine& engine, const UShort3& coord, const TShared
 }
 
 void StreamComponent::UnloadInternal(Engine& engine, Grid& grid, const TShared<SharedTiny>&context) {
+	OPTICK_EVENT();
 	if (unloadHandler.script) {
 		IScript::Request& request = *engine.bridgeSunset.requestPool.AcquireSafe();
 		IScript::Delegate<SharedTiny> w;
@@ -53,6 +54,7 @@ void StreamComponent::UnloadInternal(Engine& engine, Grid& grid, const TShared<S
 }
 
 SharedTiny* StreamComponent::Load(Engine& engine, const UShort3& coord, const TShared<SharedTiny>&context) {
+	OPTICK_EVENT();
 	size_t offset = (coord.z() * dimension.y() + coord.y()) * dimension.x() + coord.x();
 	uint16_t id = idGrids[offset];
 	SharedTiny* object = nullptr;

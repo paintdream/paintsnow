@@ -111,6 +111,7 @@ public:
 };
 
 void RenderFlowComponent::Compile() {
+	OPTICK_EVENT();
 	assert(!(Flag().load(std::memory_order_acquire) & TINY_ACTIVATED)); // aware of thread unsafe
 	std::vector<RenderStage*> result;
 	CallBatch batch(result);
@@ -185,6 +186,7 @@ struct TextureKey {
 };
 
 void RenderFlowComponent::ResolveSamplessAttachments() {
+	OPTICK_EVENT();
 	std::map<RenderPortRenderTargetStore*, RenderPortRenderTargetStore*> targetUnions;
 
 	for (size_t i = 0; i < cachedRenderStages.size(); i++) {
@@ -224,6 +226,7 @@ void RenderFlowComponent::ResolveSamplessAttachments() {
 }
 
 void RenderFlowComponent::SetupTextures(Engine& engine) {
+	OPTICK_EVENT();
 	// SetupTextures render stage texture storages
 	// Scan for sampless attachments
 
@@ -308,6 +311,7 @@ void RenderFlowComponent::SetupTextures(Engine& engine) {
 }
 
 void RenderFlowComponent::Initialize(Engine& engine, Entity* entity) {
+	OPTICK_EVENT();
 	Compile();
 
 	IRender::Device* device = engine.snowyStream.GetRenderDevice();

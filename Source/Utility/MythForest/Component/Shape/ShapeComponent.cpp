@@ -97,6 +97,7 @@ void ShapeComponent::Cleanup() {
 void ShapeComponent::Update(Engine& engine, const TShared<MeshResource>& resource) {
 	static_assert(alignof(Patch) == 8, "Patch align must be 8.");
 	if (resource == meshResource) return;
+	OPTICK_EVENT();
 
 	SnowyStream& snowyStream = engine.snowyStream;
 	if (resource->Map()) {
