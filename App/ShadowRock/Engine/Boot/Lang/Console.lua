@@ -2,6 +2,10 @@ function MakeConsole(filter, ...)
 	local args = table.pack(...)
 	local prefixes = { "", "return "}
 	ListenConsole(function (command)
+		if command == "!" then
+			return hotreload(false)
+		end
+
 		if filter then
 			command = filter(command)
 		end

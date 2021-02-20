@@ -21,3 +21,6 @@ end
 local status, msg = xpcall(Main, function (msg) 
 	print("Error: " .. tostring(msg) .. "\nCallstack: \n" .. debug.traceback())
 end,...)
+
+local Bootstrap = require("Engine/Boot/Bootstrap")
+MakeConsole()

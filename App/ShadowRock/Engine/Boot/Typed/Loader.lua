@@ -1,4 +1,5 @@
-local exts = { "", ".lua" }
+local runtimeexts = { "", ".lua" }
+local exts = runtimeexts
 TypedDescriptions = {}
 
 if EnableTL then
@@ -60,7 +61,7 @@ function package.searchpath(name, filter, ...)
 		return nil, "No tld file for Buildin module " .. name
 	end
 
-	for i, v in ipairs(exts) do
+	for i, v in ipairs(LoadLuaFirst and runtimeexts or exts) do
 		local c = name .. v
 		if SnowyStream.FileExists(c) then
 			return c
@@ -71,11 +72,12 @@ function package.searchpath(name, filter, ...)
 end
 
 function require(name, ...)
-	print("Requiring " .. name)
 	local mod = package.loaded[name]
 	if mod then
 		return mod
 	end
+
+	print("Require " .. name)
 
 	path, msg = package.searchpath(name, "")
 	if not path then
@@ -96,6 +98,40 @@ function require(name, ...)
 
 	package.loaded[name] = mod
 	return mod
+end
+
+function hotreload(forceRecompile)
+	LoadLuaFirst = false
+	local QuickCompile = require("Engine/Boot/QuickCompile")
+	local compiler = QuickCompile.New()
+
+	print("Hot compiling ...")
+	local changedFiles = {
+		compiler:CompileRecursive("Engine/", forceRecompile),
+		compiler:CompileRecursive("Script/", forceRecompile)
+	}
+
+	print("Hot reloading ...")
+	LoadLuaFirst = true
+	for i = 1, 2 do
+		for _, files in ipairs(changedFiles) do
+			if files.__ordered then
+				for _, name in pairs(files.__ordered) do
+					if files[name] or forceRecompile then
+						if i == 1 then
+							package.loaded[name] = nil -- unload
+						else
+							require(name)
+						end
+					end
+				end
+			end
+		end
+	end
+
+	LoadLuaFirst = false
+
+	print("Hot reload finished ...")
 end
 
 if EnableTL then

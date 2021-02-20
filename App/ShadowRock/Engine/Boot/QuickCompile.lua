@@ -89,18 +89,20 @@ function QuickCompile:CompileOne(filename, outputfile)
 end
 
 function QuickCompile:BuildUpdatedOne(filename, tree, forceRecompile)
+	-- check if it was already up to date
+	local title = filename:match("(.-)%.tl")
+	local outputfile = title .. ".lua"
+
 	-- already checked?
-	local state = tree[filename]
+	local state = tree[title]
 	if state then -- need compile
 		return true
 	elseif state == false then
 		return false
 	end
 
-	tree[filename] = false
-	-- check if it was already up to date
-	local title = filename:match("(.-)%.tl")
-	local outputfile = title .. ".lua"
+	tree[title] = false
+
 	if not forceRecompile then
 		local source = SnowyStream.NewFile(filename, false)
 		if source then
@@ -119,7 +121,7 @@ function QuickCompile:BuildUpdatedOne(filename, tree, forceRecompile)
 					-- print("TIME " .. srcLastModifiedTime .. " VS " .. checkerLastModifiedTime)
 					if checkerLastModifiedTime > srcLastModifiedTime then
 						-- already compiled?
-						tree[filename] = false
+						tree[title] = false
 						SnowyStream.CloseFile(source)
 						SnowyStream.CloseFile(checker)
 						return false
@@ -129,12 +131,14 @@ function QuickCompile:BuildUpdatedOne(filename, tree, forceRecompile)
 			end
 			SnowyStream.CloseFile(source)
 		else
-			tree[filename] = false
+			tree[title] = false
 			return false
 		end
 	end
 
-	tree[filename] = outputfile
+	tree.__ordered = tree.__ordered or {}
+	table.insert(tree.__ordered, title)
+	tree[title] = outputfile
 	return true
 end
 
@@ -154,10 +158,12 @@ function QuickCompile:CompileRecursive(path, forceRecompile)
 	local filelist = {}
 	self:BuildUpdatedRecursive(path, filelist, forceRecompile)
 	for k, v in SortedPairs(filelist) do
-		if v then
-			self:CompileOne(k, v)
+		if k ~= "__ordered" and v then
+			self:CompileOne(k .. ".tl", v)
 		end
 	end
+
+	return filelist
 end
 
 local function CollectRuntimeModules(path, mods)
