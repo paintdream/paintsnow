@@ -205,19 +205,18 @@ void DescriptorSetAllocator::FreeDescriptorSet(const std::pair<Node*, VkDescript
 	}
 }
 
-struct VulkanQueueImpl final : public IRender::Queue, public TPool<VulkanQueueImpl, VkCommandBuffer> {
-	VulkanQueueImpl(VulkanDeviceImpl* dev, VkCommandPool pool, uint32_t f) : device(dev), commandPool(pool), TPool<VulkanQueueImpl, VkCommandBuffer>(4), renderTargetResource(nullptr), flag(f) {
+struct VulkanQueueImpl final : public IRender::Queue {
+	enum { MAX_POOLED_BUFFER_COUNT = 4 };
+	struct BufferNode {
+		VkCommandBuffer buffer;
+		BufferNode* next;
+	};
+
+	VulkanQueueImpl(VulkanDeviceImpl* dev, VkCommandPool pool, uint32_t f) : device(dev), commandPool(pool), bufferPool(*this, MAX_POOLED_BUFFER_COUNT), renderTargetResource(nullptr), flag(f) {
 		critical.store(0u, std::memory_order_relaxed);
 		preparedCount.store(0, std::memory_order_release);
 
-		VkCommandBufferAllocateInfo info;
-		info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		info.commandBufferCount = safe_cast<uint32_t>(maxCount);
-		info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		info.commandPool = commandPool;
-		info.pNext = nullptr;
-
-		currentCommandBuffer = Acquire();
+		currentCommandBuffer = bufferPool.Acquire();
 		BeginCurrentCommandBuffer();
 	}
 
@@ -235,7 +234,7 @@ struct VulkanQueueImpl final : public IRender::Queue, public TPool<VulkanQueueIm
 
 	~VulkanQueueImpl() {
 		ClearFrameData();
-		freeItems.clear(); // VkCommandBuffer can be automatically freed as command pool destroys
+		bufferPool.Clear();
 		vkDestroyCommandPool(device->device, commandPool, device->allocator);
 	}
 
@@ -255,7 +254,8 @@ struct VulkanQueueImpl final : public IRender::Queue, public TPool<VulkanQueueIm
 		}
 	}
 
-	VkCommandBuffer New() {
+	BufferNode* allocate(size_t n) {
+		assert(n == 1);
 		VkCommandBufferAllocateInfo info;
 		info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		info.commandBufferCount = 1;
@@ -265,37 +265,46 @@ struct VulkanQueueImpl final : public IRender::Queue, public TPool<VulkanQueueIm
 
 		VkCommandBuffer ret = nullptr;
 		vkAllocateCommandBuffers(device->device, &info, &ret);
-		return ret;
+
+		BufferNode* node = new BufferNode();
+		node->buffer = ret;
+		node->next = nullptr;
+		return node;
 	}
 
-	void Delete(VkCommandBuffer buffer) {
-		vkFreeCommandBuffers(device->device, commandPool, 1, &buffer);
+	void construct(BufferNode* node) {}
+	void destroy(BufferNode* node) {}
+
+	void deallocate(BufferNode* node, size_t n) {
+		assert(n == 1);
+		vkFreeCommandBuffers(device->device, commandPool, 1, &node->buffer);
+		delete node;
 	}
 
 	void EndCurrentCommandBuffer() {
 		if (renderTargetResource != nullptr) {
-			vkCmdEndRenderPass(currentCommandBuffer);
+			vkCmdEndRenderPass(currentCommandBuffer->buffer);
 			renderTargetResource = nullptr;
 		}
 
-		vkEndCommandBuffer(currentCommandBuffer);
+		vkEndCommandBuffer(currentCommandBuffer->buffer);
 	}
 
 	void BeginCurrentCommandBuffer() {
 		VkCommandBufferBeginInfo info = {};
 		info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		info.flags = !(flag & IRender::PRESENT_REPEAT) ? VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT : 0;
-		vkBeginCommandBuffer(currentCommandBuffer, &info);
+		vkBeginCommandBuffer(currentCommandBuffer->buffer, &info);
 	}
 
 	void FlushCommandBuffer() {
 		EndCurrentCommandBuffer();
 
-		preparedCommandBuffers.Push(currentCommandBuffer);
+		preparedCommandBuffers.Push(currentCommandBuffer->buffer);
 		preparedCount.fetch_add(1, std::memory_order_release);
 
-		currentCommandBuffer = Acquire();
-		vkResetCommandBuffer(currentCommandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+		currentCommandBuffer = bufferPool.Acquire();
+		vkResetCommandBuffer(currentCommandBuffer->buffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 
 		BeginCurrentCommandBuffer();
 	}
@@ -307,10 +316,11 @@ struct VulkanQueueImpl final : public IRender::Queue, public TPool<VulkanQueueIm
 
 	VulkanDeviceImpl* device;
 	VkCommandPool commandPool;
-	VkCommandBuffer currentCommandBuffer;
+	BufferNode* currentCommandBuffer;
 	uint32_t flag;
 	std::atomic<uint32_t> critical;
 	std::atomic<uint32_t> preparedCount;
+	TPool<BufferNode, VulkanQueueImpl> bufferPool;
 
 	IRender::Resource::RenderStateDescription renderStateDescription;
 	ResourceImplVulkanBase* renderTargetResource;
@@ -760,7 +770,7 @@ struct ResourceImplVulkan<IRender::Resource::TextureDescription> final : public 
 			copyBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 			copyBarrier.subresourceRange.levelCount = 1;
 			copyBarrier.subresourceRange.layerCount = 1;
-			vkCmdPipelineBarrier(queue->currentCommandBuffer, VK_PIPELINE_STAGE_HOST_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1, &copyBarrier);
+			vkCmdPipelineBarrier(queue->currentCommandBuffer->buffer, VK_PIPELINE_STAGE_HOST_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1, &copyBarrier);
 
 			VkBufferImageCopy region = {};
 			region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -768,7 +778,7 @@ struct ResourceImplVulkan<IRender::Resource::TextureDescription> final : public 
 			region.imageExtent.width = desc.dimension.x();
 			region.imageExtent.height = desc.dimension.y();
 			region.imageExtent.depth = desc.state.type == IRender::Resource::TextureDescription::TEXTURE_3D ? Math::Max((uint32_t)desc.dimension.z(), 1u) : 1u;
-			vkCmdCopyBufferToImage(queue->currentCommandBuffer, uploadBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+			vkCmdCopyBufferToImage(queue->currentCommandBuffer->buffer, uploadBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
 			VkImageMemoryBarrier useBarrier = {};
 			useBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -782,7 +792,7 @@ struct ResourceImplVulkan<IRender::Resource::TextureDescription> final : public 
 			useBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 			useBarrier.subresourceRange.levelCount = 1;
 			useBarrier.subresourceRange.layerCount = 1;
-			vkCmdPipelineBarrier(queue->currentCommandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, NULL, 0, NULL, 1, &useBarrier);
+			vkCmdPipelineBarrier(queue->currentCommandBuffer->buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, NULL, 0, NULL, 1, &useBarrier);
 
 			queue->transientDataBuffers.Push(uploadBuffer);
 			desc.data.Clear();
@@ -1131,7 +1141,7 @@ struct ResourceImplVulkan<IRender::Resource::RenderTargetDescription> final : pu
 
 	virtual void Execute(VulkanQueueImpl* queue) override {
 		if (queue->renderTargetResource != nullptr) {
-			vkCmdEndRenderPass(queue->currentCommandBuffer);
+			vkCmdEndRenderPass(queue->currentCommandBuffer->buffer);
 		}
 
 		queue->renderTargetResource = this;
@@ -1188,8 +1198,8 @@ struct ResourceImplVulkan<IRender::Resource::RenderTargetDescription> final : pu
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
 
-		vkCmdBeginRenderPass(queue->currentCommandBuffer, &info, VK_SUBPASS_CONTENTS_INLINE);
-		vkCmdSetViewport(queue->currentCommandBuffer, 0, 1, &viewport);
+		vkCmdBeginRenderPass(queue->currentCommandBuffer->buffer, &info, VK_SUBPASS_CONTENTS_INLINE);
+		vkCmdSetViewport(queue->currentCommandBuffer->buffer, 0, 1, &viewport);
 	}
 
 	uint32_t signature;
@@ -1781,7 +1791,7 @@ void ResourceImplVulkan<IRender::Resource::DrawCallDescription>::Execute(VulkanQ
 	ResourceImplVulkan<IRender::Resource::ShaderDescription>* shaderResource = static_cast<ResourceImplVulkan<IRender::Resource::ShaderDescription>*>(cacheDescription.shaderResource);
 
 	PipelineInstance& pipelineInstance = shaderResource->QueryInstance(queue, this);
-	VkCommandBuffer commandBuffer = queue->currentCommandBuffer;
+	VkCommandBuffer commandBuffer = queue->currentCommandBuffer->buffer;
 	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineInstance.pipeline);
 	VkDescriptorSet descriptors[3];
 	uint32_t i = 0;
