@@ -747,8 +747,8 @@ namespace PaintsNow {
 	template <typename T, typename... Args>
 	class ScriptHandlerTemplate : public TaskOnce {
 	public:
-		template <typename... Params>
-		ScriptHandlerTemplate(T t, Params&&... params) : callback(t), arguments(std::forward<Params>(params)...) {}
+		template <typename C, typename... Params>
+		ScriptHandlerTemplate(C&& c, Params&&... params) : callback(std::forward<C>(c)), arguments(std::forward<Params>(params)...) {}
 
 		template <size_t... S>
 		void Apply(IScript::Request& context, seq<S...>) {
@@ -774,9 +774,9 @@ namespace PaintsNow {
 	};
 
 	template <typename T, typename... Args>
-	ITask* CreateTaskScriptHandler(T t, Args&&... args) {
-		void* p = ITask::Allocate(sizeof(ScriptHandlerTemplate<T, Args...>));
-		return new (p) ScriptHandlerTemplate<T, Args...>(t, std::forward<Args>(args)...);
+	ITask* CreateTaskScriptHandler(T&& t, Args&&... args) {
+		void* p = ITask::Allocate(sizeof(ScriptHandlerTemplate<typename std::decay<T>::type, Args...>));
+		return new (p) ScriptHandlerTemplate<typename std::decay<T>::type, Args...>(std::forward<T>(t), std::forward<Args>(args)...);
 	}
 
 #endif		

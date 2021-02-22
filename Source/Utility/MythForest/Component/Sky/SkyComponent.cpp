@@ -171,7 +171,7 @@ static double CieColorMatchingFunctionTableValue(double wavelength, int column) 
 		return 0.0;
 	}
 	double u = (wavelength - kLambdaMin) / 5.0;
-	int row = static_cast<int>(std::floor(u));
+	int row = static_cast<int>(floor(u));
 	assert(row >= 0 && row + 1 < 95);
 	assert(CIE_2_DEG_COLOR_MATCHING_FUNCTIONS[4 * row] <= wavelength &&
 		CIE_2_DEG_COLOR_MATCHING_FUNCTIONS[4 * (row + 1)] >= wavelength);
