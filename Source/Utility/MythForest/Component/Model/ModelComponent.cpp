@@ -125,7 +125,6 @@ uint32_t ModelComponent::CollectDrawCalls(std::vector<OutputRenderData, DrawCall
 	if (drawCallTemplates.empty()) return 0;
 	assert(!(Flag().fetch_or(Tiny::TINY_PINNED) & Tiny::TINY_PINNED));
 
-	drawCalls.reserve(drawCalls.size() + materialResources.size());
 	ShaderResource* overrideShaderTemplate = inputRenderData.overrideShaderTemplate;
 	uint32_t baseIndex = 0;
 	if (overrideShaderTemplate != nullptr) {
@@ -146,6 +145,7 @@ uint32_t ModelComponent::CollectDrawCalls(std::vector<OutputRenderData, DrawCall
 		}
 	}
 
+	drawCalls.reserve(drawCalls.size() + materialResources.size());
 	for (size_t i = 0; i < materialResources.size(); i++) {
 		drawCalls.emplace_back(drawCallTemplates[i + baseIndex]); // TODO: optimize copy performance
 	}

@@ -25,7 +25,6 @@ namespace PaintsNow {
 		AtmosphereParameters atmosphereParameters;
 		TShared<TextureResource> transmittance_texture;
 		TShared<TextureResource> scattering_texture;
-		TShared<TextureResource> single_mie_scattering_texture;
 		TShared<TextureResource> irradiance_texture;
 	};
 }
