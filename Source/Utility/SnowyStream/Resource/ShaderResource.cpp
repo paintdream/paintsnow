@@ -7,7 +7,10 @@ using namespace PaintsNow;
 ShaderResource::ShaderResource(ResourceManager& manager, const String& uniqueID) : BaseClass(manager, uniqueID), shaderResource(nullptr) {}
 
 ShaderResource::~ShaderResource() {
-	assert(shaderResource == nullptr);
+	if (shaderResource != nullptr) { // orphan?
+		DeviceResourceManager<IRender>& manager = static_cast<DeviceResourceManager<IRender>&>(resourceManager);
+		manager.GetDevice().DeleteResource(static_cast<IRender::Queue*>(resourceManager.GetContext()), shaderResource);
+	}
 }
 
 const String& ShaderResource::GetShaderName() const {
@@ -34,12 +37,23 @@ void ShaderResource::Attach(IRender& render, void* deviceContext) {
 	if (shaderResource != nullptr) return; // already attached.
 
 	IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(deviceContext);
-	// compile default shader
-	shaderResource = pass.Compile(render, queue);
+	Compile(render, queue);
 
 #ifdef _DEBUG
 	render.SetResourceNotation(shaderResource, GetLocation());
 #endif
+}
+
+void ShaderResource::Compile(IRender& render, IRender::Queue* queue, const Bytes* newHash) {
+	PassBase& pass = GetPass();
+	// compile default shader
+	if (newHash != nullptr) {
+		hashValue = *newHash;
+	} else {
+		hashValue = pass.ExportHash();
+	}
+
+	shaderResource = pass.Compile(render, queue, shaderResource);
 }
 
 IRender::Resource* ShaderResource::GetShaderResource() const {

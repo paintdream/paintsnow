@@ -106,6 +106,7 @@ TObject<IReflect>& SnowyStream::operator () (IReflect& reflect) {
 		ReflectMethod(RequestCloneResource)[ScriptMethod = "CloneResource"];
 		ReflectMethod(RequestMapResource)[ScriptMethod = "MapResource"];
 		ReflectMethod(RequestUnmapResource)[ScriptMethod = "UnmapResource"];
+		ReflectMethod(RequestModifyResource)[ScriptMethod = "ModifyResource"];
 		ReflectMethod(RequestInspectResource)[ScriptMethod = "InspectResource"];
 		ReflectMethod(RequestCompressResourceAsync)[ScriptMethod = "CompressResourceAsync"];
 		ReflectMethod(RequestNewResourcesAsync)[ScriptMethod = "NewResourcesAsync"];
@@ -403,7 +404,7 @@ void SnowyStream::RequestQueryFiles(IScript::Request& request, const String& p) 
 }
 
 TShared<ResourceBase> SnowyStream::RequestNewResource(IScript::Request& request, const String& path, const String& expectedResType, bool createAlways) {
-	TShared<ResourceBase> resource = CreateResource(path, expectedResType, !createAlways);
+	TShared<ResourceBase> resource = CreateResource(path, expectedResType, !createAlways, path.empty() ? ResourceBase::RESOURCE_VIRTUAL : 0);
 	bridgeSunset.GetKernel().YieldCurrentWarp();
 
 	if (resource) {
@@ -575,6 +576,13 @@ void SnowyStream::RequestUnmapResource(IScript::Request& request, IScript::Deleg
 	CHECK_DELEGATE(resource);
 
 	resource->Unmap();
+}
+
+void SnowyStream::RequestModifyResource(IScript::Request& request, IScript::Delegate<ResourceBase> resource, const String& action, IScript::Request::Arguments payload) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(resource);
+
+	resource->ScriptModify(request, action, payload);
 }
 
 void SnowyStream::RequestPersistResource(IScript::Request& request, IScript::Delegate<ResourceBase> resource, const String& extension) {

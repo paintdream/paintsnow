@@ -77,6 +77,12 @@ function StandardRenderFlow.New(bloomLayerCount : number) : RenderFlowComponent
 	-- Step 5: Apply HDR effects
 	local stageScreen : RenderStage = renderFlowComponent:NewRenderStage("ScreenRenderStage", strBloomLayer)
 	renderFlowComponent:LinkRenderStagePort(stageAntiAliasing, "OutputColor", stageScreen, "InputColor")
+	local screenMaterial = SnowyStream.NewResource("", "MaterialResource", true)
+	SnowyStream.ModifyResource(screenMaterial, "Set", {
+		"invAverageLuminance", 1.0 / 4.0,
+		"bloomIntensity", { 0.2, 0.3, 0.3 }
+	})
+	renderFlowComponent:OverrideRenderStageMaterial(stageScreen, screenMaterial as MaterialResource)
 
 	-- Step 6: Prepare Bloom
 	local lastStage = stageAntiAliasing

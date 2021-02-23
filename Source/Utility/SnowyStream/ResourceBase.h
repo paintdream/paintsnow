@@ -40,6 +40,7 @@ namespace PaintsNow {
 		virtual bool Persist();
 		virtual bool Map();
 		virtual void Unmap();
+		virtual void ScriptModify(IScript::Request& request, const String& action, IScript::Request::Arguments arguments);
 		bool IsMapped() const;
 
 		struct Dependency {

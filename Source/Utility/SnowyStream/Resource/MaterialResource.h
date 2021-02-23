@@ -20,14 +20,19 @@ namespace PaintsNow {
 		void Download(IRender& render, void* deviceContext) override;
 		void Attach(IRender& render, void* deviceContext) override;
 		void Detach(IRender& render, void* deviceContext) override;
+		void ScriptModify(IScript::Request& request, const String& action, IScript::Request::Arguments args);
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		TShared<ShaderResource> Instantiate(const TShared<MeshResource>& mesh, IRender::Resource::DrawCallDescription& drawCallTemplate, std::vector<Bytes>& bufferData);
 		TShared<MaterialResource> CloneWithOverrideShader(const TShared<ShaderResource>& override);
+		void Refresh(IRender& render, IRender::Queue* queue, const TShared<ShaderResource>& original);
 
 		IAsset::Material materialParams;
 		TShared<ShaderResource> originalShaderResource;
 		std::vector<TShared<TextureResource> > textureResources;
+
+	protected:
+		void ApplyMaterial(const TShared<ShaderResource>& original);
 	};
 }
 

@@ -18,12 +18,14 @@ namespace PaintsNow {
 		BindTexture inputBloomTexture0;
 		BindTexture inputBloomTexture1;
 		BindTexture inputBloomTexture2;
+		BindBuffer paramBuffer;
 
 	protected:
 		Float2 rasterCoord;
 		Float4 outputColor;
 
-		float bloomIntensity;
+		Float3 bloomIntensity;
+		float invAverageLuminance;
 	};
 }
 

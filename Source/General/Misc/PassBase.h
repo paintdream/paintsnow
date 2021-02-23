@@ -21,7 +21,7 @@ namespace PaintsNow {
 		virtual void SetCode(const String& stage, const String& code, const std::vector<std::pair<String, String> >& config);
 		virtual void SetComplete();
 
-		IRender::Resource* Compile(IRender& render, IRender::Queue* queue, const TWrapper<void, IRender::Resource*, IRender::Resource::ShaderDescription&, IRender::Resource::ShaderDescription::Stage, const String&, const String&>& callback = TWrapper<void, IRender::Resource*, IRender::Resource::ShaderDescription&, IRender::Resource::ShaderDescription::Stage, const String&, const String&>(), void* context = nullptr, IRender::Resource* existedShaderResource = nullptr);
+		IRender::Resource* Compile(IRender& render, IRender::Queue* queue, IRender::Resource* existedShaderResource = nullptr, const TWrapper<void, IRender::Resource*, IRender::Resource::ShaderDescription&, IRender::Resource::ShaderDescription::Stage, const String&, const String&>& callback = TWrapper<void, IRender::Resource*, IRender::Resource::ShaderDescription&, IRender::Resource::ShaderDescription::Stage, const String&, const String&>(), void* context = nullptr);
 		void ClearBindings();
 		virtual bool FlushOptions();
 		Bytes ExportHash() const;
@@ -41,8 +41,8 @@ namespace PaintsNow {
 
 			inline Parameter& operator = (const Bytes& data) {
 				if (internalAddress != nullptr) {
-					assert(type->GetSize() == data.GetSize());
-					memcpy(internalAddress, data.GetData(), data.GetSize());
+					assert(type->GetSize() <= data.GetSize());
+					memcpy(internalAddress, data.GetData(), type->GetSize());
 				}
 
 				return *this;

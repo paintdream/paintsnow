@@ -551,6 +551,8 @@ void CameraComponent::OnTickHost(Engine& engine, Entity* hostEntity) {
 }
 
 void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskData, RenderableComponent* renderableComponent, TaskData::WarpData& warpData, const WorldInstanceData& instanceData) {
+	OPTICK_EVENT();
+
 	IRender& render = engine.interfaces.render;
 	IRender::Device* device = engine.snowyStream.GetRenderDevice();
 	IDrawCallProvider::InputRenderData inputRenderData(instanceData.viewReference, nullptr, renderFlowComponent->GetMainResolution());
@@ -611,6 +613,7 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 			std::vector<IRender::Resource::DrawCallDescription::BufferRange> bufferResources;
 			InstanceGroup& group = instanceGroups[key];
 			if (group.instanceCount == 0) {
+				OPTICK_EVENT("New InstanceGroup");
 				std::binary_insert(warpData.dataUpdaters, drawCall.dataUpdater);
 				group.renderPolicy = renderPolicy;
 
@@ -622,6 +625,7 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 				TaskData::PolicyData& policyData = ip->second;
 				IRender::Queue*& queue = policyData.portQueue;
 				if (queue == nullptr) {
+					OPTICK_EVENT("Create RenderQueue");
 					queue = render.CreateQueue(device);
 					policyData.instanceBuffer = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_BUFFER);
 				}
@@ -649,6 +653,7 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 				PassBase::Updater& updater = drawCall.shaderResource->GetPassUpdater();
 				std::vector<std::key_value<ShaderResource*, TaskData::WarpData::GlobalBufferItem> >::iterator ig = std::binary_find(warpData.worldGlobalBufferMap.begin(), warpData.worldGlobalBufferMap.end(), drawCall.shaderResource());
 				if (ig == warpData.worldGlobalBufferMap.end()) {
+					OPTICK_EVENT("Create GlobalBuffer");
 					ig = std::binary_insert(warpData.worldGlobalBufferMap, drawCall.shaderResource());
 
 					ig->second.renderQueue = queue;
@@ -777,6 +782,7 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 }
 
 void CameraComponent::CollectEnvCubeComponent(EnvCubeComponent* envCubeComponent, std::vector<std::pair<TShared<RenderPolicy>, EnvCubeElement> >& envCubeElements, const MatrixFloat4x4& worldMatrix) const {
+	OPTICK_EVENT();
 	EnvCubeElement element;
 	element.position = Float3(worldMatrix(3, 0), worldMatrix(3, 1), worldMatrix(3, 2));
 	element.cubeMapTexture = envCubeComponent->cubeMapTexture;
@@ -803,6 +809,7 @@ void CameraComponent::CompleteCollect(Engine& engine, TaskData& taskData) {
 }
 
 void CameraComponent::CollectLightComponent(Engine& engine, LightComponent* lightComponent, std::vector<std::pair<TShared<RenderPolicy>, LightElement> >& lightElements, const MatrixFloat4x4& worldMatrix, const TaskData& taskData) const {
+	OPTICK_EVENT();
 	LightElement element;
 	Entity* rootEntity = bridgeComponent->GetHostEntity();
 	if (lightComponent->Flag().load(std::memory_order_relaxed) & LightComponent::LIGHTCOMPONENT_DIRECTIONAL) {

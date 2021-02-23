@@ -9,8 +9,9 @@
 
 namespace PaintsNow {
 	class Weaver;
-	class Controller : public TReflected<Controller, ProxyStub>, public IScript::Remote<Weaver> {
+	class Controller : public TReflected<Controller, ProxyStub> {
 	public:
+		typedef Weaver Prototype;
 		Controller(IThread& threadApi, ITunnel& tunnel, const String& entry);
 		~Controller() override;
 		TObject<IReflect>& operator () (IReflect& reflect) override;

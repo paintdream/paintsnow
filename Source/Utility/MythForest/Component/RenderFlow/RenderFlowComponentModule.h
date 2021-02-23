@@ -78,6 +78,14 @@ namespace PaintsNow {
 		void RequestExportRenderStagePort(IScript::Request& request, IScript::Delegate<RenderFlowComponent> renderFlowComponent, IScript::Delegate<RenderStage> stage, const String& portName, const String& symbol);
 
 		/// <summary>
+		/// Set material overrider for render stage
+		/// </summary>
+		/// <param name="renderFlowComponent"> the RenderFlowComponent </param>
+		/// <param name="renderStage"> the renderstage </param>
+		/// <param name="renderTargetResource"> override materialResource </param>
+		void RequestOverrideRenderStageMaterial(IScript::Request& request, IScript::Delegate<RenderFlowComponent> renderFlowComponent, IScript::Delegate<RenderStage> renderStage, IScript::Delegate<MaterialResource> materialResource);
+
+		/// <summary>
 		/// Bind output symbol with RenderTarget
 		/// </summary>
 		/// <param name="renderFlowComponent"> the RenderFlowComponent </param>

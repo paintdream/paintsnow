@@ -1,6 +1,8 @@
 #include "SkyCommonDef.h"
 using namespace PaintsNow;
 
+DensityProfileLayer::DensityProfileLayer(double width, double exp_term, double exp_scale, double linear_term, double constant_term) : width((float)width), exp_term((float)exp_term), exp_scale((float)exp_scale), linear_term((float)linear_term), constant_term((float)constant_term) {}
+
 TObject<IReflect>& DensityProfileLayer::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 

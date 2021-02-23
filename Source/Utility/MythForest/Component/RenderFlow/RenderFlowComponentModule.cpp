@@ -64,6 +64,7 @@ TObject<IReflect>& RenderFlowComponentModule::operator () (IReflect& reflect) {
 		ReflectMethod(RequestLinkRenderStagePort)[ScriptMethodLocked = "LinkRenderStagePort"];
 		ReflectMethod(RequestUnlinkRenderStagePort)[ScriptMethodLocked = "UnlinkRenderStagePort"];
 		ReflectMethod(RequestExportRenderStagePort)[ScriptMethodLocked = "ExportRenderStagePort"];
+		ReflectMethod(RequestOverrideRenderStageMaterial)[ScriptMethodLocked = "OverrideRenderStageMaterial"];
 		ReflectMethod(RequestBindRenderTargetTexture)[ScriptMethodLocked = "BindRenderTargetTexture"];
 		ReflectMethod(RequestDeleteRenderStage)[ScriptMethodLocked = "DeleteRenderStage"];
 	}
@@ -214,6 +215,15 @@ void RenderFlowComponentModule::RequestDeleteRenderStage(IScript::Request& reque
 	CHECK_THREAD_IN_MODULE(renderFlowComponent);
 
 	renderFlowComponent->RemoveNode(stage.Get());
+}
+
+void RenderFlowComponentModule::RequestOverrideRenderStageMaterial(IScript::Request& request, IScript::Delegate<RenderFlowComponent> renderFlowComponent, IScript::Delegate<RenderStage> renderStage, IScript::Delegate<MaterialResource> materialResource) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(renderFlowComponent);
+	CHECK_DELEGATE(renderStage);
+	CHECK_THREAD_IN_MODULE(renderFlowComponent);
+
+	renderStage->overrideMaterial = materialResource.Get();
 }
 
 TShared<RenderPolicy> RenderFlowComponentModule::RequestNewRenderPolicy(IScript::Request& request, const String& name, uint16_t priorityBegin, uint16_t priorityEnd) {

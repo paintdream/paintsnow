@@ -8,6 +8,7 @@
 #include "../../Engine.h"
 #include "../../../SnowyStream/SnowyStream.h"
 #include "../../../SnowyStream/Resource/MeshResource.h"
+#include "../../../SnowyStream/Resource/MaterialResource.h"
 
 namespace PaintsNow {
 	class RenderFlowComponent;
@@ -40,6 +41,7 @@ namespace PaintsNow {
 
 		IRender::Resource::RenderStateDescription renderStateDescription;
 		IRender::Resource::RenderTargetDescription renderTargetDescription;
+		TShared<MaterialResource> overrideMaterial;
 
 	protected:
 		IRender::Resource* renderState;
@@ -72,7 +74,8 @@ namespace PaintsNow {
 
 	protected:
 		inline IRender::Resource* GetShaderResource() const {
-			return sharedShader->GetShaderResource();
+			IRender::Resource* resource = shaderInstance->GetShaderResource();
+			return resource == nullptr ? sharedShader->GetShaderResource() : resource;
 		}
 
 		inline T& GetPass() {
@@ -81,6 +84,17 @@ namespace PaintsNow {
 
 		PassBase::Updater& GetPassUpdater() {
 			return shaderInstance->GetPassUpdater();
+		}
+
+		void Update(Engine& engine, IRender::Queue* queue) override {
+			if (BaseClass::overrideMaterial && (BaseClass::overrideMaterial->Flag().load(std::memory_order_acquire) & Tiny::TINY_MODIFIED)) {
+				if (BaseClass::overrideMaterial->Flag().fetch_and(~Tiny::TINY_MODIFIED) & Tiny::TINY_MODIFIED) {
+					// flush material 
+					BaseClass::overrideMaterial->Refresh(engine.interfaces.render, queue, shaderInstance());
+				}
+			}
+
+			BaseClass::Update(engine, queue);
 		}
 
 	protected:

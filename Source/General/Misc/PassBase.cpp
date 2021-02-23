@@ -1,5 +1,6 @@
 #include "PassBase.h"
 #include <string>
+#include "../../Core/Driver/Profiler/Optick/optick.h"
 
 using namespace PaintsNow;
 
@@ -40,7 +41,7 @@ public:
 	ShaderMap shaders;
 };
 
-IRender::Resource* PassBase::Compile(IRender& render, IRender::Queue* queue, const TWrapper<void, IRender::Resource*, IRender::Resource::ShaderDescription&, IRender::Resource::ShaderDescription::Stage, const String&, const String&>& callback, void* context, IRender::Resource* existedShaderResource) {
+IRender::Resource* PassBase::Compile(IRender& render, IRender::Queue* queue, IRender::Resource* existedShaderResource, const TWrapper<void, IRender::Resource*, IRender::Resource::ShaderDescription&, IRender::Resource::ShaderDescription::Stage, const String&, const String&>& callback, void* context) {
 	IRender::Resource* shader = existedShaderResource != nullptr ? existedShaderResource : render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_SHADER);
 
 	IRender::Resource::ShaderDescription shaderDescription;
@@ -579,6 +580,7 @@ struct CachedSnapshot : public CachedSnapshotBase<useBytesCache> {
 };
 
 void PassBase::PartialUpdater::Snapshot(std::vector<Bytes>& bufferData, std::vector<IRender::Resource::DrawCallDescription::BufferRange>& bufferResources, std::vector<IRender::Resource*>& textureResources, const PassBase::PartialData& partialData, BytesCache* bytesCache) const {
+	OPTICK_EVENT();
 	if (bytesCache != nullptr) {
 		CachedSnapshot<true> snapshot(bytesCache);
 		snapshot.Snapshot(parameters, bufferData, bufferResources, textureResources, partialData, bytesCache);
@@ -638,6 +640,7 @@ public:
 };
 
 void PassBase::PartialData::Export(PartialUpdater& particalUpdater, PassBase::Updater& updater) const {
+	OPTICK_EVENT();
 	ReflectPartial reflector(updater);
 	(*const_cast<PassBase::PartialData*>(this))(reflector);
 

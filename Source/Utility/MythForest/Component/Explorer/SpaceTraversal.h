@@ -7,6 +7,7 @@
 #include "../../../../Core/Template/TProxy.h"
 #include "../Renderable/RenderableComponent.h"
 #include "../Space/SpaceComponent.h"
+#include "../../../../Core/Driver/Profiler/Optick/optick.h"
 
 namespace PaintsNow {
 	template <class T, class Config>
@@ -56,6 +57,7 @@ namespace PaintsNow {
 		}
 
 		void CollectComponentsFromSpace(Engine& engine, TaskData& taskData, const WorldInstanceData& instanceData, const CaptureData& captureData, SpaceComponent* spaceComponent) {
+			OPTICK_EVENT();
 			std::atomic<uint32_t>& pendingCount = reinterpret_cast<std::atomic<uint32_t>&>(taskData.pendingCount);
 
 			assert(pendingCount.load(std::memory_order_acquire) != 0); // must increase it before calling me.

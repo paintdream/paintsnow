@@ -79,6 +79,7 @@ namespace PaintsNow {
 	// clamped to [0,1], and where h is the altitude.
 	class DensityProfileLayer : public TReflected<DensityProfileLayer, IReflectObjectComplex> {
 	public:
+		DensityProfileLayer(double width = 0.0, double exp_term = 0.0, double exp_scale = 0.0, double linear_term = 0.0, double constant_term = 0.0);
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		Length width;

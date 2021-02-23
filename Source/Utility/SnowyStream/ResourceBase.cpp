@@ -109,6 +109,8 @@ bool ResourceBase::Compress(const String& compressType) {
 	return false; // by default no compression available
 }
 
+void ResourceBase::ScriptModify(IScript::Request& request, const String& action, IScript::Request::Arguments arguments) {}
+
 bool ResourceBase::Persist() {
 	return resourceManager.GetUniformResourceManager().SaveResource(this);
 }
@@ -266,3 +268,4 @@ bool MetaResourceInternalPersist::Write(IStreamBase& streamBase, const void* ptr
 IReflectObject* MetaResourceInternalPersist::Clone() const {
 	return new MetaResourceInternalPersist(*this);
 }
+

@@ -21,7 +21,7 @@ String StandardLightingBufferEncodedFS::GetEnvironmentLighting(float& retValue, 
 
 String StandardLightingBufferEncodedFS::GetShaderText() {
 	return UnifyShaderCode(
-		baseColor = pow(baseColor, float3(GAMMA, GAMMA, GAMMA));
+	baseColor = pow(baseColor, float3(GAMMA, GAMMA, GAMMA));
 	float3 diff = (baseColor - baseColor * metallic) / PI;
 	float3 spec = lerp(float3(0.04, 0.04, 0.04), baseColor, metallic);
 	float3 V = -normalize(viewPosition);

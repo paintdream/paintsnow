@@ -5,12 +5,14 @@
 using namespace PaintsNow;
 
 ScreenFS::ScreenFS() {
-	bloomIntensity = 1.0f;
+	bloomIntensity = Float3(0.15f, 0.2f, 0.3f);
+	invAverageLuminance = 1.0f / 5.0f;
 	
 	inputColorTexture.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
 	inputBloomTexture0.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
 	inputBloomTexture1.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
 	inputBloomTexture2.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
+	paramBuffer.description.usage = IRender::Resource::BufferDescription::UNIFORM;
 }
 
 // https://github.com/TheRealMJP/BakingLab/blob/master/BakingLab/ACES.hlsl
@@ -30,15 +32,20 @@ String ScreenFS::GetShaderText() {
 		);
 
 		float4 bloomColor = float4(0, 0, 0, 0);
-		bloomColor += texture(inputBloomTexture0, rasterCoord);
-		// bloomColor += texture(inputBloomTexture1, rasterCoord);
-		// bloomColor += texture(inputBloomTexture2, rasterCoord);
+		bloomColor += texture(inputBloomTexture0, rasterCoord) * bloomIntensity.x;
+		bloomColor += texture(inputBloomTexture1, rasterCoord) * bloomIntensity.y;
+		bloomColor += texture(inputBloomTexture2, rasterCoord) * bloomIntensity.z;
 
 		float3 color = texture(inputColorTexture, rasterCoord).xyz;
-		color = mult_vec(ACESInputMat, color + bloomColor.xyz);
-		float3 a = color * (color + float3(0.0245786f, 0.0245786f, 0.0245786f)) - float3(0.000090537f, 0.000090537f, 0.000090537f);
-		float3 b = color * (color * 0.983729f + float3(0.4329510f, 0.4329510f, 0.4329510f)) + float3(0.238081f, 0.238081f, 0.238081f);
-		outputColor.xyz = saturate(mult_vec(ACESOutputMat, a / b));
+		const float A = 2.51f;
+		const float B = 0.03f;
+		const float C = 2.43f;
+		const float D = 0.59f;
+		const float E = 0.14f;
+		color = max(mult_vec(ACESInputMat, (color + bloomColor.xyz) * invAverageLuminance), float3(0.0, 0.0, 0.0));
+		color = color * (color * A + float3(B, B, B)) / (color * (color * C + float3(D, D, D)) + float3(E, E, E));
+		outputColor.xyz = saturate(mult_vec(ACESOutputMat, color));
+		outputColor.xyz = pow(outputColor.xyz, float3(1.0 / GAMMA, 1.0 / GAMMA, 1.0 / GAMMA));
 		outputColor.w = 1;
 	);
 }
@@ -51,10 +58,12 @@ TObject<IReflect>& ScreenFS::operator () (IReflect& reflect) {
 		ReflectProperty(inputBloomTexture0);
 		ReflectProperty(inputBloomTexture1);
 		ReflectProperty(inputBloomTexture2);
+		ReflectProperty(paramBuffer);
 		ReflectProperty(rasterCoord)[BindInput(BindInput::TEXCOORD)];
 		ReflectProperty(outputColor)[BindOutput(BindOutput::COLOR)];
 
-		ReflectProperty(bloomIntensity)[IShader::BindConst<float>()];
+		ReflectProperty(bloomIntensity)[paramBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(invAverageLuminance)[paramBuffer][BindInput(BindInput::GENERAL)];
 	}
 
 	return *this;

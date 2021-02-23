@@ -95,6 +95,16 @@ namespace PaintsNow {
 		void RequestUnmapResource(IScript::Request& request, IScript::Delegate<ResourceBase> resource);
 
 		/// <summary>
+		/// Modify resource content
+		/// </summary>
+		/// <param name="resource"> Resource object </param>
+		/// <param name="action"> Modify action </param>
+		/// <param name="payload"> payload data </param>
+		/// <returns></returns>
+		void RequestModifyResource(IScript::Request& request, IScript::Delegate<ResourceBase> resource, const String& action, IScript::Request::Arguments payload);
+
+
+		/// <summary>
 		/// Clone resource to new path
 		/// </summary>
 		/// <param name="resource"> Resource object </param>

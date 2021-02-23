@@ -74,7 +74,7 @@ void ShaderComponent::SetComplete(Engine& engine) {
 	updater.Initialize(pass);
 
 	// fill vertex buffers
-	pass.Compile(render, queue, Wrap(this, &ShaderComponent::OnShaderCompiled), &engine, customMaterialShader->GetShaderResource());
+	pass.Compile(render, queue, customMaterialShader->GetShaderResource(), Wrap(this, &ShaderComponent::OnShaderCompiled), &engine);
 }
 
 void ShaderComponent::OnShaderCompiled(IRender::Resource* resource, IRender::Resource::ShaderDescription& desc, IRender::Resource::ShaderDescription::Stage stage, const String& info, const String& shaderCode) {
