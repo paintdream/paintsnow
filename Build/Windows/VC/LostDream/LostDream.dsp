@@ -119,6 +119,10 @@ SOURCE=..\..\..\..\Source\Utility\LostDream\Reflection\RPC.cpp
 
 SOURCE=..\..\..\..\Source\Utility\LostDream\Reflection\Serialization.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\LostDream\Parallel\TaskAllocator.cpp
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
@@ -134,6 +138,10 @@ SOURCE=..\..\..\..\Source\Utility\LostDream\LostDream.h
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\LostDream\Spatial\Memory.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\LostDream\Parallel\Parallel.h
 # End Source File
 # Begin Source File
 
@@ -154,6 +162,10 @@ SOURCE=..\..\..\..\Source\Utility\LostDream\Reflection\Serialization.h
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\LostDream\Spatial\Spatial.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\LostDream\Parallel\TaskAllocator.h
 # End Source File
 # End Group
 # End Target
