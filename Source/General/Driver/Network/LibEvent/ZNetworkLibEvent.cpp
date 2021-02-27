@@ -431,7 +431,9 @@ void ZNetworkLibEvent::DeactivateListener(Listener* l) {
 			listener->listener = nullptr;
 		}
 
-		event_free(listener->ev);
+		if (listener->ev != nullptr) {
+			event_free(listener->ev);
+		}
 	}
 }
 

@@ -118,7 +118,7 @@ namespace PaintsNow {
 		void DispatchTasks(Engine& engine);
 		void PostProcess(TaskData& task);
 
-		void CoTaskAssembleTask(Engine& engine, TaskData& task, uint32_t face);
+		void CoTaskAssembleTask(Engine& engine, TaskData& task, uint32_t face, const TShared<VisibilityComponent>& selfHolder);
 		void SetupIdentities(Engine& engine, Entity* hostEntity);
 		void CollectRenderableComponent(Engine& engine, TaskData& task, RenderableComponent* renderableComponent, WorldInstanceData& instanceData, uint32_t identity);
 		void CollectComponents(Engine& engine, TaskData& task, const WorldInstanceData& instanceData, const CaptureData& captureData, Entity* entity);

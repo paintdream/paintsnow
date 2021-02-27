@@ -572,7 +572,7 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 	}
 }
 
-void VisibilityComponent::CoTaskAssembleTask(Engine& engine, TaskData& task, uint32_t face) {
+void VisibilityComponent::CoTaskAssembleTask(Engine& engine, TaskData& task, uint32_t face, const TShared<VisibilityComponent>& selfHolder) {
 	OPTICK_EVENT();
 	if (hostEntity == nullptr) return;
 
@@ -670,7 +670,7 @@ void VisibilityComponent::DispatchTasks(Engine& engine) {
 			task.cell = cell;
 			std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(task.status);
 			finalStatus.store(TaskData::STATUS_DISPATCHED, std::memory_order_release);
-			threadPool.Push(CreateCoTaskContextFree(kernel, Wrap(this, &VisibilityComponent::CoTaskAssembleTask), std::ref(engine), std::ref(task), k));
+			threadPool.Push(CreateCoTaskContextFree(kernel, Wrap(this, &VisibilityComponent::CoTaskAssembleTask), std::ref(engine), std::ref(task), k, this));
 		}
 
 		n += k;
