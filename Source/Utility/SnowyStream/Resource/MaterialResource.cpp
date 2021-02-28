@@ -20,9 +20,9 @@ void MaterialResource::ApplyMaterial(const TShared<ShaderResource>& original) {
 				// Lookup texture 
 				IAsset::TextureIndex textureIndex = var.Parse(UniqueType<IAsset::TextureIndex>());
 				IRender::Resource* texture = nullptr;
-				assert(textureIndex.index < textureResources.size());
-				if (textureIndex.index < textureResources.size()) {
-					TShared<TextureResource>& res = textureResources[textureIndex.index];
+				assert(textureIndex.value < textureResources.size());
+				if (textureIndex.value < textureResources.size()) {
+					TShared<TextureResource>& res = textureResources[textureIndex.value];
 					assert(res);
 					if (res) {
 						texture = res->GetRenderResource();
@@ -30,6 +30,10 @@ void MaterialResource::ApplyMaterial(const TShared<ShaderResource>& original) {
 				}
 
 				parameter = texture;
+			} else if (var.type == IAsset::TYPE_TEXTURE_RUNTIME || var.type == IAsset::TYPE_BUFFER_RUNTIME) {
+				assert(var.value.GetSize() == sizeof(IRender::Resource*));
+				IRender::Resource* renderResource = *reinterpret_cast<IRender::Resource* const*>(var.value.GetData());
+				parameter = renderResource;
 			} else {
 				parameter = var.value;
 			}
@@ -37,7 +41,7 @@ void MaterialResource::ApplyMaterial(const TShared<ShaderResource>& original) {
 	}
 }
 
-void MaterialResource::Refresh(IRender& render, IRender::Queue* queue, const TShared<ShaderResource>& original) {
+void MaterialResource::Export(IRender& render, IRender::Queue* queue, const TShared<ShaderResource>& original) {
 	Bytes templateHash = original->GetHashValue();
 	PassBase& pass = original->GetPass();
 	ApplyMaterial(original);
@@ -281,34 +285,89 @@ void MaterialResource::ScriptModify(IScript::Request& request, const String& act
 		request >> endarray;
 		request.UnLock();
 
-		if (materialParams.variables.empty()) {
-			std::swap(materialParams.variables, variables);
-		} else {
-			// merge parameters
-			for (size_t i = 0; i < variables.size(); i++) {
-				IAsset::Material::Variable& variable = variables[i];
-
-				size_t k;
-				for (k = 0; k < materialParams.variables.size(); k++) {
-					IAsset::Material::Variable& target = materialParams.variables[k];
-					if (target.key == variable.key) {
-						target.type = variable.type;
-						target.value = std::move(variable.value);
-						break;
-					}
-				}
-
-				if (k == materialParams.variables.size()) {
-					// add new one
-					materialParams.variables.emplace_back(std::move(variable));
-				}
-			}
-		}
+		MergeParameters(variables);
 	} else if (action == "Clear") {
 		materialParams.variables.clear();
 	}
 
 	Flag().fetch_or(TINY_MODIFIED, std::memory_order_release);
+}
+
+void MaterialResource::MergeParameters(std::vector<IAsset::Material::Variable>& variables) {
+	if (materialParams.variables.empty()) {
+		std::swap(materialParams.variables, variables);
+	} else {
+		// merge parameters
+		for (size_t i = 0; i < variables.size(); i++) {
+			IAsset::Material::Variable& variable = variables[i];
+
+			size_t k;
+			for (k = 0; k < materialParams.variables.size(); k++) {
+				IAsset::Material::Variable& target = materialParams.variables[k];
+				if (target.key == variable.key) {
+					target.type = variable.type;
+					target.value = std::move(variable.value);
+					break;
+				}
+			}
+
+			if (k == materialParams.variables.size()) {
+				// add new one
+				materialParams.variables.emplace_back(std::move(variable));
+			}
+		}
+	}
+}
+
+void MaterialResource::Clear() {
+	materialParams = IAsset::Material();
+	textureResources.clear();
+}
+
+void MaterialResource::Import(const TShared<ShaderResource>& shaderResource) {
+	assert(Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_ORPHAN);
+	assert(shaderResource);
+	PassBase::Updater& updater = shaderResource->GetPassUpdater();
+	const std::vector<PassBase::Parameter>& parameters = updater.GetParameters();
+	std::vector<IAsset::Material::Variable> variables;
+	const std::vector<std::key_value<Bytes, uint32_t> >& keys = updater.GetParameterKeys();
+
+	for (size_t i = 0; i < keys.size(); i++) {
+		String name((const char*)keys[i].first.GetData(), keys[i].first.GetSize());
+		const PassBase::Parameter& parameter = parameters[keys[i].second];
+
+		if (parameter.type == UniqueType<IRender::Resource*>::Get()) {
+			if (parameter.resourceType == IRender::Resource::RESOURCE_TEXTURE) {
+				variables.emplace_back(IAsset::Material::Variable(name, IAsset::TextureRuntime(*reinterpret_cast<IRender::Resource* const*>(parameter.internalAddress))));
+			} else if (parameter.resourceType == IRender::Resource::RESOURCE_BUFFER) {
+				// TODO: track buffers
+			}
+		} else {
+			if (parameter.type == UniqueType<float>::Get()) {
+				variables.emplace_back(IAsset::Material::Variable(name, *reinterpret_cast<float*>(parameter.internalAddress)));
+			} else if (parameter.type == UniqueType<Float2>::Get()) {
+				variables.emplace_back(IAsset::Material::Variable(name, *reinterpret_cast<Float2*>(parameter.internalAddress)));
+			} else if (parameter.type == UniqueType<Float3>::Get()) {
+				variables.emplace_back(IAsset::Material::Variable(name, *reinterpret_cast<Float3*>(parameter.internalAddress)));
+			} else if (parameter.type == UniqueType<Float4>::Get()) {
+				variables.emplace_back(IAsset::Material::Variable(name, *reinterpret_cast<Float4*>(parameter.internalAddress)));
+			} else if (parameter.type == UniqueType<MatrixFloat3x3>::Get()) {
+				variables.emplace_back(IAsset::Material::Variable(name, *reinterpret_cast<MatrixFloat3x3*>(parameter.internalAddress)));
+			} else if (parameter.type == UniqueType<MatrixFloat4x4>::Get()) {
+				variables.emplace_back(IAsset::Material::Variable(name, *reinterpret_cast<MatrixFloat4x4*>(parameter.internalAddress)));
+			} else if (parameter.type == UniqueType<bool>::Get()) {
+				variables.emplace_back(IAsset::Material::Variable(name, *reinterpret_cast<bool*>(parameter.internalAddress)));
+			} else if (parameter.type == UniqueType<uint8_t>::Get()) {
+				variables.emplace_back(IAsset::Material::Variable(name, *reinterpret_cast<uint8_t*>(parameter.internalAddress)));
+			} else if (parameter.type == UniqueType<uint16_t>::Get()) {
+				variables.emplace_back(IAsset::Material::Variable(name, *reinterpret_cast<uint16_t*>(parameter.internalAddress)));
+			} else if (parameter.type == UniqueType<uint32_t>::Get()) {
+				variables.emplace_back(IAsset::Material::Variable(name, *reinterpret_cast<uint32_t*>(parameter.internalAddress)));
+			}
+		}
+	}
+
+	MergeParameters(variables);
 }
 
 TObject<IReflect>& MaterialResource::operator () (IReflect& reflect) {

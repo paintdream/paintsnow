@@ -25,7 +25,10 @@ namespace PaintsNow {
 
 		TShared<ShaderResource> Instantiate(const TShared<MeshResource>& mesh, IRender::Resource::DrawCallDescription& drawCallTemplate, std::vector<Bytes>& bufferData);
 		TShared<MaterialResource> CloneWithOverrideShader(const TShared<ShaderResource>& override);
-		void Refresh(IRender& render, IRender::Queue* queue, const TShared<ShaderResource>& original);
+		void Export(IRender& render, IRender::Queue* queue, const TShared<ShaderResource>& original);
+		void Clear();
+		void Import(const TShared<ShaderResource>& original);
+		void MergeParameters(std::vector<IAsset::Material::Variable>& variables);
 
 		IAsset::Material materialParams;
 		TShared<ShaderResource> originalShaderResource;

@@ -79,7 +79,7 @@ function StandardRenderFlow.New(bloomLayerCount : number) : RenderFlowComponent
 	renderFlowComponent:LinkRenderStagePort(stageAntiAliasing, "OutputColor", stageScreen, "InputColor")
 	local screenMaterial = SnowyStream.NewResource("", "MaterialResource", true)
 	SnowyStream.ModifyResource(screenMaterial, "Set", {
-		"invAverageLuminance", 1.0 / 6.0,
+		"invAverageLuminance", 1.0 / 5.0,
 		"bloomIntensity", { 0.2, 0.3, 0.3 }
 	})
 	renderFlowComponent:OverrideRenderStageMaterial(stageScreen, screenMaterial as MaterialResource)

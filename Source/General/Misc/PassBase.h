@@ -79,7 +79,9 @@ namespace PaintsNow {
 			
 			uint32_t GetBufferCount() const;
 			uint32_t GetTextureCount() const;
-			std::vector<Parameter>& GetParameters();
+			const std::vector<Parameter>& GetParameters() const;
+			const std::vector<std::key_value<Bytes, uint32_t> >& GetParameterKeys() const;
+			const std::vector<std::key_value<uint32_t, uint32_t> >& GetParameterSchemas() const;
 
 		private:
 			void Flush();

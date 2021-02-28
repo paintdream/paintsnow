@@ -14,11 +14,17 @@
 
 namespace PaintsNow {
 	namespace IAsset {
-		enum Type { TYPE_CONST, TYPE_FLOAT, TYPE_FLOAT2, TYPE_FLOAT3, TYPE_FLOAT4, TYPE_MATRIX3, TYPE_MATRIX4, TYPE_TEXTURE, TYPE_STRUCTURE };
-		struct TextureIndex {
-			TextureIndex(uint32_t i = 0) : index(i) {}
-			uint32_t index;
+		enum Type { TYPE_CONST, TYPE_FLOAT, TYPE_FLOAT2, TYPE_FLOAT3, TYPE_FLOAT4, TYPE_MATRIX3, TYPE_MATRIX4, TYPE_TEXTURE, TYPE_TEXTURE_RUNTIME, TYPE_BUFFER_RUNTIME, TYPE_STRUCTURE };
+
+		template <class T, size_t type>
+		struct TypeWrapper {
+			TypeWrapper(T t = T()) : value(t) {}
+			T value;
 		};
+
+		typedef TypeWrapper<uint32_t, TYPE_TEXTURE> TextureIndex;
+		typedef TypeWrapper<IRender::Resource*, TYPE_TEXTURE_RUNTIME> TextureRuntime;
+		typedef TypeWrapper<IRender::Resource*, TYPE_BUFFER_RUNTIME> BufferRuntime;
 
 		template <class T>
 		struct MapType {};
@@ -38,6 +44,10 @@ namespace PaintsNow {
 		struct MapType<float> { enum { type = TYPE_FLOAT }; };
 		template <>
 		struct MapType<TextureIndex> { enum { type = TYPE_TEXTURE }; };
+		template <>
+		struct MapType<TextureRuntime> { enum { type = TYPE_TEXTURE_RUNTIME }; };
+		template <>
+		struct MapType<BufferRuntime> { enum { type = TYPE_BUFFER_RUNTIME }; };
 		template <>
 		struct MapType<Float2> { enum { type = TYPE_FLOAT2 }; };
 		template <>

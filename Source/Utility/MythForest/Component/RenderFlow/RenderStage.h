@@ -44,6 +44,9 @@ namespace PaintsNow {
 		TShared<MaterialResource> overrideMaterial;
 
 	protected:
+		void RefreshOverrideMaterial(Engine& engine, IRender::Queue* queue, ShaderResource* shaderInstance, TShared<MaterialResource>& materialInstance);
+
+	protected:
 		IRender::Resource* renderState;
 		IRender::Resource* renderTarget;
 		IRender::Resource* drawCallResource;
@@ -74,8 +77,13 @@ namespace PaintsNow {
 
 	protected:
 		inline IRender::Resource* GetShaderResource() const {
-			IRender::Resource* resource = shaderInstance->GetShaderResource();
-			return resource == nullptr ? sharedShader->GetShaderResource() : resource;
+			if (overrideMaterialInstance) {
+				assert(overrideMaterialInstance->originalShaderResource);
+				return overrideMaterialInstance->originalShaderResource->GetShaderResource();
+			} else {
+				IRender::Resource* resource = shaderInstance->GetShaderResource();
+				return resource == nullptr ? sharedShader->GetShaderResource() : resource;
+			}
 		}
 
 		inline T& GetPass() {
@@ -87,19 +95,14 @@ namespace PaintsNow {
 		}
 
 		void Update(Engine& engine, IRender::Queue* queue) override {
-			if (BaseClass::overrideMaterial && (BaseClass::overrideMaterial->Flag().load(std::memory_order_acquire) & Tiny::TINY_MODIFIED)) {
-				if (BaseClass::overrideMaterial->Flag().fetch_and(~Tiny::TINY_MODIFIED) & Tiny::TINY_MODIFIED) {
-					// flush material 
-					BaseClass::overrideMaterial->Refresh(engine.interfaces.render, queue, shaderInstance());
-				}
-			}
-
+			BaseClass::RefreshOverrideMaterial(engine, queue, shaderInstance(), overrideMaterialInstance);
 			BaseClass::Update(engine, queue);
 		}
 
 	protected:
 		TShared<ShaderResourceImpl<T> > shaderInstance;
 		TShared<ShaderResource> sharedShader;
+		TShared<MaterialResource> overrideMaterialInstance;
 	};
 
 	template <class T>

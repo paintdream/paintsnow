@@ -253,9 +253,9 @@ function Scene.New(database : Database, clock : Clock) : Scene
 		lightComponent:SetLightDirectional(true)
 		lightComponent:AddRenderPolicy(lightPolicy)
 		local streamComponent0 = StreamComponentModule.New({4, 4, 4}, 4)
-		lightComponent:BindLightShadowStream(0, streamComponent0, { 1024, 1024 }, 0.25, 1)
+		lightComponent:BindLightShadowStream(0, streamComponent0, { 1024, 1024 }, 0.25, 0.4)
 		local streamComponent1 = StreamComponentModule.New({4, 4, 4}, 3)
-		lightComponent:BindLightShadowStream(1, streamComponent1, { 1024, 1024 }, 0.25, 2)
+		lightComponent:BindLightShadowStream(1, streamComponent1, { 1024, 1024 }, 0.25, 1.5)
 		local streamComponent2 = StreamComponentModule.New({4, 4, 4}, 3)
 		lightComponent:BindLightShadowStream(2, streamComponent2, { 1024, 1024 }, 0.25, 5)
 

@@ -203,3 +203,27 @@ void RenderStage::SetMainResolution(Engine& engine, IRender::Queue* resourceQueu
 
 	Flag().fetch_or(TINY_MODIFIED, std::memory_order_relaxed);
 }
+
+void RenderStage::RefreshOverrideMaterial(Engine& engine, IRender::Queue* queue, ShaderResource* shaderInstance, TShared<MaterialResource>& overrideMaterialInstance) {
+	if (overrideMaterial) {
+		// new shader?
+		if (overrideMaterial->originalShaderResource) {
+			// create new material instance
+			if (!overrideMaterialInstance) {
+				overrideMaterialInstance = engine.snowyStream.CreateReflectedResource(UniqueType<MaterialResource>(), "", false, ResourceBase::RESOURCE_VIRTUAL);
+				overrideMaterialInstance->originalShaderResource = static_cast<ShaderResource*>(overrideMaterial->originalShaderResource->Clone());
+				overrideMaterialInstance->textureResources = overrideMaterial->textureResources;
+			}
+
+			// refresh parameter instantly
+			overrideMaterialInstance->materialParams.variables.clear();
+			overrideMaterialInstance->Import(shaderInstance);
+			overrideMaterialInstance->MergeParameters(overrideMaterial->materialParams.variables);
+		} else if (overrideMaterial->Flag().load(std::memory_order_acquire) & Tiny::TINY_MODIFIED) {
+			if (overrideMaterial->Flag().fetch_and(~Tiny::TINY_MODIFIED) & Tiny::TINY_MODIFIED) {
+				// flush material
+				overrideMaterial->Export(engine.interfaces.render, queue, shaderInstance);
+			}
+		}
+	}
+}

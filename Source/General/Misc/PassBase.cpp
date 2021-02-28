@@ -69,8 +69,16 @@ uint32_t PassBase::Updater::GetTextureCount() const {
 	return textureCount;
 }
 
-std::vector<PassBase::Parameter>& PassBase::Updater::GetParameters() {
+const std::vector<PassBase::Parameter>& PassBase::Updater::GetParameters() const {
 	return parameters;
+}
+
+const std::vector<std::key_value<Bytes, uint32_t> >& PassBase::Updater::GetParameterKeys() const {
+	return mapParametersKey;
+}
+
+const std::vector<std::key_value<uint32_t, uint32_t> >& PassBase::Updater::GetParameterSchemas() const {
+	return mapParametersSchema;
 }
 
 PassBase::Parameter::Parameter() : internalAddress(nullptr), linearLayout(0), bindBuffer(nullptr) {}
