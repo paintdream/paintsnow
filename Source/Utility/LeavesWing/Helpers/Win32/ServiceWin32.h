@@ -19,6 +19,8 @@ namespace PaintsNow {
 		bool InstallService();
 		bool DeleteService();
 		static ServiceWin32& GetInstance();
+		static bool InServiceManager();
+		bool RunService();
 
 	protected:
 		void ConsoleHandler(LeavesFlute& leavesFlute);

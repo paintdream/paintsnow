@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
 	// Register/unregister service?
 #ifdef _WIN32
 	if (argc == 2) {
-		if (strcmp(argv[1], "-i") == 0) {
+		if (strcmp(argv[1], "/install") == 0) {
 			if (ServiceWin32::GetInstance().InstallService()) {
 				printf("Service installation complete!\n");
 				return 0;
@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
 				printf("Service installation error!\n");
 				return -1;
 			}
-		} else if (strcmp(argv[1], "-d") == 0) {
+		} else if (strcmp(argv[1], "/uninstall") == 0) {
 			if (ServiceWin32::GetInstance().DeleteService()) {
 				printf("Service uninstallation complete!\n");
 				return 0;
@@ -59,6 +59,10 @@ int main(int argc, char* argv[]) {
 				return -1;
 			}
 		}
+	}
+
+	if (ServiceWin32::InServiceManager()) {
+		ServiceWin32::GetInstance().RunService();
 	}
 #endif
 

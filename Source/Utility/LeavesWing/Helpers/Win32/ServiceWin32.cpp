@@ -2,6 +2,7 @@
 #include "../../../LeavesFlute/Loader.h"
 
 #ifdef _WIN32
+#include <TlHelp32.h>
 using namespace PaintsNow;
 
 ServiceWin32::ServiceWin32(const String& name) : serviceName(name), eventStop(nullptr) {}
@@ -15,8 +16,17 @@ static void WINAPI ServiceCtrlHandler(DWORD opcode) {
 	ServiceWin32::GetInstance().ServiceCtrlHandler(opcode);
 }
 
-__declspec(dllexport) void WINAPI ServiceMain(DWORD argc, LPTSTR* argv) {
+void WINAPI ServiceMain(DWORD argc, LPSTR* argv) {
 	ServiceWin32::GetInstance().ServiceMain(argc, argv);
+}
+
+bool ServiceWin32::RunService() {
+	SERVICE_TABLE_ENTRYA DispatchTable[] = {
+		{ (LPSTR)serviceName.c_str(), &::ServiceMain },
+		{ NULL, NULL }
+	};
+
+	return ::StartServiceCtrlDispatcherA(DispatchTable) != 0;
 }
 
 void ServiceWin32::ConsoleHandler(LeavesFlute& leavesFlute) {
@@ -112,6 +122,42 @@ bool ServiceWin32::DeleteService() {
 	::CloseServiceHandle(scService);
 	::CloseServiceHandle(scManager);
 	return result;
+}
+
+#ifdef __linux__
+#define _stricmp strcasecmp
+#endif
+
+bool ServiceWin32::InServiceManager() {
+	DWORD processID = ::GetCurrentProcessId();
+	DWORD parentID = 0;
+	HANDLE h = ::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	PROCESSENTRY32 pe = { 0 };
+	pe.dwSize = sizeof(PROCESSENTRY32);
+	if (::Process32First(h, &pe)) {
+		do {
+			if (pe.th32ProcessID == processID) {
+				parentID = pe.th32ParentProcessID;
+			}
+		} while (Process32Next(h, &pe));
+	}
+	::CloseHandle(h);
+
+	bool find = false;
+	h = ::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	if (::Process32First(h, &pe)) {
+		do {
+			if (pe.th32ProcessID == parentID) {
+				if (_stricmp(pe.szExeFile, "SERVICES.EXE") == 0) {
+					find = true;
+					break;
+				}
+			}
+		} while (Process32Next(h, &pe));
+	}
+
+	::CloseHandle(h);
+	return find;
 }
 
 #endif
