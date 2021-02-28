@@ -101,6 +101,7 @@ namespace PaintsNow {
 		void EndConsole();
 		bool ConsoleProc(IThread::Thread* thread, size_t index);
 		bool ProcessCommand(const String& command);
+		void OverrideConsoleProc(const TWrapper<void, LeavesFlute&>& handler);
 
 		virtual void Execute(const String& file, const std::vector<String>& params);
 
@@ -128,6 +129,7 @@ namespace PaintsNow {
 		GalaxyWeaver galaxyWeaver;
 
 	protected:
+		TWrapper<void, LeavesFlute&> consoleHandler;
 		IThread::Thread* consoleThread;
 		IScript::Request::Ref listenConsole;
 		String newAppTitle;

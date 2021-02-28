@@ -89,11 +89,16 @@ LeavesFlute::~LeavesFlute() {
 }
 
 void LeavesFlute::EnterStdinLoop() {
-	printf("Init Standard Input Environment ...\n");
-	ConsoleProc(nullptr, 0);
+	if (consoleHandler) {
+		consoleHandler(*this);
+	} else {
+		printf("Init Standard Input Environment ...\n");
+		ConsoleProc(nullptr, 0);
+	}
 }
 
 void LeavesFlute::EnterMainLoop() {
+	assert(!consoleHandler);
 	BeginConsole();
 	interfaces.frame.EnterMainLoop();
 
@@ -156,6 +161,10 @@ bool LeavesFlute::ProcessCommand(const String& command) {
 
 		return true;
 	}
+}
+
+void LeavesFlute::OverrideConsoleProc(const TWrapper<void, LeavesFlute&>& handler) {
+	consoleHandler = handler;
 }
 
 bool LeavesFlute::ConsoleProc(IThread::Thread* thread, size_t index) {

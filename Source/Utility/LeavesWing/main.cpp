@@ -2,6 +2,7 @@
 #include "../LeavesFlute/Platform.h"
 #ifdef _WIN32
 #include "../../General/Driver/Debugger/MiniDump/ZDebuggerWin.h"
+#include "Helpers/Win32/ServiceWin32.h"
 #include <shlwapi.h>
 // #include <vld.h>
 #endif
@@ -38,6 +39,29 @@ static void RegisterDump() {
 }
 
 int main(int argc, char* argv[]) {
+	// Register/unregister service?
+#ifdef _WIN32
+	if (argc == 2) {
+		if (strcmp(argv[1], "-i") == 0) {
+			if (ServiceWin32::GetInstance().InstallService()) {
+				printf("Service installation complete!\n");
+				return 0;
+			} else {
+				printf("Service installation error!\n");
+				return -1;
+			}
+		} else if (strcmp(argv[1], "-d") == 0) {
+			if (ServiceWin32::GetInstance().DeleteService()) {
+				printf("Service uninstallation complete!\n");
+				return 0;
+			} else {
+				printf("Service uninstallation error!\n");
+				return -1;
+			}
+		}
+	}
+#endif
+
 	RegisterDump();
 
 	CmdLine cmdLine;
@@ -88,12 +112,12 @@ int main(int argc, char* argv[]) {
 		leavesImGui.AddWidget(&repository);
 		leavesImGui.AddWidget(&visualizer);
 		leavesImGui.AddWidget(&script);
-		loader.Load(cmdLine);
+		loader.Run(cmdLine);
 	} else {
-		loader.Load(cmdLine);
+		loader.Run(cmdLine);
 	}
 #else
-	loader.Load(cmdLine);
+	loader.Run(cmdLine);
 #endif
 
 #ifdef _WIN32

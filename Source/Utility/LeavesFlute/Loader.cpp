@@ -121,7 +121,7 @@ struct DelayedValue {
 	T& value;
 };
 
-void Loader::Load(const CmdLine& cmdLine) {
+void Loader::Run(const CmdLine& cmdLine) {
 	// Load necessary modules
 	const std::list<CmdLine::Option>& modules = cmdLine.GetModuleList();
 
@@ -183,7 +183,7 @@ void Loader::Load(const CmdLine& cmdLine) {
 	// assert(factoryMap.find(String("IArchive")) != factoryMap.end());
 	// assert(factoryMap.find(String("IRender")) != factoryMap.end());
 
-	// Load default settings
+	// Run default settings
 	TWrapper<IThread*> threadFactory;
 #if !defined(CMAKE_PAINTSNOW) || ADD_THREAD_PTHREAD
 	threadFactory = WrapFactory(UniqueType<ZThreadPthread>());
@@ -373,6 +373,7 @@ void Loader::Load(const CmdLine& cmdLine) {
 		{
 			Interfaces interfaces(*archive, *audio, *database, *assetFilter, *audioFilter, *font, *frame, *image, *network, *random, *render, *script, *thread, *timer, *tunnel);
 			LeavesFlute leavesFlute(nogui, interfaces, subArchiveFactory, mount, threadCount, warpCount);
+			leavesFlute.OverrideConsoleProc(consoleHandler);
 			this->leavesFlute = &leavesFlute;
 
 			std::vector<String> paramList;
