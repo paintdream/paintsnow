@@ -99,13 +99,25 @@ SOURCE=.\LeavesWing.rc
 
 SOURCE=..\..\..\..\Source\Utility\LeavesWing\main.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\LeavesWing\Helpers\Win32\ServiceWin32.cpp
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\LeavesWing\Helpers\ImGui\LeavesImGui.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\resource.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\LeavesWing\Helpers\Win32\ServiceWin32.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

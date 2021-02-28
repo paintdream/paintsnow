@@ -9,6 +9,15 @@
 #include "../LeavesFlute/Loader.h"
 #include <ctime>
 
+#include "Helpers/ImGui/LeavesImGui.h"
+
+#if USE_LEAVES_IMGUI
+#include "Helpers/ImGui/System.h"
+#include "Helpers/ImGui/Repository.h"
+#include "Helpers/ImGui/Script.h"
+#include "Helpers/ImGui/IModule.h"
+#endif
+
 using namespace PaintsNow;
 
 static bool DumpHandler() {
@@ -63,7 +72,29 @@ int main(int argc, char* argv[]) {
 	printf("LeavesWing %s\nPaintDream (paintdream@paintdream.com) (C) 2014-2021\nBased on PaintsNow [https://github.com/paintdream/paintsnow]\n", PAINTSNOW_VERSION_MINOR);
 
 	Loader loader;
+#if USE_LEAVES_IMGUI
+	std::map<String, CmdLine::Option>::const_iterator it = cmdLine.GetFactoryMap().find("IFrame");
+	if (it != cmdLine.GetFactoryMap().end() && it->second.name == "ZFrameGLFWForImGui") {
+		System system;
+		IModule visualizer;
+		Repository repository;
+		Script script;
+
+		LeavesImGui leavesImGui(loader.leavesFlute);
+		TWrapper<IFrame*> frameFactory = WrapFactory(UniqueType<ZFrameGLFWForImGui>(), std::ref(leavesImGui));
+
+		loader.config.RegisterFactory("IFrame", "ZFrameGLFWForImGui", frameFactory);
+		leavesImGui.AddWidget(&system);
+		leavesImGui.AddWidget(&repository);
+		leavesImGui.AddWidget(&visualizer);
+		leavesImGui.AddWidget(&script);
+		loader.Load(cmdLine);
+	} else {
+		loader.Load(cmdLine);
+	}
+#else
 	loader.Load(cmdLine);
+#endif
 
 #ifdef _WIN32
 	OutputDebugStringA("LeavesWing exited without any errors.\n");

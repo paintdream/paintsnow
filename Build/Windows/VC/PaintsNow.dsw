@@ -3,19 +3,6 @@ Microsoft Developer Studio Workspace File, Format Version 6.00
 
 ###############################################################################
 
-Project: "PurpleTrail"=.\PurpleTrail\PurpleTrail.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-
-###############################################################################
-
 Project: "BridgeSunset"=.\BridgeSunset\BridgeSunset.dsp - Package Owner=<4>
 
 Package=<5>
@@ -103,21 +90,6 @@ Package=<4>
 
 ###############################################################################
 
-Project: "LeavesWind"=.\LeavesWind\LeavesWind.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name LeavesFlute
-    End Project Dependency
-}}}
-
-###############################################################################
-
 Project: "LeavesWing"=.\LeavesWing\LeavesWing.dsp - Package Owner=<4>
 
 Package=<5>
@@ -161,6 +133,18 @@ Package=<4>
 ###############################################################################
 
 Project: "PaintsNow"=.\PaintsNow\PaintsNow.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "PurpleTrail"=.\PurpleTrail\PurpleTrail.dsp - Package Owner=<4>
 
 Package=<5>
 {{{

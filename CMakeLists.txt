@@ -836,65 +836,6 @@ ADD_EXECUTABLE (LostDream ${LOSTDREAM_SRC})
 
 TARGET_LINK_LIBRARIES (LostDream ${PAINTSNOW_LIBRARIES})
 
-# ---------------------------------------------------------------- #
-
-FILE (GLOB_RECURSE LEAVESWINE_SRC
-		"${PROJECT_SOURCE_DIR}/Source/Utility/LeavesWine/*.h"
-		"${PROJECT_SOURCE_DIR}/Source/Utility/LeavesWine/*.cpp"
-		"${PROJECT_SOURCE_DIR}/Source/Utility/LeavesWine/*.def"
-		"${PROJECT_SOURCE_DIR}/Source/Utility/LeavesWine/*.idl"
-		# "${PROJECT_SOURCE_DIR}/Source/Utility/LeavesWine/*.rc"
-)
-
-FOREACH (FILE ${LEAVESWINE_SRC}) 
-	GET_FILENAME_COMPONENT(PARENT_DIR "${FILE}" PATH)
-
-	# skip src or include and changes /'s to \\'s
-	STRING(REGEX REPLACE "(\\./)?(src|include)/?" "" GROUP "${PARENT_DIR}")
-	STRING(REPLACE "/" "\\" GROUP "${GROUP}")
-	STRING(REPLACE "${LOCAL_SOURCE_DIR}" "" GROUP "${GROUP}")
-	SOURCE_GROUP("${GROUP}" FILES "${FILE}")
-ENDFOREACH (FILE ${LEAVESWINE_SRC})
-
-ADD_EXECUTABLE (LeavesWine ${LEAVESWINE_SRC} )
-
-TARGET_LINK_LIBRARIES (LeavesWine ${PAINTSNOW_LIBRARIES})
-
-IF (MSVC)
-ELSE (MSVC)
-ADD_DEFINITIONS (-fPIC)
-ENDIF (MSVC)
-
-# ---------------------------------------------------------------- #
-
-FILE (GLOB_RECURSE LEAVESWIND_SRC
-		"${PROJECT_SOURCE_DIR}/Source/Utility/LeavesWind/*.h"
-		"${PROJECT_SOURCE_DIR}/Source/Utility/LeavesWind/*.cpp"
-)
-
-FOREACH (FILE ${LEAVESWIND_SRC}) 
-	GET_FILENAME_COMPONENT(PARENT_DIR "${FILE}" PATH)
-
-	# skip src or include and changes /'s to \\'s
-	STRING(REGEX REPLACE "(\\./)?(src|include)/?" "" GROUP "${PARENT_DIR}")
-	STRING(REPLACE "/" "\\" GROUP "${GROUP}")
-	STRING(REPLACE "${LOCAL_SOURCE_DIR}" "" GROUP "${GROUP}")
-	SOURCE_GROUP("${GROUP}" FILES "${FILE}")
-ENDFOREACH (FILE ${LEAVESWIND_SRC})
-
-ADD_LIBRARY (LeavesWind SHARED ${LEAVESWIND_SRC} )
-
-TARGET_LINK_LIBRARIES (LeavesWind ${PAINTSNOW_LIBRARIES})
-
-
-IF (MSVC)
-
-ELSE (MSVC)
-
-ADD_DEFINITIONS (-fPIC)
-
-ENDIF (MSVC)
-
 ENDIF (STATIC_VC_RUNTIME OR (NOT MSVC))
 
 CONFIGURE_FILE (

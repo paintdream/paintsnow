@@ -1,6 +1,6 @@
 #include "IModule.h"
-#include "../LeavesFlute/LeavesFlute.h"
-#include "ImGui/imgui.h"
+#include "../../../LeavesFlute/LeavesFlute.h"
+#include "Core/imgui.h"
 #include <sstream>
 
 using namespace PaintsNow;
