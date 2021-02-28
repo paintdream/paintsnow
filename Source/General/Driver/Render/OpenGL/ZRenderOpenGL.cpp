@@ -1729,14 +1729,17 @@ struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> final : public
 			const Texture* texture = static_cast<const Texture*>(d.textureResources[k]);
 			assert(texture != nullptr);
 			assert(texture->textureID != 0);
-			if (program.isComputeShader) {
-				glBindImageTexture(k, (GLuint)texture->textureID, 0, GL_FALSE, 0, GL_READ_ONLY, texture->textureFormat);
-			} else {
-				glActiveTexture((GLsizei)(GL_TEXTURE0 + k));
-				glBindTexture(texture->textureType, texture->textureID);
+			GLuint location = program.textureLocations[k];
+			if (location != (GLuint)-1) {
+				if (program.isComputeShader) {
+					glBindImageTexture(k, (GLuint)texture->textureID, 0, GL_FALSE, 0, GL_READ_ONLY, texture->textureFormat);
+				} else {
+					glActiveTexture((GLsizei)(GL_TEXTURE0 + k));
+					glBindTexture(texture->textureType, texture->textureID);
+				}
+
+				glUniform1i(program.textureLocations[k], (GLuint)k);
 			}
-			
-			glUniform1i(program.textureLocations[k], (GLuint)k);
 		}
 
 		if (program.isComputeShader) {
