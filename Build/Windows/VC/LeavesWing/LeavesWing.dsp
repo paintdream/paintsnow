@@ -103,6 +103,10 @@ SOURCE=..\..\..\..\Source\Utility\LeavesWing\main.cpp
 
 SOURCE=..\..\..\..\Source\Utility\LeavesWing\Helpers\Win32\ServiceWin32.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\LeavesWing\Helpers\Win32\ToolkitWin32.cpp
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
@@ -118,6 +122,10 @@ SOURCE=.\resource.h
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\LeavesWing\Helpers\Win32\ServiceWin32.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\LeavesWing\Helpers\Win32\ToolkitWin32.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

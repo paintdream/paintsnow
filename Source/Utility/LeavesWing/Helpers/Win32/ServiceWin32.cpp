@@ -30,8 +30,13 @@ bool ServiceWin32::RunService() {
 }
 
 void ServiceWin32::ConsoleHandler(LeavesFlute& leavesFlute) {
-	// TODO: Polling service?
 	assert(eventStop != nullptr);
+	IScript::Request& request = leavesFlute.GetInterfaces().script.GetDefaultRequest();
+	request.DoLock();
+	toolkitWin32.Require(request); // register callbacks
+	request.UnLock();
+
+	// TODO: Polling service?
 	::WaitForSingleObject(eventStop, INFINITE);
 }
 

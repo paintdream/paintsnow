@@ -8,6 +8,7 @@
 #ifdef _WIN32
 
 #include "../../../LeavesFlute/LeavesFlute.h"
+#include "ToolkitWin32.h"
 #include <Windows.h>
 
 namespace PaintsNow {
@@ -30,6 +31,7 @@ namespace PaintsNow {
 		SERVICE_STATUS serviceStatus;
 		SERVICE_STATUS_HANDLE serviceStatusHandle;
 		HANDLE eventStop;
+		ToolkitWin32 toolkitWin32;
 	};
 }
 
