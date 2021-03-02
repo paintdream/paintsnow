@@ -42,5 +42,5 @@ print("Starting ...")
 local App = require("Script/Main")
 print("Starting Main ...")
 local co = coroutine.create(App.Main)
-coroutine.resume(co)
+coroutine.resume(co, ...)
 

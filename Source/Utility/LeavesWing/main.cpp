@@ -63,6 +63,7 @@ int main(int argc, char* argv[]) {
 
 	if (ServiceWin32::InServiceManager()) {
 		ServiceWin32::GetInstance().RunService();
+		return 0;
 	}
 #endif
 

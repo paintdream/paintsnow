@@ -33,7 +33,10 @@ void ServiceWin32::ConsoleHandler(LeavesFlute& leavesFlute) {
 	assert(eventStop != nullptr);
 	IScript::Request& request = leavesFlute.GetInterfaces().script.GetDefaultRequest();
 	request.DoLock();
+	request << global;
+	request >> key("System") >> begintable << key("ToolkitWin32");
 	toolkitWin32.Require(request); // register callbacks
+	request << endtable << endtable;
 	request.UnLock();
 
 	// TODO: Polling service?

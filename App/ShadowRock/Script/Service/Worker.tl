@@ -1,0 +1,1 @@
+local Worker = record end

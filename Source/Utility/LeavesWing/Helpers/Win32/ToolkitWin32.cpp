@@ -26,6 +26,9 @@ uint64_t ToolkitWin32::RequestCreateProcess(IScript::Request& request, const Str
 	String cmdLine = Utf8ToSystem(path);
 	String directory = Utf8ToSystem(currentPath);
 	STARTUPINFOW info = { 0 };
+	info.cb = sizeof(STARTUPINFOW);
+	info.dwFlags = STARTF_USESHOWWINDOW;
+	info.wShowWindow = SW_HIDE; // default to hide
 	PROCESS_INFORMATION pi = { 0 };
 
 	if (::CreateProcessW(nullptr, (WCHAR*)cmdLine.c_str(), nullptr, nullptr, TRUE, 0, nullptr, currentPath.empty() ? nullptr : (WCHAR*)directory.c_str(), &info, &pi)) {
