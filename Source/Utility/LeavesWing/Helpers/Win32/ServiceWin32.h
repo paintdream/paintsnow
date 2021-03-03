@@ -14,23 +14,26 @@
 namespace PaintsNow {
 	class ServiceWin32 {
 	public:
-		ServiceWin32(const String& serviceName);
-		void ServiceMain(DWORD argc, LPTSTR* argv);
+		ServiceWin32(const String& serviceName, const String& serviceDescription);
+		bool RunServiceMaster(DWORD argc, LPSTR* argv);
+		bool RunServiceWorker(DWORD argc, LPSTR* argv);
 		void ServiceCtrlHandler(DWORD opcode);
 		bool InstallService();
 		bool DeleteService();
 		static ServiceWin32& GetInstance();
-		static bool InServiceManager();
-		bool RunService();
+		static bool InServiceContext();
+
+	public:
+		void ServiceMain(DWORD argc, LPTSTR* argv);
 
 	protected:
 		void ConsoleHandler(LeavesFlute& leavesFlute);
 
 	protected:
 		String serviceName;
+		String serviceDescription;
 		SERVICE_STATUS serviceStatus;
 		SERVICE_STATUS_HANDLE serviceStatusHandle;
-		HANDLE eventStop;
 		ToolkitWin32 toolkitWin32;
 	};
 }

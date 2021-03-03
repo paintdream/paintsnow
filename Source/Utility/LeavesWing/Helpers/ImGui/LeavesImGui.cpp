@@ -26,27 +26,27 @@ void LeavesImGui::TickRender() {
 	}
 }
 
-ZFrameGLFWForImGui::ZFrameGLFWForImGui(LeavesImGui& imgui, const Int2& size, Callback* callback) : ZFrameGLFW(nullptr, false, size, callback), leavesImGui(imgui), init(false) {}
+ZFrameGLFWImGui::ZFrameGLFWImGui(LeavesImGui& imgui, const Int2& size, Callback* callback) : ZFrameGLFW(nullptr, false, size, callback), leavesImGui(imgui), init(false) {}
 
-void ZFrameGLFWForImGui::OnMouseButtonCallback(int button, int action, int mods) {
+void ZFrameGLFWImGui::OnMouseButtonCallback(int button, int action, int mods) {
 	ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
 	if (ImGui::GetIO().WantCaptureMouse) return;
 	ZFrameGLFW::OnMouseButtonCallback(button, action, mods);
 }
 
-void ZFrameGLFWForImGui::OnScrollCallback(double x, double y) {
+void ZFrameGLFWImGui::OnScrollCallback(double x, double y) {
 	ImGui_ImplGlfw_ScrollCallback(window, x, y);
 	if (ImGui::GetIO().WantCaptureMouse) return;
 	ZFrameGLFW::OnScrollCallback(x, y);
 }
 
-void ZFrameGLFWForImGui::OnKeyboardCallback(int key, int scancode, int action, int mods) {
+void ZFrameGLFWImGui::OnKeyboardCallback(int key, int scancode, int action, int mods) {
 	ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
 	if (ImGui::GetIO().WantCaptureKeyboard) return;
 	ZFrameGLFW::OnKeyboardCallback(key, scancode, action, mods);
 }
 
-void ZFrameGLFWForImGui::OnCustomRender() {
+void ZFrameGLFWImGui::OnCustomRender() {
 	if (!init) {
 		IMGUI_CHECKVERSION();
 

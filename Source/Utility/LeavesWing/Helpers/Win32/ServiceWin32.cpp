@@ -5,10 +5,10 @@
 #include <TlHelp32.h>
 using namespace PaintsNow;
 
-ServiceWin32::ServiceWin32(const String& name) : serviceName(name), eventStop(nullptr) {}
+ServiceWin32::ServiceWin32(const String& name, const String& description) : serviceName(name), serviceDescription(description) {}
 
 ServiceWin32& ServiceWin32::GetInstance() {
-	static ServiceWin32 theServiceWin32("LeavesWing");
+	static ServiceWin32 theServiceWin32("LeavesWind", "LeavesWind: A Scriptable Distributed Computing System based on PaintsNow");
 	return theServiceWin32;
 }
 
@@ -20,7 +20,12 @@ void WINAPI ServiceMain(DWORD argc, LPSTR* argv) {
 	ServiceWin32::GetInstance().ServiceMain(argc, argv);
 }
 
-bool ServiceWin32::RunService() {
+bool ServiceWin32::RunServiceWorker(DWORD argc, LPSTR* argv) {
+	ServiceMain(argc, argv);
+	return true;
+}
+
+bool ServiceWin32::RunServiceMaster(DWORD argc, LPSTR* argv) {
 	SERVICE_TABLE_ENTRYA DispatchTable[] = {
 		{ (LPSTR)serviceName.c_str(), &::ServiceMain },
 		{ NULL, NULL }
@@ -30,7 +35,6 @@ bool ServiceWin32::RunService() {
 }
 
 void ServiceWin32::ConsoleHandler(LeavesFlute& leavesFlute) {
-	assert(eventStop != nullptr);
 	IScript::Request& request = leavesFlute.GetInterfaces().script.GetDefaultRequest();
 	request.DoLock();
 	request << global;
@@ -39,12 +43,13 @@ void ServiceWin32::ConsoleHandler(LeavesFlute& leavesFlute) {
 	request << endtable << endtable;
 	request.UnLock();
 
-	// TODO: Polling service?
-	::WaitForSingleObject(eventStop, INFINITE);
+	MSG msg;
+	while (::GetMessageW(&msg, NULL, 0, 0)) {
+		toolkitWin32.HandleMessage(leavesFlute, msg.message, msg.wParam, msg.lParam);
+	}
 }
 
-void ServiceWin32::ServiceMain(DWORD argc, LPTSTR* argv) {
-	eventStop = ::CreateEventW(nullptr, FALSE, FALSE, nullptr);
+void ServiceWin32::ServiceMain(DWORD argc, LPSTR* argv) {
 	serviceStatus.dwServiceType = SERVICE_WIN32;
 	serviceStatus.dwCurrentState = SERVICE_START_PENDING;
 	serviceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
@@ -68,8 +73,6 @@ void ServiceWin32::ServiceMain(DWORD argc, LPTSTR* argv) {
 	Loader loader;
 	loader.consoleHandler = Wrap(this, &ServiceWin32::ConsoleHandler);
 	loader.Run(cmdLine);
-	::CloseHandle(eventStop);
-	eventStop = nullptr;
 }
 
 void ServiceWin32::ServiceCtrlHandler(DWORD opcode) {
@@ -86,8 +89,7 @@ void ServiceWin32::ServiceCtrlHandler(DWORD opcode) {
 		serviceStatus.dwCheckPoint = 0;
 		serviceStatus.dwWaitHint = 0;
 		::SetServiceStatus(serviceStatusHandle, &serviceStatus);
-		assert(eventStop != nullptr);
-		::SetEvent(eventStop);
+		::PostThreadMessageW(toolkitWin32.GetMainThreadID(), WM_QUIT, 0, 0);
 		break;
 	case SERVICE_CONTROL_INTERROGATE:
 		break;
@@ -136,7 +138,7 @@ bool ServiceWin32::DeleteService() {
 #define _stricmp strcasecmp
 #endif
 
-bool ServiceWin32::InServiceManager() {
+bool ServiceWin32::InServiceContext() {
 	DWORD processID = ::GetCurrentProcessId();
 	DWORD parentID = 0;
 	HANDLE h = ::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -147,7 +149,7 @@ bool ServiceWin32::InServiceManager() {
 			if (pe.th32ProcessID == processID) {
 				parentID = pe.th32ParentProcessID;
 			}
-		} while (Process32Next(h, &pe));
+		} while (::Process32Next(h, &pe));
 	}
 	::CloseHandle(h);
 
@@ -161,7 +163,7 @@ bool ServiceWin32::InServiceManager() {
 					break;
 				}
 			}
-		} while (Process32Next(h, &pe));
+		} while (::Process32Next(h, &pe));
 	}
 
 	::CloseHandle(h);

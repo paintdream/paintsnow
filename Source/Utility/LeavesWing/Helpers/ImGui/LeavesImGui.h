@@ -31,12 +31,13 @@ namespace PaintsNow {
 		LeavesFlute*& leavesFlute;
 	};
 
-	class ZFrameGLFWForImGui : public ZFrameGLFW {
+	class ZFrameGLFWImGui : public ZFrameGLFW {
 	public:
-		ZFrameGLFWForImGui(LeavesImGui& imgui, const Int2& size = Int2(1450, 800), Callback* callback = nullptr);
-		virtual void OnMouseButtonCallback(int button, int action, int mods) override;		virtual void OnScrollCallback(double x, double y) override;
-		virtual void OnKeyboardCallback(int key, int scancode, int action, int mods) override;
-		virtual void OnCustomRender() override;
+		ZFrameGLFWImGui(LeavesImGui& imgui, const Int2& size = Int2(1450, 800), Callback* callback = nullptr);
+		void OnMouseButtonCallback(int button, int action, int mods) override;
+		void OnScrollCallback(double x, double y) override;
+		void OnKeyboardCallback(int key, int scancode, int action, int mods) override;
+		void OnCustomRender() override;
 
 	protected:
 		LeavesImGui& leavesImGui;

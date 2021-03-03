@@ -59,10 +59,15 @@ int main(int argc, char* argv[]) {
 				return -1;
 			}
 		}
+		else if (strcmp(argv[1], "/worker") == 0)
+		{
+			ServiceWin32::GetInstance().RunServiceWorker(argc, argv);
+			return 0;
+		}
 	}
 
-	if (ServiceWin32::InServiceManager()) {
-		ServiceWin32::GetInstance().RunService();
+	if (argc == 1 && ServiceWin32::InServiceContext()) {
+		ServiceWin32::GetInstance().RunServiceMaster(argc, argv);
 		return 0;
 	}
 #endif
@@ -103,16 +108,16 @@ int main(int argc, char* argv[]) {
 	Loader loader;
 #if USE_LEAVES_IMGUI
 	std::map<String, CmdLine::Option>::const_iterator it = cmdLine.GetFactoryMap().find("IFrame");
-	if (it != cmdLine.GetFactoryMap().end() && it->second.name == "ZFrameGLFWForImGui") {
+	if (it != cmdLine.GetFactoryMap().end() && it->second.name == "ZFrameGLFWImGui") {
 		System system;
 		IModule visualizer;
 		Repository repository;
 		Script script;
 
 		LeavesImGui leavesImGui(loader.leavesFlute);
-		TWrapper<IFrame*> frameFactory = WrapFactory(UniqueType<ZFrameGLFWForImGui>(), std::ref(leavesImGui));
+		TWrapper<IFrame*> frameFactory = WrapFactory(UniqueType<ZFrameGLFWImGui>(), std::ref(leavesImGui));
 
-		loader.config.RegisterFactory("IFrame", "ZFrameGLFWForImGui", frameFactory);
+		loader.config.RegisterFactory("IFrame", "ZFrameGLFWImGui", frameFactory);
 		leavesImGui.AddWidget(&system);
 		leavesImGui.AddWidget(&repository);
 		leavesImGui.AddWidget(&visualizer);

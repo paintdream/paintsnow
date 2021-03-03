@@ -7,7 +7,7 @@
 
 #ifdef _WIN32
 
-#include "../../../../Core/Interface/IScript.h"
+#include "../../../LeavesFlute/LeavesFlute.h"
 
 namespace PaintsNow {
 	class ToolkitWin32 : public TReflected<ToolkitWin32, IScript::Library> {
@@ -16,15 +16,38 @@ namespace PaintsNow {
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		~ToolkitWin32() override;
 
+		void ScriptInitialize(IScript::Request& request) override;
+		void ScriptUninitialize(IScript::Request& request) override;
+		void HandleMessage(LeavesFlute& flute, uint32_t message, uint64_t wParam, uint64_t lParam);
+		uint32_t GetMainThreadID() const;
+
 	protected:
+		/// <summary>
+		/// Listen win32 message
+		/// </summary>
+		/// <param name="callback"> message callback </param>
+		void RequestListenMessage(IScript::Request& request, IScript::Request::Ref callback);
+
+		/// <summary>
+		/// Exit service worker
+		/// </summary>
+		/// <param name="request"></param>
+		void RequestExit(IScript::Request& request);
+
+		/// <summary>
+		/// Post message to thread
+		/// </summary>
+		/// <param name="thread"> thread id </param>
+		void RequestPostThreadMessage(IScript::Request& request, uint64_t thread, uint32_t msg, uint64_t wParam, uint64_t lParam);
+
 		/// <summary>
 		/// Create win32 process, returning handle
 		/// </summary>
 		/// <param name="path"> executable path </param>
 		/// <param name="currentPath"> current folder path </param>
 		/// <param name="parameter"> optional configs </param>
-		/// <returns> win32 process handle </returns>
-		uint64_t RequestCreateProcess(IScript::Request& request, const String& path, const String& currentPath, const String& parameter);
+		/// <returns> a list with { win32 process handle, main thread id } </returns>
+		std::pair<uint64_t, uint64_t> RequestCreateProcess(IScript::Request& request, const String& path, const String& currentPath, const String& parameter);
 
 		/// <summary>
 		/// Close win32 handle
@@ -61,6 +84,10 @@ namespace PaintsNow {
 		/// <param name="handle"> library handle </param>
 		/// <returns> true if successfully free </returns>
 		bool RequestFreeLibrary(IScript::Request& request, uint64_t handle);
+
+	protected:
+		IScript::Request::Ref messageListener;
+		uint32_t mainThreadID;
 	};
 }
 
