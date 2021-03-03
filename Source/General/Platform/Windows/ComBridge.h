@@ -13,10 +13,10 @@ namespace PaintsNow {
 	class ComBridge : public TReflected<ComBridge, Bridge> {
 	public:
 		ComBridge(IThread& thread);
-		virtual IReflectObject* Create(IScript::Request& request, IArchive& archive, const String& path, const String& data) override;
-		virtual void Call(IReflectObject* object, const TProxy<>* p, IScript::Request& request) override;
-		virtual std::unordered_map<Unique, ScriptReflect::Type>& GetReflectMap() override;
-		virtual TObject<IReflect>& operator () (IReflect& reflect) override;
+		IReflectObject* Create(IScript::Request& request, IArchive& archive, const String& path, const String& data) override;
+		void Call(IReflectObject* object, const TProxy<>* p, IScript::Request& request) override;
+		std::unordered_map<Unique, ScriptReflect::Type>& GetReflectMap() override;
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 		std::unordered_map<size_t, Unique>& GetTypeMap();
 
 	private:

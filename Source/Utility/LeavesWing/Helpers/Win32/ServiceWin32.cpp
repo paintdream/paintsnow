@@ -21,7 +21,14 @@ void WINAPI ServiceMain(DWORD argc, LPSTR* argv) {
 }
 
 bool ServiceWin32::RunServiceWorker(DWORD argc, LPSTR* argv) {
-	ServiceMain(argc, argv);
+	CmdLine cmdLine;
+	cmdLine.Process((int)argc, argv);
+
+	Loader loader;
+	loader.consoleHandler = Wrap(this, &ServiceWin32::ConsoleHandler);
+	loader.setupHandler = Wrap(this, &ServiceWin32::SetupHandler);
+	loader.Run(cmdLine);
+
 	return true;
 }
 
@@ -34,7 +41,7 @@ bool ServiceWin32::RunServiceMaster(DWORD argc, LPSTR* argv) {
 	return ::StartServiceCtrlDispatcherA(DispatchTable) != 0;
 }
 
-void ServiceWin32::ConsoleHandler(LeavesFlute& leavesFlute) {
+void ServiceWin32::SetupHandler(LeavesFlute& leavesFlute) {
 	IScript::Request& request = leavesFlute.GetInterfaces().script.GetDefaultRequest();
 	request.DoLock();
 	request << global;
@@ -42,7 +49,9 @@ void ServiceWin32::ConsoleHandler(LeavesFlute& leavesFlute) {
 	toolkitWin32.Require(request); // register callbacks
 	request << endtable << endtable;
 	request.UnLock();
+}
 
+void ServiceWin32::ConsoleHandler(LeavesFlute& leavesFlute) {
 	MSG msg;
 	while (::GetMessageW(&msg, NULL, 0, 0)) {
 		toolkitWin32.HandleMessage(leavesFlute, msg.message, msg.wParam, msg.lParam);
@@ -67,12 +76,13 @@ void ServiceWin32::ServiceMain(DWORD argc, LPSTR* argv) {
 		::SetServiceStatus(serviceStatusHandle, &serviceStatus);
 	}
 
-	CmdLine cmdLine;
-	cmdLine.Process((int)argc, argv);
+	RunServiceWorker(argc, argv);
 
-	Loader loader;
-	loader.consoleHandler = Wrap(this, &ServiceWin32::ConsoleHandler);
-	loader.Run(cmdLine);
+	serviceStatus.dwWin32ExitCode = 0;
+	serviceStatus.dwCurrentState = SERVICE_STOPPED;
+	serviceStatus.dwCheckPoint = 0;
+	serviceStatus.dwWaitHint = 0;
+	::SetServiceStatus(serviceStatusHandle, &serviceStatus);
 }
 
 void ServiceWin32::ServiceCtrlHandler(DWORD opcode) {
@@ -84,11 +94,6 @@ void ServiceWin32::ServiceCtrlHandler(DWORD opcode) {
 		serviceStatus.dwCurrentState = SERVICE_RUNNING;
 		break;
 	case SERVICE_CONTROL_STOP:
-		serviceStatus.dwWin32ExitCode = 0;
-		serviceStatus.dwCurrentState = SERVICE_STOPPED;
-		serviceStatus.dwCheckPoint = 0;
-		serviceStatus.dwWaitHint = 0;
-		::SetServiceStatus(serviceStatusHandle, &serviceStatus);
 		::PostThreadMessageW(toolkitWin32.GetMainThreadID(), WM_QUIT, 0, 0);
 		break;
 	case SERVICE_CONTROL_INTERROGATE:
@@ -134,40 +139,25 @@ bool ServiceWin32::DeleteService() {
 	return result;
 }
 
-#ifdef __linux__
-#define _stricmp strcasecmp
-#endif
-
 bool ServiceWin32::InServiceContext() {
 	DWORD processID = ::GetCurrentProcessId();
 	DWORD parentID = 0;
 	HANDLE h = ::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 	PROCESSENTRY32 pe = { 0 };
+	std::vector<DWORD> serviceIDs;
 	pe.dwSize = sizeof(PROCESSENTRY32);
 	if (::Process32First(h, &pe)) {
 		do {
 			if (pe.th32ProcessID == processID) {
 				parentID = pe.th32ParentProcessID;
+			} else if (_stricmp(pe.szExeFile, "SERVICES.EXE") == 0) {
+				serviceIDs.emplace_back(pe.th32ProcessID);
 			}
 		} while (::Process32Next(h, &pe));
 	}
 	::CloseHandle(h);
 
-	bool find = false;
-	h = ::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-	if (::Process32First(h, &pe)) {
-		do {
-			if (pe.th32ProcessID == parentID) {
-				if (_stricmp(pe.szExeFile, "SERVICES.EXE") == 0) {
-					find = true;
-					break;
-				}
-			}
-		} while (::Process32Next(h, &pe));
-	}
-
-	::CloseHandle(h);
-	return find;
+	return std::find(serviceIDs.begin(), serviceIDs.end(), parentID) != serviceIDs.end();
 }
 
 #endif

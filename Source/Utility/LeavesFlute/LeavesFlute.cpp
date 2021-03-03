@@ -88,6 +88,12 @@ LeavesFlute::~LeavesFlute() {
 	Uninitialize();
 }
 
+void LeavesFlute::Setup() {
+	if (setupHandler) {
+		setupHandler(*this);
+	}
+}
+
 void LeavesFlute::EnterStdinLoop() {
 	if (consoleHandler) {
 		consoleHandler(*this);
@@ -161,6 +167,10 @@ bool LeavesFlute::ProcessCommand(const String& command) {
 
 		return true;
 	}
+}
+
+void LeavesFlute::OverrideSetupProc(const TWrapper<void, LeavesFlute&>& handler) {
+	setupHandler = handler;
 }
 
 void LeavesFlute::OverrideConsoleProc(const TWrapper<void, LeavesFlute&>& handler) {

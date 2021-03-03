@@ -236,7 +236,7 @@ void RemoteComponent::Call(IScript::Request& fromRequest, const TShared<RemoteRo
 		toRequest.Push();
 		uint32_t flag = Flag().load(std::memory_order_relaxed);
 		// read remaining parameters
-		for (int i = 0; i < args.count; i++) {
+		for (size_t i = 0; i < args.count; i++) {
 			CopyVariable(flag, toRequest, fromRequest, fromRequest.GetCurrentType());
 		}
 		fromRequest.UnLock();
@@ -295,7 +295,7 @@ void RemoteComponent::CallAsync(IScript::Request& fromRequest, IScript::Request:
 		toRequest.Push();
 		// read remaining parameters
 		uint32_t flag = Flag().load(std::memory_order_relaxed);
-		for (int i = 0; i < args.count; i++) {
+		for (size_t i = 0; i < args.count; i++) {
 			CopyVariable(flag, toRequest, fromRequest, fromRequest.GetCurrentType());
 		}
 

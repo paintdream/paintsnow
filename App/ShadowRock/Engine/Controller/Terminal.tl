@@ -21,6 +21,7 @@ end
 local Terminal = record
 	Peers : { Connection : ConnectionRecord }
 	Dispatcher : WorkDispatcher
+	Address : string
 	__index : any
 end
 
@@ -176,8 +177,9 @@ function Terminal.New(dispatcher : WorkDispatcher, ip : string,
 	if ip then
 		local listener : Listener = dispatcher:OpenListener(ip, http, function (listener : Listener, event : string)
 			if event == "Connected" then
-				print("Listener created on IP: " .. listener:GetListenerAddress())
-				coroutine.resume(instance)
+				local address = listener:GetListenerAddress()
+				print("Listener created on IP: " .. address)
+				coroutine.resume(instance, address)
 			end
 		end, function (listener : Listener, connection : Connection)
 			-- do not add connection here
@@ -194,7 +196,7 @@ function Terminal.New(dispatcher : WorkDispatcher, ip : string,
 			listener:ActivateListener()
 			print("Listener activated")
 
-			coroutine.yield()
+			terminal.Address = (coroutine.yield()) as string
 			return terminal
 		else
 			print("Create listener failed!")

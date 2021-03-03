@@ -110,6 +110,7 @@ namespace PaintsNow {
 		TWrapper<IDatabase*> databaseFactory;
 		TWrapper<IDebugger*> debuggerFactory;
 		TWrapper<void, LeavesFlute&> consoleHandler;
+		TWrapper<void, LeavesFlute&> setupHandler;
 
 		IThread::Thread* mainThread;
 		IThread* thread;

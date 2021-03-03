@@ -23,6 +23,12 @@ namespace PaintsNow {
 
 	protected:
 		/// <summary>
+		/// Retrieve system info
+		/// </summary>
+		/// <returns/> system info dict </returns>
+		void RequestGetSystemInfo(IScript::Request& request);
+
+		/// <summary>
 		/// Listen win32 message
 		/// </summary>
 		/// <param name="callback"> message callback </param>

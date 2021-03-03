@@ -376,13 +376,13 @@ bool ZNetworkLibEvent::ActivateListenerWithHttpd(Listener* listener, Httpd* http
 		p->listener = evconnlistener_new_bind(p->dispatcher->base, listener_cb, p, LEV_OPT_REUSEABLE | LEV_OPT_CLOSE_ON_FREE, -1, (const sockaddr*)&s, sizeof(s));
 		if (p->listener != nullptr) {
 			// any port
-				if (p->port == 0) {
+			if (p->port == 0) {
 #if defined(WIN32) || defined(_WIN32)
-						int len = sizeof(s);
+				int len = sizeof(s);
 #else
-						socklen_t len = sizeof(s);
+				socklen_t len = sizeof(s);
 #endif
-						::getsockname(evconnlistener_get_fd(p->listener), (sockaddr*)&s, &len);
+				::getsockname(evconnlistener_get_fd(p->listener), (sockaddr*)&s, &len);
 				p->port = htons(s.sin_port);
 			}
 

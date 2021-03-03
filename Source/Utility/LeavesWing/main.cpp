@@ -41,34 +41,27 @@ static void RegisterDump() {
 int main(int argc, char* argv[]) {
 	// Register/unregister service?
 #ifdef _WIN32
-	if (argc == 2) {
-		if (strcmp(argv[1], "/install") == 0) {
-			if (ServiceWin32::GetInstance().InstallService()) {
-				printf("Service installation complete!\n");
-				return 0;
-			} else {
-				printf("Service installation error!\n");
-				return -1;
-			}
-		} else if (strcmp(argv[1], "/uninstall") == 0) {
-			if (ServiceWin32::GetInstance().DeleteService()) {
-				printf("Service uninstallation complete!\n");
-				return 0;
-			} else {
-				printf("Service uninstallation error!\n");
-				return -1;
-			}
-		}
-		else if (strcmp(argv[1], "/worker") == 0)
-		{
-			ServiceWin32::GetInstance().RunServiceWorker(argc, argv);
+	::CoInitialize(nullptr);
+	if (strcmp(argv[1], "/install") == 0) {
+		if (ServiceWin32::GetInstance().InstallService()) {
+			printf("Service installation complete!\n");
 			return 0;
+		} else {
+			printf("Service installation error!\n");
+			return -1;
 		}
-	}
-
-	if (argc == 1 && ServiceWin32::InServiceContext()) {
-		ServiceWin32::GetInstance().RunServiceMaster(argc, argv);
-		return 0;
+	} else if (strcmp(argv[1], "/uninstall") == 0) {
+		if (ServiceWin32::GetInstance().DeleteService()) {
+			printf("Service uninstallation complete!\n");
+			return 0;
+		} else {
+			printf("Service uninstallation error!\n");
+			return -1;
+		}
+	} else if (strcmp(argv[1], "/service") == 0) {
+		return ServiceWin32::GetInstance().RunServiceWorker(argc, argv) ? 0 : -1;
+	} else if (ServiceWin32::InServiceContext()) {
+		return ServiceWin32::GetInstance().RunServiceMaster(argc, argv) ? 0 : -1;
 	}
 #endif
 
@@ -94,7 +87,7 @@ int main(int argc, char* argv[]) {
 			"--Graphic=true",
 			const_cast<char*>(mount.c_str())
 		};
-		
+
 		cmdLine.Process(3, dragArgs);
 	} else {
 		cmdLine.Process(argc, argv);
@@ -132,6 +125,7 @@ int main(int argc, char* argv[]) {
 
 #ifdef _WIN32
 	OutputDebugStringA("LeavesWing exited without any errors.\n");
+	::CoUninitialize();
 #endif
 	return 0;
 }

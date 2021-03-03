@@ -28,6 +28,7 @@ namespace PaintsNow {
 
 	protected:
 		void ConsoleHandler(LeavesFlute& leavesFlute);
+		void SetupHandler(LeavesFlute& leavesFlute);
 
 	protected:
 		String serviceName;

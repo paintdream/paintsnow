@@ -374,6 +374,7 @@ void Loader::Run(const CmdLine& cmdLine) {
 			Interfaces interfaces(*archive, *audio, *database, *assetFilter, *audioFilter, *font, *frame, *image, *network, *random, *render, *script, *thread, *timer, *tunnel);
 			LeavesFlute leavesFlute(nogui, interfaces, subArchiveFactory, mount, threadCount, warpCount);
 			leavesFlute.OverrideConsoleProc(consoleHandler);
+			leavesFlute.OverrideSetupProc(setupHandler);
 			this->leavesFlute = &leavesFlute;
 
 			std::vector<String> paramList;
@@ -382,6 +383,7 @@ void Loader::Run(const CmdLine& cmdLine) {
 				paramList = Split(scriptParam->second.param);
 			}
 
+			leavesFlute.Setup();
 			leavesFlute.Execute(entry, paramList);
 
 			std::map<String, CmdLine::Option>::const_iterator quit = configMap.find("Quit");
