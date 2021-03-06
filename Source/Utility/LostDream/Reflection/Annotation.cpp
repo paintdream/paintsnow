@@ -131,7 +131,7 @@ static void Test() {
 	TWrapper<void, int, String> func = TestFunc;
 	TWrapper<int, char, float> func2 = TestFunc2;
 	Clos* cl = new Clos();
-	TWrapper<void, int, const String&> cc = WrapClosure(cl, &Clos::TestFunc3);
+	TWrapper<void, int, const String&> cc = WrapClosure(std::move(*cl), &Clos::TestFunc3);
 	delete cl;
 	cc(2, "haha");
 

@@ -42,25 +42,29 @@ int main(int argc, char* argv[]) {
 	// Register/unregister service?
 #ifdef _WIN32
 	::CoInitialize(nullptr);
-	if (strcmp(argv[1], "/install") == 0) {
-		if (ServiceWin32::GetInstance().InstallService()) {
-			printf("Service installation complete!\n");
-			return 0;
-		} else {
-			printf("Service installation error!\n");
-			return -1;
+	if (argc > 1) {
+		if (strcmp(argv[1], "/install") == 0) {
+			if (ServiceWin32::GetInstance().InstallService()) {
+				printf("Service installation complete!\n");
+				return 0;
+			} else {
+				printf("Service installation error!\n");
+				return -1;
+			}
+		} else if (strcmp(argv[1], "/uninstall") == 0) {
+			if (ServiceWin32::GetInstance().DeleteService()) {
+				printf("Service uninstallation complete!\n");
+				return 0;
+			} else {
+				printf("Service uninstallation error!\n");
+				return -1;
+			}
+		} else if (strcmp(argv[1], "/service") == 0) {
+			return ServiceWin32::GetInstance().RunServiceWorker(argc, argv) ? 0 : -1;
 		}
-	} else if (strcmp(argv[1], "/uninstall") == 0) {
-		if (ServiceWin32::GetInstance().DeleteService()) {
-			printf("Service uninstallation complete!\n");
-			return 0;
-		} else {
-			printf("Service uninstallation error!\n");
-			return -1;
-		}
-	} else if (strcmp(argv[1], "/service") == 0) {
-		return ServiceWin32::GetInstance().RunServiceWorker(argc, argv) ? 0 : -1;
-	} else if (ServiceWin32::InServiceContext()) {
+	}
+	
+	if (ServiceWin32::InServiceContext()) {
 		return ServiceWin32::GetInstance().RunServiceMaster(argc, argv) ? 0 : -1;
 	}
 #endif

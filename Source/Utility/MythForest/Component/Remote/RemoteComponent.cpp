@@ -148,7 +148,7 @@ static void CopyVariable(uint32_t flag, IScript::Request& request, IScript::Requ
 			if (flag & RemoteComponent::REMOTECOMPONENT_TRANSPARENT) {
 				// create wrapper
 				RoutineWrapper routineWrapper(remoteRoutine);
-				request << request.Adapt(WrapClosure(&routineWrapper, &RoutineWrapper::operator ()));
+				request << request.Adapt(WrapClosure(std::move(routineWrapper), &RoutineWrapper::operator ()));
 			} else {
 				request << remoteRoutine;
 			}
@@ -167,7 +167,7 @@ static void CopyVariable(uint32_t flag, IScript::Request& request, IScript::Requ
 						request << routine->ref;
 					} else {
 						RoutineWrapper routineWrapper(routine);
-						request << request.Adapt(WrapClosure(&routineWrapper, &RoutineWrapper::operator ()));
+						request << request.Adapt(WrapClosure(std::move(routineWrapper), &RoutineWrapper::operator ()));
 					}
 				} else {
 					request << object;
