@@ -34,19 +34,17 @@ function Scene.New(database : Database, clock : Clock) : Scene
 	-- attach to an entity
 	rootEntity:AddEntityComponent(customShaderComponent as Component)
 	
-	customShaderComponent:SetCallback(function (info : string, code : string)
+	customShaderComponent:SetComplete(function (info : string, code : string)
 		if info and #info ~= 0 then
 			print("[CustomShader.New] Compiling shader: " .. StandardShader.Name .. " failed!")
 			print("[CustomShader.New] Error: " .. info)
 		else
 			print("[CustomShader.New] Compiling shader: " .. StandardShader.Name)
 		end
-		
+
 		print("[CustomShader.New] Shader generated: ")
 		print(code)
 	end)
-
-	customShaderComponent:SetComplete()
 
 	-- add scene entities
 	if database then

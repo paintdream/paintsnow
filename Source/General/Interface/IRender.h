@@ -160,6 +160,7 @@ namespace PaintsNow {
 
 				String name;
 				void* context;
+				void* instance;
 				TWrapper<void, Resource*, ShaderDescription&, Stage, const String&, const String&> compileCallback;
 				std::vector<std::pair<Stage, IShader* > > entries;
 			};

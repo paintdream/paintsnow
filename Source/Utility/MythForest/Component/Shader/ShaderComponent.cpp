@@ -16,33 +16,7 @@ ShaderComponent::ShaderComponent(const TShared<ShaderResource>& shader, const St
 	customMaterialShader->SetLocation(shader->GetLocation() + "/" + name + "/" + StdToUtf8(ss.str()));
 }
 
-ShaderComponent::~ShaderComponent() {
-	assert(!compileCallbackRef);
-}
-
-void ShaderComponent::SetCallback(IScript::Request& request, IScript::Request::Ref callback) {
-	assert(Flag().load(std::memory_order_acquire) & TINY_ACTIVATED);
-	if (compileCallbackRef) {
-		request.Dereference(compileCallbackRef);
-	}
-
-	compileCallbackRef = callback;
-}
-
-void ShaderComponent::Uninitialize(Engine& engine, Entity* entity) {
-	if (compileCallbackRef) {
-		engine.interfaces.script.DoLock();
-		if (!engine.interfaces.script.IsClosing()) {
-			IScript::Request& request = engine.interfaces.script.GetDefaultRequest();
-			request.Dereference(compileCallbackRef);
-		} else {
-			compileCallbackRef = IScript::Request::Ref();
-		}
-		engine.interfaces.script.UnLock();
-	}
-
-	BaseClass::Uninitialize(engine, entity);
-}
+ShaderComponent::~ShaderComponent() {}
 
 void ShaderComponent::SetInput(Engine& engine, const String& stage, const String& type, const String& name, const String& value, const String& binding, const std::vector<std::pair<String, String> >& config) {
 	assert(customMaterialShader);
@@ -58,9 +32,8 @@ void ShaderComponent::SetCode(Engine& engine, const String& stage, const String&
 	pass.SetCode(stage, code, config);
 }
 
-void ShaderComponent::SetComplete(Engine& engine) {
+void ShaderComponent::SetComplete(Engine& engine, IScript::Request::Ref callback) {
 	assert(customMaterialShader);
-
 	CustomMaterialPass& pass = static_cast<CustomMaterialPass&>(customMaterialShader->GetPass());
 	pass.SetComplete();
 
@@ -74,7 +47,7 @@ void ShaderComponent::SetComplete(Engine& engine) {
 	updater.Initialize(pass);
 
 	// fill vertex buffers
-	pass.Compile(render, queue, customMaterialShader->GetShaderResource(), Wrap(this, &ShaderComponent::OnShaderCompiled), &engine);
+	pass.Compile(render, queue, customMaterialShader->GetShaderResource(), Wrap(this, &ShaderComponent::OnShaderCompiled), &engine, (void*)callback.value);
 }
 
 void ShaderComponent::OnShaderCompiled(IRender::Resource* resource, IRender::Resource::ShaderDescription& desc, IRender::Resource::ShaderDescription::Stage stage, const String& info, const String& shaderCode) {
@@ -82,8 +55,15 @@ void ShaderComponent::OnShaderCompiled(IRender::Resource* resource, IRender::Res
 		Engine* engine = reinterpret_cast<Engine*>(desc.context);
 		assert(engine != nullptr);
 
+		IScript::Request::Ref compileCallbackRef;
+		compileCallbackRef.value = reinterpret_cast<size_t>(desc.instance);
 		if (compileCallbackRef) {
 			engine->bridgeSunset.GetKernel().QueueRoutine(this, CreateTaskScript(compileCallbackRef, info, shaderCode));
+			IScript::Request& request = engine->interfaces.script.GetDefaultRequest();
+			request.DoLock();
+			request.Dereference(compileCallbackRef);
+			request.UnLock();
+			assert(!compileCallbackRef);
 		}
 
 #ifdef _DEBUG

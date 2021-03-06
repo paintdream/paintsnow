@@ -11,7 +11,6 @@ TObject<IReflect>& ShaderComponentModule::operator () (IReflect& reflect) {
 		ReflectMethod(RequestNew)[ScriptMethodLocked = "New"];
 		ReflectMethod(RequestSetCode)[ScriptMethodLocked = "SetCode"];
 		ReflectMethod(RequestSetInput)[ScriptMethodLocked = "SetInput"];
-		ReflectMethod(RequestSetCallback)[ScriptMethodLocked = "SetCallback"];
 		ReflectMethod(RequestSetComplete)[ScriptMethod = "SetComplete"];
 		ReflectMethod(RequestExportMaterial)[ScriptMethod = "ExportMaterial"];
 	}
@@ -42,18 +41,11 @@ void ShaderComponentModule::RequestSetInput(IScript::Request& request, IScript::
 	shaderComponent->SetInput(engine, stage, type, name, value, binding, config);
 }
 
-void ShaderComponentModule::RequestSetComplete(IScript::Request& request, IScript::Delegate<ShaderComponent> shaderComponent) {
+void ShaderComponentModule::RequestSetComplete(IScript::Request& request, IScript::Delegate<ShaderComponent> shaderComponent, IScript::Request::Ref callback) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(shaderComponent);
 
-	shaderComponent->SetComplete(engine);
-}
-
-void ShaderComponentModule::RequestSetCallback(IScript::Request& request, IScript::Delegate<ShaderComponent> shaderComponent, IScript::Request::Ref callback) {
-	CHECK_REFERENCES_NONE();
-	CHECK_DELEGATE(shaderComponent);
-
-	shaderComponent->SetCallback(request, callback);
+	shaderComponent->SetComplete(engine, callback);
 }
 
 TShared<MaterialResource> ShaderComponentModule::RequestExportMaterial(IScript::Request& request, IScript::Delegate<ShaderComponent> shaderComponent, IScript::Delegate<MaterialResource> materialResource) {

@@ -48,14 +48,7 @@ namespace PaintsNow {
 		/// Notify shader setting complete, start compiling
 		/// </summary>
 		/// <param name="shaderComponent"> the ShaderComponent </param>
-		void RequestSetComplete(IScript::Request& request, IScript::Delegate<ShaderComponent> shaderComponent);
-
-		/// <summary>
-		/// Set shader compilation callback
-		/// </summary>
-		/// <param name="shaderComponent"> the ShaderComponent </param>
-		/// <param name="callback"> compilation callback </param>
-		void RequestSetCallback(IScript::Request& request, IScript::Delegate<ShaderComponent> shaderComponent, IScript::Request::Ref callback);
+		void RequestSetComplete(IScript::Request& request, IScript::Delegate<ShaderComponent> shaderComponent, IScript::Request::Ref callback);
 
 		/// <summary>
 		/// Export a new material with shader in ShaderComponent

@@ -41,7 +41,7 @@ public:
 	ShaderMap shaders;
 };
 
-IRender::Resource* PassBase::Compile(IRender& render, IRender::Queue* queue, IRender::Resource* existedShaderResource, const TWrapper<void, IRender::Resource*, IRender::Resource::ShaderDescription&, IRender::Resource::ShaderDescription::Stage, const String&, const String&>& callback, void* context) {
+IRender::Resource* PassBase::Compile(IRender& render, IRender::Queue* queue, IRender::Resource* existedShaderResource, const TWrapper<void, IRender::Resource*, IRender::Resource::ShaderDescription&, IRender::Resource::ShaderDescription::Stage, const String&, const String&>& callback, void* context, void* instance) {
 	IRender::Resource* shader = existedShaderResource != nullptr ? existedShaderResource : render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_SHADER);
 
 	IRender::Resource::ShaderDescription shaderDescription;
@@ -52,6 +52,7 @@ IRender::Resource* PassBase::Compile(IRender& render, IRender::Queue* queue, IRe
 	shaderDescription.entries = std::move(allShaders.shaders);
 	shaderDescription.compileCallback = callback;
 	shaderDescription.context = context;
+	shaderDescription.instance = instance;
 	shaderDescription.name = ToString();
 
 	// commit
