@@ -34,14 +34,21 @@ local Bootstrap = require("Engine/Boot/Bootstrap")
 -- Assure latest script
 -- local Builder = require("Build")
 -- Enable Debug Console
-
 MakeConsole()
-print("Starting ...")
--- local App = require("Script/Test/MultiScriptVM")
--- local App = require("Script/Test/MiniClient")
--- local App = require("Script/Service/Master")
-local App = require("Script/Main")
-print("Starting Main ...")
-local co = coroutine.create(App.Main)
-coroutine.resume(co, ...)
+
+local args = { ... }
+
+if args[1] and args[1]:sub(1, 1) == "!" then
+	print("Starting custom " .. args[1])
+	local scriptEntry = args[1]:sub(2)
+	local App = require(scriptEntry)
+	local co = coroutine.create(App.Main)
+	coroutine.resume(co, table.unpack(args, 2))
+else
+	print("Starting Main ...")
+	local App = require("Script/Main")
+	local co = coroutine.create(App.Main)
+	coroutine.resume(co, ...)
+end
+
 

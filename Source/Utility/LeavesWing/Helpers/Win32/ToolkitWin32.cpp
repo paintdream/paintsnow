@@ -36,6 +36,8 @@ TObject<IReflect>& ToolkitWin32::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectMethod()) {
+		ReflectMethod(RequestGetMainThreadID)[ScriptMethod = "GetMainThreadID"];
+		ReflectMethod(RequestGetHostPath)[ScriptMethod = "GetHostPath"];
 		ReflectMethod(RequestGetSystemInfo)[ScriptMethod = "GetSystemInfo"];
 		ReflectMethod(RequestExit)[ScriptMethod = "Exit"];
 		ReflectMethod(RequestListenMessage)[ScriptMethod = "ListenMessage"];
@@ -49,6 +51,10 @@ TObject<IReflect>& ToolkitWin32::operator () (IReflect& reflect) {
 	}
 
 	return *this;
+}
+
+uint32_t ToolkitWin32::RequestGetMainThreadID(IScript::Request& request) {
+	return GetMainThreadID();
 }
 
 #ifndef PROCESSOR_ARCHITECTURE_ARM64
@@ -227,19 +233,32 @@ void ToolkitWin32::RequestPostThreadMessage(IScript::Request& request, uint64_t 
 	::PostThreadMessageW((DWORD)thread, (UINT)msg, (WPARAM)wParam, (LPARAM)lParam);
 }
 
-std::pair<uint64_t, uint64_t> ToolkitWin32::RequestCreateProcess(IScript::Request& request, const String& path, const String& currentPath, const String& parameter) {
+String ToolkitWin32::RequestGetHostPath(IScript::Request& request) {
+	WCHAR hostPath[MAX_PATH * 2];
+	::GetModuleFileNameW(nullptr, hostPath, MAX_PATH * 2 - 2);
+	return SystemToUtf8(String((const char*)hostPath, wcslen(hostPath) * 2));
+}
+
+std::pair<uint64_t, uint64_t> ToolkitWin32::RequestCreateProcess(IScript::Request& request, const String& path, const String& parameter, const String& currentPath) {
 	String cmdLine = Utf8ToSystem(path);
 	String directory = Utf8ToSystem(currentPath);
 	STARTUPINFOW info = { 0 };
 	info.cb = sizeof(STARTUPINFOW);
-	info.dwFlags = STARTF_USESHOWWINDOW;
-	info.wShowWindow = parameter == "Show" ? SW_SHOW : SW_HIDE; // default to hide
+	info.dwFlags = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
+	info.hStdError = ::GetStdHandle(STD_ERROR_HANDLE);
+	info.hStdInput = ::GetStdHandle(STD_INPUT_HANDLE);
+	info.hStdOutput = ::GetStdHandle(STD_OUTPUT_HANDLE);
+	info.wShowWindow = parameter == "Hide" ? SW_HIDE : SW_SHOW;
 	PROCESS_INFORMATION pi = { 0 };
 
 	WCHAR buffer[MAX_PATH * 2] = { 0 };
-	wcsncpy(buffer, (WCHAR*)cmdLine.c_str(), MAX_PATH * 2);
+	if (path.empty()) {
+		::GetModuleFileNameW(nullptr, buffer, MAX_PATH * 2);
+	} else {
+		wcsncpy(buffer, (WCHAR*)cmdLine.c_str(), MAX_PATH * 2);
+	}
 
-	if (::CreateProcessW(nullptr, buffer, nullptr, nullptr, FALSE, 0, nullptr, currentPath.empty() ? nullptr : (WCHAR*)directory.c_str(), &info, &pi)) {
+	if (::CreateProcessW(nullptr, buffer, nullptr, nullptr, TRUE, 0, nullptr, currentPath.empty() ? nullptr : (WCHAR*)directory.c_str(), &info, &pi)) {
 		::CloseHandle(pi.hThread);
 		return std::make_pair((uint64_t)pi.hProcess, (uint64_t)pi.dwThreadId);
 	} else {

@@ -29,6 +29,13 @@ namespace PaintsNow {
 		void RequestGetSystemInfo(IScript::Request& request);
 
 		/// <summary>
+		/// Get id of main thread.
+		/// </summary>
+		/// <param name="request"></param>
+		/// <returns></returns>
+		uint32_t RequestGetMainThreadID(IScript::Request& request);
+
+		/// <summary>
 		/// Listen win32 message
 		/// </summary>
 		/// <param name="callback"> message callback </param>
@@ -53,7 +60,13 @@ namespace PaintsNow {
 		/// <param name="currentPath"> current folder path </param>
 		/// <param name="parameter"> optional configs </param>
 		/// <returns> a list with { win32 process handle, main thread id } </returns>
-		std::pair<uint64_t, uint64_t> RequestCreateProcess(IScript::Request& request, const String& path, const String& currentPath, const String& parameter);
+		std::pair<uint64_t, uint64_t> RequestCreateProcess(IScript::Request& request, const String& path, const String& parameter, const String& currentPath);
+
+		/// <summary>
+		/// Get path of host program
+		/// </summary>
+		/// <returns> full path of host program </returns>
+		String RequestGetHostPath(IScript::Request& request);
 
 		/// <summary>
 		/// Close win32 handle

@@ -20,11 +20,11 @@ local function Expand(t, newLine, depth)
 	end
 end
 
---[[
-print = function (...)
-	local args = { ... }
-	if #args ~= 0 then
-		return Print(Expand(args, true, 2))
+if System and System.Print then
+	print = function (...)
+		local args = { ... }
+		if #args ~= 0 then
+			return System.Print(Expand(args, true, 2))
+		end
 	end
 end
-]]

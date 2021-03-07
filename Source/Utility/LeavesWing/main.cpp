@@ -41,7 +41,7 @@ static void RegisterDump() {
 int main(int argc, char* argv[]) {
 	// Register/unregister service?
 #ifdef _WIN32
-	::CoInitialize(nullptr);
+	::CoInitializeEx(0, COINIT_MULTITHREADED);
 	if (argc > 1) {
 		if (strcmp(argv[1], "/install") == 0) {
 			if (ServiceWin32::GetInstance().InstallService()) {
