@@ -175,11 +175,14 @@ function Terminal.New(dispatcher : WorkDispatcher, ip : string,
 	local terminal = setmetatable({ IP = ip, Peers = {}, DataHandler = dataHandler, StateHandler = stateHandler, Dispatcher = dispatcher }, Terminal as METATABLE) as Terminal
 
 	if ip then
+		local address : string
 		local listener : Listener = dispatcher:OpenListener(ip, http, function (listener : Listener, event : string)
 			if event == "Connected" then
-				local address = listener:GetListenerAddress()
+				address = listener:GetListenerAddress()
 				print("Listener created on IP: " .. address)
-				coroutine.resume(instance, address)
+				if coroutine.status(instance) == "suspended" then
+					coroutine.resume(instance)
+				end
 			end
 		end, function (listener : Listener, connection : Connection)
 			-- do not add connection here
@@ -196,7 +199,7 @@ function Terminal.New(dispatcher : WorkDispatcher, ip : string,
 			listener:ActivateListener()
 			print("Listener activated")
 
-			terminal.Address = (coroutine.yield()) as string
+			terminal.Address = (address or ((coroutine.yield()) as string))
 			return terminal
 		else
 			print("Create listener failed!")

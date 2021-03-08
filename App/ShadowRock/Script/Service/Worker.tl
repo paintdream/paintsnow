@@ -31,7 +31,7 @@ function Worker.New(masterThreadID : number) : Worker
 	local worker = {
 		MasterThreadID = masterThreadID,
 		Now = 0,
-		ResponseTimeStamp = 0
+		ResponseTimeStamp = 0,
 	}
 
 	return setmetatable(worker, Worker as METATABLE)
@@ -51,6 +51,7 @@ function Worker.Main(masterThreadID : string)
 		Common.DispatchMessage(WorkerInstance as Common, message, wparam, lparam)
 	end)
 
+	Common.InitializeListener(WorkerInstance as Common, "127.0.0.1:0")
 	Common.InitializeTicker(WorkerInstance as Common)
 end
 
