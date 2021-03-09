@@ -2,6 +2,7 @@ local Common = require("Script/Service/Common")
 
 local WorkerItem = record
 	Handle : number
+	Port : number
 	EchoTimeStamp : number
 end
 
@@ -20,14 +21,22 @@ local mainThreadID = Common.MainThreadID
 local hostPath = ToolkitWin32.GetHostPath()
 local systemInfo = ToolkitWin32.GetSystemInfo() as { string : string } 
 
+function Master:__gc()
+	for threadID, item in pairs(self.Workers) do
+		ToolkitWin32.PostThreadMessage(threadID, Messages.WM_QUIT, 0, 0)
+		ToolkitWin32.CloseHandle(item.Handle)
+	end
+end
+
 function Master:WM_ECHO(wparam : number, lparam: number)
 	-- extract main thread id
-	print("ECHO RECEIVED: " .. tostring(self.Now))
+	print("ECHO RECEIVED: " .. tostring(self.Now) .. " Listen at " .. tostring(lparam))
 	local workerThreadID = wparam
 	if workerThreadID ~= 0 then
 		local worker = self.Workers[workerThreadID]
 		if worker then
 			worker.EchoTimeStamp = self.Now
+			worker.Port = lparam
 			ToolkitWin32.PostThreadMessage(workerThreadID, Messages.WM_ECHO_RESPONSE, workerThreadID, 0)
 		else
 			-- not exist, let it die
@@ -61,6 +70,7 @@ function Master:Tick(now : number)
 			-- kick off
 			print("Worker " .. threadID .. " was not able to be connected for " .. Common.TIME_OUT .. " seconds. Kill it at once!")
 			ToolkitWin32.PostThreadMessage(threadID, Messages.WM_QUIT, 0, 0)
+			ToolkitWin32.CloseHandle(item.Handle)
 			self.Workers[threadID] = nil -- it's safe in lua
 		else
 			currentWorkerCount = currentWorkerCount + 1
@@ -71,7 +81,6 @@ function Master:Tick(now : number)
 		self:SpawnWorker()
 	end
 end
-
 
 function Master.New(workerCount : number) : Master
 	local master = {

@@ -9,6 +9,7 @@ local Common = record
 	Ticker : Entity
 	Listener : Terminal
 	Dispatcher : WorkDispatcher
+	Port : number
 	__index : any
 end
 
@@ -59,6 +60,7 @@ function Common:InitializeListener(ip : string)
 
 		self.Listener = listener
 		self.Dispatcher = dispatcher
+		self.Port = tonumber(listener.Address:match(".+:(.+)"))
 	end
 end
 

@@ -1,10 +1,12 @@
 local Common = require("Script/Service/Common")
+local Terminal = require("Engine/Controller/Terminal")
 local Messages = Common.Messages
 
 local Worker = record
 	MasterThreadID : number
 	Now : number
 	ResponseTimeStamp : number
+	Port : number
 	__index : any
 end
 
@@ -23,7 +25,7 @@ function Worker:Tick(now : number)
 		print("Cannot connect to master, exit now.")
 		ToolkitWin32.PostThreadMessage(Common.MainThreadID, Messages.WM_QUIT, 0, 0)
 	else
-		ToolkitWin32.PostThreadMessage(self.MasterThreadID, Messages.WM_ECHO, Common.MainThreadID, 0)
+		ToolkitWin32.PostThreadMessage(self.MasterThreadID, Messages.WM_ECHO, Common.MainThreadID, self.Port)
 	end
 end
 
