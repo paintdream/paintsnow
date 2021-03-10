@@ -29,6 +29,12 @@ function Worker:Tick(now : number)
 	end
 end
 
+function Worker:NetworkData(connection : Connection, data : string)
+end
+
+function Worker:NetworkState(connection : Connection, state : boolean, src : string, dst : string) : any
+end
+
 function Worker.New(masterThreadID : number) : Worker
 	local worker = {
 		MasterThreadID = masterThreadID,
@@ -43,9 +49,7 @@ function Worker.Main(masterThreadID : string)
 	print("LeavesWind Worker at " .. Common.MainThreadID)
 	local oldprint = print
 	_G.print = function (...)
-		oldprint("<Worker id=" .. Common.MainThreadID .. ">")
-		oldprint(...)
-		oldprint("<Worker/>")
+		oldprint("[Worker " .. Common.MainThreadID .. "] " .. tostring(table.concat({ ... } as { string }, " ")))
 	end
 
 	global WorkerInstance = Worker.New(tonumber(masterThreadID))

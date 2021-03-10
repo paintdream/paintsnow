@@ -10,6 +10,7 @@ local Common = record
 	Listener : Terminal
 	Dispatcher : WorkDispatcher
 	Port : number
+	Script : ScriptComponent
 	__index : any
 end
 
@@ -67,6 +68,8 @@ end
 function Common:InitializeTicker()
 	if not self.Ticker then
 		local entity = MythForest.NewEntity(-1)
+		self.Ticker = entity
+
 		local clock = HeartVioliner.NewClock(Common.TIMER_INTERVAL * 1000.0)
 		local eventComponent : EventComponent = EventComponentModule.New()
 		eventComponent:BindEventTick(clock)
@@ -76,9 +79,9 @@ function Common:InitializeTicker()
 			self:Tick(clock:Now() / 1000.0)
 		end)
 
+		self.Script = scriptComponent
 		entity:AddEntityComponent(eventComponent as Component)
 		entity:AddEntityComponent(scriptComponent as Component)
-		self.Ticker = entity
 	end
 end
 

@@ -1,4 +1,5 @@
 local Common = require("Script/Service/Common")
+local Core = require("Engine/Core")
 
 local WorkerItem = record
 	Handle : number
@@ -10,6 +11,7 @@ local Master = record
 	Workers : { number : WorkerItem } -- main thread id -> process handle 
 	WorkerCount : number
 	Now : number
+	Port : number
 	__index : any
 end
 
@@ -37,7 +39,7 @@ function Master:WM_ECHO(wparam : number, lparam: number)
 		if worker then
 			worker.EchoTimeStamp = self.Now
 			worker.Port = lparam
-			ToolkitWin32.PostThreadMessage(workerThreadID, Messages.WM_ECHO_RESPONSE, workerThreadID, 0)
+			ToolkitWin32.PostThreadMessage(workerThreadID, Messages.WM_ECHO_RESPONSE, Common.MainThreadID, self.Port)
 		else
 			-- not exist, let it die
 			ToolkitWin32.PostThreadMessage(workerThreadID, Messages.WM_QUIT, 0, 0)
@@ -82,6 +84,27 @@ function Master:Tick(now : number)
 	end
 end
 
+function Master:NetworkData(connection : Connection, data : string)
+	-- parse data
+	local pack = Core.Decode(data) as { string : any}
+
+	-- write result
+
+	-- dispatch request
+	if pack.Action == "Query" then
+		connection:WriteConnection(Core.Encode(self.Workers as { any : any }))
+	end
+end
+
+function Master:NetworkState(connection : Connection, state : boolean, src : string, dst : string) : any
+	-- stateless, just print state out
+	if state then
+		print("New connection from " .. src)
+	else
+		print("Lost connection from " .. src)
+	end
+end
+
 function Master.New(workerCount : number) : Master
 	local master = {
 		WorkerCount = workerCount,
@@ -98,11 +121,17 @@ function Master.Main(workerCount : number)
 		print(k .. ": " .. tostring(v))
 	end
 
-	global MasterInstance = Master.New(workerCount or 1)
+	local oldprint = print
+	_G.print = function (...)
+		oldprint("[Master " .. Common.MainThreadID .. "] " .. tostring(table.concat({ ... } as { string }, " ")))
+	end
+
+	global MasterInstance = Master.New(workerCount or 2)
 	ToolkitWin32.ListenMessage(function (message : number, wparam : number, lparam : number)
 		Common.DispatchMessage(MasterInstance as Common, message, wparam, lparam)
 	end)
 
+	Common.InitializeListener(MasterInstance as Common)
 	Common.InitializeTicker(MasterInstance as Common)
 end
 
