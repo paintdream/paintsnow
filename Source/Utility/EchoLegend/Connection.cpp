@@ -121,10 +121,11 @@ void Connection::DispatchEvent(INetwork::EVENT event) {
 	IScript::Request& req = *bridgeSunset.requestPool.AcquireSafe();
 	req.DoLock();
 	req.Push();
-	if ((Flag().load(std::memory_order_relaxed) & CONNECTION_PACKET_MODE)) {
-		req << currentData;
+	if (event == INetwork::READ && ((Flag().load(std::memory_order_relaxed) & CONNECTION_PACKET_MODE))) {
+		req.Call(callback, this, Looper::EventToString(event), currentData);
+	} else {
+		req.Call(callback, this, Looper::EventToString(event));
 	}
-	req.Call(callback, this, Looper::EventToString(event));
 	req.Pop();
 	req.UnLock();
 	bridgeSunset.requestPool.ReleaseSafe(&req);
@@ -142,7 +143,7 @@ void Connection::ScriptUninitialize(IScript::Request& request) {
 
 String Connection::Read() {
 	OPTICK_EVENT();
-	if (!(Flag().load(std::memory_order_acquire) & TINY_ACTIVATED)) {
+	if (Flag().load(std::memory_order_acquire) & TINY_ACTIVATED) {
 		assert(!(Flag().load(std::memory_order_acquire) & CONNECTION_PACKET_MODE));
 
 		size_t length = 0;
@@ -159,7 +160,7 @@ String Connection::Read() {
 
 void Connection::Write(const String& data) {
 	OPTICK_EVENT();
-	if (!(Flag().load(std::memory_order_acquire) & TINY_ACTIVATED)) {
+	if (Flag().load(std::memory_order_acquire) & TINY_ACTIVATED) {
 		if (Flag().load(std::memory_order_relaxed) & CONNECTION_PACKET_MODE) {
 			INetwork::Packet packet;
 			INetwork::PacketSizeType length = (INetwork::PacketSizeType)data.length();
@@ -177,6 +178,7 @@ void Connection::Write(const String& data) {
 void Connection::GetAddress(IScript::Request& request) {
 	String src, dst;
 	network.GetConnectionInfo(connection, src, dst);
+	assert(!src.empty());
 
 	request << begintable
 		<< key("Source") << src

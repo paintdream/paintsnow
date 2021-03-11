@@ -64,19 +64,22 @@ function Terminal:RemoveConnection(connection : Connection)
 	end
 end
 
-function Terminal:EventHandler(connection : Connection, status : string) : boolean
+function Terminal:EventHandler(connection : Connection, status : string, packetData : string) : boolean
 	if status == "Connected" then
 		local info = connection:GetConnectionAddresses() as ConnectionRecord
 		if self.StateHandler(connection, true, info.Source, info.Destination) then
 			self:AddConnection(connection)
+			return true
+		else
+			return false
 		end
-
-		return true
 	elseif status == "Read" then
-		self.DataHandler(connection, connection:ReadConnection(), nil, nil, nil)
+		assert(packetData)
+		self.DataHandler(connection, packetData, nil, nil, nil)
 		return true
 	elseif status == "Close" or status == "Error" then
-		self.StateHandler(connection, false, "", "")
+		local info = connection:GetConnectionAddresses() as ConnectionRecord
+		self.StateHandler(connection, false, info.Source, info.Destination)
 		self:RemoveConnection(connection)
 		return false
 	end
@@ -84,20 +87,27 @@ end
 
 function Terminal:Connect(ip : string) : Connection
 	local instance = coroutine.running()
-	local connection : Connection = self.Dispatcher:OpenConnection(ip, false, function (connection : Connection, status : string)
-		local success = self:EventHandler(connection, status)
+	local connected = false
+	local success = false
+	local connection : Connection = self.Dispatcher:OpenConnection(ip, false, function (connection : Connection, status : string, packetData : string)
+		success = self:EventHandler(connection, status, packetData)
 		if status == "Connected" then
-			coroutine.resume(instance, success)
+			connected = true
+			if coroutine.status(instance) == "suspended" then
+				coroutine.resume(instance, success)
+			end
 		end
 	end, true)
 
 	-- establishing
 	connection:ActivateConnection()
 
-	if coroutine.yield() then
+	if (connected and success) or (coroutine.yield() as boolean) then
+		print("Connect success!")
 		self:AddConnection(connection)
 		return connection
 	else
+		print("Connect failed!")
 		connection:DeactivateConnection()
 		return nil
 	end
@@ -126,14 +136,14 @@ function Terminal:EventHandlerHttp(connection : Connection, status : string) : b
 		connection:WriteConnectionHttpResponse(code, reason, header as {any}, data)
 		return true
 	elseif status == "Close" or status == "Error" then
-		self.StateHandler(connection, false, "", "")
+		local info = connection:GetConnectionAddresses() as ConnectionRecord
+		self.StateHandler(connection, false, info.Source, info.Destination)
 		self:RemoveConnection(connection)
 		return false
 	else
 		return false
 	end
 end
-
 
 function Terminal:HttpRequest(host : string, path : string, method : string,
 	options : { string : string }, header : { string : string }, callback : function (string) : (any) ) : Connection
@@ -157,7 +167,7 @@ function Terminal:HttpRequest(host : string, path : string, method : string,
 			local request = connection:ReadConnectionHttpRequest() as HttpRequestRecord
 			callback(request.Data)
 		end
-	end, false)
+	end, true)
 
 	if connection then
 		connection:ActivateConnection()
@@ -189,10 +199,10 @@ function Terminal.New(dispatcher : WorkDispatcher, ip : string,
 			-- wait for actual event
 			-- EchoLegend.WriteConnectionRecord(connection, "Hello")
 			-- print("NEW CONNECTION")
-			eventHandler(terminal, connection, "Connected")
-		end, function (connection : Connection, status : string)
+			eventHandler(terminal, connection, "Connected", nil)
+		end, function (connection : Connection, status : string, packetData : string)
 			--print("SERVER GOT" .. status)
-			eventHandler(terminal, connection, status)
+			eventHandler(terminal, connection, status, packetData)
 		end, true)
 
 		if listener then

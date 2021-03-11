@@ -49,7 +49,7 @@ end
 
 function Master:SpawnWorker() : WorkerItem
 	-- empty string for self
-	local id = ToolkitWin32.CreateProcess(hostPath .. " /service \"--IScript=#!Script/Service/Worker " .. tostring(mainThreadID) .. "\"", "Show", "") as { number }
+	local id = ToolkitWin32.CreateProcess(hostPath .. " /service \"--IScript=#!Script/Service/Worker " .. tostring(mainThreadID) .. " " .. tostring(self.Port) .. "\"", "Show", "") as { number }
 	local processHandle = id[1]
 	local threadID = id[2]
 	if processHandle ~= 0 then
@@ -85,24 +85,29 @@ function Master:Tick(now : number)
 end
 
 function Master:NetworkData(connection : Connection, data : string)
+	print("Master receive request length " .. tostring(#data))
 	-- parse data
 	local pack = Core.Decode(data) as { string : any}
-
 	-- write result
 
 	-- dispatch request
-	if pack.Action == "Query" then
+	local action = pack.Action as string
+	if action == "Query" then
 		connection:WriteConnection(Core.Encode(self.Workers as { any : any }))
+	elseif action == "Info" then
+		connection:WriteConnection(Core.Encode(systemInfo as { any : any }))
 	end
 end
 
 function Master:NetworkState(connection : Connection, state : boolean, src : string, dst : string) : any
 	-- stateless, just print state out
 	if state then
-		print("New connection from " .. src)
+		print("Activate connection from " .. src)
 	else
-		print("Lost connection from " .. src)
+		print("Deactivate connection from " .. src)
 	end
+
+	return true
 end
 
 function Master.New(workerCount : number) : Master
@@ -126,7 +131,7 @@ function Master.Main(workerCount : number)
 		oldprint("[Master " .. Common.MainThreadID .. "] " .. tostring(table.concat({ ... } as { string }, " ")))
 	end
 
-	global MasterInstance = Master.New(workerCount or 2)
+	global MasterInstance = Master.New(workerCount or 1)
 	ToolkitWin32.ListenMessage(function (message : number, wparam : number, lparam : number)
 		Common.DispatchMessage(MasterInstance as Common, message, wparam, lparam)
 	end)

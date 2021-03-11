@@ -1,7 +1,7 @@
 -- Import All Modules and functions in System to global table for typedlua routing ...
 local function ImportSymbols(env, key, collection)
 	if collection.__delegate__ then
-		print("Symbol imported for module " .. key)
+		-- print("Symbol imported for module " .. key)
 		for k, v in pairs(collection) do
 			env[k] = v
 			if type(v) == "table" then

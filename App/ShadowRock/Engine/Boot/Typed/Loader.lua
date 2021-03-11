@@ -77,7 +77,7 @@ function require(name, ...)
 		return mod
 	end
 
-	print("Require " .. name)
+	-- print("Require " .. name)
 
 	path, msg = package.searchpath(name, "")
 	if not path then
