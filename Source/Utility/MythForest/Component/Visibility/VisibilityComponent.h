@@ -48,10 +48,12 @@ namespace PaintsNow {
 			Bytes payload;
 		};
 
+		struct TaskData;
 		class Cell : public TAllocatedTiny<Cell, SharedTiny>, public Cache {
 		public:
 			Cell();
-			uint32_t finishCount;
+			std::atomic<uint32_t> finishCount;
+			std::atomic<TaskData*> taskHead;
 		};
 
 		struct TaskData {
@@ -66,7 +68,7 @@ namespace PaintsNow {
 				STATUS_POSTPROCESS,
 			};
 
-			TaskData() : status(STATUS_IDLE), pendingCount(0), renderQueue(nullptr), renderTarget(nullptr) {}
+			TaskData() : status(STATUS_IDLE), pendingCount(0), renderQueue(nullptr), renderTarget(nullptr), next(nullptr) {}
 
 			struct WarpData {
 				BytesCache bytesCache;
@@ -75,6 +77,7 @@ namespace PaintsNow {
 
 			uint32_t pendingCount;
 			uint32_t status;
+			TaskData* next;
 			TShared<Cell> cell;
 			IRender::Queue* renderQueue;
 			IRender::Resource* renderTarget;
@@ -116,7 +119,7 @@ namespace PaintsNow {
 		void RoutineTickTasks(Engine& engine);
 		void ResolveTasks(Engine& engine);
 		void DispatchTasks(Engine& engine);
-		void PostProcess(TaskData& task);
+		void PostProcess(const TShared<Cell>& cell);
 
 		void CoTaskAssembleTask(Engine& engine, TaskData& task, uint32_t face, const TShared<VisibilityComponent>& selfHolder);
 		void SetupIdentities(Engine& engine, Entity* hostEntity);

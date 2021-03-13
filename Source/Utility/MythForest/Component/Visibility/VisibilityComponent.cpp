@@ -210,7 +210,10 @@ static inline void MergeSample(Bytes& dst, const Bytes& src) {
 	}
 }
 
-VisibilityComponentConfig::Cell::Cell() : finishCount(0) {}
+VisibilityComponentConfig::Cell::Cell() {
+	finishCount.store(0, std::memory_order_relaxed);
+	taskHead.store(nullptr, std::memory_order_release);
+}
 
 const Bytes& VisibilityComponent::QuerySample(Engine& engine, const Float3& position) {
 	OPTICK_EVENT();
@@ -245,7 +248,7 @@ const Bytes& VisibilityComponent::QuerySample(Engine& engine, const Float3& posi
 					std::binary_insert(bakePoints, cell);
 				}
 
-				incomplete = incomplete || cell->finishCount != FACE_COUNT;
+				incomplete = incomplete || cell->finishCount.load(std::memory_order_acquire) != FACE_COUNT;
 				toMerge.emplace_back(cell);
 				mergedSize = Math::Max(mergedSize, (uint32_t)safe_cast<uint32_t>(cell->payload.GetSize()));
 			}
@@ -275,11 +278,16 @@ TShared<SharedTiny> VisibilityComponent::StreamLoadHandler(Engine& engine, const
 
 TShared<SharedTiny> VisibilityComponent::StreamUnloadHandler(Engine& engine, const UShort3& coord, const TShared<SharedTiny>& tiny, const TShared<SharedTiny>& context) {
 	TShared<Cell> cell = tiny->QueryInterface(UniqueType<Cell>());
-	cell->payload.Clear();
-	cell->finishCount = 0;
-	cell->Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_release);
 
-	return cell();
+	// is ready?
+	if (cell->finishCount.load(std::memory_order_acquire) == FACE_COUNT) {
+		cell->payload.Clear();
+		cell->finishCount.store(0, std::memory_order_release);
+		cell->Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_release);
+		return cell();
+	} else {
+		return nullptr; // let it choose a new one
+	}
 }
 
 bool VisibilityComponent::IsVisible(const Bytes& s, TransformComponent* transformComponent) {
@@ -460,32 +468,39 @@ void VisibilityComponent::CollectComponents(Engine& engine, TaskData& task, cons
 	}
 }
 
-void VisibilityComponent::PostProcess(TaskData& task) {
-	OPTICK_EVENT();
+void VisibilityComponent::PostProcess(const TShared<Cell>& cell) {
+	TaskData* dataList;
+	while ((dataList = cell->taskHead.exchange(nullptr, std::memory_order_release)) != nullptr) {
+		OPTICK_EVENT();
+		while (dataList != nullptr) {
+			TaskData& task = *dataList;
+			assert(task.status == TaskData::STATUS_POSTPROCESS);
+			Cell& cell = *task.cell;
+			Bytes& encodedData = cell.payload;
+			const Bytes& data = task.data;
+			assert(data.GetSize() % sizeof(uint32_t) == 0);
+			uint32_t count = safe_cast<uint32_t>(data.GetSize()) / sizeof(uint32_t);
+			const uint32_t* p = reinterpret_cast<const uint32_t*>(data.GetData());
+			uint8_t* target = encodedData.GetData();
 
-	assert(task.status == TaskData::STATUS_POSTPROCESS);
-	Cell& cell = *task.cell;
-	Bytes& encodedData = cell.payload;
-	const Bytes& data = task.data;
-	assert(data.GetSize() % sizeof(uint32_t) == 0);
-	uint32_t count = safe_cast<uint32_t>(data.GetSize()) / sizeof(uint32_t);
-	const uint32_t* p = reinterpret_cast<const uint32_t*>(data.GetData());
-	uint8_t* target = encodedData.GetData();
+			for (size_t m = 0; m < count; m++) {
+				uint32_t objectID = p[m];
+				uint32_t location = objectID >> 3;
+				if (location >= encodedData.GetSize()) {
+					encodedData.Resize(location + 1, 0);
+					target = encodedData.GetData();
+				}
 
-	for (size_t m = 0; m < count; m++) {
-		uint32_t objectID = p[m];
-		uint32_t location = objectID >> 3;
-		if (location >= encodedData.GetSize()) {
-			encodedData.Resize(location + 1, 0);
-			target = encodedData.GetData();
+				target[location] |= 1 << (objectID & 7);
+			}
+
+			dataList = dataList->next;
+			task.next = nullptr;
+			cell.finishCount.fetch_add(1, std::memory_order_release);
+			std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(task.status);
+			finalStatus.store(TaskData::STATUS_IDLE, std::memory_order_release);
 		}
-
-		target[location] |= 1 << (objectID & 7);
 	}
-
-	cell.finishCount++;
-	std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(task.status);
-	finalStatus.store(TaskData::STATUS_IDLE, std::memory_order_release);
 }
 
 void VisibilityComponent::ResolveTasks(Engine& engine) {
@@ -496,7 +511,9 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 		std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(task.status);
 		if (task.status == TaskData::STATUS_BAKED) {
 			finalStatus.store(TaskData::STATUS_POSTPROCESS);
-			engine.GetKernel().GetThreadPool().Push(CreateTaskContextFree(Wrap(this, &VisibilityComponent::PostProcess), std::ref(task)));
+			Cell& cell = *task.cell();
+			task.next = cell.taskHead.exchange(&task, std::memory_order_acquire);
+			engine.GetKernel().GetThreadPool().Push(CreateTaskContextFree(Wrap(this, &VisibilityComponent::PostProcess), &cell));
 		} else if (task.status == TaskData::STATUS_ASSEMBLING) {
 			if (task.pendingCount == 0) {
 				// Commit draw calls.

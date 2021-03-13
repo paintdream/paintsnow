@@ -144,7 +144,7 @@ ZFrameGLFW::ZFrameGLFW(GLFWwindow** windowPtr, bool vulkan, const Int2& size, IF
 	glfwSetCursorPosCallback(window, ::OnMouseMoveCallback);
 	glfwSetScrollCallback(window, ::OnScrollCallback);
 	glfwMakeContextCurrent(window);
-	glfwSwapInterval(0);
+	// glfwSwapInterval(0);
 }
 
 ZFrameGLFW::~ZFrameGLFW() {
@@ -161,6 +161,10 @@ void ZFrameGLFW::SetCallback(IFrame::Callback* cb) {
 
 void ZFrameGLFW::SetWindowTitle(const String& title) {
 	glfwSetWindowTitle(window, title.c_str());
+}
+
+void ZFrameGLFW::EnableVerticalSynchronization(bool enable) {
+	glfwSwapInterval(enable ? 1 : 0);
 }
 
 void ZFrameGLFW::OnMouse(const EventMouse& mouse) {

@@ -53,7 +53,7 @@ void StreamComponent::UnloadInternal(Engine& engine, Grid& grid, const TShared<S
 	}
 }
 
-SharedTiny* StreamComponent::Load(Engine& engine, const UShort3& coord, const TShared<SharedTiny>&context) {
+SharedTiny* StreamComponent::Load(Engine& engine, const UShort3& coord, const TShared<SharedTiny>& context) {
 	OPTICK_EVENT();
 	size_t offset = (coord.z() * dimension.y() + coord.y()) * dimension.x() + coord.x();
 	uint16_t id = idGrids[offset];
@@ -63,12 +63,12 @@ SharedTiny* StreamComponent::Load(Engine& engine, const UShort3& coord, const TS
 		id = recycleQueue[recycleStart];
 
 		Grid& grid = grids[id];
-		TShared<SharedTiny> last = grid.object;
 
 		if (grid.object) {
 			UnloadInternal(engine, grid, context);
 		}
 
+		TShared<SharedTiny> last = grid.object;
 		grid.recycleIndex = recycleStart;
 		recycleStart = (recycleStart + 1) % safe_cast<uint16_t>(recycleQueue.size());
 

@@ -21,6 +21,7 @@ public:
 
 	void SetWindowSize(const Int2& size) override {}
 	void SetWindowTitle(const String& title) override {}
+	void EnableVerticalSynchronization(bool enable) override {}
 
 	virtual void OnMouse(const EventMouse& mouse) {}
 	virtual void OnKeyboard(const EventKeyboard& keyboard) {}
@@ -126,6 +127,7 @@ void Loader::Run(const CmdLine& cmdLine) {
 	const std::list<CmdLine::Option>& modules = cmdLine.GetModuleList();
 
 	bool nogui = true;
+	bool vsync = true;
 	bool isVulkan = true;
 	bool enableModuleLog = false;
 	const std::map<String, CmdLine::Option>& configMap = cmdLine.GetConfigMap();
@@ -141,6 +143,8 @@ void Loader::Run(const CmdLine& cmdLine) {
 	for (std::map<String, CmdLine::Option>::const_iterator p = configMap.begin(); p != configMap.end(); ++p) {
 		if ((*p).first == "Graphic") {
 			nogui = (*p).second.name != "true";
+		} else if ((*p).first == "VSync") {
+			vsync = (*p).second.name == "true";
 		} else if ((*p).first == "Log") {
 			enableModuleLog = (*p).second.name == "true";
 		} else if ((*p).first == "Entry") {
@@ -391,6 +395,7 @@ void Loader::Run(const CmdLine& cmdLine) {
 				if (nogui) {
 					leavesFlute.EnterStdinLoop();
 				} else {
+					frame->EnableVerticalSynchronization(vsync);
 					leavesFlute.EnterMainLoop();
 				}
 			}

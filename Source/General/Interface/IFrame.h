@@ -132,6 +132,7 @@ namespace PaintsNow {
 		virtual const Int2& GetWindowSize() const = 0;
 		virtual void SetWindowSize(const Int2& size) = 0;
 		virtual void SetWindowTitle(const String& title) = 0;
+		virtual void EnableVerticalSynchronization(bool enable) = 0;
 		enum CURSOR { NONE, ARROW, CROSS, WAIT };
 		virtual void ShowCursor(CURSOR cursor) = 0;
 		virtual void WarpCursor(const Int2& position) = 0;

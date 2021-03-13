@@ -18,6 +18,7 @@ namespace PaintsNow {
 		const Int2& GetWindowSize() const override;
 		void SetWindowSize(const Int2& size) override;
 		void SetWindowTitle(const String& title) override;
+		void EnableVerticalSynchronization(bool enable) override;
 
 		bool IsRendering() const override;
 		void EnterMainLoop() override;
