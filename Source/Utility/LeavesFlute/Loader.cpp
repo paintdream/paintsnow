@@ -132,7 +132,15 @@ void Loader::Run(const CmdLine& cmdLine) {
 	bool enableModuleLog = false;
 	const std::map<String, CmdLine::Option>& configMap = cmdLine.GetConfigMap();
 	String entry = "Entry";
-	uint32_t threadCount = 4;
+	uint32_t threadCount;
+#ifdef _WIN32
+	// full speed
+	SYSTEM_INFO systemInfo;
+	::GetSystemInfo(&systemInfo);
+	threadCount = (int32_t)systemInfo.dwNumberOfProcessors;
+#else
+	threadCount = std::thread::hardware_concurrency();
+#endif
 
 	String mount;
 	uint32_t warpCount = 0; // let mythforest decide
@@ -156,19 +164,11 @@ void Loader::Run(const CmdLine& cmdLine) {
 			warpCount = Math::Min(maxWarpCount, (uint32_t)safe_cast<uint32_t>(atoi((*p).second.name.c_str())));
 		} else if ((*p).first == "Thread") {
 			int32_t expectedThreadCount = (int32_t)safe_cast<int32_t>(atoi((*p).second.name.c_str()));
-#ifdef _WIN32
-			// full speed
 			if (expectedThreadCount <= 0) {
-				SYSTEM_INFO systemInfo;
-				::GetSystemInfo(&systemInfo);
-				expectedThreadCount = Math::Max((int32_t)threadCount, (int32_t)systemInfo.dwNumberOfProcessors - expectedThreadCount);
+				threadCount += expectedThreadCount;
+			} else {
+				threadCount = expectedThreadCount;
 			}
-#else
-			if (expectedThreadCount == 0) {
-				expectedThreadCount = threadCount;
-			}
-#endif
-			threadCount = Math::Min(maxThreadCount, (uint32_t)expectedThreadCount);
 		}
 	}
 

@@ -317,6 +317,9 @@ void RenderFlowComponent::Initialize(Engine& engine, Entity* entity) {
 	IRender::Device* device = engine.snowyStream.GetRenderDevice();
 	IRender& render = engine.interfaces.render;
 	resourceQueue = render.CreateQueue(device);
+	IThread& thread = engine.interfaces.thread;
+	frameSyncLock = thread.NewLock();
+	frameSyncEvent = thread.NewEvent();
 
 	for (size_t n = 0; n < cachedRenderStages.size(); n++) {
 		RenderStage* renderStage = cachedRenderStages[n];
@@ -348,10 +351,11 @@ void RenderFlowComponent::Initialize(Engine& engine, Entity* entity) {
 
 void RenderFlowComponent::Uninitialize(Engine& engine, Entity* entity) {
 	// Wait for rendering finished.
-	Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_release);
+	IThread& thread = engine.interfaces.thread;
 
+	Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_release);
 	while (Flag().load(std::memory_order_acquire) & RENDERFLOWCOMPONENT_RENDERING) {
-		YieldThread();
+		thread.Sleep(10);
 	}
 
 	for (size_t i = 0; i < allNodes.size(); i++) {
@@ -361,6 +365,11 @@ void RenderFlowComponent::Uninitialize(Engine& engine, Entity* entity) {
 	IRender& render = engine.interfaces.render;
 	render.DeleteQueue(resourceQueue);
 	resourceQueue = nullptr;
+
+	thread.DeleteEvent(frameSyncEvent);
+	frameSyncEvent = nullptr;
+	thread.DeleteLock(frameSyncLock);
+	frameSyncLock = nullptr;
 
 	// Deactivate this
 	BaseClass::Uninitialize(engine, entity);
@@ -418,6 +427,9 @@ void RenderFlowComponent::RenderSyncTick(Engine& engine) {
 	}
 
 	Flag().fetch_and(~RENDERFLOWCOMPONENT_RENDER_SYNC_TICKING, std::memory_order_release);
+
+	IThread& thread = engine.interfaces.thread;
+	thread.Signal(frameSyncEvent);
 }
 
 void RenderFlowComponent::DispatchEvent(Event& event, Entity* entity) {
@@ -426,9 +438,14 @@ void RenderFlowComponent::DispatchEvent(Event& event, Entity* entity) {
 		if (Flag().load(std::memory_order_acquire) & TINY_ACTIVATED) {
 			Engine& engine = event.engine;
 			const Tiny::FLAG condition = RENDERFLOWCOMPONENT_RENDER_SYNC_TICKING | TINY_ACTIVATED;
+			IThread& thread = engine.interfaces.thread;
 			OPTICK_PUSH("Wait for sync ticking");
-			while ((Flag().load(std::memory_order_acquire) & condition) == condition) {
-				YieldThread();
+			if ((Flag().load(std::memory_order_acquire) & condition) == condition) {
+				thread.DoLock(frameSyncLock);
+				while ((Flag().load(std::memory_order_acquire) & condition) == condition) {
+					thread.Wait(frameSyncEvent, frameSyncLock, 10);
+				}
+				thread.UnLock(frameSyncLock);
 			}
 			OPTICK_POP();
 

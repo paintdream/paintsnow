@@ -51,6 +51,8 @@ namespace PaintsNow {
 		std::map<String, std::pair<RenderStage*, String> > symbolMap;
 		std::vector<RenderStage*> cachedRenderStages;
 		IRender::Queue* resourceQueue;
+		IThread::Lock* frameSyncLock;
+		IThread::Event* frameSyncEvent;
 	};
 }
 
