@@ -2,6 +2,7 @@ local Terminal = require("Engine/Controller/Terminal")
 
 local Common = record
 	TIME_OUT : number
+	TIME_OUT_CLUSTER : number
 	TIMER_INTERVAL : number
 	Messages : { string : number }
 	MessageMap : { number : string }
@@ -16,7 +17,8 @@ end
 
 Common.__index = Common
 Common.TIME_OUT = 16 -- timed out
-Common.TIMER_INTERVAL = 5
+Common.TIME_OUT_CLUSTER = 16 -- timed out
+Common.TIMER_INTERVAL = 3
 Common.MainThreadID = ToolkitWin32.GetMainThreadID()
 
 local Messages = {

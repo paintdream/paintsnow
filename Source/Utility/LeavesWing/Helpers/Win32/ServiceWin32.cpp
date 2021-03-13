@@ -42,7 +42,10 @@ bool ServiceWin32::RunServiceMaster(DWORD argc, LPSTR* argv) {
 }
 
 void ServiceWin32::SetupHandler(LeavesFlute& leavesFlute) {
-	leavesFlute.EnableRawPrint(true);
+	if (runningEvent != nullptr) {
+		leavesFlute.EnableRawPrint(true); // service?
+	}
+
 	IScript::Request& request = leavesFlute.GetInterfaces().script.GetDefaultRequest();
 	request.DoLock();
 	request << global;
