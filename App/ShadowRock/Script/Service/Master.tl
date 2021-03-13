@@ -54,7 +54,7 @@ function Master:SpawnWorker() : WorkerItem
 	local threadID = id[2]
 	if processHandle ~= 0 then
 		print("Spawn a worker with id: " .. threadID)
-		self.Workers[threadID] = { Handle = processHandle, EchoTimeStamp = self.Now } as WorkerItem
+		self.Workers[threadID] = { Handle = processHandle, EchoTimeStamp = self.Now, Port = 0 } as WorkerItem
 	else
 		return nil
 	end

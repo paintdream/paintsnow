@@ -36,6 +36,7 @@ namespace PaintsNow {
 		SERVICE_STATUS serviceStatus;
 		SERVICE_STATUS_HANDLE serviceStatusHandle;
 		ToolkitWin32 toolkitWin32;
+		HANDLE runningEvent;
 	};
 }
 

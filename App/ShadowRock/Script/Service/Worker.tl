@@ -14,6 +14,7 @@ local Worker = record
 end
 
 Worker.__index = Worker
+local oldprint = print
 
 function Worker:WM_ECHO_RESPONSE(wparam, lparam)
 	print("ECHO CONFIRMED: " .. tostring(self.Now))
@@ -33,15 +34,32 @@ function Worker:Tick(now : number)
 end
 
 function Worker:NetworkData(connection : Connection, data : string)
-	print("Receive network data!!!!!!!!!!!!!!!")
-	local t = Core.Decode(data) as { string : string }
-	if t then
-		local s = ""
-		for k, v in pairs(t) do
-			s = s .. "[" .. k .. "] = " .. v .. "\n"
+	print("Worker receive request length " .. tostring(#data))
+	-- parse data
+	local pack = Core.Decode(data) as { string : any }
+	-- write result
+
+	-- dispatch request
+	local action = pack.Action as string
+	if action == "Execute" then
+		local code = pack.Code as string
+		local func, err = load(code, pack.Name as string)
+		local ret : { string : string } = {}
+		if not func then
+			ret.Message = "Compile error: " .. err
+		else
+			local s, msg = pcall(function () : string
+				return func(connection) as string
+			end)
+
+			if not s then
+				ret.Message = "Run error: " .. msg
+			else
+				ret.Message = ""
+			end
 		end
 
-		print("Receive Data: \n" .. s)
+		connection:WriteConnection(Core.Encode(ret as { any : any }))
 	end
 end
 
@@ -62,7 +80,6 @@ end
 
 function Worker.Main(masterThreadID : string, masterPort : string)
 	print("LeavesWind Worker at " .. Common.MainThreadID)
-	local oldprint = print
 	_G.print = function (...)
 		oldprint("[Worker " .. Common.MainThreadID .. "] " .. tostring(table.concat({ ... } as { string }, " ")))
 	end
@@ -74,14 +91,6 @@ function Worker.Main(masterThreadID : string, masterPort : string)
 
 	Common.InitializeListener(WorkerInstance as Common, "127.0.0.1:0")
 	Common.InitializeTicker(WorkerInstance as Common)
-
-	-- Try to load system info from master
-	global connection = WorkerInstance.Listener:Connect("127.0.0.1:" .. masterPort)
-	if connection then
-		local data = Core.Encode({ Action = "Info" } as { any : any })
-		print("Send request to " .. masterPort .. " length: " .. tostring(#data))
-		connection:WriteConnection(data)
-	end
 end
 
 return Worker

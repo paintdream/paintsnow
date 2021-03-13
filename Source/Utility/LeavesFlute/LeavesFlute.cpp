@@ -38,7 +38,7 @@ LeavesFlute::LeavesFlute(bool ng, Interfaces& inters, const TWrapper<IArchive*, 
 					heartVioliner(inters.thread, inters.timer, bridgeSunset),
 					remembery(inters.thread, inters.archive, inters.database, bridgeSunset),
 					galaxyWeaver(inters.thread, inters.tunnel, bridgeSunset, snowyStream, mythForest),
-					consoleThread(nullptr)
+					consoleThread(nullptr), rawPrint(false)
 {
 	ScanModules scanModules;
 	(*this)(scanModules);
@@ -50,6 +50,10 @@ LeavesFlute::LeavesFlute(bool ng, Interfaces& inters, const TWrapper<IArchive*, 
 	request.DoLock();
 	Require(request); // register callbacks
 	request.UnLock();
+}
+
+void LeavesFlute::EnableRawPrint(bool enable) {
+	rawPrint = enable;
 }
 
 /*
@@ -386,11 +390,15 @@ void LeavesFlute::Print(const String& str) {
 	const String& text = Utf8ToSystem(str + "\n");
 #if defined(_WIN32) || defined(WIN32)
 	// wprintf(L"%s\n", text.c_str());
-	static HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
-	DWORD ws;
-	WriteConsoleW(handle, text.c_str(), (DWORD)wcslen((const WCHAR*)text.c_str()), &ws, nullptr);
+	if (rawPrint) {
+		fwprintf(stdout, L"%s", (WCHAR*)text.c_str());
+	} else {
+		static HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+		DWORD ws;
+		WriteConsoleW(handle, text.c_str(), (DWORD)wcslen((const WCHAR*)text.c_str()), &ws, nullptr);
+	}
 #else
-	printf("%s\n", text.c_str());
+	printf("%s", text.c_str());
 #endif
 }
 

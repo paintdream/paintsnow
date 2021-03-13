@@ -105,6 +105,7 @@ namespace PaintsNow {
 		void OverrideConsoleProc(const TWrapper<void, LeavesFlute&>& handler);
 		void Execute(const String& file, const std::vector<String>& params);
 		void Setup();
+		void EnableRawPrint(bool rawPrint);
 
 	public:
 		void OnInitialize(void* param) override;
@@ -136,6 +137,7 @@ namespace PaintsNow {
 		IScript::Request::Ref listenConsole;
 		String newAppTitle;
 		String appTitle;
+		bool rawPrint;
 	};
 }
 

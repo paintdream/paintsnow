@@ -5,7 +5,7 @@
 #include <TlHelp32.h>
 using namespace PaintsNow;
 
-ServiceWin32::ServiceWin32(const String& name, const String& description) : serviceName(name), serviceDescription(description) {}
+ServiceWin32::ServiceWin32(const String& name, const String& description) : serviceName(name), serviceDescription(description), runningEvent(nullptr) {}
 
 ServiceWin32& ServiceWin32::GetInstance() {
 	static ServiceWin32 theServiceWin32("LeavesWind", "LeavesWind: A Scriptable Distributed Computing System based on PaintsNow");
@@ -42,6 +42,7 @@ bool ServiceWin32::RunServiceMaster(DWORD argc, LPSTR* argv) {
 }
 
 void ServiceWin32::SetupHandler(LeavesFlute& leavesFlute) {
+	leavesFlute.EnableRawPrint(true);
 	IScript::Request& request = leavesFlute.GetInterfaces().script.GetDefaultRequest();
 	request.DoLock();
 	request << global;
@@ -53,12 +54,29 @@ void ServiceWin32::SetupHandler(LeavesFlute& leavesFlute) {
 
 void ServiceWin32::ConsoleHandler(LeavesFlute& leavesFlute) {
 	MSG msg;
-	while (::GetMessageW(&msg, NULL, 0, 0)) {
-		toolkitWin32.HandleMessage(leavesFlute, msg.message, msg.wParam, msg.lParam);
+	if (runningEvent == nullptr) {
+		while (::GetMessageW(&msg, NULL, 0, 0)) {
+			toolkitWin32.HandleMessage(leavesFlute, msg.message, msg.wParam, msg.lParam);
+		}
+	} else {
+		while (true) {
+			DWORD event = ::MsgWaitForMultipleObjects(1, &runningEvent, FALSE, INFINITE, QS_ALLINPUT);
+			if (event == WAIT_OBJECT_0) break;
+
+			::PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE);
+			toolkitWin32.HandleMessage(leavesFlute, msg.message, msg.wParam, msg.lParam);
+		}
 	}
 }
 
 void ServiceWin32::ServiceMain(DWORD argc, LPSTR* argv) {
+	WCHAR currentPath[MAX_PATH * 2];
+	::GetModuleFileNameW(nullptr, currentPath, MAX_PATH * 2);
+	WCHAR* t = wcsrchr(currentPath, L'\\');
+	if (t != nullptr) *t = L'\0';
+	::SetCurrentDirectoryW(currentPath);
+	freopen("service.log", "w", stdout);
+
 	serviceStatus.dwServiceType = SERVICE_WIN32;
 	serviceStatus.dwCurrentState = SERVICE_START_PENDING;
 	serviceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
@@ -76,25 +94,31 @@ void ServiceWin32::ServiceMain(DWORD argc, LPSTR* argv) {
 		::SetServiceStatus(serviceStatusHandle, &serviceStatus);
 	}
 
+	runningEvent = ::CreateEventW(NULL, FALSE, FALSE, NULL);
 	RunServiceWorker(argc, argv);
-
-	serviceStatus.dwWin32ExitCode = 0;
-	serviceStatus.dwCurrentState = SERVICE_STOPPED;
-	serviceStatus.dwCheckPoint = 0;
-	serviceStatus.dwWaitHint = 0;
-	::SetServiceStatus(serviceStatusHandle, &serviceStatus);
+	::CloseHandle(runningEvent);
 }
 
 void ServiceWin32::ServiceCtrlHandler(DWORD opcode) {
 	switch (opcode) {
 	case SERVICE_CONTROL_PAUSE:
+		// printf("Service Control Pause\n");
 		serviceStatus.dwCurrentState = SERVICE_PAUSED;
+		::SetServiceStatus(serviceStatusHandle, &serviceStatus);
 		break;
 	case SERVICE_CONTROL_CONTINUE:
+		// printf("Service Control Continue\n");
 		serviceStatus.dwCurrentState = SERVICE_RUNNING;
+		::SetServiceStatus(serviceStatusHandle, &serviceStatus);
 		break;
 	case SERVICE_CONTROL_STOP:
-		::PostThreadMessageW(toolkitWin32.GetMainThreadID(), WM_QUIT, 0, 0);
+		// printf("Service Control Stop\n");
+		serviceStatus.dwWin32ExitCode = 0;
+		serviceStatus.dwCurrentState = SERVICE_STOPPED;
+		serviceStatus.dwCheckPoint = 0;
+		serviceStatus.dwWaitHint = 0;
+		::SetServiceStatus(serviceStatusHandle, &serviceStatus);
+		::SetEvent(runningEvent);
 		break;
 	case SERVICE_CONTROL_INTERROGATE:
 		break;
