@@ -38,7 +38,7 @@ function StandardRenderFlow.New(bloomLayerCount : number) : RenderFlowComponent
 	renderFlowComponent:LinkRenderStagePort(stageLightBuffer, "LightSource", stageDeferredLighting, "LightSource")
 	renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "CameraView", stageDeferredLighting, "CameraView")
 
-	local lastShadowMask : RenderStage = nil
+	local lastShadowMask : RenderStage = nil as RenderStage
 	for i = 1, 3 do
 		local stageShadowMask : RenderStage = renderFlowComponent:NewRenderStage("ShadowMaskRenderStage", tostring(i - 1))
 		renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "CameraView", stageShadowMask, "CameraView")

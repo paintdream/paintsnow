@@ -16,7 +16,7 @@ local function MakeDatabase(databasePath : string, sqlTemplatePath : string) : D
 	local schema = SnowyStream.FetchFileData(sqlTemplatePath) as string
 	for sql in schema:gmatch("[^;]+;") do
 		if sql then
-			database:Execute(sql, nil)
+			database:Execute(sql, nil as HoneyData)
 		end
 	end
 

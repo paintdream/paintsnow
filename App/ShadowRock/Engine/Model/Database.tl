@@ -18,11 +18,11 @@ function Database:Lines(sql : string, cacheCount : number, data) : function (any
 	local cache : any
 
 	return function (t, k : number) : (any, any)
-		if k == nil or k == cacheCount then
+		if k == nil as number or k == cacheCount then
 			-- reinit
 			local s : any = honey:Step(cacheCount)
 			cache = s
-			k = nil
+			k = nil as number
 		end
 
 		-- tail call to next
@@ -57,7 +57,7 @@ end
 
 function Database.New(path : string) : Database
 	local handle : Hive = Remembery.NewDatabase(path, "", "", true)
-	if not handle then return nil end
+	if not handle then return nil as Database end
 
 	local meta = {
 		Handle = handle

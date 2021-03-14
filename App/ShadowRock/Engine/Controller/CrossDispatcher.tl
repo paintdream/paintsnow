@@ -15,7 +15,7 @@ function CrossDispatcher.New(count : number) : CrossDispatcher
 		Routines = {},
 		States = {},
 		Registered = {},
-		Coroutine = nil,
+		Coroutine = nil as thread,
 	}
 
 	local running = coroutine.running()
@@ -48,7 +48,7 @@ function CrossDispatcher:Dispatch(cacheName : string, ...:any)
 				local func = self.Registered[i][cacheName] as function (...:any)
 				assert(func, "must register first!")
 				self.States[i] = false
-				self.Coroutine = nil
+				self.Coroutine = nil as thread
 				func(...)
 				return
 			end
@@ -68,7 +68,7 @@ function CrossDispatcher:Wait()
 		end
 	end
 
-	self.Coroutine = nil
+	self.Coroutine = nil as thread
 end
 
 function CrossDispatcher:Clear()

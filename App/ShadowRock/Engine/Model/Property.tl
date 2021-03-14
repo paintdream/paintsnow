@@ -80,7 +80,7 @@ function Property:Update()
 		for _, sub in ipairs(property._outputs) do
 			local lockCount = (lockMap[sub] or #sub._inputs) - 1
 			if lockCount == 0 then
-				lockMap[sub] = nil
+				lockMap[sub] = nil as number
 				table.insert(updateQueue, sub)
 			else
 				lockMap[sub] = lockCount

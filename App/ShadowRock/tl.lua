@@ -4125,7 +4125,7 @@ function tl.type_check(ast, opts)
          return compare_typevars(t1, t2, same_type)
       end
 
-      if t1.typename ~= t2.typename then
+	  if t1.typename ~= t2.typename then
          return false, terr(t1, "got %s, expected %s", t1, t2)
       end
       if t1.typename == "array" then
@@ -4241,7 +4241,7 @@ function tl.type_check(ast, opts)
       end
 
       if t1.typename == "nil" then
-         return true
+         --return true
       end
 
       if t2.typename ~= "tuple" then

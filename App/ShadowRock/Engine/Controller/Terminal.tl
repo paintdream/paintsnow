@@ -60,7 +60,7 @@ end
 -- Remove a connection terminal from current terminal
 function Terminal:RemoveConnection(connection : Connection)
 	if connection then
-		self.Peers[connection] = nil
+		self.Peers[connection] = nil as ConnectionRecord
 	end
 end
 
@@ -75,7 +75,7 @@ function Terminal:EventHandler(connection : Connection, status : string, packetD
 		end
 	elseif status == "Read" then
 		assert(packetData)
-		self.DataHandler(connection, packetData, nil, nil, nil)
+		self.DataHandler(connection, packetData, nil as string, nil as {{ string }}, nil as string)
 		return true
 	elseif status == "Close" or status == "Error" then
 		local info = connection:GetConnectionAddresses() as ConnectionRecord
@@ -109,7 +109,7 @@ function Terminal:Connect(ip : string) : Connection
 	else
 		print("Connect failed!")
 		connection:DeactivateConnection()
-		return nil
+		return nil as Connection
 	end
 end
 
@@ -213,7 +213,7 @@ function Terminal.New(dispatcher : WorkDispatcher, ip : string,
 			return terminal
 		else
 			print("Create listener failed!")
-			return nil
+			return nil as Terminal
 		end
 	else
 		return terminal

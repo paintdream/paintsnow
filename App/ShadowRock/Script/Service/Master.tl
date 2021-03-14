@@ -69,7 +69,7 @@ function Master:SpawnWorker() : WorkerItem
 		print("Spawn a worker with id: " .. threadID)
 		self.Workers[threadID] = { Handle = processHandle, EchoTimeStamp = self.Now, Port = 0 } as WorkerItem
 	else
-		return nil
+		return nil as WorkerItem
 	end
 end
 
@@ -86,7 +86,7 @@ function Master:Tick(now : number)
 			print("Worker " .. threadID .. " was not able to be connected for " .. Common.TIME_OUT .. " seconds. Kill it at once!")
 			ToolkitWin32.PostThreadMessage(threadID, Messages.WM_QUIT, 0, 0)
 			ToolkitWin32.CloseHandle(item.Handle)
-			self.Workers[threadID] = nil -- it's safe in lua
+			self.Workers[threadID] = nil as WorkerItem -- it's safe in lua
 		else
 			currentWorkerCount = currentWorkerCount + 1
 		end
@@ -100,7 +100,7 @@ function Master:Tick(now : number)
 	for address, clusterItem in pairs(self.Clusters) do
 		if clusterItem.EchoTimeStamp + Common.TIME_OUT_CLUSTER < now then
 			print("Cluster \"" .. clusterItem.Name .. "\" (" .. address .. ") was not able to be connected for " .. Common.TIME_OUT_CLUSTER .. " seconds. Kill it at once!")
-			self.Clusters[address] = nil -- kick off
+			self.Clusters[address] = nil as ClusterItem -- kick off
 		end
 	end
 
@@ -156,7 +156,7 @@ function Master:NetworkState(connection : Connection, state : boolean, src : str
 		print("Activate connection from " .. src)
 	else
 		if connection == self.UpstreamConnection then
-			self.UpstreamConnection = nil
+			self.UpstreamConnection = nil as Connection
 		end
 
 		print("Deactivate connection from " .. src)

@@ -267,7 +267,7 @@ local function InitializeWorld(databasePath : string)
 		local command = coroutine.yield()
 		if command == "@Quit" then
 			print("Battle control terminated.")
-			eventComponent:BindEventTick(nil)
+			eventComponent:BindEventTick(nil as Clock)
 			eventComponent:BindEventUserInput(false)
 			eventComponent:BindEventFrame(false)
 			System.Exit()
@@ -304,5 +304,11 @@ function Main.Main()
 	end
 
 end
+
+function test(b : string, a : string)
+
+end
+
+test("abc")
 
 return Main

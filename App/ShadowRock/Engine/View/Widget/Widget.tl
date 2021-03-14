@@ -38,7 +38,7 @@ function Widget:GetStyle() : Style
 end
 
 function Widget:GetSlice() : Slice
-	if not self.slice then return nil end
+	if not self.slice then return nil as Slice end
 
 	return self.theme.slices[self.slice]
 end
@@ -90,7 +90,7 @@ function Widget:RemoveChild(child : Widget)
 	end
 
 	if child.name ~= "" then
-		self.childs[child.name] = nil
+		self.childs[child.name] = nil as Widget
 	end
 
 	assert(self.spaceComponent)
@@ -102,7 +102,7 @@ function Widget:GetChild(...: any) : Widget
 	local p : Widget = self
 	for _, v in ipairs(lists) do
 		p = p.childs[v]
-		if p == nil then return nil end	
+		if p == nil as Widget then return nil as Widget end	
 	end
 
 	return p

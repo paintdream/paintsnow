@@ -34,7 +34,7 @@ function PropertyGraph:AddProperty(property : Property)
 end
 
 function PropertyGraph:RemoveProperty(property : Property)
-	self._properties[property.name] = nil
+	self._properties[property.name] = nil as Property
 	self._committed = false
 end
 

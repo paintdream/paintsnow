@@ -8,7 +8,7 @@ local Timeline = record
 end
 
 function Timeline:SetReplay(enable : boolean)
-	assert(not enable or self.component ~= nil)
+	assert(not enable or (self.component ~= nil as TapeComponent))
 	self.isReplay = enable
 end
 

@@ -153,7 +153,7 @@ end
 
 function Core.Patch(g : { any : any }, t : { any : any }) : { any : any }
 	-- clear metatable first
-	setmetatable(g, nil)
+	setmetatable(g, nil as METATABLE)
 	-- clear old values ...
 	for k, v in pairs(g) do
 		g[k] = nil

@@ -39,7 +39,7 @@ function Test.Main()
 
 	-- CrossRoutine is running on another LuaVM
 	local upval = "~~~"
-	local cross = CrossRoutine.New(nil)
+	local cross = CrossRoutine.New(nil as function(any))
 	local rpc = cross(function (value : string) : string
 		return "Hello " .. value .. upval
 	end)
