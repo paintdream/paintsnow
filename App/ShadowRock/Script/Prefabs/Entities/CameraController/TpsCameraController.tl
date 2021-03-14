@@ -26,7 +26,7 @@ function TpsCameraController.New(eventComponent : EventComponent) : TpsCameraCon
 	local cameraComponent = StandardCamera.New(renderFlowComponent)
 	local transformComponent = TransformComponentModule.New()
 	local phaseComponent = Phase.New(renderFlowComponent)
-	local spaceComponent = SpaceComponentModule.New()
+	local spaceComponent = SpaceComponentModule.New(0, false)
 
 	entity:AddEntityComponent(transformComponent as Component)
 	entity:AddEntityComponent(renderFlowComponent as Component)

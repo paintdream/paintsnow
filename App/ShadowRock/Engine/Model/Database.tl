@@ -9,7 +9,7 @@ function Database:Execute(sql : string, data : HoneyData) : Honey
 	return self.Handle:Execute(sql, data)
 end
 
-function Database:Lines(sql : string, cacheCount : number, data) : function (any, number) : (any, any)
+function Database:Lines(sql : string, cacheCount : number, data : HoneyData) : function (any, number) : (any, any)
 	cacheCount = cacheCount or 0
 
 	local honey = self:Execute(sql, data as HoneyData)
@@ -34,7 +34,7 @@ function Database:Commit()
 
 end
 
-function Database:Query(sql : string, data)
+function Database:Query(sql : string, data : HoneyData)
 	print("Query Result: ")
 	print("--------------------------------------")
 	local rowCount = 0

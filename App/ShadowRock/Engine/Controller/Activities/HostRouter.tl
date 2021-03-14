@@ -16,7 +16,7 @@ function HostRouter:Query()
 	-- send query command
 	assert(self.connection)
 
-	self.terminal:Write(self.connection, Core.Encode({ Action = "Query" } as { any : any }))
+	self.terminal:Write(self.connection, Core.Encode({ Action = "Query" } as { any : any }, nil as { any : any }))
 	-- TODO: response
 end
 
@@ -38,7 +38,7 @@ function HostRouter.New(dispatcher : WorkDispatcher, ip : string) : HostRouter
 		terminal = Terminal.New(dispatcher, ip, function () end,
 		function (connection : Connection, state : boolean, src : string, dst : string) : any
 			return { ping = 0 }
-		end)
+		end, false)
 	}, HostRouter as METATABLE)
 end
 

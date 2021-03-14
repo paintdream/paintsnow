@@ -13,7 +13,7 @@ function Timeline:SetReplay(enable : boolean)
 end
 
 function Timeline:Flush()
-	self.component:Flush()
+	self.component:Flush(nil)
 end
 
 function Timeline:Push(seq : number, event : { string : any })
@@ -24,7 +24,7 @@ function Timeline:Push(seq : number, event : { string : any })
 
 	-- record event
 	if self.component then
-		self.component:Write(seq, Core.Encode(event))
+		self.component:Write(seq, Core.Encode(event, nil as { any : any }))
 	end
 
 	-- chain to timeline
@@ -39,7 +39,7 @@ function Timeline:Pop() : (number, { string : any })
 	if self.isReplay then
 		-- read from component
 		local info = self.component:Read()
-		return info[1] as number, (Core.Decode(info[2] as string)) as { string : any } -- seq, event
+		return info[1] as number, (Core.Decode(info[2] as string, nil as { any })) as { string : any } -- seq, event
 	else
 		local event = self.popHead
 		if event then
@@ -63,7 +63,7 @@ function Timeline.New(tapePath : string, isReplay : boolean) : Timeline
 	if tapePath then
 		local res = SnowyStream.NewResource(tapePath, "StreamResource", true)
 		assert(res, "Unable to new resource: " .. tapePath)
-		component = TapeComponentModule.New(res as SharedTiny)
+		component = TapeComponentModule.New(res as SharedTiny, 4096)
 	end
 
 	local object = {

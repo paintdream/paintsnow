@@ -59,7 +59,7 @@ function Common:InitializeListener(ip : string)
 			self:NetworkData(connection, data)	
 		end, function (connection : Connection, state : boolean, src : string, dst : string) : any
 			return self:NetworkState(connection, state, src, dst)
-		end)
+		end, false)
 
 		self.Listener = listener
 		self.Dispatcher = dispatcher
@@ -72,7 +72,7 @@ function Common:InitializeTicker()
 		local entity = MythForest.NewEntity(-1)
 		self.Ticker = entity
 
-		local clock = HeartVioliner.NewClock(Common.TIMER_INTERVAL * 1000.0)
+		local clock = HeartVioliner.NewClock(Common.TIMER_INTERVAL * 1000.0, 0)
 		local eventComponent : EventComponent = EventComponentModule.New()
 		eventComponent:BindEventTick(clock)
 

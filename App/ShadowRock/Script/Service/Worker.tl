@@ -36,7 +36,7 @@ end
 function Worker:NetworkData(connection : Connection, data : string)
 	print("Worker receive request length " .. tostring(#data))
 	-- parse data
-	local pack = Core.Decode(data) as { string : any }
+	local pack = Core.Decode(data, nil as { any }) as { string : any }
 	-- write result
 
 	-- dispatch request
@@ -59,26 +59,26 @@ function Worker:NetworkData(connection : Connection, data : string)
 			end
 		end
 
-		connection:WriteConnection(Core.Encode(ret as { any : any }))
+		connection:WriteConnection(Core.Encode(ret as { any : any }, nil as { any : any }))
 	elseif action == "Upload" then
 		local ret : { string : string } = {}
 		local path = pack.Path as string
 		if path:sub(1, 5) == "Temp/" then -- can only create file in this folder
 			local file = SnowyStream.NewFile(path, true)
-			SnowyStream.WriteFile(file, pack.Content as string)
+			SnowyStream.WriteFile(file, pack.Content as string, nil)
 			SnowyStream.CloseFile(file)
 			ret.Message = ""
 		else
 			ret.Message = "Cannot create file " .. path
 		end
 
-		connection:WriteConnection(Core.Encode(ret as { any : any }))
+		connection:WriteConnection(Core.Encode(ret as { any : any }, nil as { any : any }))
 	elseif action == "Download" then
 		local content = SnowyStream.FetchFileData(pack.Path as string)
 		local ret : { string : string } = {}
 		ret.Message = ""
 		ret.Content = content as string
-		connection:WriteConnection(Core.Encode(ret as { any : any }))
+		connection:WriteConnection(Core.Encode(ret as { any : any }, nil as { any : any }))
 	elseif action == "Delete" then
 		SnowyStream.DeleteFile(pack.Path as string)
 	elseif action == "Query" then

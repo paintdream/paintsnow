@@ -121,7 +121,7 @@ function Master:Tick(now : number)
 				} as ClusterItem
 			}
 
-			self.UpstreamConnection:WriteConnection(Core.Encode(live as { any : any }))
+			self.UpstreamConnection:WriteConnection(Core.Encode(live as { any : any }, nil as { any : any }))
 		end
 	end
 end
@@ -129,13 +129,13 @@ end
 function Master:NetworkData(connection : Connection, data : string)
 	print("Master receive request length " .. tostring(#data))
 	-- parse data
-	local pack = Core.Decode(data) as { string : any}
+	local pack = Core.Decode(data, nil as { any }) as { string : any}
 	-- write result
 
 	-- dispatch request
 	local action = pack.Action as string
 	if action == "Query" then
-		connection:WriteConnection(Core.Encode(self.Workers as { any : any }))
+		connection:WriteConnection(Core.Encode(self.Workers as { any : any }, nil as { any : any }))
 	elseif action == "ClusterTick" then
 		local clusterItem = pack.ClusterItem as ClusterItem
 		local address = (connection:GetConnectionAddresses() as { string : string}).Destination
@@ -144,9 +144,9 @@ function Master:NetworkData(connection : Connection, data : string)
 			self.Clusters[address] = clusterItem
 		end
 	elseif action == "ClusterQuery" then
-		connection:WriteConnection(Core.Encode(self.Clusters as { any : any }))
+		connection:WriteConnection(Core.Encode(self.Clusters as { any : any }, nil as { any : any }))
 	elseif action == "Info" then
-		connection:WriteConnection(Core.Encode(systemInfo as { any : any }))
+		connection:WriteConnection(Core.Encode(systemInfo as { any : any }, nil as { any : any }))
 	end
 end
 

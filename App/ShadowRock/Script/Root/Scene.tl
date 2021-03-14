@@ -50,7 +50,7 @@ function Scene.New(database : Database, clock : Clock) : Scene
 	if database then
 		print("\tWarming up resources ...")
 		local warmingUpResources : { string : { string }} = {}
-		for _, line in database:Lines("select Path, Names.Name from `Resources`, `Names` where `TypeID` == Names.ID") do
+		for _, line in database:Lines("select Path, Names.Name from `Resources`, `Names` where `TypeID` == Names.ID", 0, nil as HoneyData) do
 			local path, name = table.unpack(line as { string })
 			warmingUpResources[name as string] = warmingUpResources[name as string] or {}
 			table.insert(warmingUpResources[name as string], path as string)
@@ -81,7 +81,7 @@ function Scene.New(database : Database, clock : Clock) : Scene
 		for i = 1, dupCount do
 			print("\tCreating at warp " .. i)
 			local offset = (i - 1) * 7.5
-			local interSpaceComponent = SpaceComponentModule.New(i)
+			local interSpaceComponent = SpaceComponentModule.New(i, false)
 			rootEntity:AddEntityComponent(interSpaceComponent as Component)
 
 			BridgeSunset.QueueRoutine(interSpaceComponent, function ()
@@ -95,13 +95,13 @@ function Scene.New(database : Database, clock : Clock) : Scene
 				subRootEntity:AddEntityComponent(subTransformComponent as Component)
 				subRootEntity:AddEntityComponent(subSpaceComponent as Component)
 				subRootEntity:AddEntityComponent(subSpaceComponentHuge as Component)
-				local batchComponent = BatchComponentModule.New()
+				local batchComponent = BatchComponentModule.New("")
 
 				local entities : { Entity } = {}
 				local hugeEntity : { Entity : boolean } = {}
 				local hugeComponent : { Component : boolean } = {}
 
-				for _, line in database:Lines("select ID from `Entities`;", 32) do
+				for _, line in database:Lines("select ID from `Entities`;", 32, nil as HoneyData) do
 					local entityID = table.unpack(line as { number }) as number
 					entities[entityID] = MythForest.NewEntity(-1)
 				end
@@ -110,7 +110,7 @@ function Scene.New(database : Database, clock : Clock) : Scene
 				local components : { Component } = {}
 				local shapeComponents : { ShapeComponent } = {}
 				local formComponents : { FormComponent } = {}
-				for _, line in database:Lines("select ModelComponents.ID, Path, ViewDistance from `ModelComponents`, `Resources` where `ResourceID` == Resources.ID;", 32) do
+				for _, line in database:Lines("select ModelComponents.ID, Path, ViewDistance from `ModelComponents`, `Resources` where `ResourceID` == Resources.ID;", 32, nil as HoneyData) do
 					local componentID, path, viewDistance = table.unpack(line as { any })
 					if not path as string:find("Sky") then
 						local meshResource = SnowyStream.NewResource(path as string, "MeshResource", false) as MeshResource
@@ -130,7 +130,7 @@ function Scene.New(database : Database, clock : Clock) : Scene
 				end
 
 				local count = 0
-				for _, line in database:Lines("select ModelComponentMaterials.ID, MeshGroupID, Path from `ModelComponentMaterials`, `Resources` where `ResourceID` == Resources.ID;", 32) do
+				for _, line in database:Lines("select ModelComponentMaterials.ID, MeshGroupID, Path from `ModelComponentMaterials`, `Resources` where `ResourceID` == Resources.ID;", 32, nil as HoneyData) do
 					local componentID, meshGroupID, path = table.unpack(line as { any })
 					local materialResource = SnowyStream.NewResource(path as string, "MaterialResource", false) as MaterialResource
 					if not materialResource then
@@ -148,7 +148,7 @@ function Scene.New(database : Database, clock : Clock) : Scene
 				end
 
 				print("\tCreating transform components.")
-				for _, line in database:Lines("select ID, X, Y, Z, Scale, Yaw, Pitch, Roll from `TransformComponents`;", 32) do
+				for _, line in database:Lines("select ID, X, Y, Z, Scale, Yaw, Pitch, Roll from `TransformComponents`;", 32, nil as HoneyData) do
 					local componentID, x, y, z, s, yaw, pitch, roll = table.unpack(line as { number })
 					local transformComponent = TransformComponentModule.New()
 					transformComponent:SetTranslation({ x as number, y as number, z as number })
@@ -160,7 +160,7 @@ function Scene.New(database : Database, clock : Clock) : Scene
 				end
 
 				print("\tCreating envcube components")
-				for _, line in database:Lines("select EnvCubeComponents.ID, Path from `EnvCubeComponents`, `Resources` where `ResourceID` == Resources.ID;", 32) do
+				for _, line in database:Lines("select EnvCubeComponents.ID, Path from `EnvCubeComponents`, `Resources` where `ResourceID` == Resources.ID;", 32, nil as HoneyData) do
 					local componentID, path = table.unpack(line as { any })
 					components[componentID as number] = components[componentID as number] or EnvCubeComponentModule.New() as Component
 					local textureResource = SnowyStream.NewResource(path as string, "TextureResource", false)
@@ -178,7 +178,7 @@ function Scene.New(database : Database, clock : Clock) : Scene
 
 				print("\tAttaching components.")
 				-- create model components
-				for _, line in database:Lines("select ID, ComponentID from `EntityComponents`;", 32) do
+				for _, line in database:Lines("select ID, ComponentID from `EntityComponents`;", 32, nil as HoneyData) do
 					local entityID, componentID = table.unpack(line as { any })
 					local entity = entities[entityID as number]
 					local component = components[componentID as number]

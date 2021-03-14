@@ -4525,7 +4525,16 @@ function tl.type_check(ast, opts)
          end
          ]]
 
-         local va = is_vararg(f)
+		 local va = is_vararg(f)
+		 -- lua builtin functions not included
+		 if (f.rets[1] and f.rets[1].filename) or (f.args[1] and f.args[1].filename) then
+		 	if not va and #args ~= #f.args then
+				table.insert(errs, { y = node.y, x = node.x,
+					msg = "wrong number of arguments (given " .. #args .. ", expects " .. #f.args .. ")", filename = filename })
+				return nil, errs
+			end
+		end
+
          local nargs = va and
          math.max(#args, #f.args) or
          math.min(#args, #f.args)

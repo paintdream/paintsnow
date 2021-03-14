@@ -68,7 +68,7 @@ function Terminal:EventHandler(connection : Connection, status : string, packetD
 	if status == "Connected" then
 		local info = connection:GetConnectionAddresses() as ConnectionRecord
 		if self.StateHandler(connection, true, info.Source, info.Destination) then
-			self:AddConnection(connection)
+			self:AddConnection(connection, nil)
 			return true
 		else
 			return false
@@ -104,7 +104,7 @@ function Terminal:Connect(ip : string) : Connection
 
 	if (connected and success) or (coroutine.yield() as boolean) then
 		print("Connect success!")
-		self:AddConnection(connection)
+		self:AddConnection(connection, nil)
 		return connection
 	else
 		print("Connect failed!")

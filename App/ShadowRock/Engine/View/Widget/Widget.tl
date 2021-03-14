@@ -57,7 +57,7 @@ function Widget:SetText(text : string)
 	if not textViewComponent then
 		-- get font from theme
 		local style = self:GetStyle()
-		textViewComponent = TextViewComponentModule.New(fontCache:Load(style.font) as FontResource)
+		textViewComponent = TextViewComponentModule.New(fontCache:Load(style.font) as FontResource, nil as MeshResource, nil as MaterialResource, nil as BatchComponent)
 		self.entity:AddEntityComponent(textViewComponent as Component)
 		self.textViewComponent = textViewComponent
 	end
@@ -121,7 +121,7 @@ function Widget:Update()
 	if slice then
 		local widgetComponent = self.widgetComponent
 		if not widgetComponent then
-			widgetComponent = WidgetComponentModule.New()
+			widgetComponent = WidgetComponentModule.New(nil as BatchComponent, nil as BatchComponent, nil as MaterialResource)
 			self.widgetComponent = widgetComponent
 		end
 

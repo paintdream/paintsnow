@@ -89,7 +89,7 @@ local function InitializeWorld(databasePath : string)
 	cameraComponent:BindRootEntity(scene.rootEntity)
 	
 	cameraController.spaceComponent:InsertEntity(guiEntity)
-	cameraController.entity:UpdateEntity()
+	cameraController.entity:UpdateEntity(false)
 
 	print("\tCreating Player ...")
 	local Player = require("Script/Prefabs/Entities/Player/StandardPlayer")
@@ -304,11 +304,5 @@ function Main.Main()
 	end
 
 end
-
-function test(b : string, a : string)
-
-end
-
-test("abc")
 
 return Main
