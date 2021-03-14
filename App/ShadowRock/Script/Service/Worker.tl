@@ -60,6 +60,49 @@ function Worker:NetworkData(connection : Connection, data : string)
 		end
 
 		connection:WriteConnection(Core.Encode(ret as { any : any }))
+	elseif action == "Upload" then
+		local ret : { string : string } = {}
+		local path = pack.Path as string
+		if path:sub(1, 5) == "Temp/" then -- can only create file in this folder
+			local file = SnowyStream.NewFile(path, true)
+			SnowyStream.WriteFile(file, pack.Content as string)
+			SnowyStream.CloseFile(file)
+			ret.Message = ""
+		else
+			ret.Message = "Cannot create file " .. path
+		end
+
+		connection:WriteConnection(Core.Encode(ret as { any : any }))
+	elseif action == "Download" then
+		local content = SnowyStream.FetchFileData(pack.Path as string)
+		local ret : { string : string } = {}
+		ret.Message = ""
+		ret.Content = content as string
+		connection:WriteConnection(Core.Encode(ret as { any : any }))
+	elseif action == "Delete" then
+		SnowyStream.DeleteFile(pack.Path as string)
+	elseif action == "Query" then
+		-- query file/folder information
+		local path = pack.Path as string
+		local ret : { string : any } = {}
+		ret.Message = ""
+
+		if path:sub(-1) == "/" then -- folder
+			local files = SnowyStream.QueryFiles(path)
+			ret.Files = files
+		else
+			local source = SnowyStream.NewFile(path, false)
+			if source then
+				local size = SnowyStream.GetFileSize(source)
+				local time = SnowyStream.GetFileLastModifiedTime(source)
+				ret.Size = size
+				ret.ModifiedTime = time
+			else
+				ret.Message = "File not exist"
+			end
+		end
+
+		SnowyStream.DeleteFile(pack.Path as string)
 	end
 end
 
