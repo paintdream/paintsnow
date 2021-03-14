@@ -376,7 +376,6 @@ void MythForest::RequestPostEvent(IScript::Request& request, IScript::Delegate<E
 	}
 }
 
-//
 void MythForest::OnSize(const Int2& size) {
 	EventComponentModule& eventComponentModule = *engine.GetComponentModuleFromName("EventComponent")->QueryInterface(UniqueType<EventComponentModule>());
 	eventComponentModule.OnSize(size);

@@ -103,7 +103,6 @@ namespace PaintsNow {
 		/// <returns></returns>
 		void RequestModifyResource(IScript::Request& request, IScript::Delegate<ResourceBase> resource, const String& action, IScript::Request::Arguments payload);
 
-
 		/// <summary>
 		/// Clone resource to new path
 		/// </summary>

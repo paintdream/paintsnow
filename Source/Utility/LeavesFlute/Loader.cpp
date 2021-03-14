@@ -79,7 +79,6 @@ public:
 	void SetResourceNotation(Resource* lhs, const String& note) override {}
 };
 
-
 void Loader::SetFactory(TWrapper<IDevice*>& ptr, const String& key, const std::map<String, CmdLine::Option>& factoryMap) {
 	const std::map<String, CmdLine::Option>::const_iterator p = factoryMap.find(key);
 	if (p != factoryMap.end()) {

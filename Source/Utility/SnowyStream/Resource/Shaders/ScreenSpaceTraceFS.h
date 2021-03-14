@@ -25,5 +25,3 @@ namespace PaintsNow {
 		Float2 traceCoord;
 	};
 }
-
-

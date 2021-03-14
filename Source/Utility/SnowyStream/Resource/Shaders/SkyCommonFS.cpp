@@ -902,7 +902,6 @@ String SkyCommonFS::GetIrradiance(IrradianceSpectrum& retValue,
 	);
 }
 
-
 String SkyCommonFS::GetRMuSFromIrradianceTextureUv(const AtmosphereParameters& atmosphere,
 	const Float2& uv, Length& r, Number& mu_s) {
 	return UnifyShaderCode(

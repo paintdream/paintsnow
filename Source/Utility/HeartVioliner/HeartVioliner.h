@@ -102,7 +102,6 @@ namespace PaintsNow {
 		/// <returns> </returns>
 		void RequestClear(IScript::Request& request, IScript::Delegate<Queue> queue);
 
-
 	private:
 		ITimer& timerFactory;
 		BridgeSunset& bridgeSunset;

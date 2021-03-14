@@ -93,7 +93,6 @@ void RenderPortRenderTargetStore::Tick(Engine& engine, IRender::Queue* queue) {
 	}
 }
 
-
 RenderPortRenderTargetLoad* RenderPortRenderTargetStore::QueryLoad() const {
 	const std::vector<RenderStage::PortInfo>& portInfos = static_cast<RenderStage*>(GetNode())->GetPorts();
 	for (size_t i = 0; i < portInfos.size(); i++) {

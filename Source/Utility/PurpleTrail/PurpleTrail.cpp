@@ -385,7 +385,6 @@ void PurpleTrail::RequestSetValue(IScript::Request& request, IScript::BaseDelega
 	}
 }
 
-
 PurpleTrail::PurpleTrail(IThread& t) : ISyncObject(t) {
 	REGISTER_PRIMITIVE(String);
 	REGISTER_PRIMITIVE(Bytes);

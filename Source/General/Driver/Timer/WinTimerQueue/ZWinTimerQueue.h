@@ -10,7 +10,6 @@
 #error "Timer Queue can only be used on Windows System."
 #endif
 
-
 namespace PaintsNow {
 	class ZWinTimerQueue final : public ITimer {
 	public:

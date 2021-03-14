@@ -46,5 +46,3 @@ namespace PaintsNow {
 		bool enableAlphaTest;
 	};
 }
-
-

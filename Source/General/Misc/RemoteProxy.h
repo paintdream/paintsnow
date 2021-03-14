@@ -97,7 +97,6 @@ namespace PaintsNow {
 		virtual void Reflect(IReflect& reflect) = 0;
 	};
 
-
 	// save raw value
 	template <class T>
 	class Value : public ValueBase {

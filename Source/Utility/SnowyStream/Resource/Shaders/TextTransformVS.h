@@ -32,5 +32,3 @@ namespace PaintsNow {
 		Float2 texCoord;
 	};
 }
-
-

@@ -29,5 +29,3 @@ namespace PaintsNow {
 		Float4 outputIrradiance;
 	};
 }
-
-

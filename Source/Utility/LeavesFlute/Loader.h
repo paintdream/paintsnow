@@ -84,7 +84,6 @@
 
 #include "../../Utility/LeavesFlute/LeavesFlute.h"
 
-
 namespace PaintsNow {
 	class Loader {
 	public:

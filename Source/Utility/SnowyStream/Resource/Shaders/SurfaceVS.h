@@ -14,5 +14,3 @@ namespace PaintsNow {
 		String GetShaderText() override;
 	};
 }
-
-

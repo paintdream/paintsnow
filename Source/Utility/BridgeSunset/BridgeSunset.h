@@ -3,7 +3,6 @@
 // 2015-1-2
 //
 
-
 #pragma once
 #include "../../Core/Interface/IScript.h"
 #include "../../Core/System/Kernel.h"
@@ -52,8 +51,9 @@ namespace PaintsNow {
 		/// Execute TaskGraph at once
 		/// </summary>
 		/// <param name="graph"> Execute TaskGraph at once </param>
+		/// <param name="callback"> Callback on all task finished. </param>
 		/// <returns></returns>
-		void RequestExecuteGraph(IScript::Request& request, IScript::Delegate<TaskGraph> graph);
+		void RequestExecuteGraph(IScript::Request& request, IScript::Delegate<TaskGraph> graph, IScript::Request::Ref callback);
 
 		/// <summary>
 		/// Queue a routine based on a tiny
@@ -192,7 +192,6 @@ namespace PaintsNow {
 			}
 			req.UnLock();
 
-
 			bridgeSunset.requestPool.ReleaseSafe(&req);
 			BaseClass::Delete(context, this);
 		}
@@ -229,7 +228,6 @@ namespace PaintsNow {
 				req.Dereference(callback);
 			}
 			req.UnLock();
-
 
 			bridgeSunset.requestPool.ReleaseSafe(&req);
 			BaseClass::Delete(context, this);

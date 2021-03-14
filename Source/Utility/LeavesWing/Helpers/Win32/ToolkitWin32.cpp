@@ -139,7 +139,6 @@ static std::pair<String, String> GetProcessorAndOSName() {
 		pclsObj->Release();
 	}
 
-
 	hres = pSvc->ExecQuery(bstr_t("WQL"), bstr_t("SELECT * FROM Win32_OperatingSystem"), WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY, NULL, &pEnumerator);
 
 	if (FAILED(hres)) {

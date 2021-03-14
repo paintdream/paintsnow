@@ -24,7 +24,6 @@ struct WinTimerQueueImpl : public ITimer::Timer {
 	size_t interval;
 };
 
-
 static VOID WINAPI TimerFunc(PVOID pContext, BOOLEAN bTimeOrWait) {
 	TimerController* q = reinterpret_cast<TimerController*>(pContext);
 	if (::TryEnterCriticalSection(&q->cs)) { // Do not alert it at busy
@@ -33,8 +32,7 @@ static VOID WINAPI TimerFunc(PVOID pContext, BOOLEAN bTimeOrWait) {
 	}
 }
 
-ZWinTimerQueue::ZWinTimerQueue() {
-}
+ZWinTimerQueue::ZWinTimerQueue() {}
 
 ZWinTimerQueue::~ZWinTimerQueue() {}
 

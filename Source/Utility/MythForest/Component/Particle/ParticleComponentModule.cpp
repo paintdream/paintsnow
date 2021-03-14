@@ -22,5 +22,3 @@ TShared<ParticleComponent> ParticleComponentModule::RequestNew(IScript::Request&
 	particleComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
 	return particleComponent;
 }
-
-

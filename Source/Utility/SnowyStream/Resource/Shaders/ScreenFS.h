@@ -28,5 +28,3 @@ namespace PaintsNow {
 		float invAverageLuminance;
 	};
 }
-
-

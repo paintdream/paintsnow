@@ -123,7 +123,6 @@ struct Collector {
 	}
 };
 
-
 void FieldSimplygon::QueryEntitiesForEntityTree(Entity* entity, std::vector<TShared<Entity> >& entities) const {
 	Collector collector(entities);
 	switch (type) {

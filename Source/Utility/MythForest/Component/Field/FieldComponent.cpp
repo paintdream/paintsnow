@@ -48,7 +48,6 @@ void FieldComponent::QueryEntities(SpaceComponent* spaceComponent, std::vector<T
 	}
 }
 
-
 // Trivial implementation with operator []
 void FieldComponent::FieldBase::PostEventForEntityTree(Entity* entity, Event& event, FLAG mask) const {
 	assert(entity != nullptr);

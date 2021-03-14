@@ -24,5 +24,3 @@ namespace PaintsNow {
 		float occlusion;
 	};
 }
-
-

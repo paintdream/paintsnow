@@ -40,5 +40,3 @@ namespace PaintsNow {
 		Float4 mainColor; // target
 	};
 }
-
-

@@ -127,11 +127,27 @@ void BridgeSunset::RequestConnectGraphRoutine(IScript::Request& request, IScript
 	graph->Next(prev, next);
 }
 
-void BridgeSunset::RequestExecuteGraph(IScript::Request& request, IScript::Delegate<TaskGraph> graph) {
+struct ScriptTaskWrapper {
+	ScriptTaskWrapper(BridgeSunset* b, ITask* t) : bridgeSunset(b), task(t) {}
+
+	void operator () () {
+		bridgeSunset->Dispatch(task);
+	}
+
+	BridgeSunset* bridgeSunset;
+	ITask* task;
+};
+
+void BridgeSunset::RequestExecuteGraph(IScript::Request& request, IScript::Delegate<TaskGraph> graph, IScript::Request::Ref callback) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(graph);
 
-	graph->Commit();
+	if (callback) {
+		ScriptTaskWrapper wrapper(this, CreateTaskScriptOnce(callback));
+		graph->Dispatch(WrapClosure(std::move(wrapper), &ScriptTaskWrapper::operator ()));
+	} else {
+		graph->Dispatch();
+	}
 }
 
 void BridgeSunset::RequestSetWarpIndex(IScript::Request& request, IScript::Delegate<WarpTiny> source, uint32_t index) {

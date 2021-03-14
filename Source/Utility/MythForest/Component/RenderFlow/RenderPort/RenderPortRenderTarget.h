@@ -24,7 +24,6 @@ namespace PaintsNow {
 
 		typedef MetaAdaptMainResolution Type;
 
-
 		uint8_t bitwiseShift;
 	};
 

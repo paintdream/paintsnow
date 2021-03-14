@@ -257,15 +257,6 @@ bool LeavesFlute::ConsoleProc(IThread::Thread* thread, size_t index) {
 
 void LeavesFlute::OnInitialize(void* param) {}
 
-template <class T>
-void WriteObjectAttrib(IScript::Request& request, T& container) {
-	for (typename T::const_iterator p = container.begin(); p != container.end(); ++p) {
-		request << key((*p).first) << (*p).second;
-	}
-
-	container.clear();
-}
-
 void LeavesFlute::RequestSetScreenSize(IScript::Request& request, Int2& size) {
 	interfaces.frame.SetWindowSize(size);
 }
@@ -393,9 +384,9 @@ void LeavesFlute::Print(const String& str) {
 	if (rawPrint) {
 		fwprintf(stdout, L"%s", (WCHAR*)text.c_str());
 	} else {
-		static HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+		static HANDLE handle = ::GetStdHandle(STD_OUTPUT_HANDLE);
 		DWORD ws;
-		WriteConsoleW(handle, text.c_str(), (DWORD)wcslen((const WCHAR*)text.c_str()), &ws, nullptr);
+		::WriteConsoleW(handle, text.c_str(), (DWORD)wcslen((const WCHAR*)text.c_str()), &ws, nullptr);
 	}
 #else
 	printf("%s", text.c_str());
@@ -563,7 +554,6 @@ void LeavesFlute::RequestSearchMemory(IScript::Request& request, const String& m
 	request.DoLock();
 	request << addresses;
 	request.UnLock();
-
 #endif
 }
 

@@ -28,5 +28,3 @@ namespace PaintsNow {
 		Float4 blendColor;
 	};
 }
-
-

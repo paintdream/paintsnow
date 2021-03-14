@@ -15,7 +15,7 @@ namespace PaintsNow {
 	class Engine;
 
 	// The entity object is exactly 64 bytes on 32-bit platforms (MSVC Release).
-	class_aligned(64) Entity final : public TAllocatedTiny<Entity, TKdTree<Float3Pair, Unit> >{
+	class_aligned(CPU_CACHELINE_SIZE) Entity final : public TAllocatedTiny<Entity, TKdTree<Float3Pair, Unit> >{
 	public:
 		Entity(Engine& engine);
 		~Entity() override;

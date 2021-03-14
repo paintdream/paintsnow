@@ -5,17 +5,19 @@
 
 #pragma once
 #include "../../Core/PaintsNow.h"
-#include "LeavesApi.h"
+#include "../../Core/Interface/IType.h"
+#include "../../Core/Interface/IDevice.h"
+#include "../../Core/Template/TProxy.h"
 #include <string>
 #include <map>
 #include <list>
 
 namespace PaintsNow {
-	class Config : public LeavesApi {
+	class Config {
 	public:
-		~Config() override;
-		void RegisterFactory(const String& factoryEntry, const String& name, const TWrapper<IDevice*>& factoryBase) override;
-		void UnregisterFactory(const String& factoryEntry, const String& name) override;
+		~Config();
+		void RegisterFactory(const String& factoryEntry, const String& name, const TWrapper<IDevice*>& factoryBase);
+		void UnregisterFactory(const String& factoryEntry, const String& name);
 
 		struct Entry {
 			String name;

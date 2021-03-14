@@ -3,7 +3,6 @@
 // 2014-12-14
 //
 
-
 #pragma once
 
 #include "../../Core/PaintsNow.h"

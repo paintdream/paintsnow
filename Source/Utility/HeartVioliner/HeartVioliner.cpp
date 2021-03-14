@@ -4,7 +4,6 @@
 
 using namespace PaintsNow;
 
-
 HeartVioliner::HeartVioliner(IThread& thread, ITimer& base, BridgeSunset& b) : timerFactory(base), bridgeSunset(b) {}
 
 TObject<IReflect>& HeartVioliner::operator () (IReflect& reflect) {

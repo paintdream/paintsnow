@@ -27,5 +27,3 @@ namespace PaintsNow {
 		Float3 worldPosition;
 	};
 }
-
-

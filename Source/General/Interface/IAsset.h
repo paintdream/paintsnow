@@ -91,7 +91,6 @@ namespace PaintsNow {
 			static void CalulateNormals(Float3* outputNormals, const Float3* vertices, const Int3* faces, size_t vertexCount, size_t faceCount);
 		};
 
-
 		enum INTERPOLATE { INTERPOLATE_NONE, INTERPOLATE_LINEAR, INTERPOLATE_HERMITE, INTERPOLATE_BEZIER };
 		enum FILTER { FILTER_NONE, FILTER_TRANSPARENT, FILTER_BLEND, FILTER_ADDITIVE, FILTER_ADD_ALPHA, FILTER_MODULATE };
 

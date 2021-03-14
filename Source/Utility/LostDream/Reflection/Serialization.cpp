@@ -122,7 +122,6 @@ struct MetaSharedPersist : public TReflected<MetaSharedPersist<X>, MetaStreamPer
 	typedef MetaSharedPersist Type;
 };
 
-
 struct MarshallInfo : public TReflected<MarshallInfo, IReflectObjectComplex, MetaConstructable> {
 	MarshallInfo() : dynType(nullptr) {}
 	virtual ~MarshallInfo() {
@@ -205,7 +204,6 @@ public:
 	char ch;
 	String extra;
 };
-
 
 #include "../../../Core/Driver/Filter/Pod/ZFilterPod.h"
 

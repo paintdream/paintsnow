@@ -36,7 +36,6 @@ using namespace PaintsNow;
 * THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
 static const int kLambdaMin = 360;
 static const int kLambdaMax = 830;
 // Values from "CIE (1931) 2-deg color matching functions", see

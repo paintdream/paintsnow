@@ -70,7 +70,6 @@ namespace PaintsNow {
 	TType4<T> func(const TVector<T, 4>& input) { return input;  }
 #endif
 
-
 	FILTER_FUNCTION(normalize);
 	FILTER_FUNCTION(saturate);
 	FILTER_FUNCTION(radians);
@@ -103,7 +102,6 @@ namespace PaintsNow {
 	T func(const TVector<T, 4>& input) { return T(0);  }
 
 	FILTER_FUNCTION_RET_T(length);
-
 
 #define FILTER_FUNCTION_TWO(func) \
 	template <class T> \

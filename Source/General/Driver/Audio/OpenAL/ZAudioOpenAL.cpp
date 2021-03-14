@@ -2,7 +2,6 @@
 
 using namespace PaintsNow;
 
-
 ZAudioOpenAL::ZAudioOpenAL() : device(nullptr), context(nullptr) {
 	device = alcOpenDevice(nullptr);
 	if (device != nullptr) {

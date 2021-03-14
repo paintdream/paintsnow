@@ -30,5 +30,3 @@ namespace PaintsNow {
 		std::vector<uint32_t> lightBufferData;
 	};
 }
-
-

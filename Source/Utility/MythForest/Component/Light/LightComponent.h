@@ -62,7 +62,7 @@ namespace PaintsNow {
 
 			TObject<IReflect>& operator () (IReflect& reflect) override;
 
-			struct_aligned(64) WarpData {
+			struct_aligned(CPU_CACHELINE_SIZE) WarpData {
 				typedef std::unordered_map<InstanceKey, InstanceGroup, HashInstanceKey> InstanceGroupMap;
 				WarpData();
 				InstanceGroupMap instanceGroups;
@@ -156,7 +156,6 @@ namespace PaintsNow {
 			float scale;
 			UShort2 resolution;
 		};
-
 
 		Float3 color;
 		float attenuation;

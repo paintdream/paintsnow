@@ -24,7 +24,6 @@ public:
 	}
 };
 
-
 class PrefabFactory : public TWrapper<IScript::Object*, const String&> {
 public:
 	PrefabFactory(IThread& threadApi) : TWrapper<IScript::Object*, const String&>(Wrap(this, &PrefabFactory::CreateObject)), thread(threadApi) {}
@@ -100,7 +99,6 @@ public:
 	TWrapper<void, const IScript::Request::AutoWrapperBase&, IScript::Request&, uint32_t, const String&, int> Test;
 	TWrapper<void, const IScript::Request::AutoWrapperBase&, IScript::Request&, const String&> Complete;
 } myPrefab;
-
 
 void OnFinish(IScript::Request& request) {
 	printf("FINISH!\n");

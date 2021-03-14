@@ -333,7 +333,6 @@ struct TMaskCast<CAST_REF> {
 	};
 };
 
-
 template <>
 struct TMaskCast<CAST_ARRAY> {
 	template <class T>
@@ -422,7 +421,6 @@ public:
 		// type::Read(request, var, *reinterpret_cast<ComVariant*>(base));
 	}
 };
-
 
 /*
 enum VARENUM
@@ -518,7 +516,6 @@ struct RegType<0> {
 		};
 	};
 };
-
 
 template <class T>
 struct Declare {

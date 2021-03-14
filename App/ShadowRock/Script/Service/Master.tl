@@ -176,7 +176,7 @@ function Master.New(workerCount : number, upstreamClusterAddress : string) : Mas
 	return setmetatable(master, Master as METATABLE)
 end
 
-function Master.Main(workerCount : number, upstreamClusterAddress : string)
+function Master.Main(workerCount : number, listenAddress : string, upstreamClusterAddress : string)
 	print("LeavesWind Master")
 	print("System information:")
 	for k, v in pairs(systemInfo) do
@@ -193,7 +193,7 @@ function Master.Main(workerCount : number, upstreamClusterAddress : string)
 		Common.DispatchMessage(MasterInstance as Common, message, wparam, lparam)
 	end)
 
-	Common.InitializeListener(MasterInstance as Common)
+	Common.InitializeListener(MasterInstance as Common, listenAddress or "127.0.0.1:29716")
 	Common.InitializeTicker(MasterInstance as Common)
 end
 

@@ -390,7 +390,6 @@ Bytes PassBase::ExportHash() const {
 	return exporter.hashValue;
 }
 
-
 class ShaderStageMaskExporter : public IReflect {
 public:
 	uint32_t mask;
@@ -410,7 +409,6 @@ public:
 
 	void Method(const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta) override {}
 };
-
 
 uint32_t PassBase::ExportShaderStageMask() const {
 	ShaderStageMaskExporter exporter;

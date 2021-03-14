@@ -36,5 +36,3 @@ namespace PaintsNow {
 		Float4 dstLit;
 	};
 }
-
-

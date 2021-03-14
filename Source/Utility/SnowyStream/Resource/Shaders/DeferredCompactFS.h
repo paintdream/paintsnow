@@ -53,5 +53,3 @@ namespace PaintsNow {
 		float shadow;
 	};
 }
-
-

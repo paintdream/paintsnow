@@ -58,5 +58,3 @@ namespace PaintsNow {
 		std::vector<IShader::BindBuffer> vertexBufferBindingsTemplate;
 	};
 }
-
-

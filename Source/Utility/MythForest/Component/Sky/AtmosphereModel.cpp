@@ -37,7 +37,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 namespace Atmosphere {
 	using namespace PaintsNow;
 	

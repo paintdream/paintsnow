@@ -18,5 +18,3 @@ namespace PaintsNow {
 		CustomMaterialDescription::InstanceData instanceData;
 	};
 }
-
-

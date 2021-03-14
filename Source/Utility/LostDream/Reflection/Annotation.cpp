@@ -68,7 +68,6 @@ public:
 			ReflectProperty(c)[Note = "Test"];
 			ReflectProperty(inner);
 
-
 			ReflectProperty(vecValues);
 			ReflectProperty(vecInner);
 		}

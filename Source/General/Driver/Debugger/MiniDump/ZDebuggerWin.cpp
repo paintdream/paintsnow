@@ -59,7 +59,6 @@ typedef struct _MINIDUMP_CALLBACK_OUTPUT {
 	};
 } MINIDUMP_CALLBACK_OUTPUT, *PMINIDUMP_CALLBACK_OUTPUT;
 
-
 typedef struct _MINIDUMP_THREAD_CALLBACK {
 	ULONG ThreadId;
 	HANDLE ThreadHandle;
@@ -134,7 +133,6 @@ BOOL
 	PMINIDUMP_CALLBACK_OUTPUT CallbackOutput
 	);
 
-
 typedef enum _MINIDUMP_TYPE {
 	MiniDumpNormal			 = 0x00000000,
 	MiniDumpWithDataSegs		   = 0x00000001,
@@ -193,11 +191,9 @@ pfnMiniDumpWriteDump)(
 
 pfnMiniDumpWriteDump MiniDumpWriteDump = nullptr;
 
-
 #endif // WINDOWS
 
 using namespace PaintsNow;
-
 
 #if defined(_WIN32) || defined(WIN32)
 

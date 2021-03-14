@@ -97,10 +97,6 @@ SOURCE=..\..\..\..\Source\Utility\LeavesFlute\Config.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\LeavesFlute\LeavesApi.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\..\..\Source\Utility\LeavesFlute\LeavesFlute.cpp
 # End Source File
 # Begin Source File
@@ -126,10 +122,6 @@ SOURCE=..\..\..\..\Source\Utility\LeavesFlute\CmdTools.h
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\LeavesFlute\Config.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\..\..\Source\Utility\LeavesFlute\LeavesApi.h
 # End Source File
 # Begin Source File
 

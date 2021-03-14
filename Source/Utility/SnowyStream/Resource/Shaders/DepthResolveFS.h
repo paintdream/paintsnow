@@ -24,5 +24,3 @@ namespace PaintsNow {
 		Float4 outputDepth;
 	};
 }
-
-

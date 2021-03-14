@@ -9,7 +9,7 @@ bool Memory::Initialize() {
 	return true;
 }
 
-struct_aligned(64) data {
+struct_aligned(CPU_CACHELINE_SIZE) data {
 	int32_t values[16];
 };
 

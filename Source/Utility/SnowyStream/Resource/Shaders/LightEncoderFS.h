@@ -30,5 +30,3 @@ namespace PaintsNow {
 		Float4 outputIndex; // RGBA16UInt
 	};
 }
-
-
