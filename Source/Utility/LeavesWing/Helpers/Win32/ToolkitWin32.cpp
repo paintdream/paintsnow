@@ -285,4 +285,8 @@ bool ToolkitWin32::RequestFreeLibrary(IScript::Request& request, uint64_t handle
 	return ::FreeLibrary((HMODULE)handle) != 0;
 }
 
+void ToolkitWin32::SetupLuaProxy() {
+
+}
+
 #endif

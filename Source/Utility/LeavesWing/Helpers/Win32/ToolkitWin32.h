@@ -22,6 +22,9 @@ namespace PaintsNow {
 		uint32_t GetMainThreadID() const;
 
 	protected:
+		void SetupLuaProxy();
+
+	protected:
 		/// <summary>
 		/// Retrieve system info
 		/// </summary>
