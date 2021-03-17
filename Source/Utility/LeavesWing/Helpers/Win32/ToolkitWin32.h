@@ -15,14 +15,12 @@ namespace PaintsNow {
 		ToolkitWin32();
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		~ToolkitWin32() override;
+		void Setup(LeavesFlute& flute);
 
 		void ScriptInitialize(IScript::Request& request) override;
 		void ScriptUninitialize(IScript::Request& request) override;
-		void HandleMessage(LeavesFlute& flute, uint32_t message, uint64_t wParam, uint64_t lParam);
+		void HandleMessage(uint32_t message, uint64_t wParam, uint64_t lParam);
 		uint32_t GetMainThreadID() const;
-
-	protected:
-		void SetupLuaProxy();
 
 	protected:
 		/// <summary>
@@ -101,6 +99,17 @@ namespace PaintsNow {
 		uint64_t RequestLoadLibrary(IScript::Request& request, const String& library);
 
 		/// <summary>
+		/// Call win32 library
+		/// </summary>
+		/// <param name="handle"> library handle </param>
+		/// <param name="entry"> library entry function name </param>
+		/// <param name="sParam"> customized string param </param>
+		/// <param name="wParam"> customized word param </param>
+		/// <param name="lParam"> customized long param </param>
+		/// <returns> return value of callee </returns>
+		uint64_t RequestCallLibrary(IScript::Request& request, uint64_t handle, const String& entry, const String& sParam, uint64_t wParam, uint64_t lParam);
+
+		/// <summary>
 		/// Free win32 library
 		/// </summary>
 		/// <param name="handle"> library handle </param>
@@ -108,6 +117,7 @@ namespace PaintsNow {
 		bool RequestFreeLibrary(IScript::Request& request, uint64_t handle);
 
 	protected:
+		LeavesFlute* leavesFlute;
 		IScript::Request::Ref messageListener;
 		uint32_t mainThreadID;
 	};
