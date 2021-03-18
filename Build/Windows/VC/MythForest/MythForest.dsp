@@ -145,6 +145,14 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Data\DataComponent.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Data\DataComponentModule.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\DeferredLightingBufferEncodedRenderStage.cpp
 # End Source File
 # Begin Source File
@@ -586,6 +594,14 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Explorer\CameraCuller.h
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Data\DataComponent.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Data\DataComponentModule.h
 # End Source File
 # Begin Source File
 

@@ -4,6 +4,7 @@
 #include "Component/Bridge/BridgeComponentModule.h"
 #include "Component/Cache/CacheComponentModule.h"
 #include "Component/Camera/CameraComponentModule.h"
+#include "Component/Data/DataComponentModule.h"
 #include "Component/EnvCube/EnvCubeComponentModule.h"
 #include "Component/Event/EventComponentModule.h"
 #include "Component/Explorer/ExplorerComponentModule.h"
@@ -56,6 +57,7 @@ void MythForest::Initialize() {
 	engine.InstallModule(new BridgeComponentModule(engine));
 	engine.InstallModule(new CacheComponentModule(engine));
 	engine.InstallModule(new CameraComponentModule(engine));
+	engine.InstallModule(new DataComponentModule(engine));
 	engine.InstallModule(new EnvCubeComponentModule(engine));
 	engine.InstallModule(new EventComponentModule(engine));
 	engine.InstallModule(new ExplorerComponentModule(engine));
