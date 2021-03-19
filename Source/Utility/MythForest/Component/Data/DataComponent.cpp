@@ -8,7 +8,7 @@ DataComponent::Property::Property(size_t s, size_t count) : size(s) {
 
 DataComponent::DataComponent(size_t c) : maxObjectCount(c) {
 	assert(c != 0);
-	bitmap.resize((c + sizeof(size_t) - 1) / sizeof(size_t));
+	bitmap.resize((c + sizeof(size_t) * 8 - 1) / (sizeof(size_t) * 8));
 }
 
 size_t DataComponent::SetProperty(const String& name, size_t size) {
