@@ -9,6 +9,7 @@
 #include <Windows.h>
 #else
 #include <signal.h>
+#include <dlfcn.h>
 #endif
 
 using namespace PaintsNow;
@@ -519,6 +520,10 @@ void LeavesFlute::Execute(const String& path, const std::vector<String>& params)
 #endif
 #endif
 
+#ifdef __GNUC__
+#define _stricmp strcasecmp
+#endif
+
 void LeavesFlute::RequestSearchMemory(IScript::Request& request, const String& memory, size_t start, size_t end, uint32_t alignment, uint32_t maxResult) {
 	OPTICK_EVENT();
 	bridgeSunset.GetKernel().YieldCurrentWarp();
@@ -557,6 +562,49 @@ void LeavesFlute::RequestSearchMemory(IScript::Request& request, const String& m
 #endif
 }
 
+
+uint64_t LeavesFlute::RequestLoadLibrary(IScript::Request& request, const String& path) {
+	String last = path.substr(path.length() - 3, 3);
+#if defined(__linux__)
+	if (_stricmp(last.c_str(), ".so") == 0) {
+		return (uint64_t)dlopen(Utf8ToSystem(path).c_str(), RTLD_NOW | RTLD_GLOBAL);
+	}
+#elif defined(_WIN32)
+	if (_stricmp(last.c_str(), "dll") == 0) {
+		return (uint64_t)::LoadLibraryW((const WCHAR*)Utf8ToSystem(path).c_str());
+	}
+#endif
+
+	return 0;
+}
+
+uint64_t LeavesFlute::RequestCallLibrary(IScript::Request& request, uint64_t handle, const String& entry, const String& sParam, uint64_t wParam, uint64_t lParam) {
+	// _cdecl calling convension for compatibility of parameter counts
+	typedef uint64_t (*SetupProxy)(Interfaces&, IScript::Request&, void*, const char*, uint64_t, uint64_t);
+	if (handle != 0) {
+#if defined(__linux__)
+		SetupProxy proxy = (SetupProxy)dlsym((void*)handle, entry.c_str());
+#elif defined(_WIN32)
+		SetupProxy proxy = (SetupProxy)::GetProcAddress((HMODULE)handle, entry.c_str());
+#endif
+		if (proxy != nullptr) {
+			return proxy(GetInterfaces(), request, request.GetNativeScript(), sParam.c_str(), wParam, lParam);
+		}
+	}
+
+	return 0;
+}
+
+bool LeavesFlute::RequestFreeLibrary(IScript::Request& request, uint64_t handle) {
+#if defined(__linux__)
+	return dlclose((void*)handle) == 0;
+#elif defined(_WIN32)
+	return ::FreeLibrary((HMODULE)handle) != 0;
+#else
+	return 0;
+#endif
+}
+
 TObject<IReflect>& LeavesFlute::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 	if (reflect.IsReflectProperty()) {
@@ -581,6 +629,9 @@ TObject<IReflect>& LeavesFlute::operator () (IReflect& reflect) {
 		ReflectMethod(RequestGetScreenSize)[ScriptMethodLocked = "GetScreenSize"];
 		ReflectMethod(RequestListenConsole)[ScriptMethod = "ListenConsole"];
 		ReflectMethod(RequestSearchMemory)[ScriptMethod = "SearchMemory"];
+		ReflectMethod(RequestLoadLibrary)[ScriptMethod = "LoadLibrary"];
+		ReflectMethod(RequestCallLibrary)[ScriptMethod = "CallLibrary"];
+		ReflectMethod(RequestFreeLibrary)[ScriptMethod = "FreeLibrary"];
 	}
 
 	return *this;

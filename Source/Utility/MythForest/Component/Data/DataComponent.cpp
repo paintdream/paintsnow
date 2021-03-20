@@ -72,6 +72,19 @@ size_t DataComponent::AllocateObject() {
 		}
 	}
 
+	// Not enough, try resizing
+	if (Flag().load(std::memory_order_relaxed) & DATACOMPONENT_FIX_COUNT) {
+		size_t index = maxObjectCount;
+		maxObjectCount *= 2;
+		bitmap.resize((maxObjectCount + sizeof(size_t) * 8 - 1) / (sizeof(size_t) * 8));
+		for (size_t i = 0; i < properties.size(); i++) {
+			Property& prop = *properties[i];
+			prop.data.Resize(maxObjectCount * prop.size);
+		}
+
+		return index;
+	}
+
 	return ~(size_t)0;
 }
 
@@ -81,3 +94,23 @@ void DataComponent::DeallocateObject(size_t objectIndex) {
 	uint8_t* ptr = reinterpret_cast<uint8_t*>(&bitmap[0]);
 	ptr[objectIndex >> 3] &= ~(1 << (objectIndex & 7));
 }
+
+class DataReflector : public IReflect {
+public:
+	DataReflector(DataComponent& comp) : IReflect(true, false, false, false), dataComponent(comp) {}
+
+	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) {
+		if (s.IsBasicObject()) {
+			dataComponent.SetProperty(name, typeID->GetSize());
+		}
+	}
+
+private:
+	DataComponent& dataComponent;
+};
+
+void DataComponent::SetProperty(const IReflectObject& prototype) {
+	DataReflector reflector(*this);
+	const_cast<IReflectObject&>(prototype)(reflector);
+}
+

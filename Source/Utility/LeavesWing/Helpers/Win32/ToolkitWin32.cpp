@@ -18,10 +18,6 @@ ToolkitWin32::ToolkitWin32() {
 
 ToolkitWin32::~ToolkitWin32() {}
 
-void ToolkitWin32::Setup(LeavesFlute& flute) {
-	leavesFlute = &flute;
-}
-
 uint32_t ToolkitWin32::GetMainThreadID() const {
 	return mainThreadID;
 }
@@ -50,9 +46,6 @@ TObject<IReflect>& ToolkitWin32::operator () (IReflect& reflect) {
 		ReflectMethod(RequestCloseHandle)[ScriptMethod = "CloseHandle"];
 		ReflectMethod(RequestWaitForSingleObject)[ScriptMethod = "WaitForSingleObject"];
 		ReflectMethod(RequestTerminateProcess)[ScriptMethod = "TerminateProcess"];
-		ReflectMethod(RequestLoadLibrary)[ScriptMethod = "LoadLibrary"];
-		ReflectMethod(RequestCallLibrary)[ScriptMethod = "CallLibrary"];
-		ReflectMethod(RequestFreeLibrary)[ScriptMethod = "FreeLibrary"];
 	}
 
 	return *this;
@@ -207,15 +200,15 @@ void ToolkitWin32::RequestGetSystemInfo(IScript::Request& request) {
 	request.UnLock();
 }
 
-void ToolkitWin32::HandleMessage(uint32_t msg, uint64_t wParam, uint64_t lParam) {
+void ToolkitWin32::HandleMessage(LeavesFlute& leavesFlute, uint32_t msg, uint64_t wParam, uint64_t lParam) {
 	if (messageListener) {
-		IScript::Request& request = *leavesFlute->bridgeSunset.requestPool.AcquireSafe();
+		IScript::Request& request = *leavesFlute.bridgeSunset.requestPool.AcquireSafe();
 		request.DoLock();
 		request.Push();
 		request.Call(messageListener, msg, wParam, lParam);
 		request.Pop();
 		request.UnLock();
-		leavesFlute->bridgeSunset.requestPool.ReleaseSafe(&request);
+		leavesFlute.bridgeSunset.requestPool.ReleaseSafe(&request);
 	}
 }
 
@@ -280,29 +273,6 @@ uint32_t ToolkitWin32::RequestWaitForSingleObject(IScript::Request& request, uin
 
 bool ToolkitWin32::RequestTerminateProcess(IScript::Request& request, uint64_t process, uint32_t exitCode) {
 	return ::TerminateProcess((HANDLE)process, exitCode) != 0;
-}
-
-uint64_t ToolkitWin32::RequestLoadLibrary(IScript::Request& request, const String& library) {
-	return (uint64_t)::LoadLibraryW((const WCHAR*)Utf8ToSystem(library).c_str());
-}
-
-uint64_t ToolkitWin32::RequestCallLibrary(IScript::Request& request, uint64_t handle, const String& entry, const String& sParam, uint64_t wParam, uint64_t lParam) {
-	HMODULE module = (HMODULE)handle;
-
-	// _cdecl calling convension for compatibility of parameter counts
-	typedef uint64_t (_cdecl *SetupProxy)(Interfaces&, IScript::Request&, void*, const char*, uint64_t, uint64_t);
-	if (module != nullptr) {
-		SetupProxy proxy = (SetupProxy)::GetProcAddress(module, entry.c_str());
-		if (proxy != nullptr) {
-			return proxy(leavesFlute->GetInterfaces(), request, request.GetNativeScript(), sParam.c_str(), wParam, lParam);
-		}
-	}
-
-	return 0;
-}
-
-bool ToolkitWin32::RequestFreeLibrary(IScript::Request& request, uint64_t handle) {
-	return ::FreeLibrary((HMODULE)handle) != 0;
 }
 
 #endif

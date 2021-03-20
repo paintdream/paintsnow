@@ -42,8 +42,6 @@ bool ServiceWin32::RunServiceMaster(DWORD argc, LPSTR* argv) {
 }
 
 void ServiceWin32::SetupHandler(LeavesFlute& leavesFlute) {
-	toolkitWin32.Setup(leavesFlute);
-
 	if (runningEvent != nullptr) {
 		leavesFlute.EnableRawPrint(true); // service?
 	}
@@ -61,7 +59,7 @@ void ServiceWin32::ConsoleHandler(LeavesFlute& leavesFlute) {
 	MSG msg;
 	if (runningEvent == nullptr) {
 		while (::GetMessageW(&msg, NULL, 0, 0)) {
-			toolkitWin32.HandleMessage(msg.message, msg.wParam, msg.lParam);
+			toolkitWin32.HandleMessage(leavesFlute, msg.message, msg.wParam, msg.lParam);
 		}
 	} else {
 		while (true) {
@@ -69,7 +67,7 @@ void ServiceWin32::ConsoleHandler(LeavesFlute& leavesFlute) {
 			if (event == WAIT_OBJECT_0) break;
 
 			::PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE);
-			toolkitWin32.HandleMessage(msg.message, msg.wParam, msg.lParam);
+			toolkitWin32.HandleMessage(leavesFlute, msg.message, msg.wParam, msg.lParam);
 		}
 	}
 }

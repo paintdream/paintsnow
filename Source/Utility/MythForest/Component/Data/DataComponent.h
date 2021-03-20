@@ -11,8 +11,13 @@
 namespace PaintsNow {
 	class DataComponent : public TAllocatedTiny<DataComponent, Component> {
 	public:
-		DataComponent(size_t maxObjectCount);
+		DataComponent(size_t initMaxObjectCount);
+		enum {
+			DATACOMPONENT_FIX_COUNT = COMPONENT_CUSTOM_BEGIN,
+			DATACOMPONENT_CUSTOM_BEGIN = COMPONENT_CUSTOM_BEGIN << 1
+		};
 
+		void SetProperty(const IReflectObject& prototype);
 		size_t SetProperty(const String& name, size_t size);
 		size_t GetProperty(const String& name) const;
 		uint8_t* GetPropertyData(size_t objectIndex, size_t propertyIndex);
