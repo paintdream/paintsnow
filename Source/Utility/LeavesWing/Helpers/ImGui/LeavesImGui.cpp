@@ -5,7 +5,7 @@
 #include "Core/imgui.h"
 #include "Core/imgui_impl_glfw.h"
 #include "Core/imgui_impl_opengl3.h"
-#include <GL/glew.h>
+#include "../../../../../Driver/Render/OpenGL/Core/glew.h"
 #include <GLFW/glfw3.h>
 
 using namespace PaintsNow;

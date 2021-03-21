@@ -20,7 +20,7 @@ namespace PaintsNow {
 		void Download(IRender& render, void* deviceContext) override;
 		void Attach(IRender& render, void* deviceContext) override;
 		void Detach(IRender& render, void* deviceContext) override;
-		void ScriptModify(IScript::Request& request, const String& action, IScript::Request::Arguments args);
+		void ScriptModify(IScript::Request& request, const String& action, IScript::Request::Arguments args) override;
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		TShared<ShaderResource> Instantiate(const TShared<MeshResource>& mesh, IRender::Resource::DrawCallDescription& drawCallTemplate, std::vector<Bytes>& bufferData);

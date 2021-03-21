@@ -1,6 +1,11 @@
 #include "../../../../Core/Template/TAlgorithm.h"
 #include "ZFilterLAME.h"
 #include <cassert>
+
+extern "C" {
+	#include "Core/include/lame.h"
+}
+
 using namespace PaintsNow;
 
 class LAMEDecoder : public IAudio::Decoder {

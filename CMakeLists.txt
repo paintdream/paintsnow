@@ -14,6 +14,23 @@ ENDIF ()
 # ================================================================ #
 PROJECT (PaintsNow)
 
+SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
+
+# https://stackoverflow.com/questions/45092198/cmake-how-do-i-change-properties-on-subdirectory-project-targets
+set_property(GLOBAL PROPERTY USE_FOLDERS TRUE)
+define_property(
+    TARGET
+    PROPERTY FOLDER
+    INHERITED
+    BRIEF_DOCS "Set the folder name."
+    FULL_DOCS  "Use to organize targets in an IDE."
+)
+
+function(add_subdirectory_with_folder _folder_name _folder)
+    add_subdirectory(${_folder} ${ARGN})
+    set_property(DIRECTORY "${_folder}" PROPERTY FOLDER "${_folder_name}")
+endfunction()
+
 IF (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
     SET (IS_X86_64 1)
 ELSE ()
@@ -88,6 +105,7 @@ INCLUDE(CheckIncludeFiles)
 ADD_DEFINITIONS (-D_7ZIP_ST)
 ADD_DEFINITIONS (-DCMAKE_PAINTSNOW)
 
+SET (CMAKE_C_STANDARD 11)
 SET (CMAKE_CXX_STANDARD 11)
 
 IF (MSVC)
@@ -210,11 +228,7 @@ ENDIF (ADD_RANDOM_LIBNOISE_BUILTIN)
 OPTION (ADD_AUDIO_LAME "Add LAME Decoder Audio Driver" ON)
 IF (ADD_AUDIO_LAME)
 	SET (FLAG_ADD_AUDIO_LAME 1)
-	CHECK_INCLUDE_FILES(lame.h HAVE_LAME_H)
-	CHECK_INCLUDE_FILES(lame/lame.h HAVE_LAME_OTHER_H)
-	IF (NOT HAVE_LAME_H AND NOT HAVE_LAME_OTHER_H)
-		MESSAGE (FINAL_ERROR "Could not find lame.h FOR LAME Decoder Audio Driver")
-	ENDIF (NOT HAVE_LAME_H AND NOT HAVE_LAME_OTHER_H)
+	add_subdirectory_with_folder("ThirdParty" Source/General/Driver/Filter/LAME/Core)
 
 	FILE (GLOB_RECURSE LAME_SRC
 		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Filter/LAME/*.h"
@@ -229,12 +243,9 @@ ENDIF (ADD_AUDIO_LAME)
 OPTION (ADD_AUDIO_OPENAL "Add OpenAL Audio Driver" ON)
 IF (ADD_AUDIO_OPENAL)
 	SET (FLAG_ADD_AUDIO_OPENAL 1)
-	CHECK_INCLUDE_FILES(AL/al.h HAVE_AL_H)
-	IF (NOT HAVE_AL_H)
-		MESSAGE (FATAL_ERROR "Could not find AL/al.h FOR OpenAL Audio Driver")
-	ENDIF (NOT HAVE_AL_H)
+	add_subdirectory_with_folder("ThirdParty" Source/General/Driver/Audio/OpenAL/Core)
 
-	FILE (GLOB_RECURSE OPENAL_SRC
+	FILE (GLOB OPENAL_SRC
 		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Audio/OpenAL/*.h"
 		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Audio/OpenAL/*.cpp"
 	)
@@ -379,21 +390,9 @@ ENDIF (ADD_FILTER_LZMA_BUILTIN)
 OPTION (ADD_FONT_FREETYPE "Add Freetype Font Driver" ON)
 IF (ADD_FONT_FREETYPE)
 	SET (FLAG_ADD_FONT_FREETYPE 1)
-	IF (NOT WIN32)
-		INCLUDE_DIRECTORIES("/usr/include/freetype2")
-	ENDIF (NOT WIN32)
-	CHECK_INCLUDE_FILES(ftglyph.h HAVE_FREETYPE_H)
-	CHECK_INCLUDE_FILES(freetype/ftglyph.h HAVE_FREETYPE_OTHER_H)
-	IF (NOT HAVE_FREETYPE_H AND NOT HAVE_FREETYPE_OTHER_H)
-		# MESSAGE (FATAL_ERROR "Could not find ftglyph.h FOR Freetype Font Driver")
-	ENDIF (NOT HAVE_FREETYPE_H AND NOT HAVE_FREETYPE_OTHER_H)
+	add_subdirectory_with_folder("ThirdParty" Source/General/Driver/Font/Freetype/Core)
 
-	CHECK_INCLUDE_FILES(iconv.h HAVE_ICONV_H)
-	IF (NOT HAVE_ICONV_H)
-		MESSAGE (FATAL_ERROR "Could not find iconv.h FOR Freetype Font Driver")
-	ENDIF (NOT HAVE_ICONV_H)
-
-	FILE (GLOB_RECURSE FREETYPE_SRC
+	FILE (GLOB FREETYPE_SRC
 		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Font/Freetype/*.h"
 		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Font/Freetype/*.cpp"
 	)
@@ -406,12 +405,9 @@ ENDIF (ADD_FONT_FREETYPE)
 OPTION (ADD_FRAME_GLFW "Add GLFW Frame/Timer Driver" ON)
 IF (ADD_FRAME_GLFW)
 	SET (FLAG_ADD_FRAME_GLFW 1)
-	CHECK_INCLUDE_FILES(GLFW/glfw3.h HAVE_GLFW_H)
-	IF (NOT HAVE_GLFW_H)
-		MESSAGE (FATAL_ERROR "Could not find GL/glfw3.h Frame Driver")
-	ENDIF (NOT HAVE_GLFW_H)
+	add_subdirectory_with_folder("ThirdParty" Source/General/Driver/Frame/GLFW/Core)
 
-	FILE (GLOB_RECURSE GLFW_SRC
+	FILE (GLOB GLFW_SRC
 		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Frame/GLFW/*.h"
 		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Frame/GLFW/*.cpp"
 		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Timer/GLFW/*.h"
@@ -427,12 +423,9 @@ ENDIF (ADD_FRAME_GLFW)
 OPTION (ADD_IMAGE_FREEIMAGE "Add Freeimage Image Driver" ON)
 IF (ADD_IMAGE_FREEIMAGE)
 	SET (FLAG_ADD_IMAGE_FREEIMAGE 1)
-	CHECK_INCLUDE_FILES(FreeImage.h HAVE_FREEIMAGE_H)
-	IF (NOT HAVE_FREEIMAGE_H)
-		MESSAGE (FATAL_ERROR "Could not find FreeImage.h FOR Freeimage Image Driver")
-	ENDIF (NOT HAVE_FREEIMAGE_H)
+	add_subdirectory_with_folder("ThirdParty" Source/General/Driver/Image/FreeImage/Core)
 
-	FILE (GLOB_RECURSE FREEIMAGE_SRC
+	FILE (GLOB FREEIMAGE_SRC
 		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Image/FreeImage/*.h"
 		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Image/FreeImage/*.cpp"
 	)
@@ -445,16 +438,15 @@ ENDIF (ADD_IMAGE_FREEIMAGE)
 OPTION (ADD_NETWORK_LIBEVENT "Add Libevent Network Driver" ON)
 IF (ADD_NETWORK_LIBEVENT)
 	SET (FLAG_ADD_NETWORK_LIBEVENT 1)
-	CHECK_INCLUDE_FILES(event2/event.h HAVE_EVENT_H)
-	IF (NOT HAVE_EVENT_H)
-		MESSAGE (FATAL_ERROR "Could not find event2/event.h FOR Libevent Network Driver")
-	ENDIF (NOT HAVE_EVENT_H)
-
-	FILE (GLOB_RECURSE LIBEVENT_SRC
+	add_subdirectory_with_folder("ThirdParty" Source/General/Driver/Network/LibEvent/Core)
+	FILE (GLOB LIBEVENT_SRC
 		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Network/LibEvent/*.h"
 		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Network/LibEvent/*.cpp"
 	)
 
+	# libevent bug, add these include directories manually.
+	INCLUDE_DIRECTORIES("${PROJECT_BINARY_DIR}/Source/General/Driver/Network/LibEvent/Core/include")
+	INCLUDE_DIRECTORIES("${PROJECT_SOURCE_DIR}/Source/General/Driver/Network/LibEvent/Core/include")
 	SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${LIBEVENT_SRC})
 ELSE (ADD_NETWORK_LIBEVENT)
 	SET (FLAG_ADD_NETWORK_LIBEVENT 0)
@@ -463,14 +455,11 @@ ENDIF (ADD_NETWORK_LIBEVENT)
 OPTION (ADD_RENDER_OPENGL "Add OpenGL Render Driver" ON)
 IF (ADD_RENDER_OPENGL)
 	SET (FLAG_ADD_RENDER_OPENGL 1)
-	CHECK_INCLUDE_FILES(GL/glew.h HAVE_GLEW_H)
-	IF (NOT HAVE_GLEW_H)
-		MESSAGE (FATAL_ERROR "Could not find GL/glew.h FOR OpenGL Render Driver")
-	ENDIF (NOT HAVE_GLEW_H)
 
 	FILE (GLOB_RECURSE OPENGL_SRC
 		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Render/OpenGL/*.h"
 		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Render/OpenGL/*.cpp"
+		"${PROJECT_SOURCE_DIR}/Source/General/Driver/Render/OpenGL/*.c"
 	)
 
 	SET (PAINTSNOW_SRC ${PAINTSNOW_SRC} ${OPENGL_SRC})
@@ -598,6 +587,7 @@ FOREACH (FILE ${PURPLETRAIL_SRC})
 ENDFOREACH (FILE ${PURPLETRAIL_SRC})
 
 ADD_LIBRARY (PurpleTrail ${PURPLETRAIL_SRC})
+SET_TARGET_PROPERTIES(PurpleTrail PROPERTIES FOLDER Module)
 
 # ---------------------------------------------------------------- #
 
@@ -617,6 +607,7 @@ FOREACH (FILE ${BRIDGESUNSET_SRC})
 ENDFOREACH (FILE ${BRIDGESUNSET_SRC})
 
 ADD_LIBRARY (BridgeSunset ${BRIDGESUNSET_SRC})
+SET_TARGET_PROPERTIES(BridgeSunset PROPERTIES FOLDER Module)
 
 # ---------------------------------------------------------------- #
 
@@ -636,6 +627,7 @@ FOREACH (FILE ${ECHOLEGEND_SRC})
 ENDFOREACH (FILE ${ECHOLEGEND_SRC})
 
 ADD_LIBRARY (EchoLegend ${ECHOLEGEND_SRC})
+SET_TARGET_PROPERTIES(EchoLegend PROPERTIES FOLDER Module)
 
 # ---------------------------------------------------------------- #
 
@@ -654,8 +646,8 @@ FOREACH (FILE ${GALAXYWEAVER_SRC})
 	SOURCE_GROUP("${GROUP}" FILES "${FILE}")
 ENDFOREACH (FILE ${GALAXYWEAVER_SRC})
 
-
 ADD_LIBRARY (GalaxyWeaver ${GALAXYWEAVER_SRC})
+SET_TARGET_PROPERTIES(GalaxyWeaver PROPERTIES FOLDER Module)
 
 # ---------------------------------------------------------------- #
 
@@ -675,6 +667,7 @@ FOREACH (FILE ${HEARTVIOLINER_SRC})
 ENDFOREACH (FILE ${HEARTVIOLINER_SRC})
 
 ADD_LIBRARY (HeartVioliner ${HEARTVIOLINER_SRC})
+SET_TARGET_PROPERTIES(HeartVioliner PROPERTIES FOLDER Module)
 
 # ---------------------------------------------------------------- #
 
@@ -694,6 +687,7 @@ FOREACH (FILE ${LEAVESFLUTE_SRC})
 ENDFOREACH (FILE ${LEAVESFLUTE_SRC})
 
 ADD_LIBRARY (LeavesFlute ${LEAVESFLUTE_SRC})
+SET_TARGET_PROPERTIES(LeavesFlute PROPERTIES FOLDER Module)
 
 
 # ---------------------------------------------------------------- #
@@ -713,8 +707,8 @@ FOREACH (FILE ${MYTHFOREST_SRC})
 	SOURCE_GROUP("${GROUP}" FILES "${FILE}")
 ENDFOREACH (FILE ${MYTHFOREST_SRC})
 
-
 ADD_LIBRARY (MythForest ${MYTHFOREST_SRC})
+SET_TARGET_PROPERTIES(MythForest PROPERTIES FOLDER Module)
 
 # ---------------------------------------------------------------- #
 
@@ -734,6 +728,7 @@ FOREACH (FILE ${REMEMBERY_SRC})
 ENDFOREACH (FILE ${REMEMBERY_SRC})
 
 ADD_LIBRARY (Remembery ${REMEMBERY_SRC})
+SET_TARGET_PROPERTIES(Remembery PROPERTIES FOLDER Module)
 
 # ---------------------------------------------------------------- #
 
@@ -753,6 +748,7 @@ FOREACH (FILE ${SNOWYSTREAM_SRC})
 ENDFOREACH (FILE ${SNOWYSTREAM_SRC})
 
 ADD_LIBRARY (SnowyStream ${SNOWYSTREAM_SRC})
+SET_TARGET_PROPERTIES(SnowyStream PROPERTIES FOLDER Module)
 
 
 # ================================================================ #
@@ -776,56 +772,55 @@ FOREACH (FILE ${LEAVESWING_SRC})
 ENDFOREACH (FILE ${LEAVESWING_SRC})
 
 ADD_EXECUTABLE (LeavesWing ${LEAVESWING_SRC})
+SET_TARGET_PROPERTIES(LeavesWing PROPERTIES FOLDER Application)
 
 SET (PAINTSNOW_LIBRARIES
 	LeavesFlute Remembery MythForest SnowyStream BridgeSunset PurpleTrail HeartVioliner EchoLegend GalaxyWeaver PaintsNow
 )
 
+IF (ADD_FRAME_GLFW)
+	SET (PAINTSNOW_LIBRARIES ${PAINTSNOW_LIBRARIES} glfw)
+ENDIF (ADD_FRAME_GLFW)
+
+IF (ADD_AUDIO_OPENAL)
+	SET (PAINTSNOW_LIBRARIES ${PAINTSNOW_LIBRARIES} OpenAL)
+ENDIF (ADD_AUDIO_OPENAL)
+
+IF (ADD_FONT_FREETYPE)
+	SET (PAINTSNOW_LIBRARIES ${PAINTSNOW_LIBRARIES} freetype)
+ENDIF (ADD_FONT_FREETYPE)
+
+IF (ADD_IMAGE_FREEIMAGE)
+	SET (PAINTSNOW_LIBRARIES ${PAINTSNOW_LIBRARIES} FreeImage)
+ENDIF (ADD_IMAGE_FREEIMAGE)
+
+IF (ADD_NETWORK_LIBEVENT)
+	SET (PAINTSNOW_LIBRARIES ${PAINTSNOW_LIBRARIES} event)
+ENDIF (ADD_NETWORK_LIBEVENT)
+
+IF (ADD_AUDIO_LAME)
+	SET (PAINTSNOW_LIBRARIES ${PAINTSNOW_LIBRARIES} mp3lame)
+ENDIF (ADD_AUDIO_LAME)
+
 IF (MSVC)
 
 ELSE (MSVC)
 	IF (ADD_RENDER_OPENGL)
-		SET (PAINTSNOW_LIBRARIES ${PAINTSNOW_LIBRARIES} GL GLU GLEW)
+		SET (PAINTSNOW_LIBRARIES ${PAINTSNOW_LIBRARIES} GL)
 	ENDIF (ADD_RENDER_OPENGL)
 
 	IF (ADD_RENDER_VULKAN)
 		SET (PAINTSNOW_LIBRARIES ${PAINTSNOW_LIBRARIES} vulkan)
 	ENDIF (ADD_RENDER_VULKAN)
 
-	IF (ADD_FRAME_GLFW)
-		SET (PAINTSNOW_LIBRARIES ${PAINTSNOW_LIBRARIES} glfw)
-	ENDIF (ADD_FRAME_GLFW)
-
-	IF (ADD_AUDIO_OPENAL)
-		SET (PAINTSNOW_LIBRARIES ${PAINTSNOW_LIBRARIES} openal)
-	ENDIF (ADD_AUDIO_OPENAL)
-
-	IF (ADD_FONT_FREETYPE)
-		SET (PAINTSNOW_LIBRARIES ${PAINTSNOW_LIBRARIES} freetype)
-	ENDIF (ADD_FONT_FREETYPE)
-
-	IF (ADD_IMAGE_FREEIMAGE)
-		SET (PAINTSNOW_LIBRARIES ${PAINTSNOW_LIBRARIES} freeimage)
-	ENDIF (ADD_IMAGE_FREEIMAGE)
-
 	IF (ADD_THREAD_PTHREAD)
 		SET (PAINTSNOW_LIBRARIES ${PAINTSNOW_LIBRARIES} pthread)
 	ENDIF (ADD_THREAD_PTHREAD)
-
-	IF (ADD_AUDIO_LAME)
-		SET (PAINTSNOW_LIBRARIES ${PAINTSNOW_LIBRARIES} mp3lame)
-	ENDIF (ADD_AUDIO_LAME)
-
-	IF (ADD_NETWORK_LIBEVENT)
-		SET (PAINTSNOW_LIBRARIES ${PAINTSNOW_LIBRARIES} event)
-		SET (PAINTSNOW_LIBRARIES ${PAINTSNOW_LIBRARIES} event_pthreads)
-	ENDIF (ADD_NETWORK_LIBEVENT)
 
 	SET (PAINTSNOW_LIBRARIES ${PAINTSNOW_LIBRARIES} stdc++ dl rt m)
 ENDIF (MSVC)
 
 TARGET_LINK_LIBRARIES (LeavesWing ${PAINTSNOW_LIBRARIES})
-
 
 FILE (GLOB_RECURSE LOSTDREAM_SRC
 		"${PROJECT_SOURCE_DIR}/Source/Utility/LostDream/*.h"
@@ -833,12 +828,13 @@ FILE (GLOB_RECURSE LOSTDREAM_SRC
 )
 
 ADD_EXECUTABLE (LostDream ${LOSTDREAM_SRC})
+SET_TARGET_PROPERTIES(LostDream PROPERTIES FOLDER Test)
 
 TARGET_LINK_LIBRARIES (LostDream ${PAINTSNOW_LIBRARIES})
 
 ENDIF (STATIC_VC_RUNTIME OR (NOT MSVC))
 
 CONFIGURE_FILE (
-		"${PROJECT_SOURCE_DIR}/Config.h.in"
-		"${PROJECT_BINARY_DIR}/Config.h"
+		"${PROJECT_SOURCE_DIR}/PaintsNowConfig.h.in"
+		"${PROJECT_BINARY_DIR}/PaintsNowConfig.h"
 )

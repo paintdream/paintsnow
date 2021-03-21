@@ -4,7 +4,8 @@
 #define FREEIMAGE_LIB
 #endif
 
-#include <FreeImage.h>
+#include "Core/Source/FreeImage.h"
+
 #include <cassert>
 #include <algorithm>
 
@@ -13,7 +14,7 @@ using namespace PaintsNow;
 class InitFreeImage {
 public:
 	InitFreeImage() {
-		FreeImage_Initialise(TRUE);
+		FreeImage_Initialise(true);
 	}
 
 	~InitFreeImage() {

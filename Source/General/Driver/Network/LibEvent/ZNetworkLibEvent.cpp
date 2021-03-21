@@ -317,13 +317,6 @@ ZNetworkLibEvent::ZNetworkLibEvent(IThread& t) : threadApi(t) {
 	WSADATA wsa;
 	WSAStartup(0x201, &wsa);
 #endif
-
-#ifdef WIN32
-	evthread_use_windows_threads(); // may cause memory leak but ...
-#else
-	evthread_use_pthreads();
-#endif
-
 }
 
 ZNetworkLibEvent::~ZNetworkLibEvent() {

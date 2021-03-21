@@ -17,7 +17,7 @@
 #include <sstream>
 
 #define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
+#include "../../Frame/GLFW/Core/include/GLFW/glfw3.h"
 
 using namespace PaintsNow;
 

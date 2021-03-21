@@ -1,13 +1,14 @@
 #include "ZFontFreetype.h"
 #include <cassert>
 #include <map>
-#include <ft2build.h>
 
-#ifdef __linux__
-#include <freetype2/ftglyph.h>
-#else
+#if defined(_MSC_VER) && _MSC_VER <= 1200
+#include <ft2build.h>
 #include <freetype/ftglyph.h>
-#endif 
+#else
+#include "Core/include/ft2build.h"
+#include "Core/include/ftglyph.h"
+#endif
 
 using namespace PaintsNow;
 

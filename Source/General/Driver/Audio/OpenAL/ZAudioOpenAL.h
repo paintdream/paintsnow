@@ -1,12 +1,11 @@
 #pragma once
 #include "../../../Interface/IAudio.h"
 #include <cstdlib>
-#define AL_LIBTYPE_STATIC
-#include <AL/alc.h>
-#include <AL/al.h>
+#define AL_LIBTYPE_STATIC 1
+#include "Core/include/AL/alc.h"
+#include "Core/include/AL/al.h"
 
-namespace PaintsNow
-{
+namespace PaintsNow {
 	class ZAudioOpenAL final : public IAudio {
 	public:
 		ZAudioOpenAL();

@@ -8,23 +8,13 @@
 #define PAINTSNOW_VERSION_MAJOR "0"
 #define PAINTSNOW_VERSION_MINOR "0.20.7.16"
 
-#ifdef _MSC_VER
-#if !defined(CMAKE_PAINTSNOW) || ADD_AUDIO_LAME
-#if defined(_DEBUG) && _MSC_VER > 1200
-#pragma comment(lib, "libmp3lameD.lib")
-#pragma comment(lib, "mpghipD.lib")
-#else
+#if defined(_MSC_VER) && _MSC_VER <= 1200
 #pragma comment(lib, "libmp3lame.lib")
 #pragma comment(lib, "mpghip.lib")
 #endif
-#endif
 
-#if !defined(CMAKE_PAINTSNOW) || ADD_RENDER_OPENGL
-#if defined(_DEBUG) && _MSC_VER > 1200
-#pragma comment(lib, "glew32sd.lib")
-#else
+#if defined(_MSC_VER) && _MSC_VER <= 1200
 #pragma comment(lib, "glew32s.lib")
-#endif
 #endif
 
 #if (!defined(CMAKE_PAINTSNOW) || ADD_RENDER_VULKAN) && (!defined(_MSC_VER) || _MSC_VER > 1200)
@@ -32,43 +22,32 @@
 #pragma comment(lib, "glslang.lib")
 #endif
 
-#if !defined(CMAKE_PAINTSNOW) || ADD_AUDIO_OPENAL
-#if defined(_DEBUG) && _MSC_VER > 1200
-#pragma comment(lib, "OpenAL32D.lib")
-#else
+#if defined(_MSC_VER) && _MSC_VER <= 1200
 #pragma comment(lib, "OpenAL32.lib")
 #endif
+
+#if defined(_MSC_VER)
 #pragma comment(lib, "WinMM.lib")
 #endif
 
-#if !defined(CMAKE_PAINTSNOW) || ADD_FONT_FREETYPE
-#if defined(_DEBUG) && _MSC_VER > 1200
-#pragma comment(lib, "freetypeD.lib")
-#else
+#if defined(_MSC_VER) && _MSC_VER <= 1200
 #pragma comment(lib, "freetype.lib")
 #endif
-#endif
 
-#if !defined(CMAKE_PAINTSNOW) || ADD_IMAGE_FREEIMAGE
-#if defined(_DEBUG) && _MSC_VER > 1200
-#pragma comment(lib, "freeimageD.lib")
-#else
+#if defined(_MSC_VER) && _MSC_VER <= 1200
 #pragma comment(lib, "freeimage.lib")
 #endif
+
+#if defined(_MSC_VER) && _MSC_VER <= 1200
+#pragma comment(lib, "glfw3.lib")
 #endif
 
-#if !defined(CMAKE_PAINTSNOW) || ADD_FRAME_GLFW
-#pragma comment(lib, "glfw3.lib")
+#if defined(_MSC_VER)
 #pragma comment(lib, "OpenGL32.lib")
 #endif
 
-#if !defined(CMAKE_PAINTSNOW) || ADD_NETWORK_LIBEVENT
-#if defined(_DEBUG) && _MSC_VER > 1200
-#pragma comment(lib, "libeventD.lib")
-#else
+#if defined(_MSC_VER) && _MSC_VER <= 1200
 #pragma comment(lib, "libevent.lib")
-#endif
-#endif
 #endif
 
 #if defined(_MSC_VER) && _MSC_VER <= 1200

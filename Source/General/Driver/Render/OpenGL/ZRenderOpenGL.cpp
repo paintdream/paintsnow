@@ -22,7 +22,7 @@
 
 // #define LOG_OPENGL
 
-#include <GL/glew.h>
+#include "Core/glew.h"
 
 using namespace PaintsNow;
 

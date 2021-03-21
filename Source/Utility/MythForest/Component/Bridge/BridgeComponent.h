@@ -14,7 +14,7 @@ namespace PaintsNow {
 		void DispatchEvent(Event& event, Entity* entity) override;
 		void Initialize(Engine& engine, Entity* entity) override;
 		void Uninitialize(Engine& engine, Entity* entity) override;
-		Entity* GetHostEntity() const;
+		Entity* GetHostEntity() const override;
 		void Clear(Engine& engine);
 
 	protected:

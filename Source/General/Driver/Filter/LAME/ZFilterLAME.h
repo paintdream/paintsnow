@@ -4,12 +4,6 @@
 //
 
 #pragma once
-#ifndef __linux__
-#include <lame.h>
-#else
-#include <lame/lame.h>
-#endif
-
 #include "../../../Interface/IAudio.h"
 
 namespace PaintsNow {

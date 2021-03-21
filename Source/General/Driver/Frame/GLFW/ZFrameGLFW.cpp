@@ -13,8 +13,8 @@
 #define GLFW_INCLUDE_VULKAN
 #endif
 
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
+#include "../../Render/OpenGL/Core/glew.h"
+#include "Core/include/GLFW/glfw3.h"
 #include <cassert>
 
 using namespace PaintsNow;
