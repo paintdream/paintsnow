@@ -1,12 +1,10 @@
 #include "ZFrameGLFW.h"
 #include "../../../../Core/Driver/Profiler/Optick/optick.h"
 
-#if USE_STATIC_THIRDPARTY_LIBRARIES
 #define GLFW_STATIC
 #define GLEW_STATIC
 #ifdef GLFW_LIB_PRAGMAS
 #undef GLFW_LIB_PRAGMAS
-#endif
 #endif
 
 #if (!defined(CMAKE_PAINTSNOW) || ADD_RENDER_VULKAN) && (!defined(_MSC_VER) || _MSC_VER > 1200)

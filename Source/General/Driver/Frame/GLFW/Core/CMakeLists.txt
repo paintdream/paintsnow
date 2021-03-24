@@ -30,8 +30,6 @@ cmake_dependent_option(GLFW_USE_HYBRID_HPG "Force use of high-performance GPU on
                        "WIN32" OFF)
 cmake_dependent_option(GLFW_USE_WAYLAND "Use Wayland for window creation" OFF
                        "UNIX;NOT APPLE" OFF)
-cmake_dependent_option(USE_MSVC_RUNTIME_LIBRARY_DLL "Use MSVC runtime library DLL" ON
-                       "MSVC" OFF)
 
 if (BUILD_SHARED_LIBS)
     set(_GLFW_BUILD_DLL 1)
@@ -75,23 +73,6 @@ if (MSVC)
         endif()
         # Workaround for VS 2008 not shipping with stdint.h
         list(APPEND glfw_INCLUDE_DIRS "${GLFW_SOURCE_DIR}/deps/vs2008")
-    endif()
-
-    if (NOT USE_MSVC_RUNTIME_LIBRARY_DLL)
-        foreach (flag CMAKE_C_FLAGS
-                      CMAKE_C_FLAGS_DEBUG
-                      CMAKE_C_FLAGS_RELEASE
-                      CMAKE_C_FLAGS_MINSIZEREL
-                      CMAKE_C_FLAGS_RELWITHDEBINFO)
-
-            if (${flag} MATCHES "/MD")
-                string(REGEX REPLACE "/MD" "/MT" ${flag} "${${flag}}")
-            endif()
-            if (${flag} MATCHES "/MDd")
-                string(REGEX REPLACE "/MDd" "/MTd" ${flag} "${${flag}}")
-            endif()
-
-        endforeach()
     endif()
 endif()
 

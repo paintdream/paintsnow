@@ -7,7 +7,7 @@ namespace UnrealBuildTool.Rules
 	{
 		private string ThirdPartyPath
 		{
-			get { return Path.GetFullPath(Path.Combine(ModuleDirectory, "../../../../../../Build64Dynamic/")); }
+			get { return Path.GetFullPath(Path.Combine(ModuleDirectory, "../../../../../../Build/")); }
 		}
 
 		public LeavesExporter(ReadOnlyTargetRules Target) : base(Target)
@@ -63,32 +63,22 @@ namespace UnrealBuildTool.Rules
 			if ((Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32))
 			{
 				isLibrarySupported = true;
-				string LibraryPath = ThirdPartyPath;
 
 				UnrealTargetConfiguration configure = Target.Configuration;
-				/*
-				if (configure == UnrealTargetConfiguration.DebugGame)
-				{
-					LibraryPath = Path.Combine(LibraryPath, "Debug");
-				}
-				else
-				{
-					LibraryPath = Path.Combine(LibraryPath, "Release");
-				}*/
-				LibraryPath = Path.Combine(LibraryPath, "Release");
 
-				PublicLibraryPaths.Add(LibraryPath);
-				PublicAdditionalLibraries.Add("LibEvent.lib");
-				PublicAdditionalLibraries.Add(Path.Combine(LibraryPath, "PaintsNow.lib"));
-				PublicAdditionalLibraries.Add(Path.Combine(LibraryPath, "BridgeSunset.lib"));
-				PublicAdditionalLibraries.Add(Path.Combine(LibraryPath, "GalaxyWeaver.lib"));
-				PublicAdditionalLibraries.Add(Path.Combine(LibraryPath, "MythForest.lib"));
-				PublicAdditionalLibraries.Add(Path.Combine(LibraryPath, "SnowyStream.lib"));
-				// PublicIncludePaths.Add(Path.Combine(ThirdPartyPath, "PaintsNow", "include"));
+				string modulePath = Path.Combine(ThirdPartyPath, "Release");
+				PublicAdditionalLibraries.Add(Path.Combine(modulePath, "PaintsNow.lib"));
+				PublicAdditionalLibraries.Add(Path.Combine(modulePath, "BridgeSunset.lib"));
+				PublicAdditionalLibraries.Add(Path.Combine(modulePath, "GalaxyWeaver.lib"));
+				PublicAdditionalLibraries.Add(Path.Combine(modulePath, "MythForest.lib"));
+				PublicAdditionalLibraries.Add(Path.Combine(modulePath, "SnowyStream.lib"));
+
+				string libraryPath = Path.Combine(ThirdPartyPath, "Source/General/Driver/Network/LibEvent/Core/lib/Release");
+				PublicAdditionalLibraries.Add(Path.Combine(libraryPath, "event.lib"));
+				PublicAdditionalLibraries.Add(Path.Combine(libraryPath, "event_core.lib"));
+				PublicAdditionalLibraries.Add(Path.Combine(libraryPath, "event_extra.lib"));
 			}
 
-			// and here we go.
-			// Definitions.Add(string.Format("WITH_SIXENSE_BINDING={0}", isLibrarySupported ? 1 : 0));
 			return isLibrarySupported;
 		}
 	}

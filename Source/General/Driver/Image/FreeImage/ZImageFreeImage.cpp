@@ -1,8 +1,6 @@
 #include "ZImageFreeImage.h"
 
-#if USE_STATIC_THIRDPARTY_LIBRARIES
 #define FREEIMAGE_LIB
-#endif
 
 #include "Core/Source/FreeImage.h"
 

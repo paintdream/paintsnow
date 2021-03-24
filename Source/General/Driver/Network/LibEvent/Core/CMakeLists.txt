@@ -31,15 +31,11 @@ if (POLICY CMP0075)
     cmake_policy(SET CMP0075 NEW)
 endif()
 
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release
-        CACHE STRING "Set build type to Debug o Release (default Release)" FORCE)
-endif()
 string(TOLOWER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_LOWER)
 
 # get rid of the extra default configurations
 # what? why would you get id of other useful build types? - Ellzey
-set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Limited configurations" FORCE)
+#set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Limited configurations" FORCE)
 
 set(EVENT__LIBRARY_TYPE STATIC CACHE STRING
     "Set library type to SHARED/STATIC/BOTH (default SHARED for MSVC, otherwise BOTH)")
@@ -232,34 +228,6 @@ elseif ("${EVENT_LIBRARY_TYPE}" STREQUAL "SHARED")
     set(EVENT_LIBRARY_SHARED ON)
 else()
     message(FATAL_ERROR "${EVENT_LIBRARY_TYPE} is not supported")
-endif()
-
-if (${MSVC})
-    set(msvc_static_runtime OFF)
-    if ("${EVENT_LIBRARY_TYPE}" STREQUAL "STATIC")
-        set(msvc_static_runtime ON)
-    endif()
-
-    # For more info:
-    # - https://docs.microsoft.com/en-us/cpp/build/reference/md-mt-ld-use-run-time-library?view=vs-2017
-    # - https://gitlab.kitware.com/cmake/community/wikis/FAQ#how-can-i-build-my-msvc-application-with-a-static-runtime
-    option(EVENT__MSVC_STATIC_RUNTIME
-           "Link static runtime libraries"
-           ${msvc_static_runtime})
-
-    if (EVENT__MSVC_STATIC_RUNTIME)
-        foreach (flag_var
-                 CMAKE_C_FLAGS
-                 CMAKE_C_FLAGS_DEBUG
-                 CMAKE_C_FLAGS_RELEASE
-                 CMAKE_C_FLAGS_MINSIZEREL
-                 CMAKE_C_FLAGS_RELWITHDEBINFO
-        )
-            if (${flag_var} MATCHES "/MD")
-                string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
-            endif()
-        endforeach()
-    endif()
 endif()
 
 # GNUC specific options.

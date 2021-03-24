@@ -14,11 +14,9 @@
 #include <iterator>
 #include <sstream>
 
-#if USE_STATIC_THIRDPARTY_LIBRARIES
 #define GLEW_STATIC
 #define GLAPI
 #define GLFW_INCLUDE_VULKAN
-#endif
 
 // #define LOG_OPENGL
 

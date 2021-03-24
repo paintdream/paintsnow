@@ -277,11 +277,6 @@ HAVE_C11_ATOMIC)
 # Add definitions, compiler switches, etc.
 INCLUDE_DIRECTORIES("${OpenAL_SOURCE_DIR}/include" "${OpenAL_SOURCE_DIR}/common" "${OpenAL_BINARY_DIR}")
 
-IF(NOT CMAKE_BUILD_TYPE)
-    SET(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING
-        "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel."
-        FORCE)
-ENDIF()
 IF(NOT CMAKE_DEBUG_POSTFIX)
     SET(CMAKE_DEBUG_POSTFIX "" CACHE STRING
         "Library postfix for debug builds. Normally left blank."
@@ -301,17 +296,6 @@ IF(MSVC)
     ENDIF()
     IF(DXSDK_DIR)
         MESSAGE(STATUS "Using DirectX SDK directory: ${DXSDK_DIR}")
-    ENDIF()
-
-    OPTION(FORCE_STATIC_VCRT "Force /MT for static VC runtimes" ON)
-    IF(FORCE_STATIC_VCRT)
-        FOREACH(flag_var
-                CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE
-                CMAKE_C_FLAGS_MINSIZEREL CMAKE_C_FLAGS_RELWITHDEBINFO)
-            IF(${flag_var} MATCHES "/MD")
-                STRING(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
-            ENDIF()
-        ENDFOREACH(flag_var)
     ENDIF()
 ELSE()
     SET(EXTRA_CFLAGS "${EXTRA_CFLAGS} -Winline -Wall")
