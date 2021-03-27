@@ -2,8 +2,13 @@
 #include "../../../Interface/IAudio.h"
 #include <cstdlib>
 #define AL_LIBTYPE_STATIC 1
+#if defined(_MSC_VER) && _MSC_VER <= 1200
+#include <AL/alc.h>
+#include <AL/al.h>
+#else
 #include "Core/include/AL/alc.h"
 #include "Core/include/AL/al.h"
+#endif
 
 namespace PaintsNow {
 	class ZAudioOpenAL final : public IAudio {

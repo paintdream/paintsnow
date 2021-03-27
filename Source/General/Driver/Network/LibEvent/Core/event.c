@@ -1864,14 +1864,11 @@ event_base_loopbreak(struct event_base *event_base)
 	EVBASE_ACQUIRE_LOCK(event_base, th_base_lock);
 	event_base->event_break = 1;
 
-	/*
 	if (EVBASE_NEED_NOTIFY(event_base)) {
 		r = evthread_notify_base(event_base);
 	} else {
 		r = (0);
-	}*/
-	
-	r = evthread_notify_base(event_base);
+	}
 	EVBASE_RELEASE_LOCK(event_base, th_base_lock);
 	return r;
 }

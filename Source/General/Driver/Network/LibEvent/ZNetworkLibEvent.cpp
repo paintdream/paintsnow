@@ -317,6 +317,13 @@ ZNetworkLibEvent::ZNetworkLibEvent(IThread& t) : threadApi(t) {
 	WSADATA wsa;
 	WSAStartup(0x201, &wsa);
 #endif
+
+#ifdef WIN32
+	evthread_use_windows_threads();
+#else
+	evthread_use_pthreads();
+#endif
+
 }
 
 ZNetworkLibEvent::~ZNetworkLibEvent() {
@@ -351,6 +358,7 @@ INetwork::Listener* ZNetworkLibEvent::OpenListener(Dispatcher* dispatcher, const
 	p->listener = nullptr;
 	p->isActivated = false;
 	p->http = nullptr;
+	p->ev = nullptr;
 
 	return p;
 }
