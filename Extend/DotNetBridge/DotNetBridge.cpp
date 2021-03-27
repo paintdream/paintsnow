@@ -1,15 +1,64 @@
 #include "DotNetBridge.h"
-#include "../../Source/Core/Interface/IScript.h"
 
+using namespace System::Text;
+using namespace System::Diagnostics;
 using namespace PaintsNow;
 using namespace DotNetBridge;
 
-extern "C" __declspec(dllexport) uint64_t Main(void*, IScript::Request&, void*, const char*, uint64_t, uint64_t)
+static IScript* theScript = nullptr;
+
+ScriptReference::ScriptReference(size_t h) : handle(h) {}
+ScriptReference::~ScriptReference()
 {
-	return 0;
+	IScript* script = theScript;
+	script->DoLock();
+	script->GetDefaultRequest().Dereference(IScript::Request::Ref(handle));
+	script->UnLock();
 }
 
-System::String^ LeavesBridge::GetVersionInfo()
+UIntPtr LeavesBridge::GetScriptHandle()
 {
-	return gcnew System::String("DotNetBridge");
+	return UIntPtr(theScript);
+}
+
+static PaintsNow::String FromManagedString(System::String^ str)
+{
+	array<Byte>^ byteArray = Encoding::UTF8->GetBytes(str);
+	pin_ptr<unsigned char> v = &byteArray[0];
+	return PaintsNow::String(reinterpret_cast<char*>(v), byteArray->Length);
+}
+
+static System::String^ ToManagedString(const PaintsNow::String& str)
+{
+	return gcnew System::String(str.c_str(), 0, (int)str.length(), Encoding::UTF8);
+}
+
+ScriptReference^ LeavesBridge::GetGlobal(System::String^ name)
+{
+	Debug::Assert(theScript != nullptr);
+
+	IScript::Request& request = theScript->GetDefaultRequest();
+	IScript::Request::Ref r;
+	request.DoLock();
+	request << global >> key(FromManagedString(name).c_str()) >> r << endtable;
+	request.UnLock();
+
+	return gcnew ScriptReference(r.value);
+}
+
+
+extern "C" __declspec(dllexport) size_t Main(void*, IScript::Request& request, void*, const char* option, size_t, size_t)
+{
+	std::string strOption = option;
+
+	if (strOption == "Initialize")
+	{
+		theScript = request.GetScript();
+	}
+	else if (strOption == "Uninitialize")
+	{
+		theScript = nullptr;
+	}
+
+	return 0;
 }

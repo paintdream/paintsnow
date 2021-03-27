@@ -100,7 +100,7 @@ namespace PaintsNow {
 		/// </summary>
 		/// <param name="library"> library name </param>
 		/// <returns> library handle </returns>
-		uint64_t RequestLoadLibrary(IScript::Request& request, const String& library);
+		size_t RequestLoadLibrary(IScript::Request& request, const String& library);
 
 		/// <summary>
 		/// Call library
@@ -111,14 +111,14 @@ namespace PaintsNow {
 		/// <param name="wParam"> customized word param </param>
 		/// <param name="lParam"> customized long param </param>
 		/// <returns> return value of callee </returns>
-		uint64_t RequestCallLibrary(IScript::Request& request, uint64_t handle, const String& entry, const String& sParam, uint64_t wParam, uint64_t lParam);
+		size_t RequestCallLibrary(IScript::Request& request, size_t handle, const String& entry, const String& sParam, size_t wParam, size_t lParam);
 
 		/// <summary>
 		/// Free library
 		/// </summary>
 		/// <param name="handle"> library handle </param>
 		/// <returns> true if successfully free </returns>
-		bool RequestFreeLibrary(IScript::Request& request, uint64_t handle);
+		bool RequestFreeLibrary(IScript::Request& request, size_t handle);
 
 	public:
 		void EnterMainLoop();

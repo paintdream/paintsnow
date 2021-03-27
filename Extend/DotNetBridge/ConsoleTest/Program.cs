@@ -8,7 +8,7 @@ namespace ConsoleTest
 		static void Main(string[] args)
 		{
 			var leavesBridge = new LeavesBridge();
-			Console.WriteLine("Hello World! " + leavesBridge.GetVersionInfo());
+			Console.WriteLine("Hello World! " + leavesBridge.GetScriptHandle());
 		}
 	}
 }

@@ -562,25 +562,24 @@ void LeavesFlute::RequestSearchMemory(IScript::Request& request, const String& m
 #endif
 }
 
-
-uint64_t LeavesFlute::RequestLoadLibrary(IScript::Request& request, const String& path) {
+size_t LeavesFlute::RequestLoadLibrary(IScript::Request& request, const String& path) {
 	String last = path.substr(path.length() - 3, 3);
 #if defined(__linux__)
 	if (_stricmp(last.c_str(), ".so") == 0) {
-		return (uint64_t)dlopen(Utf8ToSystem(path).c_str(), RTLD_NOW | RTLD_GLOBAL);
+		return (size_t)dlopen(Utf8ToSystem(path).c_str(), RTLD_NOW | RTLD_GLOBAL);
 	}
 #elif defined(_WIN32)
 	if (_stricmp(last.c_str(), "dll") == 0) {
-		return (uint64_t)::LoadLibraryW((const WCHAR*)Utf8ToSystem(path).c_str());
+		return (size_t)::LoadLibraryW((const WCHAR*)Utf8ToSystem(path).c_str());
 	}
 #endif
 
 	return 0;
 }
 
-uint64_t LeavesFlute::RequestCallLibrary(IScript::Request& request, uint64_t handle, const String& entry, const String& sParam, uint64_t wParam, uint64_t lParam) {
+size_t LeavesFlute::RequestCallLibrary(IScript::Request& request, size_t handle, const String& entry, const String& sParam, size_t wParam, size_t lParam) {
 	// _cdecl calling convension for compatibility of parameter counts
-	typedef uint64_t (*SetupProxy)(Interfaces&, IScript::Request&, void*, const char*, uint64_t, uint64_t);
+	typedef size_t (*SetupProxy)(Interfaces&, IScript::Request&, void*, const char*, size_t, size_t);
 	if (handle != 0) {
 #if defined(__linux__)
 		SetupProxy proxy = (SetupProxy)dlsym((void*)handle, entry.c_str());
@@ -595,7 +594,7 @@ uint64_t LeavesFlute::RequestCallLibrary(IScript::Request& request, uint64_t han
 	return 0;
 }
 
-bool LeavesFlute::RequestFreeLibrary(IScript::Request& request, uint64_t handle) {
+bool LeavesFlute::RequestFreeLibrary(IScript::Request& request, size_t handle) {
 #if defined(__linux__)
 	return dlclose((void*)handle) == 0;
 #elif defined(_WIN32)

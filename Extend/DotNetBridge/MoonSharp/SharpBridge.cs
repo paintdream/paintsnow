@@ -8,7 +8,7 @@ namespace MoonSharp
 		public void TestVersion()
 		{
 			var leavesBridge = new LeavesBridge();
-			Console.WriteLine("Hello World! " + leavesBridge.GetVersionInfo());
+			Console.WriteLine("Hello World! " + leavesBridge.GetScriptHandle());
 		}
 	}
 }
