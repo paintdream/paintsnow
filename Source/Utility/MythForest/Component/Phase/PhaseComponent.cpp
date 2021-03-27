@@ -668,12 +668,12 @@ void PhaseComponent::DispatchTasks(Engine& engine) {
 			if (!bakePointShadows.empty()) {
 				finalStatus.store(TaskData::STATUS_DISPATCHED, std::memory_order_relaxed);
 				const UpdatePointShadow& shadow = bakePointShadows.top();
-				threadPool.Push(CreateCoTaskContextFree(kernel, Wrap(this, &PhaseComponent::CoTaskAssembleTaskShadow), std::ref(engine), std::ref(task), shadow));
+				threadPool.Dispatch(CreateCoTaskContextFree(kernel, Wrap(this, &PhaseComponent::CoTaskAssembleTaskShadow), std::ref(engine), std::ref(task), shadow));
 				bakePointShadows.pop();
 			} else if (!bakePointSetups.empty()) {
 				finalStatus.store(TaskData::STATUS_DISPATCHED, std::memory_order_relaxed);
 				const UpdatePointSetup& setup = bakePointSetups.top();
-				threadPool.Push(CreateCoTaskContextFree(kernel, Wrap(this, &PhaseComponent::CoTaskAssembleTaskSetup), std::ref(engine), std::ref(task), setup));
+				threadPool.Dispatch(CreateCoTaskContextFree(kernel, Wrap(this, &PhaseComponent::CoTaskAssembleTaskSetup), std::ref(engine), std::ref(task), setup));
 				bakePointSetups.pop();
 			} else if (!bakePointBounces.empty()) {
 				finalStatus.store(TaskData::STATUS_DISPATCHED, std::memory_order_relaxed);

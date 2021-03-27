@@ -164,10 +164,10 @@ bool LeavesFlute::ProcessCommand(const String& command) {
 			request.UnLock();
 
 			if (code) {
-				bridgeSunset.Dispatch(CreateTaskScriptOnce(code));
+				bridgeSunset.threadPool.Dispatch(CreateTaskScriptOnce(code));
 			}
 		} else {
-			bridgeSunset.Dispatch(CreateTaskScript(listenConsole, command));
+			bridgeSunset.threadPool.Dispatch(CreateTaskScript(listenConsole, command));
 		}
 
 		return true;

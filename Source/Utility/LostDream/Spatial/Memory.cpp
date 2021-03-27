@@ -46,7 +46,7 @@ bool Memory::Run(int randomSeed, int length) {
 	count.store(length, std::memory_order_release);
 
 	for (size_t k = 0; k < (size_t)length; k++) {
-		threadPool.Push(CreateTaskContextFree(Wrap(TaskRoutine), trunks, std::ref(ptrs), k, length, std::ref(count), std::ref(total)));
+		threadPool.Dispatch(CreateTaskContextFree(Wrap(TaskRoutine), trunks, std::ref(ptrs), k, length, std::ref(count), std::ref(total)));
 	}
 
 	while (count.load(std::memory_order_acquire) != 0) {

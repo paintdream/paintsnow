@@ -17,7 +17,6 @@ namespace PaintsNow {
 		~BridgeSunset() override;
 		void ScriptInitialize(IScript::Request& request) override;
 		void ScriptUninitialize(IScript::Request& request) override;
-		void Dispatch(ITask* task);
 		Kernel& GetKernel();
 		void ContinueScriptDispatcher(IScript::Request& request, IHost* host, size_t paramCount, const TWrapper<void, IScript::Request&>& continuer);
 

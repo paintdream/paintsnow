@@ -428,7 +428,8 @@ public:
 		ReferenceObject();
 		for (uint32_t i = 0; i < safe_cast<uint32_t>(pathList.size()); i++) {
 			// Create async task and use low-level thread pool dispatching it
-			threadPool.Push(CreateTask(Wrap(this, &TaskResourceCreator::RoutineCreateResource), i));
+			// Do not occupy all threads.
+			threadPool.Dispatch(CreateTask(Wrap(this, &TaskResourceCreator::RoutineCreateResource), i), 1);
 		}
 	}
 
@@ -653,7 +654,7 @@ void SnowyStream::RequestCompressResourceAsync(IScript::Request& request, IScrip
 	task->compressType = std::move(compressType);
 	task->callback = callback;
 
-	bridgeSunset.GetKernel().GetThreadPool().Push(task);
+	bridgeSunset.GetKernel().GetThreadPool().Dispatch(task);
 }
 
 void SnowyStream::Uninitialize() {

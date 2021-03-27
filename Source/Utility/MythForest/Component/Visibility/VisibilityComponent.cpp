@@ -513,7 +513,7 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 			finalStatus.store(TaskData::STATUS_POSTPROCESS);
 			Cell& cell = *task.cell();
 			task.next = cell.taskHead.exchange(&task, std::memory_order_acquire);
-			engine.GetKernel().GetThreadPool().Push(CreateTaskContextFree(Wrap(this, &VisibilityComponent::PostProcess), &cell));
+			engine.GetKernel().GetThreadPool().Dispatch(CreateTaskContextFree(Wrap(this, &VisibilityComponent::PostProcess), &cell));
 		} else if (task.status == TaskData::STATUS_ASSEMBLING) {
 			if (task.pendingCount == 0) {
 				// Commit draw calls.
@@ -687,7 +687,7 @@ void VisibilityComponent::DispatchTasks(Engine& engine) {
 			task.cell = cell;
 			std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(task.status);
 			finalStatus.store(TaskData::STATUS_DISPATCHED, std::memory_order_release);
-			threadPool.Push(CreateCoTaskContextFree(kernel, Wrap(this, &VisibilityComponent::CoTaskAssembleTask), std::ref(engine), std::ref(task), k, this));
+			threadPool.Dispatch(CreateCoTaskContextFree(kernel, Wrap(this, &VisibilityComponent::CoTaskAssembleTask), std::ref(engine), std::ref(task), k, this));
 		}
 
 		n += k;

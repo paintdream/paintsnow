@@ -304,7 +304,7 @@ void RemoteComponent::CallAsync(IScript::Request& fromRequest, IScript::Request:
 		assert(&pool->GetScript() == fromRequest.GetScript());
 		fromRequest.UnLock();
 
-		engine.bridgeSunset.GetKernel().GetThreadPool().Push(CreateTaskContextFree(Wrap(this, &RemoteComponent::Complete), pool, std::ref(toRequest), callback, remoteRoutine));
+		engine.bridgeSunset.GetKernel().GetThreadPool().Dispatch(CreateTaskContextFree(Wrap(this, &RemoteComponent::Complete), pool, std::ref(toRequest), callback, remoteRoutine));
 	} else {
 		fromRequest.Error("Invalid ref.");
 	}

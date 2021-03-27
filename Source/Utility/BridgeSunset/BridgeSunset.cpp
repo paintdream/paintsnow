@@ -59,10 +59,6 @@ Kernel& BridgeSunset::GetKernel() {
 	return kernel;
 }
 
-void BridgeSunset::Dispatch(ITask* task) {
-	threadPool.Push(task);
-}
-
 void BridgeSunset::ContinueScriptDispatcher(IScript::Request& request, IHost* host, size_t paramCount, const TWrapper<void, IScript::Request&>& continuer) {
 	// check if current warp is yielded
 	static thread_local uint32_t stackWarpIndex = ~(uint32_t)0;
@@ -131,7 +127,7 @@ struct ScriptTaskWrapper {
 	ScriptTaskWrapper(BridgeSunset* b, ITask* t) : bridgeSunset(b), task(t) {}
 
 	void operator () () {
-		bridgeSunset->Dispatch(task);
+		bridgeSunset->threadPool.Dispatch(task);
 	}
 
 	BridgeSunset* bridgeSunset;

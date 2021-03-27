@@ -98,7 +98,7 @@ void Weaver::RpcCheckVersion(IScript::Request& request) {
 	request.UnLock();
 
 	if (rpcCallback) {
-		bridgeSunset.Dispatch(CreateTaskScript(rpcCallback, String("RpcCheckVersion"), WEAVER_VERSION));
+		bridgeSunset.threadPool.Dispatch(CreateTaskScript(rpcCallback, String("RpcCheckVersion"), WEAVER_VERSION));
 	}
 }
 
@@ -130,14 +130,14 @@ void Weaver::RpcPostResource(IScript::Request& request, const String& path, cons
 	filter->Destroy();
 
 	if (rpcCallback) {
-		bridgeSunset.Dispatch(CreateTaskScript(rpcCallback, String("RpcPostResource"), path, extension));
+		bridgeSunset.threadPool.Dispatch(CreateTaskScript(rpcCallback, String("RpcPostResource"), path, extension));
 	}
 }
 
 void Weaver::RpcComplete(IScript::Request& request) {
 	
 	if (rpcCallback) {
-		bridgeSunset.Dispatch(CreateTaskScript(rpcCallback, String("RpcComplete")));
+		bridgeSunset.threadPool.Dispatch(CreateTaskScript(rpcCallback, String("RpcComplete")));
 	}
 }
 
@@ -148,61 +148,61 @@ void Weaver::RpcPostEntity(IScript::Request& request, uint32_t entityID, uint32_
 	entity->AddComponent(mythForest.GetEngine(), formComponent());*/
 
 	if (rpcCallback) {
-		bridgeSunset.Dispatch(CreateTaskScript(rpcCallback, String("RpcPostEntity"), entityID, groupID, entityName));
+		bridgeSunset.threadPool.Dispatch(CreateTaskScript(rpcCallback, String("RpcPostEntity"), entityID, groupID, entityName));
 	}
 }
 
 void Weaver::RpcPostEntityGroup(IScript::Request& request, uint32_t groupID, const String& groupName) {
 	if (rpcCallback) {
-		bridgeSunset.Dispatch(CreateTaskScript(rpcCallback, String("RpcPostEntityGroup"), groupID, groupName));
+		bridgeSunset.threadPool.Dispatch(CreateTaskScript(rpcCallback, String("RpcPostEntityGroup"), groupID, groupName));
 	}
 }
 
 void Weaver::RpcPostEntityComponent(IScript::Request& request, uint32_t entityID, uint32_t componentID) {
 	if (rpcCallback) {
-		bridgeSunset.Dispatch(CreateTaskScript(rpcCallback, String("RpcPostEntityComponent"), entityID, componentID));
+		bridgeSunset.threadPool.Dispatch(CreateTaskScript(rpcCallback, String("RpcPostEntityComponent"), entityID, componentID));
 	}
 }
 
 void Weaver::RpcPostModelComponent(IScript::Request& request, uint32_t componentID, const String& resource, float viewDistance) {
 	
 	if (rpcCallback) {
-		bridgeSunset.Dispatch(CreateTaskScript(rpcCallback, String("RpcPostModelComponent"), componentID, resource, viewDistance));
+		bridgeSunset.threadPool.Dispatch(CreateTaskScript(rpcCallback, String("RpcPostModelComponent"), componentID, resource, viewDistance));
 	}
 }
 
 void Weaver::RpcPostModelComponentMaterial(IScript::Request& request, uint32_t componentID, uint32_t meshGroupID, const String& materialResource) {
 	
 	if (rpcCallback) {
-		bridgeSunset.Dispatch(CreateTaskScript(rpcCallback, String("RpcPostModelComponentMaterial"), componentID, meshGroupID, materialResource));
+		bridgeSunset.threadPool.Dispatch(CreateTaskScript(rpcCallback, String("RpcPostModelComponentMaterial"), componentID, meshGroupID, materialResource));
 	}
 }
 
 void Weaver::RpcPostTransformComponent(IScript::Request& request, uint32_t componentID, const Float3& position, const Float3& scale, const Float3& rotation) {
 	
 	if (rpcCallback) {
-		bridgeSunset.Dispatch(CreateTaskScript(rpcCallback, String("RpcPostTransformComponent"), componentID, position, scale, rotation));
+		bridgeSunset.threadPool.Dispatch(CreateTaskScript(rpcCallback, String("RpcPostTransformComponent"), componentID, position, scale, rotation));
 	}
 }
 
 void Weaver::RpcPostEnvCubeComponent(IScript::Request& request, uint32_t componentID, const String& texturePath) {
 	
 	if (rpcCallback) {
-		bridgeSunset.Dispatch(CreateTaskScript(rpcCallback, String("RpcPostEnvCubeComponent"), componentID, texturePath));
+		bridgeSunset.threadPool.Dispatch(CreateTaskScript(rpcCallback, String("RpcPostEnvCubeComponent"), componentID, texturePath));
 	}
 }
 
 void Weaver::RpcPostSpaceComponent(IScript::Request& request, uint32_t componentID, uint32_t groupID) {
 	
 	if (rpcCallback) {
-		bridgeSunset.Dispatch(CreateTaskScript(rpcCallback, String("RpcPostSpaceComponent"), componentID, groupID));
+		bridgeSunset.threadPool.Dispatch(CreateTaskScript(rpcCallback, String("RpcPostSpaceComponent"), componentID, groupID));
 	}
 }
 
 void Weaver::RpcUpdateView(IScript::Request& request,  const MatrixFloat4x4& viewMatrix, const Float4& fovNearFarAspect) {
 	
 	if (rpcCallback) {
-		bridgeSunset.Dispatch(CreateTaskScript(rpcCallback, String("RpcUpdateView"), viewMatrix, fovNearFarAspect));
+		bridgeSunset.threadPool.Dispatch(CreateTaskScript(rpcCallback, String("RpcUpdateView"), viewMatrix, fovNearFarAspect));
 	}
 }
 
@@ -217,6 +217,6 @@ void Weaver::RpcUninitialize(IScript::Request& request) {
 void Weaver::RpcDebugPrint(IScript::Request& request, const String& text) {
 	
 	if (rpcCallback) {
-		bridgeSunset.Dispatch(CreateTaskScript(rpcCallback, String("RpcDebugPrint"), text));
+		bridgeSunset.threadPool.Dispatch(CreateTaskScript(rpcCallback, String("RpcDebugPrint"), text));
 	}
 }

@@ -11,7 +11,7 @@ bool TaskAllocator::Initialize() {
 static void TaskRoutine(ThreadPool& threadPool, int count, std::atomic<size_t>& counter) {
 	for (int i = 0; i < count; i++) {
 		counter.fetch_add(1);
-		threadPool.Push(CreateTaskContextFree(Wrap(TaskRoutine), std::ref(threadPool), rand() % (count / 8 + 1), std::ref(counter)));
+		threadPool.Dispatch(CreateTaskContextFree(Wrap(TaskRoutine), std::ref(threadPool), rand() % (count / 8 + 1), std::ref(counter)));
 	}
 	
 	counter.fetch_sub(1);
@@ -25,7 +25,7 @@ bool TaskAllocator::Run(int randomSeed, int length) {
 	srand(randomSeed);
 	for (size_t k = 0; k < (size_t)length * 64; k++) {
 		counter.fetch_add(1);
-		threadPool.Push(CreateTaskContextFree(Wrap(TaskRoutine), std::ref(threadPool), rand() % 256, std::ref(counter)));
+		threadPool.Dispatch(CreateTaskContextFree(Wrap(TaskRoutine), std::ref(threadPool), rand() % 256, std::ref(counter)));
 	}
 
 	while (counter.load() != 0) {
