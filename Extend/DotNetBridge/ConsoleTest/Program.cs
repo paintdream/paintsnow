@@ -7,7 +7,7 @@ namespace ConsoleTest
 	{
 		static void Main(string[] args)
 		{
-			var leavesBridge = new LeavesBridge();
+			var leavesBridge = LeavesBridge.Instance;
 			Console.WriteLine("Hello World! " + leavesBridge.GetScriptHandle());
 		}
 	}

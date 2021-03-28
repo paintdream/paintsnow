@@ -1167,28 +1167,32 @@ void ReflectRoutines::Method(const char* name, const TProxy<>* p, const Param& r
 
 class QueryInterfaceCallback : public IReflectObject {
 public:
-	QueryInterfaceCallback(const TWrapper<void, IScript::Request&, IReflectObject&, const IScript::Request::Ref&>& c, const IScript::BaseDelegate& d, IReflectObject& o, RemoteProxy::ObjectInfo& objInfo) : object(o), bd(d), callback(c), objectInfo(objInfo) {}
+	QueryInterfaceCallback(const TWrapper<void, IScript::Request&, IReflectObject&, const IScript::Request::Ref&>& c, const IScript::BaseDelegate& d, IReflectObject& o, RemoteProxy::ObjectInfo& objInfo, const IScript::Request::Ref& r) : object(o), bd(d), callback(c), objectInfo(objInfo), g(r) {}
 
 	void Invoke(IScript::Request& request) {
 		RemoteProxy::Request& r = static_cast<RemoteProxy::Request&>(request);
 		r.DoLock();
-		r.QueryObjectInterface(objectInfo, bd, callback, object);
+		r.QueryObjectInterface(objectInfo, bd, callback, object, g);
 		r.UnLock();
 
-		callback(request, object, ref);
 		r.tempObjects.erase(this);
 		delete this;
 	}
 
 	IReflectObject& object;
+	IScript::Request::Ref g;
 	IScript::BaseDelegate bd;
 	TWrapper<void, IScript::Request&, IReflectObject&, const IScript::Request::Ref&> callback;
 	RemoteProxy::ObjectInfo& objectInfo;
 };
 
-void RemoteProxy::Request::QueryObjectInterface(ObjectInfo& objectInfo, const IScript::BaseDelegate& d, const TWrapper<void, IScript::Request&, IReflectObject&, const Request::Ref&>& callback, IReflectObject& target) {
+void RemoteProxy::Request::QueryObjectInterface(ObjectInfo& objectInfo, const IScript::BaseDelegate& d, const TWrapper<void, IScript::Request&, IReflectObject&, const Request::Ref&>& callback, IReflectObject& target, const Request::Ref& g) {
 	ReflectRoutines reflect(*this, d, objectInfo);
 	target(reflect);
+
+	UnLock();
+	callback(*this, target, g);
+	DoLock();
 }
 
 void RemoteProxy::Request::QueryInterface(const TWrapper<void, IScript::Request&, IReflectObject&, const Request::Ref&>& callback, IReflectObject& target, const Request::Ref& g) {
@@ -1197,14 +1201,11 @@ void RemoteProxy::Request::QueryInterface(const TWrapper<void, IScript::Request&
 	IScript::BaseDelegate* d = reinterpret_cast<IScript::BaseDelegate*>(g.value);
 	assert(d != nullptr);
 	if (d->GetRaw() == (IScript::Object*)UNIQUE_GLOBAL) {
-		QueryObjectInterface(globalRoutines, *d, callback, target);
-		UnLock();
-		callback(*this, target, g);
-		DoLock();
+		QueryObjectInterface(globalRoutines, *d, callback, target, g);
 	} else if (!d->IsNative()) {
 		ObjectInfo& objectInfo = remoteActiveObjects[d->GetRaw()];
 		if (objectInfo.needQuery) {
-			QueryInterfaceCallback* cb = new QueryInterfaceCallback(callback, *d, target, objectInfo);
+			QueryInterfaceCallback* cb = new QueryInterfaceCallback(callback, *d, target, objectInfo, g);
 			tempObjects.insert(cb);
 			IScript::BaseDelegate d((IScript::Object*)UNIQUE_GLOBAL);
 			IScript::Request::Ref ref((size_t)&d);
@@ -1213,7 +1214,7 @@ void RemoteProxy::Request::QueryInterface(const TWrapper<void, IScript::Request&
 			request.Call(IScript::Request::Adapt(Wrap(cb, &QueryInterfaceCallback::Invoke)), ref, GLOBAL_INTERFACE_QUERY, g);
 			request.Pop();
 		} else {
-			QueryObjectInterface(objectInfo, *d, callback, target);
+			QueryObjectInterface(objectInfo, *d, callback, target, g);
 		}
 	}
 }

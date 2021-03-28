@@ -366,7 +366,7 @@ namespace PaintsNow {
 			IScript::Request::Ref ReferenceEx(const IScript::BaseDelegate* base);
 			void DereferenceEx(IScript::BaseDelegate* base);
 			void ApplyDelta(std::map<IScript::Object*, ObjectInfo>& info, const std::vector<std::pair<int64_t, int64_t> >& delta, bool retrieve);
-			void QueryObjectInterface(ObjectInfo& objectInfo, const IScript::BaseDelegate& d, const TWrapper<void, IScript::Request&, IReflectObject&, const Ref&>& callback, IReflectObject& target);
+			void QueryObjectInterface(ObjectInfo& objectInfo, const IScript::BaseDelegate& d, const TWrapper<void, IScript::Request&, IReflectObject&, const Ref&>& callback, IReflectObject& target, const Request::Ref& g);
 
 		public:
 			void RequestNewObject(IScript::Request& request, const String& url);

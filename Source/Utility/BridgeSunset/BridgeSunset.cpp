@@ -86,7 +86,7 @@ void BridgeSunset::RequestQueueRoutine(IScript::Request& request, IScript::Deleg
 	CHECK_DELEGATE(unit);
 
 	if (GetKernel().GetCurrentWarpIndex() != unit->GetWarpIndex()) {
-		GetKernel().QueueRoutine(unit.Get(), CreateTaskScriptOnce(callback));
+		GetKernel().QueueRoutinePost(unit.Get(), CreateTaskScriptOnce(callback));
 	} else {
 		// Already locked!
 		// request.DoLock();

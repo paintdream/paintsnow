@@ -78,7 +78,7 @@ bool TapeComponent::Flush(Engine& engine, IScript::Request::Ref callback) {
 		Flag().fetch_or(TINY_UPDATING);
 		ReferenceObject();
 
-		engine.GetKernel().GetThreadPool().Dispatch(CreateTaskContextFree(Wrap(this, &TapeComponent::OnAsyncFlush), std::ref(engine), callback));
+		engine.GetKernel().GetThreadPool().Dispatch(CreateTaskContextFree(Wrap(this, &TapeComponent::OnAsyncFlush), std::ref(engine), callback), 1);
 		return true;
 	} else {
 		return FlushInternal();
