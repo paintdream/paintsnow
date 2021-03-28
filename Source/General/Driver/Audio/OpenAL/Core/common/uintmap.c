@@ -228,7 +228,13 @@ ALvoid *RemoveUIntMapKey(UIntMap *map, ALuint key)
                 memmove(&map->values[pos], &map->values[pos+1],
                         (map->size-1-pos)*sizeof(map->values[0]));
             }
-            map->size--;
+            if (--map->size == 0)
+            {
+                al_free(map->keys);
+                map->keys = NULL;
+                map->values = NULL;
+                map->capacity = 0;
+            }
         }
     }
     WriteUnlock(&map->lock);
