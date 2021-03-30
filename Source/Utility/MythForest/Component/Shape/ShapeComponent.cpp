@@ -95,6 +95,13 @@ void ShapeComponent::Cleanup() {
 }
 
 void ShapeComponent::Update(Engine& engine, const TShared<MeshResource>& resource) {
+	assert(!(Flag().load(std::memory_order_acquire) & TINY_PINNED));
+	if (!(Flag().fetch_or(TINY_UPDATING, std::memory_order_acquire) & TINY_UPDATING)) {
+		engine.GetKernel().GetThreadPool().Dispatch(CreateTaskContextFree(Wrap(this, &ShapeComponent::RoutineUpdate), std::ref(engine), resource), 1);
+	}
+}
+
+void ShapeComponent::RoutineUpdate(Engine& engine, const TShared<MeshResource>& resource) {
 	static_assert(alignof(Patch) == 8, "Patch align must be 8.");
 	if (resource == meshResource) return;
 	OPTICK_EVENT();
@@ -184,6 +191,9 @@ void ShapeComponent::Update(Engine& engine, const TShared<MeshResource>& resourc
 	} else {
 		assert(false);
 	}
+
+	Flag().fetch_or(TINY_PINNED, std::memory_order_relaxed);
+	Flag().fetch_and(~TINY_UPDATING, std::memory_order_release);
 }
 
 struct ShapeComponent::PatchRaycaster {
@@ -264,23 +274,27 @@ struct ShapeComponent::PatchRaycaster {
 };
 
 float ShapeComponent::Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const {
-	OPTICK_EVENT();
-	if (!patches.empty()) {
-		Float3Pair box(ray.first, ray.first);
-		Math::Union(box, ray.second);
-		IAsset::MeshCollection& meshCollection = meshResource->meshCollection;
-		PatchRaycaster q(meshCollection.vertices, meshCollection.indices, ray);
-		(const_cast<Patch&>(patches[0])).Query(box, q);
+	if (Flag().load(std::memory_order_acquire) & TINY_PINNED) {
+		if (!patches.empty()) {
+			OPTICK_EVENT();
+			Float3Pair box(ray.first, ray.first);
+			Math::Union(box, ray.second);
+			IAsset::MeshCollection& meshCollection = meshResource->meshCollection;
+			PatchRaycaster q(meshCollection.vertices, meshCollection.indices, ray);
+			(const_cast<Patch&>(patches[0])).Query(box, q);
 
-		if (q.hitPatch != nullptr) {
-			RaycastResult result;
-			result.position = q.intersection;
-			result.distance = q.distance * ratio;
-			result.unit = const_cast<ShapeComponent*>(this);
-			result.parent = parent;
-			task.EmplaceResult(std::move(result));
+			if (q.hitPatch != nullptr) {
+				RaycastResult result;
+				result.position = q.intersection;
+				result.distance = q.distance * ratio;
+				result.unit = const_cast<ShapeComponent*>(this);
+				result.parent = parent;
+				task.EmplaceResult(std::move(result));
+			}
 		}
-	}
 
-	return ratio;
+		return ratio;
+	} else {
+		return 0.0f;
+	}
 }

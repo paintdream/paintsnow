@@ -14,14 +14,16 @@ namespace PaintsNow {
 	public:
 		ShapeComponent();
 		~ShapeComponent() override;
-		void Update(Engine& engine, const TShared<MeshResource>&resource);
+		void Update(Engine& engine, const TShared<MeshResource>& resource);
 		float Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio = 1) const override;
 		enum {
 			MAX_PATCH_COUNT = 8
 		};
 
 	protected:
+		void RoutineUpdate(Engine& engine, const TShared<MeshResource>& resource);
 		void Cleanup();
+
 		struct_aligned(8) Patch : public TKdTree<Float3Pair> {
 			union {
 				uint32_t indices[MAX_PATCH_COUNT];
