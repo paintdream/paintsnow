@@ -159,7 +159,4 @@ set(CPACK_SOURCE_IGNORE_FILES
 set(CPACK_GENERATOR TGZ)
 include(CPack)
 
-# add make dist target
-add_custom_target(dist COMMAND ${CMAKE_MAKE_PROGRAM} package_source)
-
 # eof

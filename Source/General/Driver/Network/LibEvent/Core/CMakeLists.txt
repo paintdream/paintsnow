@@ -1504,18 +1504,6 @@ if (EVENT__DOXYGEN)
     UseDoxygen()
 endif()
 
-
-if (NOT TARGET uninstall)
-	# Create the uninstall target.
-	# https://gitlab.kitware.com/cmake/community/wikis/FAQ#can-i-do-make-uninstall-with-cmake
-	configure_file(${PROJECT_SOURCE_DIR}/cmake/Uninstall.cmake.in
-				   ${PROJECT_BINARY_DIR}/Uninstall.cmake
-				   @ONLY)
-
-	add_custom_target(uninstall
-					  COMMAND ${CMAKE_COMMAND} -P ${PROJECT_BINARY_DIR}/Uninstall.cmake)
-endif()
-
 message(STATUS "")
 message(STATUS "        ---( Libevent " ${EVENT_VERSION} " )---")
 message(STATUS "")
