@@ -158,9 +158,13 @@ TObject<IReflect>& ModelComponent::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectProperty()) {
-		ReflectProperty(batchComponent)[Runtime];
 		ReflectProperty(meshResource)[Runtime];
+		ReflectProperty(batchComponent)[Runtime];
+		ReflectProperty(shaderOverriders)[Runtime];
 		ReflectProperty(materialResources)[Runtime];
+		ReflectProperty(drawCallTemplates)[Runtime];
+		ReflectProperty(collapseData)[Runtime];
+		ReflectProperty(hostCount)[Runtime];
 	}
 
 	return *this;

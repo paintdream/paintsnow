@@ -18,14 +18,14 @@ void Value<TableImpl>::Reflect(IReflect& reflect) {
 			for (size_t i = 0; i < count; i++) {
 				Variant v;
 				String key;
-				reflect.OnProperty(key, "Key", this, nullptr);
-				reflect.OnProperty(v, "Value", this, nullptr);
+				reflect.OnProperty(key, "Key", this, nullptr, nullptr);
+				reflect.OnProperty(v, "Value", this, nullptr, nullptr);
 				value.mapPart[key] = v;
 			}
 		} else {
 			for (std::map<String, Variant>::const_iterator it = value.mapPart.begin(); it != value.mapPart.end(); ++it) {
-				reflect.OnProperty(it->first, "Key", this, nullptr);
-				reflect.OnProperty(it->second, "Value", this, nullptr);
+				reflect.OnProperty(it->first, "Key", this, nullptr, nullptr);
+				reflect.OnProperty(it->second, "Value", this, nullptr, nullptr);
 			}
 		}
 	}

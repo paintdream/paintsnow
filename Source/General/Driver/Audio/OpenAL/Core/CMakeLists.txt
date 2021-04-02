@@ -944,9 +944,9 @@ IF(ALSOFT_REQUIRE_QSA AND NOT HAVE_QSA)
 ENDIF()
 
 # Check Windows-only backends
-OPTION(ALSOFT_REQUIRE_WINMM "Require Windows Multimedia backend" OFF)
+OPTION(ALSOFT_REQUIRE_WINMM "Require Windows Multimedia backend" ON)
 OPTION(ALSOFT_REQUIRE_DSOUND "Require DirectSound backend" OFF)
-OPTION(ALSOFT_REQUIRE_MMDEVAPI "Require MMDevApi backend" OFF)
+OPTION(ALSOFT_REQUIRE_MMDEVAPI "Require MMDevApi backend" ON)
 IF(HAVE_WINDOWS_H)
     # Check MMSystem backend
     CHECK_INCLUDE_FILES("windows.h;mmsystem.h" HAVE_MMSYSTEM_H)
