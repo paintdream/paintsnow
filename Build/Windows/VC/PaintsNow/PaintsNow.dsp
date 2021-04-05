@@ -1883,6 +1883,30 @@ SOURCE=..\..\..\..\Source\General\Driver\Debugger\RenderDoc\ZDebuggerRenderDoc.h
 # End Source File
 # End Group
 # End Group
+# Begin Group "Profiler"
+
+# PROP Default_Filter ""
+# Begin Group "LeavesTrail"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Core\Driver\Profiler\LeavesTrail\LeavesTrail.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Core\Driver\Profiler\LeavesTrail\LeavesTrail.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Core\Driver\Profiler\LeavesTrail\ReflectTrail.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Core\Driver\Profiler\LeavesTrail\ReflectTrail.h
+# End Source File
+# End Group
+# End Group
 # End Group
 # Begin Source File
 

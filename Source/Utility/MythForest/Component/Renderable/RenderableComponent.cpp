@@ -29,3 +29,13 @@ void RenderableComponent::RemoveRenderPolicy(const TShared<RenderPolicy>& render
 		}
 	}
 }
+
+TObject<IReflect>& RenderableComponent::operator () (IReflect& reflect) {
+	BaseClass::operator () (reflect);
+
+	if (reflect.IsReflectProperty()) {
+		ReflectProperty(renderPolicies)[Runtime];
+	}
+
+	return *this;
+}

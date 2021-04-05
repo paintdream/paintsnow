@@ -54,6 +54,7 @@ namespace PaintsNow {
 		const std::vector<TShared<RenderPolicy> >& GetRenderPolicies() const;
 		void AddRenderPolicy(const TShared<RenderPolicy>& renderPolicy);
 		void RemoveRenderPolicy(const TShared<RenderPolicy>& renderPolicy);
+		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 	private:
 		std::vector<TShared<RenderPolicy> > renderPolicies;
