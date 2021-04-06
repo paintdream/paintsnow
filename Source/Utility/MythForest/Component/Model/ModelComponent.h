@@ -44,13 +44,11 @@ namespace PaintsNow {
 		};
 
 	protected:
-		TShared<MeshResource> meshResource;
-		TShared<BatchComponent> batchComponent;
-
-		std::vector<TShared<ShaderResource> > shaderOverriders;
 		std::vector<std::pair<uint32_t, TShared<MaterialResource> > > materialResources;
 		std::vector<OutputRenderData> drawCallTemplates;
-
+		std::vector<TShared<ShaderResource> > shaderOverriders;
+		TShared<MeshResource> meshResource;
+		TShared<BatchComponent> batchComponent;
 		CollapseData collapseData;
 		uint32_t hostCount;
 	};
