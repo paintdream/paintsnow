@@ -15,16 +15,15 @@ static inline Float4 BuildPlane(const Float3& a, const Float3& b, const Float3& 
 
 bool FrustrumCuller::operator () (const Float3Pair& box) const {
 	// check visibility
-	const Float4 one(1, 1, 1, 1);
 	const Float4 half(0.5f, 0.5f, 0.5f, 0.5f);
 	Float4 begin = Float4::Load(box.first);
 	Float4 end = Float4::Load(box.second);
-	Float4 size = (end - begin) * half;
-	Float4 center = begin + size;
+	Float4 size = end - begin;
+	Float4 center = begin + size * half;
 
 	for (size_t i = 0; i < sizeof(planes) / sizeof(planes[0]); i++) {
 		const Float4& plane = planes[i];
-		float r = Math::DotProduct(Math::Abs(size * plane), one) + plane.w();
+		float r = Math::DotProduct(Math::Abs(size * plane), half) + plane.w();
 
 		if (Math::DotProduct(plane, center) + r < -1e-4) {
 			return false;
