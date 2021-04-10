@@ -107,11 +107,8 @@ namespace PaintsNow {
 		/// </summary>
 		/// <param name="handle"> library handle </param>
 		/// <param name="entry"> library entry function name </param>
-		/// <param name="sParam"> customized string param </param>
-		/// <param name="wParam"> customized word param </param>
-		/// <param name="lParam"> customized long param </param>
-		/// <returns> return value of callee </returns>
-		size_t RequestCallLibrary(IScript::Request& request, size_t handle, const String& entry, const String& sParam, size_t wParam, size_t lParam);
+		/// <param name="args"> [optional] arguments </param>
+		void RequestCallLibrary(IScript::Request& request, size_t handle, const String& entry, IScript::Request::Arguments args);
 
 		/// <summary>
 		/// Free library

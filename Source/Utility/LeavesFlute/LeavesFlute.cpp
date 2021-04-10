@@ -577,9 +577,9 @@ size_t LeavesFlute::RequestLoadLibrary(IScript::Request& request, const String& 
 	return 0;
 }
 
-size_t LeavesFlute::RequestCallLibrary(IScript::Request& request, size_t handle, const String& entry, const String& sParam, size_t wParam, size_t lParam) {
+void LeavesFlute::RequestCallLibrary(IScript::Request& request, size_t handle, const String& entry, IScript::Request::Arguments args) {
 	// _cdecl calling convension for compatibility of parameter counts
-	typedef size_t (*SetupProxy)(Interfaces&, IScript::Request&, void*, const char*, size_t, size_t);
+	typedef void (*SetupProxy)(Interfaces&, IScript::Request&);
 	if (handle != 0) {
 #if defined(__linux__)
 		SetupProxy proxy = (SetupProxy)dlsym((void*)handle, entry.c_str());
@@ -587,11 +587,9 @@ size_t LeavesFlute::RequestCallLibrary(IScript::Request& request, size_t handle,
 		SetupProxy proxy = (SetupProxy)::GetProcAddress((HMODULE)handle, entry.c_str());
 #endif
 		if (proxy != nullptr) {
-			return proxy(GetInterfaces(), request, request.GetNativeScript(), sParam.c_str(), wParam, lParam);
+			proxy(GetInterfaces(), request);
 		}
 	}
-
-	return 0;
 }
 
 bool LeavesFlute::RequestFreeLibrary(IScript::Request& request, size_t handle) {

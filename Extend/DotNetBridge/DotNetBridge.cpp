@@ -3,6 +3,7 @@
 
 using namespace System::Text;
 using namespace System::Diagnostics;
+using namespace System::Reflection;
 using namespace PaintsNow;
 using namespace DotNetBridge;
 
@@ -55,7 +56,7 @@ static void WriteValueArray(IScript::Request& request, array<Object^>^ args)
 	}
 }
 
-static Object^ ReadValue(IScript::Request& request)
+static Object^ ReadValue(LeavesBridge^ bridge, IScript::Request& request)
 {
 	switch (request.GetCurrentType())
 	{
@@ -98,7 +99,7 @@ static Object^ ReadValue(IScript::Request& request)
 		array<Object^>^ arr = gcnew array<Object^>((int)ts.count);
 		for (int i = 0; i < ts.count; i++)
 		{
-			arr[i] = ReadValue(request);
+			arr[i] = ReadValue(bridge, request);
 		}
 		request >> endtable;
 		return arr;
@@ -110,7 +111,7 @@ static Object^ ReadValue(IScript::Request& request)
 		request >> r;
 		if (r)
 		{
-			return gcnew ScriptReference(r.value);
+			return gcnew ScriptReference(bridge, r.value);
 		}
 		else
 		{
@@ -122,27 +123,87 @@ static Object^ ReadValue(IScript::Request& request)
 	return nullptr;
 }
 
-class SharpReference : public IScript::Object
+class SharpObjectReference : public IScript::Object
 {
 public:
-	SharpReference(Delegate^ d) : function(d) {}
+	SharpObjectReference(System::Object^ o) : object(o) {}
+
+	gcroot<System::Object^> object;
+};
+
+class SharpDelegateReference : public SharpObjectReference
+{
+public:
+	SharpDelegateReference(LeavesBridge^ b, Delegate^ d) : SharpObjectReference(d), bridge(b) {}
+
 	void RequestCall(IScript::Request& request, IScript::Request::Arguments args)
 	{
-		Delegate^ d = function;
+		Delegate^ d = static_cast<Delegate^>((System::Object^)object);
 		if (d)
 		{
-			d->DynamicInvoke();
+			array<System::Object^>^ params = gcnew array<System::Object^>((int)args.count);
+			for (int i = 0; i < args.count; i++)
+			{
+				params[i] = ReadValue(bridge, request);
+			}
+
+			d->DynamicInvoke(params);
 		}
 	}
 
-private:
-	gcroot<Delegate^> function;
+	gcroot<LeavesBridge^> bridge;
 };
 
-ScriptReference::ScriptReference(size_t h) : handle(h) {}
+class SharpBridgeReference : public SharpObjectReference
+{
+public:
+	SharpBridgeReference(LeavesBridge^ o) : SharpObjectReference(o) {}
+
+	void RequestCreateInstance(PaintsNow::IScript::Request& request, const PaintsNow::String& libraryName, const PaintsNow::String& entryTypeName)
+	{
+		Assembly^ assembly = Assembly::LoadFile(ToManagedString(libraryName));
+		gcroot<System::Object^> instance = assembly->CreateInstance(ToManagedString(entryTypeName), false, BindingFlags::ExactBinding, nullptr, gcnew array<System::Object^>{ object }, nullptr, nullptr);
+
+		SharpObjectReference* ref = new SharpObjectReference(object);
+		Type^ type = ((System::Object^)instance)->GetType();
+		array<MethodInfo^>^ methods = type->GetMethods();
+
+		std::vector<IScript::Object*> holdings;
+		holdings.emplace_back(ref);
+
+		request.DoLock();
+		request << begintable;
+		// Register delegates
+		int lowerBound = methods->GetLowerBound(0);
+		int upperBound = methods->GetUpperBound(0);
+
+		if (upperBound != -1)
+		{
+			for (int i = lowerBound; i <= upperBound; i++)
+			{
+				MethodInfo^ info = methods[i];
+				Delegate^ d = info->CreateDelegate<Delegate^>();
+				SharpDelegateReference* dref = new SharpDelegateReference(static_cast<LeavesBridge^>((System::Object^)object), d);
+				request << key(FromManagedString(info->Name)) << dref;
+				holdings.emplace_back(dref);
+			}
+		}
+
+		request << key("__delegates__") << holdings;
+		request << endtable;
+		request.UnLock();
+
+		for (size_t i = 0; i < holdings.size(); i++)
+		{
+			holdings[i]->Destroy();
+		}
+	}
+};
+
+ScriptReference::ScriptReference(LeavesBridge^ b, size_t h) : bridge(b), handle(h) {}
 ScriptReference::~ScriptReference()
 {
-	IScript* script = LeavesBridge::Instance->script;
+	IScript* script = bridge->script;
 	script->DoLock();
 	script->GetDefaultRequest().Dereference(IScript::Request::Ref(handle));
 	script->UnLock();
@@ -155,7 +216,7 @@ Object^ ScriptReference::Call(... array<Object^>^ args)
 		throw gcnew NullReferenceException("Unable to call invalid function.");
 	}
 
-	IScript::RequestPool* requestPool = LeavesBridge::Instance->requestPool;
+	IScript::RequestPool* requestPool = bridge->requestPool;
 	IScript::Request& request = *requestPool->requestPool.AcquireSafe();
 	IScript::Request::Ref f(handle);
 
@@ -163,7 +224,7 @@ Object^ ScriptReference::Call(... array<Object^>^ args)
 	request.Push();
 	WriteValueArray(request, args);
 	request.Call(f);
-	Object^ retValue = ReadValue(request);
+	Object^ retValue = ReadValue(bridge, request);
 	request.Pop();
 	request.UnLock();
 
@@ -172,12 +233,12 @@ Object^ ScriptReference::Call(... array<Object^>^ args)
 }
 
 template <typename T>
-static T AsObject(size_t handle)
+static T AsObject(LeavesBridge^ bridge, size_t handle)
 {
 	if (handle == 0) return T();
 
 	T t;
-	IScript::Request& request = LeavesBridge::Instance->script->GetDefaultRequest();
+	IScript::Request& request = bridge->script->GetDefaultRequest();
 	request.DoLock();
 	request.Push();
 	request << IScript::Request::Ref(handle);
@@ -190,27 +251,27 @@ static T AsObject(size_t handle)
 
 int ScriptReference::AsInteger()
 {
-	return AsObject<int>(handle);
+	return AsObject<int>(bridge, handle);
 }
 
 double ScriptReference::AsDouble()
 {
-	return AsObject<double>(handle);
+	return AsObject<double>(bridge, handle);
 }
 
 float ScriptReference::AsFloat()
 {
-	return AsObject<float>(handle);
+	return AsObject<float>(bridge, handle);
 }
 
 System::IntPtr ScriptReference::AsHandle()
 {
-	return System::IntPtr(AsObject<void*>(handle));
+	return System::IntPtr(AsObject<void*>(bridge, handle));
 }
 
 System::String^ ScriptReference::AsString()
 {
-	return ToManagedString(AsObject<const char*>(handle));
+	return ToManagedString(AsObject<const char*>(bridge, handle));
 }
 
 UIntPtr LeavesBridge::GetScriptHandle()
@@ -228,7 +289,7 @@ ScriptReference^ LeavesBridge::GetGlobal(System::String^ name)
 	request << global >> key(FromManagedString(name).c_str()) >> r << endtable;
 	request.UnLock();
 
-	return gcnew ScriptReference(r.value);
+	return gcnew ScriptReference(this, r.value);
 }
 
 void LeavesBridge::Initialize(IScript::Request& request)
@@ -238,17 +299,14 @@ void LeavesBridge::Initialize(IScript::Request& request)
 	script = request.GetScript();
 	requestPool = request.GetRequestPool();
 
-	IScript::Request::Ref r;
-	request.DoLock();
-	request.Push();
-	request << begintable;
-	request << endtable;
-	request >> r;
-	request.Pop();
-	request << r;
-	request.UnLock();
+	SharpBridgeReference* ref = new SharpBridgeReference(this);
 
-	moduleTable = gcnew ScriptReference(r.value);
+	request.DoLock();
+	request << begintable;
+	request << key("CreateInstance") << request.Adapt(Wrap(ref, &SharpBridgeReference::RequestCreateInstance));
+	request << key("__delegate__") << ref;
+	request << endtable;
+	request.UnLock();
 }
 
 void LeavesBridge::Uninitialize(IScript::Request& request)
@@ -257,27 +315,6 @@ void LeavesBridge::Uninitialize(IScript::Request& request)
 
 	script = nullptr;
 	requestPool = nullptr;
-	moduleTable = nullptr;
-}
-
-void LeavesBridge::RegisterDelegate(System::String^ name, Delegate^ func)
-{
-	SharpReference* sharpRef = new SharpReference(func);
-	IScript::Request& request = LeavesBridge::Instance->script->GetDefaultRequest();
-
-	PaintsNow::String funcName = FromManagedString(name);
-	request.DoLock();
-	request.Push();
-	request << IScript::Request::Ref(moduleTable->Handle);
-	request >> begintable;
-	request << key(funcName) << request.Adapt(Wrap(sharpRef, &SharpReference::RequestCall));
-	request >> key("__delegate__"); // in case of destroy!!
-		request >> begintable;
-		request << key(funcName) << sharpRef;
-		request >> endtable;
-	request >> endtable;
-	request.Pop();
-	request.UnLock();
 }
 
 LeavesBridge::LeavesBridge() {}
@@ -286,19 +323,34 @@ LeavesBridge::LeavesBridge(const LeavesBridge%)
 	throw gcnew InvalidOperationException("LeavesBridge cannot copy");
 }
 
-extern "C" __declspec(dllexport) size_t Main(void*, IScript::Request& request, void*, const char* option, size_t, size_t)
+extern "C" __declspec(dllexport) void Main(void*, IScript::Request& request)
 {
-	std::string strOption = option;
-	LeavesBridge^ bridge = LeavesBridge::Instance;
+	const char* command = nullptr;
+	request.DoLock();
+	request >> command; // do not use String on ABI
+	request.UnLock();
 
-	if (strOption == "Initialize")
+	PaintsNow::String strCommand = command;
+
+	if (strCommand == "Initialize")
 	{
+		LeavesBridge^ bridge = gcnew LeavesBridge();
 		bridge->Initialize(request);
 	}
-	else if (strOption == "Uninitialize")
+	else if (strCommand == "Uninitialize")
 	{
-		bridge->Uninitialize(request);
-	}
+		IScript::Delegate<SharpObjectReference> sharpObject;
+		request.DoLock();
+		request >> sharpObject;
+		request.UnLock();
 
-	return 0;
+		if (sharpObject)
+		{
+			LeavesBridge^ bridge = dynamic_cast<LeavesBridge^>((Object^)sharpObject.Get()->object);
+			if (bridge != nullptr)
+			{
+				bridge->Uninitialize(request);
+			}
+		}
+	}
 }
