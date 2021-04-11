@@ -1,9 +1,12 @@
 #include "DotNetBridge.h"
+#include "../../Source/Core/System/Tiny.h"
 #include <vcclr.h>
 
 using namespace System::Text;
 using namespace System::Diagnostics;
 using namespace System::Reflection;
+using namespace System::Linq;
+using namespace System::Linq::Expressions;
 using namespace PaintsNow;
 using namespace DotNetBridge;
 
@@ -28,6 +31,8 @@ static System::String^ ToManagedString(const char* str)
 static void WriteValueArray(IScript::Request& request, array<Object^>^ args);
 static void WriteValue(IScript::Request& request, Object^ object)
 {
+	if (object == nullptr) return;
+
 	Type^ type = object->GetType();
 	if (type->IsArray)
 	{
@@ -38,6 +43,31 @@ static void WriteValue(IScript::Request& request, Object^ object)
 			WriteValueArray(request, arr);
 			request << endarray;
 		}
+	}
+	else
+	{
+		switch (Type::GetTypeCode(type))
+		{
+		case TypeCode::Byte:
+		case TypeCode::SByte:
+		case TypeCode::UInt16:
+		case TypeCode::UInt32:
+		case TypeCode::UInt64:
+		case TypeCode::Int16:
+		case TypeCode::Int32:
+		case TypeCode::Int64:
+			request << safe_cast<int64_t>(object);
+			break;
+		case TypeCode::Decimal:
+		case TypeCode::Double:
+		case TypeCode::Single:
+			request << safe_cast<double>(object);
+			break;
+		case TypeCode::String:
+			request << FromManagedString(safe_cast<System::String^>(object));
+			break;
+		}
+
 	}
 }
 
@@ -97,7 +127,7 @@ static Object^ ReadValue(LeavesBridge^ bridge, IScript::Request& request)
 		IScript::Request::TableStart ts;
 		request >> ts;
 		array<Object^>^ arr = gcnew array<Object^>((int)ts.count);
-		for (int i = 0; i < ts.count; i++)
+		for (int i = 0; i < (int)ts.count; i++)
 		{
 			arr[i] = ReadValue(bridge, request);
 		}
@@ -123,31 +153,151 @@ static Object^ ReadValue(LeavesBridge^ bridge, IScript::Request& request)
 	return nullptr;
 }
 
-class SharpObjectReference : public IScript::Object
+static Object^ ReadValueTyped(LeavesBridge^ bridge, IScript::Request& request, Type^ type)
+{
+	if (type->IsArray)
+	{
+		Type^ elementType = type->GetElementType();
+		IScript::Request::ArrayStart as;
+		request >> as;
+		array<System::Object^>^ retValue = gcnew array<System::Object^>((int)as.count);
+		for (int i = 0; i < (int)as.count; i++)
+		{
+			retValue[i] = ReadValueTyped(bridge, request, elementType);
+		}
+		request >> endarray;
+		return retValue;
+	}
+	else
+	{
+		switch (Type::GetTypeCode(type))
+		{
+		case TypeCode::Byte:
+		{
+			uint64_t value;
+			request >> value;
+			return (Byte)value;
+		}
+		case TypeCode::SByte:
+		{
+			int64_t value;
+			request >> value;
+			return (SByte)value;
+		}
+		case TypeCode::UInt16:
+		{
+			uint64_t value;
+			request >> value;
+			return (UInt16)value;
+		}
+		case TypeCode::UInt32:
+		{
+			uint64_t value;
+			request >> value;
+			return (UInt32)value;
+		}
+		case TypeCode::UInt64:
+		{
+			uint64_t value;
+			request >> value;
+			return (UInt64)value;
+		}
+		case TypeCode::Int16:
+		{
+			int64_t value;
+			request >> value;
+			return (Int16)value;
+		}
+		case TypeCode::Int32:
+		{
+			int64_t value;
+			request >> value;
+			return (Int32)value;
+		}
+		case TypeCode::Int64:
+		{
+			int64_t value;
+			request >> value;
+			return (Int64)value;
+		}
+		case TypeCode::Decimal:
+		{
+			double value;
+			request >> value;
+			return (Decimal)value;
+		}
+		case TypeCode::Double:
+		{
+			double value;
+			request >> value;
+			return (Double)value;
+		}
+		case TypeCode::Single:
+		{
+			double value;
+			request >> value;
+			return (Single)value;
+		}
+		case TypeCode::String:
+		{
+			const char* value;
+			request >> value;
+			return ToManagedString(value);
+		}
+		case TypeCode::Object:
+		{
+			IScript::Request::Ref r;
+			request >> r;
+			if (r)
+			{
+				return gcnew ScriptReference(bridge, r.value);
+			}
+		}
+		}
+	}
+
+	return nullptr;
+}
+
+class SharpObjectReference : public SharedTiny
 {
 public:
-	SharpObjectReference(System::Object^ o) : object(o) {}
-
 	gcroot<System::Object^> object;
 };
 
 class SharpDelegateReference : public SharpObjectReference
 {
 public:
-	SharpDelegateReference(LeavesBridge^ b, Delegate^ d) : SharpObjectReference(d), bridge(b) {}
-
 	void RequestCall(IScript::Request& request, IScript::Request::Arguments args)
 	{
 		Delegate^ d = static_cast<Delegate^>((System::Object^)object);
 		if (d)
 		{
 			array<System::Object^>^ params = gcnew array<System::Object^>((int)args.count);
-			for (int i = 0; i < args.count; i++)
+			int count = (int)args.count;
+			array<ParameterInfo^>^ parameters = d->Method->GetParameters();
+			int lowerBound = parameters->GetLowerBound(0);
+			int upperBound = parameters->GetUpperBound(0);
+
+			upperBound = count == 0 ? -1 : std::min(lowerBound + count - 1, upperBound);
+
+			if (upperBound != -1)
 			{
-				params[i] = ReadValue(bridge, request);
+				request.DoLock();
+				for (int i = lowerBound; i <= upperBound; i++)
+				{
+					params[i - lowerBound] = ReadValueTyped(bridge, request, parameters[i]->ParameterType);
+				}
+				request.UnLock();
 			}
 
-			d->DynamicInvoke(params);
+			System::Object^ retValue = d->DynamicInvoke(params);
+			if (retValue != nullptr)
+			{
+				request.DoLock();
+				WriteValue(request, retValue);
+				request.UnLock();
+			}
 		}
 	}
 
@@ -157,45 +307,81 @@ public:
 class SharpBridgeReference : public SharpObjectReference
 {
 public:
-	SharpBridgeReference(LeavesBridge^ o) : SharpObjectReference(o) {}
-
-	void RequestCreateInstance(PaintsNow::IScript::Request& request, const PaintsNow::String& libraryName, const PaintsNow::String& entryTypeName)
+	void RequestCreateInstance(PaintsNow::IScript::Request& request, const char* libraryName, const char* entryTypeName)
 	{
-		Assembly^ assembly = Assembly::LoadFile(ToManagedString(libraryName));
-		gcroot<System::Object^> instance = assembly->CreateInstance(ToManagedString(entryTypeName), false, BindingFlags::ExactBinding, nullptr, gcnew array<System::Object^>{ object }, nullptr, nullptr);
+		Assembly^ assembly = Assembly::LoadFile(IO::Path::GetFullPath(ToManagedString(libraryName)));
+		System::Object^ instance = nullptr;
 
-		SharpObjectReference* ref = new SharpObjectReference(object);
-		Type^ type = ((System::Object^)instance)->GetType();
-		array<MethodInfo^>^ methods = type->GetMethods();
-
-		std::vector<IScript::Object*> holdings;
-		holdings.emplace_back(ref);
-
-		request.DoLock();
-		request << begintable;
-		// Register delegates
-		int lowerBound = methods->GetLowerBound(0);
-		int upperBound = methods->GetUpperBound(0);
-
-		if (upperBound != -1)
+		try
 		{
-			for (int i = lowerBound; i <= upperBound; i++)
-			{
-				MethodInfo^ info = methods[i];
-				Delegate^ d = info->CreateDelegate<Delegate^>();
-				SharpDelegateReference* dref = new SharpDelegateReference(static_cast<LeavesBridge^>((System::Object^)object), d);
-				request << key(FromManagedString(info->Name)) << dref;
-				holdings.emplace_back(dref);
-			}
+			instance = assembly->CreateInstance(ToManagedString(entryTypeName), false, BindingFlags::Default, nullptr, nullptr, nullptr, nullptr);
+		}
+		catch (MissingMethodException^ )
+		{
+			return;
 		}
 
-		request << key("__delegates__") << holdings;
-		request << endtable;
-		request.UnLock();
-
-		for (size_t i = 0; i < holdings.size(); i++)
+		if (instance != nullptr)
 		{
-			holdings[i]->Destroy();
+			SharpObjectReference* ref = new SharpObjectReference();
+			ref->object = instance;
+			Type^ type = instance->GetType();
+			array<MethodInfo^>^ methods = type->GetMethods();
+
+			std::vector<SharedTiny*> holdings;
+			holdings.emplace_back(ref);
+
+			request.DoLock();
+			request << begintable;
+			// Register delegates
+			int lowerBound = methods->GetLowerBound(0);
+			int upperBound = methods->GetUpperBound(0);
+
+			if (upperBound != -1)
+			{
+				for (int i = lowerBound; i <= upperBound; i++)
+				{
+					MethodInfo^ info = methods[i];
+					// https://stackoverflow.com/questions/16364198/how-to-create-a-delegate-from-a-methodinfo-when-method-signature-cannot-be-known
+					array<ParameterInfo^>^ parameters = info->GetParameters();
+					int lowerBound = parameters->GetLowerBound(0);
+					int upperBound = parameters->GetUpperBound(0);
+					array<Type^>^ types = nullptr;
+
+					if (upperBound != -1)
+					{
+						types = gcnew array<Type^>(upperBound - lowerBound + 2);
+						for (int j = lowerBound; j <= upperBound; j++)
+						{
+							types[j - lowerBound] = parameters[j]->ParameterType;
+						}
+
+						types[upperBound - lowerBound + 1] = info->ReturnType;
+					}
+					else
+					{
+						types = gcnew array<Type^>(1);
+						types[0] = info->ReturnType;
+					}
+
+					Delegate^ d = info->CreateDelegate(Expression::GetDelegateType(types), instance);
+					SharpDelegateReference* dref = new SharpDelegateReference();
+					dref->object = d;
+					dref->bridge = static_cast<LeavesBridge^>((System::Object^)object);
+
+					request << key(FromManagedString(info->Name)) << request.Adapt(Wrap(dref, &SharpDelegateReference::RequestCall));
+					holdings.emplace_back(dref);
+				}
+			}
+
+			request << key("__delegates__") << holdings;
+			request << endtable;
+			request.UnLock();
+
+			for (size_t i = 0; i < holdings.size(); i++)
+			{
+				holdings[i]->ReleaseObject();
+			}
 		}
 	}
 };
@@ -297,11 +483,11 @@ void LeavesBridge::Initialize(IScript::Request& request)
 	Debug::Assert(script == nullptr);
 
 	script = request.GetScript();
-	requestPool = request.GetRequestPool();
-
-	SharpBridgeReference* ref = new SharpBridgeReference(this);
+	SharpBridgeReference* ref = new SharpBridgeReference();
+	ref->object = this;
 
 	request.DoLock();
+	requestPool = request.GetRequestPool();
 	request << begintable;
 	request << key("CreateInstance") << request.Adapt(Wrap(ref, &SharpBridgeReference::RequestCreateInstance));
 	request << key("__delegate__") << ref;
@@ -318,10 +504,6 @@ void LeavesBridge::Uninitialize(IScript::Request& request)
 }
 
 LeavesBridge::LeavesBridge() {}
-LeavesBridge::LeavesBridge(const LeavesBridge%)
-{
-	throw gcnew InvalidOperationException("LeavesBridge cannot copy");
-}
 
 extern "C" __declspec(dllexport) void Main(void*, IScript::Request& request)
 {

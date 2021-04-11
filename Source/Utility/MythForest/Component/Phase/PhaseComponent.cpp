@@ -228,8 +228,8 @@ void PhaseComponent::Step(Engine& engine, uint32_t bounceCount) {
 		} while (to == from);
 
 		UpdatePointBounce bounce;
-		bounce.fromPhaseIndex = safe_cast<uint32_t>(from - &phases[0]);
-		bounce.toPhaseIndex = safe_cast<uint32_t>(to - &phases[0]);
+		bounce.fromPhaseIndex = verify_cast<uint32_t>(from - &phases[0]);
+		bounce.toPhaseIndex = verify_cast<uint32_t>(to - &phases[0]);
 
 		bakePointBounces.push(bounce);
 	}
@@ -385,7 +385,7 @@ void PhaseComponent::TickRender(Engine& engine) {
 			uint32_t frameIndex = engine.GetFrameIndex();
 			for (size_t j = 0; j < task.textures.size(); j++) {
 				assert(!task.textures[j]->GetLocation().empty());
-				engine.GetKernel().QueueRoutine(this, CreateTaskContextFree(Wrap(this, &PhaseComponent::CoTaskWriteDebugTexture), std::ref(engine), (uint32_t)safe_cast<uint32_t>(frameIndex * tasks.size() + i), std::move(task.textures[j]->description.data), task.textures[j]));
+				engine.GetKernel().QueueRoutine(this, CreateTaskContextFree(Wrap(this, &PhaseComponent::CoTaskWriteDebugTexture), std::ref(engine), (uint32_t)verify_cast<uint32_t>(frameIndex * tasks.size() + i), std::move(task.textures[j]->description.data), task.textures[j]));
 			}
 
 			finalStatus.store(TaskData::STATUS_BAKED, std::memory_order_release);
@@ -394,7 +394,7 @@ void PhaseComponent::TickRender(Engine& engine) {
 
 	// Commit bakes
 	if (!bakeQueues.empty()) {
-		render.PresentQueues(&bakeQueues[0], safe_cast<uint32_t>(bakeQueues.size()), IRender::PRESENT_EXECUTE_ALL);
+		render.PresentQueues(&bakeQueues[0], verify_cast<uint32_t>(bakeQueues.size()), IRender::PRESENT_EXECUTE_ALL);
 	}
 }
 
@@ -443,7 +443,7 @@ void PhaseComponent::CoTaskWriteDebugTexture(Engine& engine, uint32_t index, Byt
 		
 		IImage::Image* png = image.Create(description.dimension.x(), description.dimension.y(), layout, format);
 		void* buffer = image.GetBuffer(png);
-		memcpy(buffer, data.GetData(), safe_cast<size_t>(length));
+		memcpy(buffer, data.GetData(), verify_cast<size_t>(length));
 		image.Save(png, *stream, "png");
 		image.Delete(png);
 		// write png
@@ -490,7 +490,7 @@ void PhaseComponent::ResolveTasks(Engine& engine) {
 								IRender::Resource::BufferDescription desc;
 								desc.format = IRender::Resource::BufferDescription::FLOAT;
 								desc.usage = IRender::Resource::BufferDescription::INSTANCED;
-								desc.component = safe_cast<uint8_t>(viewSize / (group.instanceCount * sizeof(float)));
+								desc.component = verify_cast<uint8_t>(viewSize / (group.instanceCount * sizeof(float)));
 								desc.data.Resize(viewSize);
 								desc.data.Import(0, data);
 								render.UploadResource(queue, buffer, &desc);
@@ -841,7 +841,7 @@ void PhaseComponent::CompleteUpdateLights(Engine& engine, std::vector<LightEleme
 		shadow.projectionMatrix = projectionMatrix;
 
 		UpdatePointShadow bakePointShadow;
-		bakePointShadow.shadowIndex = safe_cast<uint32_t>(i);
+		bakePointShadow.shadowIndex = verify_cast<uint32_t>(i);
 		bakePointShadows.push(bakePointShadow);
 	}
 
@@ -850,8 +850,8 @@ void PhaseComponent::CompleteUpdateLights(Engine& engine, std::vector<LightEleme
 	if (!elements.empty()) {
 		for (size_t j = 0; j < phases.size(); j++) {
 			UpdatePointSetup bakePoint;
-			bakePoint.phaseIndex = safe_cast<uint32_t>(j);
-			bakePoint.shadowIndex = safe_cast<uint32_t>(rand() % elements.size());
+			bakePoint.phaseIndex = verify_cast<uint32_t>(j);
+			bakePoint.shadowIndex = verify_cast<uint32_t>(rand() % elements.size());
 			bakePointSetups.push(bakePoint);
 		}
 	}

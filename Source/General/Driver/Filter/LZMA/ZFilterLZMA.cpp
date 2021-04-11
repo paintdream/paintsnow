@@ -181,7 +181,7 @@ bool FilterLZMAImpl::Write(IReflectObject& s, void* ptr, size_t length) {
 	s(reflectWriter);
 
 	if (reflectWriter.data != nullptr) {
-		uint32_t size = safe_cast<uint32_t>(reflectWriter.data->size());
+		uint32_t size = verify_cast<uint32_t>(reflectWriter.data->size());
 		stream << size;
 		size_t n = size;
 		return Write(reflectWriter.data->data(), n);

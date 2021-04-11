@@ -46,7 +46,7 @@ void AnimationComponent::Play(const String& clipName, float startTime) {
 	const IAsset::BoneAnimation& boneAnimation = skeletonResource->GetBoneAnimation();
 	for (size_t i = 0; i < boneAnimation.clips.size(); i++) {
 		if (boneAnimation.clips[i].name == clipName) {
-			clipIndex = safe_cast<uint32_t>(i);
+			clipIndex = verify_cast<uint32_t>(i);
 			animationTime = startTime;
 			break;
 		}
@@ -68,7 +68,7 @@ void AnimationComponent::Attach(const String& name, const TShared<Entity>&entity
 	const IAsset::BoneAnimation& boneAnimation = skeletonResource->GetBoneAnimation();
 	for (size_t i = 0; i < boneAnimation.joints.size(); i++) {
 		if (boneAnimation.joints[i].name == name) {
-			mountPoints.emplace_back(std::make_pair((uint32_t)safe_cast<uint32_t>(i), entity));
+			mountPoints.emplace_back(std::make_pair((uint32_t)verify_cast<uint32_t>(i), entity));
 		}
 	}
 }

@@ -21,7 +21,7 @@ uint32_t ModelComponent::CreateOverrider(const TShared<ShaderResource>& shaderRe
 		it = std::binary_insert(shaderOverriders, shaderResourceTemplate);
 	}
 	
-	return safe_cast<uint32_t>((it - shaderOverriders.begin() + 1) * materialResources.size());
+	return verify_cast<uint32_t>((it - shaderOverriders.begin() + 1) * materialResources.size());
 }
 
 static void GenerateDrawCall(IDrawCallProvider::OutputRenderData& renderData, ShaderResource* shaderResource, std::vector<IRender::Resource*>& meshBuffers, const IAsset::MeshGroup& slice, const MeshResource::BufferCollection& bufferCollection, uint32_t deviceElementSize, uint16_t priority, uint16_t index) {
@@ -80,8 +80,8 @@ void ModelComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTe
 
 	for (size_t i = 0; i < materialResources.size(); i++) {
 		std::pair<uint32_t, TShared<MaterialResource> >& mat = materialResources[i];
-		uint16_t meshGroupIndex = safe_cast<uint16_t>(mat.first & 0xFFFF);
-		uint16_t priority = safe_cast<uint16_t>(mat.first >> 16);
+		uint16_t meshGroupIndex = verify_cast<uint16_t>(mat.first & 0xFFFF);
+		uint16_t priority = verify_cast<uint16_t>(mat.first >> 16);
 
 		if (meshGroupIndex < meshResource->meshCollection.groups.size()) {
 			IAsset::MeshGroup& slice = meshResource->meshCollection.groups[meshGroupIndex];
@@ -96,12 +96,12 @@ void ModelComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTe
 				assert(shaderInstance->GetPassUpdater().GetBufferCount() != 0);
 				drawCall.shaderResource = shaderInstance;
 
-				uint32_t orgSize = safe_cast<uint32_t>(drawCallTemplates.size());
+				uint32_t orgSize = verify_cast<uint32_t>(drawCallTemplates.size());
 				std::vector<IRender::Resource::DrawCallDescription::BufferRange> bufferRanges(uniformBufferData.size());
 				for (size_t n = 0; n < uniformBufferData.size(); n++) {
 					const Bytes& data = uniformBufferData[n];
 					if (!data.Empty()) {
-						bufferRanges[n] = batchComponent->Allocate(data.GetData(), safe_cast<uint32_t>(data.GetSize()));
+						bufferRanges[n] = batchComponent->Allocate(data.GetData(), verify_cast<uint32_t>(data.GetSize()));
 					}
 				}
 
@@ -151,7 +151,7 @@ uint32_t ModelComponent::CollectDrawCalls(std::vector<OutputRenderData, DrawCall
 	}
 
 	assert(Flag().fetch_and(~Tiny::TINY_PINNED) & Tiny::TINY_PINNED);
-	return safe_cast<uint32_t>(materialResources.size());
+	return verify_cast<uint32_t>(materialResources.size());
 }
 
 TObject<IReflect>& ModelComponent::operator () (IReflect& reflect) {

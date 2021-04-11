@@ -250,7 +250,7 @@ const Bytes& VisibilityComponent::QuerySample(Engine& engine, const Float3& posi
 
 				incomplete = incomplete || cell->finishCount.load(std::memory_order_acquire) != FACE_COUNT;
 				toMerge.emplace_back(cell);
-				mergedSize = Math::Max(mergedSize, (uint32_t)safe_cast<uint32_t>(cell->payload.GetSize()));
+				mergedSize = Math::Max(mergedSize, (uint32_t)verify_cast<uint32_t>(cell->payload.GetSize()));
 			}
 		}
 	}
@@ -336,7 +336,7 @@ void VisibilityComponent::TickRender(Engine& engine) {
 
 	// Commit bakes
 	if (!bakeQueues.empty()) {
-		render.PresentQueues(&bakeQueues[0], safe_cast<uint32_t>(bakeQueues.size()), IRender::PRESENT_EXECUTE_ALL);
+		render.PresentQueues(&bakeQueues[0], verify_cast<uint32_t>(bakeQueues.size()), IRender::PRESENT_EXECUTE_ALL);
 	}
 }
 
@@ -479,7 +479,7 @@ void VisibilityComponent::PostProcess(const TShared<Cell>& cell) {
 			Bytes& encodedData = cell.payload;
 			const Bytes& data = task.data;
 			assert(data.GetSize() % sizeof(uint32_t) == 0);
-			uint32_t count = safe_cast<uint32_t>(data.GetSize()) / sizeof(uint32_t);
+			uint32_t count = verify_cast<uint32_t>(data.GetSize()) / sizeof(uint32_t);
 			const uint32_t* p = reinterpret_cast<const uint32_t*>(data.GetData());
 			uint8_t* target = encodedData.GetData();
 
@@ -548,9 +548,9 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 								IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[k];
 								bufferRange.buffer = buffer;
 								bufferRange.offset = bufferSize;
-								bufferRange.component = safe_cast<uint16_t>(viewSize / (group.instanceCount * sizeof(float)));
+								bufferRange.component = verify_cast<uint16_t>(viewSize / (group.instanceCount * sizeof(float)));
 								warpData.bytesCache.Link(bufferData, data);
-								bufferSize += safe_cast<uint32_t>(viewSize);
+								bufferSize += verify_cast<uint32_t>(viewSize);
 								assert(bufferData.GetViewSize() == bufferSize);
 							}
 						}

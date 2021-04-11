@@ -108,7 +108,7 @@ inline uint32_t GenVertex(std::vector<GradVertex>& buffer, const GradVertex& des
 		buffer.emplace_back(desc);
 	}
 
-	return safe_cast<uint32_t>(buffer.size() - 1);
+	return verify_cast<uint32_t>(buffer.size() - 1);
 }
 
 inline uint32_t GetVertex(std::vector<GradVertex>& buffer, uint32_t i, uint32_t j, std::vector<Float3>& gradHeightMap, uint32_t totalWidth, uint32_t totalHeight, bool forceNew) {
@@ -200,7 +200,7 @@ void GenerateDetails(Region& root, std::vector<Region>& regions, std::vector<Gra
 
 	int sum = (int)leftGap + (int)rightGap + (int)topGap + (int)bottomGap;
 
-	uint32_t faceStart = safe_cast<uint32_t>(faces.size());
+	uint32_t faceStart = verify_cast<uint32_t>(faces.size());
 
 	float a = fabs(buffer[leftTop].vertex.z() + buffer[rightBottom].vertex.z() - 2 * v.vertex.z());
 	float b = fabs(buffer[rightTop].vertex.z() + buffer[leftBottom].vertex.z() - 2 * v.vertex.z());
@@ -268,7 +268,7 @@ void GenerateDetails(Region& root, std::vector<Region>& regions, std::vector<Gra
 			uint32_t x = ((r.second.x() - r.first.x() + 1) >> 1), y = ((r.second.y() - r.first.y() + 1) >> 1);
 			for (uint32_t i = r.first.x(); i < r.second.x(); i += x) {
 				for (uint32_t j = r.first.y(); j < r.second.y(); j += y) {
-					uint32_t n = safe_cast<uint32_t>(regions.size()) - 4 + k;
+					uint32_t n = verify_cast<uint32_t>(regions.size()) - 4 + k;
 					Region& subRegion = regions[n];
 					UInt2Pair range = UInt2Pair(UInt2(i, j), UInt2(i + x, j + y));
 					subRegion.range = range;

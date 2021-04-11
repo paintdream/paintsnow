@@ -17,13 +17,13 @@ StreamComponent::StreamComponent(const UShort3& dim, uint16_t cacheCount) : dime
 
 UShort3 StreamComponent::ComputeWrapCoordinate(const Int3& pos) const {
 	return UShort3(
-		safe_cast<uint16_t>((pos.x() % dimension.x() + dimension.x()) % dimension.x()),
-		safe_cast<uint16_t>((pos.y() % dimension.y() + dimension.y()) % dimension.y()),
-		safe_cast<uint16_t>((pos.z() % dimension.z() + dimension.z()) % dimension.z()));
+		verify_cast<uint16_t>((pos.x() % dimension.x() + dimension.x()) % dimension.x()),
+		verify_cast<uint16_t>((pos.y() % dimension.y() + dimension.y()) % dimension.y()),
+		verify_cast<uint16_t>((pos.z() % dimension.z() + dimension.z()) % dimension.z()));
 }
 
 uint16_t StreamComponent::GetCacheCount() const {
-	return safe_cast<uint16_t>(grids.size());
+	return verify_cast<uint16_t>(grids.size());
 }
 
 void StreamComponent::Unload(Engine& engine, const UShort3& coord, const TShared<SharedTiny>&context) {
@@ -70,7 +70,7 @@ SharedTiny* StreamComponent::Load(Engine& engine, const UShort3& coord, const TS
 
 		TShared<SharedTiny> last = grid.object;
 		grid.recycleIndex = recycleStart;
-		recycleStart = (recycleStart + 1) % safe_cast<uint16_t>(recycleQueue.size());
+		recycleStart = (recycleStart + 1) % verify_cast<uint16_t>(recycleQueue.size());
 
 		if (loadHandler.script) {
 			IScript::Request& request = *engine.bridgeSunset.requestPool.AcquireSafe();
@@ -101,7 +101,7 @@ SharedTiny* StreamComponent::Load(Engine& engine, const UShort3& coord, const TS
 		recycleQueue[oldIndex] = recycleQueue[recycleStart]; // make swap
 		recycleQueue[recycleStart] = id;
 
-		recycleStart = (recycleStart + 1) % safe_cast<uint16_t>(recycleQueue.size());
+		recycleStart = (recycleStart + 1) % verify_cast<uint16_t>(recycleQueue.size());
 		object = grid.object();
 	}
 

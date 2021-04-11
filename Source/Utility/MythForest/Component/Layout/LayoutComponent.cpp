@@ -116,7 +116,7 @@ public:
 		int weight = 0;
 		size_t num = 0;
 		if (winCount == -1) {
-			winCount = safe_cast<uint32_t>(components.size());
+			winCount = verify_cast<uint32_t>(components.size());
 		}
 
 		Float2 current = range.first;

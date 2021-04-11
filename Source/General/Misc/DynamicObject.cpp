@@ -202,7 +202,7 @@ DynamicInfo* DynamicUniqueAllocator::AllocFromDescriptor(const String& name, con
 		info.SetName(newName);
 		std::sort(fields.begin(), fields.end());
 		for (size_t i = 0; i < fields.size(); i++) {
-			info.mapNameToField[fields[i].name] = safe_cast<uint32_t>(i);
+			info.mapNameToField[fields[i].name] = verify_cast<uint32_t>(i);
 		}
 
 		while (lastOffset != 0 && Math::Alignment(lastOffset) < maxAlignment) {
@@ -265,7 +265,7 @@ TObject<IReflect>& DynamicObjectWrapper::operator () (IReflect& reflect) {
 	return *this;
 }
 
-DynamicVector::DynamicVector(Unique type, DynamicInfo::MemController* mc, size_t c, bool r) : unique(type), memController(mc), reflectable(r), count(safe_cast<uint32_t>(c)), buffer(nullptr) {
+DynamicVector::DynamicVector(Unique type, DynamicInfo::MemController* mc, size_t c, bool r) : unique(type), memController(mc), reflectable(r), count(verify_cast<uint32_t>(c)), buffer(nullptr) {
 	Init();
 }
 

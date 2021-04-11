@@ -58,8 +58,8 @@ IDatabase::Database* ZDatabaseSqlite::Connect(IArchive& archive, const String& t
 
 			FILE* fp = fopen(tmpFileName.c_str(), "wb");
 			if (fp != nullptr) {
-				uint8_t* buffer = new uint8_t[safe_cast<size_t>(length)];
-				size_t s = safe_cast<size_t>(length);
+				uint8_t* buffer = new uint8_t[verify_cast<size_t>(length)];
+				size_t s = verify_cast<size_t>(length);
 				if (f->Read(buffer, s)) {
 					fwrite(buffer, 1, s, fp);
 				}

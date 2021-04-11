@@ -321,7 +321,7 @@ void RemoteProxy::Request::PostPacket(Packet& packet) {
 	stream << packet;
 	ITunnel::Packet state;
 	state.header.length = (ITunnel::PacketSizeType)stream.GetTotalLength();
-	host.tunnel.WriteConnectionPacket(connection, stream.GetBuffer(), safe_cast<uint32_t>(stream.GetTotalLength()), state);
+	host.tunnel.WriteConnectionPacket(connection, stream.GetBuffer(), verify_cast<uint32_t>(stream.GetTotalLength()), state);
 	host.tunnel.Flush(connection);
 	remoteObjectRefDelta.clear();
 	localObjectRefDelta.clear();

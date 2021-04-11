@@ -238,7 +238,7 @@ void MaterialResource::ScriptModify(IScript::Request& request, const String& act
 				size_t k;
 				for (k = 0; k < textureResources.size(); k++) {
 					if (value == textureResources[k]->GetLocation()) {
-						variables.emplace_back(IAsset::Material::Variable(name, IAsset::TextureIndex(safe_cast<uint32_t>(k))));
+						variables.emplace_back(IAsset::Material::Variable(name, IAsset::TextureIndex(verify_cast<uint32_t>(k))));
 					}
 				}
 
@@ -246,7 +246,7 @@ void MaterialResource::ScriptModify(IScript::Request& request, const String& act
 					TShared<ResourceBase> resource = resourceManager.LoadExistSafe(value);
 					if (resource && resource->QueryInterface(UniqueType<TextureResource>()) != nullptr) {
 						textureResources.emplace_back(static_cast<TextureResource*>(resource()));
-						variables.emplace_back(IAsset::Material::Variable(name, IAsset::TextureIndex(safe_cast<uint32_t>(k))));
+						variables.emplace_back(IAsset::Material::Variable(name, IAsset::TextureIndex(verify_cast<uint32_t>(k))));
 					}
 				}
 

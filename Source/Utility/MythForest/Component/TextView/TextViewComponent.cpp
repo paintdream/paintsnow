@@ -34,7 +34,7 @@ void TextViewComponent::TagParser::Parse(const char* start, const char* end) {
 		if (*p == '\\') {
 			slash = true;
 		} else {
-			uint32_t offset = safe_cast<uint32_t>(q - start);
+			uint32_t offset = verify_cast<uint32_t>(q - start);
 			if (*p == '<' && !slash) {
 				PushText(offset, q, p);
 				less = true;
@@ -54,7 +54,7 @@ void TextViewComponent::TagParser::Parse(const char* start, const char* end) {
 		}
 	}
 
-	PushText(safe_cast<uint32_t>(q - start), q, p);
+	PushText(verify_cast<uint32_t>(q - start), q, p);
 }
 
 void TextViewComponent::TagParser::PushReturn(uint32_t offset) {
@@ -66,7 +66,7 @@ bool TextViewComponent::TagParser::ParseAttrib(const char*& valueString, bool& i
 	bool ret = false;
 	valueString = nullptr;
 	isClose = false;
-	const uint32_t len = safe_cast<uint32_t>(strlen(attrib));
+	const uint32_t len = verify_cast<uint32_t>(strlen(attrib));
 	const char* format = start;
 
 	if ((size_t)(end - start) >= len && memcmp(format, attrib, len) == 0) {
@@ -119,7 +119,7 @@ void TextViewComponent::TagParser::PushFormat(uint32_t offset, const char* start
 
 void TextViewComponent::TagParser::PushText(uint32_t offset, const char* start, const char* end) {
 	if (start != end) {
-		uint32_t length = safe_cast<uint32_t>(end - start);
+		uint32_t length = verify_cast<uint32_t>(end - start);
 		nodes.emplace_back(Node(Node::TEXT, offset, length));
 	}
 }
@@ -356,7 +356,7 @@ uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData, DrawC
 	// return 0;
 	if (renderInfos.empty()) return 0;
 
-	uint32_t start = safe_cast<uint32_t>(outputDrawCalls.size());
+	uint32_t start = verify_cast<uint32_t>(outputDrawCalls.size());
 	uint32_t count = BaseClass::CollectDrawCalls(outputDrawCalls, inputRenderData, bytesCache);
 	const Bytes texCoordRectKey = StaticBytes(texCoordRect);
 	const Bytes instanceColorKey = StaticBytes(instanceColor);
@@ -397,7 +397,7 @@ uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData, DrawC
 			renderData.localInstancedData.emplace_back(std::make_pair(paramInstanceColor.slot, Bytes::Null()));
 		}
 
-		drawCall.instanceCounts.x() = safe_cast<uint32_t>(renderInfos.size());
+		drawCall.instanceCounts.x() = verify_cast<uint32_t>(renderInfos.size());
 
 		for (size_t j = 0; j < renderInfos.size(); j++) {
 			RenderInfo& renderInfo = renderInfos[j];
@@ -433,11 +433,11 @@ uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData, DrawC
 		}
 	}
 
-	return safe_cast<uint32_t>(outputDrawCalls.size()) - start;
+	return verify_cast<uint32_t>(outputDrawCalls.size()) - start;
 }
 
 uint32_t TextViewComponent::GetLineCount() const {
-	return safe_cast<uint32_t>(lines.size());
+	return verify_cast<uint32_t>(lines.size());
 }
 
 void TextViewComponent::SetPasswordChar(int ch) {
@@ -489,7 +489,7 @@ int32_t TextViewComponent::Locate(Short2& rowCol, const Short2& pt, bool isPtRow
 		rowCol.y() = Math::Max((int16_t)0, Math::Min((int16_t)(desc.allOffsets.size()), pt.y()));
 
 		if (rowCol.y() == desc.allOffsets.size()) {
-			return safe_cast<uint32_t>(text.size());
+			return verify_cast<uint32_t>(text.size());
 		} else {
 			return desc.allOffsets[rowCol.y()].offset;
 		}
@@ -509,7 +509,7 @@ int32_t TextViewComponent::Locate(Short2& rowCol, const Short2& pt, bool isPtRow
 			if (q != lines.end() && !(*q).allOffsets.empty()) {
 				return q->firstOffset;
 			} else {
-				return safe_cast<uint32_t>(text.size());
+				return verify_cast<uint32_t>(text.size());
 			}
 		} else {
 			return t->offset;

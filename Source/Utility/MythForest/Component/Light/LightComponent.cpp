@@ -261,7 +261,7 @@ void ShadowLayerConfig::TaskData::RenderFrame(Engine& engine) {
 		renderQueues.emplace_back(warp.renderQueue);
 	}
 
-	engine.interfaces.render.PresentQueues(&renderQueues[0], safe_cast<uint32_t>(renderQueues.size()), IRender::PRESENT_EXECUTE_ALL);
+	engine.interfaces.render.PresentQueues(&renderQueues[0], verify_cast<uint32_t>(renderQueues.size()), IRender::PRESENT_EXECUTE_ALL);
 	shadowGrid->Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release);
 
 	Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release);
@@ -298,9 +298,9 @@ void LightComponent::ShadowLayer::CompleteCollect(Engine& engine, TaskData& task
 					IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[k];
 					bufferRange.buffer = buffer;
 					bufferRange.offset = bufferSize;
-					bufferRange.component = safe_cast<uint8_t>(viewSize / (group.instanceCount * sizeof(float)));
+					bufferRange.component = verify_cast<uint8_t>(viewSize / (group.instanceCount * sizeof(float)));
 					warpData.bytesCache.Link(bufferData, data); // it's safe to link different bytesCache's data for read.
-					bufferSize += safe_cast<uint32_t>(viewSize);
+					bufferSize += verify_cast<uint32_t>(viewSize);
 				}
 			}
 

@@ -62,7 +62,7 @@ IRender::Resource::DrawCallDescription::BufferRange BatchComponent::Allocate(con
 
 	IRender::Resource::DrawCallDescription::BufferRange bufferRange;
 	bufferRange.buffer = buffer;
-	bufferRange.offset = safe_cast<uint32_t>(curSize);
+	bufferRange.offset = verify_cast<uint32_t>(curSize);
 	bufferRange.length = appendSize;
 	Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
 

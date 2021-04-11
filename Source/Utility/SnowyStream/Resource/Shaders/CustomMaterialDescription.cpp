@@ -143,7 +143,7 @@ void CustomMaterialDescription::ReflectUniformTemplate(IReflect& reflect, Instan
 			DummyMetaChain<IShader::BindInput> chainSchemaBinding(schemaBinding);
 			DummyMetaChain<IShader::BindBuffer> chain(uniformBuffer, var.schema == 0xFF ? nullptr : &chainSchemaBinding);
 			// Make alignment
-			uint32_t size = safe_cast<uint32_t>(type->GetSize());
+			uint32_t size = verify_cast<uint32_t>(type->GetSize());
 			offset = (offset + size - 1) & Math::AlignmentMask(size); // make alignment for variable
 
 			if (var.slot != 0xFFFF) { // depends
@@ -221,7 +221,7 @@ void CustomMaterialDescription::ReflectOptionTemplate(IReflect& reflect, Instanc
 		// extra data
 		static IReflectObject dummy;
 		// Make alignment
-		uint32_t size = safe_cast<uint32_t>(var.value.GetSize());
+		uint32_t size = verify_cast<uint32_t>(var.value.GetSize());
 		Unique type = UniqueType<bool>::Get();
 
 		// bool?
@@ -349,19 +349,19 @@ void CustomMaterialDescription::SetComplete(InstanceData& instanceData) {
 				Unique type = UniqueFromEntryType(var.type);
 				static IReflectObject dummy;
 				// Make alignment
-				size_t size = safe_cast<uint32_t>(type->GetSize());
+				size_t size = verify_cast<uint32_t>(type->GetSize());
 				uniformOffset = (uniformOffset + size - 1) & Math::AlignmentMask(size); // make alignment for variable
 
 				uniformBufferData.Resize(uniformOffset + size);
 				memcpy(uniformBufferData.GetData() + uniformOffset, var.value.GetData(), size);
 
-				var.offset = safe_cast<uint32_t>(uniformOffset);
+				var.offset = verify_cast<uint32_t>(uniformOffset);
 				uniformOffset += size;
 			}
 		} else if (var.var == VAR_OPTION) {
 			if (var.value.GetSize() == sizeof(bool)) {
 				optionBufferData.Append(var.value.GetData(), sizeof(bool));
-				var.offset = safe_cast<uint32_t>(optionOffset++);
+				var.offset = verify_cast<uint32_t>(optionOffset++);
 			} else {
 				assert(var.value.GetSize() == sizeof(uint32_t));
 				// padding
@@ -372,7 +372,7 @@ void CustomMaterialDescription::SetComplete(InstanceData& instanceData) {
 				optionBufferData.Resize(optionOffset + sizeof(value), false);
 				*(uint32_t*)(optionBufferData.GetData() + optionOffset) = value;
 
-				var.offset = safe_cast<uint32_t>(optionOffset);
+				var.offset = verify_cast<uint32_t>(optionOffset);
 				optionOffset += sizeof(value);
 			}
 		}
@@ -387,10 +387,10 @@ void CustomMaterialDescription::SetInput(const String& category, const String& t
 	Entry var;
 
 	if (type == "texture") { // resource name
-		var.SetValue(IAsset::TextureIndex(safe_cast<uint32_t>(uniformTextureBindingsTemplate.size())));
+		var.SetValue(IAsset::TextureIndex(verify_cast<uint32_t>(uniformTextureBindingsTemplate.size())));
 		// encode def path
 		var.value.Assign((const uint8_t*)value.c_str(), value.size());
-		var.offset = safe_cast<uint16_t>(uniformTextureBindingsTemplate.size());
+		var.offset = verify_cast<uint16_t>(uniformTextureBindingsTemplate.size());
 		uniformTextureBindingsTemplate.emplace_back(IShader::BindTexture());
 	} else if (type == "float") {
 		var.SetValue((float)atof(value.c_str()));
@@ -429,13 +429,13 @@ void CustomMaterialDescription::SetInput(const String& category, const String& t
 		assert(false);
 	}
 
-	var.key.Assign((const uint8_t*)name.c_str(), safe_cast<uint32_t>(name.size()));
+	var.key.Assign((const uint8_t*)name.c_str(), verify_cast<uint32_t>(name.size()));
 
 	if (category == "Vertex" || category == "Instance") {
 		IShader::BindBuffer bindBuffer;
 		var.var = VAR_VERTEX;
 		bindBuffer.description.usage = category == "Vertex" ? IRender::Resource::BufferDescription::VERTEX : IRender::Resource::BufferDescription::INSTANCED;
-		var.offset = safe_cast<uint16_t>(vertexBufferBindingsTemplate.size());
+		var.offset = verify_cast<uint16_t>(vertexBufferBindingsTemplate.size());
 		vertexBufferBindingsTemplate.emplace_back(std::move(bindBuffer));
 	} else if (category == "Input") {
 		var.var = VAR_INPUT;
@@ -459,9 +459,9 @@ void CustomMaterialDescription::SetInput(const String& category, const String& t
 				Bytes& key = entry.key;
 				if (memcmp(binding.c_str(), key.GetData(), Math::Min(binding.size(), (size_t)key.GetSize())) == 0) {
 					assert(var.var == VAR_OPTION || entry.var == VAR_OPTION);
-					var.slot = safe_cast<uint16_t>(i);
+					var.slot = verify_cast<uint16_t>(i);
 					if (entry.var == VAR_VERTEX) {
-						entry.slot = safe_cast<uint16_t>(entries.size()); // dual binding
+						entry.slot = verify_cast<uint16_t>(entries.size()); // dual binding
 					}
 					break;
 				}

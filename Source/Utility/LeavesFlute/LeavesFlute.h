@@ -31,6 +31,18 @@ namespace PaintsNow {
 		void Require(IScript::Request& request) override;
 
 		/// <summary>
+		/// Get system platform string
+		/// </summary>
+		/// <returns> system platform string </returns>
+		String RequestGetSystemPlatform(IScript::Request& request);
+
+		/// <summary>
+		/// Get processor bit witdh
+		/// </summary>
+		/// <returns> bit with (e.g. 64 for 64-bit system) </returns>
+		size_t RequestGetProcessorBitWidth(IScript::Request& request);
+
+		/// <summary>
 		/// Listen console input
 		/// </summary>
 		/// <param name="callback"> callback </param>

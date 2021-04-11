@@ -600,7 +600,7 @@ void ZRenderVulkan::PresentQueues(Queue** queues, uint32_t count, PresentOption 
 		info.waitSemaphoreCount = 1;
 		info.pWaitSemaphores = &frame.acquireSemaphore;
 		info.pWaitDstStageMask = &waitStage;
-		info.commandBufferCount = safe_cast<uint32_t>(commandBuffers.size());
+		info.commandBufferCount = verify_cast<uint32_t>(commandBuffers.size());
 		info.pCommandBuffers = &commandBuffers[0];
 		info.signalSemaphoreCount = 1;
 		info.pSignalSemaphores = &frame.releaseSemaphore;
@@ -894,7 +894,7 @@ struct ResourceImplVulkan<IRender::Resource::DrawCallDescription> final : public
 	}
 
 	uint32_t GetVertexBufferCount() {
-		return safe_cast<uint32_t>(signature.GetSize() / 3);
+		return verify_cast<uint32_t>(signature.GetSize() / 3);
 	}
 
 	uint8_t GetVertexBufferBindingIndex(uint32_t index) {
@@ -1085,7 +1085,7 @@ struct ResourceImplVulkan<IRender::Resource::RenderTargetDescription> final : pu
 
 		VkSubpassDescription subPass = {};
 		subPass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-		subPass.colorAttachmentCount = safe_cast<uint32_t>(attachmentReferences.size());
+		subPass.colorAttachmentCount = verify_cast<uint32_t>(attachmentReferences.size());
 		subPass.pColorAttachments = &attachmentReferences[0];
 		subPass.pDepthStencilAttachment = &depthStencilAttachment;
 
@@ -1099,7 +1099,7 @@ struct ResourceImplVulkan<IRender::Resource::RenderTargetDescription> final : pu
 
 		VkRenderPassCreateInfo renderPassInfo = {};
 		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-		renderPassInfo.attachmentCount = safe_cast<uint32_t>(attachmentDescriptions.size());
+		renderPassInfo.attachmentCount = verify_cast<uint32_t>(attachmentDescriptions.size());
 		renderPassInfo.pAttachments = &attachmentDescriptions[0];
 		renderPassInfo.subpassCount = 1;
 		renderPassInfo.pSubpasses = &subPass;
@@ -1119,7 +1119,7 @@ struct ResourceImplVulkan<IRender::Resource::RenderTargetDescription> final : pu
 		VkFramebufferCreateInfo info = {};
 		info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		info.renderPass = renderPass;
-		info.attachmentCount = safe_cast<uint32_t>(cacheDescription.colorStorages.size());
+		info.attachmentCount = verify_cast<uint32_t>(cacheDescription.colorStorages.size());
 		info.pAttachments = &attachments[0];
 		info.layers = 1;
 
@@ -1288,10 +1288,10 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> final : public R
 			ResourceImplVulkan<IRender::Resource::BufferDescription>* buffer = static_cast<ResourceImplVulkan<IRender::Resource::BufferDescription>*>(bufferRange.buffer);
 			IRender::Resource::BufferDescription& desc = buffer->cacheDescription;
 
-			uint32_t bindingIndex = drawCall->GetVertexBufferBindingIndex(safe_cast<uint32_t>(k));
+			uint32_t bindingIndex = drawCall->GetVertexBufferBindingIndex(verify_cast<uint32_t>(k));
 			if (k == bindingIndex) {
 				VkVertexInputBindingDescription bindingDesc = {};
-				bindingDesc.binding = safe_cast<uint32_t>(inputBindingDescriptions.size());
+				bindingDesc.binding = verify_cast<uint32_t>(inputBindingDescriptions.size());
 				assert(bindingDesc.binding == k);
 				bindingDesc.inputRate = desc.usage == IRender::Resource::BufferDescription::INSTANCED ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX;
 				bindingDesc.stride = desc.stride == 0 ? ComputeBufferStride(desc) : desc.stride;
@@ -1313,9 +1313,9 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> final : public R
 
 		VkPipelineVertexInputStateCreateInfo vertexInfo = {};
 		vertexInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-		vertexInfo.vertexBindingDescriptionCount = safe_cast<uint32_t>(inputBindingDescriptions.size());
+		vertexInfo.vertexBindingDescriptionCount = verify_cast<uint32_t>(inputBindingDescriptions.size());
 		vertexInfo.pVertexBindingDescriptions = &inputBindingDescriptions[0];
-		vertexInfo.vertexAttributeDescriptionCount = safe_cast<uint32_t>(inputAttributeDescriptions.size());
+		vertexInfo.vertexAttributeDescriptionCount = verify_cast<uint32_t>(inputAttributeDescriptions.size());
 		vertexInfo.pVertexAttributeDescriptions = &inputAttributeDescriptions[0];
 
 		VkPipelineInputAssemblyStateCreateInfo iaInfo = {};
@@ -1341,7 +1341,7 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> final : public R
 
 		VkPipelineColorBlendStateCreateInfo blendInfo;
 		blendInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-		blendInfo.attachmentCount = safe_cast<uint32_t>(target->cacheDescription.colorStorages.size());
+		blendInfo.attachmentCount = verify_cast<uint32_t>(target->cacheDescription.colorStorages.size());
 		assert(blendInfo.attachmentCount != 0);
 		// TODO: different blend operations
 		// create state instance
@@ -1368,7 +1368,7 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> final : public R
 		VkGraphicsPipelineCreateInfo info = {};
 		info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 		info.flags = 0;
-		info.stageCount = safe_cast<uint32_t>(shaderStageCreateInfos.size());
+		info.stageCount = verify_cast<uint32_t>(shaderStageCreateInfos.size());
 		info.pStages = &shaderStageCreateInfos[0];
 		info.pVertexInputState = &vertexInfo;
 		info.pViewportState = &viewportInfo;
@@ -1472,7 +1472,7 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> final : public R
 					bufferDescriptions.emplace_back(bindBuffer->description);
 					if (bindBuffer->description.usage == IRender::Resource::BufferDescription::UNIFORM || bindBuffer->description.usage == IRender::Resource::BufferDescription::STORAGE) {
 						VkDescriptorSetLayoutBinding binding = {};
-						binding.binding = safe_cast<uint32_t>(uniformBufferBindings.size());
+						binding.binding = verify_cast<uint32_t>(uniformBufferBindings.size());
 						binding.descriptorCount = 1;
 						binding.descriptorType = bindBuffer->description.usage == IRender::Resource::BufferDescription::UNIFORM ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER : VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
 						binding.stageFlags = stageFlags;
@@ -1712,17 +1712,17 @@ void ResourceImplVulkan<IRender::Resource::DrawCallDescription>::Upload(VulkanQu
 			assert(desc.component < 32);
 			assert(bufferRange.offset <= 255);
 
-			uint8_t sameIndex = safe_cast<uint8_t>(i);
+			uint8_t sameIndex = verify_cast<uint8_t>(i);
 			for (size_t n = 0; n < i; n++) {
 				if (description->bufferResources[n].buffer == buffer) {
-					sameIndex = safe_cast<uint8_t>(n);
+					sameIndex = verify_cast<uint8_t>(n);
 					break;
 				}
 			}
 
 			*data++ = sameIndex;
 			*data++ = desc.format << 5 | desc.component;
-			*data++ = safe_cast<uint8_t>(bufferRange.offset);
+			*data++ = verify_cast<uint8_t>(bufferRange.offset);
 		} else if (desc.usage == IRender::Resource::BufferDescription::UNIFORM || desc.usage == IRender::Resource::BufferDescription::STORAGE) {
 			VkDescriptorBufferInfo info = {};
 			info.buffer = buffer->buffer;
@@ -1755,7 +1755,7 @@ void ResourceImplVulkan<IRender::Resource::DrawCallDescription>::Upload(VulkanQu
 			VkWriteDescriptorSet desc = {};
 			desc.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			desc.dstSet = descriptorSetTexture.second;
-			desc.descriptorCount = safe_cast<uint32_t>(imageInfos.size());
+			desc.descriptorCount = verify_cast<uint32_t>(imageInfos.size());
 			desc.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 			desc.pImageInfo = &imageInfos[0];
 
@@ -1766,7 +1766,7 @@ void ResourceImplVulkan<IRender::Resource::DrawCallDescription>::Upload(VulkanQu
 			VkWriteDescriptorSet desc = {};
 			desc.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			desc.dstSet = descriptorSetUniformBuffer.second;
-			desc.descriptorCount = safe_cast<uint32_t>(uniformBufferInfos.size());
+			desc.descriptorCount = verify_cast<uint32_t>(uniformBufferInfos.size());
 			desc.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 			desc.pBufferInfo = &uniformBufferInfos[0];
 			vkUpdateDescriptorSets(device->device, 1, &desc, 0, nullptr);
@@ -1776,7 +1776,7 @@ void ResourceImplVulkan<IRender::Resource::DrawCallDescription>::Upload(VulkanQu
 			VkWriteDescriptorSet desc = {};
 			desc.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			desc.dstSet = descriptorSetStorageBuffer.second;
-			desc.descriptorCount = safe_cast<uint32_t>(storageBufferInfos.size());
+			desc.descriptorCount = verify_cast<uint32_t>(storageBufferInfos.size());
 			desc.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 			desc.pBufferInfo = &storageBufferInfos[0];
 			vkUpdateDescriptorSets(device->device, 1, &desc, 0, nullptr);
@@ -1821,7 +1821,7 @@ void ResourceImplVulkan<IRender::Resource::DrawCallDescription>::Execute(VulkanQ
 		}
 	}
 
-	vkCmdBindVertexBuffers(commandBuffer, 0, safe_cast<uint32_t>(vertexBuffers.size()), &vertexBuffers[0], nullptr);
+	vkCmdBindVertexBuffers(commandBuffer, 0, verify_cast<uint32_t>(vertexBuffers.size()), &vertexBuffers[0], nullptr);
 	vkCmdDrawIndexed(commandBuffer, cacheDescription.indexBufferResource.length / sizeof(UInt3), cacheDescription.instanceCounts.x(), 0, 0, 0);
 }
 

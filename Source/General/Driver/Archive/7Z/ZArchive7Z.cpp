@@ -329,7 +329,7 @@ int ZArchive7Z::main(int argc, char* argv[]) {
 		uint64_t len;
 		IStreamBase* base = dir.Open(argv[1], false, len);
 		if (base != nullptr) {
-			ZArchive7Z z(*base, safe_cast<size_t>(len));
+			ZArchive7Z z(*base, verify_cast<size_t>(len));
 			PrintCallback pb;
 			z.Query("", Wrap(&pb, &PrintCallback::Print));
 			base->Destroy();

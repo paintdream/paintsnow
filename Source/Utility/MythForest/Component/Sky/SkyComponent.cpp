@@ -479,7 +479,7 @@ static TShared<TextureResource> NewTexture2D(SnowyStream& snowyStream, const Str
 	IRender::Queue* renderQueue = snowyStream.GetResourceQueue();
 
 	IRender::Resource::TextureDescription& description = textureResource->description;
-	description.dimension = UShort3(safe_cast<uint16_t>(width), safe_cast<uint16_t>(height), 0);
+	description.dimension = UShort3(verify_cast<uint16_t>(width), verify_cast<uint16_t>(height), 0);
 	description.state.format = IRender::Resource::TextureDescription::FLOAT;
 	description.state.layout = IRender::Resource::TextureDescription::RGBA;
 	description.state.sample = IRender::Resource::TextureDescription::LINEAR;
@@ -495,7 +495,7 @@ static TShared<TextureResource> NewTexture3D(SnowyStream& snowyStream, const Str
 	IRender::Queue* renderQueue = snowyStream.GetResourceQueue();
 
 	IRender::Resource::TextureDescription& description = textureResource->description;
-	description.dimension = UShort3(safe_cast<uint16_t>(width), safe_cast<uint16_t>(height), safe_cast<uint16_t>(depth));
+	description.dimension = UShort3(verify_cast<uint16_t>(width), verify_cast<uint16_t>(height), verify_cast<uint16_t>(depth));
 	description.state.type = IRender::Resource::TextureDescription::TEXTURE_3D;
 	description.state.format = half ? IRender::Resource::TextureDescription::HALF : IRender::Resource::TextureDescription::FLOAT;
 	description.state.layout = IRender::Resource::TextureDescription::RGBA;

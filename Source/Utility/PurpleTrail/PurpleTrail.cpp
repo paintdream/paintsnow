@@ -152,7 +152,7 @@ struct InspectProcs : public IReflect {
 	}
 
 	void Enum(size_t value, Unique id, const char* name, const MetaChainBase* meta) override {
-		request << key(name) << safe_cast<int32_t>(value);
+		request << key(name) << verify_cast<int32_t>(value);
 	}
 
 	void WriteReflectObject(IReflectObjectComplex* p) {

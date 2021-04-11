@@ -29,8 +29,6 @@ namespace DotNetBridge {
 	{
 	public:
 		LeavesBridge();
-	private:
-		LeavesBridge(const LeavesBridge%);
 
 	public:
 		void Initialize(PaintsNow::IScript::Request& request);

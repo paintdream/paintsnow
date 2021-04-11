@@ -450,7 +450,7 @@ public:
 		if (stream != nullptr) {
 			if (length != 0) {
 				// read string
-				size_t len = safe_cast<size_t>(length);
+				size_t len = verify_cast<size_t>(length);
 				text.resize(len);
 				if (stream->Read(const_cast<char*>(text.data()), len)) {
 					ret = true;
@@ -562,6 +562,22 @@ void LeavesFlute::RequestSearchMemory(IScript::Request& request, const String& m
 #endif
 }
 
+size_t RequestGetProcessorBitWidth(IScript::Request& request) {
+	return sizeof(size_t) * 8;
+}
+
+String LeavesFlute::RequestGetSystemPlatform(IScript::Request& request) {
+#if defined(_WIN32)
+	return "Windows";
+#elif defined(__linux__)
+	return "Linux";
+#elif defined(__APPLE__)
+	return "MacOS/iOS";
+#else
+	return "Unix"; // maybe
+#endif
+}
+
 size_t LeavesFlute::RequestLoadLibrary(IScript::Request& request, const String& path) {
 	String last = path.substr(path.length() - 3, 3);
 #if defined(__linux__)
@@ -570,7 +586,9 @@ size_t LeavesFlute::RequestLoadLibrary(IScript::Request& request, const String& 
 	}
 #elif defined(_WIN32)
 	if (_stricmp(last.c_str(), "dll") == 0) {
-		return (size_t)::LoadLibraryW((const WCHAR*)Utf8ToSystem(path).c_str());
+		WCHAR fullPathName[MAX_PATH * 4];
+		::GetFullPathNameW((const WCHAR*)Utf8ToSystem(path).c_str(), MAX_PATH * 4, fullPathName, nullptr);
+		return (size_t)::LoadLibraryExW(fullPathName, nullptr, LOAD_WITH_ALTERED_SEARCH_PATH);
 	}
 #endif
 

@@ -149,7 +149,7 @@ struct ResourceCommandImplOpenGL {
 		}
 
 		ResourceBaseImplOpenGL* impl = static_cast<ResourceBaseImplOpenGL*>(GetResource());
-		uint8_t index = safe_cast<uint8_t>(GetOperation());
+		uint8_t index = verify_cast<uint8_t>(GetOperation());
 		assert(index < sizeof(actionTable) / sizeof(actionTable[0]));
 		Action action = actionTable[index];
 #ifdef _DEBUG
@@ -915,7 +915,7 @@ struct ResourceImplOpenGL<IRender::Resource::BufferDescription> final : public R
 		format = d.format;
 		component = d.component;
 		uint32_t orgLength = length;
-		length = d.length == 0 ? (uint32_t)safe_cast<uint32_t>(d.data.GetSize()) : (uint32_t)(d.offset + d.length);
+		length = d.length == 0 ? (uint32_t)verify_cast<uint32_t>(d.data.GetSize()) : (uint32_t)(d.offset + d.length);
 
 		GLuint bufferType = GL_ELEMENT_ARRAY_BUFFER;
 		switch (d.usage) {

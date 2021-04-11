@@ -113,15 +113,15 @@ IFontBase::CHARINFO ZFontFreetype::RenderTexture(Font* font, String& texture, FO
 	memcpy(data, bitmap.buffer, size);
 
 	IFontBase::CHARINFO info;
-	info.height = safe_cast<uint16_t>(bitmap.rows);
-	info.width = safe_cast<uint16_t>(bitmap.width);
-	info.adv.x() = safe_cast<uint16_t>(face->glyph->advance.x / 64);
+	info.height = verify_cast<uint16_t>(bitmap.rows);
+	info.width = verify_cast<uint16_t>(bitmap.width);
+	info.adv.x() = verify_cast<uint16_t>(face->glyph->advance.x / 64);
 	// info.adv.x() = face->glyph->metrics.horiAdvance;
-	info.adv.y() = safe_cast<uint16_t>(face->glyph->advance.y / 64);
-	info.bearing.x() = safe_cast<int16_t>(face->glyph->metrics.horiBearingX / 64);
-	info.bearing.y() = safe_cast<int16_t>(face->glyph->metrics.horiBearingY / 64);
-	info.delta.x() = safe_cast<int16_t>(bitmap_glyph->left);
-	info.delta.y() = safe_cast<int16_t>(bitmap_glyph->top - info.height);
+	info.adv.y() = verify_cast<uint16_t>(face->glyph->advance.y / 64);
+	info.bearing.x() = verify_cast<int16_t>(face->glyph->metrics.horiBearingX / 64);
+	info.bearing.y() = verify_cast<int16_t>(face->glyph->metrics.horiBearingY / 64);
+	info.delta.x() = verify_cast<int16_t>(bitmap_glyph->left);
+	info.delta.y() = verify_cast<int16_t>(bitmap_glyph->top - info.height);
 
 	FT_Done_Glyph(glyph);
 	return info;

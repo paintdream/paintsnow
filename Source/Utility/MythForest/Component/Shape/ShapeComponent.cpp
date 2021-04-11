@@ -12,7 +12,7 @@ static inline UShort3 ToLocalInt(const Float3Pair& bound, const Float3& pt, uint
 	Float3 local = Math::ToLocal(bound, pt);
 	UShort3 ret;
 	for (uint32_t i = 0; i < 3; i++) {
-		ret[i] = safe_cast<uint16_t>(Math::Clamp((uint32_t)(local[i] * divCount), 0u, divCount - 1));
+		ret[i] = verify_cast<uint16_t>(Math::Clamp((uint32_t)(local[i] * divCount), 0u, divCount - 1));
 	}
 
 	return ret;

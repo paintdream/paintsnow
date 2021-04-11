@@ -192,7 +192,7 @@ bool TextureResource::Compress(const String& compressionType) {
 		assert(mapCount.load(std::memory_order_relaxed) == 0);
 		ThreadPool& threadPool = resourceManager.GetThreadPool();
 		if (threadPool.PollExchange(critical, 1u) == 0u) {
-			description.data.Assign((uint8_t*)target.GetBuffer(), safe_cast<uint32_t>(target.GetTotalLength()));
+			description.data.Assign((uint8_t*)target.GetBuffer(), verify_cast<uint32_t>(target.GetTotalLength()));
 			description.state.compress = 1;
 			description.state.layout = IRender::Resource::TextureDescription::RGBA;
 			SpinUnLock(critical);
@@ -220,8 +220,8 @@ bool TextureResource::LoadExternalResource(Interfaces& interfaces, IStreamBase& 
 	if (threadPool.PollExchange(critical, 1u) == 0u) {
 		description.state.layout = layout;
 		description.state.format = dataType;
-		description.dimension.x() = safe_cast<uint16_t>(imageBase.GetWidth(image));
-		description.dimension.y() = safe_cast<uint16_t>(imageBase.GetHeight(image));
+		description.dimension.x() = verify_cast<uint16_t>(imageBase.GetWidth(image));
+		description.dimension.y() = verify_cast<uint16_t>(imageBase.GetHeight(image));
 
 		void* buffer = imageBase.GetBuffer(image);
 		description.data.Assign(reinterpret_cast<uint8_t*>(buffer), (size_t)description.dimension.x() * description.dimension.y() * IImage::GetPixelSize(dataType, layout));

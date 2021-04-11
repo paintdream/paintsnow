@@ -182,8 +182,8 @@ void CameraComponent::Instancing(Engine& engine, TaskData& taskData) {
 
 					assert(bufferRange.buffer == nullptr);
 					bufferRange.buffer = policyData.instanceBuffer;
-					bufferRange.offset = safe_cast<uint32_t>(policyData.instanceOffset); // TODO: alignment
-					bufferRange.component = safe_cast<uint16_t>(viewSize / (group.instanceCount * sizeof(float)));
+					bufferRange.offset = verify_cast<uint32_t>(policyData.instanceOffset); // TODO: alignment
+					bufferRange.component = verify_cast<uint16_t>(viewSize / (group.instanceCount * sizeof(float)));
 					warpData.bytesCache.Link(policyData.instanceData, data);
 					policyData.instanceOffset += viewSize;
 					assert(policyData.instanceOffset == policyData.instanceData.GetViewSize());
@@ -747,7 +747,7 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 						group.instancedData.resize(localInstancedData.first + 1);
 					}
 
-					Bytes bytes = warpData.bytesCache.New(safe_cast<uint32_t>(localInstancedData.second.GetSize()));
+					Bytes bytes = warpData.bytesCache.New(verify_cast<uint32_t>(localInstancedData.second.GetSize()));
 					bytes.Import(0, localInstancedData.second.GetData(), localInstancedData.second.GetSize());
 					warpData.bytesCache.Link(group.instancedData[localInstancedData.first], bytes);
 				}
@@ -757,7 +757,7 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 					group.instanceUpdater->Snapshot(s, bufferResources, textureResources, instanceData, &warpData.bytesCache);
 					assert(drawCall.drawCallDescription.instanceCounts.x() != 0);
 					for (size_t j = 0; j < s.size(); j++) {
-						uint32_t viewSize = safe_cast<uint32_t>(s[j].GetViewSize());
+						uint32_t viewSize = verify_cast<uint32_t>(s[j].GetViewSize());
 						Bytes view = warpData.bytesCache.New(viewSize * drawCall.drawCallDescription.instanceCounts.x());
 						view.Import(0, s[j], drawCall.drawCallDescription.instanceCounts.x());
 						warpData.bytesCache.Link(group.instancedData[j], view);

@@ -48,19 +48,19 @@ namespace PaintsNow {
 
 		template <class T>
 		inline uint32_t UpdateBuffer(IRender& render, IRender::Queue* queue, IRender::Resource*& buffer, std::vector<T>& data, IRender::Resource::BufferDescription::Usage usage, const char* note, uint32_t groupSize = 1) {
-			uint32_t size = safe_cast<uint32_t>(data.size());
+			uint32_t size = verify_cast<uint32_t>(data.size());
 			if (!data.empty()) {
 				IRender::Resource::BufferDescription description;
-				description.data.Resize(safe_cast<uint32_t>(data.size() * sizeof(T)));
+				description.data.Resize(verify_cast<uint32_t>(data.size() * sizeof(T)));
 				description.usage = usage;
 #if defined(_MSC_VER) && _MSC_VER <= 1200
-				description.component = safe_cast<uint8_t>(sizeof(T) / sizeof(T::type) * groupSize);
+				description.component = verify_cast<uint8_t>(sizeof(T) / sizeof(T::type) * groupSize);
 				description.format = MapFormat<T::type>::format;
 #else
-				description.component = safe_cast<uint8_t>(sizeof(T) / sizeof(typename T::type) * groupSize);
+				description.component = verify_cast<uint8_t>(sizeof(T) / sizeof(typename T::type) * groupSize);
 				description.format = MapFormat<typename T::type>::format;
 #endif
-				description.stride = safe_cast<uint16_t>(sizeof(T) * groupSize);
+				description.stride = verify_cast<uint16_t>(sizeof(T) * groupSize);
 				memcpy(description.data.GetData(), &data[0], data.size() * sizeof(T));
 
 				if (buffer == nullptr) {

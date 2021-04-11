@@ -50,7 +50,7 @@ void TextViewComponentModule::RequestSetFontSize(IScript::Request& request, IScr
 	CHECK_DELEGATE(textViewComponent);
 
 	// Get font
-	textViewComponent->fontSize = safe_cast<uint32_t>(fontSize);
+	textViewComponent->fontSize = verify_cast<uint32_t>(fontSize);
 	textViewComponent->SetUpdateMark();
 }
 

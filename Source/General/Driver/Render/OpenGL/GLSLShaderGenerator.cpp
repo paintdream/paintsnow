@@ -281,7 +281,7 @@ void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refT
 							case IRender::Resource::BufferDescription::INSTANCED:
 								assert(typeID->GetSize() < 4 * sizeof(float) || typeID->GetSize() % (4 * sizeof(float)) == 0);
 								statement += String("layout (location = ") + ToString(inputIndex) + ") in " + declareMap[typeID] + " " + name + ";\n";
-								inputIndex += ((uint32_t)safe_cast<uint32_t>(typeID->GetSize()) + sizeof(float) * 3) / (sizeof(float) * 4u);
+								inputIndex += ((uint32_t)verify_cast<uint32_t>(typeID->GetSize()) + sizeof(float) * 3) / (sizeof(float) * 4u);
 								break;
 							}
 						} else {

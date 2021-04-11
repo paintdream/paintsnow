@@ -31,7 +31,7 @@ void EventComponent::Execute(void* context) {
 
 		if (rootEntity->Flag().load(std::memory_order_relaxed) & Entity::ENTITY_HAS_TICK_EVENT) {
 			Event event(*reinterpret_cast<Engine*>(context), Event::EVENT_TICK, this, nullptr);
-			event.counter = safe_cast<uint32_t>(tickTimeDelta);
+			event.counter = verify_cast<uint32_t>(tickTimeDelta);
 			event.timestamp = tickTimeStamp;
 			rootEntity->PostEvent(event, Entity::ENTITY_HAS_TICK_EVENT);
 		}

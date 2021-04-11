@@ -183,8 +183,8 @@ void RenderStage::SetMainResolution(Engine& engine, IRender::Queue* resourceQueu
 		uint16_t width = res.x(), height = res.y();
 		IRender& render = engine.interfaces.render;
 		assert(width != 0 && height != 0);
-		width = safe_cast<uint16_t>(resolutionShift.x() > 0 ? Math::Max(width >> resolutionShift.x(), 2) : width << resolutionShift.x());
-		height = safe_cast<uint16_t>(resolutionShift.y() > 0 ? Math::Max(height >> resolutionShift.y(), 2) : height << resolutionShift.y());
+		width = verify_cast<uint16_t>(resolutionShift.x() > 0 ? Math::Max(width >> resolutionShift.x(), 2) : width << resolutionShift.x());
+		height = verify_cast<uint16_t>(resolutionShift.y() > 0 ? Math::Max(height >> resolutionShift.y(), 2) : height << resolutionShift.y());
 
 		const std::vector<PortInfo>& portInfos = GetPorts();
 		for (size_t i = 0; i < portInfos.size(); i++) {

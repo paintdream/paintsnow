@@ -161,7 +161,7 @@ Short2 ZFrameWin32AttachWindow::MakePoint(LPARAM lParam) {
 	point.y = HIWORD(lParam);
 	::ScreenToClient(window, &point);
 
-	return Short2(safe_cast<short>(point.x), safe_cast<short>(point.y));
+	return Short2(verify_cast<short>(point.x), verify_cast<short>(point.y));
 }
 
 bool ZFrameWin32AttachWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -178,10 +178,10 @@ bool ZFrameWin32AttachWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 		::InvalidateRect(hWnd, NULL, TRUE); // Prepare for next rendering
 		break;
 	case WM_KEYDOWN:
-		callback->OnKeyboard(ConvertKeyMessage(safe_cast<UINT>(wParam), HIWORD(lParam), 0));
+		callback->OnKeyboard(ConvertKeyMessage(verify_cast<UINT>(wParam), HIWORD(lParam), 0));
 		break;
 	case WM_KEYUP:
-		callback->OnKeyboard(ConvertKeyMessage(safe_cast<UINT>(wParam), HIWORD(lParam), IFrame::EventKeyboard::KEY_POP));
+		callback->OnKeyboard(ConvertKeyMessage(verify_cast<UINT>(wParam), HIWORD(lParam), IFrame::EventKeyboard::KEY_POP));
 		break;
 	case WM_MOUSEWHEEL:
 		callback->OnMouse(IFrame::EventMouse((short)HIWORD(wParam) > 0, false, false, true, MakePoint(lParam)));

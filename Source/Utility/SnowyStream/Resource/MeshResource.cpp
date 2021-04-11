@@ -107,7 +107,7 @@ void MeshResource::Upload(IRender& render, void* deviceContext) {
 				indices.reserve(meshCollection.indices.size());
 				for (size_t i = 0; i < meshCollection.indices.size(); i++) {
 					const UInt3& v = meshCollection.indices[i];
-					indices.emplace_back(UChar3(safe_cast<uint8_t>(v.x()), safe_cast<uint8_t>(v.y()), safe_cast<uint8_t>(v.z())));
+					indices.emplace_back(UChar3(verify_cast<uint8_t>(v.x()), verify_cast<uint8_t>(v.y()), verify_cast<uint8_t>(v.z())));
 				}
 
 				deviceElementSize = sizeof(UChar3);
@@ -117,7 +117,7 @@ void MeshResource::Upload(IRender& render, void* deviceContext) {
 				indices.reserve(meshCollection.indices.size());
 				for (size_t i = 0; i < meshCollection.indices.size(); i++) {
 					const UInt3& v = meshCollection.indices[i];
-					indices.emplace_back(UShort3(safe_cast<uint16_t>(v.x()), safe_cast<uint16_t>(v.y()), safe_cast<uint16_t>(v.z())));
+					indices.emplace_back(UShort3(verify_cast<uint16_t>(v.x()), verify_cast<uint16_t>(v.y()), verify_cast<uint16_t>(v.z())));
 				}
 
 				deviceElementSize = sizeof(UShort3);

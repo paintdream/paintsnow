@@ -60,7 +60,7 @@ void SkeletonResource::PrepareOffsetTransform(size_t k) {
 static uint32_t LocateFrame(const std::vector<float>& frames, float time) {
 	assert(!frames.empty());
 	size_t frame = std::lower_bound(frames.begin(), frames.end(), time) - frames.begin();
-	return safe_cast<uint32_t>(Math::Min(frame, frames.size() - 1));
+	return verify_cast<uint32_t>(Math::Min(frame, frames.size() - 1));
 }
 
 const IAsset::BoneAnimation& SkeletonResource::GetBoneAnimation() const {

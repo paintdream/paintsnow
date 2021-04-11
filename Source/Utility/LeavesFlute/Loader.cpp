@@ -160,9 +160,9 @@ void Loader::Run(const CmdLine& cmdLine) {
 			mount = (*p).second.name;
 		} else if ((*p).first == "Warp") {
 			// According to Unit::WARP_INDEX
-			warpCount = Math::Min(maxWarpCount, (uint32_t)safe_cast<uint32_t>(atoi((*p).second.name.c_str())));
+			warpCount = Math::Min(maxWarpCount, (uint32_t)verify_cast<uint32_t>(atoi((*p).second.name.c_str())));
 		} else if ((*p).first == "Thread") {
-			int32_t expectedThreadCount = (int32_t)safe_cast<int32_t>(atoi((*p).second.name.c_str()));
+			int32_t expectedThreadCount = (int32_t)verify_cast<int32_t>(atoi((*p).second.name.c_str()));
 			if (expectedThreadCount <= 0) {
 				threadCount += expectedThreadCount;
 			} else {

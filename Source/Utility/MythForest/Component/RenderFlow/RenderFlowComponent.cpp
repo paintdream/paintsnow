@@ -155,11 +155,11 @@ void RenderFlowComponent::Render(Engine& engine) {
 				render.PresentQueues(&resourceQueue, 1, IRender::PRESENT_EXECUTE_ALL);
 
 				if (!instantQueues.empty()) {
-					render.PresentQueues(&instantQueues[0], safe_cast<uint32_t>(instantQueues.size()), IRender::PRESENT_EXECUTE_ALL);
+					render.PresentQueues(&instantQueues[0], verify_cast<uint32_t>(instantQueues.size()), IRender::PRESENT_EXECUTE_ALL);
 				}
 
 				if (!repeatQueues.empty()) {
-					render.PresentQueues(&repeatQueues[0], safe_cast<uint32_t>(repeatQueues.size()), IRender::PRESENT_REPEAT);
+					render.PresentQueues(&repeatQueues[0], verify_cast<uint32_t>(repeatQueues.size()), IRender::PRESENT_REPEAT);
 				}
 
 				m = n + 1;
@@ -383,7 +383,7 @@ void RenderFlowComponent::SetMainResolution(Engine& engine) {
 		if (size.x() == 0 || size.y() == 0) return;
 
 		if (mainResolution.x() != size.x() || mainResolution.y() != size.y()) {
-			mainResolution = UShort2(safe_cast<uint16_t>(size.x()), safe_cast<uint16_t>(size.y()));
+			mainResolution = UShort2(verify_cast<uint16_t>(size.x()), verify_cast<uint16_t>(size.y()));
 			updateResolution = true;
 		}
 	} else if (!!(Flag().load(std::memory_order_relaxed) & RENDERFLOWCOMPONENT_RESOLUTION_MODIFIED)) {

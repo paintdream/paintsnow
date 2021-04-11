@@ -55,7 +55,7 @@ void SnowyStream::Initialize() {
 		uint64_t modifiedTime = 0;
 		IStreamBase* stream = archive.Open(defMount, false, length, &modifiedTime);
 		if (stream != nullptr) {
-			TShared<File> file = TShared<File>::From(new File(stream, safe_cast<size_t>(length), modifiedTime));
+			TShared<File> file = TShared<File>::From(new File(stream, verify_cast<size_t>(length), modifiedTime));
 			IArchive* ar = subArchiveCreator(*file->GetStream(), file->GetLength());
 			defMountInstance = TShared<Mount>::From(new Mount(archive, "", ar, file));
 		} else {
@@ -227,7 +227,7 @@ void SnowyStream::RequestFetchFileData(IScript::Request& request, const String& 
 	bool success = false;
 	if (stream != nullptr) {
 		String buf;
-		size_t len = safe_cast<size_t>(length);
+		size_t len = verify_cast<size_t>(length);
 		buf.resize(len);
 
 		if (stream->Read(const_cast<char*>(buf.data()), len)) {
@@ -260,7 +260,7 @@ TShared<File> SnowyStream::RequestNewFile(IScript::Request& request, const Strin
 	uint64_t modifiedTime = 0;
 	IStreamBase* stream = path == ":memory:" ? new MemoryStream(0x1000, true) : archive.Open(path, write, length, &modifiedTime);
 	if (stream != nullptr) {
-		return TShared<File>::From(new File(stream, safe_cast<size_t>(length), modifiedTime));
+		return TShared<File>::From(new File(stream, verify_cast<size_t>(length), modifiedTime));
 	} else {
 		return nullptr;
 	}
@@ -426,7 +426,7 @@ public:
 	void Start(IScript::Request& request) {
 		ThreadPool& threadPool = bridgeSunset.GetKernel().GetThreadPool();
 		ReferenceObject();
-		for (uint32_t i = 0; i < safe_cast<uint32_t>(pathList.size()); i++) {
+		for (uint32_t i = 0; i < verify_cast<uint32_t>(pathList.size()); i++) {
 			// Create async task and use low-level thread pool dispatching it
 			// Do not occupy all threads.
 			threadPool.Dispatch(CreateTask(Wrap(this, &TaskResourceCreator::RoutineCreateResource), i), 1);
