@@ -73,7 +73,7 @@ namespace PaintsNow {
 				};
 
 				enum Sample {
-					POINT, LINEAR, ANSOTRIPIC
+					POINT, LINEAR, ANSOTRIPIC, TRILINEAR
 				};
 
 				enum Media {

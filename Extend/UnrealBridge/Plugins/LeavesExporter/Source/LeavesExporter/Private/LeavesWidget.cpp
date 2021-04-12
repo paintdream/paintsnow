@@ -360,8 +360,10 @@ void SLeavesWidget::OnExportTextureResource(UTexture* t, T op) {
 			break;
 		case TextureFilter::TF_Default:
 		case TextureFilter::TF_Bilinear:
-		case TextureFilter::TF_Trilinear:
 			state.sample = IRender::Resource::TextureDescription::LINEAR;
+			break;
+		case TextureFilter::TF_Trilinear:
+			state.sample = IRender::Resource::TextureDescription::TRILINEAR;
 			break;
 		}
 

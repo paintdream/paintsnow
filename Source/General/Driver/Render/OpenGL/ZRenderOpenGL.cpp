@@ -813,7 +813,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 			}
 		}
 
-		glTexParameteri(textureType, GL_TEXTURE_MIN_FILTER, d.state.sample == Resource::TextureDescription::POINT ? GL_NEAREST : GL_LINEAR);
+		glTexParameteri(textureType, GL_TEXTURE_MIN_FILTER, d.state.sample == Resource::TextureDescription::POINT ? GL_NEAREST : d.state.sample == Resource::TextureDescription::TRILINEAR ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
 		glTexParameteri(textureType, GL_TEXTURE_MAG_FILTER, d.state.sample == Resource::TextureDescription::POINT ? GL_NEAREST : GL_LINEAR);
 
 		// PCF?
