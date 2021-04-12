@@ -3,12 +3,19 @@
 #include <vcclr.h>
 
 using namespace System::Text;
+using namespace System::Collections;
 using namespace System::Diagnostics;
 using namespace System::Reflection;
 using namespace System::Linq;
 using namespace System::Linq::Expressions;
 using namespace PaintsNow;
 using namespace DotNetBridge;
+
+class SharpObjectReference : public SharedTiny
+{
+public:
+	gcroot<System::Object^> object;
+};
 
 static PaintsNow::String FromManagedString(System::String^ str)
 {
@@ -57,17 +64,51 @@ static void WriteValue(IScript::Request& request, Object^ object)
 		case TypeCode::Int32:
 		case TypeCode::Int64:
 			request << safe_cast<int64_t>(object);
-			break;
+			return;
 		case TypeCode::Decimal:
 		case TypeCode::Double:
 		case TypeCode::Single:
 			request << safe_cast<double>(object);
-			break;
+			return;
 		case TypeCode::String:
 			request << FromManagedString(safe_cast<System::String^>(object));
-			break;
+			return;
 		}
 
+		IDictionary^ dictionary = dynamic_cast<IDictionary^>(object);
+		if (dictionary != nullptr)
+		{
+			IDictionaryEnumerator^ it = dictionary->GetEnumerator();
+			request << begintable;
+			while (it->MoveNext())
+			{
+				request << key(FromManagedString(it->Key->ToString()));
+				WriteValue(request, it->Value);
+			}
+			request << endtable;
+		}
+		else
+		{
+			// A enumerable?
+			IEnumerable^ enumerable = dynamic_cast<IEnumerable^>(object);
+			if (enumerable != nullptr)
+			{
+				IEnumerator^ it = enumerable->GetEnumerator();
+				request << beginarray;
+				while (it->MoveNext())
+				{
+					WriteValue(request, it->Current);
+				}
+				request << endarray;
+			}
+			else
+			{
+				SharpObjectReference* dref = new SharpObjectReference();
+				dref->object = object;
+				request << dref;
+				dref->ReleaseObject();
+			}
+		}
 	}
 }
 
@@ -123,16 +164,34 @@ static Object^ ReadValue(LeavesBridge^ bridge, IScript::Request& request)
 	case IScript::Request::TABLE:
 	case IScript::Request::ARRAY:
 	{
-		// TODO: support dict
 		IScript::Request::TableStart ts;
 		request >> ts;
-		array<Object^>^ arr = gcnew array<Object^>((int)ts.count);
-		for (int i = 0; i < (int)ts.count; i++)
+		Object^ ret = nullptr;
+		if (ts.count != 0)
 		{
-			arr[i] = ReadValue(bridge, request);
+			array<Object^>^ arr = gcnew array<Object^>((int)ts.count);
+			for (int i = 0; i < (int)ts.count; i++)
+			{
+				arr[i] = ReadValue(bridge, request);
+			}
+
+			ret = arr;
+		}
+		else
+		{
+			std::vector<IScript::Request::Key> keys = request.Enumerate();
+			Generic::Dictionary<System::String^, Object^>^ dict = gcnew Generic::Dictionary<System::String^, Object^>();
+			for (size_t i = 0; i < keys.size(); i++)
+			{
+				request >> keys[i];
+				Object^ value = ReadValue(bridge, request);
+				dict->Add(ToManagedString(keys[i].name), value);
+			}
+
+			ret = dict;
 		}
 		request >> endtable;
-		return arr;
+		return ret;
 	}
 	case IScript::Request::FUNCTION:
 	case IScript::Request::OBJECT:
@@ -254,16 +313,13 @@ static Object^ ReadValueTyped(LeavesBridge^ bridge, IScript::Request& request, T
 			}
 		}
 		}
+
+		// TODO: process dict
 	}
 
 	return nullptr;
 }
 
-class SharpObjectReference : public SharedTiny
-{
-public:
-	gcroot<System::Object^> object;
-};
 
 class SharpDelegateReference : public SharpObjectReference
 {
