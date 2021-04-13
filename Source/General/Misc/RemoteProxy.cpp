@@ -546,7 +546,7 @@ Variant& Variant::operator = (const Variant& var) {
 
 // Request Apis
 
-RemoteProxy::Request::Request(RemoteProxy& h, ITunnel::Connection* c, const TWrapper<void, IScript::Request&, bool, STATUS, const String&>& sh) : host(h), threadApi(host.threadApi), stream(CHUNK_SIZE, true), statusHandler(sh), idx(0), initCount(0), tableLevel(0), connection(c), manually(false) {
+RemoteProxy::Request::Request(RemoteProxy& h, ITunnel::Connection* c, const TWrapper<void, IScript::Request&, bool, STATUS, const String&>& sh) : host(h), threadApi(host.threadApi), stream(CHUNK_SIZE, true), statusHandler(sh), idx(0), initCount(0), tableLevel(0), connection(c), manually(false), isKey(false) {
 	syncCallEvent = threadApi.NewEvent();
 	MethodInspector inspector((IScript::Object*)UNIQUE_GLOBAL, globalRoutines);
 	(*this)(inspector);
@@ -600,10 +600,6 @@ IScript::Request::TYPE RemoteProxy::Request::GetCurrentType() {
 	Variant& var = buffer[buffer.size() - 1];
 	assert(false); // not implemented
 	return NIL;
-}
-
-std::vector<IScript::Request::Key> RemoteProxy::Request::Enumerate() {
-	return std::vector<IScript::Request::Key>(); // not allowed
 }
 
 static int IncreaseTableIndex(std::vector<Variant>& buffer, int count = 1) {
@@ -807,11 +803,12 @@ void RemoteProxy::Request::RequestQueryObject(IScript::Request& request, IScript
 	request.DoLock();
 	request << beginarray;
 
+	IScript::Request::Key key;
 	for (size_t i = 0; i < info.collection.size(); i++) {
 		request << begintable;
 		const ObjectInfo::Entry& entry = info.collection[i];
-		request << IScript::Request::Key("Name") << entry.name;
-		request << IScript::Request::Key("Arguments") << beginarray;
+		request << key("Name") << entry.name;
+		request << key("Arguments") << beginarray;
 		for (size_t j = 1; j < entry.params.size(); j++) {
 			request << entry.params[j].type->GetName();
 		}
@@ -836,11 +833,13 @@ IScript::Request::Ref RemoteProxy::Request::Load(const String& script, const Str
 }
 
 IScript::Request& RemoteProxy::Request::operator << (const Nil& nil) {
+	assert(!isKey);
 	Write(*this, nil);
 	return *this;
 }
 
 IScript::Request& RemoteProxy::Request::operator << (const Global&) {
+	assert(!isKey);
 	assert(false);
 	/*
 	buffer.emplace_back(Variant((IDispatch*)host.globalObject));
@@ -851,45 +850,68 @@ IScript::Request& RemoteProxy::Request::operator << (const Global&) {
 
 IScript::Request& RemoteProxy::Request::operator << (const Key& k) {
 	assert(key.empty());
-	key = k.name;
+	assert(!isKey);
+	isKey = true;
+	// key = k.name;
 	return *this;
 }
 
 IScript::Request& RemoteProxy::Request::operator >> (const Key& k) {
-	key = k.name;
+	assert(!isKey);
+	isKey = true;
+	// key = k.name;
+	return *this;
+}
+
+IScript::Request& RemoteProxy::Request::operator >> (Iterator& it) {
+	assert(false); // not allowed
 	return *this;
 }
 
 IScript::Request& RemoteProxy::Request::operator << (double value) {
+	assert(!isKey);
 	Write(*this, value);
 	return *this;
 }
 
 IScript::Request& RemoteProxy::Request::operator >> (double& value) {
+	assert(!isKey);
 	Read(*this, value);
 
 	return *this;
 }
 
 IScript::Request& RemoteProxy::Request::operator << (const String& str) {
-	Write(*this, str);
+	if (isKey) {
+		key = str;
+		isKey = false;
+	} else {
+		Write(*this, str);
+	}
 
 	return *this;
 }
 
 IScript::Request& RemoteProxy::Request::operator >> (String& str) {
-	Read(*this, str);
+	if (isKey) {
+		key = str;
+		isKey = false;
+	} else {
+		Read(*this, str);
+	}
 
 	return *this;
 }
 
 IScript::Request& RemoteProxy::Request::operator << (const Bytes& str) {
+	assert(!isKey);
 	Write(*this, str);
 
 	return *this;
 }
 
 IScript::Request& RemoteProxy::Request::operator >> (Bytes& str) {
+	assert(!isKey);
 	Read(*this, str);
 
 	return *this;
@@ -897,7 +919,13 @@ IScript::Request& RemoteProxy::Request::operator >> (Bytes& str) {
 
 IScript::Request& RemoteProxy::Request::operator << (const char* str) {
 	assert(str != nullptr);
-	return *this << String(str);
+	if (isKey) {
+		key = str;
+		isKey = false;
+		return *this;
+	} else {
+		return *this << String(str);
+	}
 }
 
 IScript::Request& RemoteProxy::Request::operator >> (const char*& str) {
@@ -906,11 +934,13 @@ IScript::Request& RemoteProxy::Request::operator >> (const char*& str) {
 }
 
 IScript::Request& RemoteProxy::Request::operator << (bool b) {
+	assert(!isKey);
 	Write(*this, b);
 	return *this;
 }
 
 IScript::Request& RemoteProxy::Request::operator >> (bool& b) {
+	assert(!isKey);
 	Read(*this, b);
 	return *this;
 }
@@ -920,6 +950,7 @@ inline IScript::BaseDelegate Reverse(const IScript::BaseDelegate& value) {
 }
 
 IScript::Request& RemoteProxy::Request::operator << (const BaseDelegate& value) {
+	assert(!isKey);
 	IScript::BaseDelegate rev = Reverse(value);
 	Write(*this, rev);
 
@@ -927,6 +958,7 @@ IScript::Request& RemoteProxy::Request::operator << (const BaseDelegate& value) 
 }
 
 IScript::Request& RemoteProxy::Request::operator >> (BaseDelegate& value) {
+	assert(!isKey);
 	value = IScript::BaseDelegate(nullptr);
 	Read(*this, value);
 	// value = Reverse(value);
@@ -935,6 +967,7 @@ IScript::Request& RemoteProxy::Request::operator >> (BaseDelegate& value) {
 }
 
 IScript::Request& RemoteProxy::Request::operator << (const AutoWrapperBase& wrapper) {
+	assert(!isKey);
 	assert(false); // not supported
 	// const AutoWrapperBase* ptr = &wrapper;
 	// Write(*this, ptr);
@@ -942,35 +975,41 @@ IScript::Request& RemoteProxy::Request::operator << (const AutoWrapperBase& wrap
 }
 
 IScript::Request& RemoteProxy::Request::operator << (int64_t u) {
+	assert(!isKey);
 	Write(*this, u);
 	return *this;
 }
 
 IScript::Request& RemoteProxy::Request::operator >> (int64_t& u) {
+	assert(!isKey);
 	Read(*this, u);
 
 	return *this;
 }
 
 IScript::Request& RemoteProxy::Request::MoveVariables(IScript::Request& target, size_t count) {
+	assert(!isKey);
 	assert(false); // not supported
 
 	return *this;
 }
 
 IScript::Request& RemoteProxy::Request::operator << (const ArrayEnd&) {
+	assert(!isKey);
 	buffer.resize(buffer.size() - 2);
 	tableLevel--;
 	return *this;
 }
 
 IScript::Request& RemoteProxy::Request::operator << (const TableEnd&) {
+	assert(!isKey);
 	buffer.resize(buffer.size() - 2);
 	tableLevel--;
 	return *this;
 }
 
 IScript::Request& RemoteProxy::Request::operator >> (const ArrayEnd&) {
+	assert(!isKey);
 	buffer.resize(buffer.size() - 2);
 	tableLevel--;
 
@@ -978,6 +1017,7 @@ IScript::Request& RemoteProxy::Request::operator >> (const ArrayEnd&) {
 }
 
 IScript::Request& RemoteProxy::Request::operator >> (const TableEnd&) {
+	assert(!isKey);
 	buffer.resize(buffer.size() - 2);
 	tableLevel--;
 
@@ -989,6 +1029,7 @@ bool RemoteProxy::Request::IsValid(const BaseDelegate& d) {
 }
 
 IScript::Request& RemoteProxy::Request::operator >> (Arguments& args) {
+	assert(!isKey);
 	args.count = initCount - idx + 1;
 	assert(args.count > 0);
 
@@ -996,6 +1037,7 @@ IScript::Request& RemoteProxy::Request::operator >> (Arguments& args) {
 }
 
 IScript::Request& RemoteProxy::Request::operator >> (Ref& ref) {
+	assert(!isKey);
 	BaseDelegate d;
 	*this >> d;
 	ref = ReferenceEx(&d);
@@ -1003,11 +1045,13 @@ IScript::Request& RemoteProxy::Request::operator >> (Ref& ref) {
 }
 
 IScript::Request& RemoteProxy::Request::operator << (const Ref& ref) {
+	assert(!isKey);
 	*this << *reinterpret_cast<BaseDelegate*>(ref.value);
 	return *this;
 }
 
 bool RemoteProxy::Request::Call(const AutoWrapperBase& wrapper, const Request::Ref& ref) {
+	assert(!isKey);
 	// parse function index
 	if (buffer.empty())
 		return false;
@@ -1114,10 +1158,11 @@ ReflectRoutines::ReflectRoutines(IScript::Request& request, const IScript::BaseD
 		request >> ns;
 		objectInfo.collection.resize(ns.count);
 
+		IScript::Request::Key key;
 		for (size_t i = 0; i < ns.count; i++) {
 			String name;
 			request >> begintable;
-			request >> IScript::Request::Key("Name") >> name;
+			request >> key("Name") >> name;
 			RemoteProxy::ObjectInfo::Entry& entry = objectInfo.collection[i];
 			entry.index = i;
 			entry.name = name;

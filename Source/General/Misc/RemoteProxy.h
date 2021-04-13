@@ -299,7 +299,6 @@ namespace PaintsNow {
 			void QueryInterface(const TWrapper<void, IScript::Request&, IReflectObject&, const Ref&>& callback, IReflectObject& target, const Ref& g) override;
 
 			bool Call(const AutoWrapperBase& defer, const Request::Ref& g) override;
-			std::vector<Key> Enumerate() override;
 			TYPE GetCurrentType() override;
 			IScript::Request::Ref Load(const String& script, const String& pathname = String()) override;
 			IScript::Request& Push() override;
@@ -323,6 +322,7 @@ namespace PaintsNow {
 			IScript::Request& operator >> (const ArrayEnd&) override;
 			IScript::Request& operator << (const Key&) override;
 			IScript::Request& operator >> (const Key&) override;
+			IScript::Request& operator >> (Iterator&) override;
 			IScript::Request& operator << (double value) override;
 			IScript::Request& operator >> (double& value) override;
 			IScript::Request& operator << (const String& str) override;
@@ -400,6 +400,7 @@ namespace PaintsNow {
 			MemoryStream stream;
 
 			bool manually;
+			bool isKey;
 		};
 
 		friend class Request;

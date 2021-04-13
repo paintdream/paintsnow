@@ -193,13 +193,14 @@ static void CopyArray(uint32_t flag, IScript::Request& request, IScript::Request
 		CopyVariable(flag, request, fromRequest, fromRequest.GetCurrentType());
 	}
 
-	std::vector<IScript::Request::Key> keys = fromRequest.Enumerate();
-	for (size_t i = 0; i < keys.size(); i++) {
-		const IScript::Request::Key& k = keys[i];
-		// NIL, NUMBER, INTEGER, STRING, TABLE, FUNCTION, OBJECT
-		fromRequest >> k;
-		request << k;
-		CopyVariable(flag, request, fromRequest, k.type);
+	IScript::Request::Iterator it;
+	while (true) {
+		fromRequest >> it;
+		if (!it) break;
+
+		request << key;
+		CopyVariable(flag, request, fromRequest, it.keyType);
+		CopyVariable(flag, request, fromRequest, it.valueType);
 	}
 
 	request << endarray;
@@ -214,13 +215,14 @@ static void CopyTable(uint32_t flag, IScript::Request& request, IScript::Request
 		CopyVariable(flag, request, fromRequest, fromRequest.GetCurrentType());
 	}
 
-	std::vector<IScript::Request::Key> keys = fromRequest.Enumerate();
-	for (size_t i = 0; i < keys.size(); i++) {
-		const IScript::Request::Key& k = keys[i];
-		// NIL, NUMBER, INTEGER, STRING, TABLE, FUNCTION, OBJECT
-		fromRequest >> k;
-		request << k;
-		CopyVariable(flag, request, fromRequest, k.type);
+	IScript::Request::Iterator it;
+	while (true) {
+		fromRequest >> it;
+		if (!it) break;
+
+		request << key;
+		CopyVariable(flag, request, fromRequest, it.keyType);
+		CopyVariable(flag, request, fromRequest, it.valueType);
 	}
 
 	request << endtable;
