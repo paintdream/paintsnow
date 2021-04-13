@@ -80,7 +80,7 @@ void ScriptReflect::Perform(const IReflectObject& s, void* base, Unique id) {
 
 void ScriptReflect::Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) {
 	if (read) {
-		request >> key(name);
+		request << key(name);
 	} else {
 		request << key(name);
 	}
@@ -112,7 +112,7 @@ void ScriptReflect::Property(IReflectObject& s, Unique typeID, Unique refTypeID,
 			}
 
 			if (read) {
-				request >> endarray;
+				request << endarray;
 			} else {
 				request << endarray;
 			}
@@ -120,7 +120,7 @@ void ScriptReflect::Property(IReflectObject& s, Unique typeID, Unique refTypeID,
 			if (read) {
 				request >> begintable;
 				s(*this);
-				request >> endtable;
+				request << endtable;
 			} else {
 				request << begintable;
 				s(*this);

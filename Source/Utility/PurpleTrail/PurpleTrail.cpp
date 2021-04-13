@@ -26,7 +26,7 @@ struct InspectCustomStructure : public IReflect {
 			const MetaNodeBase* node = t->GetNode();
 			if (!node->IsBasicObject() && node->GetUnique() == typedBaseType) {
 				IScript::MetaVariable::TypedBase* entry = const_cast<IScript::MetaVariable::TypedBase*>(static_cast<const IScript::MetaVariable::TypedBase*>(node));
-				request << key(entry->name.empty() ? name : entry->name);
+				request << key(entry->name.empty() ? name : entry->name.c_str());
 				InspectCustomStructure::ProcessMember(request, typeID, s.IsIterator(), false);
 			}
 		}
@@ -290,7 +290,7 @@ public:
 										SyncProperty((*p).second, it.Get());
 									}
 
-									request >> endarray;
+									request << endarray;
 								} else {
 									request << beginarray;
 

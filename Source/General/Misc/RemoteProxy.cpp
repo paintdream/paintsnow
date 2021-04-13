@@ -856,13 +856,6 @@ IScript::Request& RemoteProxy::Request::operator << (const Key& k) {
 	return *this;
 }
 
-IScript::Request& RemoteProxy::Request::operator >> (const Key& k) {
-	assert(!isKey);
-	isKey = true;
-	// key = k.name;
-	return *this;
-}
-
 IScript::Request& RemoteProxy::Request::operator >> (Iterator& it) {
 	assert(false); // not allowed
 	return *this;
@@ -1008,22 +1001,6 @@ IScript::Request& RemoteProxy::Request::operator << (const TableEnd&) {
 	return *this;
 }
 
-IScript::Request& RemoteProxy::Request::operator >> (const ArrayEnd&) {
-	assert(!isKey);
-	buffer.resize(buffer.size() - 2);
-	tableLevel--;
-
-	return *this;
-}
-
-IScript::Request& RemoteProxy::Request::operator >> (const TableEnd&) {
-	assert(!isKey);
-	buffer.resize(buffer.size() - 2);
-	tableLevel--;
-
-	return *this;
-}
-
 bool RemoteProxy::Request::IsValid(const BaseDelegate& d) {
 	return d.GetRaw() != nullptr;
 }
@@ -1162,7 +1139,7 @@ ReflectRoutines::ReflectRoutines(IScript::Request& request, const IScript::BaseD
 		for (size_t i = 0; i < ns.count; i++) {
 			String name;
 			request >> begintable;
-			request >> key("Name") >> name;
+			request << key("Name") >> name;
 			RemoteProxy::ObjectInfo::Entry& entry = objectInfo.collection[i];
 			entry.index = i;
 			entry.name = name;
@@ -1173,14 +1150,14 @@ ReflectRoutines::ReflectRoutines(IScript::Request& request, const IScript::BaseD
 			/*
 			printf("Name: %s\n", name.c_str());
 			IScript::Request::TableStart ts;
-			request >> key("Arguments") >> ts;
+			request << key("Arguments") >> ts;
 			for (size_t j = 0; j < ts.count; j++) {
 			request >> name;
 			printf("\tArg[%d]: %s\n", (int)j, name.c_str());
 			}*/
-			request >> endtable;
+			request << endtable;
 		}
-		request >> endtable;
+		request << endtable;
 		objectInfo.needQuery = false;
 	} else {
 		for (size_t i = 0; i < objectInfo.collection.size(); i++) {

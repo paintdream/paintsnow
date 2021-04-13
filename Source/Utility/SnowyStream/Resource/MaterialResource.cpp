@@ -274,7 +274,7 @@ void MaterialResource::ScriptModify(IScript::Request& request, const String& act
 					PushValue<MatrixFloat4x4>::PushFloats(request, name, variables);
 					break;
 				}
-				request >> endarray;
+				request << endarray;
 				break;
 			}
 			default:
@@ -282,7 +282,7 @@ void MaterialResource::ScriptModify(IScript::Request& request, const String& act
 				break;
 			}
 		}
-		request >> endarray;
+		request << endarray;
 		request.UnLock();
 
 		MergeParameters(variables);

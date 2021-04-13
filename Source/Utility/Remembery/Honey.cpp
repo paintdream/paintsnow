@@ -186,13 +186,13 @@ void HoneyData::Attach(void* base) {
 				break;
 			}
 		}
-		request >> endtable;
+		request << endtable;
 
 		DynamicInfo* info = uniqueAllocator.AllocFromDescriptor("HoneyDataInstance", fields);
 		dynamicObject = static_cast<DynamicObject*>(info->Create());
 	}
 
-	request >> endtable;
+	request << endtable;
 	request.Pop();
 	count = ts.count;
 	index = 0;
@@ -250,7 +250,7 @@ void HoneyData::Enter() {
 }
 
 void HoneyData::Leave() {
-	*request >> endtable;
+	*request << endtable;
 	request->Pop();
 	request->UnLock();
 }
@@ -261,7 +261,7 @@ bool HoneyData::Next() {
 		for (size_t n = 0; n < sets.size(); n++) {
 			(this->*sets[n])(n);
 		}
-		*request >> endtable;
+		*request << endtable;
 		index++;
 		return true;
 	} else {

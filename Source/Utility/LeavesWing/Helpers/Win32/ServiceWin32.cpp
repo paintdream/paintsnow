@@ -49,7 +49,7 @@ void ServiceWin32::SetupHandler(LeavesFlute& leavesFlute) {
 	IScript::Request& request = leavesFlute.GetInterfaces().script.GetDefaultRequest();
 	request.DoLock();
 	request << global;
-	request >> key("System") >> begintable << key("ToolkitWin32");
+	request << key("System") >> begintable << key("ToolkitWin32");
 	toolkitWin32.Require(request); // register callbacks
 	request << endtable << endtable;
 	request.UnLock();

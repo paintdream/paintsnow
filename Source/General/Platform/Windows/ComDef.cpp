@@ -322,7 +322,7 @@ struct TMaskCast<CAST_REF> {
 				request << handle;
 				request >> begintable;
 				self.Import(br, request);
-				request >> endtable;
+				request << endtable;
 				request.Pop();
 			}
 		}
@@ -362,7 +362,7 @@ struct TMaskCast<CAST_ARRAY> {
 				::SafeArrayPutElement(safeArray, &index, &((VARIANT&)(container.back().var)).intVal);
 			}
 
-			request >> endtable;
+			request << endtable;
 
 			VARIANT& v = (VARIANT&)var;
 			v.vt = VT_ARRAY | MapType<T::type>::VtTypeTarget;

@@ -204,7 +204,7 @@ static void CopyArray(uint32_t flag, IScript::Request& request, IScript::Request
 	}
 
 	request << endarray;
-	fromRequest >> endarray;
+	fromRequest << endarray;
 }
 
 static void CopyTable(uint32_t flag, IScript::Request& request, IScript::Request& fromRequest) {
@@ -226,7 +226,7 @@ static void CopyTable(uint32_t flag, IScript::Request& request, IScript::Request
 	}
 
 	request << endtable;
-	fromRequest >> endtable;
+	fromRequest << endtable;
 }
 
 void RemoteComponent::Call(IScript::Request& fromRequest, const TShared<RemoteRoutine>& remoteRoutine, IScript::Request::Arguments& args) {

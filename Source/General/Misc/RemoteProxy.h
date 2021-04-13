@@ -315,13 +315,10 @@ namespace PaintsNow {
 			IScript::Request& operator << (const TableStart&) override;
 			IScript::Request& operator >> (TableStart&) override;
 			IScript::Request& operator << (const TableEnd&) override;
-			IScript::Request& operator >> (const TableEnd&) override;
 			IScript::Request& operator << (const ArrayStart&) override;
 			IScript::Request& operator >> (ArrayStart&) override;
 			IScript::Request& operator << (const ArrayEnd&) override;
-			IScript::Request& operator >> (const ArrayEnd&) override;
 			IScript::Request& operator << (const Key&) override;
-			IScript::Request& operator >> (const Key&) override;
 			IScript::Request& operator >> (Iterator&) override;
 			IScript::Request& operator << (double value) override;
 			IScript::Request& operator >> (double& value) override;

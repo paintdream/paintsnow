@@ -64,18 +64,18 @@ void Then(IScript::Request& request) {
 	for (size_t i = 0; i < ns.count; i++) {
 		String name;
 		request >> begintable;
-		request >> key("Name") >> name;
+		request << key("Name") >> name;
 		printf("Name: %s\n", name.c_str());
 		IScript::Request::ArrayStart ts;
-		request >> key("Arguments") >> ts;
+		request << key("Arguments") >> ts;
 		for (size_t j = 0; j < ts.count; j++) {
 			request >> name;
 			printf("\tArg[%d]: %s\n", (int)j, name.c_str());
 		}
-		request >> endarray;
-		request >> endtable;
+		request << endarray;
+		request << endtable;
 	}
-	request >> endarray;
+	request << endarray;
 }
 
 void After(IScript::Request& request, IScript::Request::Ref prefab) {

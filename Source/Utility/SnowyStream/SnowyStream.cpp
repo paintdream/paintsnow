@@ -167,7 +167,8 @@ static void WriteValue(IScript::Request& request, const Json::Value& value) {
 	case objectValue:
 		request << begintable;
 		for (it = value.begin(); it != value.end(); ++it) {
-			request << key(StdToUtf8(it.name()));
+			String s = StdToUtf8(it.name());
+			request << key(s);
 			WriteValue(request, *it);
 		}
 		request << endtable;
