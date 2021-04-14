@@ -31,11 +31,13 @@ namespace DotNetBridge {
 		LeavesBridge();
 
 	public:
+		array<Type^>^ emptyTypeArray;
+
+	public:
 		void Initialize(PaintsNow::IScript::Request& request);
 		void Uninitialize(PaintsNow::IScript::Request& request);
 		UIntPtr GetScriptHandle();
 		ScriptReference^ GetGlobal(System::String^ name);
-
 		PaintsNow::IScript* script = nullptr;
 		PaintsNow::IScript::RequestPool* requestPool = nullptr;
 	};

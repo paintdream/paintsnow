@@ -185,6 +185,7 @@ static Object^ ReadValue(LeavesBridge^ bridge, IScript::Request& request)
 			{
 				request >> it;
 				if (!it) break;
+
 				Object^ key = ReadValue(bridge, request);
 				Object^ value = ReadValue(bridge, request);
 				dict->Add(key, value);
@@ -316,7 +317,35 @@ static Object^ ReadValueTyped(LeavesBridge^ bridge, IScript::Request& request, T
 		}
 		}
 
-		// TODO: process dict
+		// check dict, slow
+		array<Type^>^ args = type->GenericTypeArguments;
+		if (args->GetUpperBound(0) - args->GetLowerBound(0) == 1) // 2 args, test dict
+		{
+			MethodInfo^ add = type->GetMethod("Add");
+			if (add != nullptr)
+			{
+				ConstructorInfo^ info = type->GetConstructor(bridge->emptyTypeArray);
+				if (info != nullptr)
+				{
+					Type^ keyType = args[args->GetLowerBound(0)];
+					Type^ valueType = args[args->GetUpperBound(0)];
+					Object^ object = info->Invoke(nullptr);
+
+					IScript::Request::Iterator it;
+					array<Object^>^ params = gcnew array<Object^>(2);
+					while (true)
+					{
+						request >> it;
+						if (!it) break;
+
+						params[0] = ReadValueTyped(bridge, request, keyType);
+						params[1] = ReadValueTyped(bridge, request, valueType);
+
+						add->Invoke(object, params);
+					}
+				}
+			}
+		}
 	}
 
 	return nullptr;
@@ -561,7 +590,10 @@ void LeavesBridge::Uninitialize(IScript::Request& request)
 	requestPool = nullptr;
 }
 
-LeavesBridge::LeavesBridge() {}
+LeavesBridge::LeavesBridge()
+{
+	emptyTypeArray = gcnew array<Type^>{};
+}
 
 extern "C" __declspec(dllexport) void Main(void*, IScript::Request& request)
 {

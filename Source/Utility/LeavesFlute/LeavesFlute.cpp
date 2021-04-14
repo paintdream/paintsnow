@@ -383,7 +383,7 @@ void LeavesFlute::OnConsoleOutput(const String& text) {
 
 void LeavesFlute::Print(const String& str) {
 	// convert utf8 to system encoding
-	const String& text = Utf8ToSystem(str + "\n");
+	String text = Utf8ToSystem(str + "\n");
 #if defined(_WIN32) || defined(WIN32)
 	// wprintf(L"%s\n", text.c_str());
 	if (rawPrint) {
