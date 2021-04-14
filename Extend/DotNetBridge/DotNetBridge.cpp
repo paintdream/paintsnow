@@ -133,7 +133,7 @@ static Object^ ReadValue(LeavesBridge^ bridge, IScript::Request& request)
 	{
 	case IScript::Request::NIL:
 	{
-		void* v;
+		uint64_t v;
 		request >> v;
 		return nullptr;
 	}
@@ -179,18 +179,20 @@ static Object^ ReadValue(LeavesBridge^ bridge, IScript::Request& request)
 		}
 		else
 		{
-			std::vector<IScript::Request::Key> keys = request.Enumerate();
-			Generic::Dictionary<System::String^, Object^>^ dict = gcnew Generic::Dictionary<System::String^, Object^>();
-			for (size_t i = 0; i < keys.size(); i++)
+			Generic::Dictionary<Object^, Object^>^ dict = gcnew Generic::Dictionary<Object^, Object^>();
+			IScript::Request::Iterator it;
+			while (true)
 			{
-				request >> keys[i];
+				request >> it;
+				if (!it) break;
+				Object^ key = ReadValue(bridge, request);
 				Object^ value = ReadValue(bridge, request);
-				dict->Add(ToManagedString(keys[i].name), value);
+				dict->Add(key, value);
 			}
 
 			ret = dict;
 		}
-		request >> endtable;
+		request << endtable;
 		return ret;
 	}
 	case IScript::Request::FUNCTION:
@@ -224,7 +226,7 @@ static Object^ ReadValueTyped(LeavesBridge^ bridge, IScript::Request& request, T
 		{
 			retValue[i] = ReadValueTyped(bridge, request, elementType);
 		}
-		request >> endarray;
+		request << endarray;
 		return retValue;
 	}
 	else
@@ -508,7 +510,7 @@ float ScriptReference::AsFloat()
 
 System::IntPtr ScriptReference::AsHandle()
 {
-	return System::IntPtr(AsObject<void*>(bridge, handle));
+	return System::IntPtr((void*)AsObject<uint64_t>(bridge, handle));
 }
 
 System::String^ ScriptReference::AsString()
@@ -528,7 +530,7 @@ ScriptReference^ LeavesBridge::GetGlobal(System::String^ name)
 	IScript::Request& request = script->GetDefaultRequest();
 	IScript::Request::Ref r;
 	request.DoLock();
-	request << global >> key(FromManagedString(name).c_str()) >> r << endtable;
+	request << global << key(FromManagedString(name).c_str()) >> r << endtable;
 	request.UnLock();
 
 	return gcnew ScriptReference(this, r.value);
