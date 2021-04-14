@@ -874,6 +874,18 @@ IScript::Request& RemoteProxy::Request::operator >> (double& value) {
 	return *this;
 }
 
+
+IScript::Request& RemoteProxy::Request::operator << (const StringView& str) {
+	assert(false);
+
+	return *this;
+}
+
+IScript::Request& RemoteProxy::Request::operator >> (StringView& str) {
+	assert(false);
+	return *this;
+}
+
 IScript::Request& RemoteProxy::Request::operator << (const String& str) {
 	if (isKey) {
 		key = str;

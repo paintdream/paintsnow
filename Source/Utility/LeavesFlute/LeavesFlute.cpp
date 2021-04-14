@@ -258,6 +258,10 @@ bool LeavesFlute::ConsoleProc(IThread::Thread* thread, size_t index) {
 
 void LeavesFlute::OnInitialize(void* param) {}
 
+size_t LeavesFlute::RequestGetProcessorBitWidth(IScript::Request& request) {
+	return sizeof(size_t) * 8;
+}
+
 void LeavesFlute::RequestSetScreenSize(IScript::Request& request, Int2& size) {
 	interfaces.frame.SetWindowSize(size);
 }
@@ -562,10 +566,6 @@ void LeavesFlute::RequestSearchMemory(IScript::Request& request, const String& m
 #endif
 }
 
-size_t RequestGetProcessorBitWidth(IScript::Request& request) {
-	return sizeof(size_t) * 8;
-}
-
 String LeavesFlute::RequestGetSystemPlatform(IScript::Request& request) {
 #if defined(_WIN32)
 	return "Windows";
@@ -635,6 +635,8 @@ TObject<IReflect>& LeavesFlute::operator () (IReflect& reflect) {
 	}
 
 	if (reflect.IsReflectMethod()) {
+		ReflectMethod(RequestGetSystemPlatform)[ScriptMethod = "GetSystemPlatform"];
+		ReflectMethod(RequestGetProcessorBitWidth)[ScriptMethod = "GetProcessorBitWidth"];
 		ReflectMethod(RequestExit)[ScriptMethod = "Exit"];
 		ReflectMethod(RequestPrint)[ScriptMethod = "Print"];
 		ReflectMethod(RequestSetAppTitle)[ScriptMethod = "SetAppTitle"];

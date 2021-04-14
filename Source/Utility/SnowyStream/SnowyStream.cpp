@@ -175,20 +175,20 @@ static void WriteValue(IScript::Request& request, const Json::Value& value) {
 	}
 }
 
-void SnowyStream::RequestParseJson(IScript::Request& request, const String& str) {
+void SnowyStream::RequestParseJson(IScript::Request& request, const StringView& str) {
 	using namespace Json;
 
 	Reader reader;
 	Value document;
 	
-	if (reader.parse(Utf8ToStd(str), document)) {
+	if (reader.parse(str.begin(), str.end(), document)) {
 		request.DoLock();
 		WriteValue(request, document);
 		request.UnLock();
 	}
 }
 
-TShared<Mount>  SnowyStream::RequestMount(IScript::Request& request, const String& path, IScript::Delegate<File> file) {
+TShared<Mount> SnowyStream::RequestMount(IScript::Request& request, const String& path, IScript::Delegate<File> file) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(file);
 

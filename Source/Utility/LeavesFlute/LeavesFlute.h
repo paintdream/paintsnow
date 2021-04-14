@@ -148,8 +148,8 @@ namespace PaintsNow {
 		void OnWindowSize(const IFrame::EventSize&) override;
 		void OnMouse(const IFrame::EventMouse& mouse) override;
 		void OnKeyboard(const IFrame::EventKeyboard& keyboard) override;
-		virtual void OnConsoleOutput(const String& text);
-		virtual void Print(const String& text);
+		void OnConsoleOutput(const String& text);
+		void Print(const String& text);
 
 	protected:
 		Interfaces& interfaces;

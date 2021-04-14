@@ -36,7 +36,7 @@ struct InspectCustomStructure : public IReflect {
 
 	static bool FilterType(const String& name, String& ret, String& count) {
 		// parse name
-		if (name == UniqueType<String>::Get()->GetName() || name == UniqueType<Bytes>::Get()->GetName()) {
+		if (name == UniqueType<String>::Get()->GetName() || name == UniqueType<StringView>::Get()->GetName() || name == UniqueType<Bytes>::Get()->GetName()) {
 			ret = "string";
 			return true;
 		} else if (name.find("std::vector") == 0 || name.find("std::pair") == 0 || name.find("std::list") == 0) {

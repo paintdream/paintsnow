@@ -45,7 +45,7 @@ namespace PaintsNow {
 		/// <param name="objectIndex"> object index, must be lower than max object index </param>
 		/// <param name="propertyIndex"> property index </param>
 		/// <param name="data"> new data </param>
-		void RequestSetPropertyData(IScript::Request& request, IScript::Delegate<DataComponent> dataComponent, size_t objectIndex, size_t propertyIndex, const String& data);
+		void RequestSetPropertyData(IScript::Request& request, IScript::Delegate<DataComponent> dataComponent, size_t objectIndex, size_t propertyIndex, const StringView& data);
 
 		/// <summary>
 		/// Get property data of specified object

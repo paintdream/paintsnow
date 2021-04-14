@@ -125,7 +125,7 @@ namespace PaintsNow {
 		/// </summary>
 		/// <param name="str"> json string </param>
 		/// <returns> json object in cascaded dicts and arrays </returns>
-		void RequestParseJson(IScript::Request& request, const String& str);
+		void RequestParseJson(IScript::Request& request, const StringView& str);
 
 		/// <summary>
 		/// Open or create a file from local file system

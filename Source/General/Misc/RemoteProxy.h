@@ -322,6 +322,8 @@ namespace PaintsNow {
 			IScript::Request& operator >> (Iterator&) override;
 			IScript::Request& operator << (double value) override;
 			IScript::Request& operator >> (double& value) override;
+			IScript::Request& operator << (const StringView& str) override;
+			IScript::Request& operator >> (StringView& str) override;
 			IScript::Request& operator << (const String& str) override;
 			IScript::Request& operator >> (String& str) override;
 			IScript::Request& operator << (const Bytes& str) override;

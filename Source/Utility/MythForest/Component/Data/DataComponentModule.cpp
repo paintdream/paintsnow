@@ -46,7 +46,7 @@ void DataComponentModule::RequestGetProperty(IScript::Request& request, IScript:
 	}
 }
 
-void DataComponentModule::RequestSetPropertyData(IScript::Request& request, IScript::Delegate<DataComponent> dataComponent, size_t objectIndex, size_t propertyIndex, const String& data) {
+void DataComponentModule::RequestSetPropertyData(IScript::Request& request, IScript::Delegate<DataComponent> dataComponent, size_t objectIndex, size_t propertyIndex, const StringView& data) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(dataComponent);
 	CHECK_THREAD_IN_MODULE(dataComponent);
