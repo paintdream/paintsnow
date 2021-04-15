@@ -69,8 +69,7 @@ public:
 		static ResourceImpl r;
 		return &r;
 	}
-	void AcquireResource(Queue* queue, Resource* resource) override {}
-	void ReleaseResource(Queue* queue, Resource* resource) override {}
+	void SetupBarrier(Queue* queue, Barrier* barrier) override {}
 	void UploadResource(Queue* queue, Resource* resource, Resource::Description* description) override {}
 	void RequestDownloadResource(Queue* queue, Resource* resource, Resource::Description* description) override {}
 	void CompleteDownloadResource(Queue* queue, Resource* resource) override {}

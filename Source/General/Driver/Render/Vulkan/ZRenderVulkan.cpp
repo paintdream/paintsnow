@@ -36,6 +36,7 @@ struct ResourceImplVulkanBase : public IRender::Resource {
 	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* description) = 0;
 	virtual void Delete(VulkanQueueImpl* queue) = 0;
 	virtual void Execute(VulkanQueueImpl* queue) = 0;
+	virtual Resource::Type GetResourceType() = 0;
 };
 
 template <class T>
@@ -651,6 +652,10 @@ struct ResourceImplVulkan<IRender::Resource::TextureDescription> final : public 
 	~ResourceImplVulkan() {
 	}
 
+	Resource::Type GetResourceType() override {
+		return RESOURCE_TEXTURE;
+	}
+
 	void Clear(VulkanDeviceImpl* device) {
 		if (imageView != VK_NULL_HANDLE) {
 			vkDestroyImageView(device->device, imageView, device->allocator);
@@ -812,6 +817,10 @@ struct ResourceImplVulkan<IRender::Resource::BufferDescription> final : public R
 		assert(buffer == VK_NULL_HANDLE);
 	}
 
+	Resource::Type GetResourceType() override {
+		return RESOURCE_BUFFER;
+	}
+
 	void Clear(VulkanDeviceImpl* device) {
 		if (buffer != VK_NULL_HANDLE) {
 			vkDestroyBuffer(device->device, buffer, device->allocator);
@@ -891,6 +900,10 @@ struct ResourceImplVulkan<IRender::Resource::DrawCallDescription> final : public
 		descriptorSetUniformBuffer.second = VK_NULL_HANDLE;
 		descriptorSetStorageBuffer.first = nullptr;
 		descriptorSetStorageBuffer.second = VK_NULL_HANDLE;
+	}
+
+	Resource::Type GetResourceType() override {
+		return RESOURCE_DRAWCALL;
 	}
 
 	uint32_t GetVertexBufferCount() {
@@ -992,6 +1005,10 @@ struct ResourceImplVulkan<IRender::Resource::RenderStateDescription> final : pub
 	virtual void Execute(VulkanQueueImpl* queue) override {
 		queue->renderStateDescription = cacheDescription;
 	}
+
+	Resource::Type GetResourceType() override {
+		return RESOURCE_RENDERSTATE;
+	}
 };
 
 static uint32_t EncodeRenderTargetSignature(const IRender::Resource::RenderTargetDescription& desc) {
@@ -1011,6 +1028,10 @@ static uint32_t EncodeRenderTargetSignature(const IRender::Resource::RenderTarge
 template <>
 struct ResourceImplVulkan<IRender::Resource::RenderTargetDescription> final : public ResourceImplVulkanDesc<IRender::Resource::RenderTargetDescription> {
 	ResourceImplVulkan() : signature(0), renderPass(VK_NULL_HANDLE), frameBuffer(VK_NULL_HANDLE) {}
+
+	Resource::Type GetResourceType() override {
+		return RESOURCE_RENDERTARGET;
+	}
 
 	static VkAttachmentLoadOp ConvertLoadOp(uint32_t k) {
 		switch (k) {
@@ -1211,6 +1232,10 @@ template <>
 struct ResourceImplVulkan<IRender::Resource::ShaderDescription> final : public ResourceImplVulkanBase {
 	ResourceImplVulkan() : descriptorSetLayoutTexture(VK_NULL_HANDLE), descriptorSetLayoutUniformBuffer(VK_NULL_HANDLE), descriptorSetLayoutStorageBuffer(VK_NULL_HANDLE), pipelineLayout(VK_NULL_HANDLE) {
 		memset(shaderModules, 0, sizeof(shaderModules));
+	}
+
+	Resource::Type GetResourceType() override {
+		return RESOURCE_SHADER;
 	}
 
 	void Clear(VulkanDeviceImpl* device) {
@@ -1656,14 +1681,64 @@ void ZRenderVulkan::UploadResource(Queue* queue, Resource* resource, Resource::D
 	res->Upload(static_cast<VulkanQueueImpl*>(queue), description);
 }
 
-void ZRenderVulkan::AcquireResource(Queue* queue, Resource* resource) {}
-void ZRenderVulkan::ReleaseResource(Queue* queue, Resource* resource) {}
+void ZRenderVulkan::SetupBarrier(Queue* queue, Barrier* barrier) {
+	// memory barrier?
+	VulkanQueueImpl* q = static_cast<VulkanQueueImpl*>(queue);
+	ResourceImplVulkanBase* resource = static_cast<ResourceImplVulkanBase*>(barrier->resource);
+
+	if (resource == nullptr) {
+		VkMemoryBarrier memoryBarrier;
+		memoryBarrier.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
+		memoryBarrier.pNext = nullptr;
+		memoryBarrier.srcAccessMask = (VkAccessFlags)barrier->srcAccessMask; // totally mapped
+		memoryBarrier.dstAccessMask = (VkAccessFlags)barrier->dstAccessMask; // totally mapped
+
+		vkCmdPipelineBarrier(q->currentCommandBuffer->buffer, (VkPipelineStageFlags)barrier->srcStageMask, (VkPipelineStageFlags)barrier->dstStageMask, (VkDependencyFlags)barrier->dependencyMask, 1, &memoryBarrier, 0, nullptr, 0, nullptr);
+	} else {
+		Resource::Type resourceType = resource->GetResourceType();
+		if (resourceType == Resource::RESOURCE_BUFFER) {
+			ResourceImplVulkan<Resource::BufferDescription>* impl = static_cast<ResourceImplVulkan<Resource::BufferDescription>*>(resource);
+			VkBufferMemoryBarrier memoryBarrier;
+			memoryBarrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+			memoryBarrier.pNext = nullptr;
+			memoryBarrier.srcAccessMask = (VkAccessFlags)barrier->srcAccessMask; // totally mapped
+			memoryBarrier.dstAccessMask = (VkAccessFlags)barrier->dstAccessMask; // totally mapped
+			memoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			memoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			memoryBarrier.buffer = impl->buffer;
+			memoryBarrier.offset = barrier->offset;
+			memoryBarrier.size = barrier->size;
+
+			vkCmdPipelineBarrier(q->currentCommandBuffer->buffer, (VkPipelineStageFlags)barrier->srcStageMask, (VkPipelineStageFlags)barrier->dstStageMask, (VkDependencyFlags)barrier->dependencyMask, 0, nullptr, 1, &memoryBarrier, 0, nullptr);
+		} else if (resourceType == Resource::RESOURCE_TEXTURE) {
+			ResourceImplVulkan<Resource::TextureDescription>* impl = static_cast<ResourceImplVulkan<Resource::TextureDescription>*>(resource);
+			VkImageMemoryBarrier memoryBarrier;
+			memoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+			memoryBarrier.pNext = nullptr;
+			memoryBarrier.srcAccessMask = (VkAccessFlags)barrier->srcAccessMask; // totally mapped
+			memoryBarrier.dstAccessMask = (VkAccessFlags)barrier->dstAccessMask; // totally mapped
+			memoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			memoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			memoryBarrier.image = impl->image;
+			memoryBarrier.oldLayout = (VkImageLayout)barrier->oldLayout;
+			memoryBarrier.newLayout = (VkImageLayout)barrier->newLayout;
+			memoryBarrier.subresourceRange.aspectMask = barrier->aspectMask;
+			memoryBarrier.subresourceRange.baseMipLevel = barrier->baseMipLevel;
+			memoryBarrier.subresourceRange.levelCount = barrier->levelCount;
+			memoryBarrier.subresourceRange.baseArrayLayer = barrier->baseArrayLayer;
+			memoryBarrier.subresourceRange.layerCount = barrier->layerCount;
+
+			vkCmdPipelineBarrier(q->currentCommandBuffer->buffer, (VkPipelineStageFlags)barrier->srcStageMask, (VkPipelineStageFlags)barrier->dstStageMask, (VkDependencyFlags)barrier->dependencyMask, 0, nullptr, 0, nullptr, 1, &memoryBarrier);
+		} else {
+			assert(false);
+		}
+	}
+}
+
 void ZRenderVulkan::RequestDownloadResource(Queue* queue, Resource* resource, Resource::Description* description) {}
 void ZRenderVulkan::CompleteDownloadResource(Queue* queue, Resource* resource) {}
 void ZRenderVulkan::ExecuteResource(Queue* queue, Resource* resource) {}
-void ZRenderVulkan::SetResourceNotation(Resource* lhs, const String& note) {
-
-}
+void ZRenderVulkan::SetResourceNotation(Resource* lhs, const String& note) {}
 
 void ZRenderVulkan::DeleteResource(Queue* queue, Resource* resource) {
 	VulkanQueueImpl* impl = static_cast<VulkanQueueImpl*>(queue);

@@ -1959,12 +1959,8 @@ void ZRenderOpenGL::ExecuteResource(Queue* queue, Resource* resource) {
 	q->QueueCommand(ResourceCommandImplOpenGL(ResourceCommandImplOpenGL::OP_EXECUTE, resource));
 }
 
-void ZRenderOpenGL::AcquireResource(Queue* queue, Resource* resource) {
-	// OpenGL does not support multi-thread committing and reordering
-}
-
-void ZRenderOpenGL::ReleaseResource(Queue* queue, Resource* resource) {
-	// OpenGL does not support multi-thread committing and reordering
+void ZRenderOpenGL::SetupBarrier(Queue* queue, Barrier* barrier) {
+	// OpenGL does not support barriers
 }
 
 void ZRenderOpenGL::SetResourceNotation(Resource* resource, const String& note) {
