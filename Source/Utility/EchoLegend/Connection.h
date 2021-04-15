@@ -29,7 +29,7 @@ namespace PaintsNow {
 		void OnEventHttp(int code);
 		void ScriptUninitialize(IScript::Request& request) override;
 		String Read();
-		void Write(const String& data);
+		void Write(StringView data);
 
 		void GetAddress(IScript::Request& request);
 		void ReadHttpRequest(IScript::Request& request);

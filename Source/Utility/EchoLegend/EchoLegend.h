@@ -112,7 +112,7 @@ namespace PaintsNow {
 		/// <param name="connection"> Connection object </param>
 		/// <param name="data"> data string </param>
 		/// <returns></returns>
-		void RequestWriteConnection(IScript::Request& request, IScript::Delegate<Connection> connection, const String& data);
+		void RequestWriteConnection(IScript::Request& request, IScript::Delegate<Connection> connection, StringView data);
 
 		/// <summary>
 		/// Read data from connection

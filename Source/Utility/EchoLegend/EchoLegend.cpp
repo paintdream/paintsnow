@@ -110,7 +110,7 @@ void EchoLegend::RequestGetConnectionAddresses(IScript::Request& request, IScrip
 	connection->GetAddress(request);
 }
 
-void EchoLegend::RequestWriteConnection(IScript::Request& request, IScript::Delegate<Connection> connection, const String& data) {
+void EchoLegend::RequestWriteConnection(IScript::Request& request, IScript::Delegate<Connection> connection, StringView data) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(connection);
 	connection->Write(data);

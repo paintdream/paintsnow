@@ -24,6 +24,12 @@ namespace PaintsNow {
 		/// <param name="interval"> Specifies the clock interval in milliseconds</param>
 		/// <returns> Clock object </returns>
 		TShared<Clock> RequestNewClock(IScript::Request& request, int64_t interval, int64_t start);
+
+		/// <summary>
+		/// Force set a clock current time
+		/// </summary>
+		/// <param name="clock"> Specifies the clock object </param>
+		/// <param name="time"> Specified new current time </param>
 		void RequestSetClock(IScript::Request& request, IScript::Delegate<Clock> clock, int64_t time);
 
 		/// <summary>

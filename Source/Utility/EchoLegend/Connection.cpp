@@ -158,7 +158,7 @@ String Connection::Read() {
 	}
 }
 
-void Connection::Write(const String& data) {
+void Connection::Write(StringView data) {
 	OPTICK_EVENT();
 	if (Flag().load(std::memory_order_acquire) & TINY_ACTIVATED) {
 		if (Flag().load(std::memory_order_relaxed) & CONNECTION_PACKET_MODE) {
