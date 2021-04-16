@@ -36,18 +36,21 @@ struct ResourceImplVulkanBase : public IRender::Resource {
 	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* description) = 0;
 	virtual void Delete(VulkanQueueImpl* queue) = 0;
 	virtual void Execute(VulkanQueueImpl* queue) = 0;
+	virtual void Download(VulkanQueueImpl* queue, IRender::Resource::Description* description) = 0;
 	virtual Resource::Type GetResourceType() = 0;
 };
 
 template <class T>
 struct ResourceImplVulkanDesc : public ResourceImplVulkanBase {
 	typedef ResourceImplVulkanDesc BaseClass;
-	virtual void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* description) override {
+	void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* description) override {
 		cacheDescription = std::move(*static_cast<T*>(description));
 	}
 
-	virtual void Delete(VulkanQueueImpl* queue) override {}
-	virtual void Execute(VulkanQueueImpl* queue) override {}
+	void Download(VulkanQueueImpl* queue, IRender::Resource::Description* description) override {}
+
+	void Delete(VulkanQueueImpl* queue) override {}
+	void Execute(VulkanQueueImpl* queue) override {}
 
 	T cacheDescription;
 };
@@ -82,7 +85,7 @@ struct DescriptorSetAllocator {
 };
 
 struct VulkanDeviceImpl final : public IRender::Device {
-	VulkanDeviceImpl(VkAllocationCallbacks* alloc, VkPhysicalDevice phy, VkDevice dev, uint32_t family, VkQueue q) : allocator(alloc), physicalDevice(phy), device(dev), resolution(0, 0), queueFamily(family), queue(q), swapChain(VK_NULL_HANDLE), currentFrameIndex(0) {
+	VulkanDeviceImpl(IRender& r, VkAllocationCallbacks* alloc, VkPhysicalDevice phy, VkDevice dev, uint32_t family, VkQueue q) : render(r), allocator(alloc), physicalDevice(phy), device(dev), resolution(0, 0), queueFamily(family), queue(q), swapChain(VK_NULL_HANDLE), currentFrameIndex(0) {
 		for (size_t k = 0; k < sizeof(descriptorAllocators) / sizeof(descriptorAllocators[0]); k++) {
 			DescriptorSetAllocator& alloc = descriptorAllocators[k];
 			alloc.device = this;
@@ -132,6 +135,7 @@ struct VulkanDeviceImpl final : public IRender::Device {
 	}
 
 	std::atomic<uint32_t> critical;
+	IRender& render;
 	VkPhysicalDevice physicalDevice;
 	VkDevice device;
 	VkAllocationCallbacks* allocator;
@@ -239,7 +243,11 @@ struct VulkanQueueImpl final : public IRender::Queue {
 		vkDestroyCommandPool(device->device, commandPool, device->allocator);
 	}
 
+	void DispatchEvents();
+
 	void ClearFrameData() {
+		DispatchEvents();
+
 		while (!deletedResources.Empty()) {
 			ResourceImplVulkanBase* res = deletedResources.Top();
 			res->Delete(this);
@@ -328,6 +336,8 @@ struct VulkanQueueImpl final : public IRender::Queue {
 	TQueueList<VkBuffer, 4> transientDataBuffers;
 	TQueueList<VkCommandBuffer, 4> preparedCommandBuffers;
 	TQueueList<ResourceImplVulkanBase*, 4> deletedResources;
+	TQueueList<ResourceImplVulkanBase*, 4> newEvents;
+	TQueueList<ResourceImplVulkanBase*, 4> pendingEvents;
 };
 
 void VulkanDeviceImpl::CleanupFrame(FrameData& lastFrame) {
@@ -428,7 +438,7 @@ IRender::Device* ZRenderVulkan::CreateDevice(const String& description) {
 			VkBool32 res;
 			vkGetPhysicalDeviceSurfaceSupportKHR(device, family, (VkSurfaceKHR)surface, &res);
 
-			VulkanDeviceImpl* impl = new VulkanDeviceImpl(allocator, device, logicDevice, family, queue);
+			VulkanDeviceImpl* impl = new VulkanDeviceImpl(*this, allocator, device, logicDevice, family, queue);
 
 			int w, h;
 			glfwGetFramebufferSize(window, &w, &h);
@@ -937,6 +947,61 @@ struct ResourceImplVulkan<IRender::Resource::DrawCallDescription> final : public
 	Bytes signature;
 };
 
+template <>
+struct ResourceImplVulkan<IRender::Resource::EventDescription> final : public ResourceImplVulkanDesc<IRender::Resource::EventDescription> {
+	ResourceImplVulkan() : eventHandle(VK_NULL_HANDLE) {}
+	void Upload(VulkanQueueImpl* queue, IRender::Resource::Description* d) override {
+		if (eventHandle == VK_NULL_HANDLE) {
+			VkEventCreateInfo info;
+			info.sType = VK_STRUCTURE_TYPE_EVENT_CREATE_INFO;
+			info.pNext = nullptr;
+			info.flags = 0;
+			vkCreateEvent(queue->device->device, &info, queue->device->allocator, &eventHandle);
+		}
+
+		EventDescription* ed = static_cast<EventDescription*>(d);
+		if (ed->setState) {
+			if (ed->newState) {
+				vkSetEvent(queue->device->device, eventHandle);
+			} else {
+				vkResetEvent(queue->device->device, eventHandle);
+			}
+		}
+
+		if (ed->setCallback) {
+			cacheDescription.eventCallback = std::move(ed->eventCallback);
+		}
+	}
+
+	void Download(VulkanQueueImpl* queue, IRender::Resource::Description* d) override {
+		EventDescription* ed = static_cast<EventDescription*>(d);
+		if (ed->setState) {
+			assert(eventHandle != VK_NULL_HANDLE);
+			ed->newState = vkGetEventStatus(queue->device->device, eventHandle);
+		}
+
+		if (ed->setCallback) {
+			ed->eventCallback = cacheDescription.eventCallback;
+		}
+	}
+
+	void Delete(VulkanQueueImpl* queue) override {
+		if (eventHandle != VK_NULL_HANDLE) {
+			vkDestroyEvent(queue->device->device, eventHandle, queue->device->allocator);
+		}
+	}
+
+	void Execute(VulkanQueueImpl* queue) override {
+		if (cacheDescription.eventCallback) {
+			queue->newEvents.Push(this);
+		}
+
+		vkCmdSetEvent(queue->currentCommandBuffer->buffer, eventHandle, VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT | VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
+	}
+
+	VkEvent eventHandle;
+};
+
 struct PipelineInstance {
 	VkPipeline pipeline;
 };
@@ -1268,6 +1333,7 @@ struct ResourceImplVulkan<IRender::Resource::ShaderDescription> final : public R
 		}
 	}
 
+	void Download(VulkanQueueImpl* queue, IRender::Resource::Description* description) override {}
 	PipelineInstance& QueryInstance(VulkanQueueImpl* queue, ResourceImplVulkan<IRender::Resource::DrawCallDescription>* drawCall) {
 		// Generate vertex format.
 		const IRender::Resource::RenderStateDescription& renderState = queue->renderStateDescription;
@@ -1735,8 +1801,15 @@ void ZRenderVulkan::SetupBarrier(Queue* queue, Barrier* barrier) {
 	}
 }
 
-void ZRenderVulkan::RequestDownloadResource(Queue* queue, Resource* resource, Resource::Description* description) {}
-void ZRenderVulkan::CompleteDownloadResource(Queue* queue, Resource* resource) {}
+void ZRenderVulkan::RequestDownloadResource(Queue* queue, Resource* resource, Resource::Description* description) {
+	ResourceImplVulkanBase* impl = static_cast<ResourceImplVulkanBase*>(resource);
+	impl->Download(static_cast<VulkanQueueImpl*>(queue), description);
+}
+
+void ZRenderVulkan::CompleteDownloadResource(Queue* queue, Resource* resource) {
+
+}
+
 void ZRenderVulkan::ExecuteResource(Queue* queue, Resource* resource) {}
 void ZRenderVulkan::SetResourceNotation(Resource* lhs, const String& note) {}
 
@@ -1898,6 +1971,38 @@ void ResourceImplVulkan<IRender::Resource::DrawCallDescription>::Execute(VulkanQ
 
 	vkCmdBindVertexBuffers(commandBuffer, 0, verify_cast<uint32_t>(vertexBuffers.size()), &vertexBuffers[0], nullptr);
 	vkCmdDrawIndexed(commandBuffer, cacheDescription.indexBufferResource.length / sizeof(UInt3), cacheDescription.instanceCounts.x(), 0, 0, 0);
+}
+
+void VulkanQueueImpl::DispatchEvents() {
+	while (!pendingEvents.Empty()) {
+		ResourceImplVulkan<IRender::Resource::EventDescription>* ev = static_cast<ResourceImplVulkan<IRender::Resource::EventDescription>*>(pendingEvents.Top());
+		if (ev->eventHandle != VK_NULL_HANDLE) {
+			if (vkGetEventStatus(device->device, ev->eventHandle) == VK_EVENT_SET) {
+				if (ev->cacheDescription.eventCallback) {
+					ev->cacheDescription.eventCallback(device->render, this);
+				}
+			} else {
+				pendingEvents.Push(ev); // reenter
+			}
+		}
+
+		pendingEvents.Pop();
+	}
+
+	while (!newEvents.Empty()) {
+		ResourceImplVulkan<IRender::Resource::EventDescription>* ev = static_cast<ResourceImplVulkan<IRender::Resource::EventDescription>*>(newEvents.Top());
+		if (ev->eventHandle != VK_NULL_HANDLE) {
+			if (vkGetEventStatus(device->device, ev->eventHandle) == VK_EVENT_SET) {
+				if (ev->cacheDescription.eventCallback) {
+					ev->cacheDescription.eventCallback(device->render, this);
+				}
+			} else {
+				pendingEvents.Push(ev);
+			}
+		}
+
+		newEvents.Pop();
+	}
 }
 
 #ifdef _DEBUG

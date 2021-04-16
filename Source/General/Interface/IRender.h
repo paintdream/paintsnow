@@ -30,7 +30,8 @@ namespace PaintsNow {
 				RESOURCE_SHADER,
 				RESOURCE_RENDERSTATE,
 				RESOURCE_RENDERTARGET,
-				RESOURCE_DRAWCALL
+				RESOURCE_DRAWCALL,
+				RESOURCE_EVENT
 			};
 
 			struct Description {
@@ -250,6 +251,19 @@ namespace PaintsNow {
 				BufferRange indexBufferResource;
 				std::vector<BufferRange> bufferResources;
 				std::vector<Resource*> textureResources;
+			};
+
+			struct EventDescription : public Description {
+				EventDescription() : setState(0), setCallback(0), newState(0), reserved(0) {}
+
+				TWrapper<void, IRender&, IRender::Queue*> eventCallback;
+
+				struct {
+					uint32_t setState : 1;
+					uint32_t setCallback : 1;
+					uint32_t newState : 1;
+					uint32_t reserved : 29;
+				};
 			};
 		};
 

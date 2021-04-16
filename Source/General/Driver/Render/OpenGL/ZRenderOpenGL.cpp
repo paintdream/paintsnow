@@ -1794,6 +1794,39 @@ struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> final : public
 	}
 };
 
+template <>
+struct ResourceImplOpenGL<IRender::Resource::EventDescription> final : public ResourceBaseImplOpenGLDesc<IRender::Resource::EventDescription> {
+	IRender::Resource::Type GetType() const override { return RESOURCE_EVENT; }
+	void Upload(QueueImplOpenGL& queue) override {
+		UpdateDescription();
+	}
+
+	void Download(QueueImplOpenGL& queue) override {
+		assert(downloadDescription != nullptr);
+		EventDescription& description = GetDescription();
+		if (downloadDescription->setCallback) {
+			downloadDescription->eventCallback = description.eventCallback;
+		}
+
+		if (downloadDescription->setState) {
+			downloadDescription->newState = description.newState;
+		}
+
+		downloadDescription = nullptr;
+	}
+
+	void Delete(QueueImplOpenGL& queue) override {}
+
+	void Execute(QueueImplOpenGL& queue) override {
+		EventDescription& description = GetDescription();
+		if (description.eventCallback) {
+			// trigger event!
+			description.newState = 1;
+			description.eventCallback(queue.device->render, &queue);
+		}
+	}
+};
+
 IRender::Device* ZRenderOpenGL::CreateDevice(const String& description) {
 	if (description.empty()) {
 		return new DeviceImplOpenGL(*this); // by now we only supports one device
@@ -1919,6 +1952,8 @@ IRender::Resource* ZRenderOpenGL::CreateResource(Device* device, Resource::Type 
 		return new ResourceImplOpenGL<Resource::RenderTargetDescription>();
 	case Resource::RESOURCE_DRAWCALL:
 		return static_cast<DeviceImplOpenGL*>(device)->drawCallPool.pool.AcquireSafe();
+	case Resource::RESOURCE_EVENT:
+		return new ResourceImplOpenGL<Resource::EventDescription>();
 	}
 
 	assert(false);
