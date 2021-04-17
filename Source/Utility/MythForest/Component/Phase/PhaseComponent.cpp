@@ -351,7 +351,7 @@ void PhaseComponent::TickRender(Engine& engine) {
 
 	IRender& render = engine.interfaces.render;
 	Kernel& kernel = engine.GetKernel();
-	render.PresentQueues(&renderQueue, 1, IRender::PRESENT_EXECUTE_ALL);
+	render.SubmitQueues(&renderQueue, 1, IRender::SUBMIT_EXECUTE_ALL);
 
 	std::vector<IRender::Queue*> bakeQueues;
 	for (size_t i = 0; i < tasks.size(); i++) {
@@ -372,7 +372,7 @@ void PhaseComponent::TickRender(Engine& engine) {
 			render.FlushQueue(task.renderQueue);
 			bakeQueues.emplace_back(task.renderQueue);
 			finalStatus.store(status, std::memory_order_release);
-			// render.PresentQueues(&task.renderQueue, 1, IRender::PRESENT_EXECUTE_ALL);
+			// render.SubmitQueues(&task.renderQueue, 1, IRender::SUBMIT_EXECUTE_ALL);
 			// engine.mythForest.EndCaptureFrame();
 		} else if (task.status == TaskData::STATUS_DOWNLOADED) {
 			for (size_t k = 0; k < task.textures.size(); k++) {
@@ -394,7 +394,7 @@ void PhaseComponent::TickRender(Engine& engine) {
 
 	// Commit bakes
 	if (!bakeQueues.empty()) {
-		render.PresentQueues(&bakeQueues[0], verify_cast<uint32_t>(bakeQueues.size()), IRender::PRESENT_EXECUTE_ALL);
+		render.SubmitQueues(&bakeQueues[0], verify_cast<uint32_t>(bakeQueues.size()), IRender::SUBMIT_EXECUTE_ALL);
 	}
 }
 

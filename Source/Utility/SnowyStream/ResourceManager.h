@@ -7,6 +7,7 @@
 #include "../../General/Interface/Interfaces.h"
 #include "../../Core/Interface/IFilterBase.h"
 #include "../../Core/Template/TMap.h"
+#include "../../Core/Template/TQueue.h"
 #include "../../Core/System/Tiny.h"
 #include "../../Core/System/ThreadPool.h"
 #include "ResourceBase.h"
@@ -44,6 +45,7 @@ namespace PaintsNow {
 		std::unordered_map<String, ResourceBase*> resourceMap;
 		IUniformResourceManager& uniformResourceManager;
 		TWrapper<void, const String&> errorHandler;
+		TQueueList<TShared<ResourceBase> > runtimeUpdatingResources;
 		void* context;
 	};
 

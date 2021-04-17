@@ -50,7 +50,8 @@ ResourceBase::ResourceBase(ResourceManager& manager, const String& id) : BaseCla
 	leakGuard.Insert(this);
 #endif
 	mapCount.store(0, std::memory_order_relaxed);
-	critical.store(0, std::memory_order_relaxed);
+	runtimeVersion.store(0, std::memory_order_relaxed);
+	critical.store(0, std::memory_order_release);
 }
 
 ResourceBase::~ResourceBase() {

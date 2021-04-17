@@ -28,7 +28,7 @@ namespace PaintsNow {
 		void NextDeviceFrame(Device* device) override;
 		void DeleteDevice(Device* device) override;
 
-		void PresentQueues(Queue** queues, uint32_t count, PresentOption option) override;
+		void SubmitQueues(Queue** queues, uint32_t count, SubmitOption option) override;
 		size_t GetProfile(Device* device, const String& feature) override;
 
 		// Queue

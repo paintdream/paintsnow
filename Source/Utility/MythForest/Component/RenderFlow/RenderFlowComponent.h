@@ -53,6 +53,7 @@ namespace PaintsNow {
 		IRender::Queue* resourceQueue;
 		IThread::Lock* frameSyncLock;
 		IThread::Event* frameSyncEvent;
+		IRender::Resource* eventResourcePrepared;
 	};
 }
 

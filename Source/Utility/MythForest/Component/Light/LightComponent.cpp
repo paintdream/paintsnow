@@ -261,7 +261,7 @@ void ShadowLayerConfig::TaskData::RenderFrame(Engine& engine) {
 		renderQueues.emplace_back(warp.renderQueue);
 	}
 
-	engine.interfaces.render.PresentQueues(&renderQueues[0], verify_cast<uint32_t>(renderQueues.size()), IRender::PRESENT_EXECUTE_ALL);
+	engine.interfaces.render.SubmitQueues(&renderQueues[0], verify_cast<uint32_t>(renderQueues.size()), IRender::SUBMIT_EXECUTE_ALL);
 	shadowGrid->Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release);
 
 	Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release);

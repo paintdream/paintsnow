@@ -302,7 +302,7 @@ struct VulkanQueueImpl final : public IRender::Queue {
 	void BeginCurrentCommandBuffer() {
 		VkCommandBufferBeginInfo info = {};
 		info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		info.flags = !(flag & IRender::PRESENT_REPEAT) ? VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT : 0;
+		info.flags = !(flag & IRender::SUBMIT_EXECUTE_REPEAT) ? VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT : 0;
 		vkBeginCommandBuffer(currentCommandBuffer->buffer, &info);
 	}
 
@@ -568,7 +568,7 @@ size_t ZRenderVulkan::GetProfile(Device* device, const String& feature) {
 	return true; // by now all supported.
 }
 
-void ZRenderVulkan::PresentQueues(Queue** queues, uint32_t count, PresentOption option) {
+void ZRenderVulkan::SubmitQueues(Queue** queues, uint32_t count, SubmitOption option) {
 	if (count != 0) {
 		VulkanDeviceImpl* device = static_cast<VulkanQueueImpl*>(queues[0])->device;
 		FrameData& frame = device->frames[device->currentFrameIndex];
@@ -589,7 +589,7 @@ void ZRenderVulkan::PresentQueues(Queue** queues, uint32_t count, PresentOption 
 					assert(commandBuffer != VK_NULL_HANDLE);
 					assert(q->preparedCount.load(std::memory_order_acquire) >= 0);
 
-					if (option == IRender::PRESENT_REPEAT) {
+					if (option == IRender::SUBMIT_EXECUTE_REPEAT) {
 						if (q->preparedCount.load(std::memory_order_acquire) == 1) {
 							commandBuffers.push_back(commandBuffer);
 							break;
@@ -600,7 +600,7 @@ void ZRenderVulkan::PresentQueues(Queue** queues, uint32_t count, PresentOption 
 					q->preparedCommandBuffers.Pop();
 					commandBuffers.push_back(commandBuffer); // TODO: add acquire-release
 
-					if (option == IRender::PRESENT_EXECUTE) {
+					if (option == IRender::SUBMIT_EXECUTE) {
 						break;
 					}
 				}

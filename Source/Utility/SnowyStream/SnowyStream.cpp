@@ -44,8 +44,7 @@ using namespace PaintsNow;
 
 String SnowyStream::reflectedExtension = "*.rds";
 
-SnowyStream::SnowyStream(Interfaces& inters, BridgeSunset& bs, const TWrapper<IArchive*, IStreamBase&, size_t>& psubArchiveCreator, const String& dm, const TWrapper<void, const String&>& err) : interfaces(inters), bridgeSunset(bs), errorHandler(err), subArchiveCreator(psubArchiveCreator), defMount(dm), resourceQueue(nullptr) {
-}
+SnowyStream::SnowyStream(Interfaces& inters, BridgeSunset& bs, const TWrapper<IArchive*, IStreamBase&, size_t>& psubArchiveCreator, const String& dm, const TWrapper<void, const String&>& err) : interfaces(inters), bridgeSunset(bs), errorHandler(err), subArchiveCreator(psubArchiveCreator), defMount(dm), resourceQueue(nullptr), renderResourceStepPerFrame(8) {}
 
 void SnowyStream::Initialize() {
 	// Mount default drive
@@ -76,7 +75,7 @@ void SnowyStream::TickDevice(IDevice& device) {
 	if (&device == &interfaces.render) {
 		OPTICK_EVENT();
 		if (resourceQueue != nullptr) {
-			interfaces.render.PresentQueues(&resourceQueue, 1, IRender::PRESENT_EXECUTE_ALL);
+			interfaces.render.SubmitQueues(&resourceQueue, 1, IRender::SUBMIT_EXECUTE_ALL);
 		}
 	}
 }
@@ -101,6 +100,7 @@ TObject<IReflect>& SnowyStream::operator () (IReflect& reflect) {
 
 	if (reflect.IsReflectMethod()) {
 		ReflectMethod(RequestNewResource)[ScriptMethod = "NewResource"];
+		ReflectMethod(RequestSetRenderResourceFrameStep)[ScriptMethod = "SetRenderResourceFrameStep"];
 		ReflectMethod(RequestLoadExternalResourceData)[ScriptMethod = "LoadExternalResourceData"];
 		ReflectMethod(RequestPersistResource)[ScriptMethod = "PersistResource"];
 		ReflectMethod(RequestCloneResource)[ScriptMethod = "CloneResource"];
@@ -414,6 +414,10 @@ TShared<ResourceBase> SnowyStream::RequestNewResource(IScript::Request& request,
 		request.Error(String("Unable to create resource ") + path);
 		return nullptr;
 	}
+}
+
+void SnowyStream::RequestSetRenderResourceFrameStep(IScript::Request& request, uint32_t limitStep) {
+	renderResourceStepPerFrame = limitStep;
 }
 
 class TaskResourceCreator final : public TReflected<TaskResourceCreator, SharedTiny> {
@@ -748,6 +752,10 @@ void SnowyStream::RegisterBuiltinPasses() {
 
 IRender::Queue* SnowyStream::GetResourceQueue() {
 	return resourceQueue;
+}
+
+uint32_t SnowyStream::GetRenderResourceFrameStep() const {
+	return renderResourceStepPerFrame;
 }
 
 void SnowyStream::RegisterReflectedSerializers() {

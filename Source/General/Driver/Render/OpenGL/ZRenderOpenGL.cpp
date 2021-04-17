@@ -122,20 +122,20 @@ struct ResourceCommandImplOpenGL {
 		OP_MASK = 3
 	};
 
-	ResourceCommandImplOpenGL(Operation a = OP_EXECUTE, IRender::Resource* r = nullptr) {
+	forceinline ResourceCommandImplOpenGL(Operation a = OP_EXECUTE, IRender::Resource* r = nullptr) {
 		assert(((size_t)r & OP_MASK) == 0);
 		resource = reinterpret_cast<IRender::Resource*>((size_t)r | (a & OP_MASK));
 	}
 
-	inline IRender::Resource* GetResource() const {
+	forceinline IRender::Resource* GetResource() const {
 		return reinterpret_cast<IRender::Resource*>((size_t)resource & ~(size_t)OP_MASK);
 	}
 
-	Operation GetOperation() const {
+	forceinline Operation GetOperation() const {
 		return (Operation)((size_t)resource & OP_MASK);
 	}
 
-	bool Invoke(QueueImplOpenGL& queue) {
+	forceinline bool Invoke(QueueImplOpenGL& queue) {
 		// decode mask	
 		static Action actionTable[] = {
 			&ResourceBaseImplOpenGL::Execute,
@@ -277,6 +277,21 @@ struct QueueImplOpenGL final : public IRender::Queue {
 		while (!queuedCommands.Empty()) {
 			ResourceCommandImplOpenGL command = queuedCommands.Top();
 			queuedCommands.Pop();
+
+			if (command.GetOperation() == ResourceCommandImplOpenGL::OP_DELETE) {
+				command.Invoke(*this);
+			}
+		}
+	}
+
+	void Clear() {
+		OPTICK_EVENT();
+		while (!queuedCommands.Empty()) {
+			ResourceCommandImplOpenGL command = queuedCommands.Top();
+			queuedCommands.Pop();
+
+			if (command.GetResource() == nullptr)
+				return;
 
 			if (command.GetOperation() == ResourceCommandImplOpenGL::OP_DELETE) {
 				command.Invoke(*this);
@@ -1800,28 +1815,27 @@ struct ResourceImplOpenGL<IRender::Resource::EventDescription> final : public Re
 	void Upload(QueueImplOpenGL& queue) override {
 		UpdateDescription();
 	}
-
-	void Download(QueueImplOpenGL& queue) override {
-		assert(downloadDescription != nullptr);
+	void SetDownloadDescription(IRender::Resource::Description* d) override {
+		EventDescription* target = static_cast<EventDescription*>(d);
 		EventDescription& description = GetDescription();
-		if (downloadDescription->setCallback) {
-			downloadDescription->eventCallback = description.eventCallback;
+		if (target->setCallback) {
+			target->eventCallback = description.eventCallback;
 		}
 
-		if (downloadDescription->setState) {
-			downloadDescription->newState = description.newState;
+		if (target->setState) {
+			target->newState = description.newState;
 		}
-
-		downloadDescription = nullptr;
 	}
 
+	void Download(QueueImplOpenGL& queue) override {}
 	void Delete(QueueImplOpenGL& queue) override {}
 
 	void Execute(QueueImplOpenGL& queue) override {
 		EventDescription& description = GetDescription();
+		description.newState = 1;
+
 		if (description.eventCallback) {
 			// trigger event!
-			description.newState = 1;
 			description.eventCallback(queue.device->render, &queue);
 		}
 	}
@@ -1829,7 +1843,7 @@ struct ResourceImplOpenGL<IRender::Resource::EventDescription> final : public Re
 
 IRender::Device* ZRenderOpenGL::CreateDevice(const String& description) {
 	if (description.empty()) {
-		return new DeviceImplOpenGL(*this); // by now we only supports one device
+		return new DeviceImplOpenGL(*this); // by now we only support one device
 	} else {
 		return nullptr;
 	}
@@ -1872,20 +1886,20 @@ std::vector<String> ZRenderOpenGL::EnumerateDevices() {
 	return std::vector<String>();
 }
 
-void ZRenderOpenGL::PresentQueues(Queue** queues, uint32_t count, PresentOption option) {
+void ZRenderOpenGL::SubmitQueues(Queue** queues, uint32_t count, SubmitOption option) {
 	GL_GUARD();
 	void (QueueImplOpenGL::*op)() = &QueueImplOpenGL::ExecuteAll;
 	switch (option) {
-	case PresentOption::PRESENT_EXECUTE_ALL:
+	case SubmitOption::SUBMIT_EXECUTE_ALL:
 		op = &QueueImplOpenGL::ExecuteAll;
 		break;
-	case PresentOption::PRESENT_REPEAT:
-		op = &QueueImplOpenGL::Repeat;
-		break;
-	case PresentOption::PRESENT_EXECUTE:
+	case SubmitOption::SUBMIT_EXECUTE:
 		op = &QueueImplOpenGL::Execute;
 		break;
-	case PresentOption::PRESENT_CLEAR_ALL:
+	case SubmitOption::SUBMIT_EXECUTE_REPEAT:
+		op = &QueueImplOpenGL::Repeat;
+		break;
+	case SubmitOption::SUBMIT_CLEAR_ALL:
 		op = &QueueImplOpenGL::ClearAll;
 		break;
 	}

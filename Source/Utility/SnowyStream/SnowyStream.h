@@ -20,6 +20,7 @@ namespace PaintsNow {
 		~SnowyStream() override;
 		IRender::Device* GetRenderDevice() const;
 		IRender::Queue* GetResourceQueue();
+		uint32_t GetRenderResourceFrameStep() const;
 
 		void TickDevice(IDevice& device) override;
 		void Initialize() override;
@@ -47,6 +48,12 @@ namespace PaintsNow {
 		/// <param name="createAlways"> always create a new resource (regardless whether it exists or not </param>
 		/// <returns> Resource object </returns>
 		TShared<ResourceBase> RequestNewResource(IScript::Request& request, const String& path, const String& expectedResType, bool createAlways);
+
+		/// <summary>
+		/// Set render resource upload/update count limit per frame.
+		/// </summary>
+		/// <param name="limitStep"> new limit per frame </param>
+		void RequestSetRenderResourceFrameStep(IScript::Request& request, uint32_t limitStep);
 
 		/// <summary>
 		/// Open bulk of resources in asynchorinzed way
@@ -283,19 +290,22 @@ namespace PaintsNow {
 	protected:
 		Interfaces& interfaces;
 		BridgeSunset& bridgeSunset;
-		const TWrapper<void, const String&> errorHandler;
-		std::unordered_map<String, std::pair<Unique, TShared<ResourceCreator> > > resourceSerializers;
-		std::map<Unique, TShared<ResourceManager> > resourceManagers;
-		static String reflectedExtension;
-		const TWrapper<IArchive*, IStreamBase&, size_t> subArchiveCreator;
-		String defMount;
-		TShared<Mount> defMountInstance;
-
-	protected:
 		// Device related
 		// Render
 		IRender::Device* renderDevice;
 		IRender::Queue* resourceQueue;
+		uint32_t renderResourceStepPerFrame;
+
+		// managers
+		TShared<Mount> defMountInstance;
+		std::unordered_map<String, std::pair<Unique, TShared<ResourceCreator> > > resourceSerializers;
+		std::map<Unique, TShared<ResourceManager> > resourceManagers;
+		String defMount;
+		static String reflectedExtension;
+
+		// handlers
+		const TWrapper<IArchive*, IStreamBase&, size_t> subArchiveCreator;
+		const TWrapper<void, const String&> errorHandler;
 	};
 
 	class MetaResourceExternalPersist : public TReflected<MetaResourceExternalPersist, MetaStreamPersist> {

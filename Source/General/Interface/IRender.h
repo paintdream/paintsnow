@@ -256,7 +256,7 @@ namespace PaintsNow {
 			struct EventDescription : public Description {
 				EventDescription() : setState(0), setCallback(0), newState(0), reserved(0) {}
 
-				TWrapper<void, IRender&, IRender::Queue*> eventCallback;
+				TWrapper<void, IRender&, Queue*> eventCallback;
 
 				struct {
 					uint32_t setState : 1;
@@ -392,14 +392,15 @@ namespace PaintsNow {
 		};
 
 		// The only API that requires calling on device thread.
-		enum PresentOption {
-			PRESENT_EXECUTE_ALL,
-			PRESENT_EXECUTE,
-			PRESENT_REPEAT,
-			PRESENT_CLEAR_ALL
+		enum SubmitOption {
+			SUBMIT_EXECUTE_ALL,
+			SUBMIT_EXECUTE,
+			SUBMIT_EXECUTE_REPEAT,
+			SUBMIT_CLEAR,
+			SUBMIT_CLEAR_ALL
 		};
 
-		virtual void PresentQueues(Queue** queues, uint32_t count, PresentOption option) = 0;
+		virtual void SubmitQueues(Queue** queues, uint32_t count, SubmitOption option) = 0;
 
 		// Device
 		virtual std::vector<String> EnumerateDevices() = 0;

@@ -57,12 +57,15 @@ namespace PaintsNow {
 		// bool operator >> (IStreamBase& stream) const override;
 		// bool operator << (IStreamBase& stream) override;
 		TObject<IReflect>& operator () (IReflect& reflect) override;
-		std::atomic<uint32_t> critical;
 
 	protected:
 		String uniqueLocation;
 		ResourceManager& resourceManager;
 		std::atomic<uint32_t> mapCount;
+		std::atomic<uint32_t> runtimeVersion; // for resource updating synchronization
+
+	public:
+		std::atomic<uint32_t> critical;
 	};
 
 	template <class T>

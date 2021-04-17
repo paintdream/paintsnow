@@ -52,6 +52,8 @@ local function printbox(prefix : string, box : { { number } })
 end
 
 local function InitializeWorld(databasePath : string)
+	SnowyStream.SetRenderResourceFrameStep(8)
+
 	print("InitializeWorld: Loading repository " .. databasePath .. " ...")
 	local database = Database.New(databasePath)
 	if not database then
@@ -71,10 +73,6 @@ local function InitializeWorld(databasePath : string)
 	local gui = GUI.New()
 	local guiEntity = gui.rootEntity
 
-	print("InitializeWorld: Creating scene ...")
-	local Scene = require("Script/Root/Scene")
-	local scene = Scene.New(database, clock)
-
 	print("\tCreating Camera ...")
 	local TpsCameraController = require("Script/Prefabs/Entities/CameraController/TpsCameraController")
 	local cameraController = TpsCameraController.New(eventComponent)
@@ -86,28 +84,15 @@ local function InitializeWorld(databasePath : string)
 	cameraTransform:SetRotation(cameraRotation)
 	cameraTransform:UpdateTransform()
 	local cameraComponent = cameraController.cameraComponent
-	cameraComponent:BindRootEntity(scene.rootEntity)
-	
-	cameraController.spaceComponent:InsertEntity(guiEntity)
-	cameraController.entity:UpdateEntity(false)
-
 	print("\tCreating Player ...")
 	local Player = require("Script/Prefabs/Entities/Player/StandardPlayer")
 	local player = Player.New(eventComponent, cameraController)
 	print("InitializeWorld: Mounting entities...")
 
-	local spaceComponent = scene.spaceComponent
-	spaceComponent:InsertEntity(player.entity)
-
-
 	local screenSize = System.GetScreenSize() as { number }
 	cameraController.aspect = screenSize[1] / screenSize[2]
 	cameraController:UpdatePerspective()
 	
-	local phaseComponent = cameraController.phaseComponent
-	phaseComponent:BindRootEntity(scene.rootEntity)
-	phaseComponent:SetDebugMode("./phases/")
-
 	local lastMousePos = { 0, 0 }
 	local moveSpeed = 1.0
 	local inOperation = false
@@ -139,14 +124,27 @@ local function InitializeWorld(databasePath : string)
 	end
 
 	local scriptComponent = ScriptComponentModule.New("UserInputComponent")
+	local phaseComponent : PhaseComponent
 
 	scriptComponent:SetHandler("EVENT_TICK", function (eventData : EventData)
 		local deltaTime = eventData as number
 		SetFrameMonitorOnTitle(deltaTime, cameraComponent, cameraTransform)
-		if stepPhase then
+		if stepPhase and phaseComponent then
 			phaseComponent:Step(stepBounceCount)
 		end
 	end)
+
+	cameraController.spaceComponent:InsertEntity(guiEntity)
+	cameraController.entity:UpdateEntity(false)
+	cameraController.entity:AddEntityComponent(scriptComponent as Component)
+
+	print("InitializeWorld: Creating scene ...")
+	local Scene = require("Script/Root/Scene")
+	local scene = Scene.New(database, clock)
+	local spaceComponent = scene.spaceComponent
+	spaceComponent:InsertEntity(player.entity)
+	cameraComponent:BindRootEntity(scene.rootEntity)
+	scene.rootEntity:UpdateEntity(true)
 
 	scriptComponent:SetHandler("EVENT_INPUT", function (eventData : EventData)
 		if inOperation then return end
@@ -241,8 +239,10 @@ local function InitializeWorld(databasePath : string)
 		inOperation = false
 	end)
 
-	player.cameraController.entity:AddEntityComponent(scriptComponent as Component)
-	scene.rootEntity:UpdateEntity(true)
+	local phaseComponent = cameraController.phaseComponent
+	phaseComponent:BindRootEntity(scene.rootEntity)
+	phaseComponent:SetDebugMode("./phases/")
+
 	Debug.StartPhase = function ()
 		phaseComponent:Update({ 4, 1.6, 5 })
 	end

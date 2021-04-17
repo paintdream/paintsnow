@@ -59,7 +59,7 @@ public:
 	}
 
 	size_t GetProfile(Device* device, const String&) override { return 0; }
-	void PresentQueues(Queue** queue, uint32_t count, PresentOption option) override {}
+	void SubmitQueues(Queue** queue, uint32_t count, SubmitOption option) override {}
 	void DeleteQueue(Queue* queue) override {}
 	void FlushQueue(Queue* queue) override {}
 
