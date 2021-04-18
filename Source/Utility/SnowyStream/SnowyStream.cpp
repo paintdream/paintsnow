@@ -1,41 +1,12 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include "SnowyStream.h"
+#include "Manager/RenderResourceManager.h"
 #include "Resource/FontResource.h"
 #include "Resource/MaterialResource.h"
 #include "Resource/MeshResource.h"
 #include "Resource/SkeletonResource.h"
 #include "Resource/StreamResource.h"
 #include "Resource/TextureResource.h"
-#include "Resource/Passes/AntiAliasingPass.h"
-#include "Resource/Passes/BloomPass.h"
-#include "Resource/Passes/ConstMapPass.h"
-#include "Resource/Passes/CustomMaterialPass.h"
-#include "Resource/Passes/DeferredLightingBufferEncodedPass.h"
-#include "Resource/Passes/DeferredLightingTextureEncodedPass.h"
-#include "Resource/Passes/DepthResolvePass.h"
-#include "Resource/Passes/DepthBoundingPass.h"
-#include "Resource/Passes/DepthBoundingSetupPass.h"
-#include "Resource/Passes/ForwardLightingPass.h"
-#include "Resource/Passes/LightBufferEncodePass.h"
-#include "Resource/Passes/LightTextureEncodePass.h"
-#include "Resource/Passes/MultiHashSetupPass.h"
-#include "Resource/Passes/MultiHashTracePass.h"
-#include "Resource/Passes/ParticlePass.h"
-#include "Resource/Passes/ScreenPass.h"
-#include "Resource/Passes/ShadowMaskPass.h"
-#include "Resource/Passes/SkyDirectIrradiancePass.h"
-#include "Resource/Passes/SkyIndirectIrradiancePass.h"
-#include "Resource/Passes/SkyMultipleScatteringPass.h"
-#include "Resource/Passes/SkyPass.h"
-#include "Resource/Passes/SkyScatteringDensityPass.h"
-#include "Resource/Passes/SkySingleScatteringPass.h"
-#include "Resource/Passes/SkyTransmittancePass.h"
-#include "Resource/Passes/StandardPass.h"
-#include "Resource/Passes/TerrainPass.h"
-#include "Resource/Passes/TextPass.h"
-#include "Resource/Passes/VolumePass.h"
-#include "Resource/Passes/WaterPass.h"
-#include "Resource/Passes/WidgetPass.h"
 #include "../../Core/System/MemoryStream.h"
 #include "../../Core/Driver/Profiler/Optick/optick.h"
 #include "../../General/Driver/Filter/Json/Core/json.h"
@@ -44,7 +15,10 @@ using namespace PaintsNow;
 
 String SnowyStream::reflectedExtension = "*.rds";
 
-SnowyStream::SnowyStream(Interfaces& inters, BridgeSunset& bs, const TWrapper<IArchive*, IStreamBase&, size_t>& psubArchiveCreator, const String& dm, const TWrapper<void, const String&>& err) : interfaces(inters), bridgeSunset(bs), errorHandler(err), subArchiveCreator(psubArchiveCreator), defMount(dm), resourceQueue(nullptr), renderResourceStepPerFrame(8) {}
+SnowyStream::SnowyStream(Interfaces& inters, BridgeSunset& bs, const TWrapper<IArchive*, IStreamBase&, size_t>& psubArchiveCreator, const String& dm, const TWrapper<void, const String&>& err) : interfaces(inters), bridgeSunset(bs), errorHandler(err), subArchiveCreator(psubArchiveCreator), defMount(dm) {
+	assert(resourceManagers.empty());
+	RegisterReflectedSerializers();
+}
 
 void SnowyStream::Initialize() {
 	// Mount default drive
@@ -61,26 +35,19 @@ void SnowyStream::Initialize() {
 			fprintf(stderr, "Unable to mount default archive: %s\n", defMount.c_str());
 		}
 	}
-
-	assert(resourceManagers.empty());
-	renderDevice = interfaces.render.CreateDevice("");
-	resourceQueue = interfaces.render.CreateQueue(renderDevice, IRender::QUEUE_MULTITHREAD);
-	RegisterReflectedSerializers();
-	RegisterBuiltinPasses();
-
-	CreateBuiltinResources();
 }
 
 void SnowyStream::TickDevice(IDevice& device) {
-	if (&device == &interfaces.render) {
-		OPTICK_EVENT();
-		if (resourceQueue != nullptr) {
-			interfaces.render.SubmitQueues(&resourceQueue, 1, IRender::SUBMIT_EXECUTE_ALL);
-		}
+	for (std::map<Unique, TShared<ResourceManager> >::iterator it = resourceManagers.begin(); it != resourceManagers.end(); ++it) {
+		(*it).second->TickDevice(device);
 	}
 }
 
 SnowyStream::~SnowyStream() {}
+
+const TShared<RenderResourceManager>& SnowyStream::GetRenderResourceManager() const {
+	return renderResourceManager;
+}
 
 Interfaces& SnowyStream::GetInterfaces() const {
 	return interfaces;
@@ -206,7 +173,7 @@ void SnowyStream::RequestUnmount(IScript::Request& request, IScript::Delegate<Mo
 }
 
 size_t SnowyStream::RequestGetRenderProfile(IScript::Request& request, const String& feature) {
-	return interfaces.render.GetProfile(renderDevice, feature);
+	return renderResourceManager->GetProfile(feature);
 }
 
 void SnowyStream::RequestFileExists(IScript::Request& request, const String& path) {
@@ -417,7 +384,7 @@ TShared<ResourceBase> SnowyStream::RequestNewResource(IScript::Request& request,
 }
 
 void SnowyStream::RequestSetRenderResourceFrameStep(IScript::Request& request, uint32_t limitStep) {
-	renderResourceStepPerFrame = limitStep;
+	renderResourceManager->SetRenderResourceFrameStep(limitStep);
 }
 
 class TaskResourceCreator final : public TReflected<TaskResourceCreator, SharedTiny> {
@@ -671,91 +638,7 @@ void SnowyStream::Uninitialize() {
 		(*p).second->UnLock();
 	}
 
-	interfaces.render.DeleteQueue(resourceQueue);
-	resourceQueue = nullptr;
-	interfaces.render.DeleteDevice(renderDevice);
-	renderDevice = nullptr;
-}
-
-template <class T>
-void RegisterPass(ResourceManager& resourceManager, UniqueType<T> type, const String& matName = "", const IRender::Resource::RenderStateDescription& renderState = IRender::Resource::RenderStateDescription()) {
-	ShaderResourceImpl<T>* shaderResource = new ShaderResourceImpl<T>(resourceManager, "", ResourceBase::RESOURCE_ETERNAL | ResourceBase::RESOURCE_VIRTUAL);
-	PassBase& pass = shaderResource->GetPass();
-	shaderResource->GetPassUpdater().Initialize(pass);
-
-	Unique unique = pass.GetUnique();
-	assert(unique != UniqueType<PassBase>().Get());
-	String name = pass.GetUnique()->GetName();
-	auto pos = name.find_last_of(':');
-	if (pos != String::npos) {
-		name = name.substr(pos + 1);
-	}
-
-	resourceManager.DoLock();
-	shaderResource->SetLocation(ShaderResource::GetShaderPathPrefix() + name);
-	resourceManager.Insert(shaderResource);
-	resourceManager.UnLock();
-
-	if (!matName.empty()) {
-		TShared<MaterialResource> materialResource = TShared<MaterialResource>::From(new MaterialResource(resourceManager, String("[Runtime]/MaterialResource/") + matName));
-		materialResource->originalShaderResource = shaderResource;
-		materialResource->materialParams.state = renderState;
-		materialResource->Flag().fetch_or(ResourceBase::RESOURCE_ETERNAL | ResourceBase::RESOURCE_VIRTUAL, std::memory_order_release);
-
-		resourceManager.DoLock();
-		resourceManager.Insert(materialResource());
-		resourceManager.UnLock();
-	}
-	shaderResource->ReleaseObject();
-}
-
-void SnowyStream::RegisterBuiltinPasses() {
-	TShared<ResourceManager> resourceManager = resourceManagers[UniqueType<IRender>::Get()];
-	assert(resourceManager);
-
-	RegisterPass(*resourceManager(), UniqueType<AntiAliasingPass>());
-	RegisterPass(*resourceManager(), UniqueType<BloomPass>());
-	RegisterPass(*resourceManager(), UniqueType<ConstMapPass>());
-	RegisterPass(*resourceManager(), UniqueType<CustomMaterialPass>());
-	RegisterPass(*resourceManager(), UniqueType<DeferredLightingBufferEncodedPass>());
-	RegisterPass(*resourceManager(), UniqueType<DeferredLightingTextureEncodedPass>());
-	RegisterPass(*resourceManager(), UniqueType<DepthResolvePass>());
-	RegisterPass(*resourceManager(), UniqueType<DepthBoundingPass>());
-	RegisterPass(*resourceManager(), UniqueType<DepthBoundingSetupPass>());
-	RegisterPass(*resourceManager(), UniqueType<ForwardLightingPass>());
-	RegisterPass(*resourceManager(), UniqueType<LightBufferEncodePass>());
-	RegisterPass(*resourceManager(), UniqueType<LightTextureEncodePass>());
-	RegisterPass(*resourceManager(), UniqueType<MultiHashSetupPass>());
-	RegisterPass(*resourceManager(), UniqueType<MultiHashTracePass>());
-	RegisterPass(*resourceManager(), UniqueType<ScreenPass>());
-	RegisterPass(*resourceManager(), UniqueType<ShadowMaskPass>());
-	RegisterPass(*resourceManager(), UniqueType<SkyDirectIrradiancePass>());
-	RegisterPass(*resourceManager(), UniqueType<SkyIndirectIrradiancePass>());
-	RegisterPass(*resourceManager(), UniqueType<SkyMultipleScatteringPass>());
-	RegisterPass(*resourceManager(), UniqueType<SkyPass>());
-	RegisterPass(*resourceManager(), UniqueType<SkyScatteringDensityPass>());
-	RegisterPass(*resourceManager(), UniqueType<SkySingleScatteringPass>());
-	RegisterPass(*resourceManager(), UniqueType<SkyTransmittancePass>());
-	RegisterPass(*resourceManager(), UniqueType<StandardPass>());
-
-	IRender::Resource::RenderStateDescription state;
-	state.depthTest = 0;
-	RegisterPass(*resourceManager(), UniqueType<TextPass>(), "Text", state);
-	RegisterPass(*resourceManager(), UniqueType<WidgetPass>(), "Widget", state);
-
-	/*
-	RegisterPass(*resourceManager(), UniqueType<ParticlePass>());
-	RegisterPass(*resourceManager(), UniqueType<TerrainPass>());
-	RegisterPass(*resourceManager(), UniqueType<VolumePass>());
-	RegisterPass(*resourceManager(), UniqueType<WaterPass>());*/
-}
-
-IRender::Queue* SnowyStream::GetResourceQueue() {
-	return resourceQueue;
-}
-
-uint32_t SnowyStream::GetRenderResourceFrameStep() const {
-	return renderResourceStepPerFrame;
+	renderResourceManager = nullptr;
 }
 
 void SnowyStream::RegisterReflectedSerializers() {
@@ -764,13 +647,19 @@ void SnowyStream::RegisterReflectedSerializers() {
 	// Commented resources may have dependencies, so we do not serialize/deserialize them at once.
 	// PaintsNow recommends database-managed resource dependencies ...
 
-	RegisterReflectedSerializer(UniqueType<FontResource>(), interfaces.fontBase, this);
-	RegisterReflectedSerializer(UniqueType<MaterialResource>(), interfaces.render, resourceQueue);
-	RegisterReflectedSerializer(UniqueType<ShaderResource>(), interfaces.render, resourceQueue);
-	RegisterReflectedSerializer(UniqueType<MeshResource>(), interfaces.render, resourceQueue);
-	RegisterReflectedSerializer(UniqueType<SkeletonResource>(), interfaces.render, resourceQueue);
-	RegisterReflectedSerializer(UniqueType<TextureResource>(), interfaces.render, resourceQueue);
-	RegisterReflectedSerializer(UniqueType<StreamResource>(), interfaces.archive, nullptr);
+	UniqueType<RenderResourceManager> renderResourceManagerType;
+	RegisterReflectedSerializer(UniqueType<FontResource>(), interfaces.fontBase, this, UniqueType<DeviceResourceManager<FontResource::DriverType> >());
+	RegisterReflectedSerializer(UniqueType<MaterialResource>(), interfaces.render, nullptr, renderResourceManagerType);
+	RegisterReflectedSerializer(UniqueType<ShaderResource>(), interfaces.render, nullptr, renderResourceManagerType);
+	RegisterReflectedSerializer(UniqueType<MeshResource>(), interfaces.render, nullptr, renderResourceManagerType);
+	RegisterReflectedSerializer(UniqueType<SkeletonResource>(), interfaces.render, nullptr, renderResourceManagerType);
+	RegisterReflectedSerializer(UniqueType<TextureResource>(), interfaces.render, nullptr, renderResourceManagerType);
+	RegisterReflectedSerializer(UniqueType<StreamResource>(), interfaces.archive, this, UniqueType<DeviceResourceManager<StreamResource::DriverType> >());
+
+	TShared<ResourceManager> manager = resourceManagers[UniqueType<IRender>::Get()];
+	assert(manager);
+	renderResourceManager = manager->QueryInterface(UniqueType<RenderResourceManager>());
+	assert(renderResourceManager);
 }
 
 bool SnowyStream::RegisterResourceManager(Unique unique, ResourceManager* resourceManager) {
@@ -930,177 +819,6 @@ bool SnowyStream::SaveResource(const TShared<ResourceBase>& resource, const Stri
 	} else {
 		return false;
 	}
-}
-
-void SnowyStream::CreateBuiltinSolidTexture(const String& path, const UChar4& color) {
-	IRender& render = interfaces.render;
-	// Error Texture for missing textures ...
-	TShared<TextureResource> errorTexture = CreateReflectedResource(UniqueType<TextureResource>(), path, false, ResourceBase::RESOURCE_ETERNAL | ResourceBase::RESOURCE_VIRTUAL);
-	if (errorTexture) {
-		errorTexture->description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
-		errorTexture->description.state.layout = IRender::Resource::TextureDescription::RGBA;
-		// 2x2 pixel
-		const int width = 2, height = 2;
-		errorTexture->description.dimension.x() = width;
-		errorTexture->description.dimension.y() = height;
-		errorTexture->description.data.Resize(width * height * sizeof(UChar4));
-
-		UChar4* buffer = reinterpret_cast<UChar4*>(errorTexture->description.data.GetData());
-		std::fill(buffer, buffer + width * height, color);
-
-		errorTexture->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
-		errorTexture->GetResourceManager().InvokeUpload(errorTexture());
-	} else {
-		errorHandler("Unable to create error texture ...");
-	}
-}
-
-void SnowyStream::CreateBuiltinMesh(const String& path, const Float3* vertices, size_t vertexCount, const UInt3* indices, size_t indexCount) {
-	TShared<MeshResource> meshResource = CreateReflectedResource(UniqueType<MeshResource>(), path, false, ResourceBase::RESOURCE_ETERNAL | ResourceBase::RESOURCE_VIRTUAL);
-	IRender& render = interfaces.render;
-
-	if (meshResource) {
-		meshResource->meshCollection.vertices.assign(vertices, vertices + vertexCount);
-		meshResource->meshCollection.indices.assign(indices, indices + indexCount);
-
-		// add mesh group
-		IAsset::MeshGroup group;
-		group.primitiveOffset = 0;
-		group.primitiveCount = 2;
-		meshResource->meshCollection.groups.emplace_back(group);
-		meshResource->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_release);
-		meshResource->GetResourceManager().InvokeUpload(meshResource());
-	} else {
-		errorHandler(String("Unable to create builtin mesh: ") + path);
-	}
-}
-
-// https://github.com/caosdoar/spheres/blob/master/src/spheres.cpp
-static void SpherifiedCube(uint32_t divisions, std::vector<UInt3>& indices, std::vector<Float3>& vertices) {
-	static const Float3 origins[6] = {
-		Float3(-1.0, -1.0, -1.0),
-		Float3(1.0, -1.0, -1.0),
-		Float3(1.0, -1.0, 1.0),
-		Float3(-1.0, -1.0, 1.0),
-		Float3(-1.0, 1.0, -1.0),
-		Float3(-1.0, -1.0, 1.0)
-	};
-
-	static const Float3 rights[6] = {
-		Float3(2.0, 0.0, 0.0),
-		Float3(0.0, 0.0, 2.0),
-		Float3(-2.0, 0.0, 0.0),
-		Float3(0.0, 0.0, -2.0),
-		Float3(2.0, 0.0, 0.0),
-		Float3(2.0, 0.0, 0.0)
-	};
-
-	static const Float3 ups[6] =
-	{
-		Float3(0.0, 2.0, 0.0),
-		Float3(0.0, 2.0, 0.0),
-		Float3(0.0, 2.0, 0.0),
-		Float3(0.0, 2.0, 0.0),
-		Float3(0.0, 0.0, 2.0),
-		Float3(0.0, 0.0, -2.0)
-	};
-
-	const float step = 1.0f / divisions;
-	vertices.reserve(6 * (divisions + 1) * (divisions + 1));
-
-	uint32_t face;
-	for (face = 0; face < 6; face++) {
-		const Float3 origin = origins[face];
-		const Float3 right = rights[face];
-		const Float3 up = ups[face];
-		for (uint32_t j = 0; j < divisions + 1; j++) {
-			for (uint32_t i = 0; i < divisions + 1; i++) {
-				const Float3 p = origin + (right * (float)i + up * (float)j) * step;
-				const Float3 p2 = p * p;
-				const Float3 n
-				(
-					p.x() * (float)sqrt(1.0f - 0.5f * (p2.y() + p2.z()) + p2.y() * p2.z() / 3.0f),
-					p.y() * (float)sqrt(1.0f - 0.5f * (p2.z() + p2.x()) + p2.z() * p2.x() / 3.0f),
-					p.z() * (float)sqrt(1.0f - 0.5f * (p2.x() + p2.y()) + p2.x() * p2.y() / 3.0f)
-				);
-
-				vertices.emplace_back(n);
-			}
-		}
-	}
-	
-	indices.reserve(6 * divisions * divisions);
-	const uint32_t k = divisions + 1;
-	for (face = 0; face < 6; ++face) {
-		for (uint32_t j = 0; j < divisions; ++j) {
-			const bool bottom = j < (divisions / 2);
-			for (uint32_t i = 0; i < divisions; ++i) {
-				const bool left = i < (divisions / 2);
-				const uint32_t a = (face * k + j) * k + i;
-				const uint32_t b = (face * k + j) * k + i + 1;
-				const uint32_t c = (face * k + j + 1) * k + i;
-				const uint32_t d = (face * k + j + 1) * k + i + 1;
-				if (bottom != left) {
-					indices.emplace_back(UInt3(a, c, b));
-					indices.emplace_back(UInt3(c, d, b));
-				} else {
-					indices.emplace_back(UInt3(a, c, d));
-					indices.emplace_back(UInt3(a, d, b));
-				}
-			}
-		}
-	}
-}
-
-void SnowyStream::CreateBuiltinResources() {
-	// MeshResource for widget rendering and deferred rendering ...
-	static const Float3 quadVertices[] = {
-		Float3(-1.0f, -1.0f, 0.0f),
-		Float3(1.0f, -1.0f, 0.0f),
-		Float3(1.0f, 1.0f, 0.0f),
-		Float3(-1.0f, 1.0f, 0.0f),
-	};
-
-	static const UInt3 quadIndices[] = { UInt3(0, 1, 2), UInt3(2, 3, 0) };
-
-	CreateBuiltinMesh("[Runtime]/MeshResource/StandardQuad", quadVertices, sizeof(quadVertices) / sizeof(quadVertices[0]), quadIndices, sizeof(quadIndices) / sizeof(quadIndices[0]));
-
-	static const Float3 cubeVertices[] = {
-		Float3(-1.0f, -1.0f, -1.0f),
-		Float3(1.0f, -1.0f, -1.0f),
-		Float3(1.0f, 1.0f, -1.0f),
-		Float3(-1.0f, 1.0f, -1.0f),
-		Float3(-1.0f, -1.0f, 1.0f),
-		Float3(1.0f, -1.0f, 1.0f),
-		Float3(1.0f, 1.0f, 1.0f),
-		Float3(-1.0f, 1.0f, 1.0f),
-	};
-
-	static const UInt3 cubeIndices[] = {
-		UInt3(0, 2, 1), UInt3(2, 0, 3), // bottom
-		UInt3(0, 4, 7), UInt3(0, 7, 3), // left
-		UInt3(0, 5, 4), UInt3(0, 1, 5), // back
-		UInt3(4, 5, 6), UInt3(6, 7, 4), // top
-		UInt3(1, 6, 5), UInt3(1, 2, 6), // right
-		UInt3(3, 6, 2), UInt3(3, 7, 6), // front
-	};
-
-	CreateBuiltinMesh("[Runtime]/MeshResource/StandardCube", cubeVertices, sizeof(cubeVertices) / sizeof(cubeVertices[0]), cubeIndices, sizeof(cubeIndices) / sizeof(cubeIndices[0]));
-
-	std::vector<UInt3> sphereIndices;
-	std::vector<Float3> sphereVertices;
-	SpherifiedCube(5, sphereIndices, sphereVertices);
-	CreateBuiltinMesh("[Runtime]/MeshResource/StandardSphere", &sphereVertices[0], sphereVertices.size(), &sphereIndices[0], sphereIndices.size());
-
-	CreateBuiltinSolidTexture("[Runtime]/TextureResource/Black", UChar4(0, 0, 0, 0));
-	CreateBuiltinSolidTexture("[Runtime]/TextureResource/White", UChar4(255, 255, 255, 255));
-	CreateBuiltinSolidTexture("[Runtime]/TextureResource/MissingBaseColor", UChar4(255, 0, 255, 255));
-	CreateBuiltinSolidTexture("[Runtime]/TextureResource/MissingNormal", UChar4(127, 127, 255, 255));
-	CreateBuiltinSolidTexture("[Runtime]/TextureResource/MissingMaterial", UChar4(255, 255, 0, 0));
-}
-
-IRender::Device* SnowyStream::GetRenderDevice() const {
-	return renderDevice;
 }
 
 IReflectObject* MetaResourceExternalPersist::Clone() const {

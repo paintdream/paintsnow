@@ -1,5 +1,6 @@
 #include "LeavesFlute.h"
 #include <ctime>
+#include "../SnowyStream/Manager/RenderResourceManager.h"
 #include "../../Core/Driver/Filter/Pod/ZFilterPod.h"
 #include "../../General/Driver/Filter/Json/ZFilterJson.h"
 #include "../../General/Driver/Filter/LZMA/ZFilterLZMA.h"
@@ -400,7 +401,7 @@ void LeavesFlute::Print(const String& str) {
 
 void LeavesFlute::OnWindowSize(const IFrame::EventSize& size) {
 	OPTICK_EVENT();
-	interfaces.render.SetDeviceResolution(snowyStream.GetRenderDevice(), size.size);
+	interfaces.render.SetDeviceResolution(snowyStream.GetRenderResourceManager()->GetRenderDevice(), size.size);
 	mythForest.OnSize(size.size);
 }
 
@@ -434,7 +435,7 @@ void LeavesFlute::OnRender() {
 		modules[i]->TickDevice(interfaces.render);
 	}
 
-	interfaces.render.NextDeviceFrame(snowyStream.GetRenderDevice());
+	interfaces.render.NextDeviceFrame(snowyStream.GetRenderResourceManager()->GetRenderDevice());
 }
 
 class ExpandParamsScriptTask : public WarpTiny, public TaskRepeat {

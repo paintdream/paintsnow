@@ -1,6 +1,7 @@
 #include "RenderFlowComponent.h"
 #include "RenderStage.h"
 #include "../../../SnowyStream/SnowyStream.h"
+#include "../../../SnowyStream/Manager/RenderResourceManager.h"
 #include "RenderPort/RenderPortRenderTarget.h"
 #include "RenderStage/FrameBarrierRenderStage.h"
 #include "../../../../Core/Driver/Profiler/Optick/optick.h"
@@ -314,7 +315,7 @@ void RenderFlowComponent::Initialize(Engine& engine, Entity* entity) {
 	OPTICK_EVENT();
 	Compile();
 
-	IRender::Device* device = engine.snowyStream.GetRenderDevice();
+	IRender::Device* device = engine.snowyStream.GetRenderResourceManager()->GetRenderDevice();
 	IRender& render = engine.interfaces.render;
 	assert(resourceQueue == nullptr);
 	resourceQueue = render.CreateQueue(device);
@@ -388,7 +389,7 @@ void RenderFlowComponent::Uninitialize(Engine& engine, Entity* entity) {
 
 void RenderFlowComponent::SetMainResolution(Engine& engine) {
 	bool updateResolution = false;
-	IRender::Device* device = engine.snowyStream.GetRenderDevice();
+	IRender::Device* device = engine.snowyStream.GetRenderResourceManager()->GetRenderDevice();
 	if (Flag().load(std::memory_order_relaxed) & RENDERFLOWCOMPONENT_SYNC_DEVICE_RESOLUTION) {
 		Int2 size = engine.interfaces.render.GetDeviceResolution(device);
 		if (size.x() == 0 || size.y() == 0) return;
@@ -436,7 +437,7 @@ void RenderFlowComponent::RenderSyncTick(Engine& engine) {
 		if (prepared) {
 			SetMainResolution(engine);
 
-			IRender::Device* device = engine.snowyStream.GetRenderDevice();
+			IRender::Device* device = engine.snowyStream.GetRenderResourceManager()->GetRenderDevice();
 			// Cleanup modified flag for all ports
 			for (size_t k = 0; k < cachedRenderStages.size(); k++) {
 				RenderStage* stage = cachedRenderStages[k];

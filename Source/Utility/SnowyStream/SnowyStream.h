@@ -14,19 +14,17 @@
 
 namespace PaintsNow {
 	class ShaderResource;
+	class RenderResourceManager;
 	class SnowyStream : public TReflected<SnowyStream, IScript::Library>, public IUniformResourceManager {
 	public:
 		SnowyStream(Interfaces& interfaces, BridgeSunset& bs, const TWrapper<IArchive*, IStreamBase&, size_t>& subArchiveCreator, const String& defMount, const TWrapper<void, const String&>& errorHandler);
 		~SnowyStream() override;
-		IRender::Device* GetRenderDevice() const;
-		IRender::Queue* GetResourceQueue();
-		uint32_t GetRenderResourceFrameStep() const;
+		const TShared<RenderResourceManager>& GetRenderResourceManager() const;
 
 		void TickDevice(IDevice& device) override;
 		void Initialize() override;
 		void Uninitialize() override;
 		void Reset();
-		bool MountArchive(const String& mount);
 
 		virtual Interfaces& GetInterfaces() const;
 		TShared<ResourceBase> CreateResource(const String& location, const String& extension = "", bool openExisting = true, Tiny::FLAG flag = 0) override;
@@ -246,9 +244,8 @@ namespace PaintsNow {
 		size_t RequestGetRenderProfile(IScript::Request& request, const String& feature);
 
 	public:
-		void RegisterBuiltinPasses();
-		template <class T>
-		bool RegisterResourceSerializer(const String& extension, T& device, ResourceCreator* serializer, void* context) {
+		template <class T, class M>
+		bool RegisterResourceSerializer(const String& extension, T& device, ResourceCreator* serializer, void* context, UniqueType<M> managerType) {
 			Unique unique = UniqueType<T>::Get();
 			if (!RegisterResourceSerializer(unique, extension, serializer)) {
 				return false;
@@ -256,7 +253,7 @@ namespace PaintsNow {
 
 			std::map<Unique, TShared<ResourceManager> >::iterator it = resourceManagers.find(unique);
 			if (it == resourceManagers.end()) {
-				ResourceManager* resourceManager = new DeviceResourceManager<T>(bridgeSunset.GetKernel().GetThreadPool(), *this, device, errorHandler, context);
+				ResourceManager* resourceManager = new M(bridgeSunset.GetKernel().GetThreadPool(), *this, device, errorHandler, context);
 				RegisterResourceManager(unique, resourceManager);
 				resourceManager->ReleaseObject();
 			}
@@ -266,11 +263,11 @@ namespace PaintsNow {
 
 		static String GetReflectedExtension(Unique unique);
 
-		template <class T>
-		void RegisterReflectedSerializer(UniqueType<T> type, typename T::DriverType& device, void* context) {
+		template <class T, class M>
+		void RegisterReflectedSerializer(UniqueType<T> type, typename T::DriverType& device, void* context, UniqueType<M> managerType) {
 			String extension = GetReflectedExtension(type.Get());
 			ResourceCreator* serializer = new ResourceReflectedCreator<T>(extension);
-			RegisterResourceSerializer(extension, device, serializer, context);
+			RegisterResourceSerializer(extension, device, serializer, context, managerType);
 			serializer->ReleaseObject();
 		}
 
@@ -278,8 +275,6 @@ namespace PaintsNow {
 		TShared<T> CreateReflectedResource(UniqueType<T> type, const String& location, bool openExisting = true, Tiny::FLAG flag = 0) {
 			return static_cast<T*>(CreateResource(location, GetReflectedExtension(type.Get()), openExisting, flag)());
 		}
-
-		void CreateBuiltinResources();
 
 	protected:
 		void RegisterReflectedSerializers();
@@ -290,13 +285,9 @@ namespace PaintsNow {
 	protected:
 		Interfaces& interfaces;
 		BridgeSunset& bridgeSunset;
-		// Device related
-		// Render
-		IRender::Device* renderDevice;
-		IRender::Queue* resourceQueue;
-		uint32_t renderResourceStepPerFrame;
 
 		// managers
+		TShared<RenderResourceManager> renderResourceManager; // for frequently use ...
 		TShared<Mount> defMountInstance;
 		std::unordered_map<String, std::pair<Unique, TShared<ResourceCreator> > > resourceSerializers;
 		std::map<Unique, TShared<ResourceManager> > resourceManagers;

@@ -1,6 +1,7 @@
 #include "BatchComponent.h"
 #include "../Renderable/RenderableComponent.h"
 #include "../../../MythForest/MythForest.h"
+#include "../../../SnowyStream/Manager/RenderResourceManager.h"
 
 using namespace PaintsNow;
 
@@ -13,7 +14,7 @@ BatchComponent::~BatchComponent() {
 void BatchComponent::InstanceInitialize(Engine& engine) {
 	if (referenceCount == 0) {
 		IRender& render = engine.interfaces.render;
-		buffer = render.CreateResource(engine.snowyStream.GetRenderDevice(), IRender::Resource::RESOURCE_BUFFER);
+		buffer = render.CreateResource(engine.snowyStream.GetRenderResourceManager()->GetRenderDevice(), IRender::Resource::RESOURCE_BUFFER);
 	}
 
 	++referenceCount;

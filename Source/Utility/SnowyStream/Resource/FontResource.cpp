@@ -1,7 +1,8 @@
 #include "FontResource.h"
+#include "../../SnowyStream/SnowyStream.h"
+#include "../../SnowyStream/Manager/RenderResourceManager.h"
 #include "../../../Core/Interface/IArchive.h"
 #include "../../../Core/System/MemoryStream.h"
-#include "../../SnowyStream/SnowyStream.h"
 #include "../../../Core/Driver/Profiler/Optick/optick.h"
 
 using namespace PaintsNow;
@@ -24,7 +25,7 @@ void FontResource::Attach(IFontBase& fontBase, void* deviceContext) {
 void FontResource::Detach(IFontBase& fontBase, void* deviceContext) {
 	SnowyStream* snowyStream = reinterpret_cast<SnowyStream*>(deviceContext);
 	IRender& render = snowyStream->GetInterfaces().render;
-	IRender::Queue* queue = snowyStream->GetResourceQueue();
+	IRender::Queue* queue = snowyStream->GetRenderResourceManager()->GetResourceQueue();
 
 	for (std::map<uint32_t, Slice>::iterator it = sliceMap.begin(); it != sliceMap.end(); ++it) {
 		it->second.Uninitialize(render, queue, resourceManager);

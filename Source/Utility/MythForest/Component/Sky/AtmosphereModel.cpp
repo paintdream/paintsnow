@@ -1,6 +1,7 @@
 #include "AtmosphereModel.h"
 #include "../../Engine.h"
 #include "../../../SnowyStream/SnowyStream.h"
+#include "../../../SnowyStream/Manager/RenderResourceManager.h"
 #include <cassert>
 #include <cmath>
 #include <iostream>
@@ -251,7 +252,7 @@ namespace Atmosphere {
 	}
 
 	static TShared<TextureResource> NewTexture2d(Engine& engine, int width, int height) {
-		IRender::Queue* resourceQueue = engine.snowyStream.GetResourceQueue();
+		IRender::Queue* resourceQueue = engine.snowyStream.GetRenderResourceManager()->GetResourceQueue();
 		TShared<TextureResource> texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), "", false, ResourceBase::RESOURCE_VIRTUAL);
 		IRender::Resource::TextureDescription::State& state = texture->description.state;
 		state.addressU = state.addressV = state.addressW = IRender::Resource::TextureDescription::CLAMP;
@@ -271,7 +272,7 @@ namespace Atmosphere {
 	}
 
 	static TShared<TextureResource> NewTexture3d(Engine& engine, int width, int height, int depth, bool half_precision) {
-		IRender::Queue* resourceQueue = engine.snowyStream.GetResourceQueue();
+		IRender::Queue* resourceQueue = engine.snowyStream.GetRenderResourceManager()->GetResourceQueue();
 		TShared<TextureResource> texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), "", false, ResourceBase::RESOURCE_VIRTUAL);
 		IRender::Resource::TextureDescription::State& state = texture->description.state;
 		state.type = IRender::Resource::TextureDescription::TEXTURE_3D;

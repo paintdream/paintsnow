@@ -1,6 +1,7 @@
 #include "LightBufferEncodeRenderStage.h"
 #include "../../../Engine.h"
 #include "../../../../SnowyStream/SnowyStream.h"
+#include "../../../../SnowyStream/Manager/RenderResourceManager.h"
 #include <sstream>
 
 using namespace PaintsNow;
@@ -28,7 +29,7 @@ void LightBufferEncodeRenderStage::Prepare(Engine& engine, IRender::Queue* queue
 
 	assert(LightBuffer.sharedBufferResource == nullptr);
 	IRender& render = engine.interfaces.render;
-	IRender::Resource* resource = render.CreateResource(engine.snowyStream.GetRenderDevice(), IRender::Resource::RESOURCE_BUFFER);
+	IRender::Resource* resource = render.CreateResource(engine.snowyStream.GetRenderResourceManager()->GetRenderDevice(), IRender::Resource::RESOURCE_BUFFER);
 	IRender::Resource::BufferDescription description;
 	description.format = IRender::Resource::BufferDescription::UNSIGNED_INT;
 	description.component = 4;

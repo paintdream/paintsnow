@@ -110,6 +110,13 @@ bool ResourceBase::Compress(const String& compressType) {
 	return false; // by default no compression available
 }
 
+bool ResourceBase::Complete(size_t version) {
+	size_t currentVersion = runtimeVersion.load(std::memory_order_acquire);
+	if (currentVersion > version) return false;
+
+	return runtimeVersion.compare_exchange_strong(currentVersion, version, std::memory_order_acquire);
+}
+
 void ResourceBase::ScriptModify(IScript::Request& request, const String& action, IScript::Request::Arguments arguments) {}
 
 bool ResourceBase::Persist() {

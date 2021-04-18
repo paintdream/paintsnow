@@ -35,6 +35,7 @@ namespace PaintsNow {
 		void SetLocation(const String& location);
 
 		virtual Unique GetDeviceUnique() const;
+		virtual bool Complete(size_t version);
 		virtual bool LoadExternalResource(Interfaces& interfaces, IStreamBase& streamBase, size_t length);
 		virtual bool Compress(const String& compressType);
 		virtual bool Persist();
@@ -62,10 +63,12 @@ namespace PaintsNow {
 		String uniqueLocation;
 		ResourceManager& resourceManager;
 		std::atomic<uint32_t> mapCount;
-		std::atomic<uint32_t> runtimeVersion; // for resource updating synchronization
 
 	public:
 		std::atomic<uint32_t> critical;
+
+	protected:
+		std::atomic<size_t> runtimeVersion; // for resource updating synchronization
 	};
 
 	template <class T>

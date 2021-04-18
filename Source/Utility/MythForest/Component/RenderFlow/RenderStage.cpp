@@ -1,5 +1,6 @@
 #include "RenderStage.h"
 #include "RenderPort/RenderPortRenderTarget.h"
+#include "../../../SnowyStream/Manager/RenderResourceManager.h"
 
 using namespace PaintsNow;
 
@@ -43,7 +44,7 @@ void RenderStage::SetFrameBarrierIndex(uint16_t index) {
 
 void RenderStage::Prepare(Engine& engine, IRender::Queue* queue) {
 	IRender& render = engine.interfaces.render;
-	IRender::Device* device = engine.snowyStream.GetRenderDevice();
+	IRender::Device* device = engine.snowyStream.GetRenderResourceManager()->GetRenderDevice();
 
 	if (!(Flag().load(std::memory_order_relaxed) & RENDERSTAGE_COMPUTE_PASS)) {
 		assert(renderState == nullptr);

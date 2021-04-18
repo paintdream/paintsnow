@@ -23,7 +23,6 @@ namespace PaintsNow {
 		void Insert(ResourceBase* resource);
 		void Remove(ResourceBase* resource);
 		void RemoveAll();
-		virtual Unique GetDeviceUnique() const = 0;
 		void Report(const String& err);
 		void* GetContext() const;
 		const String& GetLocationPostfix() const;
@@ -33,6 +32,10 @@ namespace PaintsNow {
 		IUniformResourceManager& GetUniformResourceManager();
 		ThreadPool& GetThreadPool();
 
+		virtual Unique GetDeviceUnique() const = 0;
+		virtual void TickDevice(IDevice&);
+		virtual void NotifyResourceCompletion(const TShared<ResourceBase>& resource, size_t runtimeVersion);
+
 	public:
 		virtual void InvokeRefresh(ResourceBase* resource, void* deviceContext = nullptr) = 0;
 		virtual void InvokeAttach(ResourceBase* resource, void* deviceContext = nullptr) = 0;
@@ -40,12 +43,11 @@ namespace PaintsNow {
 		virtual void InvokeUpload(ResourceBase* resource, void* deviceContext = nullptr) = 0;
 		virtual void InvokeDownload(ResourceBase* resource, void* deviceContext = nullptr) = 0;
 
-	private:
+	protected:
 		ThreadPool& threadPool;
 		std::unordered_map<String, ResourceBase*> resourceMap;
 		IUniformResourceManager& uniformResourceManager;
 		TWrapper<void, const String&> errorHandler;
-		TQueueList<TShared<ResourceBase> > runtimeUpdatingResources;
 		void* context;
 	};
 

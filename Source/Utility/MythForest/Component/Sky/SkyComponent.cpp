@@ -1,5 +1,6 @@
 #include "SkyComponent.h"
 #include "../../../SnowyStream/SnowyStream.h"
+#include "../../../SnowyStream/Manager/RenderResourceManager.h"
 #include "../Transform/TransformComponent.h"
 #include <utility>
 
@@ -476,7 +477,7 @@ TObject<IReflect>& SkyComponent::operator () (IReflect& reflect) {
 
 static TShared<TextureResource> NewTexture2D(SnowyStream& snowyStream, const String& path, int width, int height) {
 	TShared<TextureResource> textureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), path, false, ResourceBase::RESOURCE_VIRTUAL);
-	IRender::Queue* renderQueue = snowyStream.GetResourceQueue();
+	IRender::Queue* renderQueue = snowyStream.GetRenderResourceManager()->GetResourceQueue();
 
 	IRender::Resource::TextureDescription& description = textureResource->description;
 	description.dimension = UShort3(verify_cast<uint16_t>(width), verify_cast<uint16_t>(height), 0);
@@ -492,7 +493,7 @@ static TShared<TextureResource> NewTexture2D(SnowyStream& snowyStream, const Str
 
 static TShared<TextureResource> NewTexture3D(SnowyStream& snowyStream, const String& path, int width, int height, int depth, bool half) {
 	TShared<TextureResource> textureResource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), path, false, ResourceBase::RESOURCE_VIRTUAL);
-	IRender::Queue* renderQueue = snowyStream.GetResourceQueue();
+	IRender::Queue* renderQueue = snowyStream.GetRenderResourceManager()->GetResourceQueue();
 
 	IRender::Resource::TextureDescription& description = textureResource->description;
 	description.dimension = UShort3(verify_cast<uint16_t>(width), verify_cast<uint16_t>(height), verify_cast<uint16_t>(depth));

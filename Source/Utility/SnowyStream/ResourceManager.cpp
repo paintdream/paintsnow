@@ -12,6 +12,8 @@ const String& ResourceManager::GetLocationPostfix() const {
 	return uniExtension;
 }
 
+void ResourceManager::TickDevice(IDevice& device) {}
+
 ResourceManager::~ResourceManager() {
 	assert(resourceMap.empty());
 }
@@ -75,6 +77,10 @@ void ResourceManager::Insert(ResourceBase* resource) {
 	InvokeAttach(resource, GetContext());
 }
 
+void ResourceManager::NotifyResourceCompletion(const TShared<ResourceBase>& resource, size_t runtimeVersion) {
+	resource->Complete(runtimeVersion);
+}
+
 IUniformResourceManager& ResourceManager::GetUniformResourceManager() {
 	return uniformResourceManager;
 }
@@ -126,3 +132,4 @@ void ResourceManager::Remove(ResourceBase* resource) {
 }
 
 ResourceCreator::~ResourceCreator() {}
+

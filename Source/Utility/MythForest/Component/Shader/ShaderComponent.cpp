@@ -1,5 +1,6 @@
 #include "ShaderComponent.h"
 #include "../../../SnowyStream/SnowyStream.h"
+#include "../../../SnowyStream/Manager/RenderResourceManager.h"
 #include <sstream>
 
 using namespace PaintsNow;
@@ -39,7 +40,7 @@ void ShaderComponent::SetComplete(Engine& engine, IScript::Request::Ref callback
 
 	// Try to compile
 	IRender& render = engine.interfaces.render;
-	IRender::Queue* queue = engine.snowyStream.GetResourceQueue();
+	IRender::Queue* queue = engine.snowyStream.GetRenderResourceManager()->GetResourceQueue();
 
 	ReferenceObject();
 

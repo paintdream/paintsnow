@@ -1,5 +1,6 @@
 #include "VisibilityComponent.h"
 #include "../../../SnowyStream/SnowyStream.h"
+#include "../../../SnowyStream/Manager/RenderResourceManager.h"
 #include "../Space/SpaceComponent.h"
 #include "../Renderable/RenderableComponent.h"
 #include "../Transform/TransformComponent.h"
@@ -56,7 +57,7 @@ void VisibilityComponent::Initialize(Engine& engine, Entity* entity) {
 	collectLock = thread.NewLock();
 
 	IRender& render = engine.interfaces.render;
-	IRender::Device* device = engine.snowyStream.GetRenderDevice();
+	IRender::Device* device = engine.snowyStream.GetRenderResourceManager()->GetRenderDevice();
 	renderQueue = render.CreateQueue(device);
 
 	String path = ShaderResource::GetShaderPathPrefix() + UniqueType<ConstMapPass>::Get()->GetBriefName();

@@ -4,6 +4,7 @@
 #include "../../General/Interface/IRender.h"
 #include "../BridgeSunset/BridgeSunset.h"
 #include "../SnowyStream/SnowyStream.h"
+#include "../SnowyStream/Manager/RenderResourceManager.h"
 
 using namespace PaintsNow;
 
@@ -12,7 +13,7 @@ Engine::Engine(Interfaces& pinterfaces, BridgeSunset& pbridgeSunset, SnowyStream
 	finalizeEvent = interfaces.thread.NewEvent();
 	frameTasks.resize(GetKernel().GetWarpCount());
 
-	IRender::Device* device = snowyStream.GetRenderDevice();
+	IRender::Device* device = snowyStream.GetRenderResourceManager()->GetRenderDevice();
 	IRender& render = interfaces.render;
 	warpResourceQueues.resize(GetKernel().GetWarpCount(), nullptr);
 
@@ -93,7 +94,7 @@ std::unordered_map<String, Module*>& Engine::GetModuleMap() {
 void Engine::TickFrame() {
 	IRender& render = interfaces.render;
 	/*
-	IRender::Queue* resourceQueue = snowyStream.GetResourceQueue();
+	IRender::Queue* resourceQueue = snowyStream.GetRenderResourceManager()->GetResourceQueue();
 	if (resourceQueue != nullptr) {
 		interfaces.render.SubmitQueues(&resourceQueue, 1, IRender::SUBMIT_EXECUTE_ALL);
 	}*/

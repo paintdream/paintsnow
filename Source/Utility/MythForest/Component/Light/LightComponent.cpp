@@ -3,6 +3,7 @@
 #include "../Transform/TransformComponent.h"
 #include "../Visibility/VisibilityComponent.h"
 #include "../../../SnowyStream/SnowyStream.h"
+#include "../../../SnowyStream/Manager/RenderResourceManager.h"
 #include "../../../MythForest/MythForest.h"
 #include "../../../../Core/Driver/Profiler/Optick/optick.h"
 #include <utility>
@@ -184,7 +185,7 @@ void LightComponent::SetRange(const Float3& r) {
 
 void LightComponent::ShadowLayer::CollectRenderableComponent(Engine& engine, TaskData& taskData, RenderableComponent* renderableComponent, TaskData::WarpData& warpData, const WorldInstanceData& instanceData) {
 	IRender& render = engine.interfaces.render;
-	IRender::Device* device = engine.snowyStream.GetRenderDevice();
+	IRender::Device* device = engine.snowyStream.GetRenderResourceManager()->GetRenderDevice();
 	IDrawCallProvider::InputRenderData inputRenderData(0.0f, pipeline());
 	IDrawCallProvider::DrawCallAllocator allocator(&warpData.bytesCache);
 	std::vector<IDrawCallProvider::OutputRenderData, IDrawCallProvider::DrawCallAllocator> drawCalls(allocator);
@@ -434,7 +435,7 @@ ShadowLayerConfig::TaskData::WarpData::WarpData() : renderQueue(nullptr) {}
 ShadowLayerConfig::TaskData::TaskData(Engine& engine, uint32_t warpCount, const UShort2& resolution) : pendingCount(0) {
 	warpData.resize(warpCount);
 	IRender& render = engine.interfaces.render;
-	IRender::Device* device = engine.snowyStream.GetRenderDevice();
+	IRender::Device* device = engine.snowyStream.GetRenderResourceManager()->GetRenderDevice();
 
 	for (uint32_t i = 0; i < warpCount; i++) {
 		warpData[i].renderQueue = render.CreateQueue(device);

@@ -249,6 +249,10 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\ParticleResource.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Manager\RenderResourceManager.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\ResourceBase.cpp
 # End Source File
 # Begin Source File
@@ -630,6 +634,10 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\ParticleResource.h
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Filter\Operator\RegressionOperator.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Manager\RenderResourceManager.h
 # End Source File
 # Begin Source File
 

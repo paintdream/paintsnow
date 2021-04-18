@@ -4,6 +4,7 @@
 #include "../Renderable/RenderableComponent.h"
 #include "../Transform/TransformComponent.h"
 #include "../Explorer/ExplorerComponent.h"
+#include "../../../SnowyStream/Manager/RenderResourceManager.h"
 #include "../../../../Core/Driver/Profiler/Optick/optick.h"
 #include <cmath>
 #include <ctime>
@@ -131,7 +132,7 @@ void PhaseComponent::Initialize(Engine& engine, Entity* entity) {
 		shadowPipeline = snowyStream.CreateReflectedResource(UniqueType<ShaderResource>(), ShaderResource::GetShaderPathPrefix() + UniqueType<ConstMapPass>::Get()->GetBriefName(), true, ResourceBase::RESOURCE_VIRTUAL)->QueryInterface(UniqueType<ShaderResourceImpl<ConstMapPass> >());
 
 		IRender& render = engine.interfaces.render;
-		IRender::Device* device = engine.snowyStream.GetRenderDevice();
+		IRender::Device* device = engine.snowyStream.GetRenderResourceManager()->GetRenderDevice();
 		renderQueue = render.CreateQueue(device);
 
 		statePostResource = render.CreateResource(device, IRender::Resource::RESOURCE_RENDERSTATE);
@@ -239,7 +240,7 @@ void PhaseComponent::Setup(Engine& engine, uint32_t phaseCount, uint32_t taskCou
 	OPTICK_EVENT();
 	assert(tasks.empty() && phases.empty());
 	IRender& render = engine.interfaces.render;
-	IRender::Device* device = engine.snowyStream.GetRenderDevice();
+	IRender::Device* device = engine.snowyStream.GetRenderResourceManager()->GetRenderDevice();
 	SnowyStream& snowyStream = engine.snowyStream;
 	resolution = res;
 	range = r;

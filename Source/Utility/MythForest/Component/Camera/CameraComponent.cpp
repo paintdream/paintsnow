@@ -18,6 +18,7 @@
 #include "../../Engine.h"
 #include "../../../BridgeSunset/BridgeSunset.h"
 #include "../../../SnowyStream/SnowyStream.h"
+#include "../../../SnowyStream/Manager/RenderResourceManager.h"
 #include "../../../../Core/Driver/Profiler/Optick/optick.h"
 #include <cmath>
 #include <iterator>
@@ -99,7 +100,7 @@ void CameraComponent::Initialize(Engine& engine, Entity* entity) {
 		renderFlowComponent->EndPort(port);
 	}
 
-	IRender::Device* device = engine.snowyStream.GetRenderDevice();
+	IRender::Device* device = engine.snowyStream.GetRenderResourceManager()->GetRenderDevice();
 	uint32_t warpCount = engine.bridgeSunset.GetKernel().GetWarpCount();
 	prevTaskData = TShared<TaskData>::From(new TaskData(warpCount));
 	nextTaskData = TShared<TaskData>::From(new TaskData(warpCount));
@@ -554,7 +555,7 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 	OPTICK_EVENT();
 
 	IRender& render = engine.interfaces.render;
-	IRender::Device* device = engine.snowyStream.GetRenderDevice();
+	IRender::Device* device = engine.snowyStream.GetRenderResourceManager()->GetRenderDevice();
 	IDrawCallProvider::InputRenderData inputRenderData(instanceData.viewReference, nullptr, renderFlowComponent->GetMainResolution());
 	IDrawCallProvider::DrawCallAllocator allocator(&warpData.bytesCache);
 	std::vector<IDrawCallProvider::OutputRenderData, IDrawCallProvider::DrawCallAllocator> drawCalls(allocator);
