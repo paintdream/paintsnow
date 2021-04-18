@@ -66,9 +66,6 @@ namespace PaintsNow {
 
 	public:
 		std::atomic<uint32_t> critical;
-
-	protected:
-		std::atomic<size_t> runtimeVersion; // for resource updating synchronization
 	};
 
 	template <class T>

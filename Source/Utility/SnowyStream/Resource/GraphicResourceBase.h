@@ -78,10 +78,14 @@ namespace PaintsNow {
 
 		GraphicResourceBase(ResourceManager& manager, const String& uniqueID);
 		~GraphicResourceBase() override;
+		bool Complete(size_t version) override;
 		void Refresh(IRender& device, void* deviceContext) override;
 		void Attach(IRender& device, void* deviceContext) override;
 		void Detach(IRender& device, void* deviceContext) override;
 		TObject<IReflect>& operator () (IReflect& reflect) override;
+
+	protected:
+		std::atomic<size_t> runtimeVersion; // for resource updating synchronization
 	};
 }
 

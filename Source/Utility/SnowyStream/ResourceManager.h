@@ -34,7 +34,6 @@ namespace PaintsNow {
 
 		virtual Unique GetDeviceUnique() const = 0;
 		virtual void TickDevice(IDevice&);
-		virtual void NotifyResourceCompletion(const TShared<ResourceBase>& resource, size_t runtimeVersion);
 
 	public:
 		virtual void InvokeRefresh(ResourceBase* resource, void* deviceContext = nullptr) = 0;

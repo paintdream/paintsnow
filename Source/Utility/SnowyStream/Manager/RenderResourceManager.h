@@ -18,11 +18,14 @@ namespace PaintsNow {
 
 		IRender::Device* GetRenderDevice() const;
 		IRender::Queue* GetResourceQueue();
-		void NotifyResourceCompletion(const TShared<ResourceBase>& resource, size_t runtimeVersion);
+		size_t NotifyCompletion(const TShared<ResourceBase>& resource);
 		uint32_t GetRenderResourceFrameStep() const;
 		void TickDevice(IDevice& device) override;
 		size_t GetProfile(const String& feature);
 		void SetRenderResourceFrameStep(uint32_t limitStep);
+		size_t GetCurrentRuntimeVersion() const;
+		size_t GetNextRuntimeVersion() const;
+		bool GetCompleted() const;
 
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 
@@ -37,5 +40,9 @@ namespace PaintsNow {
 		IRender::Device* renderDevice;
 		IRender::Queue* resourceQueue;
 		uint32_t renderResourceStepPerFrame;
+		std::atomic<uint32_t> currentNotifiedResourceCount;
+		std::atomic<size_t> currentRuntimeVersion;
+		std::atomic<size_t> nextRuntimeVersion;
+		TQueueList<TShared<ResourceBase> > pendingCompletionResources;
 	};
 }

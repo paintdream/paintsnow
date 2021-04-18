@@ -43,6 +43,7 @@ RenderResourceManager::RenderResourceManager(ThreadPool& tp, IUniformResourceMan
 	resourceQueue = dev.CreateQueue(renderDevice, IRender::QUEUE_MULTITHREAD);
 	assert(context == nullptr); // must not initialize context
 	context = resourceQueue;
+	currentNotifiedResourceCount.store(0, std::memory_order_release);
 	RegisterBuiltinPasses();
 	RegisterBuiltinResources();
 }
@@ -257,6 +258,7 @@ void RegisterPass(ResourceManager& resourceManager, UniqueType<T> type, const St
 		resourceManager.Insert(materialResource());
 		resourceManager.UnLock();
 	}
+
 	shaderResource->ReleaseObject();
 }
 
@@ -314,16 +316,63 @@ void RenderResourceManager::SetRenderResourceFrameStep(uint32_t limitStep) {
 	renderResourceStepPerFrame = limitStep;
 }
 
-void RenderResourceManager::NotifyResourceCompletion(const TShared<ResourceBase>& resource, size_t runtimeVersion) {
-	// TODO: delay resource completion
-	DeviceResourceManager<IRender>::NotifyResourceCompletion(resource, runtimeVersion);
+size_t RenderResourceManager::GetCurrentRuntimeVersion() const {
+	return currentRuntimeVersion.load(std::memory_order_acquire);
+}
+
+size_t RenderResourceManager::GetNextRuntimeVersion() const {
+	return nextRuntimeVersion.load(std::memory_order_acquire);
+}
+
+size_t RenderResourceManager::NotifyCompletion(const TShared<ResourceBase>& resource) {
+	size_t limit = renderResourceStepPerFrame;
+	uint32_t runtimeVersion = nextRuntimeVersion.load(std::memory_order_acquire);
+
+	if (limit == 0) {
+		// available at once!
+		resource->Complete(runtimeVersion);
+		return runtimeVersion;
+	} else {
+		pendingCompletionResources.Push(resource);
+
+		uint32_t current = currentNotifiedResourceCount.fetch_add(1, std::memory_order_acquire);
+		IRender& render = device;
+		while (current >= limit && currentNotifiedResourceCount.compare_exchange_strong(current, current - limit, std::memory_order_release)) {
+			nextRuntimeVersion.fetch_add(1, std::memory_order_acquire);
+			render.ExecuteResource(resourceQueue, nullptr); // yield execution to next frame(s)
+		}
+
+		return runtimeVersion + 1;
+	}
+}
+
+bool RenderResourceManager::GetCompleted() const {
+	assert(currentRuntimeVersion.load(std::memory_order_acquire) <= nextRuntimeVersion.load(std::memory_order_acquire));
+	return currentRuntimeVersion.load(std::memory_order_acquire) == nextRuntimeVersion.load(std::memory_order_acquire);
 }
 
 void RenderResourceManager::TickDevice(IDevice& tickingDevice) {
 	if (&device == &tickingDevice) {
 		OPTICK_EVENT();
+
 		if (resourceQueue != nullptr) {
-			device.SubmitQueues(&resourceQueue, 1, IRender::SUBMIT_EXECUTE_ALL);
+			device.SubmitQueues(&resourceQueue, 1, IRender::SUBMIT_EXECUTE);
+			assert(currentRuntimeVersion.load(std::memory_order_acquire) <= nextRuntimeVersion.load(std::memory_order_acquire));
+
+			if (currentRuntimeVersion.load(std::memory_order_acquire) != nextRuntimeVersion.load(std::memory_order_acquire)) {
+				size_t version = currentRuntimeVersion.fetch_add(1, std::memory_order_acquire) + 1;
+
+				while (!pendingCompletionResources.Empty()) {
+					const TShared<ResourceBase>& resource = pendingCompletionResources.Top();
+					if (!resource) {
+						pendingCompletionResources.Pop();
+						break;
+					}
+
+					resource->Complete(version);
+					pendingCompletionResources.Pop();
+				}
+			}
 		}
 	}
 }
