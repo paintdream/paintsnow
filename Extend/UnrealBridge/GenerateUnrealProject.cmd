@@ -1,1 +1,1 @@
-"C:/Program Files/Epic Games/UE_4.25/Engine/Binaries/DotNET/UnrealBuildTool.exe"  -projectfiles -project="%~dp0/UnrealStartupProject.uproject" -game -rocket -progress -2019
+"C:/Program Files/Epic Games/UE_4.26/Engine/Binaries/DotNET/UnrealBuildTool.exe"  -projectfiles -project="%~dp0/UnrealStartupProject.uproject" -game -rocket -progress -2019

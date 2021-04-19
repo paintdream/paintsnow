@@ -699,6 +699,10 @@ void VisibilityComponent::DispatchTasks(Engine& engine) {
 
 void VisibilityComponent::RoutineTickTasks(Engine& engine) {
 	OPTICK_EVENT();
-	ResolveTasks(engine);
-	DispatchTasks(engine);
+
+	// Must complete all pending resources
+	if (engine.snowyStream.GetRenderResourceManager()->GetCompleted()) {
+		ResolveTasks(engine);
+		DispatchTasks(engine);
+	}
 }
