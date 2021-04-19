@@ -4,14 +4,14 @@
 //
 
 #pragma once
-#include "GraphicResourceBase.h"
+#include "RenderResourceBase.h"
 #include "ShaderResource.h"
 #include "TextureResource.h"
 #include "MeshResource.h"
 #include "../../../General/Interface/IAsset.h"
 
 namespace PaintsNow {
-	class MaterialResource : public TReflected<MaterialResource, GraphicResourceBase> {
+	class MaterialResource : public TReflected<MaterialResource, RenderResourceBase> {
 	public:
 		MaterialResource(ResourceManager& manager, const String& uniqueID);
 

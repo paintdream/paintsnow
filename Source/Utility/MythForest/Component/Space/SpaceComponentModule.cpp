@@ -31,7 +31,7 @@ TShared<SpaceComponent> SpaceComponentModule::RequestNew(IScript::Request& reque
 	} else {
 		spaceComponent->SetWarpIndex(warpIndex);
 		if (warpIndex != currentWarpIndex) {
-			spaceComponent->Flag().fetch_or(Component::COMPONENT_LOCALIZED_WARP);
+			spaceComponent->Flag().fetch_or(Component::COMPONENT_OVERRIDE_WARP);
 		}
 	}
 

@@ -34,7 +34,7 @@ static void InvokeRemoveAll(void* context, bool run, Engine& engine, SpaceCompon
 }
 
 void SpaceComponent::Uninitialize(Engine& engine, Entity* entity) {
-	if (Flag().load(std::memory_order_relaxed) & COMPONENT_LOCALIZED_WARP) {
+	if (Flag().load(std::memory_order_relaxed) & COMPONENT_OVERRIDE_WARP) {
 		QueueRoutine(engine, CreateTask(Wrap(InvokeRemoveAll), std::ref(engine), this));
 	} else {
 		RemoveAll(engine);
@@ -129,7 +129,7 @@ void SpaceComponent::DispatchEvent(Event& event, Entity* entity) {
 	OPTICK_EVENT();
 	// forward tick only
 	if ((Flag().load(std::memory_order_relaxed) & SPACECOMPONENT_FORWARD_EVENT_TICK) && event.eventID == Event::EVENT_TICK) {
-		if (Flag().load(std::memory_order_relaxed) & COMPONENT_LOCALIZED_WARP) {
+		if (Flag().load(std::memory_order_relaxed) & COMPONENT_OVERRIDE_WARP) {
 			QueueRoutine(event.engine, CreateTaskContextFree(Wrap(this, &SpaceComponent::RoutineDispatchEvent), event));
 		} else {
 			RoutineDispatchEvent(event);
@@ -364,7 +364,7 @@ float SpaceComponent::RoutineRaycast(RaycastTask& task, Float3Pair& ray, Unit* p
 float SpaceComponent::Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const {
 	OPTICK_EVENT();
 
-	if (!(Flag().load(std::memory_order_relaxed) & COMPONENT_LOCALIZED_WARP) || task.GetEngine().GetKernel().GetCurrentWarpIndex() == GetWarpIndex()) {
+	if (!(Flag().load(std::memory_order_relaxed) & COMPONENT_OVERRIDE_WARP) || task.GetEngine().GetKernel().GetCurrentWarpIndex() == GetWarpIndex()) {
 		if (Flag().load(std::memory_order_relaxed) & SPACECOMPONENT_ORDERED) {
 			RaycastInternal(rootEntity, task, ray, parent, ratio, boundingBox, std::true_type());
 		} else {
@@ -393,7 +393,7 @@ void SpaceComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box, bool rec
 		Kernel& kernel = engine.bridgeSunset.GetKernel();
 		uint32_t warp = kernel.GetCurrentWarpIndex();
 
-		if ((flag & COMPONENT_LOCALIZED_WARP) && warp != GetWarpIndex()) {
+		if ((flag & COMPONENT_OVERRIDE_WARP) && warp != GetWarpIndex()) {
 			if (!(Flag().fetch_or(TINY_UPDATING, std::memory_order_acquire) & TINY_UPDATING)) {
 				QueueRoutine(engine, CreateTaskContextFree(Wrap(this, &SpaceComponent::RoutineUpdateBoundingBox), std::ref(engine), std::ref(newBox), recursive));
 

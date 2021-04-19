@@ -4,11 +4,11 @@
 //
 
 #pragma once
-#include "GraphicResourceBase.h"
+#include "RenderResourceBase.h"
 #include "../../../General/Interface/IAsset.h"
 
 namespace PaintsNow {
-	class ParticleResource : public TReflected<ParticleResource, GraphicResourceBase> {
+	class ParticleResource : public TReflected<ParticleResource, RenderResourceBase> {
 	public:
 		ParticleResource(ResourceManager& manager, const String& uniqueID);
 		bool operator << (IStreamBase& stream) override;

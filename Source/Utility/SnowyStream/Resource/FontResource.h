@@ -4,7 +4,7 @@
 //
 
 #pragma once
-#include "GraphicResourceBase.h"
+#include "RenderResourceBase.h"
 #include "TextureResource.h"
 #include "../ResourceManager.h"
 #include "../../../General/Interface/IFontBase.h"

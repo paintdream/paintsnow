@@ -4,10 +4,10 @@
 //
 
 #pragma once
-#include "GraphicResourceBase.h"
+#include "RenderResourceBase.h"
 
 namespace PaintsNow {
-	class TextureResource : public TReflected<TextureResource, GraphicResourceBase> {
+	class TextureResource : public TReflected<TextureResource, RenderResourceBase> {
 	public:
 		TextureResource(ResourceManager& manager, const String& uniqueID);
 

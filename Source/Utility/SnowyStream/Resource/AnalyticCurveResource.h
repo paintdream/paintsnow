@@ -4,11 +4,11 @@
 //
 
 #pragma once
-#include "GraphicResourceBase.h"
+#include "RenderResourceBase.h"
 #include "../../../General/Interface/IAsset.h"
 
 namespace PaintsNow {
-	class AnalyticCurveResource : public TReflected<AnalyticCurveResource, GraphicResourceBase> {
+	class AnalyticCurveResource : public TReflected<AnalyticCurveResource, RenderResourceBase> {
 	public:
 		AnalyticCurveResource(ResourceManager& manager, const String& uniqueID);
 	};

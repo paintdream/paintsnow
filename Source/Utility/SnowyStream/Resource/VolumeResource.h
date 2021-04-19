@@ -4,11 +4,11 @@
 //
 
 #pragma once
-#include "GraphicResourceBase.h"
+#include "RenderResourceBase.h"
 #include "../../../General/Interface/IAsset.h"
 
 namespace PaintsNow {
-	class VolumeResource : public TReflected<VolumeResource, GraphicResourceBase> {
+	class VolumeResource : public TReflected<VolumeResource, RenderResourceBase> {
 	public:
 		VolumeResource(ResourceManager& manager, const String& uniqueID);
 		bool operator << (IStreamBase& stream) override;

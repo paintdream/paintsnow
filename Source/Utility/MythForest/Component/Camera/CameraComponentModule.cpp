@@ -27,6 +27,7 @@ TObject<IReflect>& CameraComponentModule::operator () (IReflect& reflect) {
 		ReflectMethod(RequestGetCollectedTriangleCount)[ScriptMethodLocked = "GetCollectedTriangleCount"];
 		ReflectMethod(RequestSetProjectionJitter)[ScriptMethodLocked = "SetProjectionJitter"];
 		ReflectMethod(RequestSetSmoothTrack)[ScriptMethodLocked = "SetSmoothTrack"];
+		ReflectMethod(RequestSetAgileRendering)[ScriptMethodLocked = "SetAgileRendering"];
 	}
 
 	return *this;
@@ -140,3 +141,16 @@ void CameraComponentModule::RequestSetSmoothTrack(IScript::Request& request, ISc
 		camera->Flag().fetch_and(~CameraComponent::CAMERACOMPONENT_SMOOTH_TRACK, std::memory_order_relaxed);
 	}
 }
+
+void CameraComponentModule::RequestSetAgileRendering(IScript::Request& request, IScript::Delegate<CameraComponent> camera, bool agileRendering) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(camera);
+	CHECK_THREAD_IN_MODULE(camera);
+
+	if (agileRendering) {
+		camera->Flag().fetch_or(CameraComponent::CAMERACOMPONENT_AGILE_RENDERING, std::memory_order_relaxed);
+	} else {
+		camera->Flag().fetch_and(~CameraComponent::CAMERACOMPONENT_AGILE_RENDERING, std::memory_order_relaxed);
+	}
+}
+

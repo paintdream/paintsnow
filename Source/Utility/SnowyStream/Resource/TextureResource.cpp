@@ -15,7 +15,7 @@ TextureResource::TextureResource(ResourceManager& manager, const String& uniqueI
 }
 
 void TextureResource::Attach(IRender& render, void* deviceContext) {
-	GraphicResourceBase::Attach(render, deviceContext);
+	RenderResourceBase::Attach(render, deviceContext);
 	IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(deviceContext);
 	assert(queue != nullptr);
 	assert(instance == nullptr);
@@ -29,11 +29,11 @@ void TextureResource::Detach(IRender& render, void* deviceContext) {
 		instance = nullptr;
 	}
 
-	GraphicResourceBase::Detach(render, deviceContext);
+	RenderResourceBase::Detach(render, deviceContext);
 }
 
 void TextureResource::Unmap() {
-	GraphicResourceBase::Unmap();
+	RenderResourceBase::Unmap();
 	ThreadPool& threadPool = resourceManager.GetThreadPool();
 	if (threadPool.PollExchange(critical, 1u) == 0u) {
 		if (mapCount.load(std::memory_order_relaxed) == 0) {

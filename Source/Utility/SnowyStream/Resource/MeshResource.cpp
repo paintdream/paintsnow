@@ -50,7 +50,7 @@ void MeshResource::Refresh(IRender& render, void* deviceContext) {
 void MeshResource::Attach(IRender& render, void* deviceContext) {
 	// delayed to upload
 
-	GraphicResourceBase::Attach(render, deviceContext);
+	RenderResourceBase::Attach(render, deviceContext);
 }
 
 typedef IRender::Resource::BufferDescription Description;
@@ -153,7 +153,7 @@ void MeshResource::Upload(IRender& render, void* deviceContext) {
 
 void MeshResource::Unmap() {
 	OPTICK_EVENT();
-	GraphicResourceBase::Unmap();
+	RenderResourceBase::Unmap();
 
 	ThreadPool& threadPool = resourceManager.GetThreadPool();
 	if (threadPool.PollExchange(critical, 1u) == 0u) {
@@ -181,7 +181,7 @@ void MeshResource::Detach(IRender& render, void* deviceContext) {
 		ClearBuffer(render, queue, bufferCollection.texCoordBuffers[i]);
 	}
 
-	GraphicResourceBase::Detach(render, deviceContext);
+	RenderResourceBase::Detach(render, deviceContext);
 }
 
 void MeshResource::Download(IRender& render, void* deviceContext) {

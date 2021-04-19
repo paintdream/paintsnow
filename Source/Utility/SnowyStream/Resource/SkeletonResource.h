@@ -4,11 +4,11 @@
 //
 
 #pragma once
-#include "GraphicResourceBase.h"
+#include "RenderResourceBase.h"
 #include "../../../General/Interface/IAsset.h"
 
 namespace PaintsNow {
-	class SkeletonResource : public TReflected<SkeletonResource, GraphicResourceBase> {
+	class SkeletonResource : public TReflected<SkeletonResource, RenderResourceBase> {
 	public:
 		SkeletonResource(ResourceManager& manager, const String& uniqueID);
 		TObject<IReflect>& operator () (IReflect& reflect) override;

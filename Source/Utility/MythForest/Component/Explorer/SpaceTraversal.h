@@ -61,7 +61,7 @@ namespace PaintsNow {
 			std::atomic<uint32_t>& pendingCount = reinterpret_cast<std::atomic<uint32_t>&>(taskData.pendingCount);
 
 			assert(pendingCount.load(std::memory_order_acquire) != 0); // must increase it before calling me.
-			if ((spaceComponent->Flag().load(std::memory_order_relaxed) & Component::COMPONENT_LOCALIZED_WARP) && spaceComponent->GetWarpIndex() != engine.GetKernel().GetCurrentWarpIndex()) {
+			if ((spaceComponent->Flag().load(std::memory_order_relaxed) & Component::COMPONENT_OVERRIDE_WARP) && spaceComponent->GetWarpIndex() != engine.GetKernel().GetCurrentWarpIndex()) {
 				spaceComponent->QueueRoutine(engine, CreateTaskContextFree(Wrap(this, &SpaceTraversal<T, Config>::CollectComponentsFromSpace), std::ref(engine), std::ref(taskData), instanceData, captureData, spaceComponent));
 			} else {
 				Entity* spaceRoot = spaceComponent->GetRootEntity();

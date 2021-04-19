@@ -4,12 +4,12 @@
 //
 
 #pragma once
-#include "GraphicResourceBase.h"
+#include "RenderResourceBase.h"
 #include "../../../General/Interface/IAsset.h"
 #include "TextureResource.h"
 
 namespace PaintsNow {
-	class TerrainResource : public TReflected<TerrainResource, GraphicResourceBase> {
+	class TerrainResource : public TReflected<TerrainResource, RenderResourceBase> {
 	public:
 		TerrainResource(ResourceManager& manager, const String& uniqueID);
 		TObject<IReflect>& operator () (IReflect& reflect) override;

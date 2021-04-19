@@ -7,7 +7,7 @@
 #include "../../../../Core/Template/TCache.h"
 #include "../../Entity.h"
 #include "../../Component.h"
-#include "../../../SnowyStream/Resource/GraphicResourceBase.h"
+#include "../../../SnowyStream/Resource/RenderResourceBase.h"
 #include "../../../SnowyStream/Resource/MaterialResource.h"
 #include "../../../SnowyStream/Resource/TextureResource.h"
 #include "../../../SnowyStream/Resource/SkeletonResource.h"

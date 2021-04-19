@@ -118,7 +118,7 @@ void Entity::UninitializeComponent(Engine& engine, Component* component) {
 }
 
 void Entity::AddComponent(Engine& engine, Component* component) {
-	assert((component->Flag().load(std::memory_order_acquire) & Component::COMPONENT_LOCALIZED_WARP) || component->GetWarpIndex() == GetWarpIndex());
+	assert((component->Flag().load(std::memory_order_acquire) & Component::COMPONENT_OVERRIDE_WARP) || component->GetWarpIndex() == GetWarpIndex());
 	uint32_t id = component->GetQuickUniqueID();
 	if (id != ~(uint32_t)0) {
 		assert(component->Flag().load(std::memory_order_relaxed) & TINY_UNIQUE);

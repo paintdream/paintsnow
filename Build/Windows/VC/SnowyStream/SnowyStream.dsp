@@ -177,10 +177,6 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\ForwardLightingPas
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\GraphicResourceBase.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\LightBufferEncodePass.cpp
 # End Source File
 # Begin Source File
@@ -246,6 +242,10 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\ParticlePass.cpp
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\ParticleResource.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\RenderResourceBase.cpp
 # End Source File
 # Begin Source File
 
@@ -561,10 +561,6 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Filter\Sampler\GaussianSampler.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\GraphicResourceBase.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\LightBufferEncodePass.h
 # End Source File
 # Begin Source File
@@ -634,6 +630,10 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\ParticleResource.h
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Filter\Operator\RegressionOperator.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\RenderResourceBase.h
 # End Source File
 # Begin Source File
 

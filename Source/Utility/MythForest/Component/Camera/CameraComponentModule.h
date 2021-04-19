@@ -91,11 +91,18 @@ namespace PaintsNow {
 		void RequestSetProjectionJitter(IScript::Request& request, IScript::Delegate<CameraComponent> cameraComponent, bool jitter);
 
 		/// <summary>
-		/// Enable/Disable camera interploation on low tps with high fps
+		/// Enable/Disable camera interpolation on low tps with high fps
 		/// </summary>
 		/// <param name="cameraComponent"> the CameraComponent </param>
 		/// <param name="smoothTrack"> enable smooth track or not </param>
 		void RequestSetSmoothTrack(IScript::Request& request, IScript::Delegate<CameraComponent> cameraComponent, bool smoothTrack);
+
+		/// <summary>
+		/// Enable/Disable agile rendering (i.e. still render part of scene even some objects may not be ready.
+		/// </summary>
+		/// <param name="request"></param>
+		/// <param name="enableAgileRendering"></param>
+		void RequestSetAgileRendering(IScript::Request& request, IScript::Delegate<CameraComponent> camera, bool enableAgileRendering);
 
 	protected:
 		BridgeComponentModule* bridgeComponentModule;

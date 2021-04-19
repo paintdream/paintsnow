@@ -58,7 +58,7 @@ file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/include)
 include_directories("${PROJECT_BINARY_DIR}/include")
 message(STATUS "Creating ${PROJECT_BINARY_DIR}/include/ftconfig.h.")
 execute_process(
-  COMMAND sed -e "s/FT_CONFIG_OPTIONS_H/"ftoption.h>/" -e "s/FT_CONFIG_STANDARD_LIBRARY_H/<ftstdlib.h"/" -e "s?/undef ?#undef ?"
+  COMMAND sed -e "s/FT_CONFIG_OPTIONS_H/\"ftoption.h>/" -e "s/FT_CONFIG_STANDARD_LIBRARY_H/<ftstdlib.h\"/" -e "s?/undef ?#undef ?"
   INPUT_FILE ${PROJECT_SOURCE_DIR}/builds/unix/ftconfig.in
   OUTPUT_FILE ${PROJECT_BINARY_DIR}/include/ftconfig.h
 )

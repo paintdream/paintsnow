@@ -207,7 +207,7 @@ void MythForest::RequestAddEntityComponent(IScript::Request& request, IScript::D
 	CHECK_DELEGATE(component);
 	CHECK_THREAD_IN_MODULE(entity);
 	
-	if (!(component->Flag().load(std::memory_order_acquire) & Component::COMPONENT_LOCALIZED_WARP)) {
+	if (!(component->Flag().load(std::memory_order_acquire) & Component::COMPONENT_OVERRIDE_WARP)) {
 		CHECK_THREAD_IN_MODULE(component);
 	}
 

@@ -18,7 +18,7 @@ const String& Component::GetAliasedTypeName() const {
 }
 
 void Component::Initialize(Engine& engine, Entity* entity) {
-	assert((Flag().load(std::memory_order_acquire) & COMPONENT_LOCALIZED_WARP) || entity->GetWarpIndex() == GetWarpIndex());
+	assert((Flag().load(std::memory_order_acquire) & COMPONENT_OVERRIDE_WARP) || entity->GetWarpIndex() == GetWarpIndex());
 	Flag().fetch_or(Tiny::TINY_ACTIVATED, std::memory_order_relaxed);
 }
 

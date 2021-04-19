@@ -4,12 +4,12 @@
 //
 
 #pragma once
-#include "GraphicResourceBase.h"
+#include "RenderResourceBase.h"
 #include "../../../General/Interface/IAsset.h"
 #include "../../../General/Misc/PassBase.h"
 
 namespace PaintsNow {
-	class MeshResource : public TReflected<MeshResource, GraphicResourceBase> {
+	class MeshResource : public TReflected<MeshResource, RenderResourceBase> {
 	public:
 		MeshResource(ResourceManager& manager, const String& uniqueID);
 		~MeshResource() override;
