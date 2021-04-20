@@ -121,8 +121,6 @@ namespace PaintsNow {
 					meshResource = engine.snowyStream.CreateReflectedResource(UniqueType<MeshResource>(), path, true, ResourceBase::RESOURCE_VIRTUAL);
 					assert(meshResource);
 				}
-
-				assert(meshResource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_UPLOADED);
 			}
 
 			BaseClass::Prepare(engine, queue);

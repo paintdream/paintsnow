@@ -427,7 +427,6 @@ private:
 		if (run) {
 			resourceList[index] = snowyStream.CreateResource(pathList[index], resType, true);
 			assert(resourceList[index]);
-			assert(resourceList[index]->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_UPLOADED);
 		}
 
 		if (callbackStep) {

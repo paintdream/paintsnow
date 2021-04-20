@@ -38,7 +38,7 @@
 
 using namespace PaintsNow;
 
-RenderResourceManager::RenderResourceManager(ThreadPool& tp, IUniformResourceManager& hostManager, IRender& dev, const TWrapper<void, const String&>& errorHandler, void* c) : DeviceResourceManager<IRender>(tp, hostManager, dev, errorHandler, c), resourceQueue(nullptr), renderResourceStepPerFrame(8) {
+RenderResourceManager::RenderResourceManager(ThreadPool& tp, IUniformResourceManager& hostManager, IRender& dev, const TWrapper<void, const String&>& errorHandler, void* c) : DeviceResourceManager<IRender>(tp, hostManager, dev, errorHandler, c), resourceQueue(nullptr), renderResourceStepPerFrame(0) {
 	renderDevice = dev.CreateDevice("");
 	resourceQueue = dev.CreateQueue(renderDevice, IRender::QUEUE_MULTITHREAD);
 	assert(context == nullptr); // must not initialize context
@@ -335,11 +335,11 @@ size_t RenderResourceManager::NotifyCompletion(const TShared<ResourceBase>& reso
 	} else {
 		pendingCompletionResources.Push(resource);
 
-		uint32_t current = currentNotifiedResourceCount.fetch_add(1, std::memory_order_acquire);
+		uint32_t current = currentNotifiedResourceCount.fetch_add(1, std::memory_order_acquire) + 1;
 		IRender& render = device;
 		while (current >= limit && currentNotifiedResourceCount.compare_exchange_strong(current, current - limit, std::memory_order_release)) {
 			nextRuntimeVersion.fetch_add(1, std::memory_order_acquire);
-			render.ExecuteResource(resourceQueue, nullptr); // yield execution to next frame(s)
+			render.FlushQueue(resourceQueue); // yield execution to next frame(s)
 		}
 
 		return runtimeVersion + 1;

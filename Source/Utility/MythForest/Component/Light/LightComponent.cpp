@@ -93,13 +93,17 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 		assert(shadowGrid);
 	} else {
 		shadowGrid = TShared<ShadowGrid>::From(new ShadowGrid());
+		shadowGrid->Flag().fetch_or(TINY_MODIFIED, std::memory_order_relaxed);
 	}
 
 	return shadowGrid();
 }
 
 void LightComponent::ShadowLayer::StreamRefreshHandler(Engine& engine, const UShort3& coord, const TShared<SharedTiny>& tiny, const TShared<SharedTiny>& context) {
-	if (!(tiny->Flag().load(std::memory_order_acquire) & TINY_MODIFIED) || !engine.snowyStream.GetRenderResourceManager()->GetCompleted())
+	if (!(tiny->Flag().load(std::memory_order_acquire) & TINY_MODIFIED))
+		return;
+	
+	if (!engine.snowyStream.GetRenderResourceManager()->GetCompleted())
 		return;
 
 	if (tiny->Flag().fetch_or(TINY_UPDATING, std::memory_order_release) & TINY_UPDATING)
@@ -124,7 +128,6 @@ void LightComponent::ShadowLayer::StreamRefreshHandler(Engine& engine, const USh
 		texture->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_relaxed);
 		texture->GetResourceManager().InvokeUpload(texture(), taskData->renderQueue);
 		shadowGrid->texture = texture;
-		shadowGrid->Flag().fetch_or(TINY_MODIFIED, std::memory_order_relaxed);
 	}
 
 	assert(!(taskData->Flag().load(std::memory_order_relaxed) & TINY_MODIFIED));
@@ -264,21 +267,23 @@ void LightComponent::InstanceGroup::Reset() {
 
 void ShadowLayerConfig::TaskData::RenderFrame(Engine& engine) {
 	OPTICK_EVENT();
-	// engine.mythForest.StartCaptureFrame("lightdebug", "");
-	std::vector<IRender::Queue*> renderQueues;
-	renderQueues.emplace_back(renderQueue);
-	for (size_t k = 0; k < warpData.size(); k++) {
-		TaskData::WarpData& warp = warpData[k];
-		renderQueues.emplace_back(warp.renderQueue);
+	if (Flag().fetch_and(~TINY_MODIFIED) & TINY_MODIFIED) {
+		// engine.mythForest.StartCaptureFrame("lightdebug", "");
+		std::vector<IRender::Queue*> renderQueues;
+		renderQueues.emplace_back(renderQueue);
+		for (size_t k = 0; k < warpData.size(); k++) {
+			TaskData::WarpData& warp = warpData[k];
+			renderQueues.emplace_back(warp.renderQueue);
+		}
+
+		engine.interfaces.render.SubmitQueues(&renderQueues[0], verify_cast<uint32_t>(renderQueues.size()), IRender::SUBMIT_EXECUTE_ALL);
+		shadowGrid->Flag().fetch_and(~(TINY_MODIFIED | TINY_UPDATING), std::memory_order_release);
+
+		Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release);
+		Cleanup(engine.interfaces.render);
+		ReleaseObject();
+		// engine.mythForest.EndCaptureFrame();
 	}
-
-	engine.interfaces.render.SubmitQueues(&renderQueues[0], verify_cast<uint32_t>(renderQueues.size()), IRender::SUBMIT_EXECUTE_ALL);
-	shadowGrid->Flag().fetch_and(~(TINY_MODIFIED | TINY_UPDATING), std::memory_order_release);
-
-	Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release);
-	Cleanup(engine.interfaces.render);
-	ReleaseObject();
-	// engine.mythForest.EndCaptureFrame();
 }
 
 void LightComponent::ShadowLayer::CompleteCollect(Engine& engine, TaskData& task) {

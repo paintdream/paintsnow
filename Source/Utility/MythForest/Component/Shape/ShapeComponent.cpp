@@ -110,7 +110,6 @@ void ShapeComponent::RoutineUpdate(Engine& engine, const TShared<MeshResource>& 
 	if (resource->Map()) {
 		Cleanup();
 		meshResource = resource;
-		assert(meshResource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_UPLOADED);
 
 		IAsset::MeshCollection& meshCollection = meshResource->meshCollection;
 		Float3Pair bound = meshResource->boundingBox;
