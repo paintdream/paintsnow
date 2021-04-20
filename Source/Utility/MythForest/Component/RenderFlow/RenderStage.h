@@ -158,10 +158,10 @@ namespace PaintsNow {
 			render.UploadResource(queue, BaseClass::drawCallResource, &copy);
 		}
 
-		void Commit(Engine& engine, std::vector<IRender::Queue*>& queues, std::vector<IRender::Queue*>& instantQueues, std::vector<IRender::Queue*>& deletedQueues, IRender::Queue* instantQueue) override {
-			BaseClass::Commit(engine, queues, instantQueues, deletedQueues, instantQueue);
+		void Commit(Engine& engine, std::vector<IRender::Queue*>& queues, std::vector<IRender::Queue*>& instantQueues, std::vector<IRender::Queue*>& deletedQueues, IRender::Queue* resourceQueue) override {
+			BaseClass::Commit(engine, queues, instantQueues, deletedQueues, resourceQueue);
 			IRender& render = engine.interfaces.render;
-			render.ExecuteResource(instantQueue, BaseClass::drawCallResource);
+			render.ExecuteResource(resourceQueue, BaseClass::drawCallResource);
 		}
 
 	protected:

@@ -335,7 +335,7 @@ void CameraComponent::CommitRenderRequests(Engine& engine, TaskData& taskData, I
 			RenderPortCommandQueue* lastCommandQueue = nullptr;
 			IRender::Resource* lastRenderState = nullptr;
 
-			// warpData.resourceQueue
+			// warpData.mainQueue
 			TaskData::WarpData::InstanceGroupMap& instanceGroups = warpData.instanceGroups;
 			for (TaskData::WarpData::InstanceGroupMap::iterator it = instanceGroups.begin(); it != instanceGroups.end(); ++it) {
 				InstanceGroup& group = (*it).second;

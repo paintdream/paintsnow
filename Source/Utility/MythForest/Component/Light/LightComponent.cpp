@@ -119,7 +119,7 @@ void LightComponent::ShadowLayer::StreamRefreshHandler(Engine& engine, const USh
 		depthStencilDescription.state.format = IRender::Resource::TextureDescription::FLOAT;
 		depthStencilDescription.state.layout = IRender::Resource::TextureDescription::DEPTH;
 
-		TShared<TextureResource> texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("LightShadowBake", shadowGrid()), false, ResourceBase::RESOURCE_VIRTUAL);
+		TShared<TextureResource> texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), "", false, ResourceBase::RESOURCE_VIRTUAL);
 		texture->description.dimension = dim;
 		texture->description.state.attachment = true;
 		texture->description.state.format = IRender::Resource::TextureDescription::FLOAT;

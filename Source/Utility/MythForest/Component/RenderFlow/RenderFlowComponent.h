@@ -20,7 +20,8 @@ namespace PaintsNow {
 			RENDERFLOWCOMPONENT_RESOLUTION_MODIFIED = COMPONENT_CUSTOM_BEGIN << 1,
 			RENDERFLOWCOMPONENT_RENDER_SYNC_TICKING = COMPONENT_CUSTOM_BEGIN << 2,
 			RENDERFLOWCOMPONENT_RENDERING = COMPONENT_CUSTOM_BEGIN << 3,
-			RENDERFLOWCOMPONENT_CUSTOM_BEGIN = COMPONENT_CUSTOM_BEGIN << 4
+			RENDERFLOWCOMPONENT_RESOURCE_PREPARED = COMPONENT_CUSTOM_BEGIN << 4,
+			RENDERFLOWCOMPONENT_CUSTOM_BEGIN = COMPONENT_CUSTOM_BEGIN << 5
 		};
 
 		void Initialize(Engine& engine, Entity* entity) override;
@@ -50,7 +51,7 @@ namespace PaintsNow {
 		UShort2 mainResolution;
 		std::map<String, std::pair<RenderStage*, String> > symbolMap;
 		std::vector<RenderStage*> cachedRenderStages;
-		IRender::Queue* resourceQueue;
+		IRender::Queue* mainQueue;
 		IThread::Lock* frameSyncLock;
 		IThread::Event* frameSyncEvent;
 		IRender::Resource* eventResourcePrepared;

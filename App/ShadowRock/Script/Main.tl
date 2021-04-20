@@ -52,7 +52,7 @@ local function printbox(prefix : string, box : { { number } })
 end
 
 local function InitializeWorld(databasePath : string)
-	-- SnowyStream.SetRenderResourceFrameStep(8)
+	SnowyStream.SetRenderResourceFrameStep(8)
 
 	print("InitializeWorld: Loading repository " .. databasePath .. " ...")
 	local database = Database.New(databasePath)
