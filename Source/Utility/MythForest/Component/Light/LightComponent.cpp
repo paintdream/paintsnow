@@ -87,32 +87,44 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 
 	// Do nothing by now
 	TShared<ShadowGrid> shadowGrid;
-	TShared<TaskData> taskData = currentTask;
 
 	if (tiny && tiny != currentGrid) {
 		shadowGrid = tiny->QueryInterface(UniqueType<ShadowGrid>());
 		assert(shadowGrid);
 	} else {
 		shadowGrid = TShared<ShadowGrid>::From(new ShadowGrid());
+	}
 
+	return shadowGrid();
+}
+
+void LightComponent::ShadowLayer::StreamRefreshHandler(Engine& engine, const UShort3& coord, const TShared<SharedTiny>& tiny, const TShared<SharedTiny>& context) {
+	if (!(tiny->Flag().load(std::memory_order_acquire) & TINY_MODIFIED) || !engine.snowyStream.GetRenderResourceManager()->GetCompleted())
+		return;
+
+	if (tiny->Flag().fetch_or(TINY_UPDATING, std::memory_order_release) & TINY_UPDATING)
+		return;
+
+	TShared<ShadowGrid> shadowGrid = tiny->QueryInterface(UniqueType<ShadowGrid>());
+	TShared<TaskData> taskData = currentTask;
+
+	if (!shadowGrid->texture) {
 		UShort3 dim(resolution.x(), resolution.y(), 0);
 		IRender::Resource::TextureDescription depthStencilDescription;
 		depthStencilDescription.dimension = dim;
 		depthStencilDescription.state.format = IRender::Resource::TextureDescription::FLOAT;
 		depthStencilDescription.state.layout = IRender::Resource::TextureDescription::DEPTH;
 
-		if (!shadowGrid->texture) {
-			TShared<TextureResource> texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("LightShadowBake", shadowGrid()), false, ResourceBase::RESOURCE_VIRTUAL);
-			texture->description.dimension = dim;
-			texture->description.state.attachment = true;
-			texture->description.state.format = IRender::Resource::TextureDescription::FLOAT;
-			texture->description.state.layout = IRender::Resource::TextureDescription::DEPTH;
-			texture->description.state.pcf = true;
-			texture->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_relaxed);
-			texture->GetResourceManager().InvokeUpload(texture(), taskData->renderQueue);
-			shadowGrid->texture = texture;
-			shadowGrid->Flag().fetch_or(TINY_MODIFIED, std::memory_order_relaxed);
-		}
+		TShared<TextureResource> texture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), ResourceBase::GenerateLocation("LightShadowBake", shadowGrid()), false, ResourceBase::RESOURCE_VIRTUAL);
+		texture->description.dimension = dim;
+		texture->description.state.attachment = true;
+		texture->description.state.format = IRender::Resource::TextureDescription::FLOAT;
+		texture->description.state.layout = IRender::Resource::TextureDescription::DEPTH;
+		texture->description.state.pcf = true;
+		texture->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_relaxed);
+		texture->GetResourceManager().InvokeUpload(texture(), taskData->renderQueue);
+		shadowGrid->texture = texture;
+		shadowGrid->Flag().fetch_or(TINY_MODIFIED, std::memory_order_relaxed);
 	}
 
 	assert(!(taskData->Flag().load(std::memory_order_relaxed) & TINY_MODIFIED));
@@ -148,8 +160,6 @@ TShared<SharedTiny> LightComponent::ShadowLayer::StreamLoadHandler(Engine& engin
 
 	std::atomic_thread_fence(std::memory_order_acquire);
 	CollectComponentsFromEntity(engine, *taskData, instanceData, captureData, shadowContext->rootEntity());
-
-	return shadowGrid();
 }
 
 TShared<SharedTiny> LightComponent::ShadowLayer::StreamUnloadHandler(Engine& engine, const UShort3& coord, const TShared<SharedTiny>& tiny, const TShared<SharedTiny>& context) {
@@ -263,7 +273,7 @@ void ShadowLayerConfig::TaskData::RenderFrame(Engine& engine) {
 	}
 
 	engine.interfaces.render.SubmitQueues(&renderQueues[0], verify_cast<uint32_t>(renderQueues.size()), IRender::SUBMIT_EXECUTE_ALL);
-	shadowGrid->Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release);
+	shadowGrid->Flag().fetch_and(~(TINY_MODIFIED | TINY_UPDATING), std::memory_order_release);
 
 	Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release);
 	Cleanup(engine.interfaces.render);
@@ -508,6 +518,7 @@ void LightComponent::ShadowLayer::Initialize(Engine& engine, const TShared<Strea
 
 	if (streamComponent) {
 		streamComponent->SetLoadHandler(Wrap(this, &ShadowLayer::StreamLoadHandler));
+		streamComponent->SetRefreshHandler(Wrap(this, &ShadowLayer::StreamRefreshHandler));
 		streamComponent->SetUnloadHandler(Wrap(this, &ShadowLayer::StreamUnloadHandler));
 	}
 
@@ -535,8 +546,9 @@ void LightComponent::ShadowLayer::Initialize(Engine& engine, const TShared<Strea
 void LightComponent::ShadowLayer::Uninitialize(Engine& engine) {
 	OPTICK_EVENT();
 	if (streamComponent) {
-		streamComponent->SetLoadHandler(TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, const TShared<SharedTiny>&, const TShared<SharedTiny>&>());
-		streamComponent->SetUnloadHandler(TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, const TShared<SharedTiny>&, const TShared<SharedTiny>&>());
+		streamComponent->SetLoadHandler(nullptr);
+		streamComponent->SetRefreshHandler(nullptr);
+		streamComponent->SetUnloadHandler(nullptr);
 	}
 
 	if (currentTask) {

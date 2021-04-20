@@ -13,7 +13,7 @@
 namespace PaintsNow {
 	class ProxyStub : public TReflected<ProxyStub, WarpTiny> {
 	public:
-		ProxyStub(IThread& thread, ITunnel& tunnel, const String& entry, const TWrapper<void, IScript::Request&, bool, RemoteProxy::STATUS, const String&>& statusHandler = TWrapper<void, IScript::Request&, bool, RemoteProxy::STATUS, const String&>());
+		ProxyStub(IThread& thread, ITunnel& tunnel, const String& entry, const TWrapper<void, IScript::Request&, bool, RemoteProxy::STATUS, const String&>& statusHandler = nullptr);
 		void ScriptInitialize(IScript::Request& request) override;
 		void ScriptUninitialize(IScript::Request& request) override;
 

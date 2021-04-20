@@ -248,7 +248,7 @@ namespace PaintsNow {
 	class RemoteProxy : public TReflected<RemoteProxy, IReflectObjectComplex>, public IScript {
 	public:
 		enum STATUS { CONNECTED = 0, CLOSED, ABORTED, TIMEOUT };
-		RemoteProxy(IThread& threadApi, ITunnel& tunnel, const TWrapper<IScript::Object*, const String&>& creator, const String& entry, const TWrapper<void, IScript::Request&, bool, STATUS, const String&>& statusHandler = TWrapper<void, IScript::Request&, bool, STATUS, const String&>());
+		RemoteProxy(IThread& threadApi, ITunnel& tunnel, const TWrapper<IScript::Object*, const String&>& creator, const String& entry, const TWrapper<void, IScript::Request&, bool, STATUS, const String&>& statusHandler = nullptr);
 		~RemoteProxy() override;
 		virtual void SetEntry(const String& entry);
 		virtual void Reconnect(IScript::Request& request);

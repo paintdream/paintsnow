@@ -153,7 +153,7 @@ namespace PaintsNow {
 				TRANSFORM_VIEWPROJECTION, TRANSFORM_VIEWPROJECTION_INV, TRANSFORM_LAST_VIEWPROJECTION, 
 				LIGHT, UNITCOORD, MAINTEXTURE, TEXCOORD };
 
-			BindInput(uint32_t t = GENERAL, const TWrapper<UInt2>& q = TWrapper<UInt2>()) : BaseClass(t), subRangeQueryer(q) {}
+			BindInput(uint32_t t = GENERAL, const TWrapper<UInt2>& q = nullptr) : BaseClass(t), subRangeQueryer(q) {}
 			TObject<IReflect>& operator () (IReflect& reflect) override {
 				BaseClass::operator () (reflect);
 				return *this;
