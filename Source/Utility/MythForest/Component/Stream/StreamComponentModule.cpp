@@ -10,8 +10,9 @@ TObject<IReflect>& StreamComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 	if (reflect.IsReflectMethod()) {
 		ReflectMethod(RequestNew)[ScriptMethodLocked = "New"];
-		ReflectMethod(RequestSetStreamLoadHandler)[ScriptMethod = "SetStreamLoadHandler"];
-		ReflectMethod(RequestSetStreamUnloadHandler)[ScriptMethod = "SetStreamUnloadHandler"];
+		ReflectMethod(RequestSetLoadHandler)[ScriptMethod = "SetLoadHandler"];
+		ReflectMethod(RequestSetRefreshHandler)[ScriptMethod = "SetRefreshHandler"];
+		ReflectMethod(RequestSetUnloadHandler)[ScriptMethod = "SetUnloadHandler"];
 	}
 
 	return *this;
@@ -23,14 +24,21 @@ TShared<StreamComponent> StreamComponentModule::RequestNew(IScript::Request& req
 	return soundComponent;
 }
 
-void StreamComponentModule::RequestSetStreamLoadHandler(IScript::Request& request, IScript::Delegate<StreamComponent> stream, IScript::Request::Ref ref) {
+void StreamComponentModule::RequestSetLoadHandler(IScript::Request& request, IScript::Delegate<StreamComponent> stream, IScript::Request::Ref ref) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(stream);
 
 	stream->SetLoadHandler(request, ref);
 }
 
-void StreamComponentModule::RequestSetStreamUnloadHandler(IScript::Request& request, IScript::Delegate<StreamComponent> stream, IScript::Request::Ref ref) {
+void StreamComponentModule::RequestSetRefreshHandler(IScript::Request& request, IScript::Delegate<StreamComponent> stream, IScript::Request::Ref ref) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(stream);
+
+	stream->SetRefreshHandler(request, ref);
+}
+
+void StreamComponentModule::RequestSetUnloadHandler(IScript::Request& request, IScript::Delegate<StreamComponent> stream, IScript::Request::Ref ref) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(stream);
 

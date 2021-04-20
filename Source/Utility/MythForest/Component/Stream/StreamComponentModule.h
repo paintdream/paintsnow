@@ -32,14 +32,21 @@ namespace PaintsNow {
 		/// </summary>
 		/// <param name="streamComponent"> the StreamComponent </param>
 		/// <param name="callback"> load callback </param>
-		void RequestSetStreamLoadHandler(IScript::Request& request, IScript::Delegate<StreamComponent> streamComponent, IScript::Request::Ref callback);
+		void RequestSetLoadHandler(IScript::Request& request, IScript::Delegate<StreamComponent> streamComponent, IScript::Request::Ref callback);
+
+		/// <summary>
+		/// Set stream refresh handler
+		/// </summary>
+		/// <param name="streamComponent"> the StreamComponent </param>
+		/// <param name="callback"> refresh callback </param>
+		void RequestSetRefreshHandler(IScript::Request& request, IScript::Delegate<StreamComponent> streamComponent, IScript::Request::Ref callback);
 
 		/// <summary>
 		/// Set stream unload handler 
 		/// </summary>
 		/// <param name="streamComponent"> the StreamComponent </param>
 		/// <param name="callback"> unload callback </param>
-		void RequestSetStreamUnloadHandler(IScript::Request& request, IScript::Delegate<StreamComponent> streamComponent, IScript::Request::Ref callback);
+		void RequestSetUnloadHandler(IScript::Request& request, IScript::Delegate<StreamComponent> streamComponent, IScript::Request::Ref callback);
 	};
 }
 

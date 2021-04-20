@@ -105,6 +105,18 @@ SharedTiny* StreamComponent::Load(Engine& engine, const UShort3& coord, const TS
 		object = grid.object();
 	}
 
+	if (refreshHandler.script) {
+		IScript::Request& request = *engine.bridgeSunset.requestPool.AcquireSafe();
+		request.DoLock();
+		request.Push();
+		request.Call(refreshHandler.script, coord, object, context);
+		request.Pop();
+		request.UnLock();
+		engine.bridgeSunset.requestPool.ReleaseSafe(&request);
+	} else if (refreshHandler.native) {
+		refreshHandler.native(engine, coord, object, context);
+	}
+
 	return object;
 }
 
@@ -116,9 +128,11 @@ void StreamComponent::Uninitialize(Engine& engine, Entity* entity) {
 	if (!engine.interfaces.script.IsClosing()) {
 		IScript::Request& request = engine.interfaces.script.GetDefaultRequest();
 		SetLoadHandler(request, IScript::Request::Ref());
+		SetRefreshHandler(request, IScript::Request::Ref());
 		SetUnloadHandler(request, IScript::Request::Ref());
 	} else {
 		loadHandler.script = IScript::Request::Ref();
+		refreshHandler.script = IScript::Request::Ref();
 		unloadHandler.script = IScript::Request::Ref();
 	}
 
@@ -129,12 +143,20 @@ void StreamComponent::SetLoadHandler(IScript::Request& request, IScript::Request
 	loadHandler.ReplaceScript(request, ref);
 }
 
+void StreamComponent::SetRefreshHandler(IScript::Request& request, IScript::Request::Ref ref) {
+	refreshHandler.ReplaceScript(request, ref);
+}
+
 void StreamComponent::SetUnloadHandler(IScript::Request& request, IScript::Request::Ref ref) {
 	unloadHandler.ReplaceScript(request, ref);
 }
 
 void StreamComponent::SetLoadHandler(const TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, const TShared<SharedTiny>&, const TShared<SharedTiny>& >& handler) {
 	loadHandler.native = handler;
+}
+
+void StreamComponent::SetRefreshHandler(const TWrapper<void, Engine&, const UShort3&, const TShared<SharedTiny>&, const TShared<SharedTiny>& >& handler) {
+	refreshHandler.native = handler;
 }
 
 void StreamComponent::SetUnloadHandler(const TWrapper<TShared<SharedTiny>, Engine&, const UShort3&, const TShared<SharedTiny>&, const TShared<SharedTiny>& >& handler) {
