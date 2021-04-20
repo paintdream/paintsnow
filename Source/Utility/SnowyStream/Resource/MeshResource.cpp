@@ -1,5 +1,6 @@
 #include "MeshResource.h"
 #include "../ResourceManager.h"
+#include "../Manager/RenderResourceManager.h"
 #include "../../../General/Interface/IShader.h"
 #include "../../../Core/Driver/Profiler/Optick/optick.h"
 
@@ -145,10 +146,9 @@ void MeshResource::Upload(IRender& render, void* deviceContext) {
 			}
 
 			SpinUnLock(critical);
+			GetRenderResourceManager().NotifyCompletion(this);
 		}
 	}
-
-	Flag().fetch_or(RESOURCE_UPLOADED, std::memory_order_release);
 }
 
 void MeshResource::Unmap() {

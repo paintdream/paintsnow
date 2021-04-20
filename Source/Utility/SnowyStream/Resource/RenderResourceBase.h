@@ -37,6 +37,7 @@ namespace PaintsNow {
 		enum { format = IRender::Resource::BufferDescription::UNSIGNED_INT };
 	};
 
+	class RenderResourceManager;
 	class RenderResourceBase : public TReflected<RenderResourceBase, DeviceResourceBase<IRender> > {
 	public:
 		static inline void ClearBuffer(IRender& render, IRender::Queue* queue, IRender::Resource*& buffer) {
@@ -83,6 +84,8 @@ namespace PaintsNow {
 		void Attach(IRender& device, void* deviceContext) override;
 		void Detach(IRender& device, void* deviceContext) override;
 		TObject<IReflect>& operator () (IReflect& reflect) override;
+
+		RenderResourceManager& GetRenderResourceManager();
 
 	protected:
 		std::atomic<size_t> runtimeVersion; // for resource updating synchronization

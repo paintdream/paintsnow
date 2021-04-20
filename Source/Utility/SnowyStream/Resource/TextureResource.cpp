@@ -1,5 +1,6 @@
 #include "TextureResource.h"
 #include "../ResourceManager.h"
+#include "../Manager/RenderResourceManager.h"
 #include "../../../General/Interface/IImage.h"
 #include "../../../Core/System/MemoryStream.h"
 #include "../../../Core/Driver/Profiler/Optick/optick.h"
@@ -73,10 +74,9 @@ void TextureResource::Upload(IRender& render, void* deviceContext) {
 #endif
 
 			SpinUnLock(critical);
+			GetRenderResourceManager().NotifyCompletion(this);
 		}
 	}
-
-	Flag().fetch_or(RESOURCE_UPLOADED, std::memory_order_release);
 }
 
 void TextureResource::Download(IRender& render, void* deviceContext) {

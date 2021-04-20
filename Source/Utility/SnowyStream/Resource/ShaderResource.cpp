@@ -1,5 +1,6 @@
 #include "ShaderResource.h"
 #include "../ResourceManager.h"
+#include "../Manager/RenderResourceManager.h"
 #include "../../../General/Interface/IShader.h"
 
 using namespace PaintsNow;
@@ -42,6 +43,7 @@ void ShaderResource::Attach(IRender& render, void* deviceContext) {
 #ifdef _DEBUG
 	render.SetResourceNotation(shaderResource, GetLocation());
 #endif
+	GetRenderResourceManager().NotifyCompletion(this);
 }
 
 void ShaderResource::Compile(IRender& render, IRender::Queue* queue, const Bytes* newHash) {

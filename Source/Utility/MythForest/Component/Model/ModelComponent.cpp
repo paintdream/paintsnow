@@ -122,7 +122,8 @@ void ModelComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTe
 }
 
 uint32_t ModelComponent::CollectDrawCalls(std::vector<OutputRenderData, DrawCallAllocator>& drawCalls, const InputRenderData& inputRenderData, BytesCache& bytesCache) {
-	if (drawCallTemplates.empty()) return 0;
+	if (drawCallTemplates.empty() || !(meshResource->Flag().load(std::memory_order_relaxed) & ResourceBase::RESOURCE_UPLOADED)) return 0;
+
 	assert(!(Flag().fetch_or(Tiny::TINY_PINNED) & Tiny::TINY_PINNED));
 
 	ShaderResource* overrideShaderTemplate = inputRenderData.overrideShaderTemplate;
@@ -147,7 +148,10 @@ uint32_t ModelComponent::CollectDrawCalls(std::vector<OutputRenderData, DrawCall
 
 	drawCalls.reserve(drawCalls.size() + materialResources.size());
 	for (size_t i = 0; i < materialResources.size(); i++) {
-		drawCalls.emplace_back(drawCallTemplates[i + baseIndex]); // TODO: optimize copy performance
+		IDrawCallProvider::OutputRenderData& drawCall = drawCallTemplates[i + baseIndex];
+		if (drawCall.shaderResource->Flag().load(std::memory_order_relaxed) & ResourceBase::RESOURCE_UPLOADED) {
+			drawCalls.emplace_back(drawCallTemplates[i + baseIndex]); // TODO: optimize copy performance
+		}
 	}
 
 	assert(Flag().fetch_and(~Tiny::TINY_PINNED) & Tiny::TINY_PINNED);
