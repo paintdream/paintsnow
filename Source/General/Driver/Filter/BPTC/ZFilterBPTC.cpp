@@ -17,7 +17,7 @@ public:
 		int height = 1 << level;
 		size_t newLength = width * height;
 		BYTE* buffer = (BYTE*)IMemory::AllocAligned(newLength, 512);
-#if defined(_MSC_VER) && _MSC_VER <= 1200
+#if defined(_MSC_VER) && (_MSC_VER <= 1200 || (!defined(_M_IX86) && !defined(_M_AMD64)))
 		BC7C::CompressImageBC7(reinterpret_cast<const BYTE*>(p), buffer, width, height);
 #else
 		BC7C::CompressImageBC7SIMD(reinterpret_cast<const BYTE*>(p), buffer, width, height);

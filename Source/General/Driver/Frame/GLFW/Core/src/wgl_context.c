@@ -33,6 +33,10 @@
 #include <malloc.h>
 #include <assert.h>
 
+#ifdef _MSC_VER
+#pragma comment(lib, "gdi32.lib") // Required by Build on MSVC ARM.
+#endif
+
 // Return the value corresponding to the specified attribute
 //
 static int findPixelFormatAttribValue(const int* attribs,

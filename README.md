@@ -10,3 +10,4 @@ Third party libraries: OpenGL & Vulkan & GLFW & glm & glew & freetype & lua 5.4 
 Compilers supported: GCC/Clang/MSVC (requires C++ 11) | MSVC6
 
 Target platforms: Linux | Windows
+Target architecture: x86/amd64 | arm/arm64 (experimental)

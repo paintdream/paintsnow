@@ -44,7 +44,7 @@
 
 
 // GCC and Visual Studio SSE2 compiler flags
-#if defined __SSE2__ || (_MSC_VER >= 1300 && !_M_CEE_PURE)
+#if defined __SSE2__ || (_MSC_VER >= 1300 && !_M_CEE_PURE && (defined(_M_IX86) || defined(_M_AMD64)))
     #define IMF_HAVE_SSE2 1
 #endif
 

@@ -51,7 +51,7 @@ static const float kFloatConversion[256] = {
 ///////////////////////////////////////////////////////////////////////////////
 static inline UINT CountBitsInMask(BYTE n) {
 
-#if !defined(_MSC_VER) || defined(_WIN64)
+#if !defined(_MSC_VER) || defined(_WIN64) || (!defined(_M_AMD64) && !defined(_M_IX86))
 	if(!n) return 0; // no bits set
 	if(!(n & (n-1))) return 1; // power of two
 

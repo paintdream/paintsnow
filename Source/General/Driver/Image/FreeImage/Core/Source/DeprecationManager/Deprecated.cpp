@@ -3,7 +3,7 @@
 //
 // Design and implementation by
 // - Floris van den Berg (flvdberg@wxs.nl)
-// - Hervé Drolon (drolon@infonie.fr)
+// - Herv?Drolon (drolon@infonie.fr)
 //
 // This file is part of FreeImage 3
 //
@@ -28,7 +28,7 @@
 
 FIBITMAP *DLL_CALLCONV 
 FreeImage_RotateClassic(FIBITMAP *dib, double angle) {
-#ifdef _WIN32
+#if defined(_WIN32) && defined(_M_AMD64) || defined(_M_IX86)
 	DEPRECATE("FreeImage_RotateClassic()", "FreeImage_Rotate()")
 #endif // _WIN32
 	return FreeImage_Rotate(dib, angle, NULL);

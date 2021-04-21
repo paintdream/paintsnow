@@ -15,6 +15,7 @@
 //
 //--------------------------------------------------------------------------------------
 
+#if defined(_M_IX86) || defined(_M_AMD64) || defined(__i386__) || defined(__x86_64__)
 #include "RGBAEndpointsSIMD.h"
 #include "BC7CompressorDLL.h"
 #include "BC7CompressionModeSIMD.h"
@@ -408,3 +409,4 @@ void GetPrincipalAxis(const RGBAClusterSIMD &c, RGBADirSIMD &axis) {
 
 	axis = b;
 }
+#endif

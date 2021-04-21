@@ -15,6 +15,7 @@
 //
 //--------------------------------------------------------------------------------------
 
+#if defined(_M_IX86) || defined(_M_AMD64) || defined(__i386__) || defined(__x86_64__)
 #include "BC7CompressorDLL.h"
 #include "BC7CompressionModeSIMD.h"
 #include "RGBAEndpointsSIMD.h"
@@ -1242,3 +1243,4 @@ namespace BC7C
 		}
 	}
 }
+#endif
