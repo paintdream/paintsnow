@@ -30,6 +30,7 @@ const ALfloat *Resample_lerp32_Neon(const InterpState* UNUSED(state),
 
     for(i = 0;numsamples-i > 3;i += 4)
     {
+#ifdef _MSC_VER
         float32x4_t val1;
         val1.n128_f32[0] = src[pos_[0]];
         val1.n128_f32[1] = src[pos_[1]];
@@ -41,7 +42,10 @@ const ALfloat *Resample_lerp32_Neon(const InterpState* UNUSED(state),
         val2.n128_f32[1] = src[pos_[1] + 1];
         val2.n128_f32[2] = src[pos_[2] + 1];
         val2.n128_f32[3] = src[pos_[3] + 1];
-
+#else
+        const float32x4_t val1 = (float32x4_t){src[pos_[0]], src[pos_[1]], src[pos_[2]], src[pos_[3]]};
+        const float32x4_t val2 = (float32x4_t){src[pos_[0]+1], src[pos_[1]+1], src[pos_[2]+1], src[pos_[3]+1]};
+#endif
         /* val1 + (val2-val1)*mu */
         const float32x4_t r0 = vsubq_f32(val2, val1);
         const float32x4_t mu = vmulq_f32(vcvtq_f32_s32(frac4), fracOne4);
