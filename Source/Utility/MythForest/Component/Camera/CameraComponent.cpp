@@ -29,9 +29,9 @@ using namespace PaintsNow;
 // From glu source code
 const double PI = 3.14159265358979323846;
 enum {
-	STENCIL_SHADOW = 0x10,
-	// STENCIL_REFLECTION = 0x20,
-	// STENCIL_BLOOM = 0x40,
+	// STENCIL_REFLECTION = 0x10,
+	// STENCIL_BLOOM = 0x20,
+	STENCIL_SHADOW = 0x40,
 	STENCIL_LIGHTING = 0x80
 };
 
@@ -165,11 +165,12 @@ void CameraComponent::Instancing(Engine& engine, TaskData& taskData) {
 		for (TaskData::WarpData::InstanceGroupMap::iterator it = instanceGroup.begin(); it != instanceGroup.end(); ++it) {
 			InstanceGroup& group = (*it).second;
 			if (group.instanceCount == 0) continue;
-			std::vector<std::key_value<RenderPolicy*, TaskData::PolicyData> >::iterator ip = std::binary_find(warpData.renderPolicyMap.begin(), warpData.renderPolicyMap.end(), group.renderPolicy());
+			RenderPolicy* renderPolicy = group.renderPolicy();
+			std::vector<std::key_value<RenderPolicy*, TaskData::PolicyData> >::iterator ip = std::binary_find(warpData.renderPolicyMap.begin(), warpData.renderPolicyMap.end(), renderPolicy);
 			if (ip == warpData.renderPolicyMap.end()) {
-				ip = std::binary_insert(warpData.renderPolicyMap, group.renderPolicy());
+				ip = std::binary_insert(warpData.renderPolicyMap, renderPolicy);
 			}
-		
+
 			TaskData::PolicyData& policyData = ip->second;
 			IRender::Queue* queue = policyData.portQueue;
 			assert(queue != nullptr);
@@ -632,15 +633,27 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 				}
 
 				// add renderstate if exists
-				std::vector<std::key_value<IRender::Resource::RenderStateDescription, IRender::Resource*> >::iterator is = std::binary_find(warpData.renderStateMap.begin(), warpData.renderStateMap.end(), drawCall.renderStateDescription);
+				IRender::Resource::RenderStateDescription& renderStateDescription = drawCall.renderStateDescription;
+
+				// apply renderPolicy renderstate modifier
+				static_assert(sizeof(renderPolicy->renderStateMask) == sizeof(uint32_t), "Please use larger integer type here!");
+				static_assert(sizeof(renderPolicy->renderStateTemplate) == sizeof(uint32_t), "Please use larger integer type here!");
+				static_assert(sizeof(renderStateDescription) == sizeof(uint32_t), "Please use larger integer type here!");
+
+				uint32_t renderStateMask = *reinterpret_cast<uint32_t*>(&renderPolicy->renderStateMask);
+				uint32_t renderStateTemplate = *reinterpret_cast<uint32_t*>(&renderPolicy->renderStateTemplate);
+				uint32_t& renderStateTarget = *reinterpret_cast<uint32_t*>(&renderStateDescription);
+				renderStateTarget = (renderStateTarget & ~renderStateMask) | (renderStateTemplate | renderStateMask);
+
+				std::vector<std::key_value<IRender::Resource::RenderStateDescription, IRender::Resource*> >::iterator is = std::binary_find(warpData.renderStateMap.begin(), warpData.renderStateMap.end(), renderStateDescription);
 				if (is == warpData.renderStateMap.end()) {
-					is = std::binary_insert(warpData.renderStateMap, drawCall.renderStateDescription);
+					is = std::binary_insert(warpData.renderStateMap, renderStateDescription);
 				}
 
 				IRender::Resource*& state = is->second;
 				if (state == nullptr) {
 					state = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_RENDERSTATE);
-					render.UploadResource(queue, state, &drawCall.renderStateDescription);
+					render.UploadResource(queue, state, &renderStateDescription);
 					policyData.runtimeResources.emplace_back(state);
 				}
 
