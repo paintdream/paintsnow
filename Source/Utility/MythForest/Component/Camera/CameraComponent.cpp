@@ -39,7 +39,7 @@ CameraComponent::TaskData::WarpData::WarpData() : entityCount(0), visibleEntityC
 
 CameraComponent::CameraComponent(const TShared<RenderFlowComponent>& prenderFlowComponent, const String& name)
 : collectedEntityCount(0), collectedVisibleEntityCount(0), collectedTriangleCount(0), viewDistance(256), jitterIndex(0), renderFlowComponent(std::move(prenderFlowComponent)), cameraViewPortName(name) {
-	Flag().fetch_or(CAMERACOMPONENT_PERSPECTIVE | CAMERACOMPONENT_UPDATE_COMMITTED, std::memory_order_relaxed);
+	Flag().fetch_or(CAMERACOMPONENT_PERSPECTIVE | CAMERACOMPONENT_UPDATE_COMMITTED | CAMERACOMPONENT_AGILE_RENDERING, std::memory_order_relaxed);
 }
 
 void CameraComponent::UpdateJitterMatrices(CameraComponentConfig::WorldGlobalData& worldGlobalData) {

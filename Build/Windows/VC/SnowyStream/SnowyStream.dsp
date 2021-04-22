@@ -265,6 +265,14 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\ScreenFS.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\ScreenOutlineFS.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\ScreenOutlinePass.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\ScreenPass.cpp
 # End Source File
 # Begin Source File
@@ -650,6 +658,14 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\ResourceManager.h
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\ScreenFS.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\ScreenOutlineFS.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\ScreenOutlinePass.h
 # End Source File
 # Begin Source File
 

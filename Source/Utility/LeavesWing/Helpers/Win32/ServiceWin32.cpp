@@ -78,7 +78,7 @@ void ServiceWin32::ServiceMain(DWORD argc, LPSTR* argv) {
 	WCHAR* t = wcsrchr(currentPath, L'\\');
 	if (t != nullptr) *t = L'\0';
 	::SetCurrentDirectoryW(currentPath);
-	freopen("service.log", "w", stdout);
+	// freopen("service.log", "w", stdout);
 
 	serviceStatus.dwServiceType = SERVICE_WIN32;
 	serviceStatus.dwCurrentState = SERVICE_START_PENDING;

@@ -393,6 +393,10 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage.cp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\ScreenOutlineRenderStage.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\ScreenRenderStage.cpp
 # End Source File
 # Begin Source File
@@ -842,6 +846,10 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderPort\Ren
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\ScreenOutlineRenderStage.h
 # End Source File
 # Begin Source File
 

@@ -17,7 +17,6 @@ namespace PaintsNow {
 		void Download(IRender& render, void* deviceContext) override;
 		void Attach(IRender& render, void* deviceContext) override;
 		void Detach(IRender& render, void* deviceContext) override;
-
 	};
 }
 
