@@ -17,7 +17,7 @@ Tiny::FLAG LightComponent::GetEntityFlagMask() const {
 	return Entity::ENTITY_HAS_RENDERCONTROL | RenderableComponent::GetEntityFlagMask();
 }
 
-uint32_t LightComponent::CollectDrawCalls(std::vector<OutputRenderData, DrawCallAllocator>& outputDrawCalls, const InputRenderData& inputRenderData, BytesCache& bytesCache) {
+uint32_t LightComponent::CollectDrawCalls(std::vector<OutputRenderData, DrawCallAllocator>& outputDrawCalls, const InputRenderData& inputRenderData, BytesCache& bytesCache, CollectOption option) {
 	return 0;
 }
 
@@ -202,7 +202,7 @@ void LightComponent::ShadowLayer::CollectRenderableComponent(Engine& engine, Tas
 	IDrawCallProvider::InputRenderData inputRenderData(0.0f, pipeline());
 	IDrawCallProvider::DrawCallAllocator allocator(&warpData.bytesCache);
 	std::vector<IDrawCallProvider::OutputRenderData, IDrawCallProvider::DrawCallAllocator> drawCalls(allocator);
-	renderableComponent->CollectDrawCalls(drawCalls, inputRenderData, warpData.bytesCache);
+	renderableComponent->CollectDrawCalls(drawCalls, inputRenderData, warpData.bytesCache, IDrawCallProvider::COLLECT_DEFAULT); // TODO: exit on -1
 	TaskData::WarpData::InstanceGroupMap& instanceGroups = warpData.instanceGroups;
 
 	for (size_t k = 0; k < drawCalls.size(); k++) {

@@ -714,7 +714,7 @@ void PhaseComponent::CollectRenderableComponent(Engine& engine, TaskData& taskDa
 		IDrawCallProvider::InputRenderData inputRenderData(0.0f, taskData.pipeline);
 		IDrawCallProvider::DrawCallAllocator allocator(&warpData.bytesCache);
 		std::vector<IDrawCallProvider::OutputRenderData, IDrawCallProvider::DrawCallAllocator> drawCalls(allocator);
-		renderableComponent->CollectDrawCalls(drawCalls, inputRenderData, warpData.bytesCache);
+		renderableComponent->CollectDrawCalls(drawCalls, inputRenderData, warpData.bytesCache, IDrawCallProvider::COLLECT_DEFAULT);
 		assert(drawCalls.size() < sizeof(RenderableComponent) - 1);
 
 		for (size_t i = 0; i < drawCalls.size(); i++) {

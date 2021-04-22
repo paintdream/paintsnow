@@ -387,7 +387,7 @@ void VisibilityComponent::CollectRenderableComponent(Engine& engine, TaskData& t
 		std::vector<IDrawCallProvider::OutputRenderData, IDrawCallProvider::DrawCallAllocator> drawCalls(allocator);
 		IThread& thread = engine.interfaces.thread;
 		thread.DoLock(collectLock);
-		renderableComponent->CollectDrawCalls(drawCalls, inputRenderData, warpData.bytesCache);
+		renderableComponent->CollectDrawCalls(drawCalls, inputRenderData, warpData.bytesCache, IDrawCallProvider::COLLECT_AGILE_RENDERING);
 		thread.UnLock(collectLock);
 		assert(drawCalls.size() < sizeof(RenderableComponent) - 1);
 

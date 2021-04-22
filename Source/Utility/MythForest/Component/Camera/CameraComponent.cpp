@@ -560,7 +560,7 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 	IDrawCallProvider::InputRenderData inputRenderData(instanceData.viewReference, nullptr, renderFlowComponent->GetMainResolution());
 	IDrawCallProvider::DrawCallAllocator allocator(&warpData.bytesCache);
 	std::vector<IDrawCallProvider::OutputRenderData, IDrawCallProvider::DrawCallAllocator> drawCalls(allocator);
-	renderableComponent->CollectDrawCalls(drawCalls, inputRenderData, warpData.bytesCache);
+	renderableComponent->CollectDrawCalls(drawCalls, inputRenderData, warpData.bytesCache, (Flag().load(std::memory_order_relaxed) & CAMERACOMPONENT_AGILE_RENDERING) ? IDrawCallProvider::COLLECT_AGILE_RENDERING : IDrawCallProvider::COLLECT_DEFAULT);
 	TaskData::WarpData::InstanceGroupMap& instanceGroups = warpData.instanceGroups;
 
 	bool isCameraViewSpace = !!(renderableComponent->Flag().load(std::memory_order_relaxed) & RenderableComponent::RENDERABLECOMPONENT_CAMERAVIEW);

@@ -121,11 +121,14 @@ void ModelComponent::GenerateDrawCalls(std::vector<OutputRenderData>& drawCallTe
 	}
 }
 
-uint32_t ModelComponent::CollectDrawCalls(std::vector<OutputRenderData, DrawCallAllocator>& drawCalls, const InputRenderData& inputRenderData, BytesCache& bytesCache) {
-	if (drawCallTemplates.empty() || !(meshResource->Flag().load(std::memory_order_relaxed) & ResourceBase::RESOURCE_UPLOADED)) return 0;
+uint32_t ModelComponent::CollectDrawCalls(std::vector<OutputRenderData, DrawCallAllocator>& drawCalls, const InputRenderData& inputRenderData, BytesCache& bytesCache, CollectOption option) {
+	if (drawCallTemplates.empty())
+		return 0;
+
+	if (!(meshResource->Flag().load(std::memory_order_relaxed) & ResourceBase::RESOURCE_UPLOADED))
+		return ~(uint32_t)0;
 
 	assert(!(Flag().fetch_or(Tiny::TINY_PINNED) & Tiny::TINY_PINNED));
-
 	ShaderResource* overrideShaderTemplate = inputRenderData.overrideShaderTemplate;
 	uint32_t baseIndex = 0;
 	if (overrideShaderTemplate != nullptr) {
@@ -143,6 +146,16 @@ uint32_t ModelComponent::CollectDrawCalls(std::vector<OutputRenderData, DrawCall
 			}
 
 			GenerateDrawCalls(drawCallTemplates, overrideMaterialResources);
+		}
+	}
+
+	if (!(option & CollectOption::COLLECT_AGILE_RENDERING)) {
+		for (size_t i = 0; i < materialResources.size(); i++) {
+			IDrawCallProvider::OutputRenderData& drawCall = drawCallTemplates[i + baseIndex];
+			if (!(drawCall.shaderResource->Flag().load(std::memory_order_relaxed) & ResourceBase::RESOURCE_UPLOADED)) {
+				assert(Flag().fetch_and(~Tiny::TINY_PINNED) & Tiny::TINY_PINNED);
+				return ~(uint32_t)0;
+			}
 		}
 	}
 

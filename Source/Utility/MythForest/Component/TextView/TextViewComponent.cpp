@@ -352,12 +352,14 @@ void TextViewComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box, bool 
 	Math::Union(box, Float3(1.0f, 1.0f, 1.0f));
 }
 
-uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData, DrawCallAllocator>& outputDrawCalls, const InputRenderData& inputRenderData, BytesCache& bytesCache) {
+uint32_t TextViewComponent::CollectDrawCalls(std::vector<OutputRenderData, DrawCallAllocator>& outputDrawCalls, const InputRenderData& inputRenderData, BytesCache& bytesCache, CollectOption option) {
 	// return 0;
 	if (renderInfos.empty()) return 0;
 
 	uint32_t start = verify_cast<uint32_t>(outputDrawCalls.size());
-	uint32_t count = BaseClass::CollectDrawCalls(outputDrawCalls, inputRenderData, bytesCache);
+	uint32_t count = BaseClass::CollectDrawCalls(outputDrawCalls, inputRenderData, bytesCache, option);
+	if (count == ~(uint32_t)0) return count;
+
 	const Bytes texCoordRectKey = StaticBytes(texCoordRect);
 	const Bytes instanceColorKey = StaticBytes(instanceColor);
 	float invTexSize = 1.0f / fontResource->GetFontTextureSize();

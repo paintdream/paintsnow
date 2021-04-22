@@ -36,8 +36,13 @@ namespace PaintsNow {
 			std::vector<std::pair<uint32_t, Bytes> > localInstancedData;
 		};
 
+		enum CollectOption {
+			COLLECT_DEFAULT = 0,
+			COLLECT_AGILE_RENDERING = 1,
+		};
+
 		typedef TCacheAllocator<OutputRenderData, uint8_t> DrawCallAllocator;
-		virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData, DrawCallAllocator>& outputDrawCalls, const InputRenderData& inputRenderData, BytesCache& bytesCache) = 0;
+		virtual uint32_t CollectDrawCalls(std::vector<OutputRenderData, DrawCallAllocator>& outputDrawCalls, const InputRenderData& inputRenderData, BytesCache& bytesCache, CollectOption option) = 0;
 	};
 
 	class RenderableComponent : public TAllocatedTiny<RenderableComponent, Component>, public IDrawCallProvider {
