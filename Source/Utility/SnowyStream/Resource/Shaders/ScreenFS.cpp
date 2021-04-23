@@ -5,7 +5,7 @@
 using namespace PaintsNow;
 
 ScreenFS::ScreenFS() {
-	bloomIntensity = Float3(0.15f, 0.2f, 0.3f);
+	bloomIntensity = Float3(0.5f, 0.8f, 1.2f);
 	invAverageLuminance = 1.0f / 5.0f;
 	
 	inputColorTexture.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;

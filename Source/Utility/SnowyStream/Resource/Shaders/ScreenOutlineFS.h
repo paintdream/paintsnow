@@ -17,6 +17,10 @@ namespace PaintsNow {
 		BindTexture inputColorTexture;
 		BindBuffer paramBuffer;
 
+		Float3 outlineColor;
+		float outlineWidth;
+		Float2 invScreenSize;
+
 	protected:
 		Float2 rasterCoord;
 		Float4 outputColor;

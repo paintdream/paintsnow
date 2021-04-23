@@ -15,6 +15,8 @@ namespace PaintsNow {
 
 		BindTexture screenTexture;
 		BindBuffer uniformBloomBuffer;
+		Float3 colorThreshold;
+		float colorScale;
 		Float2 invScreenSize;
 
 	protected:
