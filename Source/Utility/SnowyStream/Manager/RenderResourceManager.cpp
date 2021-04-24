@@ -325,8 +325,8 @@ size_t RenderResourceManager::GetNextRuntimeVersion() const {
 }
 
 size_t RenderResourceManager::NotifyCompletion(const TShared<ResourceBase>& resource) {
-	size_t limit = renderResourceStepPerFrame;
-	uint32_t runtimeVersion = nextRuntimeVersion.load(std::memory_order_acquire);
+	uint32_t limit = renderResourceStepPerFrame;
+	size_t runtimeVersion = nextRuntimeVersion.load(std::memory_order_acquire);
 
 	if (limit == 0) {
 		// available at once!
