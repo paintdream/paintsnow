@@ -106,11 +106,11 @@ void LightComponent::ShadowLayer::StreamRefreshHandler(Engine& engine, const USh
 	if (!engine.snowyStream.GetRenderResourceManager()->GetCompleted())
 		return;
 
-	TShared<TaskData> taskData = currentTask;
-//	if (taskData->Flag().load(std::memory_order_relaxed) & TINY_MODIFIED)
-//		return;
-
 	if (tiny->Flag().fetch_or(TINY_UPDATING, std::memory_order_release) & TINY_UPDATING)
+		return;
+
+	TShared<TaskData> taskData = currentTask;
+	if (taskData->Flag().fetch_or(TINY_MODIFIED, std::memory_order_relaxed) & TINY_MODIFIED)
 		return;
 
 	TShared<ShadowGrid> shadowGrid = tiny->QueryInterface(UniqueType<ShadowGrid>());
@@ -133,8 +133,6 @@ void LightComponent::ShadowLayer::StreamRefreshHandler(Engine& engine, const USh
 		shadowGrid->texture = texture;
 	}
 
-	taskData->Flag().fetch_or(TINY_MODIFIED, std::memory_order_release);
-
 	// get entity
 	ShadowContext* shadowContext = context->QueryInterface(UniqueType<ShadowContext>());
 	assert(shadowContext != nullptr);
@@ -149,9 +147,9 @@ void LightComponent::ShadowLayer::StreamRefreshHandler(Engine& engine, const USh
 	for (size_t i = 0; i < taskData->warpData.size(); i++) {
 		taskData->warpData[i].bytesCache.Reset();
 	}
+
 	taskData->rootEntity = shadowContext->rootEntity; // in case of gc
 	taskData->shadowGrid = shadowGrid();
-	taskData->ReferenceObject();
 
 	// Prepare render target
 	IRender::Resource::RenderTargetDescription desc;
@@ -292,8 +290,6 @@ void ShadowLayerConfig::TaskData::RenderFrame(Engine& engine) {
 		Cleanup(engine.interfaces.render);
 		// engine.mythForest.EndCaptureFrame();
 	}
-
-	ReleaseObject();
 }
 
 void LightComponent::ShadowLayer::CompleteCollect(Engine& engine, TaskData& task) {
@@ -360,11 +356,9 @@ void LightComponent::ShadowLayer::CompleteCollect(Engine& engine, TaskData& task
 		}
 
 		render.DeleteResource(queue, buffer);
-	} else {
-		int a = 0;
 	}
 
-	engine.QueueFrameRoutine(CreateTaskContextFree(Wrap(&task, &TaskData::RenderFrame), std::ref(engine)));
+	engine.QueueFrameRoutine(CreateTaskContextFree(Wrap(&task, &TaskData::RenderFrame), std::ref(engine)), &task);
 }
 
 void LightComponent::ShadowLayer::CollectComponents(Engine& engine, TaskData& taskData, const WorldInstanceData& instanceData, const CaptureData& captureData, Entity* entity) {

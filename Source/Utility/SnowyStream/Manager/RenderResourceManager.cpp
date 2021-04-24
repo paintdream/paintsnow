@@ -333,13 +333,18 @@ size_t RenderResourceManager::NotifyCompletion(const TShared<ResourceBase>& reso
 		resource->Complete(runtimeVersion);
 		return runtimeVersion;
 	} else {
+		DoLock();
 		pendingCompletionResources.Push(resource);
+		UnLock();
 
 		uint32_t current = currentNotifiedResourceCount.fetch_add(1, std::memory_order_acquire) + 1;
 		IRender& render = device;
 		while (current >= limit && currentNotifiedResourceCount.compare_exchange_strong(current, current - limit, std::memory_order_release)) {
 			nextRuntimeVersion.fetch_add(1, std::memory_order_acquire);
+			DoLock();
+			pendingCompletionResources.Push(TShared<ResourceBase>(nullptr));
 			render.FlushQueue(resourceQueue); // yield execution to next frame(s)
+			UnLock();
 		}
 
 		return runtimeVersion + 1;

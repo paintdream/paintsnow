@@ -380,20 +380,22 @@ void VisibilityComponent::CollectRenderableComponent(Engine& engine, TaskData& t
 	std::vector<IRender::Resource*> textureResources;
 	std::vector<IRender::Resource::DrawCallDescription::BufferRange> bufferResources;
 
+	IThread& thread = engine.interfaces.thread;
 	if (first.drawCallDescription.shaderResource != nullptr) {
 		size_t i = 0;
 		while (true) {
 			InstanceGroup& group = instanceGroups[(size_t)renderableComponent + i++];
 			if (group.drawCallDescription.shaderResource == nullptr) break;
-	
+
+			thread.DoLock(collectLock);
 			group.instanceUpdater.Snapshot(group.instancedData, bufferResources, textureResources, instanceData, &warpData.bytesCache);
+			thread.UnLock(collectLock);
 			group.instanceCount++;
 		}
 	} else {
 		IDrawCallProvider::InputRenderData inputRenderData(0.0f, pipeline());
 		IDrawCallProvider::DrawCallAllocator allocator(&warpData.bytesCache);
 		std::vector<IDrawCallProvider::OutputRenderData, IDrawCallProvider::DrawCallAllocator> drawCalls(allocator);
-		IThread& thread = engine.interfaces.thread;
 		thread.DoLock(collectLock);
 		uint32_t count = renderableComponent->CollectDrawCalls(drawCalls, inputRenderData, warpData.bytesCache, IDrawCallProvider::COLLECT_DEFAULT);
 
@@ -403,9 +405,13 @@ void VisibilityComponent::CollectRenderableComponent(Engine& engine, TaskData& t
 
 		thread.UnLock(collectLock);
 
+		if (task.pendingResourceCount != 0)
+			return;
+
 		assert(drawCalls.size() < sizeof(RenderableComponent) - 1);
 
 		for (size_t i = 0; i < drawCalls.size(); i++) {
+			assert(drawCalls[i].shaderResource->Flag().load(std::memory_order_relaxed) & ResourceBase::RESOURCE_UPLOADED);
 			IDataUpdater* dataUpdater = drawCalls[i].dataUpdater;
 			InstanceGroup& group = instanceGroups[(size_t)renderableComponent + i];
 			if (group.instanceCount == 0) {
@@ -717,8 +723,8 @@ void VisibilityComponent::RoutineTickTasks(Engine& engine) {
 	OPTICK_EVENT();
 
 	// Must complete all pending resources
-	if (engine.snowyStream.GetRenderResourceManager()->GetCompleted()) {
+	// if (engine.snowyStream.GetRenderResourceManager()->GetCompleted()) {
 		ResolveTasks(engine);
 		DispatchTasks(engine);
-	}
+	// }
 }

@@ -22,11 +22,11 @@ Engine::Engine(Interfaces& pinterfaces, BridgeSunset& pbridgeSunset, SnowyStream
 	}
 }
 
-void Engine::QueueFrameRoutine(ITask* task) {
+void Engine::QueueFrameRoutine(ITask* task, const TShared<SharedTiny>& tiny) {
 	uint32_t warp = GetKernel().GetCurrentWarpIndex();
 	assert(warp != ~(uint32_t)0);
 
-	frameTasks[warp].push(task);
+	frameTasks[warp].push(std::make_pair(task, tiny));
 }
 
 IRender::Queue* Engine::GetWarpResourceQueue() {
@@ -44,12 +44,12 @@ void Engine::Clear() {
 	}
 
 	for (size_t i = 0; i < frameTasks.size(); i++) {
-		std::queue<ITask*>& q = frameTasks[i];
+		std::queue<std::pair<ITask*, TShared<SharedTiny> > >& q = frameTasks[i];
 		while (!q.empty()) {
-			ITask* task = q.front();
-			q.pop();
-
+			ITask* task = q.front().first;
 			task->Abort(this);
+
+			q.pop();
 		}
 	}
 
@@ -104,12 +104,12 @@ void Engine::TickFrame() {
 	}
 
 	for (size_t j = 0; j < frameTasks.size(); j++) {
-		std::queue<ITask*>& q = frameTasks[j];
+		std::queue<std::pair<ITask*, TShared<SharedTiny> > >& q = frameTasks[j];
 		while (!q.empty()) {
-			ITask* task = q.front();
-			q.pop();
-
+			ITask* task = q.front().first;
 			task->Execute(this);
+
+			q.pop();
 		}
 	}
 

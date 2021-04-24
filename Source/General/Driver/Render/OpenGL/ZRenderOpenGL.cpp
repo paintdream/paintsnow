@@ -1631,6 +1631,7 @@ void MoveResource<IRender::Resource::DrawCallDescription>(IRender::Resource::Dra
 template <>
 struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> final : public ResourceBaseImplOpenGLDesc<IRender::Resource::DrawCallDescription> {
 	IRender::Resource::Type GetType() const override { return RESOURCE_DRAWCALL; }
+
 	void Upload(QueueImplOpenGL& queue) override {
 		UpdateDescription();
 	}

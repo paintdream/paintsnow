@@ -33,7 +33,7 @@ namespace PaintsNow {
 		void TickFrame();
 		uint32_t GetFrameIndex() const;
 		Kernel& GetKernel();
-		void QueueFrameRoutine(ITask* task);
+		void QueueFrameRoutine(ITask* task, const TShared<SharedTiny>& tiny);
 		IRender::Queue* GetWarpResourceQueue();
 
 		Interfaces& interfaces;
@@ -53,7 +53,7 @@ namespace PaintsNow {
 		std::atomic<uint32_t> unitCount;
 		IThread::Event* finalizeEvent;
 		std::unordered_map<String, Module*> modules;
-		std::vector<std::queue<ITask*> > frameTasks;
+		std::vector<std::queue<std::pair<ITask*, TShared<SharedTiny> > > > frameTasks;
 		std::vector<IRender::Queue*> warpResourceQueues;
 
 #ifdef _DEBUG

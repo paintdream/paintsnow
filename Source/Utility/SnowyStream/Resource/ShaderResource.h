@@ -54,6 +54,7 @@ namespace PaintsNow {
 
 		IReflectObject* Clone() const override {
 			ShaderResourceImpl<T>* resource = new ShaderResourceImpl<T>(BaseClass::resourceManager, ""); // on the fly
+			resource->Flag().fetch_and(~BaseClass::RESOURCE_UPLOADED, std::memory_order_relaxed);
 			resource->pass = pass; // copy pass default values
 			resource->hashValue = BaseClass::hashValue;
 			resource->GetPassUpdater().Initialize(resource->pass); // reinitialize pass updater

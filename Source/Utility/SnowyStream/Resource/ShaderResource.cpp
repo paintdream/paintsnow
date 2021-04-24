@@ -77,6 +77,7 @@ void ShaderResource::Detach(IRender& render, void* deviceContext) {
 IReflectObject* ShaderResource::Clone() const {
 	ShaderResource* clone = new ShaderResource(resourceManager, uniqueLocation);
 	clone->shaderResource = nullptr;
+	clone->Flag().fetch_and(~RESOURCE_UPLOADED, std::memory_order_relaxed);
 	clone->Flag().fetch_or(RESOURCE_ORPHAN, std::memory_order_relaxed);
 
 	return clone;

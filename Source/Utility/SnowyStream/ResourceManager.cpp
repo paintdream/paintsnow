@@ -72,9 +72,12 @@ void ResourceManager::Insert(ResourceBase* resource) {
 		}
 
 		resource->Flag().fetch_and(~ResourceBase::RESOURCE_ORPHAN, std::memory_order_release);
+		UnLock();
+		InvokeAttach(resource, GetContext());
+		DoLock();
+	} else {
+		InvokeAttach(resource, GetContext());
 	}
-
-	InvokeAttach(resource, GetContext());
 }
 
 IUniformResourceManager& ResourceManager::GetUniformResourceManager() {
