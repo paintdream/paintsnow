@@ -226,5 +226,20 @@ void RenderStage::RefreshOverrideMaterial(Engine& engine, IRender::Queue* queue,
 				overrideMaterial->Export(engine.interfaces.render, queue, shaderInstance);
 			}
 		}
+
+		// refresh render state
+		static_assert(sizeof(overrideMaterial->materialParams.state) == sizeof(uint32_t), "Please use larger integer type here!");
+		static_assert(sizeof(overrideMaterial->materialParams.stateMask) == sizeof(uint32_t), "Please use larger integer type here!");
+		static_assert(sizeof(renderStateDescription) == sizeof(uint32_t), "Please use larger integer type here!");
+
+		uint32_t renderStateMask = *reinterpret_cast<uint32_t*>(&overrideMaterial->materialParams.state);
+		uint32_t renderStateTemplate = *reinterpret_cast<uint32_t*>(&overrideMaterial->materialParams.state);
+		uint32_t& renderStateTarget = *reinterpret_cast<uint32_t*>(&renderStateDescription);
+		uint32_t newTarget = (renderStateTarget & ~renderStateMask) | (renderStateTemplate | renderStateMask);
+
+		if (renderStateTarget != newTarget) {
+			renderStateTarget = newTarget;
+			engine.interfaces.render.UploadResource(queue, renderState, &renderStateDescription);
+		}
 	}
 }

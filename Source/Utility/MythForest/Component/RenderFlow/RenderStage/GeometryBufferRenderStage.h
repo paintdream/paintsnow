@@ -18,7 +18,7 @@ namespace PaintsNow {
 		void Prepare(Engine& engine, IRender::Queue* queue) override;
 
 		RenderPortCameraView CameraView;
-		RenderPortCommandQueue Primitives;		// input primitives
+		RenderPortCommandQueue Primitives;
 
 		RenderPortRenderTargetStore BaseColorOcclusion;
 		RenderPortRenderTargetStore NormalRoughnessMetallic;

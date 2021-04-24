@@ -223,63 +223,115 @@ void MaterialResource::ScriptModify(IScript::Request& request, const String& act
 		for (size_t i = 0; i < as.count / 2; i++) {
 			String name;
 			request >> name;
-			switch (request.GetCurrentType()) {
-			case IScript::Request::NIL:
-			case IScript::Request::BOOLEAN:
-				PushValue<bool>::Push(request, name, variables);
-				break;
-			case IScript::Request::INTEGER:
-				PushValue<uint32_t>::Push(request, name, variables);
-				break;
-			case IScript::Request::STRING:
-			{
-				String value;
+			if (name.size() == 0) continue;
+
+			if (name[0] == '#') { // unlikely
+				int32_t value;
 				request >> value;
-				size_t k;
-				for (k = 0; k < textureResources.size(); k++) {
-					if (value == textureResources[k]->GetLocation()) {
-						variables.emplace_back(IAsset::Material::Variable(name, IAsset::TextureIndex(verify_cast<uint32_t>(k))));
-					}
-				}
+				const int32_t MASK = ~(uint32_t)0;
 
-				if (k == textureResources.size()) {
-					TShared<ResourceBase> resource = resourceManager.LoadExistSafe(value);
-					if (resource && resource->QueryInterface(UniqueType<TextureResource>()) != nullptr) {
-						textureResources.emplace_back(static_cast<TextureResource*>(resource()));
-						variables.emplace_back(IAsset::Material::Variable(name, IAsset::TextureIndex(verify_cast<uint32_t>(k))));
+				if (name == "#stencilReplacePass") {
+					materialParams.state.stencilReplacePass = value;
+					materialParams.stateMask.stencilReplacePass = MASK;
+				} else if (name == "#stencilReplaceFail") {
+					materialParams.state.stencilReplaceFail = value;
+					materialParams.stateMask.stencilReplaceFail = MASK;
+				} else if (name == "#stencilReplaceZFail") {
+					materialParams.state.stencilReplaceZFail = value;
+					materialParams.stateMask.stencilReplaceZFail = MASK;
+				} else if (name == "#cullFrontFace") {
+					materialParams.state.cullFrontFace = value;
+					materialParams.stateMask.cullFrontFace = MASK;
+				} else if (name == "#cull") {
+					materialParams.state.cull = value;
+					materialParams.stateMask.cull = MASK;
+				} else if (name == "#fill") {
+					materialParams.state.fill = value;
+					materialParams.stateMask.fill = MASK;
+				} else if (name == "#blend") {
+					materialParams.state.blend = value;
+					materialParams.stateMask.blend = MASK;
+				} else if (name == "#colorWrite") {
+					materialParams.state.colorWrite = value;
+					materialParams.stateMask.colorWrite = MASK;
+				} else if (name == "#depthTest") {
+					materialParams.state.depthTest = value;
+					materialParams.stateMask.depthTest = MASK;
+				} else if (name == "#depthWrite") {
+					materialParams.state.depthWrite = value;
+					materialParams.stateMask.depthWrite = MASK;
+				} else if (name == "#stencilTest") {
+					materialParams.state.stencilTest = value;
+					materialParams.stateMask.stencilTest = MASK;
+				} else if (name == "#stencilWrtie") {
+					materialParams.state.stencilWrite = value;
+					materialParams.stateMask.stencilWrite = MASK;
+				} else if (name == "#stencilMask") {
+					materialParams.state.stencilMask = value;
+					materialParams.stateMask.stencilMask = MASK;
+				} else if (name == "#stencilValue") {
+					materialParams.state.stencilMask = value;
+					materialParams.stateMask.stencilMask = MASK;
+				}
+			} else {
+				switch (request.GetCurrentType()) {
+				case IScript::Request::NIL:
+				case IScript::Request::BOOLEAN:
+					PushValue<bool>::Push(request, name, variables);
+					break;
+				case IScript::Request::INTEGER:
+					PushValue<uint32_t>::Push(request, name, variables);
+					break;
+				case IScript::Request::STRING:
+				{
+					String value;
+					request >> value;
+					size_t k;
+					for (k = 0; k < textureResources.size(); k++) {
+						if (value == textureResources[k]->GetLocation()) {
+							variables.emplace_back(IAsset::Material::Variable(name, IAsset::TextureIndex(verify_cast<uint32_t>(k))));
+						}
 					}
-				}
 
-				break;
-			}
-			case IScript::Request::ARRAY:
-			case IScript::Request::TABLE:
-			{
-				IScript::Request::ArrayStart vs;
-				request >> vs;
-				switch (vs.count) {
-				case 2:
-					PushValue<Float2>::PushFloats(request, name, variables);
-					break;
-				case 3:
-					PushValue<Float3>::PushFloats(request, name, variables);
-					break;
-				case 4:
-					PushValue<Float4>::PushFloats(request, name, variables);
-					break;
-				case 9:
-					PushValue<MatrixFloat3x3>::PushFloats(request, name, variables);
-					break;
-				case 16:
-					PushValue<MatrixFloat4x4>::PushFloats(request, name, variables);
+					if (k == textureResources.size()) {
+						TShared<ResourceBase> resource = resourceManager.LoadExistSafe(value);
+						if (resource && resource->QueryInterface(UniqueType<TextureResource>()) != nullptr) {
+							textureResources.emplace_back(static_cast<TextureResource*>(resource()));
+							variables.emplace_back(IAsset::Material::Variable(name, IAsset::TextureIndex(verify_cast<uint32_t>(k))));
+						}
+					}
+
 					break;
 				}
-				request << endarray;
-				break;
-			}
-			default:
-				PushValue<float>::Push(request, name, variables);
-				break;
+				case IScript::Request::ARRAY:
+				case IScript::Request::TABLE:
+				{
+					IScript::Request::ArrayStart vs;
+					request >> vs;
+					switch (vs.count) {
+					case 2:
+						PushValue<Float2>::PushFloats(request, name, variables);
+						break;
+					case 3:
+						PushValue<Float3>::PushFloats(request, name, variables);
+						break;
+					case 4:
+						PushValue<Float4>::PushFloats(request, name, variables);
+						break;
+					case 9:
+						PushValue<MatrixFloat3x3>::PushFloats(request, name, variables);
+						break;
+					case 16:
+						PushValue<MatrixFloat4x4>::PushFloats(request, name, variables);
+						break;
+					}
+					request << endarray;
+					break;
+				}
+				default:
+					PushValue<float>::Push(request, name, variables);
+					break;
+				}
 			}
 		}
 		request << endarray;

@@ -5,12 +5,12 @@
 
 using namespace PaintsNow;
 
-StencilMaskRenderStage::StencilMaskRenderStage(const String& config) : InputDepth(renderTargetDescription.depthStorage), InputColorPlaceHolder(renderTargetDescription.colorStorages[0]), OutputDepth(renderTargetDescription.depthStorage) {
-	renderStateDescription.colorWrite = 0;
-	renderStateDescription.depthTest = 1;
-	renderStateDescription.stencilTest = IRender::Resource::RenderStateDescription::ALWAYS;
-	renderStateDescription.stencilWrite = 1;
-	renderStateDescription.stencilValue = atoi(config.c_str());
+StencilMaskRenderStage::StencilMaskRenderStage(const String& config) : InputDepthStencil(renderTargetDescription.depthStorage), OutputMask(renderTargetDescription.depthStorage) {
+	renderStateDescription.colorWrite = 1;
+	renderStateDescription.depthTest = 0;
+	renderStateDescription.stencilTest = IRender::Resource::RenderStateDescription::EQUAL;
+	renderStateDescription.stencilWrite = 0;
+	renderStateDescription.stencilValue = 0;
 	renderStateDescription.stencilMask = 0xff;
 
 	renderTargetDescription.colorStorages[0].loadOp = IRender::Resource::RenderTargetDescription::DEFAULT;
@@ -25,9 +25,8 @@ TObject<IReflect>& StencilMaskRenderStage::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectProperty()) {
-		ReflectProperty(InputDepth);
-		ReflectProperty(InputColorPlaceHolder);
-		ReflectProperty(OutputDepth);
+		ReflectProperty(InputDepthStencil);
+		ReflectProperty(OutputMask);
 	}
 
 	return *this;

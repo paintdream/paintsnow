@@ -19,9 +19,8 @@ namespace PaintsNow {
 
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 
-		RenderPortRenderTargetLoad InputDepth;
-		RenderPortRenderTargetLoad InputColorPlaceHolder;
-		RenderPortRenderTargetStore OutputDepth;
+		RenderPortRenderTargetLoad InputDepthStencil;
+		RenderPortRenderTargetStore OutputMask;
 	};
 }
 

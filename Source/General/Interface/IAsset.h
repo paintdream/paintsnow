@@ -162,6 +162,7 @@ namespace PaintsNow {
 
 			std::vector<Variable> variables;
 			IRender::Resource::RenderStateDescription state;
+			IRender::Resource::RenderStateDescription stateMask; // for runtime overriding materials, no effects on root material.
 		};
 
 		typedef Sequence<Float4> RotSequence;
