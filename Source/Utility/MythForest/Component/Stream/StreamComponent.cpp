@@ -58,51 +58,59 @@ SharedTiny* StreamComponent::Load(Engine& engine, const UShort3& coord, const TS
 	size_t offset = (coord.z() * dimension.y() + coord.y()) * dimension.x() + coord.x();
 	uint16_t id = idGrids[offset];
 	SharedTiny* object = nullptr;
-	if (id == (uint16_t)~0) {
-		// allocate id ...
-		id = recycleQueue[recycleStart];
+	while (true) {
+		if (id == (uint16_t)~0) {
+			// allocate id ...
+			id = recycleQueue[recycleStart];
 
-		Grid& grid = grids[id];
+			Grid& grid = grids[id];
 
-		if (grid.object) {
-			UnloadInternal(engine, grid, context);
-		}
+			if (grid.object) {
+				UnloadInternal(engine, grid, context);
+			}
 
-		TShared<SharedTiny> last = grid.object;
-		grid.recycleIndex = recycleStart;
-		recycleStart = (recycleStart + 1) % verify_cast<uint16_t>(recycleQueue.size());
+			TShared<SharedTiny> last = grid.object;
+			grid.recycleIndex = recycleStart;
+			recycleStart = (recycleStart + 1) % verify_cast<uint16_t>(recycleQueue.size());
 
-		if (loadHandler.script) {
-			IScript::Request& request = *engine.bridgeSunset.requestPool.AcquireSafe();
-			IScript::Delegate<SharedTiny> w;
+			if (loadHandler.script) {
+				IScript::Request& request = *engine.bridgeSunset.requestPool.AcquireSafe();
+				IScript::Delegate<SharedTiny> w;
 
-			request.DoLock();
-			request.Push();
-			request.Call(loadHandler.script, coord, last, context);
-			request >> w;
-			request.Pop();
-			request.UnLock();
+				request.DoLock();
+				request.Push();
+				request.Call(loadHandler.script, coord, last, context);
+				request >> w;
+				request.Pop();
+				request.UnLock();
 
-			assert(w);
-			grid.object = w.Get();
-			engine.bridgeSunset.requestPool.ReleaseSafe(&request);
+				assert(w);
+				grid.object = w.Get();
+				engine.bridgeSunset.requestPool.ReleaseSafe(&request);
+			} else {
+				assert(loadHandler.native);
+				grid.object = loadHandler.native(engine, coord, last, context);
+			}
+
+			grid.coord = coord;
+			object = grid.object();
+			idGrids[offset] = id;
+			break;
 		} else {
-			assert(loadHandler.native);
-			grid.object = loadHandler.native(engine, coord, last, context);
+			Grid& grid = grids[id];
+			if (grid.coord == coord) {
+				uint16_t oldIndex = grid.recycleIndex;
+				grid.recycleIndex = recycleStart;
+				recycleQueue[oldIndex] = recycleQueue[recycleStart]; // make swap
+				recycleQueue[recycleStart] = id;
+
+				recycleStart = (recycleStart + 1) % verify_cast<uint16_t>(recycleQueue.size());
+				object = grid.object();
+				break;
+			} else {
+				id = (uint16_t)~0; // invalid, must reload
+			}
 		}
-
-		grid.coord = coord;
-		object = grid.object();
-		idGrids[offset] = id;
-	} else {
-		Grid& grid = grids[id];
-		uint16_t oldIndex = grid.recycleIndex;
-		grid.recycleIndex = recycleStart;
-		recycleQueue[oldIndex] = recycleQueue[recycleStart]; // make swap
-		recycleQueue[recycleStart] = id;
-
-		recycleStart = (recycleStart + 1) % verify_cast<uint16_t>(recycleQueue.size());
-		object = grid.object();
 	}
 
 	if (refreshHandler.script) {

@@ -106,11 +106,11 @@ void LightComponent::ShadowLayer::StreamRefreshHandler(Engine& engine, const USh
 	if (!engine.snowyStream.GetRenderResourceManager()->GetCompleted())
 		return;
 
-	if (tiny->Flag().fetch_or(TINY_UPDATING, std::memory_order_release) & TINY_UPDATING)
-		return;
-
 	TShared<TaskData> taskData = currentTask;
 	if (taskData->Flag().fetch_or(TINY_MODIFIED, std::memory_order_relaxed) & TINY_MODIFIED)
+		return;
+
+	if (tiny->Flag().fetch_or(TINY_UPDATING, std::memory_order_release) & TINY_UPDATING)
 		return;
 
 	TShared<ShadowGrid> shadowGrid = tiny->QueryInterface(UniqueType<ShadowGrid>());
@@ -271,7 +271,7 @@ void LightComponent::InstanceGroup::Reset() {
 
 void ShadowLayerConfig::TaskData::RenderFrame(Engine& engine) {
 	OPTICK_EVENT();
-	if (Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release) & TINY_MODIFIED) {
+	if (Flag().load(std::memory_order_acquire) & TINY_MODIFIED) {
 		// engine.mythForest.StartCaptureFrame("lightdebug", "");
 		std::vector<IRender::Queue*> renderQueues;
 		renderQueues.emplace_back(renderQueue);
@@ -288,6 +288,7 @@ void ShadowLayerConfig::TaskData::RenderFrame(Engine& engine) {
 		}
 
 		Cleanup(engine.interfaces.render);
+		Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release);
 		// engine.mythForest.EndCaptureFrame();
 	}
 }
@@ -583,7 +584,9 @@ TShared<LightComponent::ShadowGrid> LightComponent::ShadowLayer::UpdateShadow(En
 	Float3 lightCoord = Math::Transform(Math::QuickInverse(lightTransform), position);
 	const UShort3& dimension = streamComponent->GetDimension();
 
-	Int3 intPosition((int32_t)(lightCoord.x() / gridSize), (int32_t)(lightCoord.y() / gridSize), (int32_t)(lightCoord.z() / gridSize));
+	float gridScaledSize = gridSize * scale;
+
+	Int3 intPosition((int32_t)(lightCoord.x() / gridScaledSize), (int32_t)(lightCoord.y() / gridScaledSize), (int32_t)(lightCoord.z() / gridScaledSize));
 	UShort3 coord = streamComponent->ComputeWrapCoordinate(intPosition);
 
 	TShared<ShadowContext> shadowContext = TShared<ShadowContext>::From(new ShadowContext());
@@ -591,15 +594,24 @@ TShared<LightComponent::ShadowGrid> LightComponent::ShadowLayer::UpdateShadow(En
 	shadowContext->lightTransformMatrix = Math::MatrixScale(Float4(scale, scale, scale, 1)) * lightTransform;
 
 	// Make alignment
-	Float3 alignedPosition = Math::Transform(lightTransform, Float3(intPosition.x() * gridSize, intPosition.y() * gridSize, intPosition.z() * gridSize));
+	Float3 alignedPosition = Math::Transform(lightTransform, Float3(intPosition.x() * gridScaledSize, intPosition.y() * gridScaledSize, intPosition.z() * gridScaledSize));
 	shadowContext->lightTransformMatrix(3, 0) = alignedPosition.x();
 	shadowContext->lightTransformMatrix(3, 1) = alignedPosition.y();
 	shadowContext->lightTransformMatrix(3, 2) = alignedPosition.z();
-	TShared<ShadowGrid> grid = streamComponent->Load(engine, coord, shadowContext())->QueryInterface(UniqueType<ShadowGrid>());
-	assert(grid);
+	TShared<ShadowGrid> grid;
 
-	if (!(grid->Flag().load(std::memory_order_relaxed) & TINY_MODIFIED) || !currentGrid) {
-		currentGrid = grid;
+	if (!(currentTask->Flag().load(std::memory_order_relaxed) & TINY_MODIFIED)) {
+		grid = streamComponent->Load(engine, coord, shadowContext())->QueryInterface(UniqueType<ShadowGrid>());
+		assert(grid);
+
+		if (!(grid->Flag().load(std::memory_order_relaxed) & TINY_MODIFIED) || !currentGrid) {
+			/*
+			if (currentGrid != grid) {
+				printf("Update Shadow (%.3f, %.3f, %.3f) - (%d, %d, %d) => (%d, %d, %d) [Grid Size] = %.5f [Scale] = %.5f\n", position.x(), position.y(), position.z(), intPosition.x(), intPosition.y(), intPosition.z(), coord.x(), coord.y(), coord.z(), gridScaledSize, scale);
+				printf("Aligned Position (%.3f, %.3f, %.3f)\n", alignedPosition.x(), alignedPosition.y(), alignedPosition.z());
+			}*/
+			currentGrid = grid;
+		}
 	}
 
 	return currentGrid;

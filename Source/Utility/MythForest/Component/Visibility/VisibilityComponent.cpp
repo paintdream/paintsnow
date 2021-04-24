@@ -535,7 +535,9 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 		if (task.status == TaskData::STATUS_BAKED) {
 			finalStatus.store(TaskData::STATUS_POSTPROCESS);
 			Cell& cell = *task.cell();
-			task.next = cell.taskHead.exchange(&task, std::memory_order_acquire);
+			task.next = cell.taskHead.load(std::memory_order_acquire);
+			while (!cell.taskHead.compare_exchange_weak(task.next, &task, std::memory_order_release)) {}
+
 			engine.GetKernel().GetThreadPool().Dispatch(CreateTaskContextFree(Wrap(this, &VisibilityComponent::PostProcess), &cell), 1);
 		} else if (task.status == TaskData::STATUS_ASSEMBLING) {
 			if (task.pendingCount == 0) {
