@@ -51,8 +51,15 @@ namespace PaintsNow {
 		struct TaskData;
 		class Cell : public TAllocatedTiny<Cell, SharedTiny>, public Cache {
 		public:
+			enum {
+				FACE_COUNT = 6,
+				ALL_FACE_MASK = (1 << FACE_COUNT) - 1
+			};
+
 			Cell();
-			std::atomic<uint32_t> finishCount;
+
+			std::atomic<uint32_t> dispatched; // bitmask
+			std::atomic<uint32_t> finished; // bitmask
 			std::atomic<TaskData*> taskHead;
 		};
 
@@ -68,7 +75,7 @@ namespace PaintsNow {
 				STATUS_POSTPROCESS,
 			};
 
-			TaskData() : status(STATUS_IDLE), pendingCount(0), pendingResourceCount(0), renderQueue(nullptr), renderTarget(nullptr), next(nullptr) {}
+			TaskData() : status(STATUS_IDLE), pendingCount(0), faceIndex(0), pendingResourceCount(0), renderQueue(nullptr), renderTarget(nullptr), next(nullptr) {}
 			bool Continue() const { return pendingResourceCount == 0; }
 
 			struct WarpData {
@@ -79,6 +86,7 @@ namespace PaintsNow {
 			uint32_t pendingCount;
 			uint32_t status;
 			uint32_t pendingResourceCount;
+			uint32_t faceIndex;
 			TaskData* next;
 			TShared<Cell> cell;
 			IRender::Queue* renderQueue;
@@ -123,7 +131,7 @@ namespace PaintsNow {
 		void DispatchTasks(Engine& engine);
 		void PostProcess(const TShared<Cell>& cell);
 
-		void CoTaskAssembleTask(Engine& engine, TaskData& task, uint32_t face, const TShared<VisibilityComponent>& selfHolder);
+		void CoTaskAssembleTask(Engine& engine, TaskData& task, const TShared<VisibilityComponent>& selfHolder);
 		void SetupIdentities(Engine& engine, Entity* hostEntity);
 		void CollectRenderableComponent(Engine& engine, TaskData& task, RenderableComponent* renderableComponent, WorldInstanceData& instanceData, uint32_t identity);
 		void CollectComponents(Engine& engine, TaskData& task, const WorldInstanceData& instanceData, const CaptureData& captureData, Entity* entity);

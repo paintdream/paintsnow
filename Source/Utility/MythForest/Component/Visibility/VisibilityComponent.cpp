@@ -11,8 +11,6 @@
 
 using namespace PaintsNow;
 
-const uint32_t FACE_COUNT = 6;
-
 VisibilityComponent::VisibilityComponent(const TShared<StreamComponent>& stream) : gridSize(0.5f, 0.5f, 0.5f), viewDistance(512.0f), taskCount(32), resolution(128, 128), activeCellCacheIndex(0), hostEntity(nullptr), renderQueue(nullptr), depthStencilResource(nullptr), stateResource(nullptr), collectLock(nullptr), streamComponent(stream) {
 	maxVisIdentity.store(0, std::memory_order_relaxed);
 	cellAllocator.Reset(new TObjectAllocator<Cell>());
@@ -212,7 +210,8 @@ static inline void MergeSample(Bytes& dst, const Bytes& src) {
 }
 
 VisibilityComponentConfig::Cell::Cell() {
-	finishCount.store(0, std::memory_order_relaxed);
+	dispatched.store(0, std::memory_order_relaxed);
+	finished.store(0, std::memory_order_relaxed);
 	taskHead.store(nullptr, std::memory_order_release);
 }
 
@@ -244,12 +243,13 @@ const Bytes& VisibilityComponent::QuerySample(Engine& engine, const Float3& posi
 				Int3 coord(x, y, z);
 				TShared<Cell> cell = streamComponent->Load(engine, streamComponent->ComputeWrapCoordinate(coord), nullptr)->QueryInterface(UniqueType<Cell>());
 
-				if (!(cell->Flag().load(std::memory_order_acquire) & TINY_ACTIVATED)) {
+				bool curIncomplete = cell->finished.load(std::memory_order_acquire) != Cell::ALL_FACE_MASK;
+				if (curIncomplete) {
 					cell->intPosition = coord;
 					std::binary_insert(bakePoints, cell);
 				}
 
-				incomplete = incomplete || cell->finishCount.load(std::memory_order_acquire) != FACE_COUNT;
+				incomplete = incomplete || curIncomplete;
 				toMerge.emplace_back(cell);
 				mergedSize = Math::Max(mergedSize, (uint32_t)verify_cast<uint32_t>(cell->payload.GetSize()));
 			}
@@ -281,10 +281,12 @@ TShared<SharedTiny> VisibilityComponent::StreamUnloadHandler(Engine& engine, con
 	TShared<Cell> cell = tiny->QueryInterface(UniqueType<Cell>());
 
 	// is ready?
-	if (cell->finishCount.load(std::memory_order_acquire) == FACE_COUNT) {
+	if (cell->finished.load(std::memory_order_acquire) == Cell::ALL_FACE_MASK) {
 		cell->payload.Clear();
-		cell->finishCount.store(0, std::memory_order_release);
+		cell->dispatched.store(0, std::memory_order_release);
+		cell->finished.store(0, std::memory_order_release);
 		cell->Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_release);
+
 		return cell();
 	} else {
 		return nullptr; // let it choose a new one
@@ -323,10 +325,16 @@ void VisibilityComponent::TickRender(Engine& engine) {
 		if (task.status == TaskData::STATUS_IDLE) {
 			finalStatus.store(TaskData::STATUS_START, std::memory_order_release);
 		} else if (task.status == TaskData::STATUS_ASSEMBLED) {
-			render.RequestDownloadResource(task.renderQueue, texture->GetRenderResource(), &texture->description);
-			render.FlushQueue(task.renderQueue);
-			bakeQueues.emplace_back(task.renderQueue);
-			finalStatus.store(TaskData::STATUS_BAKING, std::memory_order_release);
+			if (task.Continue()) {
+				render.RequestDownloadResource(task.renderQueue, texture->GetRenderResource(), &texture->description);
+				render.FlushQueue(task.renderQueue);
+				bakeQueues.emplace_back(task.renderQueue);
+				finalStatus.store(TaskData::STATUS_BAKING, std::memory_order_release);
+			} else {
+				// failed!!
+				task.cell->dispatched.fetch_and(~(1 << task.faceIndex), std::memory_order_relaxed);
+				finalStatus.store(TaskData::STATUS_IDLE, std::memory_order_release);
+			}
 		} else if (task.status == TaskData::STATUS_BAKING) {
 			render.CompleteDownloadResource(task.renderQueue, texture->GetRenderResource());
 			bakeQueues.emplace_back(task.renderQueue);
@@ -387,8 +395,14 @@ void VisibilityComponent::CollectRenderableComponent(Engine& engine, TaskData& t
 		std::vector<IDrawCallProvider::OutputRenderData, IDrawCallProvider::DrawCallAllocator> drawCalls(allocator);
 		IThread& thread = engine.interfaces.thread;
 		thread.DoLock(collectLock);
-		renderableComponent->CollectDrawCalls(drawCalls, inputRenderData, warpData.bytesCache, IDrawCallProvider::COLLECT_AGILE_RENDERING);
+		uint32_t count = renderableComponent->CollectDrawCalls(drawCalls, inputRenderData, warpData.bytesCache, IDrawCallProvider::COLLECT_DEFAULT);
+
+		if (count == ~(uint32_t)0) { // failed?
+			task.pendingResourceCount++;
+		}
+
 		thread.UnLock(collectLock);
+
 		assert(drawCalls.size() < sizeof(RenderableComponent) - 1);
 
 		for (size_t i = 0; i < drawCalls.size(); i++) {
@@ -497,7 +511,9 @@ void VisibilityComponent::PostProcess(const TShared<Cell>& cell) {
 
 			dataList = dataList->next;
 			task.next = nullptr;
-			cell.finishCount.fetch_add(1, std::memory_order_release);
+			cell.finished.fetch_or(1 << task.faceIndex, std::memory_order_release);
+
+			// cell finished?
 			std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(task.status);
 			finalStatus.store(TaskData::STATUS_IDLE, std::memory_order_release);
 		}
@@ -518,79 +534,82 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 		} else if (task.status == TaskData::STATUS_ASSEMBLING) {
 			if (task.pendingCount == 0) {
 				// Commit draw calls.
-				IRender::Queue* queue = task.renderQueue;
-				IRender& render = engine.interfaces.render;
+				if (task.Continue()) {
+					IRender::Queue* queue = task.renderQueue;
+					IRender& render = engine.interfaces.render;
 
-				for (size_t k = 0; k < task.dataUpdaters.size(); k++) {
-					task.dataUpdaters[k]->Update(render, queue);
-				}
-
-				task.dataUpdaters.clear();
-
-				IRender::Resource* buffer = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_BUFFER);
-				Bytes bufferData;
-				uint32_t bufferSize = 0;
-				std::vector<IRender::Resource*> drawCallResources;
-
-				for (size_t i = 0; i < task.warpData.size(); i++) {
-					TaskData::WarpData& warpData = task.warpData[i];
-					std::unordered_map<size_t, InstanceGroup>& groups = warpData.instanceGroups;
-					for (std::unordered_map<size_t, InstanceGroup>::iterator it = groups.begin(); it != groups.end(); ++it) {
-						InstanceGroup& group = (*it).second;
-						if (group.drawCallDescription.shaderResource == nullptr || group.instanceCount == 0) continue;
-
-						for (size_t k = 0; k < group.instancedData.size(); k++) {
-							Bytes& data = group.instancedData[k];
-							assert(!data.Empty());
-							if (!data.Empty()) {
-								assert(data.IsViewStorage());
-								// assign instanced buffer	
-								size_t viewSize = data.GetViewSize();
-								IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[k];
-								bufferRange.buffer = buffer;
-								bufferRange.offset = bufferSize;
-								bufferRange.component = verify_cast<uint16_t>(viewSize / (group.instanceCount * sizeof(float)));
-								warpData.bytesCache.Link(bufferData, data);
-								bufferSize += verify_cast<uint32_t>(viewSize);
-								assert(bufferData.GetViewSize() == bufferSize);
-							}
-						}
-
-						group.drawCallDescription.instanceCounts.x() = group.instanceCount;
-						assert(PassBase::ValidateDrawCall(group.drawCallDescription));
-
-						IRender::Resource* drawCall = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_DRAWCALL);
-						IRender::Resource::DrawCallDescription dc = group.drawCallDescription; // make copy
-						render.UploadResource(queue, drawCall, &dc);
-						drawCallResources.emplace_back(drawCall);
-						group.Reset(); // for next reuse
+					for (size_t k = 0; k < task.dataUpdaters.size(); k++) {
+						task.dataUpdaters[k]->Update(render, queue);
 					}
+
+					task.dataUpdaters.clear();
+
+					IRender::Resource* buffer = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_BUFFER);
+					Bytes bufferData;
+					uint32_t bufferSize = 0;
+					std::vector<IRender::Resource*> drawCallResources;
+
+					for (size_t i = 0; i < task.warpData.size(); i++) {
+						TaskData::WarpData& warpData = task.warpData[i];
+						std::unordered_map<size_t, InstanceGroup>& groups = warpData.instanceGroups;
+						for (std::unordered_map<size_t, InstanceGroup>::iterator it = groups.begin(); it != groups.end(); ++it) {
+							InstanceGroup& group = (*it).second;
+							if (group.drawCallDescription.shaderResource == nullptr || group.instanceCount == 0) continue;
+
+							for (size_t k = 0; k < group.instancedData.size(); k++) {
+								Bytes& data = group.instancedData[k];
+								assert(!data.Empty());
+								if (!data.Empty()) {
+									assert(data.IsViewStorage());
+									// assign instanced buffer	
+									size_t viewSize = data.GetViewSize();
+									IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[k];
+									bufferRange.buffer = buffer;
+									bufferRange.offset = bufferSize;
+									bufferRange.component = verify_cast<uint16_t>(viewSize / (group.instanceCount * sizeof(float)));
+									warpData.bytesCache.Link(bufferData, data);
+									bufferSize += verify_cast<uint32_t>(viewSize);
+									assert(bufferData.GetViewSize() == bufferSize);
+								}
+							}
+
+							group.drawCallDescription.instanceCounts.x() = group.instanceCount;
+							assert(PassBase::ValidateDrawCall(group.drawCallDescription));
+
+							IRender::Resource* drawCall = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_DRAWCALL);
+							IRender::Resource::DrawCallDescription dc = group.drawCallDescription; // make copy
+							render.UploadResource(queue, drawCall, &dc);
+							drawCallResources.emplace_back(drawCall);
+							group.Reset(); // for next reuse
+						}
+					}
+
+					IRender::Resource::BufferDescription desc;
+					assert(bufferSize == bufferData.GetViewSize());
+					desc.data.Resize(bufferSize);
+					desc.data.Import(0, bufferData);
+					desc.format = IRender::Resource::BufferDescription::FLOAT;
+					desc.usage = IRender::Resource::BufferDescription::INSTANCED;
+					desc.component = 0;
+					render.UploadResource(queue, buffer, &desc);
+
+					for (size_t m = 0; m < drawCallResources.size(); m++) {
+						IRender::Resource* drawCall = drawCallResources[m];
+						render.ExecuteResource(queue, drawCall);
+						// cleanup at current frame
+						render.DeleteResource(queue, drawCall);
+					}
+
+					render.DeleteResource(queue, buffer);
 				}
 
-				IRender::Resource::BufferDescription desc;
-				assert(bufferSize == bufferData.GetViewSize());
-				desc.data.Resize(bufferSize);
-				desc.data.Import(0, bufferData);
-				desc.format = IRender::Resource::BufferDescription::FLOAT;
-				desc.usage = IRender::Resource::BufferDescription::INSTANCED;
-				desc.component = 0;
-				render.UploadResource(queue, buffer, &desc);
-
-				for (size_t m = 0; m < drawCallResources.size(); m++) {
-					IRender::Resource* drawCall = drawCallResources[m];
-					render.ExecuteResource(queue, drawCall);
-					// cleanup at current frame
-					render.DeleteResource(queue, drawCall);
-				}
-
-				render.DeleteResource(queue, buffer);
 				finalStatus.store(TaskData::STATUS_ASSEMBLED, std::memory_order_release);
 			}
 		}
 	}
 }
 
-void VisibilityComponent::CoTaskAssembleTask(Engine& engine, TaskData& task, uint32_t face, const TShared<VisibilityComponent>& selfHolder) {
+void VisibilityComponent::CoTaskAssembleTask(Engine& engine, TaskData& task, const TShared<VisibilityComponent>& selfHolder) {
 	OPTICK_EVENT();
 	if (hostEntity == nullptr) return;
 
@@ -619,7 +638,7 @@ void VisibilityComponent::CoTaskAssembleTask(Engine& engine, TaskData& task, uin
 	task.camera = camera;
 
 	const float r2 = (float)sqrt(2.0f) / 2.0f;
-	static const Float3 directions[FACE_COUNT] = {
+	static const Float3 directions[Cell::FACE_COUNT] = {
 		Float3(r2, r2, 0),
 		Float3(-r2, r2, 0),
 		Float3(-r2, -r2, 0),
@@ -628,7 +647,7 @@ void VisibilityComponent::CoTaskAssembleTask(Engine& engine, TaskData& task, uin
 		Float3(0, 0, -1)
 	};
 
-	static const Float3 ups[FACE_COUNT] = {
+	static const Float3 ups[Cell::FACE_COUNT] = {
 		Float3(0, 0, 1),
 		Float3(0, 0, 1),
 		Float3(0, 0, 1),
@@ -645,7 +664,7 @@ void VisibilityComponent::CoTaskAssembleTask(Engine& engine, TaskData& task, uin
 	}
 
 	CaptureData captureData;
-	MatrixFloat4x4 viewMatrix = Math::MatrixLookAt(viewPosition, directions[face], ups[face]);
+	MatrixFloat4x4 viewMatrix = Math::MatrixLookAt(viewPosition, directions[task.faceIndex], ups[task.faceIndex]);
 	MatrixFloat4x4 viewProjectionMatrix = viewMatrix * projectionMatrix;
 
 	camera.UpdateCaptureData(captureData, Math::QuickInverse(viewMatrix));
@@ -663,35 +682,32 @@ void VisibilityComponent::DispatchTasks(Engine& engine) {
 	Kernel& kernel = engine.GetKernel();
 	ThreadPool& threadPool = kernel.GetThreadPool();
 
-	for (size_t i = 0, n = 0; i < bakePoints.size(); i++) {
+	for (size_t i = 0, n = 0; i < bakePoints.size() && n < tasks.size(); i++) {
 		const TShared<Cell>& cell = bakePoints[i];
-
 		Entity* entity = hostEntity;
-		// find idle task
-		TaskData* targets[FACE_COUNT] = { nullptr };
-		uint32_t k = 0;
-		for (size_t j = n; j < tasks.size(); j++) {
-			TaskData& task = tasks[j];
-			std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(task.status);
-			if (task.status == TaskData::STATUS_START) {
-				targets[k++] = &task;
-				if (k >= FACE_COUNT) break;
+
+		for (uint32_t k = 0; k < Cell::FACE_COUNT; k++) {
+			if (!(cell->dispatched.load(std::memory_order_relaxed) & (1 << k))) {
+				while (n < tasks.size()) {
+					TaskData& task = tasks[n++];
+
+					if (task.status == TaskData::STATUS_START) {
+						task.cell = cell;
+						task.faceIndex = k;
+						task.pendingResourceCount = 0;
+						cell->dispatched.fetch_or(1 << k, std::memory_order_relaxed);
+
+						std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(task.status);
+						finalStatus.store(TaskData::STATUS_DISPATCHED, std::memory_order_release);
+						threadPool.Dispatch(CreateCoTaskContextFree(kernel, Wrap(this, &VisibilityComponent::CoTaskAssembleTask), std::ref(engine), std::ref(task), this));
+						break;
+					}
+				}
+
+				if (n == tasks.size())
+					break; // not enough slots
 			}
 		}
-
-		if (k < FACE_COUNT) break; // not enough, go to next frame
-
-		if (cell->Flag().fetch_or(TINY_ACTIVATED) & TINY_ACTIVATED) continue;
-
-		for (k = 0; k < FACE_COUNT; k++) {
-			TaskData& task = *targets[k];
-			task.cell = cell;
-			std::atomic<uint32_t>& finalStatus = reinterpret_cast<std::atomic<uint32_t>&>(task.status);
-			finalStatus.store(TaskData::STATUS_DISPATCHED, std::memory_order_release);
-			threadPool.Dispatch(CreateCoTaskContextFree(kernel, Wrap(this, &VisibilityComponent::CoTaskAssembleTask), std::ref(engine), std::ref(task), k, this));
-		}
-
-		n += k;
 	}
 
 	bakePoints.clear();
