@@ -39,7 +39,8 @@ CameraComponent::TaskData::WarpData::WarpData() : entityCount(0), visibleEntityC
 
 CameraComponent::CameraComponent(const TShared<RenderFlowComponent>& prenderFlowComponent, const String& name)
 : collectedEntityCount(0), collectedVisibleEntityCount(0), collectedTriangleCount(0), viewDistance(256), jitterIndex(0), renderFlowComponent(std::move(prenderFlowComponent)), cameraViewPortName(name) {
-	Flag().fetch_or(CAMERACOMPONENT_PERSPECTIVE | CAMERACOMPONENT_UPDATE_COMMITTED | CAMERACOMPONENT_AGILE_RENDERING, std::memory_order_relaxed);
+	// Flag().fetch_or(CAMERACOMPONENT_PERSPECTIVE | CAMERACOMPONENT_UPDATE_COMMITTED | CAMERACOMPONENT_AGILE_RENDERING, std::memory_order_relaxed);
+	Flag().fetch_or(CAMERACOMPONENT_PERSPECTIVE | CAMERACOMPONENT_UPDATE_COMMITTED, std::memory_order_relaxed);
 }
 
 void CameraComponent::UpdateJitterMatrices(CameraComponentConfig::WorldGlobalData& worldGlobalData) {
@@ -458,11 +459,14 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 	TShared<TaskData> taskData;
 	if ((Flag().load(std::memory_order_relaxed) & CAMERACOMPONENT_UPDATE_COLLECTED)) {
 		taskData = nextTaskData;
-		CommitRenderRequests(engine, *taskData, queue);
+		if (nextTaskData->Flag().load(std::memory_order_relaxed) & TINY_ACTIVATED) {
+			CommitRenderRequests(engine, *taskData, queue);
+		}
+
 		Flag().fetch_and(~CAMERACOMPONENT_UPDATE_COLLECTED, std::memory_order_relaxed);
 		Flag().fetch_or(CAMERACOMPONENT_UPDATE_COMMITTED, std::memory_order_acq_rel);
 	} else {
-		taskData = prevTaskData;
+	taskData = prevTaskData;
 	}
 
 	// Update jitter
@@ -479,7 +483,7 @@ void CameraComponent::OnTickCameraViewPort(Engine& engine, RenderPort& renderPor
 		// recompute global matrices
 		worldGlobalData.viewMatrix = Math::QuickInverse(ComputeSmoothTrackTransform());
 	}
-	
+
 	worldGlobalData.viewProjectionMatrix = worldGlobalData.viewMatrix * worldGlobalData.projectionMatrix;
 
 	// update camera view settings
@@ -560,7 +564,15 @@ void CameraComponent::CollectRenderableComponent(Engine& engine, TaskData& taskD
 	IDrawCallProvider::InputRenderData inputRenderData(instanceData.viewReference, nullptr, renderFlowComponent->GetMainResolution());
 	IDrawCallProvider::DrawCallAllocator allocator(&warpData.bytesCache);
 	std::vector<IDrawCallProvider::OutputRenderData, IDrawCallProvider::DrawCallAllocator> drawCalls(allocator);
-	renderableComponent->CollectDrawCalls(drawCalls, inputRenderData, warpData.bytesCache, (Flag().load(std::memory_order_relaxed) & CAMERACOMPONENT_AGILE_RENDERING) ? IDrawCallProvider::COLLECT_AGILE_RENDERING : IDrawCallProvider::COLLECT_DEFAULT);
+	if (Flag().load(std::memory_order_relaxed) & CAMERACOMPONENT_AGILE_RENDERING) {
+		renderableComponent->CollectDrawCalls(drawCalls, inputRenderData, warpData.bytesCache, IDrawCallProvider::COLLECT_AGILE_RENDERING);
+	} else {
+		if (renderableComponent->CollectDrawCalls(drawCalls, inputRenderData, warpData.bytesCache, IDrawCallProvider::COLLECT_DEFAULT) == ~(uint32_t)0) {
+			taskData.Flag().fetch_and(~TINY_ACTIVATED);
+			return;
+		}
+	}
+
 	TaskData::WarpData::InstanceGroupMap& instanceGroups = warpData.instanceGroups;
 
 	bool isCameraViewSpace = !!(renderableComponent->Flag().load(std::memory_order_relaxed) & RenderableComponent::RENDERABLECOMPONENT_CAMERAVIEW);
@@ -817,7 +829,10 @@ void CameraComponent::CompleteCollect(Engine& engine, TaskData& taskData) {
 	if (kernel.GetCurrentWarpIndex() != GetWarpIndex()) {
 		kernel.QueueRoutine(this, CreateTaskContextFree(Wrap(this, &CameraComponent::CompleteCollect), std::ref(engine), std::ref(taskData)));
 	} else {
-		Instancing(engine, taskData);
+		if (nextTaskData->Flag().load(std::memory_order_relaxed) & TINY_ACTIVATED) {
+			Instancing(engine, taskData);
+		}
+
 		Flag().fetch_or(CAMERACOMPONENT_UPDATE_COLLECTED, std::memory_order_acq_rel);
 	}
 }
@@ -927,8 +942,14 @@ void CameraComponent::CollectComponents(Engine& engine, TaskData& taskData, cons
 			Component* component = *c;
 			if (component == nullptr) continue;
 
-			assert(component->Flag().load(std::memory_order_relaxed) & Tiny::TINY_ACTIVATED);
-			if (!(component->Flag().load(std::memory_order_relaxed) & Tiny::TINY_ACTIVATED)) continue;
+			if (!(component->Flag().load(std::memory_order_relaxed) & Tiny::TINY_ACTIVATED)) {
+				if (!(Flag().load(std::memory_order_relaxed) & CAMERACOMPONENT_AGILE_RENDERING)) {
+					taskData.Flag().fetch_and(~TINY_ACTIVATED, std::memory_order_relaxed); // fail!
+					break;
+				} else {
+					continue;
+				}
+			}
 
 			Unique unique = component->GetUnique();
 
@@ -995,6 +1016,7 @@ void CameraComponent::BindRootEntity(Engine& engine, BridgeComponentModule& brid
 CameraComponentConfig::TaskData::TaskData(uint32_t warpCount) {
 	warpData.resize(warpCount);
 	pendingCount.store(0, std::memory_order_relaxed);
+	Flag().fetch_or(TINY_ACTIVATED, std::memory_order_release);
 }
 
 TObject<IReflect>& CameraComponent::TaskData::operator () (IReflect& reflect) {
@@ -1051,6 +1073,8 @@ void CameraComponent::TaskData::Cleanup(IRender& render) {
 			}
 		}
 	}
+
+	Flag().fetch_or(TINY_ACTIVATED, std::memory_order_release);
 }
 
 void CameraComponent::InstanceGroup::Cleanup() {

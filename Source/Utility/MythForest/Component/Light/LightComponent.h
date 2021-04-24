@@ -59,6 +59,7 @@ namespace PaintsNow {
 			void Cleanup(IRender& render);
 			void Destroy(IRender& render);
 			void RenderFrame(Engine& engine);
+			bool Continue() const { return Flag().load(std::memory_order_relaxed) & TINY_ACTIVATED; }
 
 			TObject<IReflect>& operator () (IReflect& reflect) override;
 

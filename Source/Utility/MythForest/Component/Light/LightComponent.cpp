@@ -106,11 +106,14 @@ void LightComponent::ShadowLayer::StreamRefreshHandler(Engine& engine, const USh
 	if (!engine.snowyStream.GetRenderResourceManager()->GetCompleted())
 		return;
 
+	TShared<TaskData> taskData = currentTask;
+//	if (taskData->Flag().load(std::memory_order_relaxed) & TINY_MODIFIED)
+//		return;
+
 	if (tiny->Flag().fetch_or(TINY_UPDATING, std::memory_order_release) & TINY_UPDATING)
 		return;
 
 	TShared<ShadowGrid> shadowGrid = tiny->QueryInterface(UniqueType<ShadowGrid>());
-	TShared<TaskData> taskData = currentTask;
 
 	if (!shadowGrid->texture) {
 		UShort3 dim(resolution.x(), resolution.y(), 0);
@@ -130,7 +133,6 @@ void LightComponent::ShadowLayer::StreamRefreshHandler(Engine& engine, const USh
 		shadowGrid->texture = texture;
 	}
 
-	assert(!(taskData->Flag().load(std::memory_order_relaxed) & TINY_MODIFIED));
 	taskData->Flag().fetch_or(TINY_MODIFIED, std::memory_order_release);
 
 	// get entity
@@ -202,7 +204,11 @@ void LightComponent::ShadowLayer::CollectRenderableComponent(Engine& engine, Tas
 	IDrawCallProvider::InputRenderData inputRenderData(0.0f, pipeline());
 	IDrawCallProvider::DrawCallAllocator allocator(&warpData.bytesCache);
 	std::vector<IDrawCallProvider::OutputRenderData, IDrawCallProvider::DrawCallAllocator> drawCalls(allocator);
-	renderableComponent->CollectDrawCalls(drawCalls, inputRenderData, warpData.bytesCache, IDrawCallProvider::COLLECT_DEFAULT); // TODO: exit on -1
+	if (renderableComponent->CollectDrawCalls(drawCalls, inputRenderData, warpData.bytesCache, IDrawCallProvider::COLLECT_DEFAULT) == ~(uint32_t)0) {
+		taskData.Flag().fetch_and(~TINY_ACTIVATED); // failed!!
+		return;
+	}
+
 	TaskData::WarpData::InstanceGroupMap& instanceGroups = warpData.instanceGroups;
 
 	for (size_t k = 0; k < drawCalls.size(); k++) {
@@ -267,7 +273,7 @@ void LightComponent::InstanceGroup::Reset() {
 
 void ShadowLayerConfig::TaskData::RenderFrame(Engine& engine) {
 	OPTICK_EVENT();
-	if (Flag().fetch_and(~TINY_MODIFIED) & TINY_MODIFIED) {
+	if (Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release) & TINY_MODIFIED) {
 		// engine.mythForest.StartCaptureFrame("lightdebug", "");
 		std::vector<IRender::Queue*> renderQueues;
 		renderQueues.emplace_back(renderQueue);
@@ -277,77 +283,87 @@ void ShadowLayerConfig::TaskData::RenderFrame(Engine& engine) {
 		}
 
 		engine.interfaces.render.SubmitQueues(&renderQueues[0], verify_cast<uint32_t>(renderQueues.size()), IRender::SUBMIT_EXECUTE_ALL);
-		shadowGrid->Flag().fetch_and(~(TINY_MODIFIED | TINY_UPDATING), std::memory_order_release);
+		if (Flag().load(std::memory_order_relaxed) & TINY_ACTIVATED) {
+			shadowGrid->Flag().fetch_and(~(TINY_MODIFIED | TINY_UPDATING), std::memory_order_release);
+		} else {
+			shadowGrid->Flag().fetch_and(~TINY_UPDATING, std::memory_order_release);
+		}
 
-		Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release);
 		Cleanup(engine.interfaces.render);
-		ReleaseObject();
 		// engine.mythForest.EndCaptureFrame();
 	}
+
+	ReleaseObject();
 }
 
 void LightComponent::ShadowLayer::CompleteCollect(Engine& engine, TaskData& task) {
 	OPTICK_EVENT();
-	// assemble 
-	IRender::Queue* queue = task.renderQueue;
-	IRender& render = engine.interfaces.render;
 
-	IRender::Resource* buffer = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_BUFFER);
-	std::vector<IRender::Resource*> drawCallResources;
+	if (task.Flag().load(std::memory_order_relaxed) & TINY_ACTIVATED) {
+		// assemble 
+		IRender::Queue* queue = task.renderQueue;
+		IRender& render = engine.interfaces.render;
 
-	Bytes bufferData;
-	uint32_t bufferSize = 0;
+		IRender::Resource* buffer = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_BUFFER);
+		std::vector<IRender::Resource*> drawCallResources;
 
-	for (size_t k = 0; k < task.warpData.size(); k++) {
-		TaskData::WarpData& warpData = task.warpData[k];
-		for (TaskData::WarpData::InstanceGroupMap::iterator it = warpData.instanceGroups.begin(); it != warpData.instanceGroups.end(); ++it) {
-			InstanceGroup& group = (*it).second;
-			if (group.drawCallDescription.shaderResource == nullptr || group.instanceCount == 0) continue;
+		Bytes bufferData;
+		uint32_t bufferSize = 0;
 
-			for (size_t k = 0; k < group.instancedData.size(); k++) {
-				Bytes& data = group.instancedData[k];
-				assert(!data.Empty());
-				if (!data.Empty()) {
-					assert(data.IsViewStorage());
-					// assign instanced buffer
-					size_t viewSize = data.GetViewSize();
-					IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[k];
-					bufferRange.buffer = buffer;
-					bufferRange.offset = bufferSize;
-					bufferRange.component = verify_cast<uint8_t>(viewSize / (group.instanceCount * sizeof(float)));
-					warpData.bytesCache.Link(bufferData, data); // it's safe to link different bytesCache's data for read.
-					bufferSize += verify_cast<uint32_t>(viewSize);
+		for (size_t k = 0; k < task.warpData.size(); k++) {
+			TaskData::WarpData& warpData = task.warpData[k];
+			for (TaskData::WarpData::InstanceGroupMap::iterator it = warpData.instanceGroups.begin(); it != warpData.instanceGroups.end(); ++it) {
+				InstanceGroup& group = (*it).second;
+				if (group.drawCallDescription.shaderResource == nullptr || group.instanceCount == 0) continue;
+
+				for (size_t k = 0; k < group.instancedData.size(); k++) {
+					Bytes& data = group.instancedData[k];
+					assert(!data.Empty());
+					if (!data.Empty()) {
+						assert(data.IsViewStorage());
+						// assign instanced buffer
+						size_t viewSize = data.GetViewSize();
+						IRender::Resource::DrawCallDescription::BufferRange& bufferRange = group.drawCallDescription.bufferResources[k];
+						bufferRange.buffer = buffer;
+						bufferRange.offset = bufferSize;
+						bufferRange.component = verify_cast<uint8_t>(viewSize / (group.instanceCount * sizeof(float)));
+						warpData.bytesCache.Link(bufferData, data); // it's safe to link different bytesCache's data for read.
+						bufferSize += verify_cast<uint32_t>(viewSize);
+					}
 				}
+
+				group.drawCallDescription.instanceCounts.x() = group.instanceCount;
+				assert(PassBase::ValidateDrawCall(group.drawCallDescription));
+
+				IRender::Resource* drawCall = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_DRAWCALL);
+				IRender::Resource::DrawCallDescription dc = group.drawCallDescription; // make copy
+				render.UploadResource(queue, drawCall, &dc);
+				drawCallResources.emplace_back(drawCall);
+				group.Reset(); // for next reuse
 			}
-
-			group.drawCallDescription.instanceCounts.x() = group.instanceCount;
-			assert(PassBase::ValidateDrawCall(group.drawCallDescription));
-
-			IRender::Resource* drawCall = render.CreateResource(render.GetQueueDevice(queue), IRender::Resource::RESOURCE_DRAWCALL);
-			IRender::Resource::DrawCallDescription dc = group.drawCallDescription; // make copy
-			render.UploadResource(queue, drawCall, &dc);
-			drawCallResources.emplace_back(drawCall);
-			group.Reset(); // for next reuse
 		}
+
+		IRender::Resource::BufferDescription desc;
+		assert(bufferSize == bufferData.GetViewSize());
+		desc.data.Resize(bufferSize);
+		desc.data.Import(0, bufferData);
+		desc.format = IRender::Resource::BufferDescription::FLOAT;
+		desc.usage = IRender::Resource::BufferDescription::INSTANCED;
+		desc.component = 0;
+		render.UploadResource(queue, buffer, &desc);
+
+		for (size_t m = 0; m < drawCallResources.size(); m++) {
+			IRender::Resource* drawCall = drawCallResources[m];
+			render.ExecuteResource(queue, drawCall);
+			// cleanup at current frame
+			render.DeleteResource(queue, drawCall);
+		}
+
+		render.DeleteResource(queue, buffer);
+	} else {
+		int a = 0;
 	}
 
-	IRender::Resource::BufferDescription desc;
-	assert(bufferSize == bufferData.GetViewSize());
-	desc.data.Resize(bufferSize);
-	desc.data.Import(0, bufferData);
-	desc.format = IRender::Resource::BufferDescription::FLOAT;
-	desc.usage = IRender::Resource::BufferDescription::INSTANCED;
-	desc.component = 0;
-	render.UploadResource(queue, buffer, &desc);
-
-	for (size_t m = 0; m < drawCallResources.size(); m++) {
-		IRender::Resource* drawCall = drawCallResources[m];
-		render.ExecuteResource(queue, drawCall);
-		// cleanup at current frame
-		render.DeleteResource(queue, drawCall);
-	}
-
-	render.DeleteResource(queue, buffer);
 	engine.QueueFrameRoutine(CreateTaskContextFree(Wrap(&task, &TaskData::RenderFrame), std::ref(engine)));
 }
 
@@ -475,6 +491,7 @@ ShadowLayerConfig::TaskData::TaskData(Engine& engine, uint32_t warpCount, const 
 	render.UploadResource(renderQueue, stateResource, &rs);
 
 	renderTargetResource = render.CreateResource(device, IRender::Resource::RESOURCE_RENDERTARGET);
+	Flag().fetch_or(TINY_ACTIVATED, std::memory_order_release);
 }
 
 void ShadowLayerConfig::TaskData::Destroy(IRender& render) {
@@ -491,6 +508,7 @@ void ShadowLayerConfig::TaskData::Destroy(IRender& render) {
 void ShadowLayerConfig::TaskData::Cleanup(IRender& render) {
 	rootEntity = nullptr;
 	shadowGrid = nullptr;
+	Flag().fetch_or(TINY_ACTIVATED, std::memory_order_relaxed);
 }
 
 TObject<IReflect>& ShadowLayerConfig::TaskData::operator () (IReflect& reflect) {
@@ -583,15 +601,11 @@ TShared<LightComponent::ShadowGrid> LightComponent::ShadowLayer::UpdateShadow(En
 	shadowContext->lightTransformMatrix(3, 0) = alignedPosition.x();
 	shadowContext->lightTransformMatrix(3, 1) = alignedPosition.y();
 	shadowContext->lightTransformMatrix(3, 2) = alignedPosition.z();
-	TShared<ShadowGrid> grid;
+	TShared<ShadowGrid> grid = streamComponent->Load(engine, coord, shadowContext())->QueryInterface(UniqueType<ShadowGrid>());
+	assert(grid);
 
-	if (!(currentTask->Flag().load(std::memory_order_relaxed) & TINY_MODIFIED)) {
-		grid = streamComponent->Load(engine, coord, shadowContext())->QueryInterface(UniqueType<ShadowGrid>());
-		assert(grid);
-
-		if (!(grid->Flag().load(std::memory_order_relaxed) & TINY_MODIFIED) || !currentGrid) {
-			currentGrid = grid;
-		}
+	if (!(grid->Flag().load(std::memory_order_relaxed) & TINY_MODIFIED) || !currentGrid) {
+		currentGrid = grid;
 	}
 
 	return currentGrid;

@@ -17,7 +17,7 @@ static inline float RandFloat() {
 
 using namespace PaintsNow;
 
-PhaseComponent::LightConfig::TaskData::TaskData(uint32_t warpCount) : pendingCount(0) {
+PhaseComponent::LightConfig::TaskData::TaskData(uint32_t warpCount) : pendingCount(0), pendingResourceCount(0) {
 	warpData.resize(warpCount);
 }
 
@@ -51,7 +51,7 @@ TObject<IReflect>& PhaseComponentConfig::WorldInstanceData::operator () (IReflec
 	return *this;
 }
 
-PhaseComponentConfig::TaskData::TaskData() : status(STATUS_IDLE), pendingCount(0), renderQueue(nullptr), renderTarget(nullptr), pipeline(nullptr) {
+PhaseComponentConfig::TaskData::TaskData() : status(STATUS_IDLE), pendingCount(0), pendingResourceCount(0), renderQueue(nullptr), renderTarget(nullptr), pipeline(nullptr) {
 }
 
 PhaseComponentConfig::TaskData::~TaskData() {

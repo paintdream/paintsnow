@@ -68,7 +68,8 @@ namespace PaintsNow {
 				STATUS_POSTPROCESS,
 			};
 
-			TaskData() : status(STATUS_IDLE), pendingCount(0), renderQueue(nullptr), renderTarget(nullptr), next(nullptr) {}
+			TaskData() : status(STATUS_IDLE), pendingCount(0), pendingResourceCount(0), renderQueue(nullptr), renderTarget(nullptr), next(nullptr) {}
+			bool Continue() const { return pendingResourceCount == 0; }
 
 			struct WarpData {
 				BytesCache bytesCache;
@@ -77,6 +78,7 @@ namespace PaintsNow {
 
 			uint32_t pendingCount;
 			uint32_t status;
+			uint32_t pendingResourceCount;
 			TaskData* next;
 			TShared<Cell> cell;
 			IRender::Queue* renderQueue;

@@ -97,6 +97,7 @@ namespace PaintsNow {
 			virtual ~TaskData();
 			void Cleanup(IRender& render);
 			void Destroy(IRender& render);
+			bool Continue() const { return pendingResourceCount == 0; }
 
 			enum {
 				STATUS_IDLE,
@@ -112,6 +113,7 @@ namespace PaintsNow {
 			WorldGlobalData worldGlobalData;
 			uint32_t status;
 			uint32_t pendingCount;
+			uint32_t pendingResourceCount;
 			IRender::Queue* renderQueue;
 			IRender::Resource* renderTarget;
 			ShaderResource* pipeline;
@@ -183,6 +185,9 @@ namespace PaintsNow {
 
 			struct TaskData {
 				TaskData(uint32_t warpCount);
+				bool Continue() const { return pendingResourceCount == 0; }
+
+				uint32_t pendingResourceCount;
 				uint32_t pendingCount;
 				std::vector<WarpData> warpData;
 			};

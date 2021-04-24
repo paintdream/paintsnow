@@ -23,12 +23,20 @@ namespace PaintsNow {
 				if (!getboolean<D>::value && !captureData(instanceData.boundingBox))
 					break;
 
+				if (!taskData.Continue()) {
+					return;
+				}
+
 				IMemory::PrefetchRead(entity->Left());
 				IMemory::PrefetchRead(entity->Right());
 
 				Tiny::FLAG flag = entity->Flag().load(std::memory_order_relaxed);
 				if ((flag & Tiny::TINY_ACTIVATED) && captureData(entity->GetKey())) {
 					(static_cast<T*>(this))->CollectComponents(engine, taskData, instanceData, captureData, entity);
+				}
+
+				if (!taskData.Continue()) {
+					return;
 				}
 
 				// Cull left & right 
@@ -61,24 +69,30 @@ namespace PaintsNow {
 			std::atomic<uint32_t>& pendingCount = reinterpret_cast<std::atomic<uint32_t>&>(taskData.pendingCount);
 
 			assert(pendingCount.load(std::memory_order_acquire) != 0); // must increase it before calling me.
-			if ((spaceComponent->Flag().load(std::memory_order_relaxed) & Component::COMPONENT_OVERRIDE_WARP) && spaceComponent->GetWarpIndex() != engine.GetKernel().GetCurrentWarpIndex()) {
-				spaceComponent->QueueRoutine(engine, CreateTaskContextFree(Wrap(this, &SpaceTraversal<T, Config>::CollectComponentsFromSpace), std::ref(engine), std::ref(taskData), instanceData, captureData, spaceComponent));
-			} else {
-				Entity* spaceRoot = spaceComponent->GetRootEntity();
-				if (spaceRoot != nullptr) {
-					// Make new world instance data
-					WorldInstanceData subWorldInstancedData = instanceData;
-					// update bounding box
-					subWorldInstancedData.boundingBox = spaceComponent->GetBoundingBox();
-					if (spaceComponent->Flag().load(std::memory_order_relaxed) & SpaceComponent::SPACECOMPONENT_ORDERED) {
-						CollectComponentsFromEntityTree(engine, taskData, subWorldInstancedData, captureData, spaceRoot, std::true_type());
-					} else {
-						CollectComponentsFromEntityTree(engine, taskData, subWorldInstancedData, captureData, spaceRoot, std::false_type());
-					}
-				}
-
+			if (!taskData.Continue()) {
 				if (pendingCount.fetch_sub(1, std::memory_order_relaxed) == 1) {
 					(static_cast<T*>(this))->CompleteCollect(engine, taskData);
+				}
+			} else {
+				if ((spaceComponent->Flag().load(std::memory_order_relaxed) & Component::COMPONENT_OVERRIDE_WARP) && spaceComponent->GetWarpIndex() != engine.GetKernel().GetCurrentWarpIndex()) {
+					spaceComponent->QueueRoutine(engine, CreateTaskContextFree(Wrap(this, &SpaceTraversal<T, Config>::CollectComponentsFromSpace), std::ref(engine), std::ref(taskData), instanceData, captureData, spaceComponent));
+				} else {
+					Entity* spaceRoot = spaceComponent->GetRootEntity();
+					if (spaceRoot != nullptr) {
+						// Make new world instance data
+						WorldInstanceData subWorldInstancedData = instanceData;
+						// update bounding box
+						subWorldInstancedData.boundingBox = spaceComponent->GetBoundingBox();
+						if (spaceComponent->Flag().load(std::memory_order_relaxed) & SpaceComponent::SPACECOMPONENT_ORDERED) {
+							CollectComponentsFromEntityTree(engine, taskData, subWorldInstancedData, captureData, spaceRoot, std::true_type());
+						} else {
+							CollectComponentsFromEntityTree(engine, taskData, subWorldInstancedData, captureData, spaceRoot, std::false_type());
+						}
+					}
+
+					if (pendingCount.fetch_sub(1, std::memory_order_relaxed) == 1) {
+						(static_cast<T*>(this))->CompleteCollect(engine, taskData);
+					}
 				}
 			}
 		}
