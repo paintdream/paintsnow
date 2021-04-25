@@ -11,26 +11,7 @@ using namespace PaintsNow;
 Engine::Engine(Interfaces& pinterfaces, BridgeSunset& pbridgeSunset, SnowyStream& psnowyStream) : ISyncObject(pinterfaces.thread), interfaces(pinterfaces), bridgeSunset(pbridgeSunset), snowyStream(psnowyStream) {
 	unitCount.store(0, std::memory_order_relaxed);
 	finalizeEvent = interfaces.thread.NewEvent();
-	frameTasks.resize(GetKernel().GetWarpCount());
-
-	IRender::Device* device = snowyStream.GetRenderResourceManager()->GetRenderDevice();
-	IRender& render = interfaces.render;
-	warpResourceQueues.resize(GetKernel().GetWarpCount(), nullptr);
-
-	for (size_t i = 0; i < warpResourceQueues.size(); i++) {
-		warpResourceQueues[i] = render.CreateQueue(device);
-	}
-}
-
-void Engine::QueueFrameRoutine(ITask* task, const TShared<SharedTiny>& tiny) {
-	uint32_t warp = GetKernel().GetCurrentWarpIndex();
-	assert(warp != ~(uint32_t)0);
-
-	frameTasks[warp].push(std::make_pair(task, tiny));
-}
-
-IRender::Queue* Engine::GetWarpResourceQueue() {
-	return warpResourceQueues[GetKernel().GetCurrentWarpIndex()];
+	
 }
 
 Engine::~Engine() {
@@ -41,16 +22,6 @@ Engine::~Engine() {
 void Engine::Clear() {
 	for (std::unordered_map<String, Module*>::iterator it = modules.begin(); it != modules.end(); ++it) {
 		(*it).second->Uninitialize();
-	}
-
-	for (size_t i = 0; i < frameTasks.size(); i++) {
-		std::queue<std::pair<ITask*, TShared<SharedTiny> > >& q = frameTasks[i];
-		while (!q.empty()) {
-			ITask* task = q.front().first;
-			task->Abort(this);
-
-			q.pop();
-		}
 	}
 
 	while (unitCount.load(std::memory_order_acquire) != 0) {
@@ -64,13 +35,6 @@ void Engine::Clear() {
 	}
 
 	modules.clear();
-
-	IRender& render = interfaces.render;
-	for (size_t j = 0; j < warpResourceQueues.size(); j++) {
-		render.DeleteQueue(warpResourceQueues[j]);
-	}
-
-	warpResourceQueues.clear();
 }
 
 void Engine::InstallModule(Module* module) {
@@ -92,36 +56,9 @@ std::unordered_map<String, Module*>& Engine::GetModuleMap() {
 }
 
 void Engine::TickFrame() {
-	IRender& render = interfaces.render;
-	/*
-	IRender::Queue* mainQueue = snowyStream.GetRenderResourceManager()->GetResourceQueue();
-	if (mainQueue != nullptr) {
-		interfaces.render.SubmitQueues(&mainQueue, 1, IRender::SUBMIT_EXECUTE_ALL);
-	}*/
-
-	for (size_t i = 0; i < warpResourceQueues.size(); i++) {
-		render.SubmitQueues(&warpResourceQueues[i], 1, IRender::SUBMIT_EXECUTE_ALL);
-	}
-
-	for (size_t j = 0; j < frameTasks.size(); j++) {
-		std::queue<std::pair<ITask*, TShared<SharedTiny> > >& q = frameTasks[j];
-		while (!q.empty()) {
-			ITask* task = q.front().first;
-			task->Execute(this);
-
-			q.pop();
-		}
-	}
-
 	for (std::unordered_map<String, Module*>::iterator it = modules.begin(); it != modules.end(); ++it) {
 		(*it).second->TickFrame();
 	}
-
-	frameIndex.fetch_add(1, std::memory_order_relaxed);
-}
-
-uint32_t Engine::GetFrameIndex() const {
-	return frameIndex.load(std::memory_order_relaxed);
 }
 
 Kernel& Engine::GetKernel() {

@@ -2,6 +2,7 @@
 #include "../Transform/TransformComponent.h"
 #include "../Event/EventComponent.h"
 #include "../../MythForest.h"
+#include "../../../SnowyStream/Manager/RenderResourceManager.h"
 #include "../../../../Core/Driver/Profiler/Optick/optick.h"
 
 using namespace PaintsNow;
@@ -78,7 +79,7 @@ void AnimationComponent::Initialize(Engine& engine, Entity* entity) {
 }
 
 void AnimationComponent::Uninitialize(Engine& engine, Entity* entity) {
-	skeletonResource->ClearBoneMatrixBuffer(engine.interfaces.render, engine.GetWarpResourceQueue(), boneMatrixBuffer);
+	skeletonResource->ClearBoneMatrixBuffer(engine.interfaces.render, engine.snowyStream.GetRenderResourceManager()->GetWarpResourceQueue(), boneMatrixBuffer);
 	BaseClass::Uninitialize(engine, entity);
 }
 

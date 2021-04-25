@@ -1,4 +1,5 @@
 #include "ExplorerComponent.h"
+#include "../../../SnowyStream/Manager/RenderResourceManager.h"
 
 using namespace PaintsNow;
 
@@ -54,7 +55,7 @@ Unique ExplorerComponent::GetExploredComponentType() const {
 }
 
 void ExplorerComponent::SelectComponents(Engine& engine, Entity* entity, float refValue, std::vector<Component*, ComponentPointerAllocator>& activatedComponents) {
-	uint32_t currentFrameIndex = engine.GetFrameIndex();
+	uint32_t currentFrameIndex = engine.snowyStream.GetRenderResourceManager()->GetFrameIndex();
 	uint32_t maxLayer = 0;
 	for (size_t i = 0; i < proxies.size(); i++) {
 		Proxy& proxy = proxies[i];

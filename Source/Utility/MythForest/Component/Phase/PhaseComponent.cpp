@@ -383,7 +383,7 @@ void PhaseComponent::TickRender(Engine& engine) {
 			bakeQueues.emplace_back(task.renderQueue);
 
 			// Save data asynchronized
-			uint32_t frameIndex = engine.GetFrameIndex();
+			uint32_t frameIndex = engine.snowyStream.GetRenderResourceManager()->GetFrameIndex();
 			for (size_t j = 0; j < task.textures.size(); j++) {
 				assert(!task.textures[j]->GetLocation().empty());
 				engine.GetKernel().QueueRoutine(this, CreateTaskContextFree(Wrap(this, &PhaseComponent::CoTaskWriteDebugTexture), std::ref(engine), (uint32_t)verify_cast<uint32_t>(frameIndex * tasks.size() + i), std::move(task.textures[j]->description.data), task.textures[j]));

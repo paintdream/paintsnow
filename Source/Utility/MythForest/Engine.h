@@ -12,7 +12,6 @@
 #include "../../Core/Template/TMap.h"
 #include "../../General/Interface/Interfaces.h"
 #include "../../Core/System/Kernel.h"
-#include <queue>
 
 namespace PaintsNow {
 	class Interfaces;
@@ -31,10 +30,7 @@ namespace PaintsNow {
 		Module* GetComponentModuleFromName(const String& name) const;
 		std::unordered_map<String, Module*>& GetModuleMap();
 		void TickFrame();
-		uint32_t GetFrameIndex() const;
 		Kernel& GetKernel();
-		void QueueFrameRoutine(ITask* task, const TShared<SharedTiny>& tiny);
-		IRender::Queue* GetWarpResourceQueue();
 
 		Interfaces& interfaces;
 		BridgeSunset& bridgeSunset;
@@ -49,12 +45,9 @@ namespace PaintsNow {
 		Engine(const Engine& engine);
 		Engine& operator = (const Engine& engine);
 
-		std::atomic<uint32_t> frameIndex;
-		std::atomic<uint32_t> unitCount;
+		std::atomic<size_t> unitCount;
 		IThread::Event* finalizeEvent;
 		std::unordered_map<String, Module*> modules;
-		std::vector<std::queue<std::pair<ITask*, TShared<SharedTiny> > > > frameTasks;
-		std::vector<IRender::Queue*> warpResourceQueues;
 
 #ifdef _DEBUG
 		std::map<Unit*, Unit*> entityMap;

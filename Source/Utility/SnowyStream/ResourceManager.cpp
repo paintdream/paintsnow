@@ -4,7 +4,7 @@
 
 using namespace PaintsNow;
 
-ResourceManager::ResourceManager(ThreadPool& tp, IUniformResourceManager& hostManager, const TWrapper<void, const String&>& err, void* c) : ISyncObject(tp.GetThreadApi()), threadPool(tp), uniformResourceManager(hostManager), errorHandler(err), context(c) {
+ResourceManager::ResourceManager(Kernel& ker, IUniformResourceManager& hostManager, const TWrapper<void, const String&>& err, void* c) : ISyncObject(ker.GetThreadPool().GetThreadApi()), kernel(ker), uniformResourceManager(hostManager), errorHandler(err), context(c) {
 }
 
 const String& ResourceManager::GetLocationPostfix() const {
@@ -24,7 +24,11 @@ void ResourceManager::Report(const String& err) {
 }
 
 ThreadPool& ResourceManager::GetThreadPool() {
-	return threadPool;
+	return kernel.GetThreadPool();
+}
+
+Kernel& ResourceManager::GetKernel() {
+	return kernel;
 }
 
 void ResourceManager::RemoveAll() {

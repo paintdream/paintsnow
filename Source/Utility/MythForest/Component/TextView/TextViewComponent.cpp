@@ -1,7 +1,7 @@
 #include "TextViewComponent.h"
-
-#include <utility>
 #include "../../MythForest.h"
+#include "../../../SnowyStream/Manager/RenderResourceManager.h"
+#include <utility>
 
 using namespace PaintsNow;
 
@@ -200,7 +200,7 @@ void TextViewComponent::UpdateRenderData(Engine& engine) {
 	std::vector<Float4> bufferData;
 	IFontBase& fontBase = engine.interfaces.fontBase;
 	IRender& render = engine.interfaces.render;
-	IRender::Queue* queue = engine.GetWarpResourceQueue();
+	IRender::Queue* queue = engine.snowyStream.GetRenderResourceManager()->GetWarpResourceQueue();
 	renderInfos.clear();
 
 	Short2 fullSize;

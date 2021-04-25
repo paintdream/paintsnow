@@ -359,7 +359,7 @@ void LightComponent::ShadowLayer::CompleteCollect(Engine& engine, TaskData& task
 		render.DeleteResource(queue, buffer);
 	}
 
-	engine.QueueFrameRoutine(CreateTaskContextFree(Wrap(&task, &TaskData::RenderFrame), std::ref(engine)), &task);
+	engine.snowyStream.GetRenderResourceManager()->QueueFrameRoutine(CreateTaskContextFree(Wrap(&task, &TaskData::RenderFrame), std::ref(engine)), &task);
 }
 
 void LightComponent::ShadowLayer::CollectComponents(Engine& engine, TaskData& taskData, const WorldInstanceData& instanceData, const CaptureData& captureData, Entity* entity) {
@@ -552,7 +552,7 @@ void LightComponent::ShadowLayer::Initialize(Engine& engine, const TShared<Strea
 	texture->description.state.layout = IRender::Resource::TextureDescription::R;
 	texture->description.state.pcf = true;
 	texture->Flag().fetch_or(Tiny::TINY_MODIFIED, std::memory_order_relaxed);
-	texture->GetResourceManager().InvokeUpload(texture(), engine.GetWarpResourceQueue());
+	texture->GetResourceManager().InvokeUpload(texture(), engine.snowyStream.GetRenderResourceManager()->GetWarpResourceQueue());
 
 	dummyColorAttachment = texture;
 

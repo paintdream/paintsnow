@@ -7,25 +7,31 @@
 
 #include "../ResourceManager.h"
 #include "../../../General/Interface/IRender.h"
+#include <queue>
 
 namespace PaintsNow {
 	// Specification for IRender
 	class RenderResourceManager : public DeviceResourceManager<IRender> {
 	public:
 		typedef DeviceResourceManager<IRender> BaseClass;
-		RenderResourceManager(ThreadPool& tp, IUniformResourceManager& hostManager, IRender& dev, const TWrapper<void, const String&>& errorHandler, void* context);
+		RenderResourceManager(Kernel& kernel, IUniformResourceManager& hostManager, IRender& dev, const TWrapper<void, const String&>& errorHandler, void* context);
 		~RenderResourceManager() override;
 
 		IRender::Device* GetRenderDevice() const;
 		IRender::Queue* GetResourceQueue();
+		IRender::Queue* GetWarpResourceQueue();
+
 		size_t NotifyCompletion(const TShared<ResourceBase>& resource);
 		uint32_t GetRenderResourceFrameStep() const;
 		void TickDevice(IDevice& device) override;
 		size_t GetProfile(const String& feature);
 		void SetRenderResourceFrameStep(uint32_t limitStep);
+		void QueueFrameRoutine(ITask* task, const TShared<SharedTiny>& tiny);
 		size_t GetCurrentRuntimeVersion() const;
 		size_t GetNextRuntimeVersion() const;
+		uint32_t GetFrameIndex() const;
 		bool GetCompleted() const;
+		void WaitForCompleted(uint32_t delayedMilliseconds = 50);
 
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 
@@ -40,6 +46,9 @@ namespace PaintsNow {
 		IRender::Device* renderDevice;
 		IRender::Queue* resourceQueue;
 		uint32_t renderResourceStepPerFrame;
+		std::atomic<uint32_t> frameIndex;
+		std::vector<std::queue<std::pair<ITask*, TShared<SharedTiny> > > > frameTasks;
+		std::vector<IRender::Queue*> warpResourceQueues;
 		std::atomic<uint32_t> currentNotifiedResourceCount;
 		std::atomic<size_t> currentRuntimeVersion;
 		std::atomic<size_t> nextRuntimeVersion;

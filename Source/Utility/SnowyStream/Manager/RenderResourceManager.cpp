@@ -38,14 +38,57 @@
 
 using namespace PaintsNow;
 
-RenderResourceManager::RenderResourceManager(ThreadPool& tp, IUniformResourceManager& hostManager, IRender& dev, const TWrapper<void, const String&>& errorHandler, void* c) : DeviceResourceManager<IRender>(tp, hostManager, dev, errorHandler, c), resourceQueue(nullptr), renderResourceStepPerFrame(0) {
+RenderResourceManager::RenderResourceManager(Kernel& kernel, IUniformResourceManager& hostManager, IRender& dev, const TWrapper<void, const String&>& errorHandler, void* c) : DeviceResourceManager<IRender>(kernel, hostManager, dev, errorHandler, c), resourceQueue(nullptr), renderResourceStepPerFrame(0) {
 	renderDevice = dev.CreateDevice("");
 	resourceQueue = dev.CreateQueue(renderDevice, IRender::QUEUE_MULTITHREAD);
 	assert(context == nullptr); // must not initialize context
 	context = resourceQueue;
 	currentNotifiedResourceCount.store(0, std::memory_order_release);
+
+	frameTasks.resize(kernel.GetWarpCount());
+
+	IRender& render = device;
+	warpResourceQueues.resize(kernel.GetWarpCount(), nullptr);
+
+	for (size_t i = 0; i < warpResourceQueues.size(); i++) {
+		warpResourceQueues[i] = render.CreateQueue(renderDevice);
+	}
+
 	RegisterBuiltinPasses();
 	RegisterBuiltinResources();
+}
+
+RenderResourceManager::~RenderResourceManager() {
+	for (size_t i = 0; i < frameTasks.size(); i++) {
+		std::queue<std::pair<ITask*, TShared<SharedTiny> > >& q = frameTasks[i];
+		while (!q.empty()) {
+			ITask* task = q.front().first;
+			task->Abort(this);
+
+			q.pop();
+		}
+	}
+
+	IRender& render = device;
+	for (size_t j = 0; j < warpResourceQueues.size(); j++) {
+		render.DeleteQueue(warpResourceQueues[j]);
+	}
+
+	warpResourceQueues.clear();
+
+	device.DeleteQueue(resourceQueue);
+	device.DeleteDevice(renderDevice);
+}
+
+void RenderResourceManager::QueueFrameRoutine(ITask* task, const TShared<SharedTiny>& tiny) {
+	uint32_t warp = kernel.GetCurrentWarpIndex();
+	assert(warp != ~(uint32_t)0);
+
+	frameTasks[warp].push(std::make_pair(task, tiny));
+}
+
+IRender::Queue* RenderResourceManager::GetWarpResourceQueue() {
+	return warpResourceQueues[kernel.GetCurrentWarpIndex()];
 }
 
 void RenderResourceManager::CreateBuiltinSolidTexture(const String& path, const UChar4& color) {
@@ -222,13 +265,6 @@ IRender::Device* RenderResourceManager::GetRenderDevice() const {
 	return renderDevice;
 }
 
-RenderResourceManager::~RenderResourceManager() {
-	device.DeleteQueue(resourceQueue);
-	resourceQueue = nullptr;
-	device.DeleteDevice(renderDevice);
-	renderDevice = nullptr;
-}
-
 template <class T>
 void RegisterPass(ResourceManager& resourceManager, UniqueType<T> type, const String& matName = "", const IRender::Resource::RenderStateDescription& renderState = IRender::Resource::RenderStateDescription()) {
 	ShaderResourceImpl<T>* shaderResource = new ShaderResourceImpl<T>(resourceManager, "", ResourceBase::RESOURCE_ETERNAL | ResourceBase::RESOURCE_VIRTUAL);
@@ -352,13 +388,49 @@ size_t RenderResourceManager::NotifyCompletion(const TShared<ResourceBase>& reso
 }
 
 bool RenderResourceManager::GetCompleted() const {
-	assert(currentRuntimeVersion.load(std::memory_order_acquire) <= nextRuntimeVersion.load(std::memory_order_acquire));
+	// assert(currentRuntimeVersion.load(std::memory_order_acquire) <= nextRuntimeVersion.load(std::memory_order_acquire));
 	return currentRuntimeVersion.load(std::memory_order_acquire) == nextRuntimeVersion.load(std::memory_order_acquire);
+}
+
+void RenderResourceManager::WaitForCompleted(uint32_t delayedMilliseconds) {
+	uint32_t warpIndex = kernel.GetCurrentWarpIndex();
+	if (warpIndex != ~(uint32_t)0) {
+		kernel.YieldCurrentWarp();
+	}
+
+	ThreadPool& threadPool = kernel.GetThreadPool();
+	uint32_t threadIndex = threadPool.GetCurrentThreadIndex();
+	while (!GetCompleted()) {
+		threadPool.PollDelay(threadIndex, delayedMilliseconds);
+	}
+
+	if (warpIndex != ~(uint32_t)0) {
+		kernel.WaitWarp(warpIndex);
+	}
+}
+
+uint32_t RenderResourceManager::GetFrameIndex() const {
+	return frameIndex.load(std::memory_order_relaxed);
 }
 
 void RenderResourceManager::TickDevice(IDevice& tickingDevice) {
 	if (&device == &tickingDevice) {
 		OPTICK_EVENT();
+
+		IRender& render = device;
+		for (size_t i = 0; i < warpResourceQueues.size(); i++) {
+			render.SubmitQueues(&warpResourceQueues[i], 1, IRender::SUBMIT_EXECUTE_ALL);
+		}
+
+		for (size_t j = 0; j < frameTasks.size(); j++) {
+			std::queue<std::pair<ITask*, TShared<SharedTiny> > >& q = frameTasks[j];
+			while (!q.empty()) {
+				ITask* task = q.front().first;
+				task->Execute(this);
+
+				q.pop();
+			}
+		}
 
 		if (resourceQueue != nullptr) {
 			device.SubmitQueues(&resourceQueue, 1, IRender::SUBMIT_EXECUTE);
@@ -379,6 +451,8 @@ void RenderResourceManager::TickDevice(IDevice& tickingDevice) {
 				}
 			}
 		}
+
+		frameIndex.fetch_add(1, std::memory_order_relaxed);
 	}
 }
 

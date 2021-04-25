@@ -11,9 +11,10 @@ BridgeComponent::BridgeComponent(const TShared<Component>& targetComponent) : ho
 }
 
 void BridgeComponent::Clear(Engine& engine) {
-	assert(hostEntity != nullptr);
-	hostEntity->RemoveComponent(engine, this);
-	hostEntity = nullptr;
+	if (hostEntity != nullptr) {
+		hostEntity->RemoveComponent(engine, this);
+		hostEntity = nullptr;
+	}
 }
 
 void BridgeComponent::DispatchEvent(Event& event, Entity* entity) {
@@ -23,11 +24,12 @@ void BridgeComponent::DispatchEvent(Event& event, Entity* entity) {
 }
 
 void BridgeComponent::Initialize(Engine& engine, Entity* entity) {
+	assert(hostEntity == nullptr);
 	hostEntity = entity;
 }
 
 void BridgeComponent::Uninitialize(Engine& engine, Entity* entity) {
-	hostEntity = nullptr;
+	Clear(engine);
 }
 
 Entity* BridgeComponent::GetHostEntity() const {

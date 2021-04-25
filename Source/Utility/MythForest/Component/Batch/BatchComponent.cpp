@@ -24,7 +24,7 @@ void BatchComponent::InstanceUninitialize(Engine& engine) {
 	assert(referenceCount != 0);
 	if (--referenceCount == 0) {
 		IRender& render = engine.interfaces.render;
-		IRender::Queue* queue = engine.GetWarpResourceQueue();
+		IRender::Queue* queue = engine.snowyStream.GetRenderResourceManager()->GetWarpResourceQueue();
 		render.DeleteResource(queue, buffer);
 		currentData.Clear();
 
