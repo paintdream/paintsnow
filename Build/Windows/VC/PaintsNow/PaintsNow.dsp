@@ -508,6 +508,14 @@ SOURCE=..\..\..\..\Source\General\Misc\PassBase.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\General\Misc\PreConstExpr.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\General\Misc\PreConstExpr.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\General\Misc\RemoteProxy.cpp
 # End Source File
 # Begin Source File

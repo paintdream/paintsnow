@@ -33,8 +33,8 @@ namespace PaintsNow {
 		bool SaveResource(const TShared<ResourceBase>& resource, const String& extension = "") override;
 		bool LoadResource(const TShared<ResourceBase>& resource, const String& extension = "") override;
 
-		virtual bool RegisterResourceManager(Unique unique, ResourceManager* resourceManager);
-		virtual bool RegisterResourceSerializer(Unique unique, const String& extension, ResourceCreator* serializer);
+		bool RegisterResourceManager(Unique unique, ResourceManager* resourceManager);
+		bool RegisterResourceSerializer(Unique unique, const String& extension, ResourceCreator* serializer);
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 	public:

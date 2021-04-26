@@ -14,7 +14,7 @@ namespace PaintsNow {
 		String GetShaderText() override;
 
 	public:
-		BindTexture inputColorTexture;
+		BindTexture inputMaskTexture;
 		BindBuffer paramBuffer;
 
 		Float3 outlineColor;

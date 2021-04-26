@@ -5,13 +5,13 @@
 using namespace PaintsNow;
 
 ScreenOutlineFS::ScreenOutlineFS() {
-	inputColorTexture.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
+	inputMaskTexture.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
 	paramBuffer.description.usage = IRender::Resource::BufferDescription::UNIFORM;
 }
 
 String ScreenOutlineFS::GetShaderText() {
 	return UnifyShaderCode(
-		outputColor = texture(inputColorTexture, rasterCoord);
+		outputColor = texture(inputMaskTexture, rasterCoord);
 	);
 }
 
@@ -19,7 +19,7 @@ TObject<IReflect>& ScreenOutlineFS::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 
 	if (reflect.IsReflectProperty()) {
-		ReflectProperty(inputColorTexture);
+		ReflectProperty(inputMaskTexture);
 		ReflectProperty(paramBuffer);
 		ReflectProperty(rasterCoord)[BindInput(BindInput::TEXCOORD)];
 		ReflectProperty(outputColor)[BindOutput(BindOutput::COLOR)];

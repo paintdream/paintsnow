@@ -7,6 +7,7 @@
 #include "../../../../Core/Interface/IMemory.h"
 #include "../../../../Core/Template/TQueue.h"
 #include "../../../../Core/Driver/Profiler/Optick/optick.h"
+#include "../../../../General/Misc/PreConstExpr.h"
 #include "ZRenderOpenGL.h"
 #include "GLSLShaderGenerator.h"
 #include <cstdio>
@@ -1101,6 +1102,8 @@ struct ResourceImplOpenGL<IRender::Resource::ShaderDescription> final : public R
 			String head = "";
 			uint32_t inputIndex = 0, outputIndex = 0, textureIndex = 0;
 			String predefines;
+			PreConstExpr preConstExpr;
+
 			for (size_t n = 0; n < pieces.size(); n++) {
 				IShader* shader = pieces[n];
 				// Generate declaration
@@ -1109,7 +1112,7 @@ struct ResourceImplOpenGL<IRender::Resource::ShaderDescription> final : public R
 				declaration.Complete();
 				predefines += shader->GetPredefines();
 
-				body += declaration.initialization + FormatCode(shader->GetShaderText()) + declaration.finalization + "\n";
+				body += declaration.initialization + preConstExpr(FormatCode(shader->GetShaderText())) + declaration.finalization + "\n";
 
 				for (size_t i = 0; i < declaration.structures.size(); i++) {
 					head += declaration.mapStructureDefinition[declaration.structures[i]];

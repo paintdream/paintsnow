@@ -6,6 +6,7 @@ using namespace PaintsNow;
 static const String frameCode = "#define PI 3.1415926 \n\
 #define GAMMA 2.2 \n\
 #define clip(f) if (f < 0) discard; \n\
+#define constexpr \n\
 #define uint2 uvec2 \n\
 #define uint3 uvec3 \n\
 #define uint4 uvec4 \n\
