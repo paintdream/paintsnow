@@ -16,6 +16,7 @@ namespace PaintsNow {
 		std::vector<IAsset::Material::Variable> variables;
 
 	private:
-		bool Evaluate(const char* begin, const char* end) const;
+		enum EvalResult { EVAL_FALSE, EVAL_TRUE, EVAL_DYNAMIC };
+		EvalResult Evaluate(const char* begin, const char* end) const;
 	};
 }

@@ -6,6 +6,7 @@
 #pragma once
 #include "../../../Interface/IRender.h"
 #include "../../../Interface/IShader.h"
+#include "../../../Interface/IAsset.h"
 
 namespace PaintsNow {
 	class GLSLShaderGenerator : public IReflect {
@@ -33,6 +34,7 @@ namespace PaintsNow {
 		std::vector<std::pair<const IShader::BindTexture*, String> > textureBindings;
 		std::map<String, String> mapStructureDefinition;
 		std::vector<String> structures;
+		std::vector<IAsset::Material::Variable> constants;
 
 	protected:
 		std::map<const IShader::BindBuffer*, std::pair<String, String> > mapBufferDeclaration;

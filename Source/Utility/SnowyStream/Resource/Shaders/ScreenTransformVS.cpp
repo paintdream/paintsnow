@@ -21,7 +21,9 @@ String ScreenTransformVS::GetShaderText() {
 			position = mult_vec(worldTransform, position);
 			// no far clip
 			// position.z = min(position.z, position.w);
-		} else {
+		}
+
+		if (!enableVertexTransform) {
 			position.xyz = vertexPosition.xyz;
 			position.w = 1;
 		}

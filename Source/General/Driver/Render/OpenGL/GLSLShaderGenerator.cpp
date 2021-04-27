@@ -314,16 +314,19 @@ void GLSLShaderGenerator::Property(IReflectObject& s, Unique typeID, Unique refT
 			} else if (uniqueNode == uniqueBindConstBool) {
 				const IShader::BindConst<bool>* bindOption = static_cast<const IShader::BindConst<bool>*>(node);
 				declaration += String("#define ") + name + " " + (bindOption->description ? "true" : "false") + "\n";
+				constants.emplace_back(IAsset::Material::Variable(name, bindOption->description));
 			} else if (uniqueNode == uniqueBindConstInt) {
 				const IShader::BindConst<int>* bindOption = static_cast<const IShader::BindConst<int>*>(node);
 				std::stringstream ss;
 				ss << bindOption->description;
 				declaration += String("#define ") + name + " " + StdToUtf8(ss.str()) + "\n";
+				constants.emplace_back(IAsset::Material::Variable(name, (uint32_t)bindOption->description));
 			} else if (uniqueNode == uniqueBindConstFloat) {
 				const IShader::BindConst<float>* bindOption = static_cast<const IShader::BindConst<float>*>(node);
 				std::stringstream ss;
 				ss << bindOption->description;
 				declaration += String("#define ") + name + " " + StdToUtf8(ss.str()) + "\n";
+				constants.emplace_back(IAsset::Material::Variable(name, bindOption->description));
 			}
 		}
 

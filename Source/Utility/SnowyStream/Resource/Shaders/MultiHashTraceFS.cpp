@@ -77,7 +77,7 @@ String MultiHashTraceFS::GetShaderText() {
 		dist = dist / max(0.0001, dot(I, L));
 		float s = exp2(-dist * dist * sigma);
 		dstLit.w += s;
-		if (NoL < 0 && s < 0.0001) break;
+		if (NoL < 0 && s < 0.0001) { break; }
 		float4 srcLit = textureLod(srcLitTexture, biasCoord, float(0));
 		float3 H = normalize(N + V);
 		float NoH = dot(N, H);

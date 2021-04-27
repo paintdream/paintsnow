@@ -43,7 +43,7 @@ String StandardLightingTextureEncodedFS::GetShaderText() {
 
 	int k;
 	for (k = 0; k < 4; k++) {
-		if (idx[k] < 0.5) break;
+		if (idx[k] < 0.5) { break; }
 		int i = int(round(idx[k])); // Intel Graphics old driver bug, must use round
 
 		float4 pos = lightInfos[i * 2 - 2];

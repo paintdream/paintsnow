@@ -192,7 +192,9 @@ return {
 			VaryingBinormal = mult_vec(float3x3(viewWorldMatrix), normal.xyz);
 			VaryingNormal = cross(VaryingBinormal, VaryingTangent);
 			VaryingBinormal *= tangent.w;
-		} else {
+		}
+		
+		if (!EnableVertexTangent) {
 			VaryingNormal = mult_vec(float3x3(viewWorldMatrix), normal.xyz);
 		}
 	}
@@ -210,11 +212,13 @@ return {
 				alpha = color.w;
 			}
 
-			if (EnableNormalTexture && EnableVertexNormal && EnableVertexTangent) {
+			if (EnableVertexTangent) {
 				float4 bump = texture(normalTexture, VaryingTexCoord.xy);
 				bump.xyz = bump.xyz * 2.0 - float3(1.0, 1.0, 1.0);
 				outputNormal = normalize(VaryingTangent.xyz * bump.x + VaryingBinormal.xyz * bump.y + VaryingNormal.xyz * bump.z);
-			} else {
+			}
+			
+			if (!EnableVertexTangent) {
 				outputNormal = VaryingNormal.xyz;
 			}
 

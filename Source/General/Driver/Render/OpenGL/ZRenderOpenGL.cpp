@@ -1102,7 +1102,6 @@ struct ResourceImplOpenGL<IRender::Resource::ShaderDescription> final : public R
 			String head = "";
 			uint32_t inputIndex = 0, outputIndex = 0, textureIndex = 0;
 			String predefines;
-			PreConstExpr preConstExpr;
 
 			for (size_t n = 0; n < pieces.size(); n++) {
 				IShader* shader = pieces[n];
@@ -1111,7 +1110,8 @@ struct ResourceImplOpenGL<IRender::Resource::ShaderDescription> final : public R
 				(*shader)(declaration);
 				declaration.Complete();
 				predefines += shader->GetPredefines();
-
+				PreConstExpr preConstExpr;
+				preConstExpr.variables = std::move(declaration.constants);
 				body += declaration.initialization + preConstExpr(FormatCode(shader->GetShaderText())) + declaration.finalization + "\n";
 
 				for (size_t i = 0; i < declaration.structures.size(); i++) {

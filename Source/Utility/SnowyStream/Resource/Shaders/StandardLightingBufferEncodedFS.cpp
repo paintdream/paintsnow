@@ -58,7 +58,7 @@ String StandardLightingBufferEncodedFS::GetShaderText() {
 		for (k = 0; k < 4; k++) {
 			uint i = idx & 0xff;
 			idx = idx >> 8;
-			if (i == 0) break;
+			if (i == 0) { break; }
 
 			float4 pos = lightInfos[i * 2 - 2];
 			float4 color = lightInfos[i * 2 - 1];
@@ -77,7 +77,7 @@ String StandardLightingBufferEncodedFS::GetShaderText() {
 			VoH[k] = saturate(dot(V, H));
 		}
 
-		if (k == 0) break; // end of lights
+		if (k == 0) { break; } // end of lights
 
 		float4 q = (NoH.xyzw * p - NoH.xyzw) * NoH.xyzw + float4(1.0, 1.0, 1.0, 1.0);
 		float4 vl = clamp(NoL.xyzw, float4(0.1, 0.1, 0.1, 0.1), float4(1, 1, 1, 1));
@@ -92,7 +92,7 @@ String StandardLightingBufferEncodedFS::GetShaderText() {
 			mainColor.xyz = mainColor.xyz + (diff + F * DG[i]) * lightColor[i].xyz * NoL[i];
 		}
 
-		if (k != 4) break;
+		if (k != 4) { break; }
 	}
 
 	mainColor.xyz = pow(max(mainColor.xyz, float3(0, 0, 0)), float3(1.0, 1.0, 1.0) / GAMMA);

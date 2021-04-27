@@ -37,7 +37,9 @@ String StandardTransformVS::GetShaderText() {
 
 	if (enableViewProjectionMatrix) {
 		rasterPosition = mult_vec(viewProjectionMatrix, position);
-	} else {
+	}
+
+	if (!enableViewProjectionMatrix) {
 		rasterPosition = position;
 	}
 
@@ -47,8 +49,10 @@ String StandardTransformVS::GetShaderText() {
 	texCoord = vertexTexCoord;
 
 	float4x4 viewWorldMatrix;
-	if (enableVertexNormal || enableViewPosition) {
-		viewWorldMatrix = mult_mat(viewMatrix, worldMatrix);
+	if (enableVertexNormal) {
+		if (enableViewPosition) {
+			viewWorldMatrix = mult_mat(viewMatrix, worldMatrix);
+		}
 	}
 
 	if (enableViewPosition) {
@@ -63,7 +67,9 @@ String StandardTransformVS::GetShaderText() {
 			viewBinormal = mult_vec(float3x3(viewWorldMatrix), normal.xyz);
 			viewNormal = cross(viewBinormal, viewTangent);
 			viewBinormal *= tangent.w;
-		} else {
+		}
+		
+		if (!enableVertexTangent) {
 			// Not precise when non-uniform scaling applied
 			viewNormal = mult_vec(float3x3(viewWorldMatrix), normal.xyz);
 		}
