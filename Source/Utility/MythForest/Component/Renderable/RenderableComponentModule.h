@@ -5,21 +5,87 @@
 
 #pragma once
 #include "RenderableComponent.h"
-#include "../RenderFlow/RenderPolicy.h"
+#include "RenderPolicy.h"
 #include "../../Module.h"
 
 namespace PaintsNow {
 	class RenderableComponent;
+
 	template <class T>
 	class TRenderableComponentModule : public TReflected<TRenderableComponentModule<T>, ModuleImpl<T> > {
 	public:
 		typedef TReflected<TRenderableComponentModule<T>, ModuleImpl<T> > BaseClass;
 		typedef TRenderableComponentModule<T> Class;
 		typedef TRenderableComponentModule<T> RenderableComponentModule;
+
 		TRenderableComponentModule(Engine& engine) : BaseClass(engine) {
 			// check compatibility
+#ifndef _DEBUG
 			RenderableComponent* p = (T*)nullptr; (void)p;
+#endif
 		}
+
+		TObject<IReflect>& operator () (IReflect& reflect) override {
+			BaseClass::operator () (reflect);
+
+			if (reflect.IsReflectMethod()) {
+				ReflectMethod(RequestNewRenderPolicy)[ScriptMethod = "NewRenderPolicy"];
+				ReflectMethod(RequestSetRenderPolicySort)[ScriptMethod = "SetRenderPolicySort"];
+				ReflectMethod(RequestAddRenderPolicy)[ScriptMethod = "AddRenderPolicy"];
+				ReflectMethod(RequestRemoveRenderPolicy)[ScriptMethod = "RemoveRenderPolicy"];
+			}
+
+			return *this;
+		}
+
+		/// <summary>
+		/// Create RenderPolicy
+		/// </summary>
+		/// <param name="name"> name </param>
+		/// <param name="priority"> priority </param>
+		/// <returns> RenderPolicy object </returns>
+
+		TShared<RenderPolicy> RequestNewRenderPolicy(IScript::Request& request, const String& name, uint16_t priorityBegin, uint16_t priorityEnd) {
+			CHECK_REFERENCES_NONE();
+
+			TShared<RenderPolicy> policy = TShared<RenderPolicy>::From(new RenderPolicy());
+			policy->renderPortName = name;
+			policy->priorityRange = std::make_pair(priorityBegin, priorityEnd);
+			return policy;
+		}
+
+		/// <summary>
+		/// Set RenderPolicy sort 
+		/// </summary>
+		/// <param name="name"> key </param>
+		/// <param name="priority"> enable/disable </param>
+		void RequestSetRenderPolicySort(IScript::Request& request, IScript::Delegate<RenderPolicy> renderPolicy, const String& key, bool enable) {
+			CHECK_REFERENCES_NONE();
+			CHECK_DELEGATE(renderPolicy);
+
+			if (key == "NearToFar") {
+				renderPolicy->sortType &= ~(RenderPolicy::SORT_NEAR_TO_FAR | RenderPolicy::SORT_NEAR_TO_FAR);
+				if (enable) {
+					renderPolicy->sortType |= RenderPolicy::SORT_NEAR_TO_FAR;
+				}
+			} else if (key == "FarToNear") {
+				renderPolicy->sortType &= ~(RenderPolicy::SORT_NEAR_TO_FAR | RenderPolicy::SORT_NEAR_TO_FAR);
+				if (enable) {
+					renderPolicy->sortType |= RenderPolicy::SORT_FAR_TO_NEAR;
+				}
+			} else if (key == "Material") {
+				renderPolicy->sortType &= ~(RenderPolicy::SORT_MATERIAL);
+				if (enable) {
+					renderPolicy->sortType |= RenderPolicy::SORT_MATERIAL;
+				}
+			} else if (key == "RenderState") {
+				renderPolicy->sortType &= ~(RenderPolicy::SORT_RENDERSTATE);
+				if (enable) {
+					renderPolicy->sortType |= RenderPolicy::SORT_RENDERSTATE;
+				}
+			}
+		}
+
 
 		/// <summary>
 		/// Add render policy of RenderableComponent or its derivations
@@ -47,15 +113,5 @@ namespace PaintsNow {
 			renderableComponent->RemoveRenderPolicy(renderPolicy.Get());
 		}
 
-		TObject<IReflect>& operator () (IReflect& reflect) override {
-			BaseClass::operator () (reflect);
-
-			if (reflect.IsReflectMethod()) {
-				ReflectMethod(RequestAddRenderPolicy)[ScriptMethod = "AddRenderPolicy"];
-				ReflectMethod(RequestRemoveRenderPolicy)[ScriptMethod = "RemoveRenderPolicy"];
-			}
-
-			return *this;
-		}
 	};
 }

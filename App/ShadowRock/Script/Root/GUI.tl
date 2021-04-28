@@ -14,7 +14,7 @@ function GUI.New() : GUI
 	meta.spaceComponent = spaceComponent
 	meta.rootEntity = rootEntity
 
-	local renderPolicy = RenderFlowComponentModule.NewRenderPolicy("Widgets", 0, 1)
+	local renderPolicy = TextViewComponentModule.NewRenderPolicy("Widgets", 0, 1)
 
 	local widgetEntity = MythForest.NewEntity(-1)
 	local fontResource = SnowyStream.NewResource("/Packed/Font/Cantarell-Regular", "FontResource", false)

@@ -24,8 +24,8 @@ function Scene.New(database : Database, clock : Clock) : Scene
 	eventComponent:BindEventFrame(true)
 	rootEntity:AddEntityComponent(eventComponent as Component)
 
-	local renderPolicy = RenderFlowComponentModule.NewRenderPolicy("Primitives", 0, 1)
-	local lightPolicy = RenderFlowComponentModule.NewRenderPolicy("LightSource", 0, 1)
+	local renderPolicy = ModelComponentModule.NewRenderPolicy("Primitives", 0, 1)
+	local lightPolicy = ModelComponentModule.NewRenderPolicy("LightSource", 0, 1)
 
 	local CustomShader = require("Script/Prefabs/Components/Shader/CustomShader")
 	local StandardShader = require("Script/Shaders/Standard") as ShaderDescription

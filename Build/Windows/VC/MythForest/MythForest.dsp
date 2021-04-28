@@ -41,7 +41,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
-# ADD CPP /nologo /G6 /MT /W3 /O2 /Ob2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /Zm800 /c
+# ADD CPP /nologo /G6 /MT /W3 /O2 /Ob2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /Zm900 /c
 # ADD BASE RSC /l 0x804 /d "NDEBUG"
 # ADD RSC /l 0x804 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -353,7 +353,7 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderFlowComp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderPolicy.cpp
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Renderable\RenderPolicy.cpp
 # End Source File
 # Begin Source File
 
@@ -809,7 +809,7 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderFlowComp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderPolicy.h
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Renderable\RenderPolicy.h
 # End Source File
 # Begin Source File
 

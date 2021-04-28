@@ -11,7 +11,7 @@
 #include "../../../SnowyStream/Resource/MaterialResource.h"
 #include "../../../SnowyStream/Resource/TextureResource.h"
 #include "../../../SnowyStream/Resource/SkeletonResource.h"
-#include "../RenderFlow/RenderPolicy.h"
+#include "RenderPolicy.h"
 
 namespace PaintsNow {
 	class IDrawCallProvider {

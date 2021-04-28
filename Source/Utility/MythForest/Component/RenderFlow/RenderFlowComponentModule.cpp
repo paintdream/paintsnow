@@ -58,7 +58,6 @@ TObject<IReflect>& RenderFlowComponentModule::operator () (IReflect& reflect) {
 
 	if (reflect.IsReflectMethod()) {
 		ReflectMethod(RequestNew)[ScriptMethodLocked = "New"];
-		ReflectMethod(RequestNewRenderPolicy)[ScriptMethodLocked = "NewRenderPolicy"];
 		ReflectMethod(RequestNewRenderStage)[ScriptMethodLocked = "NewRenderStage"];
 		ReflectMethod(RequestEnumerateRenderStagePorts)[ScriptMethodLocked = "EnumerateRenderStagePorts"];
 		ReflectMethod(RequestLinkRenderStagePort)[ScriptMethodLocked = "LinkRenderStagePort"];
@@ -224,13 +223,4 @@ void RenderFlowComponentModule::RequestOverrideRenderStageMaterial(IScript::Requ
 	CHECK_THREAD_IN_MODULE(renderFlowComponent);
 
 	renderStage->overrideMaterial = materialResource.Get();
-}
-
-TShared<RenderPolicy> RenderFlowComponentModule::RequestNewRenderPolicy(IScript::Request& request, const String& name, uint16_t priorityBegin, uint16_t priorityEnd) {
-	CHECK_REFERENCES_NONE();
-
-	TShared<RenderPolicy> policy = TShared<RenderPolicy>::From(new RenderPolicy());
-	policy->renderPortName = name;
-	policy->priorityRange = std::make_pair(priorityBegin, priorityEnd);
-	return policy;
 }

@@ -5,7 +5,7 @@
 
 #pragma once
 #include "RenderFlowComponent.h"
-#include "RenderPolicy.h"
+#include "../Renderable/RenderPolicy.h"
 #include "../../Module.h"
 
 namespace PaintsNow {
@@ -22,14 +22,6 @@ namespace PaintsNow {
 		/// </summary>
 		/// <returns> RenderFlowComponent object </returns>
 		TShared<RenderFlowComponent> RequestNew(IScript::Request& request);
-
-		/// <summary>
-		/// Create RenderPolicy
-		/// </summary>
-		/// <param name="name"> name </param>
-		/// <param name="priority"> priority </param>
-		/// <returns> RenderPolicy object </returns>
-		TShared<RenderPolicy> RequestNewRenderPolicy(IScript::Request& request, const String& name, uint16_t priorityBegin, uint16_t priorityEnd);
 
 		/// <summary>
 		/// Create RenderStage
