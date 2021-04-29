@@ -189,7 +189,6 @@ void PassBase::Updater::Property(IReflectObject& s, Unique typeID, Unique refTyp
 		for (const MetaChainBase* check = meta; check != nullptr; check = check->GetNext()) {
 			const MetaNodeBase* node = check->GetNode();
 			if (node->GetUnique() == UniqueType<IShader::MetaShader>::Get()) {
-				const IShader::MetaShader* metaShader = static_cast<const IShader::MetaShader*>(node);
 				s(*this);
 			} else if (node->GetUnique() == UniqueType<IShader::BindInput>::Get()) {
 				const IShader::BindInput* bindInput = static_cast<const IShader::BindInput*>(node);
@@ -373,7 +372,6 @@ public:
 			for (const MetaChainBase* check = meta; check != nullptr; check = check->GetNext()) {
 				const MetaNodeBase* node = check->GetNode();
 				if (node->GetUnique() == UniqueType<IShader::MetaShader>::Get()) {
-					const IShader::MetaShader* metaShader = static_cast<const IShader::MetaShader*>(node);
 					s(*this);
 				}
 			}
@@ -433,7 +431,6 @@ public:
 				for (const MetaChainBase* check = meta; check != nullptr; check = check->GetNext()) {
 					const MetaNodeBase* node = check->GetNode();
 					if (node->GetUnique() == UniqueType<IShader::MetaShader>::Get()) {
-						const IShader::MetaShader* metaShader = static_cast<const IShader::MetaShader*>(node);
 						s(*this);
 					}
 				}
@@ -476,7 +473,6 @@ public:
 			for (const MetaChainBase* check = meta; check != nullptr; check = check->GetNext()) {
 				const MetaNodeBase* node = check->GetNode();
 				if (node->GetUnique() == UniqueType<IShader::MetaShader>::Get()) {
-					const IShader::MetaShader* metaShader = static_cast<const IShader::MetaShader*>(node);
 					s(*this);
 				}
 			}

@@ -1,6 +1,16 @@
 local args = { ... }
-local sourceSolution = args[1] or "../../BuildARM/PaintsNow.sln"
+local sourceSolution = args[1] or "../../Build/PaintsNow.sln"
 local targetSolution = args[2] or "./Purpleave.sln"
+
+local blackList = {
+	["ALL_BUILD"] = true,
+	["INSTALL"] = true,
+	["ZERO_CHECK"] = true,
+	["PACKAGE"] = true,
+	["LeavesWing"] = true,
+	["LostDream"] = true,
+	["glfw"] = true
+}
 
 if not table.unpack then
 	table.unpack = unpack
@@ -17,26 +27,65 @@ local function GenerateGuid()
 	)
 end
 
+local function GetFolder(path, ext)
+	local folder = path:match("(.-)/[^/]+%." .. ext)
+	if folder then
+		return folder
+	else
+		return path:match("(.-)\\[^\\]+%." .. ext)
+	end
+end
+
 local function ParseSolution(path)
 	local file = io.open(path, "rb")
 	if not file then
-		print("Enable to open file: " .. path)
-		return
+		error("Enable to open file: " .. path)
 	end
 
 	local content = file:read("*all")
 	file:close()
 
+	local folder = GetFolder(path, "sln")
+
 	local projects = {}
 	for guid, name, path, config in content:gmatch("Project%(\"{(.-)}\"%) = \"(.-)\", \"(.-)\", \"{(.-)}\"") do
-		print("Guid: " .. guid .. " | Name: " .. name .. " | Path: " .. path)
+		if not blackList[name] then
+			print("Guid: " .. guid .. " | Name: " .. name .. " | Path: " .. path)
 
-		table.insert(projects, {
-			Guid = guid,
-			Name = name,
-			Path = path,
-			ConfigurationGuid = config,
-		})
+			-- try to parse project
+			local cpps = {}
+			local hpps = {}
+			local includeFolder = ""
+			if guid ~= "2150E333-8FDC-42A3-9474-1A3956D46DE8" then
+				local proj = io.open(folder .. "/" .. path, "rb")
+				if not proj then
+					error("Unable to open " .. folder .. "/" .. path)
+				end
+				local xml = proj:read("*all")
+				proj:close()
+
+				for cpp in xml:gmatch("<ClCompile Include=\"(.-)\"") do
+					table.insert(cpps, cpp)
+				end
+
+				for hpp in xml:gmatch("<ClInclude Include=\"(.-)\"") do
+					table.insert(hpps, hpp)
+				end
+				
+				includeFolder = xml:match("<AdditionalIncludeDirectories>(.-)</AdditionalIncludeDirectories>")
+				assert(includeFolder)
+			end
+
+			table.insert(projects, {
+				Guid = guid,
+				Name = name,
+				Path = path,
+				ConfigurationGuid = config,
+				Includes = hpps,
+				Sources = cpps,
+				IncludeFolder = includeFolder
+			})
+		end
 	end
 
 	local nested = content:find("GlobalSection%(NestedProjects%) = preSolution")
@@ -188,10 +237,16 @@ EndGlobal
 	)
 end
 
-local function WriteSolution(path, content)
+local function WriteFile(path, content)
+	local folder = GetFolder(path, "vcxproj")
+	if folder then
+		print("MKDIR " .. folder)
+		os.execute("mkdir -p " .. folder)
+	end
+
 	local file = io.open(path, "wb")
 	if not file then
-		print("Unable to write solution file!")
+		error("Unable to write file: " .. path)
 		return
 	end
 
@@ -199,8 +254,213 @@ local function WriteSolution(path, content)
 	file:close()
 end
 
+local function GenerateProject(project)
+	local vcxprojTemplate =
+[[<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|ARM">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM">
+      <Configuration>Release</Configuration>
+      <Platform>ARM</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x86">
+      <Configuration>Debug</Configuration>
+      <Platform>x86</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x86">
+      <Configuration>Release</Configuration>
+      <Platform>x86</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{%s}</ProjectGuid>
+    <Keyword>Android</Keyword>
+    <RootNamespace>%s</RootNamespace>
+    <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
+    <ApplicationType>Android</ApplicationType>
+    <ApplicationTypeRevision>3.0</ApplicationTypeRevision>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>Clang_5_0</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>Clang_5_0</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>Clang_5_0</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>Clang_5_0</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>Clang_5_0</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>Clang_5_0</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>Clang_5_0</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>Clang_5_0</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+	  <AdditionalIncludeDirectories>%s</AdditionalIncludeDirectories>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+	  <AdditionalIncludeDirectories>%s</AdditionalIncludeDirectories>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+    <ClCompile>
+	  <AdditionalIncludeDirectories>%s</AdditionalIncludeDirectories>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+    <ClCompile>
+	  <AdditionalIncludeDirectories>%s</AdditionalIncludeDirectories>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
+    <ClCompile>
+	  <AdditionalIncludeDirectories>%s</AdditionalIncludeDirectories>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
+    <ClCompile>
+	  <AdditionalIncludeDirectories>%s</AdditionalIncludeDirectories>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
+    <ClCompile>
+	  <AdditionalIncludeDirectories>%s</AdditionalIncludeDirectories>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
+    <ClCompile>
+	  <AdditionalIncludeDirectories>%s</AdditionalIncludeDirectories>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+%s
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>
+]]
+
+	local xmlNode = {}
+	print("Generating Project: " .. project.Name)
+	for _, cpp in ipairs(project.Sources) do
+		table.insert(xmlNode, "<ClCompile Include=\"" .. cpp .. "\" />")
+	end
+
+	for _, hpp in ipairs(project.Includes) do
+		table.insert(xmlNode, "<ClInclude Include=\"" .. hpp .. "\" />")
+	end
+
+	local include = project.IncludeFolder
+	return vcxprojTemplate:format(project.ConfigurationGuid, project.Name, 
+		include, include, include, include, include, include, include, include,	
+		table.concat(xmlNode, "\n"))
+end
+
 -- Main
 local projects = ParseSolution(sourceSolution)
+-- projects
+for i = 1, #projects do
+	local project = projects[i]
+	if project.Guid ~= "2150E333-8FDC-42A3-9474-1A3956D46DE8" then
+		local content = GenerateProject(project)	
+		WriteFile(project.Path, content)
+	end
+end
+
 InjectAndroidProjects(projects)
 local content = GenerateSolution(projects)
-WriteSolution(targetSolution, content)
+WriteFile(targetSolution, content)
