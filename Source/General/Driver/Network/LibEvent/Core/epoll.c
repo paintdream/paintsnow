@@ -143,7 +143,7 @@ epoll_init(struct event_base *base)
 	int epfd = -1;
 	struct epollop *epollop;
 
-#ifdef EVENT__HAVE_EPOLL_CREATE1
+#if 0 /*defined(EVENT__HAVE_EPOLL_CREATE1)*/
 	/* First, try the shiny new epoll_create1 interface, if we have it. */
 	epfd = epoll_create1(EPOLL_CLOEXEC);
 #endif

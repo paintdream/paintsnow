@@ -484,7 +484,7 @@ arc4random(void)
 }
 #endif
 
-ARC4RANDOM_EXPORT void
+void
 arc4random_buf(void *buf_, size_t n)
 {
 	unsigned char *buf = buf_;

@@ -12,6 +12,25 @@ local blackList = {
 	["glfw"] = true
 }
 
+local filereplace = {
+	["ComDef.cpp"] = "",
+	["ComDispatch.cpp"] = "",
+	["ComBridge.cpp"] = "",
+	["evthread_win32.c"] = "evthread_pthread.c",
+	["buffer_iocp.c"] = "epoll.c",
+	["event_iocp.c"] = "epoll_sub.c",
+	["bufferevent_async.c"] = "",
+	["ZFrameGLFW.cpp"] = "",
+	["winmm.c"] = "",
+	["mmdevapi.c"] = "",
+	["mixer_sse.c"] = "mixer_neon.c",
+	["mixer_sse2.c"] = "",
+	["mixer_sse3.c"] = "",
+	["mixer_sse41.c"] = "",
+	["nulleffects.c"] = "",
+	["nullbackends.c"] = ""
+}
+
 if not table.unpack then
 	table.unpack = unpack
 end
@@ -27,12 +46,12 @@ local function GenerateGuid()
 	)
 end
 
-local function GetFolder(path, ext)
-	local folder = path:match("(.-)/[^/]+%." .. ext)
+local function GetFolder(path)
+	local folder = path:match("(.-)/[^/]*$")
 	if folder then
 		return folder
 	else
-		return path:match("(.-)\\[^\\]+%." .. ext)
+		return path:match("(.-)\\[^\\]*$")
 	end
 end
 
@@ -45,7 +64,7 @@ local function ParseSolution(path)
 	local content = file:read("*all")
 	file:close()
 
-	local folder = GetFolder(path, "sln")
+	local folder = GetFolder(path)
 
 	local projects = {}
 	for guid, name, path, config in content:gmatch("Project%(\"{(.-)}\"%) = \"(.-)\", \"(.-)\", \"{(.-)}\"") do
@@ -65,7 +84,22 @@ local function ParseSolution(path)
 				proj:close()
 
 				for cpp in xml:gmatch("<ClCompile Include=\"(.-)\"") do
-					table.insert(cpps, cpp)
+					local parent = GetFolder(cpp)
+					local file = cpp:sub(#parent + 2)
+					local rep = filereplace[file]
+					if rep then
+						if rep ~= "" then
+							print("Replacing [" .. file .. "] with [" .. rep .. "]")
+							cpp = cpp:sub(1, #parent + 1) .. rep
+						else
+							print("Removing [" .. file .. "]")
+							cpp = nil
+						end
+					end
+			
+					if cpp then
+						table.insert(cpps, cpp)
+					end
 				end
 
 				for hpp in xml:gmatch("<ClInclude Include=\"(.-)\"") do
@@ -238,7 +272,7 @@ EndGlobal
 end
 
 local function WriteFile(path, content)
-	local folder = GetFolder(path, "vcxproj")
+	local folder = GetFolder(path)
 	if folder then
 		print("MKDIR " .. folder)
 		os.execute("mkdir -p " .. folder)
@@ -365,9 +399,11 @@ local function GenerateProject(project)
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
 	  <AdditionalIncludeDirectories>%s</AdditionalIncludeDirectories>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
+	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;USE_OPTICK=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
+	  <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -376,14 +412,18 @@ local function GenerateProject(project)
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
+	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;USE_OPTICK=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
+	  <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <ClCompile>
 	  <AdditionalIncludeDirectories>%s</AdditionalIncludeDirectories>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
+	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;USE_OPTICK=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
+	  <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
@@ -392,14 +432,18 @@ local function GenerateProject(project)
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
+	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;USE_OPTICK=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
+	  <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <ClCompile>
 	  <AdditionalIncludeDirectories>%s</AdditionalIncludeDirectories>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
+	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;USE_OPTICK=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
+	  <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -408,6 +452,8 @@ local function GenerateProject(project)
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
+	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;USE_OPTICK=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
+	  <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
@@ -416,6 +462,8 @@ local function GenerateProject(project)
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
+	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;USE_OPTICK=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
+	  <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
@@ -423,7 +471,9 @@ local function GenerateProject(project)
 	  <AdditionalIncludeDirectories>%s</AdditionalIncludeDirectories>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+	  <RuntimeTypeInfo>true</RuntimeTypeInfo>
+	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;USE_OPTICK=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
+	  <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>

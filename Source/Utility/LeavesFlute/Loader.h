@@ -34,7 +34,7 @@
 #endif
 #endif
 
-#if !defined(CMAKE_PAINTSNOW) || ADD_FRAME_GLFW
+#if !defined(CMAKE_PAINTSNOW) || (ADD_FRAME_GLFW && !defined(CMAKE_ANDROID))
 #include "../../General/Driver/Frame/GLFW/ZFrameGLFW.h"
 #endif
 

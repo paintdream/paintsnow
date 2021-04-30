@@ -215,7 +215,7 @@ void Loader::Run(const CmdLine& cmdLine) {
 	}
 #endif
 
-#if !defined(CMAKE_PAINTSNOW) || ADD_FRAME_GLFW
+#if !defined(CMAKE_PAINTSNOW) || (ADD_FRAME_GLFW && !defined(CMAKE_ANDROID))
 	DelayedValue<bool> delayIsVulkan(isVulkan);
 #if (!defined(CMAKE_PAINTSNOW) || ADD_RENDER_VULKAN) && (!defined(_MSC_VER) || _MSC_VER > 1200)
 		GLFWwindow** ptr = &window;
@@ -343,7 +343,7 @@ void Loader::Run(const CmdLine& cmdLine) {
 		// Must have render factory in GUI mode.
 		assert(renderFactory);
 
-#if !defined(CMAKE_PAINTSNOW) || (ADD_RENDER_OPENGL && ADD_FRAME_GLFW)
+#if !defined(CMAKE_PAINTSNOW) || (ADD_RENDER_OPENGL && (ADD_FRAME_GLFW && !defined(CMAKE_ANDROID)))
 		// initialize for GLFW
 		if (renderFactory == glFactory) {
 			isVulkan = false; // fallback to opengl

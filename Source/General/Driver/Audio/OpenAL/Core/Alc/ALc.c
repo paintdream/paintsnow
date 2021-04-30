@@ -939,6 +939,9 @@ static void alc_initconfig(void)
     }
 
     capfilter = 0;
+#ifdef HAVE_NEON
+    capfilter |= CPU_CAP_NEON;
+#else
 #if defined(HAVE_SSE4_1)
     capfilter |= CPU_CAP_SSE | CPU_CAP_SSE2 | CPU_CAP_SSE3 | CPU_CAP_SSE4_1;
 #elif defined(HAVE_SSE3)
@@ -948,8 +951,6 @@ static void alc_initconfig(void)
 #elif defined(HAVE_SSE)
     capfilter |= CPU_CAP_SSE;
 #endif
-#ifdef HAVE_NEON
-    capfilter |= CPU_CAP_NEON;
 #endif
     if(ConfigValueStr(NULL, NULL, "disable-cpu-exts", &str))
     {

@@ -2,6 +2,10 @@
 #include <cassert>
 #include <map>
 
+#ifdef FT2_BUILD_LIBRARY
+#undef FT2_BUILD_LIBRARY
+#endif
+
 #if defined(_MSC_VER) && _MSC_VER <= 1200
 #include <ft2build.h>
 #include <freetype/ftglyph.h>

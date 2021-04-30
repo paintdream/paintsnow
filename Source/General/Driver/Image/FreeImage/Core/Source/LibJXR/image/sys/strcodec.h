@@ -27,6 +27,12 @@
 //*@@@---@@@@******************************************************************
 #pragma once
 
+#ifdef CMAKE_ANDROID
+#ifndef PLATFORM_ANSI
+#define PLATFORM_ANSI 1
+#endif
+#endif
+
 #include <stddef.h>
 #if defined(__MINGW32__)
 #include <stdint.h>
@@ -81,7 +87,7 @@
 
 //================================================================
 
-#ifdef PLATFORM_ANSI
+#if defined(PLATFORM_ANSI)
 typedef unsigned long long U64;
 #else // PLATFORM_ANSI
 typedef unsigned __int64 U64;

@@ -83,7 +83,7 @@ DEFINE_PROPERTYKEY(PKEY_AudioEndpoint_GUID, 0x1da5d803, 0xd492, 0x4edd, 0x8c, 0x
 #ifdef HAVE_INTRIN_H
 #include <intrin.h>
 #endif
-#ifdef HAVE_CPUID_H
+#if defined(HAVE_CPUID_H) && !defined(CMAKE_ANDROID)
 #include <cpuid.h>
 #endif
 #ifdef HAVE_SYS_SYSCONF_H
@@ -133,8 +133,13 @@ void FillCPUCaps(ALuint capfilter)
 
 /* FIXME: We really should get this for all available CPUs in case different
  * CPUs have different caps (is that possible on one machine?). */
-#if defined(HAVE_GCC_GET_CPUID) && (defined(__i386__) || defined(__x86_64__) || \
-                                    defined(_M_IX86) || defined(_M_X64))
+#if defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_X64)
+#define CPUID_ARCH 1
+#else
+#define CPUID_ARCH 0
+#endif
+
+#if defined(HAVE_GCC_GET_CPUID) && !defined(CMAKE_ANDROID) && CPUID_ARCH
     union {
         unsigned int regs[4];
         char str[sizeof(unsigned int[4])];
@@ -177,8 +182,7 @@ void FillCPUCaps(ALuint capfilter)
             }
         }
     }
-#elif defined(HAVE_CPUID_INTRINSIC) && (defined(__i386__) || defined(__x86_64__) || \
-                                        defined(_M_IX86) || defined(_M_X64))
+#elif defined(HAVE_CPUID_INTRINSIC) && CPUID_ARCH
     union {
         int regs[4];
         char str[sizeof(int[4])];
@@ -227,6 +231,8 @@ void FillCPUCaps(ALuint capfilter)
     }
 #else
     /* Assume support for whatever's supported if we can't check for it */
+
+#ifndef HAVE_NEON
 #if defined(HAVE_SSE4_1)
 #warning "Assuming SSE 4.1 run-time support!"
     caps |= CPU_CAP_SSE | CPU_CAP_SSE2 | CPU_CAP_SSE3 | CPU_CAP_SSE4_1;
@@ -239,6 +245,7 @@ void FillCPUCaps(ALuint capfilter)
 #elif defined(HAVE_SSE)
 #warning "Assuming SSE run-time support!"
     caps |= CPU_CAP_SSE;
+#endif
 #endif
 #endif
 #ifdef HAVE_NEON
@@ -303,7 +310,7 @@ void SetMixerFPUMode(FPUCtl *ctl)
      */
     ctl->round_mode = fegetround();
 #endif
-#if defined(__GNUC__) && defined(HAVE_SSE)
+#if defined(__GNUC__) && (!defined(HAVE_NEON) && defined(HAVE_SSE))
     /* FIXME: Some fegetenv implementations can get the SSE environment too?
      * How to tell when it does? */
     if((CPUCapFlags&CPU_CAP_SSE))
@@ -313,7 +320,7 @@ void SetMixerFPUMode(FPUCtl *ctl)
 #ifdef FE_TOWARDZERO
     fesetround(FE_TOWARDZERO);
 #endif
-#if defined(__GNUC__) && defined(HAVE_SSE)
+#if defined(__GNUC__) && (!defined(HAVE_NEON) && defined(HAVE_SSE))
     if((CPUCapFlags&CPU_CAP_SSE))
     {
         int sseState = ctl->sse_state;
@@ -352,7 +359,7 @@ void RestoreFPUMode(const FPUCtl *ctl)
 #ifdef _WIN32
     fesetround(ctl->round_mode);
 #endif
-#if defined(__GNUC__) && defined(HAVE_SSE)
+#if defined(__GNUC__) && (!defined(HAVE_NEON) && defined(HAVE_SSE))
     if((CPUCapFlags&CPU_CAP_SSE))
         __asm__ __volatile__("ldmxcsr %0" : : "m" (*&ctl->sse_state));
 #endif

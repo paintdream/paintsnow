@@ -186,6 +186,18 @@ double CLASS getreal (int type)
   }
 }
 
+#ifdef CMAKE_ANDROID
+static void swab(char* a, char* b, int c)
+{
+    for (int i = 0; i < c / 2; i++)
+    {
+        char v = b[c - i - 1];
+        b[c - i - 1] = a[i];
+        a[i] = v;
+    }
+}
+#endif
+
 void CLASS read_shorts (ushort *pixel, int count)
 {
   if (fread (pixel, 2, count, ifp) < count) derror();
@@ -2479,7 +2491,7 @@ void CLASS quicktake_100_load_raw()
 
 void CLASS kodak_radc_load_raw()
 {
-  static const char src[] = {
+  static const signed char src[] = {
     1,1, 2,3, 3,4, 4,2, 5,7, 6,5, 7,6, 7,8,
     1,0, 2,1, 3,3, 4,4, 5,2, 6,7, 7,6, 8,5, 8,8,
     2,1, 2,3, 3,0, 3,2, 3,4, 4,6, 5,5, 6,7, 6,8,
@@ -4519,7 +4531,7 @@ void CLASS lin_interpolate()
  */
 void CLASS vng_interpolate()
 {
-  static const signed char *cp, terms[] = {
+  static const short *cp, terms[] = {
     -2,-2,+0,-1,0,0x01, -2,-2,+0,+0,1,0x01, -2,-1,-1,+0,0,0x01,
     -2,-1,+0,-1,0,0x02, -2,-1,+0,+0,0,0x03, -2,-1,+0,+1,1,0x01,
     -2,+0,+0,-1,0,0x06, -2,+0,+0,+0,1,0x02, -2,+0,+0,+1,0,0x03,

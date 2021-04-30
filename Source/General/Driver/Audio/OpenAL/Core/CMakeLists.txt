@@ -706,7 +706,7 @@ SET(ALC_OBJS  Alc/ALc.c
               Alc/effects/equalizer.c
               Alc/effects/flanger.c
               Alc/effects/modulator.c
-              Alc/effects/null.c
+              Alc/effects/nulleffects.c
               Alc/effects/reverb.c
               Alc/helpers.c
               Alc/bsinc.c
@@ -859,7 +859,7 @@ SET(ALC_OBJS  ${ALC_OBJS}
               Alc/backends/base.c
               # Default backends, always available
               Alc/backends/loopback.c
-              Alc/backends/null.c
+              Alc/backends/nullbackends.c
 )
 
 # Check ALSA backend

@@ -2616,6 +2616,17 @@ void LibRaw::kodak_thumb_loader()
 #undef CLIP
 #undef SWAP
 
+#ifdef CMAKE_ANDROID
+static void swab(char* a, char* b, int c)
+{
+    for (int i = 0; i < c / 2; i++)
+    {
+        char v = b[c - i - 1];
+        b[c - i - 1] = a[i];
+        a[i] = v;
+    }
+}
+#endif
 
 // ������� thumbnail �� �����, ������ thumb_format � ������������ � ��������
 int LibRaw::unpack_thumb(void)
