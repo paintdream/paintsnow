@@ -70,7 +70,7 @@ local function ParseSolution(path)
 	local folder = GetFolder(path)
 
 	local projects = {}
-	for guid, name, path, config in content:gmatch("Project%(\"{(.-)}\"%) = \"(.-)\", \"(.-)\", \"{(.-)}\"") do
+	for guid, name, path, config, dep in content:gmatch("Project%(\"{(.-)}\"%) = \"(.-)\", \"(.-)\", \"{(.-)}\"(.-)\nEndProject") do
 		if not blackList[name] then
 			print("Guid: " .. guid .. " | Name: " .. name .. " | Path: " .. path)
 
@@ -122,7 +122,8 @@ local function ParseSolution(path)
 				ConfigurationGuid = config,
 				Includes = hpps,
 				Sources = cpps,
-				IncludeFolder = includeFolder
+				IncludeFolder = includeFolder,
+				Dependencies = dep
 			})
 		end
 	end
@@ -146,13 +147,13 @@ end
 
 local function GenerateDeclaration(projects)
 	local projectDeclare =
-[[Project("{%s}") = "%s", "%s", "{%s}"
+[[Project("{%s}") = "%s", "%s", "{%s}"%s
 EndProject]]
 	local target = {}
 	for i = 1, #projects do
 		local project = projects[i]
 		table.insert(target, projectDeclare:format(
-			project.Guid, project.Name, project.Path, project.ConfigurationGuid
+			project.Guid, project.Name, project.Path, project.ConfigurationGuid, project.Dependencies or ""
 		))
 	end
 
@@ -161,22 +162,22 @@ end
 
 local function GenerateConfiguration(projects)
 	local projectConfiguration =
-[[	{%s}.Debug|ARM.ActiveCfg = Debug|ARM
-	{%s}.Debug|ARM.Build.0 = Debug|ARM
-	{%s}.Debug|ARM64.ActiveCfg = Debug|ARM64
-	{%s}.Debug|ARM64.Build.0 = Debug|ARM64
-	{%s}.Debug|x64.ActiveCfg = Debug|x64
-	{%s}.Debug|x64.Build.0 = Debug|x64
-	{%s}.Debug|x86.ActiveCfg = Debug|x86
-	{%s}.Debug|x86.Build.0 = Debug|x86
-	{%s}.Release|ARM.ActiveCfg = Release|ARM
-	{%s}.Release|ARM.Build.0 = Release|ARM
-	{%s}.Release|ARM64.ActiveCfg = Release|ARM64
-	{%s}.Release|ARM64.Build.0 = Release|ARM64
-	{%s}.Release|x64.ActiveCfg = Release|x64
-	{%s}.Release|x64.Build.0 = Release|x64
-	{%s}.Release|x86.ActiveCfg = Release|x86
-	{%s}.Release|x86.Build.0 = Release|x86]]
+[[		{%s}.Debug|ARM.ActiveCfg = Debug|ARM
+		{%s}.Debug|ARM.Build.0 = Debug|ARM
+		{%s}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{%s}.Debug|ARM64.Build.0 = Debug|ARM64
+		{%s}.Debug|x64.ActiveCfg = Debug|x64
+		{%s}.Debug|x64.Build.0 = Debug|x64
+		{%s}.Debug|x86.ActiveCfg = Debug|x86
+		{%s}.Debug|x86.Build.0 = Debug|x86
+		{%s}.Release|ARM.ActiveCfg = Release|ARM
+		{%s}.Release|ARM.Build.0 = Release|ARM
+		{%s}.Release|ARM64.ActiveCfg = Release|ARM64
+		{%s}.Release|ARM64.Build.0 = Release|ARM64
+		{%s}.Release|x64.ActiveCfg = Release|x64
+		{%s}.Release|x64.Build.0 = Release|x64
+		{%s}.Release|x86.ActiveCfg = Release|x86
+		{%s}.Release|x86.Build.0 = Release|x86]]
 
 	local target = {}
 	for i = 1, #projects do
@@ -196,7 +197,7 @@ end
 
 local function GenerateNested(projects)
 	local projectNested = 
-[[	{%s} = {%s}]]
+[[		{%s} = {%s}]]
 	local target = {}
 	for i = 1, #projects do
 		local project = projects[i]
@@ -210,6 +211,20 @@ end
 
 local function InjectAndroidProjects(projects)
 	local hostGuid = "F896F62F-0D10-4111-9D67-519610420117"
+	local deps =
+[[
+
+	ProjectSection(ProjectDependencies) = postProject	
+%s
+	EndProjectSection]]
+	local projectNested = 
+[[		{%s} = {%s}]]
+
+	local sections = {}
+	for i = 1, #projects do
+		local project = projects[i]
+		table.insert(sections, projectNested:format(project.ConfigurationGuid, project.ConfigurationGuid))
+	end
 
 	table.insert(projects, {
 		Guid = "2150E333-8FDC-42A3-9474-1A3956D46DE8",
@@ -231,7 +246,8 @@ local function InjectAndroidProjects(projects)
 		ConfigurationGuid = "4E02E07E-1853-47BF-A692-89A7B1C98D5A",
 		Name = "Purpleave.NativeActivity",
 		Path = "Purpleave.NativeActivity\\Purpleave.NativeActivity.vcxproj",
-		NestedGuid = hostGuid
+		NestedGuid = hostGuid,
+		Dependencies = deps:format(table.concat(sections, "\n"))
 	})
 end
 
