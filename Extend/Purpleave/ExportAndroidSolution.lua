@@ -1,6 +1,9 @@
 local args = { ... }
-local sourceSolution = args[1] or "../../Build/PaintsNow.sln"
-local targetSolution = args[2] or "./Purpleave.sln"
+local sourceBuild = args[1] or "Build"
+local redirectBuild = args[2] or "BuildLinux"
+
+local targetSolution = "./Purpleave.sln"
+local sourceSolution = "../../" .. sourceBuild .. "/PaintsNow.sln"
 
 local blackList = {
 	["ALL_BUILD"] = true,
@@ -107,6 +110,8 @@ local function ParseSolution(path)
 				end
 				
 				includeFolder = xml:match("<AdditionalIncludeDirectories>(.-)</AdditionalIncludeDirectories>")
+				includeFolder = includeFolder:gsub("\\" .. sourceBuild .. "\\Source", "\\" .. redirectBuild .. "\\Source")
+				print(includeFolder)
 				assert(includeFolder)
 			end
 
@@ -273,9 +278,9 @@ end
 
 local function WriteFile(path, content)
 	local folder = GetFolder(path)
-	if folder then
+	if folder and #folder > 2 then
 		print("MKDIR " .. folder)
-		os.execute("mkdir -p " .. folder)
+		os.execute("mkdir " .. folder)
 	end
 
 	local file = io.open(path, "wb")
