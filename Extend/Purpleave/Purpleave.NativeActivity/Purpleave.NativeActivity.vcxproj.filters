@@ -1,10 +1,34 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClInclude Include="android_native_app_glue.h" />
+    <ClInclude Include="Source\Driver\Frame\Android\ZFrameAndroid.h">
+      <Filter>Source\Driver\Frame\Android</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Driver\Frame\Android\android_native_app_glue.h">
+      <Filter>Source\Driver\Frame\Android</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="android_native_app_glue.c" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Source\Driver\Frame\Android\ZFrameAndroid.cpp">
+      <Filter>Source\Driver\Frame\Android</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Driver\Frame\Android\android_native_app_glue.c">
+      <Filter>Source\Driver\Frame\Android</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source">
+      <UniqueIdentifier>{87e1264f-6140-4a12-abc1-34ba57de9ae4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Driver">
+      <UniqueIdentifier>{189ecfe1-076c-4321-8da9-ad84c0fa4359}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Driver\Frame">
+      <UniqueIdentifier>{0fc1181a-3125-4c8e-baf7-74626f613fc2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Driver\Frame\Android">
+      <UniqueIdentifier>{e8a9df8c-ad2f-4c31-8768-b4f0d85afdef}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

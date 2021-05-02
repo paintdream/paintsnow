@@ -211,11 +211,66 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="android_native_app_glue.h" />
+    <ClInclude Include="Source\Driver\Frame\Android\android_native_app_glue.h" />
+    <ClInclude Include="Source\Driver\Frame\Android\ZFrameAndroid.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="android_native_app_glue.c" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Source\Driver\Frame\Android\android_native_app_glue.c" />
+    <ClCompile Include="Source\Driver\Frame\Android\ZFrameAndroid.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BridgeSunset.vcxproj">
+      <Project>{8564a528-d665-3789-a72a-ad0c9a4da8c4}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\EchoLegend.vcxproj">
+      <Project>{62a8fd6f-9cca-36f6-8f82-da93398aeb79}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\GalaxyWeaver.vcxproj">
+      <Project>{40059839-a40d-32b7-9e5b-c9e414b2579e}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\HeartVioliner.vcxproj">
+      <Project>{d1034a67-7cf5-32c1-9baf-3566fc94c736}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\LeavesFlute.vcxproj">
+      <Project>{7f52ef21-4fbd-353d-b994-ae7fb0173cf3}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\MythForest.vcxproj">
+      <Project>{df424e9f-d10d-38b0-89f1-b2db24c5bd30}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\PaintsNow.vcxproj">
+      <Project>{6c9e5dd6-6a4f-3e3a-ac4a-7e0699228f4b}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\PurpleTrail.vcxproj">
+      <Project>{612b6593-395e-3c90-981c-00ba46b2a02c}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Remembery.vcxproj">
+      <Project>{481055d5-567f-3840-b932-b9dffd2a4476}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\SnowyStream.vcxproj">
+      <Project>{1b56093c-4a33-38ed-bc0b-51ac38784134}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Source\General\Driver\Audio\OpenAL\Core\OpenAL.vcxproj">
+      <Project>{85be38dc-8d1a-3513-bcd3-f268579f1de4}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Source\General\Driver\Filter\LAME\Core\mp3lame.vcxproj">
+      <Project>{d9b855db-242d-3112-943c-3e3adc438994}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Source\General\Driver\Font\Freetype\Core\freetype.vcxproj">
+      <Project>{b81b183c-b5c8-3609-a131-b861e3dad314}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Source\General\Driver\Image\FreeImage\Core\FreeImage.vcxproj">
+      <Project>{93e4445d-7819-30ac-9cfb-47a75a782c79}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Source\General\Driver\Network\LibEvent\Core\event_core_static.vcxproj">
+      <Project>{6914c3e0-3593-3c8e-a159-5ee6f1c844cb}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Source\General\Driver\Network\LibEvent\Core\event_extra_static.vcxproj">
+      <Project>{26e5de64-cbfa-3ad1-be24-e31365effed4}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Source\General\Driver\Network\LibEvent\Core\event_static.vcxproj">
+      <Project>{38ac69c7-2990-3d0f-b004-7192054019c8}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
