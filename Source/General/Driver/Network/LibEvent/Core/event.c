@@ -80,10 +80,10 @@
 #ifdef EVENT__HAVE_EVENT_PORTS
 extern const struct eventop evportops;
 #endif
-#ifdef EVENT__HAVE_SELECT
+#if defined(EVENT__HAVE_SELECT) && !CMAKE_ANDROID
 extern const struct eventop selectops;
 #endif
-#ifdef EVENT__HAVE_POLL
+#if defined(EVENT__HAVE_POLL) && !CMAKE_ANDROID
 extern const struct eventop pollops;
 #endif
 #ifdef EVENT__HAVE_EPOLL
@@ -107,16 +107,16 @@ static const struct eventop *eventops[] = {
 #ifdef EVENT__HAVE_WORKING_KQUEUE
 	&kqops,
 #endif
-#ifdef EVENT__HAVE_EPOLL
+#if defined(EVENT__HAVE_EPOLL) && !CMAKE_ANDROID
 	&epollops,
 #endif
 #ifdef EVENT__HAVE_DEVPOLL
 	&devpollops,
 #endif
-#ifdef EVENT__HAVE_POLL
+#if defined(EVENT__HAVE_POLL) && !CMAKE_ANDROID
 	&pollops,
 #endif
-#ifdef EVENT__HAVE_SELECT
+#if defined(EVENT__HAVE_SELECT) && !CMAKE_ANDROID
 	&selectops,
 #endif
 #ifdef _WIN32

@@ -120,6 +120,14 @@ struct DelayedValue {
 	T& value;
 };
 
+Config& Loader::GetConfig() {
+	return config;
+}
+
+LeavesFlute*& Loader::GetLeavesFluteReference() {
+	return leavesFlute;
+}
+
 void Loader::Run(const CmdLine& cmdLine) {
 	// Load necessary modules
 	const std::list<CmdLine::Option>& modules = cmdLine.GetModuleList();

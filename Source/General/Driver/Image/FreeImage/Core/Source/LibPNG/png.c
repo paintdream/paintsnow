@@ -3761,7 +3761,7 @@ png_gamma_8bit_correct(unsigned int value, png_fixed_point gamma_val)
           * Apparently GCC, however, does an intermediate conversion to (int)
           * on some (ARM) but not all (x86) platforms, possibly because of
           * hardware FP limitations.  (E.g. if the hardware conversion always
-          * assumes the integer register contains a signed value.)  This results
+          * assumes the integer contains a signed value.)  This results
           * in ANSI-C undefined behavior for large values.
           *
           * Other implementations on the same machine might actually be ANSI-C90

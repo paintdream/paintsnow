@@ -83,7 +83,7 @@ namespace FpuControl
 
 //-------------------------------------------------------------------
 //
-//    Restore the control register state from a signal handler
+//    Restore the control state from a signal handler
 //    user context, optionally clearing the exception bits
 //    in the restored control register, if applicable.
 //
@@ -95,7 +95,7 @@ void restoreControlRegs (const ucontext_t & ucon,
 
 //------------------------------------------------------------
 //
-//    Set exception mask bits in the control register state.
+//    Set exception mask bits in the control state.
 //    A value of 1 means the exception is masked, a value of
 //    0 means the exception is enabled.
 //

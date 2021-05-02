@@ -92,7 +92,7 @@ int main(int argc, char* argv[]) {
 			const_cast<char*>(mount.c_str())
 		};
 
-		cmdLine.Process(3, dragArgs);
+		cmdLine.Process(sizeof(dragArgs) / sizeof(dragArgs[0]), dragArgs);
 	} else {
 		cmdLine.Process(argc, argv);
 	}
@@ -111,10 +111,10 @@ int main(int argc, char* argv[]) {
 		Repository repository;
 		Script script;
 
-		LeavesImGui leavesImGui(loader.leavesFlute);
+		LeavesImGui leavesImGui(loader.GetLeavesFluteReference());
 		TWrapper<IFrame*> frameFactory = WrapFactory(UniqueType<ZFrameGLFWImGui>(), std::ref(leavesImGui));
 
-		loader.config.RegisterFactory("IFrame", "ZFrameGLFWImGui", frameFactory);
+		loader.GetConfig().RegisterFactory("IFrame", "ZFrameGLFWImGui", frameFactory);
 		leavesImGui.AddWidget(&system);
 		leavesImGui.AddWidget(&repository);
 		leavesImGui.AddWidget(&visualizer);

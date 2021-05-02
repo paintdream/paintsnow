@@ -90,6 +90,12 @@ namespace PaintsNow {
 		Loader();
 		~Loader();
 		void Run(const CmdLine& cmdLine);
+		Config& GetConfig();
+		LeavesFlute*& GetLeavesFluteReference();
+		TWrapper<void, LeavesFlute&> consoleHandler;
+		TWrapper<void, LeavesFlute&> setupHandler;
+
+	private:
 		void SetFactory(TWrapper<IDevice*>& factory, const String& key, const std::map<String, CmdLine::Option>& factoryMap);
 
 		TWrapper<IFrame*> frameFactory;
@@ -108,8 +114,6 @@ namespace PaintsNow {
 		TWrapper<IFilterBase*> audioFilterFactory;
 		TWrapper<IDatabase*> databaseFactory;
 		TWrapper<IDebugger*> debuggerFactory;
-		TWrapper<void, LeavesFlute&> consoleHandler;
-		TWrapper<void, LeavesFlute&> setupHandler;
 
 		IThread::Thread* mainThread;
 		IThread* thread;

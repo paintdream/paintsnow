@@ -121,7 +121,7 @@ Attribute::registerAttributeType (const char typeName[],
     Lock lock (tMap.mutex);
 
     if (tMap.find (typeName) != tMap.end())
-	THROW (IEX_NAMESPACE::ArgExc, "Cannot register image file attribute "
+	THROW (IEX_NAMESPACE::ArgExc, "Cannot image file attribute "
 			    "type \"" << typeName << "\". "
 			    "The type has already been registered.");
 

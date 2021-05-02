@@ -31,7 +31,7 @@ local filereplace = {
 	["mixer_sse3.c"] = "",
 	["mixer_sse41.c"] = "",
 	["nulleffects.c"] = "",
-	["nullbackends.c"] = ""
+	--["nullbackends.c"] = ""
 }
 
 if not table.unpack then
@@ -115,6 +115,13 @@ local function ParseSolution(path)
 				assert(includeFolder)
 			end
 
+			local deps = {}
+			print(name)
+			for d in dep:gmatch("{(.-)} = {(.-)}") do
+				print("DEP " .. d)
+				table.insert(deps, d)	
+			end
+
 			table.insert(projects, {
 				Guid = guid,
 				Name = name,
@@ -123,7 +130,7 @@ local function ParseSolution(path)
 				Includes = hpps,
 				Sources = cpps,
 				IncludeFolder = includeFolder,
-				Dependencies = dep
+				Dependencies = deps
 			})
 		end
 	end
@@ -149,11 +156,31 @@ local function GenerateDeclaration(projects)
 	local projectDeclare =
 [[Project("{%s}") = "%s", "%s", "{%s}"%s
 EndProject]]
+
+	local depsFormat =
+[[
+
+	ProjectSection(ProjectDependencies) = postProject	
+%s
+	EndProjectSection]]
+	local projectNested = 
+[[		{%s} = {%s}]]
+
 	local target = {}
 	for i = 1, #projects do
 		local project = projects[i]
+		local deps = {}
+
+		--print("PROJ: " .. project.Name)
+		if project.Dependencies then
+			for _, dep in ipairs(project.Dependencies) do
+				--print("ADD DEP: " .. dep)
+				table.insert(deps, projectNested:format(dep, dep))
+			end
+		end
+
 		table.insert(target, projectDeclare:format(
-			project.Guid, project.Name, project.Path, project.ConfigurationGuid, project.Dependencies or ""
+			project.Guid, project.Name, project.Path, project.ConfigurationGuid, depsFormat:format(table.concat(deps, "\n"))
 		))
 	end
 
@@ -211,19 +238,10 @@ end
 
 local function InjectAndroidProjects(projects)
 	local hostGuid = "F896F62F-0D10-4111-9D67-519610420117"
-	local deps =
-[[
-
-	ProjectSection(ProjectDependencies) = postProject	
-%s
-	EndProjectSection]]
-	local projectNested = 
-[[		{%s} = {%s}]]
-
 	local sections = {}
 	for i = 1, #projects do
 		local project = projects[i]
-		table.insert(sections, projectNested:format(project.ConfigurationGuid, project.ConfigurationGuid))
+		table.insert(sections, project.ConfigurationGuid)
 	end
 
 	table.insert(projects, {
@@ -247,7 +265,8 @@ local function InjectAndroidProjects(projects)
 		Name = "Purpleave.NativeActivity",
 		Path = "Purpleave.NativeActivity\\Purpleave.NativeActivity.vcxproj",
 		NestedGuid = hostGuid,
-		Dependencies = deps:format(table.concat(sections, "\n"))
+		Dependencies = sections, -- deps:format(table.concat(sections, "\n")),
+		Libraries = [[LeavesFlute.a;Remembery.a;MythForest.a;SnowyStream.a;BridgeSunset.a;PurpleTrail.a;HeartVioliner.a;EchoLegend.a;GalaxyWeaver.a;PaintsNow.a;Source\General\Driver\Audio\OpenAL\Core\OpenAL32.a;Source\General\Driver\Font\Freetype\Core\freetype.a;Source\General\Driver\Image\FreeImage\Core\FreeImage.a;Source\General\Driver\Filter\LAME\Core\mp3lame.a;Source\General\Driver\Network\LibEvent\Core\lib\event.a;Source\General\Driver\Network\LibEvent\Core\lib\event_core.a]],
 	})
 end
 
@@ -309,7 +328,7 @@ local function WriteFile(path, content)
 	file:close()
 end
 
-local function GenerateProject(project)
+local function GenerateProject(project, projects)
 	local vcxprojTemplate =
 [[<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
@@ -424,6 +443,7 @@ local function GenerateProject(project)
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
 	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;USE_OPTICK=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <CppLanguageStandard>c++1z</CppLanguageStandard>
 	  <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -434,6 +454,7 @@ local function GenerateProject(project)
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
 	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;USE_OPTICK=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <CppLanguageStandard>c++1z</CppLanguageStandard>
 	  <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -444,6 +465,7 @@ local function GenerateProject(project)
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
 	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;USE_OPTICK=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <CppLanguageStandard>c++1z</CppLanguageStandard>
 	  <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -454,6 +476,7 @@ local function GenerateProject(project)
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
 	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;USE_OPTICK=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <CppLanguageStandard>c++1z</CppLanguageStandard>
 	  <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -464,6 +487,7 @@ local function GenerateProject(project)
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
 	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;USE_OPTICK=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <CppLanguageStandard>c++1z</CppLanguageStandard>
 	  <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -474,6 +498,7 @@ local function GenerateProject(project)
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
 	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;USE_OPTICK=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <CppLanguageStandard>c++1z</CppLanguageStandard>
 	  <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -484,6 +509,7 @@ local function GenerateProject(project)
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
 	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;USE_OPTICK=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <CppLanguageStandard>c++1z</CppLanguageStandard>
 	  <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -494,9 +520,13 @@ local function GenerateProject(project)
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
 	  <RuntimeTypeInfo>true</RuntimeTypeInfo>
 	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;USE_OPTICK=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <CppLanguageStandard>c++1z</CppLanguageStandard>
 	  <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
   </ItemDefinitionGroup>
+  <ItemGroup>
+%s
+  </ItemGroup>
   <ItemGroup>
 %s
   </ItemGroup>
@@ -508,17 +538,38 @@ local function GenerateProject(project)
 	local xmlNode = {}
 	print("Generating Project: " .. project.Name)
 	for _, cpp in ipairs(project.Sources) do
-		table.insert(xmlNode, "<ClCompile Include=\"" .. cpp .. "\" />")
+		table.insert(xmlNode, "    <ClCompile Include=\"" .. cpp .. "\" />")
 	end
 
 	for _, hpp in ipairs(project.Includes) do
-		table.insert(xmlNode, "<ClInclude Include=\"" .. hpp .. "\" />")
+		table.insert(xmlNode, "    <ClInclude Include=\"" .. hpp .. "\" />")
+	end
+
+	local depFormat =
+[[    <ProjectReference Include="%s">
+      <Project>{%s}</Project>
+      <Name>%s</Name>
+    </ProjectReference>]]
+
+	local deps = {}
+	for _, dep in ipairs(project.Dependencies) do
+		for _, proj in ipairs(projects) do
+			print("TEST PROJ DEP: " .. dep .. " --- " .. proj.Name .. " -> " .. proj.ConfigurationGuid)
+			if proj.ConfigurationGuid == dep then
+				print("PROJ DEP: " .. dep .. " --- " .. proj.Name)
+				table.insert(deps, depFormat:format(proj.Path, dep, proj.Name))
+				break
+			end
+		end
 	end
 
 	local include = project.IncludeFolder
 	return vcxprojTemplate:format(project.ConfigurationGuid, project.Name, 
 		include, include, include, include, include, include, include, include,	
-		table.concat(xmlNode, "\n"))
+		table.concat(xmlNode, "\n"),
+		""
+		--table.concat(deps, "\n")
+	)
 end
 
 -- Main
@@ -527,7 +578,7 @@ local projects = ParseSolution(sourceSolution)
 for i = 1, #projects do
 	local project = projects[i]
 	if project.Guid ~= "2150E333-8FDC-42A3-9474-1A3956D46DE8" then
-		local content = GenerateProject(project)	
+		local content = GenerateProject(project, projects)
 		WriteFile(project.Path, content)
 	end
 end

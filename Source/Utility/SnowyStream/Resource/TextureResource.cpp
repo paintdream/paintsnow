@@ -114,7 +114,7 @@ size_t TextureResource::ReportDeviceMemoryUsage() const {
 }
 
 bool TextureResource::Compress(const String& compressionType) {
-#if !defined(CMAKE_PAINTSNOW) || ADD_FILTER_BPTC_BUILTIN
+#if !defined(CMAKE_ANDROID) && (!defined(CMAKE_PAINTSNOW) || ADD_FILTER_BPTC_BUILTIN)
 	OPTICK_EVENT();
 	if (compressionType == "BPTC") { // BC7
 		static ZFilterBPTC factory;

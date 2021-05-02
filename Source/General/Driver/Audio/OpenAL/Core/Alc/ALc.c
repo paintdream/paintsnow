@@ -69,7 +69,7 @@ static struct BackendInfo BackendList[] = {
 #ifdef HAVE_COREAUDIO
     { "core", ALCcoreAudioBackendFactory_getFactory },
 #endif
-#ifdef HAVE_OSS
+#if defined(HAVE_OSS) && !defined(CMAKE_ANDROID)
     { "oss", ALCossBackendFactory_getFactory },
 #endif
 #ifdef HAVE_SOLARIS

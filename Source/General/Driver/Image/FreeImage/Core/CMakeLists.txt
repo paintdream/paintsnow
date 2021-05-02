@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.8)
 project(FreeImage)
 
 set(CMAKE_C_STANDARD 90)
-set(CMAKE_CXX_STANDARD 98)
+set(CMAKE_CXX_STANDARD 11)
 
 add_definitions(-fexceptions -DNO_LCMS -D__ANSI__ -DDISABLE_PERF_MEASUREMENT -DFREEIMAGE_LIB -DOPJ_STATIC -DLIBRAW_NODLL)
 
