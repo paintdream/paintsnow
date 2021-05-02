@@ -130,7 +130,7 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);GLESv3;EGL;m;stdc++</LibraryDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -141,7 +141,7 @@
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);GLESv3;EGL;m;stdc++</LibraryDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
@@ -153,7 +153,7 @@
       <CppLanguageStandard>c++1z</CppLanguageStandard>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);GLESv3;EGL;m;stdc++</LibraryDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
@@ -165,7 +165,7 @@
       <CppLanguageStandard>c++1z</CppLanguageStandard>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);GLESv3;EGL;m;stdc++</LibraryDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -177,7 +177,7 @@
       <CppLanguageStandard>c++1z</CppLanguageStandard>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);GLESv3;EGL;m;stdc++</LibraryDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -189,7 +189,7 @@
       <CppLanguageStandard>c++1z</CppLanguageStandard>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);GLESv3;EGL;m;stdc++</LibraryDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
@@ -201,7 +201,7 @@
       <CppLanguageStandard>c++1z</CppLanguageStandard>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);GLESv3;EGL;m;stdc++</LibraryDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
@@ -213,15 +213,17 @@
       <CppLanguageStandard>c++1z</CppLanguageStandard>
     </ClCompile>
     <Link>
-      <LibraryDependencies>%(LibraryDependencies);GLESv1_CM;EGL;</LibraryDependencies>
+      <LibraryDependencies>%(LibraryDependencies);GLESv3;EGL;m;stdc++</LibraryDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Source\Driver\Frame\Android\ZFrameAndroid.h" />
+    <ClInclude Include="Util\ifaddrs.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Source\Driver\Frame\Android\ZFrameAndroid.cpp" />
+    <ClCompile Include="Util\ifaddrs.c" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BridgeSunset.vcxproj">
@@ -254,12 +256,6 @@
     <ProjectReference Include="..\SnowyStream.vcxproj">
       <Project>{1b56093c-4a33-38ed-bc0b-51ac38784134}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\Source\General\Driver\Audio\OpenAL\Core\OpenAL.vcxproj">
-      <Project>{85be38dc-8d1a-3513-bcd3-f268579f1de4}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\Source\General\Driver\Filter\LAME\Core\mp3lame.vcxproj">
-      <Project>{d9b855db-242d-3112-943c-3e3adc438994}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\Source\General\Driver\Font\Freetype\Core\freetype.vcxproj">
       <Project>{b81b183c-b5c8-3609-a131-b861e3dad314}</Project>
     </ProjectReference>
@@ -275,6 +271,9 @@
     <ProjectReference Include="..\Source\General\Driver\Network\LibEvent\Core\event_static.vcxproj">
       <Project>{38ac69c7-2990-3d0f-b004-7192054019c8}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Util\README.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

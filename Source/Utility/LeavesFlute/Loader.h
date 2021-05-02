@@ -50,11 +50,11 @@
 #include "../../General/Driver/Archive/7Z/ZArchive7Z.h"
 #endif
 
-#if !defined(CMAKE_PAINTSNOW) || ADD_AUDIO_OPENAL
+#if !defined(CMAKE_PAINTSNOW) || (ADD_AUDIO_OPENAL && !defined(CMAKE_ANDROID))
 #include "../../General/Driver/Audio/OpenAL/ZAudioOpenAL.h"
 #endif
 
-#if !defined(CMAKE_PAINTSNOW) || ADD_AUDIO_LAME
+#if !defined(CMAKE_PAINTSNOW) || (ADD_AUDIO_LAME && !defined(CMAKE_ANDROID))
 #include "../../General/Driver/Filter/LAME/ZFilterLAME.h"
 #endif
 

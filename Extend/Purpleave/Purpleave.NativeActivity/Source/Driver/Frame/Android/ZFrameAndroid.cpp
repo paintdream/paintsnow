@@ -655,3 +655,86 @@ void ZFrameAndroid::ExitMainLoop() {}
 bool ZFrameAndroid::IsRendering() const {
 	return true;
 }
+
+
+// Compile for android
+
+extern "C" int iswblank(
+	wint_t c
+) {
+	assert(false);
+	return isblank(c);
+}
+
+extern "C" void* aligned_alloc(size_t alignment, size_t size) {
+	return memalign(alignment, size);
+}
+
+extern "C" size_t wcsrtombs(
+	char* mbstr,
+	const wchar_t** wcstr,
+	size_t count,
+	mbstate_t * mbstate
+) {
+	assert(false);
+	return 0;
+}
+
+extern "C" size_t mbsrtowcs(wchar_t* dst, const char** src, size_t len, mbstate_t * ps) {
+	assert(false);
+	return 0;
+}
+
+extern "C" size_t wcsnrtombs(char* dest, const wchar_t** src,
+	size_t nwc, size_t len, mbstate_t * ps) {
+	assert(false);
+	return 0;
+}
+
+extern "C" size_t mbsnrtowcs(wchar_t* dest, const char** src,
+	size_t nms, size_t len, mbstate_t * ps) {
+	assert(false);
+	return 0;
+}
+
+extern "C" int mbtowc(
+	wchar_t* wchar,
+	const char* mbchar,
+	size_t count
+) {
+	assert(false);
+	return 0;
+}
+
+extern "C" long long wcstoll(
+	const wchar_t* strSource,
+	wchar_t** endptr,
+	int base
+) {
+	assert(false);
+	return 0;
+}
+
+extern "C" unsigned long long wcstoull(
+	const wchar_t* strSource,
+	wchar_t** endptr,
+	int base
+) {
+	assert(false);
+	return 0;
+}
+
+extern "C" float wcstof(const wchar_t* str, wchar_t** endptr) {
+	assert(false);
+	return 0;
+}
+
+extern "C" int accept4() {
+	assert(false);
+	return 0;
+}
+
+extern "C" int getrandom() {
+	return rand();
+}
+

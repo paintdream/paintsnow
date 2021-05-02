@@ -12,7 +12,9 @@ local blackList = {
 	["PACKAGE"] = true,
 	["LeavesWing"] = true,
 	["LostDream"] = true,
-	["glfw"] = true
+	["glfw"] = true,
+	["OpenAL"] = true,
+	["mp3lame"] = true
 }
 
 local filereplace = {
@@ -266,7 +268,7 @@ local function InjectAndroidProjects(projects)
 		Path = "Purpleave.NativeActivity\\Purpleave.NativeActivity.vcxproj",
 		NestedGuid = hostGuid,
 		Dependencies = sections, -- deps:format(table.concat(sections, "\n")),
-		Libraries = [[LeavesFlute.a;Remembery.a;MythForest.a;SnowyStream.a;BridgeSunset.a;PurpleTrail.a;HeartVioliner.a;EchoLegend.a;GalaxyWeaver.a;PaintsNow.a;Source\General\Driver\Audio\OpenAL\Core\OpenAL32.a;Source\General\Driver\Font\Freetype\Core\freetype.a;Source\General\Driver\Image\FreeImage\Core\FreeImage.a;Source\General\Driver\Filter\LAME\Core\mp3lame.a;Source\General\Driver\Network\LibEvent\Core\lib\event.a;Source\General\Driver\Network\LibEvent\Core\lib\event_core.a]],
+		Libraries = [[LeavesFlute.a;Remembery.a;MythForest.a;SnowyStream.a;BridgeSunset.a;PurpleTrail.a;HeartVioliner.a;EchoLegend.a;GalaxyWeaver.a;PaintsNow.a;Source\General\Driver\Font\Freetype\Core\freetype.a;Source\General\Driver\Image\FreeImage\Core\FreeImage.a;Source\General\Driver\Network\LibEvent\Core\lib\event.a;Source\General\Driver\Network\LibEvent\Core\lib\event_core.a]],
 	})
 end
 
