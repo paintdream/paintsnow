@@ -428,7 +428,7 @@ int ZFrameAndroid::InitDisplay() {
 	// Initialize GL state.
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
 	glEnable(GL_CULL_FACE);
-	glShadeModel(GL_SMOOTH);
+	// glShadeModel(GL_SMOOTH);
 	glDisable(GL_DEPTH_TEST);
 
 	return 0;
@@ -738,3 +738,19 @@ extern "C" int getrandom() {
 	return rand();
 }
 
+extern "C" float strtof_l(
+	const char* strSource,
+	char** endptr,
+	locale_t locale
+)
+{
+	return strtof(strSource, endptr);
+}
+
+extern "C" double strtod_l(
+	const char* strSource,
+	char** endptr,
+	locale_t locale
+) {
+	return strtod(strSource, endptr);
+}

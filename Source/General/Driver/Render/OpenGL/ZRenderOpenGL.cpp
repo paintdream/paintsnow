@@ -630,10 +630,18 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 							}
 
 							if (data != nullptr) {
+#if !defined(CMAKE_ANDROID)
 								glTexSubImage1D(textureType, 0, 0, d.dimension.x(), srcLayout, srcDataType, data);
+#else
+								assert(false); // not supported
+#endif
 							}
 						} else {
+#if !defined(CMAKE_ANDROID)
 							glTexImage1D(textureType, 0, format, d.dimension.x(), 0, srcLayout, srcDataType, data);
+#else
+							assert(false); // not supported
+#endif
 						}
 					}
 					break;
@@ -867,7 +875,9 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 		glBufferData(GL_PIXEL_PACK_BUFFER, (GLsizei)data.GetSize(), nullptr, GL_STREAM_READ);
 
 		// Only get mip 0
+		#if !defined(CMAKE_ANDROID)
 		glGetTexImage(textureType, 0, srcLayout, srcDataType, nullptr);
+		#endif
 		glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 	}
 
@@ -1272,7 +1282,9 @@ struct ResourceImplOpenGL<IRender::Resource::RenderStateDescription> final : pub
 			glDisable(GL_CULL_FACE);
 		}
 
+		#if !defined(CMAKE_ANDROID)
 		glPolygonMode(GL_FRONT_AND_BACK, d.fill ? GL_FILL : GL_LINE);
+		#endif
 
 		// depth
 		GLuint depthTest = GetTestEnum(d.depthTest);
@@ -1468,7 +1480,7 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> final : pu
 
 	static void SetupAttachment(IRender::Resource::RenderTargetDescription::Storage& d, GLuint id) {
 		if (d.loadOp == IRender::Resource::RenderTargetDescription::CLEAR) {
-			glDrawBuffer(id);
+			glDrawBuffers(1, &id);
 			glClearColor(d.clearColor.r(), d.clearColor.g(), d.clearColor.b(), d.clearColor.a());
 			glClear(GL_COLOR_BUFFER_BIT);
 		}
@@ -1534,7 +1546,11 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> final : pu
 			}
 
 			if (clearMask != 0) {
+
+#if !defined(CMAKE_ANDROID)
 				glClearDepth(0.0f);
+#endif
+
 				glClearStencil(0);
 				glClear(clearMask);
 			}
@@ -1542,7 +1558,9 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> final : pu
 			for (size_t i = 0; i < d.colorStorages.size(); i++) {
 				IRender::Resource::RenderTargetDescription::Storage& t = d.colorStorages[i];
 				if (t.loadOp == IRender::Resource::RenderTargetDescription::CLEAR) {
-					glDrawBuffer((GLenum)(GL_COLOR_ATTACHMENT0 + i));
+					// glDrawBuffer((GLenum)(GL_COLOR_ATTACHMENT0 + i));
+					GLenum buf = GL_COLOR_ATTACHMENT0 + i;
+					glDrawBuffers(1, &buf);
 					glClearColor(t.clearColor.r(), t.clearColor.g(), t.clearColor.b(), t.clearColor.a());
 					glClear(GL_COLOR_BUFFER_BIT);
 				} else if (t.loadOp == IRender::Resource::RenderTargetDescription::DISCARD) {
@@ -1577,12 +1595,7 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> final : pu
 			static GLuint idlist[MAX_ID] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT0 + 1,
 			GL_COLOR_ATTACHMENT0 + 2, GL_COLOR_ATTACHMENT0 + 3, GL_COLOR_ATTACHMENT0 + 4,
 			GL_COLOR_ATTACHMENT0 + 5, GL_COLOR_ATTACHMENT0 + 6, GL_COLOR_ATTACHMENT0 + 7 };
-
-			if (d.colorStorages.empty()) {
-				glDrawBuffer(GL_NONE);
-			} else {
-				glDrawBuffers((GLsizei)Math::Min(MAX_ID, d.colorStorages.size()), idlist);
-			}
+			glDrawBuffers((GLsizei)Math::Min(MAX_ID, d.colorStorages.size()), idlist);
 		}
 
 		UShort2Pair range = d.range;

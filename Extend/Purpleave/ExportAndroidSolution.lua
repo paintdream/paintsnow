@@ -4,6 +4,55 @@ local redirectBuild = args[2] or "BuildLinux"
 
 local targetSolution = "./Purpleave.sln"
 local sourceSolution = "../../" .. sourceBuild .. "/PaintsNow.sln"
+local cd = io.popen("echo %cd%")
+local currentDirectory = cd:read("l")
+cd:close()
+
+local extraReferences = {
+	["BridgeSunset"] = {
+		"PaintsNow"
+	},
+	["EchoLegend"] = {
+		"PaintsNow"
+	},
+	["GalaxyWeaver"] = {
+		"PaintsNow"
+	},
+	["HeartVioliner"] = {
+		"PaintsNow"
+	},
+	["LeavesFlute"] = {
+		"PaintsNow",
+		"BridgeSunset",
+		"EchoLegend",
+		"GalaxyWeaver",
+		"HeartVioliner",
+		"MythForest",
+		"PurpleTrail",
+		"Remembery",
+		"SnowyStream",
+	},
+	["MythForest"] = {
+		"PaintsNow",
+		"BridgeSunset",
+		"EchoLegend",
+		"HeartVioliner",
+		"Remembery",
+		"SnowyStream",
+	},
+	["PurpleTrail"] = {
+		"PaintsNow",
+		"BridgeSunset"
+	},
+	["Remembery"] = {
+		"PaintsNow",
+		"BridgeSunset"
+	},
+	["SnowyStream"] = {
+		"PaintsNow",
+		"BridgeSunset"
+	}
+}
 
 local blackList = {
 	["ALL_BUILD"] = true,
@@ -120,7 +169,7 @@ local function ParseSolution(path)
 			local deps = {}
 			print(name)
 			for d in dep:gmatch("{(.-)} = {(.-)}") do
-				print("DEP " .. d)
+				-- print("DEP " .. d)
 				table.insert(deps, d)	
 			end
 
@@ -551,16 +600,30 @@ local function GenerateProject(project, projects)
 [[    <ProjectReference Include="%s">
       <Project>{%s}</Project>
       <Name>%s</Name>
-    </ProjectReference>]]
+	</ProjectReference>]]
 
 	local deps = {}
 	for _, dep in ipairs(project.Dependencies) do
 		for _, proj in ipairs(projects) do
-			print("TEST PROJ DEP: " .. dep .. " --- " .. proj.Name .. " -> " .. proj.ConfigurationGuid)
 			if proj.ConfigurationGuid == dep then
-				print("PROJ DEP: " .. dep .. " --- " .. proj.Name)
-				table.insert(deps, depFormat:format(proj.Path, dep, proj.Name))
+				local fullPath = currentDirectory .. "\\" .. proj.Path
+				print("Project Reference: " .. proj.ConfigurationGuid .. " --- " .. fullPath)
+				table.insert(deps, depFormat:format(fullPath, proj.ConfigurationGuid, proj.Name))
 				break
+			end
+		end
+	end
+
+	local references = extraReferences[project.Name]
+	if references then
+		for _, ref in ipairs(references) do
+			for _, proj in ipairs(projects) do
+				if proj.Name == ref then
+					local fullPath = currentDirectory .. "\\" .. proj.Path
+					print("Project Reference: " .. proj.ConfigurationGuid .. " --- " .. fullPath)
+					table.insert(deps, depFormat:format(fullPath, proj.ConfigurationGuid, proj.Name))
+					break
+				end
 			end
 		end
 	end
@@ -569,8 +632,7 @@ local function GenerateProject(project, projects)
 	return vcxprojTemplate:format(project.ConfigurationGuid, project.Name, 
 		include, include, include, include, include, include, include, include,	
 		table.concat(xmlNode, "\n"),
-		""
-		--table.concat(deps, "\n")
+		table.concat(deps, "\n")
 	)
 end
 
