@@ -19,6 +19,12 @@
 #define GLAPI
 #define GLFW_INCLUDE_VULKAN
 
+#if defined(CMAKE_ANDROID)
+#define GLES_COMPATIBLE 1
+#else
+#define GLES_COMPATIBLE 0
+#endif
+
 // #define LOG_OPENGL
 
 #include "Core/glew.h"
@@ -97,19 +103,15 @@ class DeviceImplOpenGL final : public IRender::Device {
 public:
 	DeviceImplOpenGL(IRender& r) : lastProgramID(0), lastFrameBufferID(0), render(r), resolution(640, 480) {}
 
-	void CompleteStore() {
-		if (!storeInvalidates.empty()) {
-			glInvalidateFramebuffer(GL_FRAMEBUFFER, (GLsizei)storeInvalidates.size(), &storeInvalidates[0]);
-			storeInvalidates.clear();
-		}
-	}
-
 	IRender& render;
 	Int2 resolution;
 	IRender::Resource::RenderStateDescription lastRenderState;
 	GLuint lastProgramID;
 	GLuint lastFrameBufferID;
 	std::vector<GLuint> storeInvalidates;
+	#if GLES_COMPATIBLE
+	IRender::Resource::RenderTargetDescription lastRenderTargetDescription;
+	#endif
 	DrawCallPool drawCallPool;
 };
 
@@ -311,6 +313,8 @@ struct QueueImplOpenGL final : public IRender::Queue {
 		}
 	}
 
+	void FlushDownloadRequests();
+
 	DeviceImplOpenGL* device;
 	QueueImplOpenGL* next;
 	std::atomic<int32_t> critical;
@@ -401,6 +405,10 @@ struct ResourceBaseImplOpenGLDesc : public ResourceBaseImplOpenGL {
 	
 	void SyncDownload(QueueImplOpenGL& queue) override {
 		downloadDescription = nullptr;
+	}
+
+	T* GetDownloadDescription() const {
+		return downloadDescription;
 	}
 
 protected:
@@ -630,14 +638,14 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 							}
 
 							if (data != nullptr) {
-#if !defined(CMAKE_ANDROID)
+#if !GLES_COMPATIBLE
 								glTexSubImage1D(textureType, 0, 0, d.dimension.x(), srcLayout, srcDataType, data);
 #else
 								assert(false); // not supported
 #endif
 							}
 						} else {
-#if !defined(CMAKE_ANDROID)
+#if !GLES_COMPATIBLE
 							glTexImage1D(textureType, 0, format, d.dimension.x(), 0, srcLayout, srcDataType, data);
 #else
 							assert(false); // not supported
@@ -855,7 +863,34 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 		d.data.Clear();
 	}
 
+	void DownloadES(QueueImplOpenGL& queue) {
+#if GLES_COMPATIBLE
+		GL_GUARD();
+		// must bound to FBO now
+		assert(downloadDescription != nullptr);
+		GLuint srcLayout, srcDataType, format;
+		uint32_t bitDepth = ParseFormatFromState(srcLayout, srcDataType, format, downloadDescription->state);
+
+		assert(textureID != 0);
+		// glBindTexture(textureType, textureID);
+		UShort3& dimension = downloadDescription->dimension = GetDescription().dimension;
+		Bytes& data = downloadDescription->data;
+		data.Resize(bitDepth * dimension.x() * dimension.y() / 8);
+
+		if (pixelBufferObjectID == 0) {
+			glGenBuffers(1, &pixelBufferObjectID);
+		}
+
+		glBindBuffer(GL_PIXEL_PACK_BUFFER, pixelBufferObjectID);
+		glBufferData(GL_PIXEL_PACK_BUFFER, (GLsizei)data.GetSize(), nullptr, GL_STREAM_READ);
+		glReadPixels(0, 0, dimension.x(), dimension.y(), srcLayout, srcDataType, nullptr);
+		glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+		// printf("RESPONSE %p\n", static_cast<IRender::Resource*>(this));
+#endif
+	}
+
 	void Download(QueueImplOpenGL& queue) override {
+#if !GLES_COMPATIBLE
 		GL_GUARD();
 		assert(downloadDescription != nullptr);
 		GLuint srcLayout, srcDataType, format;
@@ -875,14 +910,16 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 		glBufferData(GL_PIXEL_PACK_BUFFER, (GLsizei)data.GetSize(), nullptr, GL_STREAM_READ);
 
 		// Only get mip 0
-		#if !defined(CMAKE_ANDROID)
 		glGetTexImage(textureType, 0, srcLayout, srcDataType, nullptr);
-		#endif
 		glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+#else
+		queue.FlushDownloadRequests();
+#endif
 	}
 
 	void SyncDownload(QueueImplOpenGL& queue) override {
 		GL_GUARD();
+		// printf("SYNC %p\n", static_cast<IRender::Resource*>(this));
 		assert(pixelBufferObjectID != 0);
 		glBindBuffer(GL_PIXEL_PACK_BUFFER, pixelBufferObjectID);
 		const void* ptr = glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
@@ -1494,8 +1531,16 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> final : pu
 		Resource::RenderTargetDescription& d = GetDescription();
 		GL_GUARD();
 
-		queue.device->CompleteStore();
+		if (!queue.device->storeInvalidates.empty()) {
+			glInvalidateFramebuffer(GL_FRAMEBUFFER, (GLsizei)queue.device->storeInvalidates.size(), &queue.device->storeInvalidates[0]);
+			queue.device->storeInvalidates.clear();
+		}
+
+		queue.FlushDownloadRequests();
 		queue.device->lastFrameBufferID = frameBufferID;
+		#if GLES_COMPATIBLE
+		queue.device->lastRenderTargetDescription = GetDescription();
+		#endif
 
 		glBindFramebuffer(GL_FRAMEBUFFER, frameBufferID);
 		glBindVertexArray(vertexArrayID);
@@ -1546,8 +1591,7 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> final : pu
 			}
 
 			if (clearMask != 0) {
-
-#if !defined(CMAKE_ANDROID)
+#if !GLES_COMPATIBLE
 				glClearDepth(0.0f);
 #endif
 
@@ -1559,7 +1603,7 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> final : pu
 				IRender::Resource::RenderTargetDescription::Storage& t = d.colorStorages[i];
 				if (t.loadOp == IRender::Resource::RenderTargetDescription::CLEAR) {
 					// glDrawBuffer((GLenum)(GL_COLOR_ATTACHMENT0 + i));
-					GLenum buf = GL_COLOR_ATTACHMENT0 + i;
+					GLenum buf = (GLenum)(GL_COLOR_ATTACHMENT0 + i);
 					glDrawBuffers(1, &buf);
 					glClearColor(t.clearColor.r(), t.clearColor.g(), t.clearColor.b(), t.clearColor.a());
 					glClear(GL_COLOR_BUFFER_BIT);
@@ -1885,6 +1929,13 @@ void ZRenderOpenGL::DeleteDevice(IRender::Device* device) {
 }
 
 void ZRenderOpenGL::NextDeviceFrame(IRender::Device* device) {
+	DeviceImplOpenGL* impl = static_cast<DeviceImplOpenGL*>(device);
+	impl->storeInvalidates.clear();
+
+	#if GLES_COMPATIBLE
+	impl->lastRenderTargetDescription = IRender::Resource::RenderTargetDescription();
+	#endif
+
 	ClearDeletedQueues();
 }
 
@@ -2041,6 +2092,25 @@ void ZRenderOpenGL::DeleteResource(Queue* queue, Resource* resource) {
 	QueueImplOpenGL* q = static_cast<QueueImplOpenGL*>(queue);
 	q->QueueCommand(ResourceCommandImplOpenGL(ResourceCommandImplOpenGL::OP_DELETE, resource));
 }
+
+void QueueImplOpenGL::FlushDownloadRequests() {
+#if GLES_COMPATIBLE
+	IRender::Resource::RenderTargetDescription& lastRt = device->lastRenderTargetDescription;
+	for (size_t i = 0; i < lastRt.colorStorages.size(); i++) {
+		IRender::Resource* resource = lastRt.colorStorages[i].resource;
+		if (resource != nullptr) {
+			ResourceImplOpenGL<IRender::Resource::TextureDescription>* texture = static_cast<ResourceImplOpenGL<IRender::Resource::TextureDescription>*>(resource);
+			if (texture->GetDownloadDescription() != nullptr && texture->currentDescription.state.media == IRender::Resource::TextureDescription::TEXTURE_RESOURCE) {
+				glReadBuffer((GLenum)(GL_COLOR_ATTACHMENT0 + i));
+				texture->DownloadES(*this);
+			}
+		}
+	}
+
+	device->lastRenderTargetDescription = IRender::Resource::RenderTargetDescription();
+#endif
+}
+
 
 class GlewInit {
 public:

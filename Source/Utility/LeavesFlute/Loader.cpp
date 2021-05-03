@@ -10,6 +10,34 @@ IArchive* Create7ZArchive(IStreamBase& streamBase, size_t length) {
 }
 #endif
 
+class ZAudioDummy : public IAudio {
+public:
+	Buffer* CreateBuffer() override {
+		static Buffer buffer;
+		return &buffer;
+	}
+
+	void SetBufferStream(Buffer* buffer, Decoder& stream, bool online) override {}
+	void DeleteBuffer(Buffer* buffer) override {}
+
+	Source* CreateSource() override {
+		static Source s;
+		return &s;
+	}
+
+	void DeleteSource(Source* sourceHandle) override {}
+	void SetSourcePosition(Source* sourceHandle, const Float3& position) override {}
+	void SetSourceVolume(Source* sourceHandle, float volume) override {}
+	TWrapper<size_t> SetSourceBuffer(Source* sourceHandle, const Buffer* buffer) override { return nullptr; }
+	void SetListenerPosition(const Float3& position) override {}
+	void Play(Source* sourceHandle) override {}
+	void Pause(Source* sourceHandle) override {}
+	void Rewind(Source* sourceHandle) override {}
+	void Stop(Source* sourceHandle) override {}
+};
+
+class ZDecoderDummy : public NoFilter {};
+
 class ZFrameDummy : public IFrame {
 public:
 	ZFrameDummy() {}
@@ -200,11 +228,17 @@ void Loader::Run(const CmdLine& cmdLine) {
 	config.RegisterFactory("IThread", "ZThreadPthread", threadFactory);
 #endif
 
-	TWrapper<IFrame*> frameFactory = WrapFactory(UniqueType<ZFrameDummy>());
-	config.RegisterFactory("IFrame", "ZFrameDummy", frameFactory);
+	TWrapper<IFrame*> frameFactoryDummy = WrapFactory(UniqueType<ZFrameDummy>());
+	config.RegisterFactory("IFrame", "ZFrameDummy", frameFactoryDummy);
 
-	TWrapper<IRender*> renderFactory = WrapFactory(UniqueType<ZRenderDummy>());
-	config.RegisterFactory("IRender", "ZRenderDummy", renderFactory);
+	TWrapper<IRender*> renderFactoryDummy = WrapFactory(UniqueType<ZRenderDummy>());
+	config.RegisterFactory("IRender", "ZRenderDummy", renderFactoryDummy);
+
+	TWrapper<IAudio*> audioFactoryDummy = WrapFactory(UniqueType<ZAudioDummy>());
+	config.RegisterFactory("IAudio", "ZAudioDummy", audioFactoryDummy);
+
+	TWrapper<IFilterBase*> decoderFactoryDummy = WrapFactory(UniqueType<ZDecoderDummy>());
+	config.RegisterFactory("IFilterBase::Audio", "ZDecoderDummy", decoderFactoryDummy);
 
 #if (!defined(CMAKE_PAINTSNOW) || ADD_RENDER_VULKAN) && (!defined(_MSC_VER) || _MSC_VER > 1200)
 	GLFWwindow* window = nullptr;

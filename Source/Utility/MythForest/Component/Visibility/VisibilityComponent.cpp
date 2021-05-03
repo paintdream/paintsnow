@@ -326,6 +326,7 @@ void VisibilityComponent::TickRender(Engine& engine) {
 			finalStatus.store(TaskData::STATUS_START, std::memory_order_release);
 		} else if (task.status == TaskData::STATUS_ASSEMBLED) {
 			if (task.Continue()) {
+				// printf("REQUEST %p\n", texture->GetRenderResource());
 				render.RequestDownloadResource(task.renderQueue, texture->GetRenderResource(), &texture->description);
 				render.FlushQueue(task.renderQueue);
 				bakeQueues.emplace_back(task.renderQueue);
@@ -345,7 +346,7 @@ void VisibilityComponent::TickRender(Engine& engine) {
 
 	// Commit bakes
 	if (!bakeQueues.empty()) {
-		render.SubmitQueues(&bakeQueues[0], verify_cast<uint32_t>(bakeQueues.size()), IRender::SUBMIT_EXECUTE_ALL);
+		render.SubmitQueues(&bakeQueues[0], verify_cast<uint32_t>(bakeQueues.size()), IRender::SUBMIT_EXECUTE);
 	}
 }
 

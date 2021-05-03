@@ -229,7 +229,6 @@ namespace PaintsNow {
 				Storage depthStorage;
 				Storage stencilStorage;
 				std::vector<Storage> colorStorages; // 0 for backbuffer
-				std::vector<Resource*> depResources;
 			};
 			
 			struct DrawCallDescription : public Description {
