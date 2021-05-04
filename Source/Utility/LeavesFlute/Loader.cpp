@@ -231,14 +231,22 @@ void Loader::Run(const CmdLine& cmdLine) {
 	TWrapper<IFrame*> frameFactoryDummy = WrapFactory(UniqueType<ZFrameDummy>());
 	config.RegisterFactory("IFrame", "ZFrameDummy", frameFactoryDummy);
 
+	frameFactory = frameFactoryDummy;
+
 	TWrapper<IRender*> renderFactoryDummy = WrapFactory(UniqueType<ZRenderDummy>());
 	config.RegisterFactory("IRender", "ZRenderDummy", renderFactoryDummy);
+
+	renderFactory = renderFactoryDummy;
 
 	TWrapper<IAudio*> audioFactoryDummy = WrapFactory(UniqueType<ZAudioDummy>());
 	config.RegisterFactory("IAudio", "ZAudioDummy", audioFactoryDummy);
 
+	audioFactory = audioFactoryDummy;
+
 	TWrapper<IFilterBase*> decoderFactoryDummy = WrapFactory(UniqueType<ZDecoderDummy>());
 	config.RegisterFactory("IFilterBase::Audio", "ZDecoderDummy", decoderFactoryDummy);
+
+	audioFilterFactory = decoderFactoryDummy;
 
 #if (!defined(CMAKE_PAINTSNOW) || ADD_RENDER_VULKAN) && (!defined(_MSC_VER) || _MSC_VER > 1200)
 	GLFWwindow* window = nullptr;

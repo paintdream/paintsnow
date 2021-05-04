@@ -3,17 +3,19 @@
 #include "../../../../../Source/General/Driver/Network/LibEvent/ZNetworkLibEvent.h"
 #include "../../../../../Source/Core/Driver/Thread/Pthread/ZThreadPthread.h"
 #include "../../../../../Source/Core/System/ThreadPool.h"
+#include "../../../../../Source/Core/System/Kernel.h"
 
 namespace PaintsNow {
 	static ZThreadPthread uniqueThreadApi;
 	static ThreadPool threadPool(uniqueThreadApi, 2);
+	static Kernel kernel(threadPool, 2);
 	static RemoteFactory remoteFactory;
 	static ZNetworkLibEvent libEvent(uniqueThreadApi);
 	static ProviderFactory localFactory(uniqueThreadApi, libEvent);
 
 	class UnrealResourceManager : public ResourceManager {
 	public:
-		UnrealResourceManager(ThreadPool& threadApi, IUniformResourceManager& hostManager) : ResourceManager(threadApi, hostManager, TWrapper<void, const String&>(), nullptr) {}
+		UnrealResourceManager(Kernel& kernel, IUniformResourceManager& hostManager) : ResourceManager(kernel, hostManager, TWrapper<void, const String&>(), nullptr) {}
 		virtual Unique GetDeviceUnique() const {
 			return UniqueType<UObject>::Get();
 		}
@@ -50,7 +52,7 @@ namespace PaintsNow {
 	void Service::Initialize(ISceneExplorer* se) {
 		sceneExp = se;
 		static DummyUniformResourceManager uniformResourceManager;
-		resourceManager = std::make_unique<UnrealResourceManager>(threadPool, uniformResourceManager);
+		resourceManager = std::make_unique<UnrealResourceManager>(kernel, uniformResourceManager);
 		remoteProxy = std::make_unique<RemoteProxy>(uniqueThreadApi, libEvent, localFactory, "", Wrap(this, &Service::StatusHandler));
 		// connecting ...
 		remoteProxy->Run();

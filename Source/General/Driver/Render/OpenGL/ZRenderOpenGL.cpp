@@ -573,12 +573,21 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 		srcLayout = layouts[state.layout];
 
 		uint32_t bitDepth = byteDepth * 8;
-		if (state.compress) {
+		switch (state.compress) {
+		case IRender::Resource::TextureDescription::BPTC:
 			assert(format == GL_RGBA8 && bitDepth == 32); // only support compression for GL_RGBA8
 			assert(bitDepth % 4 == 0);
 			bitDepth >>= 2;
 
 			format = GL_COMPRESSED_RGBA_BPTC_UNORM;
+			break;
+		case IRender::Resource::TextureDescription::ASTC:
+			assert(format == GL_RGBA8 && bitDepth == 32); // only support compression for GL_RGBA8
+			assert(bitDepth % 4 == 0);
+			bitDepth >>= 2;
+
+			format = GL_COMPRESSED_RGBA_ASTC_4x4_KHR;
+			break;
 		}
 
 		return bitDepth;

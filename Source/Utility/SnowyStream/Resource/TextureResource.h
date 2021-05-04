@@ -11,12 +11,13 @@ namespace PaintsNow {
 	public:
 		TextureResource(ResourceManager& manager, const String& uniqueID);
 
+		IStreamBase* OpenArchive(IArchive& archive, const String& extension, bool write, uint64_t& length) override;
 		size_t ReportDeviceMemoryUsage() const override;
 		void Upload(IRender& render, void* deviceContext) override;
 		void Download(IRender& render, void* deviceContext) override;
 		void Attach(IRender& render, void* deviceContext) override;
 		void Detach(IRender& render, void* deviceContext) override;
-		bool Compress(const String& compressType) override;
+		bool Compress(const String& compressType, bool refreshRuntime) override;
 		bool LoadExternalResource(Interfaces& interfaces, IStreamBase& streamBase, size_t length) override;
 		void Unmap() override;
 

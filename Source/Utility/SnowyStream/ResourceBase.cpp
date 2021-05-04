@@ -1,5 +1,6 @@
 #include "ResourceBase.h"
 #include "ResourceManager.h"
+#include "../../Core/Interface/IArchive.h"
 #include <sstream>
 
 using namespace PaintsNow;
@@ -105,12 +106,16 @@ bool ResourceBase::LoadExternalResource(Interfaces& interfaces, IStreamBase& str
 	return false; // by default no external resource supported.
 }
 
-bool ResourceBase::Compress(const String& compressType) {
+bool ResourceBase::Compress(const String& compressType, bool refreshRuntime) {
 	return false; // by default no compression available
 }
 
 bool ResourceBase::Complete(size_t version) {
 	return true;
+}
+
+IStreamBase* ResourceBase::OpenArchive(IArchive& archive, const String& extension, bool write, uint64_t& length) {
+	return archive.Open(GetLocation() + "." + extension + resourceManager.GetLocationPostfix(), write, length);
 }
 
 void ResourceBase::ScriptModify(IScript::Request& request, const String& action, IScript::Request::Arguments arguments) {}

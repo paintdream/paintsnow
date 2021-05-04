@@ -6,7 +6,7 @@ RepositoryCompressor.__index = RepositoryCompressor
 
 local Database = require("Engine/Model/Database")
 
-function RepositoryCompressor.Compress(database : Database)
+function RepositoryCompressor.Compress(type : string, database : Database)
 	if database then
 		print("\tCompressing resources ...")
 
@@ -24,7 +24,7 @@ function RepositoryCompressor.Compress(database : Database)
 			if textureResource then
 				local resource = textureResource
 				runningCount = runningCount + 1
-				SnowyStream.CompressResourceAsync(textureResource, "BPTC", function ()
+				SnowyStream.CompressResourceAsync(textureResource, type or "BPTC", false, function ()
 					print("Compressed texture generated: " .. path)
 					SnowyStream.PersistResource(resource, "")
 

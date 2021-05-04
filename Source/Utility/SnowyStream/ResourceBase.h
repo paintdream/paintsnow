@@ -9,6 +9,7 @@
 
 namespace PaintsNow {
 	class Interfaces;
+	class IArchive;
 	class ResourceManager;
 	class ResourceBase : public TReflected<ResourceBase, SharedTiny> {
 	public:
@@ -34,10 +35,11 @@ namespace PaintsNow {
 		const String& GetLocation() const;
 		void SetLocation(const String& location);
 
+		virtual IStreamBase* OpenArchive(IArchive& archive, const String& extension, bool write, uint64_t& length);
 		virtual Unique GetDeviceUnique() const;
 		virtual bool Complete(size_t version);
 		virtual bool LoadExternalResource(Interfaces& interfaces, IStreamBase& streamBase, size_t length);
-		virtual bool Compress(const String& compressType);
+		virtual bool Compress(const String& compressType, bool refreshRuntime);
 		virtual bool Persist();
 		virtual bool Map();
 		virtual void Unmap();

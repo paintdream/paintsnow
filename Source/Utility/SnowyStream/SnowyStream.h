@@ -123,7 +123,7 @@ namespace PaintsNow {
 		/// <param name="compressType"> compress type </param>
 		/// <param name="callback"> completion callback </param>
 		/// <returns></returns>
-		void RequestCompressResourceAsync(IScript::Request& request, IScript::Delegate<ResourceBase> resource, String& compressType, IScript::Request::Ref callback);
+		void RequestCompressResourceAsync(IScript::Request& request, IScript::Delegate<ResourceBase> resource, const String& compressType, bool refreshRuntime, IScript::Request::Ref callback);
 
 		/// <summary>
 		/// Parse json object from string

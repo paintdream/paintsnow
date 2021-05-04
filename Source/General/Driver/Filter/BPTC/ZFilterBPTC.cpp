@@ -27,14 +27,17 @@ public:
 		
 		return ret;
 	}
+
 	virtual bool Transfer(IStreamBase& stream, size_t& len) {
 		assert(false);
 		return false;
 	}
+
 	virtual bool WriteDummy(size_t& len) {
 		assert(false);
 		return false;
 	}
+
 	virtual bool Seek(SEEK_OPTION option, int64_t offset) {
 		assert(false);
 		return false;

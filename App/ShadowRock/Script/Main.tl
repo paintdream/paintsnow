@@ -281,11 +281,11 @@ function Main.Main()
 	print("Loading Repository Daemon ...")
 	local databasePath = "Weaver/Repository.db"
 
-	Debug.CompressResource = function ()
+	Debug.CompressResource = function (type : string)
 		local database : Database = Database.New(databasePath)
 		if database then
 			local compressor = require("Script/Util/RepositoryCompressor")
-			compressor.Compress(database)
+			compressor.Compress(type, database)
 		end
 	end
 

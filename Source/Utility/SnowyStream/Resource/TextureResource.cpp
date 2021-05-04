@@ -9,6 +9,10 @@
 #include "../../../General/Driver/Filter/BPTC/ZFilterBPTC.h"
 #endif
 
+#if ADD_FILTER_ASTC_BUILTIN
+#include "../../../General/Driver/Filter/ASTC/ZFilterASTC.h"
+#endif
+
 using namespace PaintsNow;
 
 TextureResource::TextureResource(ResourceManager& manager, const String& uniqueID) : BaseClass(manager, uniqueID), instance(nullptr), deviceMemoryUsage(0) {
@@ -113,11 +117,28 @@ size_t TextureResource::ReportDeviceMemoryUsage() const {
 	return deviceMemoryUsage;
 }
 
-bool TextureResource::Compress(const String& compressionType) {
-#if !defined(CMAKE_ANDROID) && (!defined(CMAKE_PAINTSNOW) || ADD_FILTER_BPTC_BUILTIN)
+bool TextureResource::Compress(const String& compressionType, bool refreshRuntime) {
+#if !defined(CMAKE_ANDROID)
 	OPTICK_EVENT();
+	IFilterBase* filterFactory = nullptr;
+	static ZFilterBPTC factoryBPTC;
+	IRender::Resource::TextureDescription::Compress compress;
+
+	#if !defined(_MSC_VER) || _MSC_VER > 1200
+	static ZFilterASTC factoryASTC;
+	#endif
+	
 	if (compressionType == "BPTC") { // BC7
-		static ZFilterBPTC factory;
+		filterFactory = &factoryBPTC;
+		compress = IRender::Resource::TextureDescription::BPTC;
+	} else if (compressionType == "ASTC") {
+	#if ADD_FILTER_ASTC_BUILTIN
+		filterFactory = &factoryASTC;
+		compress = IRender::Resource::TextureDescription::ASTC;
+	#endif
+	}
+
+	if (filterFactory != nullptr) {
 		const UShort3& dimension = description.dimension;
 		uint32_t w = dimension.x(), h = dimension.y();
 		if (w < 4 || w != h || description.data.Empty() || description.state.compress) return false;
@@ -155,7 +176,7 @@ bool TextureResource::Compress(const String& compressionType) {
 		}
 
 		MemoryStream target(length, 128);
-		IStreamBase* filter = factory.CreateFilter(target);
+		IStreamBase* filter = filterFactory->CreateFilter(target);
 
 		w = dimension.x();
 		h = dimension.y();
@@ -188,14 +209,27 @@ bool TextureResource::Compress(const String& compressionType) {
 			h >>= 1;
 		}
 
-		// TODO: conflicts with mapped resource
-		assert(mapCount.load(std::memory_order_relaxed) == 0);
-		ThreadPool& threadPool = resourceManager.GetThreadPool();
-		if (threadPool.PollExchange(critical, 1u) == 0u) {
-			description.data.Assign((uint8_t*)target.GetBuffer(), verify_cast<uint32_t>(target.GetTotalLength()));
-			description.state.compress = 1;
-			description.state.layout = IRender::Resource::TextureDescription::RGBA;
-			SpinUnLock(critical);
+		if (refreshRuntime) {
+			// TODO: conflicts with mapped resource
+			assert(mapCount.load(std::memory_order_relaxed) == 0);
+			ThreadPool& threadPool = resourceManager.GetThreadPool();
+			if (threadPool.PollExchange(critical, 1u) == 0u) {
+				description.data.Assign((uint8_t*)target.GetBuffer(), verify_cast<uint32_t>(target.GetTotalLength()));
+				description.state.compress = compress;
+				description.state.layout = IRender::Resource::TextureDescription::RGBA;
+
+				// TODO: InvokeUpload
+				SpinUnLock(critical);
+			}
+		} else {
+			// Write to file
+			TShared<TextureResource> compressedTextureResource = TShared<TextureResource>::From(new TextureResource(resourceManager, GetLocation() + "/" + compressionType));
+			compressedTextureResource->description.data.Assign((uint8_t*)target.GetBuffer(), verify_cast<uint32_t>(target.GetTotalLength()));
+			compressedTextureResource->description.dimension = description.dimension;
+			compressedTextureResource->description.state = description.state;
+			compressedTextureResource->description.state.compress = compress;
+			compressedTextureResource->description.state.layout = IRender::Resource::TextureDescription::RGBA;
+			resourceManager.GetUniformResourceManager().SaveResource(compressedTextureResource());
 		}
 
 		filter->Destroy();
@@ -231,4 +265,23 @@ bool TextureResource::LoadExternalResource(Interfaces& interfaces, IStreamBase& 
 	// copy info
 	imageBase.Delete(image);
 	return success;
+}
+
+
+IStreamBase* TextureResource::OpenArchive(IArchive& archive, const String& extension, bool write, uint64_t& length) {
+	IStreamBase* compressed = nullptr;
+	// find alternative
+	assert(extension == "TextureResource");
+	#if defined(CMAKE_ANDROID)
+	// Try astc
+	compressed = archive.Open(GetLocation() + "/ASTC" + "." + extension + resourceManager.GetLocationPostfix(), write, length);
+	#else
+	compressed = archive.Open(GetLocation() + "/BPTC" + "." + extension + resourceManager.GetLocationPostfix(), write, length);
+	#endif
+
+	if (compressed != nullptr) {
+		return compressed;
+	} else {
+		return BaseClass::OpenArchive(archive, extension, write, length);
+	}
 }

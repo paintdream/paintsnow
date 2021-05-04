@@ -579,7 +579,7 @@ struct CompressTask : public TaskOnce {
 		OPTICK_EVENT();
 
 		resource->Map();
-		bool success = resource->Compress(compressType);
+		bool success = resource->Compress(compressType, refreshRuntime);
 		if (callback) {
 			BridgeSunset& bridgeSunset = *reinterpret_cast<BridgeSunset*>(context);
 			IScript::Request& request = *bridgeSunset.requestPool.AcquireSafe();
@@ -617,16 +617,18 @@ struct CompressTask : public TaskOnce {
 	SnowyStream& snowyStream;
 	TShared<ResourceBase> resource;
 	String compressType;
+	bool refreshRuntime;
 	IScript::Request::Ref callback;
 };
 
-void SnowyStream::RequestCompressResourceAsync(IScript::Request& request, IScript::Delegate<ResourceBase> resource, String& compressType, IScript::Request::Ref callback) {
+void SnowyStream::RequestCompressResourceAsync(IScript::Request& request, IScript::Delegate<ResourceBase> resource, const String& compressType, bool refreshRuntime, IScript::Request::Ref callback) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(resource);
 	bridgeSunset.GetKernel().YieldCurrentWarp();
 	void* p = ITask::Allocate(sizeof(CompressTask));
 	CompressTask* task = new (p) CompressTask(*this);
 	task->resource = resource.Get();
+	task->refreshRuntime = refreshRuntime;
 	task->compressType = std::move(compressType);
 	task->callback = callback;
 
@@ -767,7 +769,8 @@ bool SnowyStream::LoadResource(const TShared<ResourceBase>& resource, const Stri
 		assert(t != resourceManagers.end());
 
 		uint64_t length;
-		IStreamBase* stream = archive.Open(resource->GetLocation() + "." + (*p).second.second->GetExtension() + (*t).second->GetLocationPostfix(), false, length);
+		IStreamBase* stream = resource->OpenArchive(archive, (*p).second.second->GetExtension(), false, length);
+		// IStreamBase* stream = archive.Open(resource->GetLocation() + "." + (*p).second.second->GetExtension() + (*t).second->GetLocationPostfix() , false, length);
 
 		bool result = false;
 		if (stream != nullptr) {
