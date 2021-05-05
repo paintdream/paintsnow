@@ -539,7 +539,7 @@ void VisibilityComponent::ResolveTasks(Engine& engine) {
 			task.next = cell.taskHead.load(std::memory_order_acquire);
 			while (!cell.taskHead.compare_exchange_weak(task.next, &task, std::memory_order_release)) {}
 
-			engine.GetKernel().GetThreadPool().Dispatch(CreateTaskContextFree(Wrap(this, &VisibilityComponent::PostProcess), &cell), 1);
+			engine.GetKernel().GetThreadPool().Dispatch(CreateTaskContextFree(Wrap(this, &VisibilityComponent::PostProcess), task.cell), 1);
 		} else if (task.status == TaskData::STATUS_ASSEMBLING) {
 			if (task.pendingCount == 0) {
 				// Commit draw calls.

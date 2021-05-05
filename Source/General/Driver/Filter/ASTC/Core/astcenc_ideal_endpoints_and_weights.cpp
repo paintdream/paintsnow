@@ -693,7 +693,11 @@ float compute_error_of_weight_set_1plane(
 	// Error is buffered and accumulated in blocks of 4 to ensure that
 	// the partial sums added to the accumulator are invariant with the
 	// vector implementation, irrespective of vector size ...
+	#if CMAKE_ANDROID
+	__attribute__((aligned(16))) float errorsum_tmp[4] { 0 };
+	#else
 	alignas(16) float errorsum_tmp[4] { 0 };
+	#endif
 	for (/* */; i < texel_count; i++)
 	{
 		float current_value = bilinear_infill(*dt, weights, i);
@@ -732,11 +736,10 @@ float compute_error_of_weight_set_2planes(
 	const float* weights1,
 	const float* weights2
 ) {
-	vfloat4 error_summav = vfloat4::zero();
 	float error_summa = 0.0f;
 	int texel_count = dt->texel_count;
-
 	int i = 0;
+	vfloat4 error_summav = vfloat4::zero();
 
 	// Process SIMD-width texel coordinates at at time while we can
 	int clipped_texel_count = round_down_to_simd_multiple_vla(texel_count);
@@ -767,7 +770,11 @@ float compute_error_of_weight_set_2planes(
 	// Error is buffered and accumulated in blocks of 4 to ensure that
 	// the partial sums added to the accumulator are invariant with the
 	// vector implementation, irrespective of vector size ...
-	alignas(16) float errorsum_tmp[4] { 0 };
+#if CMAKE_ANDROID
+	__attribute__((aligned(16))) float errorsum_tmp[4]{ 0 };
+#else
+	alignas(16) float errorsum_tmp[4]{ 0 };
+#endif
 	for (/* */; i < texel_count; i++)
 	{
 		// Plane 1
@@ -870,7 +877,11 @@ void compute_ideal_weights_for_decimation_table(
 	}
 
 	// Otherwise compute an estimate and perform single refinement iteration
+#if CMAKE_ANDROID
+	__attribute__((aligned(ASTCENC_VECALIGN))) float infilled_weights[MAX_TEXELS_PER_BLOCK];
+#else
 	alignas(ASTCENC_VECALIGN) float infilled_weights[MAX_TEXELS_PER_BLOCK];
+#endif
 
 	// Compute an initial average for each decimated weight
 	bool constant_wes = eai_in.is_constant_weight_error_scale;
@@ -880,13 +891,15 @@ void compute_ideal_weights_for_decimation_table(
 	// decimation table structures to safe values ...
 	for (int i = 0; i < weight_count; i += ASTCENC_SIMD_WIDTH)
 	{
+		// Accumulate error weighting of all the texels using this weight
+		vint weight_texel_count(dt.weight_texel_count + i);
+
 		// Start with a small value to avoid div-by-zero later
 		vfloat weight_weight(1e-10f);
 		vfloat initial_weight = vfloat::zero();
-
-		// Accumulate error weighting of all the texels using this weight
-		vint weight_texel_count(dt.weight_texel_count + i);
-		int max_texel_count = hmax(weight_texel_count).lane<0>();
+		int b = std::max(weight_texel_count.m[0], weight_texel_count.m[1]);
+		int c = std::max(weight_texel_count.m[2], weight_texel_count.m[3]);
+		int max_texel_count = std::max(b, c);
 		promise(max_texel_count > 0);
 
 		for (int j = 0; j < max_texel_count; j++)
@@ -946,7 +959,9 @@ void compute_ideal_weights_for_decimation_table(
 
 		// Accumulate error weighting of all the texels using this weight
 		vint weight_texel_count(dt.weight_texel_count + i);
-		int max_texel_count = hmax(weight_texel_count).lane<0>();
+		int b = std::max(weight_texel_count.m[0], weight_texel_count.m[1]);
+		int c = std::max(weight_texel_count.m[2], weight_texel_count.m[3]);
+		int max_texel_count = std::max(b, c);
 		promise(max_texel_count > 0);
 
 		for (int j = 0; j < max_texel_count; j++)
@@ -962,7 +977,7 @@ void compute_ideal_weights_for_decimation_table(
 
 			if (!constant_wes)
 			{
- 				weight_error_scale = gatherf(eai_in.weight_error_scale, texel);
+ 				weight_error_scale = gatherf((const float*)eai_in.weight_error_scale, texel);
 			}
 
 			vfloat scale = weight_error_scale * contrib_weight;

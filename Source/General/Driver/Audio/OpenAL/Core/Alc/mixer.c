@@ -60,10 +60,11 @@ MixerFunc SelectMixer(void)
 #ifdef HAVE_NEON
     if((CPUCapFlags&CPU_CAP_NEON))
         return Mix_Neon;
-#endif
-#ifdef HAVE_SSE
+#else
+#if defined(HAVE_SSE)
     if((CPUCapFlags&CPU_CAP_SSE))
         return Mix_SSE;
+#endif
 #endif
     return Mix_C;
 }
@@ -73,10 +74,11 @@ RowMixerFunc SelectRowMixer(void)
 #ifdef HAVE_NEON
     if((CPUCapFlags&CPU_CAP_NEON))
         return MixRow_Neon;
-#endif
-#ifdef HAVE_SSE
+#else
+#if defined(HAVE_SSE)
     if((CPUCapFlags&CPU_CAP_SSE))
         return MixRow_SSE;
+#endif
 #endif
     return MixRow_C;
 }
@@ -86,10 +88,11 @@ static inline HrtfMixerFunc SelectHrtfMixer(void)
 #ifdef HAVE_NEON
     if((CPUCapFlags&CPU_CAP_NEON))
         return MixHrtf_Neon;
-#endif
-#ifdef HAVE_SSE
+#else
+#if defined(HAVE_SSE)
     if((CPUCapFlags&CPU_CAP_SSE))
         return MixHrtf_SSE;
+#endif
 #endif
     return MixHrtf_C;
 }
@@ -99,10 +102,11 @@ static inline HrtfMixerBlendFunc SelectHrtfBlendMixer(void)
 #ifdef HAVE_NEON
     if((CPUCapFlags&CPU_CAP_NEON))
         return MixHrtfBlend_Neon;
-#endif
-#ifdef HAVE_SSE
+#else
+#if defined(HAVE_SSE)
     if((CPUCapFlags&CPU_CAP_SSE))
         return MixHrtfBlend_SSE;
+#endif
 #endif
     return MixHrtfBlend_C;
 }

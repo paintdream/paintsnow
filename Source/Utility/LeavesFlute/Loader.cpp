@@ -321,7 +321,7 @@ void Loader::Run(const CmdLine& cmdLine) {
 #endif
 
 	TWrapper<IFilterBase*> audioFilterFactory;
-#if !defined(CMAKE_PAINTSNOW) || (ADD_AUDIO_LAME && !defined(CMAKE_ANDROID))
+#if !defined(CMAKE_PAINTSNOW) || ADD_AUDIO_LAME
 	audioFilterFactory = WrapFactory(UniqueType<ZFilterLAME>());
 	config.RegisterFactory("IFilterBase::Audio", "ZDecoderLAME", audioFilterFactory);
 #endif
@@ -344,7 +344,7 @@ void Loader::Run(const CmdLine& cmdLine) {
 #endif
 
 	TWrapper<IAudio*> audioFactory;
-#if !defined(CMAKE_PAINTSNOW) || (ADD_AUDIO_OPENAL && !defined(CMAKE_ANDROID))
+#if !defined(CMAKE_PAINTSNOW) || ADD_AUDIO_OPENAL
 	audioFactory = WrapFactory(UniqueType<ZAudioOpenAL>());
 	config.RegisterFactory("IAudio", "ZAudioOpenAL", audioFactory);
 #endif

@@ -956,9 +956,23 @@ void determine_optimal_set_of_endpoint_formats_to_use(
 
 		// Pick best mode from the SIMD result. If multiple SIMD lanes have
 		// the best score, pick the one with the lowest index.
-		vmask lanes_min_error = vbest_ep_error == hmin(vbest_ep_error);
+		float tmin;
+		{
+			float tmp1 = std::min(vbest_ep_error.m[0], vbest_ep_error.m[1]);
+			float tmp2 = std::min(vbest_ep_error.m[2], vbest_ep_error.m[3]);
+			tmin = std::min(tmp1, tmp2);
+			vbest_ep_error = vfloat(tmin);
+		}
+		vmask lanes_min_error = vmask(tmin);
+
 		vbest_error_index = select(vint(0x7FFFFFFF), vbest_error_index, lanes_min_error);
-		vbest_error_index = hmin(vbest_error_index);
+		{
+			float tmp1 = std::min(vbest_error_index.m[0], vbest_error_index.m[1]);
+			float tmp2 = std::min(vbest_error_index.m[2], vbest_error_index.m[3]);
+			tmin = std::min(tmp1, tmp2);
+			vbest_error_index = vint(tmin);
+		}
+
 		int best_error_index = vbest_error_index.lane<0>();
 
 		best_error_weights[i] = best_error_index;

@@ -61,7 +61,7 @@
 		#define promise(cond) if(!(cond)) { __builtin_unreachable(); }
 	#endif
 #else
-	#define promise(cond) assert(cond);
+	#define promise(cond) // assert(cond); // will crash clang 5.0
 #endif
 
 /**

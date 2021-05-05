@@ -646,15 +646,6 @@ void almtx_destroy(almtx_t *mtx)
 
 int almtx_timedlock(almtx_t *mtx, const struct timespec *ts)
 {
-#ifdef HAVE_PTHREAD_MUTEX_TIMEDLOCK
-    int ret = pthread_mutex_timedlock(mtx, ts);
-    switch(ret)
-    {
-        case 0: return althrd_success;
-        case ETIMEDOUT: return althrd_timedout;
-        case EBUSY: return althrd_busy;
-    }
-#endif
     return althrd_error;
 }
 

@@ -131,7 +131,7 @@ static inline HrtfDirectMixerFunc SelectHrtfMixer(void)
     if((CPUCapFlags&CPU_CAP_NEON))
         return MixDirectHrtf_Neon;
 #endif
-#ifdef HAVE_SSE
+#if defined(HAVE_SSE) && !defined(CMAKE_ANDROID)
     if((CPUCapFlags&CPU_CAP_SSE))
         return MixDirectHrtf_SSE;
 #endif
