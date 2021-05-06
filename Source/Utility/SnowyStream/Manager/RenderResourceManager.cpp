@@ -393,10 +393,7 @@ bool RenderResourceManager::GetCompleted() const {
 }
 
 void RenderResourceManager::WaitForCompleted(uint32_t delayedMilliseconds) {
-	uint32_t warpIndex = kernel.GetCurrentWarpIndex();
-	if (warpIndex != ~(uint32_t)0) {
-		kernel.YieldCurrentWarp();
-	}
+	uint32_t warpIndex = kernel.YieldCurrentWarp();
 
 	ThreadPool& threadPool = kernel.GetThreadPool();
 	uint32_t threadIndex = threadPool.GetCurrentThreadIndex();
@@ -404,9 +401,7 @@ void RenderResourceManager::WaitForCompleted(uint32_t delayedMilliseconds) {
 		threadPool.PollDelay(threadIndex, delayedMilliseconds);
 	}
 
-	if (warpIndex != ~(uint32_t)0) {
-		kernel.WaitWarp(warpIndex);
-	}
+	kernel.WaitWarp(warpIndex);
 }
 
 uint32_t RenderResourceManager::GetFrameIndex() const {
