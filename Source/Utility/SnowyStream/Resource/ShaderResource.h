@@ -24,6 +24,7 @@ namespace PaintsNow {
 		void Attach(IRender& render, void* deviceContext) override;
 		void Detach(IRender& render, void* deviceContext) override;
 		IReflectObject* Clone() const override;
+		bool Complete(size_t runtimeVersion) override;
 		virtual PassBase& GetPass();
 		virtual PassBase::Updater& GetPassUpdater();
 		void Compile(IRender& render, IRender::Queue* queue, const Bytes* newHash = nullptr);

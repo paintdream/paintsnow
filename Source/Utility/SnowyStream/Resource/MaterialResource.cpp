@@ -131,6 +131,7 @@ TShared<ShaderResource> MaterialResource::Instantiate(const TShared<MeshResource
 			} else {
 				mutationShaderResource->SetLocation(location);
 				assert(!(mutationShaderResource->Flag().load(std::memory_order_acquire) & RESOURCE_UPLOADED));
+				// printf("Variant Shader Created: %s\n", mutationShaderResource->GetLocation().c_str());
 				resourceManager.Insert(mutationShaderResource());
 				resourceManager.UnLock();
 			}

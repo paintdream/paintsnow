@@ -66,6 +66,11 @@ void ShaderResource::SetShaderResource(IRender::Resource* res) {
 	shaderResource = res;
 }
 
+bool ShaderResource::Complete(size_t runtimeVersion) {
+	// printf("Variant Shader Completed: %s\n", GetLocation().c_str());
+	return BaseClass::Complete(runtimeVersion);
+}
+
 void ShaderResource::Detach(IRender& render, void* deviceContext) {
 	if (shaderResource != nullptr) {
 		IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(deviceContext);

@@ -444,6 +444,25 @@ void RenderResourceManager::TickDevice(IDevice& tickingDevice) {
 					resource->Complete(version);
 					pendingCompletionResources.Pop();
 				}
+			} else if (!pendingCompletionResources.Empty()) {
+				nextRuntimeVersion.fetch_add(1, std::memory_order_relaxed);
+				size_t version = currentRuntimeVersion.fetch_add(1, std::memory_order_acquire) + 1;
+
+				DoLock();
+				pendingCompletionResources.Push(TShared<ResourceBase>(nullptr));
+				render.FlushQueue(resourceQueue);
+				UnLock();
+
+				while (!pendingCompletionResources.Empty()) {
+					const TShared<ResourceBase>& resource = pendingCompletionResources.Top();
+					if (!resource) {
+						pendingCompletionResources.Pop();
+						break;
+					}
+
+					resource->Complete(version);
+					pendingCompletionResources.Pop();
+				}
 			}
 		}
 
