@@ -84,7 +84,7 @@ local filereplace = {
 	["event_iocp.c"] = "epoll_sub.c",
 	["bufferevent_async.c"] = "",
 	["ZFrameGLFW.cpp"] = "",
-	["winmm.c"] = "",
+	["winmm.c"] = "opensl.c",
 	["mmdevapi.c"] = "",
 	["mixer_sse.c"] = "mixer_neon.c",
 	["mixer_sse2.c"] = "",
@@ -502,7 +502,7 @@ local function GenerateProject(project, projects)
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;HAVE_PTHREAD_MUTEX_TIMEDLOCK=0;USE_OPTICK=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;HAVE_MEMCPY=1;HAVE_MPGLIB=1;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
+	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;HAVE_PTHREAD_MUTEX_TIMEDLOCK=0;USE_OPTICK=1;HAVE_OPENSL=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;HAVE_MEMCPY=1;HAVE_MPGLIB=1;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CppLanguageStandard>c++1z</CppLanguageStandard>
 	  <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
@@ -513,7 +513,7 @@ local function GenerateProject(project, projects)
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;HAVE_PTHREAD_MUTEX_TIMEDLOCK=0;USE_OPTICK=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;HAVE_MEMCPY=1;HAVE_MPGLIB=1;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
+	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;HAVE_PTHREAD_MUTEX_TIMEDLOCK=0;USE_OPTICK=1;HAVE_OPENSL=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;HAVE_MEMCPY=1;HAVE_MPGLIB=1;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CppLanguageStandard>c++1z</CppLanguageStandard>
 	  <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
@@ -524,7 +524,7 @@ local function GenerateProject(project, projects)
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;HAVE_PTHREAD_MUTEX_TIMEDLOCK=0;USE_OPTICK=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;HAVE_MEMCPY=1;HAVE_MPGLIB=1;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
+	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;HAVE_PTHREAD_MUTEX_TIMEDLOCK=0;USE_OPTICK=1;HAVE_OPENSL=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;HAVE_MEMCPY=1;HAVE_MPGLIB=1;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CppLanguageStandard>c++1z</CppLanguageStandard>
 	  <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
@@ -535,7 +535,7 @@ local function GenerateProject(project, projects)
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;HAVE_PTHREAD_MUTEX_TIMEDLOCK=0;USE_OPTICK=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;HAVE_MEMCPY=1;HAVE_MPGLIB=1;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
+	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;HAVE_PTHREAD_MUTEX_TIMEDLOCK=0;USE_OPTICK=1;HAVE_OPENSL=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;HAVE_MEMCPY=1;HAVE_MPGLIB=1;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CppLanguageStandard>c++1z</CppLanguageStandard>
 	  <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
@@ -546,7 +546,7 @@ local function GenerateProject(project, projects)
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;HAVE_PTHREAD_MUTEX_TIMEDLOCK=0;USE_OPTICK=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;HAVE_MEMCPY=1;HAVE_MPGLIB=1;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
+	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;HAVE_PTHREAD_MUTEX_TIMEDLOCK=0;USE_OPTICK=1;HAVE_OPENSL=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;HAVE_MEMCPY=1;HAVE_MPGLIB=1;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CppLanguageStandard>c++1z</CppLanguageStandard>
 	  <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
@@ -557,7 +557,7 @@ local function GenerateProject(project, projects)
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;HAVE_PTHREAD_MUTEX_TIMEDLOCK=0;USE_OPTICK=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;HAVE_MEMCPY=1;HAVE_MPGLIB=1;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
+	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;HAVE_PTHREAD_MUTEX_TIMEDLOCK=0;USE_OPTICK=1;HAVE_OPENSL=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;HAVE_MEMCPY=1;HAVE_MPGLIB=1;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CppLanguageStandard>c++1z</CppLanguageStandard>
 	  <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
@@ -568,7 +568,7 @@ local function GenerateProject(project, projects)
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;HAVE_PTHREAD_MUTEX_TIMEDLOCK=0;USE_OPTICK=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;HAVE_MEMCPY=1;HAVE_MPGLIB=1;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
+	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;HAVE_PTHREAD_MUTEX_TIMEDLOCK=0;USE_OPTICK=1;HAVE_OPENSL=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;HAVE_MEMCPY=1;HAVE_MPGLIB=1;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CppLanguageStandard>c++1z</CppLanguageStandard>
 	  <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
@@ -579,7 +579,7 @@ local function GenerateProject(project, projects)
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
 	  <RuntimeTypeInfo>true</RuntimeTypeInfo>
-	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;HAVE_PTHREAD_MUTEX_TIMEDLOCK=0;USE_OPTICK=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;HAVE_MEMCPY=1;HAVE_MPGLIB=1;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
+	  <PreprocessorDefinitions>NO_LCMS;__ANSI__;DISABLE_PERF_MEASUREMENT;FREEIMAGE_LIB;OPJ_STATIC;LIBRAW_NODLL;_7ZIP_ST;CMAKE_PAINTSNOW;CMAKE_ANDROID;HAVE_NEON;HAVE_PTHREAD_MUTEX_TIMEDLOCK=0;USE_OPTICK=1;HAVE_OPENSL=1;AL_ALEXT_PROTOTYPES=1;FT2_BUILD_LIBRARY;HAVE_MEMCPY=1;HAVE_MPGLIB=1;%%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <CppLanguageStandard>c++1z</CppLanguageStandard>
 	  <ExceptionHandling>Enabled</ExceptionHandling>
     </ClCompile>
