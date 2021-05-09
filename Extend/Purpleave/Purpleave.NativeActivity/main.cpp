@@ -23,21 +23,23 @@
 
 using namespace PaintsNow;
 
-extern "C" void ANativeActivity_onCreate(ANativeActivity* activity, void* savedState, size_t savedStateSize) {
-	// Register frame factory
-	Loader loader;
-	loader.GetConfig().RegisterFactory("IFrame", "ZFrameAndroid", WrapFactory(UniqueType<ZFrameAndroid>(), activity, savedState, savedStateSize));
+extern "C" void ANativeActivity_onCreate(ANativeActivity * activity, void* savedState, size_t savedStateSize) {
+	ZFrameAndroid::InvokeMain(WrapClosure([=]() {
+		// Register frame factory
+		Loader loader;
+		loader.GetConfig().RegisterFactory("IFrame", "ZFrameAndroid", WrapFactory(UniqueType<ZFrameAndroid>(), activity, savedState, savedStateSize));
 
-	// Inject frame factory
-	CmdLine cmdLine;
-	char* initArgs[] = {
-		"LeavesWing",
-		"--Graphic=true",
-		"--IFrame=ZFrameAndroid"
-	};
+		// Inject frame factory
+		CmdLine cmdLine;
+		char* initArgs[] = {
+			"LeavesWing",
+			"--Graphic=true",
+			"--IFrame=ZFrameAndroid"
+		};
 
-	cmdLine.Process(sizeof(initArgs) / sizeof(initArgs[0]), initArgs);
+		cmdLine.Process(sizeof(initArgs) / sizeof(initArgs[0]), initArgs);
 
-	// Now lets start
-	loader.Run(cmdLine);
+		// Now lets start
+		loader.Run(cmdLine);
+	}));
 }

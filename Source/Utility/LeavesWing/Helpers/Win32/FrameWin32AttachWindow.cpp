@@ -137,7 +137,6 @@ void ZFrameWin32AttachWindow::EnterMainLoop() {
 	RECT rect;
 	::GetWindowRect(window, &rect);
 	windowSize = Int2(rect.right - rect.left, rect.bottom - rect.top);
-	callback->OnInitialize(this);
 	callback->OnWindowSize(windowSize);
 	::WaitForSingleObject(mainLoopEvent, INFINITE);
 	::SetWindowLongPtrW(window, GWLP_WNDPROC, (LONG_PTR)originalProc);
@@ -149,10 +148,6 @@ void ZFrameWin32AttachWindow::EnterMainLoop() {
 
 void ZFrameWin32AttachWindow::ExitMainLoop() {
 	::SetEvent(mainLoopEvent);
-}
-
-bool ZFrameWin32AttachWindow::IsRendering() const {
-	return isRendering;
 }
 
 Short2 ZFrameWin32AttachWindow::MakePoint(LPARAM lParam) {

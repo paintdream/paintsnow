@@ -168,20 +168,6 @@ void ZFrameAndroid::PostExecuteCommand(int8_t cmd) {
 	}
 }
 
-void ZFrameAndroid::Destroy() {
-	LOGV("android_app_destroy!");
-	FreeSavedState();
-	pthread_mutex_lock(&mutex);
-	if (inputQueue != nullptr) {
-		AInputQueue_detachLooper(inputQueue);
-	}
-	AConfiguration_delete(config);
-	destroyed = 1;
-	pthread_cond_broadcast(&cond);
-	pthread_mutex_unlock(&mutex);
-	// Can't touch android_app object after this.
-}
-
 void ZFrameAndroid::ProcessInput(android_poll_source* source) {
 	AInputEvent* event = nullptr;
 	while (AInputQueue_getEvent(inputQueue, &event) >= 0) {
@@ -202,33 +188,6 @@ void ZFrameAndroid::ProcessCommand(android_poll_source* source) {
 	PreExecuteCommand(cmd);
 	HandleCommand(cmd);
 	PostExecuteCommand(cmd);
-}
-
-void* ZFrameAndroid::MainThread() {
-	config = AConfiguration_new();
-	AConfiguration_fromAssetManager(config, activity->assetManager);
-
-	PrintCurrentConfig();
-
-	cmdPollSource.id = LOOPER_ID_MAIN;
-	cmdPollSource.process = &ZFrameAndroid::ProcessCommand;
-	inputPollSource.id = LOOPER_ID_INPUT;
-	inputPollSource.process = &ZFrameAndroid::ProcessInput;
-
-	ALooper* looper = ALooper_prepare(ALOOPER_PREPARE_ALLOW_NON_CALLBACKS);
-	ALooper_addFd(looper, msgread, LOOPER_ID_MAIN, ALOOPER_EVENT_INPUT, nullptr,
-		&cmdPollSource);
-	looper = looper;
-
-	pthread_mutex_lock(&mutex);
-	running = 1;
-	pthread_cond_broadcast(&cond);
-	pthread_mutex_unlock(&mutex);
-
-	Main();
-
-	Destroy();
-	return nullptr;
 }
 
 void ZFrameAndroid::WriteCommand(int8_t cmd) {
@@ -339,7 +298,6 @@ void ZFrameAndroid::OnConfigurationChanged() {
 }
 
 void ZFrameAndroid::OnLowMemory() {
-	struct android_app* android_app = (struct android_app*)activity->instance;
 	LOGV("LowMemory: %p\n", activity);
 	WriteCommand(APP_CMD_LOW_MEMORY);
 }
@@ -421,9 +379,10 @@ int ZFrameAndroid::InitDisplay() {
 	this->display = display;
 	this->context = context;
 	this->surface = surface;
-	this->width = w;
-	this->height = h;
+	this->windowSize = Int2(w, h);
 	this->state.angle = 0;
+
+	callback->OnWindowSize(IFrame::EventSize(windowSize));
 
 	// Initialize GL state.
 	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
@@ -441,8 +400,8 @@ void ZFrameAndroid::DrawFrame() {
 	}
 
 	// Just fill the screen with a color.
-	glClearColor(((float)state.x) / width, state.angle,
-		((float)state.y) / height, 1);
+	glClearColor(((float)state.x) / windowSize.x(), state.angle,
+		((float)state.y) / windowSize.y(), 1);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	eglSwapBuffers(display, surface);
@@ -469,10 +428,91 @@ void ZFrameAndroid::TerminateDisplay() {
 * Process the next input event.
 */
 int32_t ZFrameAndroid::HandleInput(AInputEvent* event) {
-	if (AInputEvent_getType(event) == AINPUT_EVENT_TYPE_MOTION) {
-		state.x = AMotionEvent_getX(event, 0);
-		state.y = AMotionEvent_getY(event, 0);
-		return 1;
+	int32_t type = AInputEvent_getType(event);
+	int32_t source = AInputEvent_getSource(event);
+	int32_t action = AMotionEvent_getAction(event);
+
+	switch (type) {
+	case AINPUT_EVENT_TYPE_KEY:
+	{
+		int32_t action = AKeyEvent_getAction(event);
+		int32_t keyCode = AKeyEvent_getKeyCode(event);
+
+		IFrame::EventKeyboard keyboard;
+		keyboard.keyCode = 0;
+
+		if (action == AKEY_STATE_UP) {
+			keyboard.keyCode |= IFrame::EventKeyboard::KEY_POP;
+		}
+
+		if (keyCode >= AKEYCODE_0 && keyCode <= AKEYCODE_9) {
+			keyboard.keyCode = '0' + keyCode - AKEYCODE_0;
+		} else if (keyCode >= AKEYCODE_A && keyCode <= AKEYCODE_Z) {
+			keyboard.keyCode = 'A' + keyCode - AKEYCODE_A;
+		} else if (keyCode >= AKEYCODE_F1 && keyCode <= AKEYCODE_F12) {
+			keyboard.keyCode = IFrame::EventKeyboard::KEY_F1 + keyCode - AKEYCODE_F1;
+		} else if (keyCode >= AKEYCODE_NUMPAD_0 && keyCode <= AKEYCODE_NUMPAD_9) {
+			keyboard.keyCode = IFrame::EventKeyboard::KEY_KP_0 + keyCode - AKEYCODE_NUMPAD_0;
+		} else {
+			switch (keyCode) {
+#define MAP_KEY(from, to) case AKEYCODE_##from: keyboard.keyCode = IFrame::EventKeyboard::KEY_##to; break
+				MAP_KEY(CTRL_LEFT, LEFT_CONTROL);
+				MAP_KEY(CTRL_RIGHT, RIGHT_CONTROL);
+				MAP_KEY(ALT_LEFT, LEFT_ALT);
+				MAP_KEY(ALT_RIGHT, RIGHT_ALT);
+				MAP_KEY(SHIFT_LEFT, LEFT_SHIFT);
+				MAP_KEY(SHIFT_RIGHT, RIGHT_SHIFT);
+				MAP_KEY(ENTER, ENTER);
+				MAP_KEY(TAB, TAB);
+				MAP_KEY(BACK, BACKSPACE);
+				MAP_KEY(INSERT, INSERT);
+				MAP_KEY(DEL, DELETE);
+				MAP_KEY(HOME, HOME);
+				MAP_KEY(DPAD_UP, UP);
+				MAP_KEY(DPAD_LEFT, LEFT);
+				MAP_KEY(DPAD_RIGHT, RIGHT);
+				MAP_KEY(DPAD_DOWN, DOWN);
+				MAP_KEY(PAGE_UP, PAGE_UP);
+				MAP_KEY(PAGE_DOWN, PAGE_DOWN);
+				MAP_KEY(NUMPAD_DIVIDE, KP_DIVIDE);
+				MAP_KEY(NUMPAD_MULTIPLY, KP_MULTIPLY);
+				MAP_KEY(NUMPAD_SUBTRACT, KP_SUBTRACT);
+				MAP_KEY(NUMPAD_ADD, KP_ADD);
+				MAP_KEY(NUMPAD_ENTER, KP_ENTER);
+				MAP_KEY(MENU, MENU);
+			}
+		}
+
+		callback->OnKeyboard(keyboard);
+		break;
+	}
+	case AINPUT_EVENT_TYPE_MOTION:
+	{
+		size_t count = AMotionEvent_getPointerCount(event);
+		for (size_t i = 0; i < count; i++) {
+			float x = AMotionEvent_getX(event, i);
+			float y = AMotionEvent_getY(event, i);
+
+			switch (source) {
+			case AINPUT_SOURCE_TOUCHSCREEN:
+			{
+				switch (action) {
+				case AMOTION_EVENT_ACTION_MOVE:
+					callback->OnMouse(IFrame::EventMouse(true, true, true, false, Short2(x, y), verify_cast<uint16_t>(i)));
+					break;
+				case AMOTION_EVENT_ACTION_DOWN:
+					callback->OnMouse(IFrame::EventMouse(true, false, true, false, Short2(x, y), verify_cast<uint16_t>(i)));
+					break;
+				case AMOTION_EVENT_ACTION_UP:
+					callback->OnMouse(IFrame::EventMouse(false, false, true, false, Short2(x, y), verify_cast<uint16_t>(i)));
+					break;
+				}
+			}
+			}
+		}
+
+		break;
+	}
 	}
 
 	return 0;
@@ -587,6 +627,8 @@ void ZFrameAndroid::Main() {
 			// is no need to do timing here.
 			DrawFrame();
 		}
+
+		callback->OnRender();
 	}
 }
 
@@ -608,7 +650,38 @@ ZFrameAndroid::ZFrameAndroid(ANativeActivity* v, void* s, size_t ss) : activity(
 	activity->callbacks->onInputQueueDestroyed = WRAP_CONTEXT_CALLBACK(&ZFrameAndroid::OnInputQueueDestroyed);
 
 	activity->instance = this;
+}
 
+void ZFrameAndroid::SetCallback(Callback* cb) {
+	callback = cb;
+}
+
+// logic size, not android native buffer size
+const Int2& ZFrameAndroid::GetWindowSize() const {
+	return windowSize;
+}
+
+void ZFrameAndroid::SetWindowSize(const Int2& size) {
+	windowSize = size;
+}
+
+void ZFrameAndroid::SetWindowTitle(const String& title) {
+	// not implemented
+}
+
+void ZFrameAndroid::EnableVerticalSynchronization(bool enable) {
+	eglSwapInterval(display, enable ? 1 : 0);
+}
+
+void ZFrameAndroid::ShowCursor(CURSOR cursor) {
+	// not implemented
+}
+
+void ZFrameAndroid::WarpCursor(const Int2& position) {
+	// not implemented
+}
+
+void ZFrameAndroid::EnterMainLoop() {
 	pthread_mutex_init(&mutex, nullptr);
 	pthread_cond_init(&cond, nullptr);
 
@@ -627,35 +700,84 @@ ZFrameAndroid::ZFrameAndroid(ANativeActivity* v, void* s, size_t ss) : activity(
 	msgread = msgpipe[0];
 	msgwrite = msgpipe[1];
 
+	config = AConfiguration_new();
+	AConfiguration_fromAssetManager(config, activity->assetManager);
+
+	PrintCurrentConfig();
+
+	cmdPollSource.id = LOOPER_ID_MAIN;
+	cmdPollSource.process = &ZFrameAndroid::ProcessCommand;
+	inputPollSource.id = LOOPER_ID_INPUT;
+	inputPollSource.process = &ZFrameAndroid::ProcessInput;
+
+	ALooper* looper = ALooper_prepare(ALOOPER_PREPARE_ALLOW_NON_CALLBACKS);
+	ALooper_addFd(looper, msgread, LOOPER_ID_MAIN, ALOOPER_EVENT_INPUT, nullptr,
+		&cmdPollSource);
+	this->looper = looper;
+
+	pthread_mutex_lock(&mutex);
+	running = 1;
+	pthread_cond_broadcast(&cond);
+	pthread_mutex_unlock(&mutex);
+
+	Main();
+
+	LOGV("android_app_destroy!");
+	FreeSavedState();
+	pthread_mutex_lock(&mutex);
+	if (inputQueue != nullptr) {
+		AInputQueue_detachLooper(inputQueue);
+	}
+	AConfiguration_delete(config);
+	destroyed = 1;
+	pthread_cond_broadcast(&cond);
+	pthread_mutex_unlock(&mutex);
+
+	// Can't touch android_app object after this.
+}
+
+void ZFrameAndroid::ExitMainLoop() {
+	WriteCommand(APP_CMD_DESTROY);
+}
+
+void ZFrameAndroid::InvokeMain(const TWrapper<void>& callback) {
+	pthread_t thread;
+
+	struct Context {
+		Context(const TWrapper<void>& w) : callback(w) {
+			running.store(false, std::memory_order_release);
+		}
+
+		pthread_mutex_t mutex;
+		pthread_cond_t cond;
+		TWrapper<void> callback;
+		std::atomic<bool> running;
+	} context(callback);
+
+	pthread_mutex_init(&context.mutex, nullptr);
+	pthread_cond_init(&context.cond, nullptr);
+
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-	pthread_create(&thread, &attr, + [] (void* context) {
-		return reinterpret_cast<ZFrameAndroid*>(context)->MainThread();
-	}, this);
+	pthread_create(&thread, &attr, +[](void* c) -> void*{
+		Context* context = reinterpret_cast<Context*>(c);
+		context->running.store(true, std::memory_order_release);
+		pthread_cond_broadcast(&context->cond);
+		context->callback();
+		return nullptr;
+	}, &context);
 
 	// Wait for thread to start.
-	pthread_mutex_lock(&mutex);
-	while (!running) {
-		pthread_cond_wait(&cond, &mutex);
+	pthread_mutex_lock(&context.mutex);
+	while (!context.running.load(std::memory_order_acquire)) {
+		pthread_cond_wait(&context.cond, &context.mutex);
 	}
-	pthread_mutex_unlock(&mutex);
+	pthread_mutex_unlock(&context.mutex);
+
+	pthread_cond_destroy(&context.cond);
+	pthread_mutex_destroy(&context.mutex);
 }
-
-void ZFrameAndroid::SetCallback(Callback* callback) {}
-const Int2& ZFrameAndroid::GetWindowSize() const { return windowSize; }
-void ZFrameAndroid::SetWindowSize(const Int2& size) { windowSize = size; }
-void ZFrameAndroid::SetWindowTitle(const String& title) {}
-void ZFrameAndroid::EnableVerticalSynchronization(bool enable) {}
-void ZFrameAndroid::ShowCursor(CURSOR cursor) {}
-void ZFrameAndroid::WarpCursor(const Int2& position) {}
-void ZFrameAndroid::EnterMainLoop() {}
-void ZFrameAndroid::ExitMainLoop() {}
-
-bool ZFrameAndroid::IsRendering() const {
-	return true;
-}
-
 
 // Compile for android
 

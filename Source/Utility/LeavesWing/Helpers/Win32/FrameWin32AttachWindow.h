@@ -26,7 +26,6 @@ namespace PaintsNow {
 		void WarpCursor(const Int2& position) override;
 		void EnterMainLoop() override;
 		void ExitMainLoop() override;
-		bool IsRendering() const override;
 		Short2 MakePoint(LPARAM lParam);
 		bool WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 		static LRESULT CALLBACK HookProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);

@@ -257,8 +257,6 @@ bool LeavesFlute::ConsoleProc(IThread::Thread* thread, size_t index) {
 	return false;
 }
 
-void LeavesFlute::OnInitialize(void* param) {}
-
 size_t LeavesFlute::RequestGetProcessorBitWidth(IScript::Request& request) {
 	return sizeof(size_t) * 8;
 }
@@ -294,10 +292,6 @@ void LeavesFlute::RequestSetAppTitle(IScript::Request& request, const String& ti
 	DoLock();
 	newAppTitle = title;
 	UnLock();
-}
-
-bool LeavesFlute::IsRendering() const {
-	return interfaces.frame.IsRendering();
 }
 
 Interfaces& LeavesFlute::GetInterfaces() const {

@@ -20,7 +20,6 @@ namespace PaintsNow {
 		void SetWindowTitle(const String& title) override;
 		void EnableVerticalSynchronization(bool enable) override;
 
-		bool IsRendering() const override;
 		void EnterMainLoop() override;
 		void ExitMainLoop() override;
 
@@ -42,10 +41,10 @@ namespace PaintsNow {
 		GLFWwindow* window;
 		Callback* callback;
 		Int2 windowSize;
-		bool isRendering;
 		bool isVulkan;
 		bool lastbutton;
 		bool lastdown;
+		bool reserved;
 	};
 }
 

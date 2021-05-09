@@ -59,9 +59,6 @@ public:
 	void ExitMainLoop() override {}
 	void ShowCursor(CURSOR cursor) override {}
 	void WarpCursor(const Int2& position) override {}
-	bool IsRendering() const override {
-		return true;
-	}
 };
 
 class ZRenderDummy : public IRender {

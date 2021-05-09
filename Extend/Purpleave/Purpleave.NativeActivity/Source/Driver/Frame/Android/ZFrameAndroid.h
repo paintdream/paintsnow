@@ -6,6 +6,7 @@
 #pragma once
 
 #include "../../../../../../../Source/General/Interface/IFrame.h"
+#include "../../../../../../../Source/Core/Template/TProxy.h"
 
 /*
  * Copyright (C) 2010 The Android Open Source Project
@@ -49,7 +50,8 @@ namespace PaintsNow {
 		void WarpCursor(const Int2& position) override;
 		void EnterMainLoop() override;
 		void ExitMainLoop() override;
-		bool IsRendering() const override;
+
+		static void InvokeMain(const TWrapper<void>& wrapper);
 
 	protected:
 		Int2 windowSize;
@@ -99,10 +101,8 @@ namespace PaintsNow {
 		int8_t ReadCommand();
 		void PreExecuteCommand(int8_t cmd);
 		void PostExecuteCommand(int8_t cmd);
-		void Destroy();
 		void ProcessInput(android_poll_source* source);
 		void ProcessCommand(android_poll_source* source);
-		void* MainThread();
 		void Main();
 		void WriteCommand(int8_t cmd);
 		void SetInput(AInputQueue* inputQueue);
@@ -123,6 +123,9 @@ namespace PaintsNow {
 		void OnNativeWindowDestroyed(ANativeWindow* window);
 		void OnInputQueueCreated(AInputQueue* queue);
 		void OnInputQueueDestroyed(AInputQueue* queue);
+
+	protected:
+		Callback* callback;
 
 	protected:
 		// The ANativeActivity object instance that this app is running in.
@@ -173,8 +176,6 @@ namespace PaintsNow {
 		int msgread;
 		int msgwrite;
 
-		pthread_t thread;
-
 		android_poll_source cmdPollSource;
 		android_poll_source inputPollSource;
 		int running;
@@ -206,8 +207,6 @@ namespace PaintsNow {
 		EGLDisplay display;
 		EGLSurface surface;
 		EGLContext context;
-		int32_t width;
-		int32_t height;
 		saved_state state;
 	};
 }

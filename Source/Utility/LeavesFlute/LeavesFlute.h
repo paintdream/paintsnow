@@ -22,7 +22,6 @@ namespace PaintsNow {
 	public:
 		LeavesFlute(bool nogui, Interfaces& interfaces, const TWrapper<IArchive*, IStreamBase&, size_t>& subArchiveCreator, const String& defMount, uint32_t threadCount, uint32_t warpCount);
 		~LeavesFlute() override;
-		bool IsRendering() const override;
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		Interfaces& GetInterfaces() const;
 		Kernel& GetKernel();
@@ -143,7 +142,6 @@ namespace PaintsNow {
 		void EnableRawPrint(bool rawPrint);
 
 	public:
-		void OnInitialize(void* param) override;
 		void OnRender() override;
 		void OnWindowSize(const IFrame::EventSize&) override;
 		void OnMouse(const IFrame::EventMouse& mouse) override;

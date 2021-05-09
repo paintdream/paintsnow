@@ -97,7 +97,7 @@ void OnKeyboardCallback(GLFWwindow* window, int key, int scancode, int action, i
 	frame->OnKeyboardCallback(key, scancode, action, mods);
 }
 
-ZFrameGLFW::ZFrameGLFW(GLFWwindow** windowPtr, bool vulkan, const Int2& size, IFrame::Callback* cb) : windowSize(size), isRendering(false), lastdown(false), lastbutton(false), isVulkan(vulkan) {
+ZFrameGLFW::ZFrameGLFW(GLFWwindow** windowPtr, bool vulkan, const Int2& size, IFrame::Callback* cb) : windowSize(size), lastdown(false), lastbutton(false), isVulkan(vulkan) {
 	SetCallback(cb);
 	glfwSetErrorCallback(OnErrorCallback);
 
@@ -173,10 +173,6 @@ void ZFrameGLFW::OnMouse(const EventMouse& mouse) {
 	}
 }
 
-bool ZFrameGLFW::IsRendering() const {
-	return isRendering;
-}
-
 void ZFrameGLFW::OnWindowSize(const EventSize& newSize) {
 	windowSize = newSize.size;
 	if (callback != nullptr) {
@@ -209,7 +205,6 @@ void ZFrameGLFW::EnterMainLoop() {
 			glClearDepth(0.0f);
 			glClearStencil(0);
 			glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-			isRendering = true;
 			callback->OnRender();
 
 			OnCustomRender();
@@ -217,7 +212,6 @@ void ZFrameGLFW::EnterMainLoop() {
 			if (!isVulkan) {
 				glfwSwapBuffers(window);
 			}
-			isRendering = false;
 		}
 
 		glfwPollEvents();

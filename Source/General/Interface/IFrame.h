@@ -13,11 +13,12 @@ namespace PaintsNow {
 	class pure_interface IFrame : public IDevice {
 	public:
 		struct EventMouse {
-			EventMouse(bool d = true, bool m = false, bool l = true, bool w = false, const Short2& p = Short2(0, 0));
+			EventMouse(bool d = true, bool m = false, bool l = true, bool w = false, const Short2& p = Short2(0, 0), uint16_t index = 0);
 			bool down;
 			bool move;
 			bool left;
 			bool wheel;
+			uint16_t index;
 			Short2 position;
 		};
 
@@ -123,8 +124,6 @@ namespace PaintsNow {
 			virtual void OnKeyboard(const EventKeyboard& keyboard) = 0;
 			virtual void OnWindowSize(const EventSize& newSize) = 0;
 			virtual void OnRender() = 0;
-			virtual void OnInitialize(void* param) = 0;
-			virtual bool IsRendering() const = 0;
 		};
 
 		~IFrame() override;
@@ -138,7 +137,6 @@ namespace PaintsNow {
 		virtual void WarpCursor(const Int2& position) = 0;
 		virtual void EnterMainLoop() = 0;
 		virtual void ExitMainLoop() = 0;
-		virtual bool IsRendering() const = 0;
 	};
 }
 

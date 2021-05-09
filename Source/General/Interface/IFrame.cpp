@@ -2,7 +2,7 @@
 
 using namespace PaintsNow;
 
-IFrame::EventMouse::EventMouse(bool d, bool m, bool l, bool w, const Short2& p) : down(d), move(m), left(l), wheel(w), position(p) {}
+IFrame::EventMouse::EventMouse(bool d, bool m, bool l, bool w, const Short2& p, uint16_t i) : down(d), move(m), left(l), wheel(w), position(p), index(i) {}
 
 IFrame::EventKeyboard::EventKeyboard(int key) : keyCode(key) {}
 
