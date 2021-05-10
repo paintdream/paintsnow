@@ -38,8 +38,6 @@ namespace PaintsNow {
 		Callback* callback;
 		HANDLE mainLoopEvent;
 		Int2 windowSize;
-		bool isRendering;
-		bool reserved[3];
 	};
 }
 

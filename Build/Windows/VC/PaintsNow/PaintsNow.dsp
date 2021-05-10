@@ -1094,6 +1094,18 @@ SOURCE=..\..\..\..\Source\General\Driver\Filter\LAME\ZFilterLAME.cpp
 SOURCE=..\..\..\..\Source\General\Driver\Filter\LAME\ZFilterLAME.h
 # End Source File
 # End Group
+# Begin Group "LZW"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\General\Driver\Filter\LZW\ZFilterLZW.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\General\Driver\Filter\LZW\ZFilterLZW.h
+# End Source File
+# End Group
 # End Group
 # Begin Group "Font"
 

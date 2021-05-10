@@ -73,7 +73,7 @@ static IFrame::EventKeyboard ConvertKeyMessage(UINT nChar, UINT nFlags, int extr
 
 LRESULT CALLBACK HookProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-ZFrameWin32AttachWindow::ZFrameWin32AttachWindow() : window(NULL), hdc(NULL), originalProc(nullptr), isRendering(false) {
+ZFrameWin32AttachWindow::ZFrameWin32AttachWindow() : window(NULL), hdc(NULL), originalProc(nullptr) {
 	mainLoopEvent = ::CreateEventW(NULL, TRUE, FALSE, NULL);
 }
 
@@ -131,7 +131,6 @@ void ZFrameWin32AttachWindow::EnterMainLoop() {
 	hdc = ::GetWindowDC(window);
 	hglrc = wglCreateContext(hdc);
 
-	isRendering = true;
 	::SetWindowLongPtrW(window, GWLP_USERDATA, (LONG_PTR)this);
 	originalProc = (WNDPROC)::SetWindowLongPtrW(window, GWLP_WNDPROC, (LONG_PTR)HookProc);
 	RECT rect;
@@ -140,7 +139,6 @@ void ZFrameWin32AttachWindow::EnterMainLoop() {
 	callback->OnWindowSize(windowSize);
 	::WaitForSingleObject(mainLoopEvent, INFINITE);
 	::SetWindowLongPtrW(window, GWLP_WNDPROC, (LONG_PTR)originalProc);
-	isRendering = false;
 
 	wglDeleteContext(hglrc);
 	::ReleaseDC(window, hdc);

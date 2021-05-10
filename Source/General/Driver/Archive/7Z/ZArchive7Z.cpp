@@ -14,7 +14,7 @@ static int Buf_EnsureSize(CBuf *dest, size_t size)
 	return Buf_Create(dest, size, &g_Alloc);
 }
 
-#if !defined(_WIN32) && !defined(WIN32)
+#if !defined(_WIN32)
 
 static Byte kUtf8Limits[5] = { 0xC0, 0xE0, 0xF0, 0xF8, 0xFC };
 
@@ -260,6 +260,7 @@ inline bool ZArchive7Z::Open() {
 
 		opened = true;
 	}
+
 	return opened;
 }
 
