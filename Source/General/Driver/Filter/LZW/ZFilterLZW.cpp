@@ -41,10 +41,10 @@ void FilterLZWImpl::Flush() {
 }
 
 String FilterLZWImpl::ReadString(int32_t value) {
-	if (value <= 0xff) {
+	if (value < 0x100) {
 		return String((const char*)&value, (const char*)&value + 1);
 	} else {
-		return mapStrings[value - 0x80];
+		return mapStrings[value - 0x100];
 	}
 }
 
@@ -52,45 +52,43 @@ void FilterLZWImpl::WriteString(const String& key) {
 	mapStrings.emplace_back(key);
 }
 
-inline size_t ReadBuffer(int32_t& res, const char* from, const char* to) {
-	res = 0;
-	char ch = *from;
-
+inline size_t ReadBufferHead(uint8_t& ch) {
 	size_t count = 0;
-	if (ch >= 0xF0) {
+
+	if (ch == 0xFF) {
 		count = 4;
+		ch = 0;
 	} else if (ch >= 0xE0) {
-		res = ch & ~0xE0;
+		ch = ch & ~0xE0;
 		count = 3;
 	} else if (ch >= 0xC0) {
-		res = ch & ~0xC0;
+		ch = ch & ~0xC0;
 		count = 2;
 	} else if (ch >= 0x80) {
-		res = ch & ~0x80;
+		ch = ch & ~0x80;
 		count = 1;
 	}
 
-	if (from + count >= to) {
-		return from + count + 1 - to;
-	}
+	return count;
+}
 
-	from++;
-
-	for (size_t i = 0; i < count; i++) {
+inline int32_t ReadBuffer(int32_t res, const char* from, const char* to) {
+	while (from < to) {
 		res <<= 8;
-		res |= *from++;
+		res |= (uint8_t)*from++;
 	}
 
-	return true;
+	return res;
 }
 
 inline bool Output(char*& buf, const String& output, long& decodeLength, size_t len) {
-	if (decodeLength + output.length() >= len) {
+	if (decodeLength + output.length() > len) {
 		return false;
 	} else {
 		memcpy(buf, output.data(), output.size());
-		buf += output.size();
 		decodeLength += (long)output.size();
+		// printf("LLLL: %d %s\n", (int)decodeLength, buf);
+		buf += output.size();
 		return true;
 	}
 }
@@ -109,8 +107,9 @@ bool FilterLZWImpl::Read(void* p, size_t& len) {
 
 	while (decodeLength < (long)len && stream.Read(buffer, length)) {
 		total++;
-		int32_t res;
-		size_t need = ReadBuffer(res, buffer, buffer + 1);
+		uint8_t ch = *buffer;
+		size_t need = ReadBufferHead(ch);
+		int32_t res = ch;
 		if (need != 0) {
 			if (!stream.Read(buffer + 1, need)) {
 				// fail!
@@ -121,7 +120,7 @@ bool FilterLZWImpl::Read(void* p, size_t& len) {
 			}
 
 			total += (long)need;
-			need = ReadBuffer(res, buffer, buffer + 1 + need);
+			res = ReadBuffer(res, buffer + 1, buffer + 1 + need);
 		}
 
 		// now we get res
@@ -136,7 +135,7 @@ bool FilterLZWImpl::Read(void* p, size_t& len) {
 			}
 		} else {
 			// ABA case
-			if (mapStrings.size() + 0x80 <= res) {
+			if (mapStrings.size() + 0x100 <= res) {
 				entry = ReadString(prev);
 				entry += entry[0];
 				WriteString(entry);
@@ -166,23 +165,23 @@ bool FilterLZWImpl::Read(void* p, size_t& len) {
 }
 
 inline void WriteBuffer(std::vector<unsigned char>& buffer, uint32_t value) {
-	int from = 3;
-	if (value > 0xF0000000) {
-		buffer.emplace_back(0xF0);
-		from = 3;
-	} else if (value > 0xE000000) {
+	int count = 0;
+	if (value >= 0x1F000000) {
+		buffer.emplace_back(0xFF);
+		count = 3;
+	} else if (value >= 0x200000) {
 		buffer.emplace_back(0xE0 | (uint8_t)(value >> 24));
-		from = 2;
-	} else if (value > 0xC000) {
+		count = 2;
+	} else if (value >= 0x4000) {
 		buffer.emplace_back(0xC0 | (uint8_t)(value >> 16));
-		from = 1;
+		count = 1;
 	} else if (value >= 0x80) {
 		buffer.emplace_back(0x80 | (uint8_t)(value >> 8));
-		from = 0;
+		count = 0;
 	}
 
-	while (from >= 0) {
-		buffer.emplace_back((uint8_t)((value >> (from-- * 8)) & 0xff));
+	while (count >= 0) {
+		buffer.emplace_back((uint8_t)(value >> (count-- * 8)));
 	}
 }
 
@@ -198,7 +197,7 @@ int32_t FilterLZWImpl::ReadMap(const String& key) {
 
 int32_t FilterLZWImpl::WriteMap(const String& key) {
 	assert(key.size() >= 2);
-	int32_t v = (int32_t)mapCodes.size();
+	int32_t v = (int32_t)mapCodes.size() + 0x100;
 	mapCodes[key] = v;
 
 	return v;

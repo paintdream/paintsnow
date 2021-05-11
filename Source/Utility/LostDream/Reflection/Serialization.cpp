@@ -2,6 +2,7 @@
 #include "../../../Core/System/MemoryStream.h"
 #include "../../SnowyStream/Resource/MeshResource.h"
 #include "../../SnowyStream/ResourceManager.h"
+#include "../../../General/Driver/Filter/LZW/ZFilterLZW.h"
 
 using namespace PaintsNow;
 
@@ -337,6 +338,22 @@ bool Serialization::Run(int randomSeed, int length) {
 	filterAgain->Destroy();
 #endif
 
+	ZFilterLZW lzw;
+	MemoryStream ms(0x1000);
+	IStreamBase* f = lzw.CreateFilter(ms);
+	const char* data = "asdfsdfoaiwhsdfasdjfgha;lsddlahfkscfdhasfsldkfhasbjfabababa";
+	size_t len = strlen(data);
+	size_t l = len;
+	f->Write(data, l);
+	f->Destroy();
+	ms.Seek(IStreamBase::BEGIN, 0);
+	f = lzw.CreateFilter(ms);
+	char result[256] = { 0 };
+	f->Read(result, len);
+	printf("Recover data: %s\n", data);
+	printf("Recover data: %s\n", result);
+	f->Destroy();
+	
 	return true;
 }
 
