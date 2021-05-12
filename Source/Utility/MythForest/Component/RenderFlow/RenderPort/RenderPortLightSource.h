@@ -6,7 +6,6 @@
 #pragma once
 #include "../RenderPort.h"
 #include "../../Light/LightComponent.h"
-#include <queue>
 
 namespace PaintsNow {
 	class RenderPortLightSource : public TReflected<RenderPortLightSource, RenderPort> {

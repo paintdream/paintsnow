@@ -9,7 +9,6 @@
 #include "Unit.h"
 #include "Event.h"
 #include "Component.h"
-#include <set>
 
 namespace PaintsNow {
 	class Engine;

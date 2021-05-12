@@ -348,7 +348,7 @@ bool Serialization::Run(int randomSeed, int length) {
 	f->Destroy();
 	ms.Seek(IStreamBase::BEGIN, 0);
 	f = lzw.CreateFilter(ms);
-	char result[256] = { 0 };
+	char result[1024] = { 0 };
 	f->Read(result, len);
 	printf("Recover data: %s\n", data);
 	printf("Recover data: %s\n", result);
