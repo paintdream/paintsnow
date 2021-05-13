@@ -329,6 +329,14 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Profile\ProfileComponentM
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RayTrace\RayTraceComponent.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RayTrace\RayTraceComponentModule.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Remote\RemoteComponent.cpp
 # End Source File
 # Begin Source File
@@ -782,6 +790,14 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Profile\ProfileComponent.
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Profile\ProfileComponentModule.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RayTrace\RayTraceComponent.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RayTrace\RayTraceComponentModule.h
 # End Source File
 # Begin Source File
 

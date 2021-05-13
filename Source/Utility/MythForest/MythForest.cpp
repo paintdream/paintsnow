@@ -17,6 +17,7 @@
 #include "Component/Particle/ParticleComponentModule.h"
 #include "Component/Phase/PhaseComponentModule.h"
 #include "Component/Profile/ProfileComponentModule.h"
+#include "Component/RayTrace/RayTraceComponentModule.h"
 #include "Component/Remote/RemoteComponentModule.h"
 #include "Component/RenderFlow/RenderFlowComponentModule.h"
 #include "Component/Script/ScriptComponentModule.h"
@@ -70,6 +71,7 @@ void MythForest::Initialize() {
 	engine.InstallModule(new ParticleComponentModule(engine));
 	engine.InstallModule(new PhaseComponentModule(engine));
 	engine.InstallModule(new ProfileComponentModule(engine));
+	engine.InstallModule(new RayTraceComponentModule(engine));
 	engine.InstallModule(new RemoteComponentModule(engine));
 	engine.InstallModule(new RenderFlowComponentModule(engine));
 	engine.InstallModule(new ScriptComponentModule(engine));
