@@ -7,7 +7,7 @@ void ZRandomLibnoisePerlin::Seed(long seed) {
 	perlin.SetSeed(seed);
 }
 
-void ZRandomLibnoisePerlin::SetConfig(const String& parameter, double value) {
+void ZRandomLibnoisePerlin::Configure(const String& parameter, double value) {
 	if (parameter == "Frequency") {
 		perlin.SetFrequency(value);
 	} else if (parameter == "Lacunarity") {

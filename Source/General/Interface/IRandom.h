@@ -14,7 +14,7 @@ namespace PaintsNow {
 	public:
 		~IRandom() override;
 		virtual void Seed(long seed) = 0;
-		virtual void SetConfig(const String& parameter, double value) = 0;
+		virtual void Configure(const String& parameter, double value) = 0;
 		virtual double GetConfig(const String& parameter) const = 0;
 		virtual double GetValue(const double* coords, size_t dimension) = 0;
 

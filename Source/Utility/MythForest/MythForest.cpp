@@ -307,9 +307,9 @@ void MythForest::RequestClearEntityComponents(IScript::Request& request, IScript
 	entity->ClearComponents(engine);
 }
 
-class ScriptRaycastTask : public Component::RaycastTask {
+class ScriptRaycastTask : public Component::RaycastTaskWarp {
 public:
-	ScriptRaycastTask(Engine& engine, uint32_t maxCount, IScript::Request::Ref ref) : RaycastTask(engine, maxCount), callback(ref) {}
+	ScriptRaycastTask(Engine& engine, uint32_t maxCount, IScript::Request::Ref ref) : RaycastTaskWarp(engine, maxCount), callback(ref) {}
 
 	void Finish(rvalue<std::vector<Component::RaycastResult> > r) override {
 		std::vector<Component::RaycastResult>& results = r;

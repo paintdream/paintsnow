@@ -34,25 +34,40 @@ Tiny::FLAG Component::GetEntityFlagMask() const {
 	return 0;
 }
 
-Engine& Component::RaycastTask::GetEngine() {
+Component::RaycastTaskSerial::RaycastTaskSerial() {
+	Flag().store(RAYCASTTASK_IGNORE_WARP, std::memory_order_relaxed);
+	result.distance = FLT_MAX;
+}
+
+bool Component::RaycastTaskSerial::EmplaceResult(rvalue<Component::RaycastResult> item) {
+	RaycastResult& r = item;
+	if (result.distance > r.distance) {
+		result = std::move(r);
+		return true;
+	} else {
+		return false;
+	}
+}
+
+Engine& Component::RaycastTaskWarp::GetEngine() {
 	return engine;
 }
 
-Component::RaycastTask::RaycastTask(Engine& e, uint32_t m) : engine(e), maxCount(m) {
+Component::RaycastTaskWarp::RaycastTaskWarp(Engine& e, uint32_t m) : engine(e), maxCount(m) {
 	pendingCount.store(0, std::memory_order_relaxed);
 	results.resize(engine.GetKernel().GetWarpCount());
 }
 
-Component::RaycastTask::~RaycastTask() {
+Component::RaycastTaskWarp::~RaycastTaskWarp() {
 
 }
 
-void Component::RaycastTask::AddPendingTask() {
+void Component::RaycastTaskWarp::AddPendingTask() {
 	ReferenceObject();
 	pendingCount.fetch_add(1, std::memory_order_relaxed);
 }
 
-void Component::RaycastTask::RemovePendingTask() {
+void Component::RaycastTaskWarp::RemovePendingTask() {
 	if (pendingCount.fetch_sub(1, std::memory_order_relaxed) == 1) {
 		std::vector<RaycastResult> finalResult;
 
@@ -91,7 +106,7 @@ void Component::RaycastTask::RemovePendingTask() {
 	ReleaseObject();
 }
 
-bool Component::RaycastTask::EmplaceResult(std::vector<RaycastResult>& result, rvalue<Component::RaycastResult> it) {
+bool Component::RaycastTaskWarp::EmplaceResult(std::vector<RaycastResult>& result, rvalue<Component::RaycastResult> it) {
 	Component::RaycastResult& item = it;
 	if (result.size() < maxCount) {
 		result.emplace_back(std::move(item));
@@ -108,7 +123,7 @@ bool Component::RaycastTask::EmplaceResult(std::vector<RaycastResult>& result, r
 	}
 }
 
-bool Component::RaycastTask::EmplaceResult(rvalue<Component::RaycastResult> item) {
+bool Component::RaycastTaskWarp::EmplaceResult(rvalue<Component::RaycastResult> item) {
 	return EmplaceResult(results[engine.GetKernel().GetCurrentWarpIndex()], std::move(item));
 }
 

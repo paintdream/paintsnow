@@ -351,7 +351,7 @@ void RaycastInternal(Entity* root, Component::RaycastTask& task, Float3Pair& ray
 	}
 }
 
-float SpaceComponent::RoutineRaycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const {
+float SpaceComponent::RoutineRaycast(RaycastTaskWarp& task, Float3Pair& ray, Unit* parent, float ratio) const {
 	ratio = Raycast(task, ray, parent, ratio);
 	if (parent != nullptr) {
 		parent->ReleaseObject();
@@ -361,25 +361,36 @@ float SpaceComponent::RoutineRaycast(RaycastTask& task, Float3Pair& ray, Unit* p
 	return ratio;
 }
 
-float SpaceComponent::Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const {
+float SpaceComponent::Raycast(RaycastTask& rayCastTask, Float3Pair& ray, Unit* parent, float ratio) const {
 	OPTICK_EVENT();
 
-	if (!(Flag().load(std::memory_order_relaxed) & COMPONENT_OVERRIDE_WARP) || task.GetEngine().GetKernel().GetCurrentWarpIndex() == GetWarpIndex()) {
+	if (rayCastTask.Flag().load(std::memory_order_relaxed) & Component::RaycastTask::RAYCASTTASK_IGNORE_WARP) {
 		if (Flag().load(std::memory_order_relaxed) & SPACECOMPONENT_ORDERED) {
-			RaycastInternal(rootEntity, task, ray, parent, ratio, boundingBox, std::true_type());
+			RaycastInternal(rootEntity, rayCastTask, ray, parent, ratio, boundingBox, std::true_type());
 		} else {
-			RaycastInternal(rootEntity, task, ray, parent, ratio, boundingBox, std::false_type());
+			RaycastInternal(rootEntity, rayCastTask, ray, parent, ratio, boundingBox, std::false_type());
 		}
+
+		return ratio;
 	} else {
-		if (parent != nullptr) {
-			parent->ReferenceObject();
+		RaycastTaskWarp& task = static_cast<RaycastTaskWarp&>(rayCastTask);
+		if (!(Flag().load(std::memory_order_relaxed) & COMPONENT_OVERRIDE_WARP) || task.GetEngine().GetKernel().GetCurrentWarpIndex() == GetWarpIndex()) {
+			if (Flag().load(std::memory_order_relaxed) & SPACECOMPONENT_ORDERED) {
+				RaycastInternal(rootEntity, task, ray, parent, ratio, boundingBox, std::true_type());
+			} else {
+				RaycastInternal(rootEntity, task, ray, parent, ratio, boundingBox, std::false_type());
+			}
+		} else {
+			if (parent != nullptr) {
+				parent->ReferenceObject();
+			}
+
+			task.AddPendingTask();
+			task.GetEngine().GetKernel().QueueRoutine(const_cast<SpaceComponent*>(this), CreateTaskContextFree(Wrap(this, &SpaceComponent::RoutineRaycast), std::ref(task), ray, parent, ratio));
 		}
 
-		task.AddPendingTask();
-		task.GetEngine().GetKernel().QueueRoutine(const_cast<SpaceComponent*>(this), CreateTaskContextFree(Wrap(this, &SpaceComponent::RoutineRaycast), std::ref(task), ray, parent, ratio));
+		return ratio;
 	}
-
-	return ratio;
 }
 
 void SpaceComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box, bool recursive) {

@@ -11,6 +11,7 @@ TObject<IReflect>& RayTraceComponentModule::operator () (IReflect& reflect) {
 	if (reflect.IsReflectMethod()) {
 		ReflectMethod(RequestNew)[ScriptMethodLocked = "New"];
 		ReflectMethod(RequestGetCompletedPixelCount)[ScriptMethodLocked = "GetCompletedPixelCount"];
+		ReflectMethod(RequestConfigure)[ScriptMethodLocked = "Configure"];
 		ReflectMethod(RequestSetCaptureSize)[ScriptMethodLocked = "SetCaptureSize"];
 		ReflectMethod(RequestGetCaptureSize)[ScriptMethodLocked = "GetCaptureSize"];
 		ReflectMethod(RequestCapture)[ScriptMethodLocked = "Capture"];
@@ -42,6 +43,13 @@ void RayTraceComponentModule::RequestSetCaptureSize(IScript::Request& request, I
 	rayTraceComponent->SetCaptureSize(size);
 }
 
+void RayTraceComponentModule::RequestConfigure(IScript::Request& request, IScript::Delegate<RayTraceComponent> rayTraceComponent, uint16_t superSample, uint16_t tileSize, uint32_t rayCount) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(rayTraceComponent);
+
+	rayTraceComponent->Configure(superSample, tileSize, rayCount);
+}
+
 const UShort2& RayTraceComponentModule::RequestGetCaptureSize(IScript::Request& request, IScript::Delegate<RayTraceComponent> rayTraceComponent) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(rayTraceComponent);
@@ -63,3 +71,4 @@ TShared<TextureResource> RayTraceComponentModule::RequestGetCapturedTexture(IScr
 
 	return rayTraceComponent->GetCapturedTexture();
 }
+

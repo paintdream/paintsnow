@@ -38,7 +38,7 @@ namespace PaintsNow {
 	protected:
 		void Initialize(Engine& engine, Entity* entity) override;
 		void Uninitialize(Engine& engine, Entity* entity) override;
-		float RoutineRaycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const;
+		float RoutineRaycast(RaycastTaskWarp& task, Float3Pair& ray, Unit* parent, float ratio) const;
 		void RoutineUpdateBoundingBoxRecursive(Engine& engine, Float3Pair& box, Entity* entity, bool subEntity);
 		void RoutineUpdateBoundingBox(Engine& engine, Float3Pair& box, bool subEntity);
 		void RoutineDispatchEvent(const Event& event);

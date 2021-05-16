@@ -10,6 +10,7 @@
 #include "../Camera/CameraComponent.h"
 
 namespace PaintsNow {
+	class SpaceComponent;
 	class RayTraceComponent : public TAllocatedTiny<RayTraceComponent, Component> {
 	public:
 		RayTraceComponent();
@@ -22,6 +23,7 @@ namespace PaintsNow {
 		void Capture(Engine& engine, const TShared<CameraComponent>& cameraComponent);
 		TShared<TextureResource> GetCapturedTexture() const;
 		void SetOutputPath(const String& path);
+		void Configure(uint16_t superSample, uint16_t tileSize, uint32_t rayCount);
 
 	protected:
 		// progress context
@@ -33,6 +35,13 @@ namespace PaintsNow {
 			Engine& engine;
 			TShared<TextureResource> capturedTexture;
 			TShared<CameraComponent> referenceCameraComponent;
+
+			Float3 view;
+			Float3 forward;
+			Float3 up;
+			Float3 right;
+			std::vector<SpaceComponent*> rootSpaceComponents;
+
 			std::vector<LightElement> lightElements;
 			std::vector<TShared<ResourceBase> > mappedResources;
 			std::atomic<size_t> completedPixelCount;
@@ -48,6 +57,7 @@ namespace PaintsNow {
 		UShort2 captureSize;
 		uint16_t superSample;
 		uint16_t tileSize;
+		uint32_t rayCount;
 		String outputPath;
 		TShared<Context> currentContext;
 	};

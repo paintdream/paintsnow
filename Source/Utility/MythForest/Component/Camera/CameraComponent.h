@@ -171,6 +171,7 @@ namespace PaintsNow {
 		uint32_t GetCollectedVisibleEntityCount() const;
 		uint32_t GetCollectedTriangleCount() const;
 		RenderFlowComponent* GetRenderFlowComponent() const;
+		TShared<TaskData> GetTaskData();
 
 		// collected cache
 		typedef CameraComponentConfig::LightElement LightElement;

@@ -1,6 +1,7 @@
 #include "RayTraceComponent.h"
 #include "../Transform/TransformComponent.h"
 #include "../Model/ModelComponent.h"
+#include "../Space/SpaceComponent.h"
 using namespace PaintsNow;
 
 RayTraceComponent::Context::Context(Engine& e) : engine(e) {
@@ -13,11 +14,17 @@ RayTraceComponent::Context::~Context() {
 	}
 }
 
-RayTraceComponent::RayTraceComponent() : captureSize(640, 480), superSample(1024), tileSize(8) {
+RayTraceComponent::RayTraceComponent() : captureSize(640, 480), superSample(4), tileSize(8), rayCount(1024) {
 }
 
 RayTraceComponent::~RayTraceComponent() {
 	Cleanup();
+}
+
+void RayTraceComponent::Configure(uint16_t s, uint16_t t, uint32_t r) {
+	superSample = s;
+	tileSize = t;
+	rayCount = r;
 }
 
 void RayTraceComponent::SetCaptureSize(const UShort2& size) {
@@ -43,6 +50,24 @@ void RayTraceComponent::Capture(Engine& engine, const TShared<CameraComponent>& 
 	TShared<Context> context = TShared<Context>::From(new Context(engine));
 	currentContext = context;
 	context->referenceCameraComponent = cameraComponent;
+	CameraComponentConfig::WorldGlobalData& worldGlobalData = cameraComponent->GetTaskData()->worldGlobalData;
+	context->view = worldGlobalData.viewPosition;
+	MatrixFloat4x4 inverseViewProjectionMatrix = Math::QuickInverse(worldGlobalData.projectionMatrix) * Math::QuickInverse(worldGlobalData.viewMatrix);
+	context->right = Math::Transform(inverseViewProjectionMatrix, Float3(1, 0, 0));
+	context->up = Math::Transform(inverseViewProjectionMatrix, Float3(0, 1, 0));
+	context->forward = Math::Transform(inverseViewProjectionMatrix, Float3(0, 0, 1));
+
+	Entity* hostEntity = context->referenceCameraComponent->GetHostEntity();
+	const std::vector<Component*>& components = hostEntity->GetComponents();
+	std::vector<SpaceComponent*> spaceComponents;
+	for (size_t i = 0; i < components.size(); i++) {
+		Component* component = components[i];
+		if (component == nullptr) continue;
+
+		if (component->GetEntityFlagMask() & Entity::ENTITY_HAS_SPACE) {
+			context->rootSpaceComponents.emplace_back(static_cast<SpaceComponent*>(component));
+		}
+	}
 
 	engine.GetKernel().GetThreadPool().Dispatch(CreateTaskContextFree(Wrap(this, &RayTraceComponent::RoutineRayTrace), context), 1);
 }
@@ -61,7 +86,41 @@ void RayTraceComponent::RoutineRayTrace(const TShared<Context>& context) {
 }
 
 void RayTraceComponent::RoutineRenderTile(const TShared<Context>& context, size_t i, size_t j) {
-	// TODO: render tile
+	uint32_t width = Math::Min((uint32_t)tileSize, (uint32_t)(captureSize.x() - i * tileSize));
+	uint32_t height = Math::Min((uint32_t)tileSize, (uint32_t)(captureSize.y() - j * tileSize));
+	const Float3& view = context->view;
+	const std::vector<SpaceComponent*>& rootSpaceComponents = context->rootSpaceComponents;
+
+	for (uint32_t m = 0; m < height; m++) {
+		for (uint32_t n = 0; n < width; n++) {
+			uint32_t px = i * tileSize + n;
+			uint32_t py = j * tileSize + m;
+
+			for (uint32_t t = 0; t < superSample; t++) {
+				for (uint32_t r = 0; r < superSample; r++) {
+					float x = ((r + 0.5f) / superSample + px) / captureSize.x() * 2.0f - 1.0f;
+					float y = ((t + 0.5f) / superSample + py) / captureSize.y() * 2.0f - 1.0f;
+
+					Float3 dir = context->forward + context->right * x + context->up * y;
+					Component::RaycastTaskSerial task;
+					Float3Pair ray(view, dir);
+					for (size_t i = 0; i < rootSpaceComponents.size(); i++) {
+						SpaceComponent* spaceComponent = rootSpaceComponents[i];
+						spaceComponent->Raycast(task, ray, nullptr, 1.0f);
+					}
+
+					if (task.result.distance != FLT_MAX) {
+						// hit!
+						// TODO: resolve material
+					}
+				}
+			}
+
+			// finish one
+			context->completedPixelCount.fetch_add(1, std::memory_order_release);
+		}
+	}
+
 	if (context->completedPixelCount.load(std::memory_order_acquire) == captureSize.x() * captureSize.y()) {
 		// Go finish!
 		context->engine.GetKernel().QueueRoutine(this, CreateTaskContextFree(Wrap(this, &RayTraceComponent::RoutineComplete), context));
@@ -102,6 +161,8 @@ void RayTraceComponent::RoutineCollectTextures(const TShared<Context>& context, 
 		const std::vector<Component*>& components = entity->GetComponents();
 		for (size_t i = 0; i < components.size(); i++) {
 			Component* component = components[i];
+			if (component == nullptr) continue;
+
 			uint32_t mask = component->GetEntityFlagMask();
 			TransformComponent* transformComponent = entity->GetUniqueComponent(UniqueType<TransformComponent>());
 			MatrixFloat4x4 localTransform = MatrixFloat4x4::Identity();

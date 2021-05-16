@@ -83,6 +83,10 @@ RenderFlowComponent* CameraComponent::GetRenderFlowComponent() const {
 	return renderFlowComponent();
 }
 
+TShared<CameraComponent::TaskData> CameraComponent::GetTaskData() {
+	return prevTaskData;
+}
+
 Tiny::FLAG CameraComponent::GetEntityFlagMask() const {
 	return Entity::ENTITY_HAS_TICK_EVENT;
 }

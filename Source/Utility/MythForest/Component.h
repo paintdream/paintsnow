@@ -34,10 +34,28 @@ namespace PaintsNow {
 
 		class RaycastTask : public TReflected<RaycastTask, WarpTiny> {
 		public:
-			RaycastTask(Engine& engine, uint32_t maxCount);
-			~RaycastTask() override;
+			enum {
+				RAYCASTTASK_IGNORE_WARP = TINY_CUSTOM_BEGIN,
+				RAYCASTTASK_CUSTOM_BEGIN = TINY_CUSTOM_BEGIN << 1
+			};
+
+			virtual bool EmplaceResult(rvalue<RaycastResult> item) = 0;
+		};
+
+		class RaycastTaskSerial : public TReflected<RaycastTaskSerial, RaycastTask> {
+		public:
+			RaycastTaskSerial();
+			bool EmplaceResult(rvalue<RaycastResult> item) override;
+			RaycastResult result;
+		};
+
+		class RaycastTaskWarp : public TReflected<RaycastTaskWarp, RaycastTask> {
+		public:
+			RaycastTaskWarp(Engine& engine, uint32_t maxCount);
+			~RaycastTaskWarp() override;
+
 			virtual void Finish(rvalue<std::vector<RaycastResult> > finalResult) = 0;
-			bool EmplaceResult(rvalue<RaycastResult> item);
+			bool EmplaceResult(rvalue<RaycastResult> item) override;
 			bool EmplaceResult(std::vector<RaycastResult>& result, rvalue<RaycastResult> item);
 			void AddPendingTask();
 			void RemovePendingTask();

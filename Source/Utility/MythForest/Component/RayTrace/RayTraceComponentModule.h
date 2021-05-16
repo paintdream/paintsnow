@@ -40,6 +40,15 @@ namespace PaintsNow {
 		/// Get capture size of RayTraceComponent
 		/// </summary>
 		/// <param name="rayTraceComponent"> the RayTraceComponent</param>
+		/// <param name="superSample"> n for NxN supersample </param>
+		/// <param name="tileSize"> tracing tile size </param>
+		/// <param name="rayCount"> trace ray count </param>
+		void RequestConfigure(IScript::Request& request, IScript::Delegate<RayTraceComponent> rayTraceComponent, uint16_t superSample, uint16_t tileSize, uint32_t rayCount);
+
+		/// <summary>
+		/// Get capture size of RayTraceComponent
+		/// </summary>
+		/// <param name="rayTraceComponent"> the RayTraceComponent</param>
 		/// <returns> size in { x, y } </returns>
 		const UShort2& RequestGetCaptureSize(IScript::Request& request, IScript::Delegate<RayTraceComponent> rayTraceComponent);
 
