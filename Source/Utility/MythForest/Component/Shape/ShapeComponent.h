@@ -20,6 +20,8 @@ namespace PaintsNow {
 			MAX_PATCH_COUNT = 8
 		};
 
+		const TShared<MeshResource>& GetMesh() const;
+
 	protected:
 		void RoutineUpdate(Engine& engine, const TShared<MeshResource>& resource);
 		void Cleanup();

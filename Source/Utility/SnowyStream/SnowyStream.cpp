@@ -736,7 +736,7 @@ TShared<ResourceBase> SnowyStream::CreateResource(const String& path, const Stri
 
 		// assert((path[0] != '/') == !!(flag & ResourceBase::RESOURCE_VIRTUAL));
 		resource = (*p).second.second->Create(resourceManager, location);
-		resource->Flag().fetch_or(flag, std::memory_order_relaxed);
+		resource->Flag().fetch_or(flag & ~ResourceBase::RESOURCE_MAPPED, std::memory_order_relaxed);
 		resourceManager.Insert(resource());
 
 		if (!location.empty()) {

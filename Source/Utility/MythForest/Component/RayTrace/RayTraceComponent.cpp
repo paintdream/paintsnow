@@ -2,6 +2,7 @@
 #include "../Transform/TransformComponent.h"
 #include "../Model/ModelComponent.h"
 #include "../Space/SpaceComponent.h"
+#include "../Shape/ShapeComponent.h"
 using namespace PaintsNow;
 
 RayTraceComponent::Context::Context(Engine& e) : engine(e) {
@@ -56,6 +57,16 @@ void RayTraceComponent::Capture(Engine& engine, const TShared<CameraComponent>& 
 	context->right = Math::Transform(inverseViewProjectionMatrix, Float3(1, 0, 0));
 	context->up = Math::Transform(inverseViewProjectionMatrix, Float3(0, 1, 0));
 	context->forward = Math::Transform(inverseViewProjectionMatrix, Float3(0, 0, 1));
+	context->capturedTexture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), "", false, ResourceBase::RESOURCE_VIRTUAL | ResourceBase::RESOURCE_MAPPED);
+	IRender::Resource::TextureDescription& description = context->capturedTexture->description;
+	description.dimension = UShort3(captureSize.x(), captureSize.y(), 1);
+	description.state.format = IRender::Resource::TextureDescription::FLOAT;
+	description.state.layout = IRender::Resource::TextureDescription::RGBA;
+	description.data.Resize(captureSize.x() * captureSize.y() * sizeof(float) * 4);
+
+	// map manually
+	context->capturedTexture->Flag().fetch_or(ResourceBase::RESOURCE_MAPPED, std::memory_order_relaxed);
+	context->capturedTexture->GetMapCounter().fetch_add(1, std::memory_order_release);
 
 	Entity* hostEntity = context->referenceCameraComponent->GetHostEntity();
 	const std::vector<Component*>& components = hostEntity->GetComponents();
@@ -91,11 +102,13 @@ void RayTraceComponent::RoutineRenderTile(const TShared<Context>& context, size_
 	const Float3& view = context->view;
 	const std::vector<SpaceComponent*>& rootSpaceComponents = context->rootSpaceComponents;
 
+	float sampleDiv = 1.0f / (superSample * superSample);
 	for (uint32_t m = 0; m < height; m++) {
 		for (uint32_t n = 0; n < width; n++) {
-			uint32_t px = i * tileSize + n;
-			uint32_t py = j * tileSize + m;
+			uint32_t px = verify_cast<uint32_t>(i) * tileSize + n;
+			uint32_t py = verify_cast<uint32_t>(j) * tileSize + m;
 
+			Float4 finalColor(0, 0, 0, 0);
 			for (uint32_t t = 0; t < superSample; t++) {
 				for (uint32_t r = 0; r < superSample; r++) {
 					float x = ((r + 0.5f) / superSample + px) / captureSize.x() * 2.0f - 1.0f;
@@ -109,12 +122,47 @@ void RayTraceComponent::RoutineRenderTile(const TShared<Context>& context, size_
 						spaceComponent->Raycast(task, ray, nullptr, 1.0f);
 					}
 
-					if (task.result.distance != FLT_MAX) {
+					if (task.result.distance != FLT_MAX && task.result.parent) {
 						// hit!
-						// TODO: resolve material
+						assert(task.result.parent->QueryInterface(UniqueType<Entity>()) != nullptr);
+						std::unordered_map<size_t, uint32_t>::const_iterator it = context->mapEntityToResourceIndex.find(reinterpret_cast<size_t>(task.result.parent()));
+						if (it != context->mapEntityToResourceIndex.end()) {
+							const TShared<TextureResource>& baseColorTexture = static_cast<TextureResource*>(context->mappedResources[(*it).second]());
+							assert(task.result.unit->QueryInterface(UniqueType<ShapeComponent>()) != nullptr);
+							ShapeComponent* shapeComponent = static_cast<ShapeComponent*>(task.result.unit());
+							IAsset::MeshCollection& meshCollection = shapeComponent->GetMesh()->meshCollection;
+
+							const UInt3& face = meshCollection.indices[task.result.faceIndex];
+							if (!meshCollection.texCoords.empty()) {
+								Float4 uvBase = meshCollection.texCoords[0].coords[face.x()];
+								Float4 uvM = meshCollection.texCoords[0].coords[face.y()];
+								Float4 uvN = meshCollection.texCoords[0].coords[face.z()];
+								Float4 uvResult = uvBase + (uvM - uvBase)* task.result.coord.x() + (uvN - uvBase) * task.result.coord.y();
+
+								// sample texture
+								IRender::Resource::TextureDescription& desc = baseColorTexture->description;
+								assert(desc.state.format == IRender::Resource::TextureDescription::UNSIGNED_BYTE);
+								assert(desc.state.layout == IRender::Resource::TextureDescription::RGBA);
+
+								// wrap uv
+								int ux = (int)(uvResult.x() * desc.dimension.x() + 0.5f) % desc.dimension.x();
+								int uy = (int)(uvResult.y() * desc.dimension.y() + 0.5f) % desc.dimension.y();
+
+								if (ux < 0) ux += desc.dimension.x();
+								if (uy < 0) uy += desc.dimension.y();
+
+								UChar4 color = *(const UChar4*)&desc.data[uy * desc.dimension.x() * 4 * sizeof(uint8_t) + ux * 4 * sizeof(uint8_t)];
+
+								// write target
+								finalColor += Float4(color.x(), color.y(), color.z(), color.w());
+							}
+						}
 					}
 				}
 			}
+
+			finalColor *= sampleDiv;
+			*(Float4*)&context->capturedTexture->description.data[py * captureSize.x() * sizeof(float) * 4 + px * sizeof(float) * 4] = finalColor;
 
 			// finish one
 			context->completedPixelCount.fetch_add(1, std::memory_order_release);
@@ -201,12 +249,26 @@ void RayTraceComponent::RoutineCollectTextures(const TShared<Context>& context, 
 						for (size_t j = 0; j < materials.size(); j++) {
 							const TShared<MaterialResource>& material = materials[j].second;
 							// assume pbr material
+							TShared<TextureResource> baseColorTexture;
+							TShared<TextureResource> normalTexture;
+							TShared<TextureResource> mixtureTexture;
+
 							for (size_t k = 0; k < material->materialParams.variables.size(); k++) {
 								const IAsset::Material::Variable& var = material->materialParams.variables[k];
-								if (var.key == StaticBytes(baseColorTexture) || var.key == StaticBytes(normalTexture) || var.key == StaticBytes(mixtureTexture)) {
-									const TShared<TextureResource>& texture = material->textureResources[var.Parse(UniqueType<IAsset::TextureIndex>()).value];
-									context->mappedResources.emplace_back(texture->MapRawTexture()());
+								if (var.key == StaticBytes(baseColorTexture)) {
+									baseColorTexture = material->textureResources[var.Parse(UniqueType<IAsset::TextureIndex>()).value];
+								} else if (var.key == StaticBytes(normalTexture)) {
+									normalTexture = material->textureResources[var.Parse(UniqueType<IAsset::TextureIndex>()).value];
+								} else if (var.key == StaticBytes(mixtureTexture)) {
+									mixtureTexture = material->textureResources[var.Parse(UniqueType<IAsset::TextureIndex>()).value];
 								}
+							}
+
+							if (baseColorTexture && normalTexture && mixtureTexture) {
+								context->mapEntityToResourceIndex[reinterpret_cast<size_t>(entity)] = (uint32_t)verify_cast<uint32_t>(context->mappedResources.size());
+								context->mappedResources.emplace_back(baseColorTexture());
+								context->mappedResources.emplace_back(normalTexture());
+								context->mappedResources.emplace_back(mixtureTexture());
 							}
 						}
 					}

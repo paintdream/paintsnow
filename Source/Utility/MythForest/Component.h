@@ -26,6 +26,7 @@ namespace PaintsNow {
 			Float3 normal;
 			Float2 coord;
 			float distance;
+			uint32_t faceIndex;
 			TShared<Unit> unit;
 			TShared<Unit> parent;
 			Unique metaType;

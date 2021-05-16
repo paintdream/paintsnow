@@ -60,6 +60,7 @@ namespace PaintsNow {
 		// bool operator >> (IStreamBase& stream) const override;
 		// bool operator << (IStreamBase& stream) override;
 		TObject<IReflect>& operator () (IReflect& reflect) override;
+		std::atomic<uint32_t>& GetMapCounter();
 
 	protected:
 		String uniqueLocation;

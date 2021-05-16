@@ -247,6 +247,7 @@ struct ShapeComponent::PatchRaycaster {
 								distance = s;
 								hitPatch = &patch;
 								hitIndex = patch.indices[i + m - 3];
+								coord = Float2(uv[0][m], uv[1][m]);
 								intersection = hit;
 							}
 						}
@@ -265,10 +266,11 @@ struct ShapeComponent::PatchRaycaster {
 	const std::vector<Float3>& vertices;
 	const std::vector<UInt3>& indices;
 	std::pair<Group, Group> rayGroup;
+	const Patch* hitPatch;
 	const Float3Pair& ray;
 	Float3 intersection;
-	const Patch* hitPatch;
 	uint32_t hitIndex;
+	Float2 coord;
 	float distance;
 };
 
@@ -286,6 +288,8 @@ float ShapeComponent::Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, 
 				RaycastResult result;
 				result.position = q.intersection;
 				result.distance = q.distance * ratio;
+				result.faceIndex = q.hitIndex;
+				result.coord = q.coord;
 				result.unit = const_cast<ShapeComponent*>(this);
 				result.parent = parent;
 				task.EmplaceResult(std::move(result));
@@ -297,3 +301,8 @@ float ShapeComponent::Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, 
 		return 0.0f;
 	}
 }
+
+const TShared<MeshResource>& ShapeComponent::GetMesh() const {
+	return meshResource;
+}
+

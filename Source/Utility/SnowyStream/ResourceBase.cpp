@@ -217,6 +217,10 @@ void ResourceBase::GetDependencies(std::vector<Dependency>& deps) const {
 	(*const_cast<ResourceBase*>(this))(searcher);
 }
 
+std::atomic<uint32_t>& ResourceBase::GetMapCounter() {
+	return mapCount;
+}
+
 Unique ResourceBase::GetBaseUnique() const {
 	return GetUnique();
 }

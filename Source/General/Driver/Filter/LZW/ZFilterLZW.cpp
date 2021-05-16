@@ -135,7 +135,7 @@ bool FilterLZWImpl::Read(void* p, size_t& len) {
 			}
 		} else {
 			// ABA case
-			if (mapStrings.size() + 0x100 <= res) {
+			if (mapStrings.size() + 0x100 <= (size_t)res) {
 				entry = ReadString(prev);
 				entry += entry[0];
 				WriteString(entry);
