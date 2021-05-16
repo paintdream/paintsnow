@@ -92,7 +92,7 @@ namespace PaintsNow {
 		void RequestMapResource(IScript::Request& request, IScript::Delegate<ResourceBase> resource);
 
 		/// <summary>
-		/// Unmap resource to release local data on memory (especially for render resources), internal counted.
+		/// UnMap resource to release local data on memory (especially for render resources), internal counted.
 		/// </summary>
 		/// <param name="resource"> Resource object </param>
 		/// <returns></returns>

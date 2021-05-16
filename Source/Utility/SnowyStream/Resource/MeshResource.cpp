@@ -151,9 +151,9 @@ void MeshResource::Upload(IRender& render, void* deviceContext) {
 	}
 }
 
-void MeshResource::Unmap() {
+void MeshResource::UnMap() {
 	OPTICK_EVENT();
-	RenderResourceBase::Unmap();
+	RenderResourceBase::UnMap();
 
 	ThreadPool& threadPool = resourceManager.GetThreadPool();
 	if (threadPool.PollExchange(critical, 1u) == 0u) {

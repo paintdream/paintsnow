@@ -47,7 +47,7 @@ void TerrainResource::FromTexture(const TShared<TextureResource>& textureResourc
 		assert(false); // not supported
 	}
 
-	textureResource->Unmap();
+	textureResource->UnMap();
 }
 
 TObject<IReflect>& TerrainResource::operator () (IReflect& reflect) {

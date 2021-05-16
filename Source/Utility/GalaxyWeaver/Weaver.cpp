@@ -126,7 +126,7 @@ void Weaver::RpcPostResource(IScript::Request& request, const String& path, cons
 		success = resource->Persist();
 	}
 
-	resource->Unmap();
+	resource->UnMap();
 	filter->Destroy();
 
 	if (rpcCallback) {

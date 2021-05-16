@@ -552,7 +552,7 @@ void SnowyStream::RequestUnmapResource(IScript::Request& request, IScript::Deleg
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(resource);
 
-	resource->Unmap();
+	resource->UnMap();
 }
 
 void SnowyStream::RequestModifyResource(IScript::Request& request, IScript::Delegate<ResourceBase> resource, const String& action, IScript::Request::Arguments payload) {
@@ -594,7 +594,7 @@ struct CompressTask : public TaskOnce {
 			Finalize(context);
 		}
 
-		resource->Unmap();
+		resource->UnMap();
 		ITask::Delete(this);
 	}
 
@@ -707,6 +707,7 @@ TShared<ResourceBase> SnowyStream::CreateResource(const String& path, const Stri
 	std::unordered_map<String, std::pair<Unique, TShared<ResourceCreator> > >::iterator p = resourceSerializers.find(extension);
 	IArchive& archive = interfaces.archive;
 	IFilterBase& protocol = interfaces.assetFilterBase;
+	bool mapOnCreate = !!(flag & ResourceBase::RESOURCE_MAPPED);
 
 	TShared<ResourceBase> resource;
 	if (p != resourceSerializers.end()) {
@@ -724,6 +725,10 @@ TShared<ResourceBase> SnowyStream::CreateResource(const String& path, const Stri
 				if (!openExisting) {
 					return nullptr;
 				} else {
+					if (mapOnCreate) {
+						existed->Map();
+					}
+
 					return existed;
 				}
 			}
@@ -743,7 +748,9 @@ TShared<ResourceBase> SnowyStream::CreateResource(const String& path, const Stri
 				resourceManager.InvokeUpload(resource());
 			}
 
-			resource->Unmap();
+			if (!mapOnCreate) {
+				resource->UnMap();
+			}
 		}
 	}
 

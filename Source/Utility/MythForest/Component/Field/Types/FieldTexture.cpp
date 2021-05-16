@@ -7,7 +7,7 @@ FieldTexture::FieldTexture(TShared<TextureResource> t, const Float3Pair& r) : te
 }
 
 FieldTexture::~FieldTexture() {
-	textureResource->Unmap();
+	textureResource->UnMap();
 }
 
 Bytes FieldTexture::operator [] (const Float3& position) const {

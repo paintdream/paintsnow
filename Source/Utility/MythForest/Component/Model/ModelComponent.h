@@ -30,6 +30,7 @@ namespace PaintsNow {
 		void SetMaterial(uint16_t meshGroupIndex, uint16_t policy, const TShared<MaterialResource>& materialResource);
 		uint32_t CreateOverrider(const TShared<ShaderResource>& shaderResourceTemplate);
 		size_t ReportGraphicMemoryUsage() const override;
+		const std::vector<std::pair<uint32_t, TShared<MaterialResource> > >& GetMaterials() const;
 
 	protected:
 		uint32_t CollectDrawCalls(std::vector<OutputRenderData, DrawCallAllocator>& outputDrawCalls, const InputRenderData& inputRenderData, BytesCache& bytesCache, CollectOption option) override;

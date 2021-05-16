@@ -89,7 +89,7 @@ ShapeComponent::Patch* ShapeComponent::MakeBound(Patch& patch, const std::vector
 
 void ShapeComponent::Cleanup() {
 	if (meshResource) {
-		meshResource->Unmap();
+		meshResource->UnMap();
 		meshResource = nullptr;
 	}
 }

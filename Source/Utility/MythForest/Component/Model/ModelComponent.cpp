@@ -24,6 +24,10 @@ uint32_t ModelComponent::CreateOverrider(const TShared<ShaderResource>& shaderRe
 	return verify_cast<uint32_t>((it - shaderOverriders.begin() + 1) * materialResources.size());
 }
 
+const std::vector<std::pair<uint32_t, TShared<MaterialResource> > >& ModelComponent::GetMaterials() const {
+	return materialResources;
+}
+
 static void GenerateDrawCall(IDrawCallProvider::OutputRenderData& renderData, ShaderResource* shaderResource, std::vector<IRender::Resource*>& meshBuffers, const IAsset::MeshGroup& slice, const MeshResource::BufferCollection& bufferCollection, uint32_t deviceElementSize, uint16_t priority, uint16_t index) {
 	assert(deviceElementSize != 0);
 	IRender::Resource::DrawCallDescription& drawCall = renderData.drawCallDescription;

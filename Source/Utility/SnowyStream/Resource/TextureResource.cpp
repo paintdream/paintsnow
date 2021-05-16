@@ -37,8 +37,8 @@ void TextureResource::Detach(IRender& render, void* deviceContext) {
 	RenderResourceBase::Detach(render, deviceContext);
 }
 
-void TextureResource::Unmap() {
-	RenderResourceBase::Unmap();
+void TextureResource::UnMap() {
+	RenderResourceBase::UnMap();
 	ThreadPool& threadPool = resourceManager.GetThreadPool();
 	if (threadPool.PollExchange(critical, 1u) == 0u) {
 		if (mapCount.load(std::memory_order_relaxed) == 0) {
@@ -270,18 +270,54 @@ bool TextureResource::LoadExternalResource(Interfaces& interfaces, IStreamBase& 
 
 IStreamBase* TextureResource::OpenArchive(IArchive& archive, const String& extension, bool write, uint64_t& length) {
 	IStreamBase* compressed = nullptr;
+
 	// find alternative
 	assert(extension == "TextureResource");
-	#if defined(CMAKE_ANDROID)
-	// Try astc
-	compressed = archive.Open(GetLocation() + "/ASTC" + "." + extension + resourceManager.GetLocationPostfix(), write, length);
-	#else
-	compressed = archive.Open(GetLocation() + "/BPTC" + "." + extension + resourceManager.GetLocationPostfix(), write, length);
-	#endif
-
-	if (compressed != nullptr) {
-		return compressed;
+	String location = GetLocation();
+	assert(!location.empty());
+	if (location[location.size() - 1] == '$') { // raw resource required
+		return archive.Open(location.substr(0, location.size() - 1) + "." + extension + resourceManager.GetLocationPostfix(), write, length);
 	} else {
-		return BaseClass::OpenArchive(archive, extension, write, length);
+#if defined(CMAKE_ANDROID)
+		// Try astc
+		compressed = archive.Open(location + "/ASTC" + "." + extension + resourceManager.GetLocationPostfix(), write, length);
+#else
+		compressed = archive.Open(location + "/BPTC" + "." + extension + resourceManager.GetLocationPostfix(), write, length);
+#endif
+
+		if (compressed != nullptr) {
+			Flag().fetch_or(RESOURCE_COMPRESSED, std::memory_order_release);
+			return compressed;
+		} else {
+			Flag().fetch_and(~RESOURCE_COMPRESSED, std::memory_order_release);
+			return BaseClass::OpenArchive(archive, extension, write, length);
+		}
 	}
 }
+
+TShared<TextureResource> TextureResource::MapRawTexture() {
+	if (rawTexture() != nullptr) {
+		rawTexture->Map();
+		return rawTexture;
+	} else if (Flag().load(std::memory_order_acquire) & RESOURCE_COMPRESSED) {
+		TShared<ResourceBase> raw = resourceManager.GetUniformResourceManager().CreateResource(GetLocation() + '$', "TextureResource", true, RESOURCE_MAPPED);
+
+		if (raw() != nullptr) {
+			TShared<TextureResource> tex = raw->QueryInterface(UniqueType<TextureResource>());
+			assert(tex() != nullptr);
+
+			SpinLock(critical);
+			if (rawTexture() != nullptr) {
+				rawTexture = tex;
+			}
+			SpinUnLock(critical);
+			return tex;
+		} else {
+			return nullptr;
+		}
+	} else {
+		Map();
+		return this;
+	}
+}
+
