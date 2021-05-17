@@ -23,7 +23,7 @@ namespace PaintsNow {
 		void Detach(IRender& render, void* deviceContext) override;
 		bool Compress(const String& compressType, bool refreshRuntime) override;
 		bool LoadExternalResource(Interfaces& interfaces, IStreamBase& streamBase, size_t length) override;
-		void UnMap() override;
+		bool UnMap() override;
 
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		IRender::Resource* GetRenderResource() const;

@@ -42,7 +42,7 @@ namespace PaintsNow {
 		virtual bool Compress(const String& compressType, bool refreshRuntime);
 		virtual bool Persist();
 		virtual bool Map();
-		virtual void UnMap();
+		virtual bool UnMap();
 		virtual void ScriptModify(IScript::Request& request, const String& action, IScript::Request::Arguments arguments);
 		bool IsMapped() const;
 

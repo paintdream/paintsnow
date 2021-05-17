@@ -18,7 +18,7 @@ namespace PaintsNow {
 		void Refresh(IRender& render, void* deviceContext) override;
 		void Attach(IRender& render, void* deviceContext) override;
 		void Detach(IRender& render, void* deviceContext) override;
-		void UnMap() override;
+		bool UnMap() override;
 		size_t ReportDeviceMemoryUsage() const override;
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		const Float3Pair& GetBoundingBox() const;

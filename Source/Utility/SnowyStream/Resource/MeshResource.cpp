@@ -51,7 +51,7 @@ void MeshResource::Refresh(IRender& render, void* deviceContext) {
 void MeshResource::Attach(IRender& render, void* deviceContext) {
 	// delayed to upload
 
-	RenderResourceBase::Attach(render, deviceContext);
+	BaseClass::Attach(render, deviceContext);
 }
 
 typedef IRender::Resource::BufferDescription Description;
@@ -151,19 +151,23 @@ void MeshResource::Upload(IRender& render, void* deviceContext) {
 	}
 }
 
-void MeshResource::UnMap() {
+bool MeshResource::UnMap() {
 	OPTICK_EVENT();
-	RenderResourceBase::UnMap();
-
-	ThreadPool& threadPool = resourceManager.GetThreadPool();
-	if (threadPool.PollExchange(critical, 1u) == 0u) {
-		if (mapCount.load(std::memory_order_acquire) == 0) {
-			std::vector<IAsset::MeshGroup> groups;
-			std::swap(groups, meshCollection.groups);
-			meshCollection = IAsset::MeshCollection();
-			std::swap(groups, meshCollection.groups);
+	if (BaseClass::UnMap()) {
+		ThreadPool& threadPool = resourceManager.GetThreadPool();
+		if (threadPool.PollExchange(critical, 1u) == 0u) {
+			if (mapCount.load(std::memory_order_acquire) == 0) {
+				std::vector<IAsset::MeshGroup> groups;
+				std::swap(groups, meshCollection.groups);
+				meshCollection = IAsset::MeshCollection();
+				std::swap(groups, meshCollection.groups);
+			}
+			SpinUnLock(critical);
 		}
-		SpinUnLock(critical);
+
+		return true;
+	} else {
+		return false;
 	}
 }
 

@@ -188,6 +188,7 @@ void ShapeComponent::RoutineUpdate(Engine& engine, const TShared<MeshResource>& 
 
 		std::swap(newPatches, patches);
 	} else {
+		resource->UnMap();
 		assert(false);
 	}
 

@@ -19,7 +19,7 @@ TextureResource::TextureResource(ResourceManager& manager, const String& uniqueI
 }
 
 void TextureResource::Attach(IRender& render, void* deviceContext) {
-	RenderResourceBase::Attach(render, deviceContext);
+	BaseClass::Attach(render, deviceContext);
 	IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(deviceContext);
 	assert(queue != nullptr);
 	assert(instance == nullptr);
@@ -33,17 +33,22 @@ void TextureResource::Detach(IRender& render, void* deviceContext) {
 		instance = nullptr;
 	}
 
-	RenderResourceBase::Detach(render, deviceContext);
+	BaseClass::Detach(render, deviceContext);
 }
 
-void TextureResource::UnMap() {
-	RenderResourceBase::UnMap();
-	ThreadPool& threadPool = resourceManager.GetThreadPool();
-	if (threadPool.PollExchange(critical, 1u) == 0u) {
-		if (mapCount.load(std::memory_order_relaxed) == 0) {
-			description.data.Clear();
-		}
-		SpinUnLock(critical);
+bool TextureResource::UnMap() {
+	if (BaseClass::UnMap()) {
+		ThreadPool& threadPool = resourceManager.GetThreadPool();
+		if (threadPool.PollExchange(critical, 1u) == 0u) {
+			if (mapCount.load(std::memory_order_relaxed) == 0) {
+				description.data.Clear();
+			}
+			SpinUnLock(critical);
+		} 
+
+		return true;
+	} else {
+		return false;
 	}
 }
 
