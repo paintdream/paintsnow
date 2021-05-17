@@ -425,6 +425,10 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\TextTransformVS.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\TextureArrayResource.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\TextureResource.cpp
 # End Source File
 # Begin Source File
@@ -822,6 +826,10 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\TextShadingFS.h
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\TextTransformVS.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\TextureArrayResource.h
 # End Source File
 # Begin Source File
 

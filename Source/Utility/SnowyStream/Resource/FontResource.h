@@ -6,7 +6,6 @@
 #pragma once
 #include "RenderResourceBase.h"
 #include "TextureResource.h"
-#include "../ResourceManager.h"
 #include "../../../General/Interface/IFontBase.h"
 #include "../../../Core/Template/TTagged.h"
 #include "../../../Core/Template/TMap.h"

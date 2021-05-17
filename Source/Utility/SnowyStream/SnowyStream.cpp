@@ -7,6 +7,7 @@
 #include "Resource/SkeletonResource.h"
 #include "Resource/StreamResource.h"
 #include "Resource/TextureResource.h"
+#include "Resource/TextureArrayResource.h"
 #include "../../Core/System/MemoryStream.h"
 #include "../../Core/Driver/Profiler/Optick/optick.h"
 #include "../../General/Driver/Filter/Json/Core/json.h"
@@ -660,6 +661,7 @@ void SnowyStream::RegisterReflectedSerializers() {
 	RegisterReflectedSerializer(UniqueType<MeshResource>(), interfaces.render, nullptr, renderResourceManagerType);
 	RegisterReflectedSerializer(UniqueType<SkeletonResource>(), interfaces.render, nullptr, renderResourceManagerType);
 	RegisterReflectedSerializer(UniqueType<TextureResource>(), interfaces.render, nullptr, renderResourceManagerType);
+	RegisterReflectedSerializer(UniqueType<TextureArrayResource>(), interfaces.render, nullptr, renderResourceManagerType);
 	RegisterReflectedSerializer(UniqueType<StreamResource>(), interfaces.archive, this, UniqueType<DeviceResourceManager<StreamResource::DriverType> >());
 
 	TShared<ResourceManager> manager = resourceManagers[UniqueType<IRender>::Get()];

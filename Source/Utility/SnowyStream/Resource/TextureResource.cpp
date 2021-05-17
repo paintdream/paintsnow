@@ -1,5 +1,4 @@
 #include "TextureResource.h"
-#include "../ResourceManager.h"
 #include "../Manager/RenderResourceManager.h"
 #include "../../../General/Interface/IImage.h"
 #include "../../../Core/System/MemoryStream.h"
