@@ -57,18 +57,10 @@ void TextureResource::Upload(IRender& render, void* deviceContext) {
 		return;
 	OPTICK_EVENT();
 
-	// if (description.data.size() == 0) return;
-	//	assert(description.data.size() == (size_t)description.dimension.x() * description.dimension.y() * IImage::GetPixelSize((IRender::Resource::TextureDescription::Format)description.state.format, (IRender::Resource::TextureDescription::Layout)description.state.layout));
 	IRender::Queue* queue = reinterpret_cast<IRender::Queue*>(deviceContext);
-
 	if (Flag().fetch_and(~TINY_MODIFIED) & TINY_MODIFIED) {
 		ThreadPool& threadPool = resourceManager.GetThreadPool();
 		if (threadPool.PollExchange(critical, 1u) == 0u) {
-			description.state.media = 0;
-			if (description.state.compress || GetLocation()[0] == '/') {
-				assert(!description.data.Empty());
-			}
-
 			deviceMemoryUsage = description.data.GetSize();
 			if (mapCount.load(std::memory_order_relaxed) != 0) {
 				IRender::Resource::TextureDescription desc = description;

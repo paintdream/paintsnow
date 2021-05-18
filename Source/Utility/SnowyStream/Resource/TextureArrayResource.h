@@ -28,6 +28,8 @@ namespace PaintsNow {
 
 	protected:
 		std::vector<TShared<TextureResource> > slices;
+		IRender::Resource* instance;
+		size_t deviceMemoryUsage;
 	};
 }
 

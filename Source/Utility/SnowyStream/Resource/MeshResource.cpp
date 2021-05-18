@@ -45,7 +45,6 @@ void MeshResource::Refresh(IRender& render, void* deviceContext) {
 	} else {
 		deviceElementSize = sizeof(UInt3);
 	}
-
 }
 
 void MeshResource::Attach(IRender& render, void* deviceContext) {
