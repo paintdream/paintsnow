@@ -409,6 +409,10 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\Sc
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\ScreenSpaceFilterRenderStage.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\ScreenSpaceTraceRenderStage.cpp
 # End Source File
 # Begin Source File
@@ -870,6 +874,10 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\Sc
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\ScreenRenderStage.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RenderFlow\RenderStage\ScreenSpaceFilterRenderStage.h
 # End Source File
 # Begin Source File
 

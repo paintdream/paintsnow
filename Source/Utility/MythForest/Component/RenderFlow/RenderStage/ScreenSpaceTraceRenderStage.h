@@ -6,9 +6,10 @@
 #pragma once
 #include "../RenderStage.h"
 #include "../RenderPort/RenderPortTextureInput.h"
+#include "../../../../SnowyStream/Resource/Passes/ScreenSpaceTracePass.h"
 
 namespace PaintsNow {
-	class ScreenSpaceTraceRenderStage : public TReflected<ScreenSpaceTraceRenderStage, RenderStage> {
+	class ScreenSpaceTraceRenderStage : public TReflected<ScreenSpaceTraceRenderStage, GeneralRenderStageDraw<ScreenSpaceTracePass> > 	{
 	public:
 		ScreenSpaceTraceRenderStage(const String& s);
 

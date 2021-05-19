@@ -20,6 +20,8 @@
 #include "../Resource/Passes/MultiHashTracePass.h"
 #include "../Resource/Passes/ParticlePass.h"
 #include "../Resource/Passes/ScreenPass.h"
+#include "../Resource/Passes/ScreenSpaceFilterPass.h"
+#include "../Resource/Passes/ScreenSpaceTracePass.h"
 #include "../Resource/Passes/ShadowMaskPass.h"
 #include "../Resource/Passes/SkyDirectIrradiancePass.h"
 #include "../Resource/Passes/SkyIndirectIrradiancePass.h"
@@ -314,6 +316,8 @@ void RenderResourceManager::RegisterBuiltinPasses() {
 	RegisterPass(*this, UniqueType<MultiHashSetupPass>());
 	RegisterPass(*this, UniqueType<MultiHashTracePass>());
 	RegisterPass(*this, UniqueType<ScreenPass>());
+	// RegisterPass(*this, UniqueType<ScreenSpaceFilterPass>());
+	RegisterPass(*this, UniqueType<ScreenSpaceTracePass>());
 	RegisterPass(*this, UniqueType<ShadowMaskPass>());
 	RegisterPass(*this, UniqueType<SkyDirectIrradiancePass>());
 	RegisterPass(*this, UniqueType<SkyIndirectIrradiancePass>());

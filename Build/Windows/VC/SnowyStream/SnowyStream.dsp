@@ -277,7 +277,19 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\ScreenPass.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\ScreenSpaceFilterFS.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\ScreenSpaceFilterPass.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\ScreenSpaceTraceFS.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\ScreenSpaceTracePass.cpp
 # End Source File
 # Begin Source File
 
@@ -677,7 +689,19 @@ SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\ScreenPass.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\ScreenSpaceFilterFS.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\ScreenSpaceFilterPass.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Shaders\ScreenSpaceTraceFS.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\SnowyStream\Resource\Passes\ScreenSpaceTracePass.h
 # End Source File
 # Begin Source File
 

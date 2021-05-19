@@ -5,6 +5,7 @@
 using namespace PaintsNow;
 
 ScreenSpaceTraceFS::ScreenSpaceTraceFS() {
+	traceBuffer.description.usage = IRender::Resource::BufferDescription::UNIFORM;
 }
 
 String ScreenSpaceTraceFS::GetShaderText() {
@@ -23,9 +24,10 @@ String ScreenSpaceTraceFS::GetShaderText() {
 			/// reverse-z d > 0 means near than probe line
 			if (d > 0) {
 				endPosition = pos;
-			} else {
-				startPosition = pos;
+				break;
 			}
+			
+			startPosition = pos;
 		}
 
 		float4 pos = lerp(startPosition, endPosition, float(0.5));

@@ -15,6 +15,7 @@
 #include "RenderStage/LightTextureEncodeRenderStage.h"
 #include "RenderStage/PhaseLightRenderStage.h"
 #include "RenderStage/ScreenRenderStage.h"
+#include "RenderStage/ScreenSpaceFilterRenderStage.h"
 #include "RenderStage/ScreenSpaceTraceRenderStage.h"
 #include "RenderStage/ShadowMaskRenderStage.h"
 #include "RenderStage/WidgetRenderStage.h"
@@ -48,6 +49,7 @@ RenderFlowComponentModule::RenderFlowComponentModule(Engine& engine) : BaseClass
 	REGISTER_TEMPLATE(LightTextureEncodeRenderStage);
 	REGISTER_TEMPLATE(PhaseLightRenderStage);
 	REGISTER_TEMPLATE(ScreenRenderStage);
+	REGISTER_TEMPLATE(ScreenSpaceFilterRenderStage);
 	REGISTER_TEMPLATE(ScreenSpaceTraceRenderStage);
 	REGISTER_TEMPLATE(ShadowMaskRenderStage);
 	REGISTER_TEMPLATE(WidgetRenderStage);
