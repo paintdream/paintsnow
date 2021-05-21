@@ -50,7 +50,7 @@ void LightBufferEncodeRenderStage::Update(Engine& engine, IRender::Queue* queue)
 	LightBufferEncodePass& Pass = GetPass();
 	LightEncoderCS& encoder = Pass.encoder;
 	encoder.depthTexture.resource = InputDepth.textureResource->GetRenderResource();
-	encoder.inverseProjectionMatrix = CameraView->inverseProjectionMatrix;
+	encoder.projectionParams = CameraView->projectionParams;
 
 	// Prepare lights
 	const std::vector<RenderPortLightSource::LightElement>& lights = LightSource.lightElements;

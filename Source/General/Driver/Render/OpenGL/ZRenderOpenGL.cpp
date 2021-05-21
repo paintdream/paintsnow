@@ -622,10 +622,11 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 
 		if (d.state.media == IRender::Resource::TextureDescription::RENDERBUFFER) {
 			assert(d.data.Empty());
-			assert(renderbufferID == 0);
-			glGenRenderbuffers(1, &renderbufferID);
-			glBindRenderbuffer(GL_RENDERBUFFER, renderbufferID);
-			glRenderbufferStorage(GL_RENDERBUFFER, format, d.dimension.x(), d.dimension.y());
+			if (renderbufferID != 0) {
+				glGenRenderbuffers(1, &renderbufferID);
+				glBindRenderbuffer(GL_RENDERBUFFER, renderbufferID);
+				glRenderbufferStorage(GL_RENDERBUFFER, format, d.dimension.x(), d.dimension.y());
+			}
 			return;
 		}
 

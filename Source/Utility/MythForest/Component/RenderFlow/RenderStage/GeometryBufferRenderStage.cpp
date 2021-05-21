@@ -44,16 +44,19 @@ void GeometryBufferRenderStage::Prepare(Engine& engine, IRender::Queue* queue) {
 	BaseColorOcclusion.renderTargetDescription.state.layout = IRender::Resource::TextureDescription::RGBA;
 	BaseColorOcclusion.renderTargetDescription.state.immutable = false;
 	BaseColorOcclusion.renderTargetDescription.state.attachment = true;
+	BaseColorOcclusion.renderTargetDescription.state.addressU = BaseColorOcclusion.renderTargetDescription.state.addressV = BaseColorOcclusion.renderTargetDescription.state.addressW = IRender::Resource::TextureDescription::CLAMP;
 
 	NormalRoughnessMetallic.renderTargetDescription.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 	NormalRoughnessMetallic.renderTargetDescription.state.layout = IRender::Resource::TextureDescription::RGBA;
 	NormalRoughnessMetallic.renderTargetDescription.state.immutable = false;
 	NormalRoughnessMetallic.renderTargetDescription.state.attachment = true;
+	NormalRoughnessMetallic.renderTargetDescription.state.addressU = NormalRoughnessMetallic.renderTargetDescription.state.addressV = NormalRoughnessMetallic.renderTargetDescription.state.addressW = IRender::Resource::TextureDescription::CLAMP;
 
 	Depth.renderTargetDescription.state.format = IRender::Resource::TextureDescription::FLOAT;
 	Depth.renderTargetDescription.state.layout = IRender::Resource::TextureDescription::DEPTH_STENCIL;
 	Depth.renderTargetDescription.state.immutable = false;
 	Depth.renderTargetDescription.state.attachment = true;
+	Depth.renderTargetDescription.state.addressU = Depth.renderTargetDescription.state.addressV = Depth.renderTargetDescription.state.addressW = IRender::Resource::TextureDescription::CLAMP;
 
 	BaseClass::Prepare(engine, queue);
 }

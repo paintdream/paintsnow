@@ -648,7 +648,7 @@ void PhaseComponent::CoTaskAssembleTaskSetup(Engine& engine, TaskData& task, con
 	phase.shadowIndex = bakePoint.shadowIndex;
 	Shadow& shadow = shadows[phase.shadowIndex];
 	const UShort3& dim = shadow.shadow->description.dimension;
-	task.worldGlobalData.lightReprojectionMatrix = Math::InverseProjection(phase.projectionMatrix) * Math::QuickInverse(phase.viewMatrix) * shadow.viewMatrix * shadow.projectionMatrix;
+	task.worldGlobalData.lightReprojectionMatrix = Math::InversePerspective(phase.projectionMatrix) * Math::QuickInverse(phase.viewMatrix) * shadow.viewMatrix * shadow.projectionMatrix;
 	task.worldGlobalData.lightColor = shadow.lightElement.colorAttenuation;
 	task.worldGlobalData.lightPosition = shadow.lightElement.position;
 	task.worldGlobalData.invScreenSize = Float2(1.0f / dim.x(), 1.0f / dim.y());

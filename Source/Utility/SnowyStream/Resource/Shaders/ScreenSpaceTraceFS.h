@@ -13,15 +13,15 @@ namespace PaintsNow {
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		String GetShaderText() override;
 
-		BindTexture Depth;
+		BindTexture depthTexture;
+		BindTexture normalTexture;
 		BindBuffer traceBuffer;
 
-		MatrixFloat4x4 viewProjectionMatrix;
-		Float3 invScreenSize;
-		Float3 worldPosition;
-		Float3 traceDirection;
-		Float2 rasterCoord;
+		MatrixFloat4x4 projectionMatrix;
+		MatrixFloat4x4 inverseProjectionMatrix;
+		Float2 invScreenSize;
+		Float4 rasterCoord;
 
-		Float2 traceCoord;
+		Float4 traceCoord;
 	};
 }

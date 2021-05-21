@@ -24,7 +24,7 @@ String StandardLightingBufferEncodedFS::GetShaderText() {
 	baseColor = pow(baseColor, float3(GAMMA, GAMMA, GAMMA));
 	float3 diff = (baseColor - baseColor * metallic) / PI;
 	float3 spec = lerp(float3(0.04, 0.04, 0.04), baseColor, metallic);
-	float3 V = -normalize(viewPosition);
+	float3 V = normalize(float3(0, 0, 1) - viewPosition);
 	float3 N = viewNormal;
 	float NoV = saturate(dot(V, N));
 

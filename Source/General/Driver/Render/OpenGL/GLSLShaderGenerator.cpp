@@ -30,6 +30,11 @@ static const String frameCode = "#define PI 3.1415926 \n\
 #define GlobalInvocationID gl_GlobalInvocationID \n\
 #define LocalInvocationIndex gl_LocalInvocationIndex \n\
 #define textureShadow texture \n\
+float3 unprojection(float4 proj, float3 v) { \n\
+    float nz = proj.w / (proj.z + v.z); \n\
+	return float3(proj.x * v.x * nz, proj.y * v.y * nz, -nz); \n\
+} \n\
+float4 projection(float4 proj, float3 v) { return float4(proj.x * v.x, proj.y * v.y, proj.z * v.z + proj.w, -v.z); } \n\
 float saturate(float x) { return clamp(x, 0.0, 1.0); } \n\
 float2 saturate(float2 x) { return clamp(x, float2(0.0, 0.0), float2(1.0, 1.0)); } \n\
 float3 saturate(float3 x) { return clamp(x, float3(0.0, 0.0, 0.0), float3(1.0, 1.0, 1.0)); } \n\

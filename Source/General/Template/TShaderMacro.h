@@ -155,6 +155,16 @@ namespace PaintsNow {
 	FILTER_FUNCTION_THREE(smoothstep);
 
 	template <class T>
+	inline TType4<T> projection(const TVector<T, 4>& proj, const TVector<T, 3>& v) {
+		return TType4<T>(proj[0] * v[0], proj[1] * v[1], proj[2] * v[2] + proj[3], -v[2]);
+	}
+
+	template <class T>
+	inline TType3<T> unprojection(const TVector<T, 4>& unproj, const TVector<T, 3>& v) {
+		return TType3<T>(unproj[0] * v[0], unproj[1] * v[1], unproj[2] * v[2] + unproj[3]);
+	}
+
+	template <class T>
 	TType4<T> texture(const IShader::BindTexture& tex, const TVector<T, 2>& v, T bias = 0) {
 		return TType4<T>(0, 0, 0, 0);
 	}

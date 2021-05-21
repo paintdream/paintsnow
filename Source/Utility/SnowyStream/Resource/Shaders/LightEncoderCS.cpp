@@ -21,12 +21,8 @@ String LightEncoderCS::GetShaderText() {
 		uint3 id = WorkGroupID * WorkGroupSize + LocalInvocationID;
 		float2 depthRange = imageLoad(depthTexture, int2(id.x, id.y)).xy;
 		float2 rasterCoord = float2((float(id.x) + 0.5) * invScreenSize.x, (float(id.y) + 0.5) * invScreenSize.y);
-		float4 farPosition = float4(rasterCoord.x, rasterCoord.y, depthRange.x, 1) * float(2.0) - float4(1.0, 1.0, 1.0, 1.0);
-		farPosition = mult_vec(inverseProjectionMatrix, farPosition);
-		farPosition /= farPosition.w;
-		float4 nearPosition = float4(rasterCoord.x, rasterCoord.y, depthRange.y, 1) * float(2.0) - float4(1.0, 1.0, 1.0, 1.0);
-		nearPosition = mult_vec(inverseProjectionMatrix, nearPosition);
-		nearPosition /= nearPosition.w;
+		float3 farPosition = unprojection(projectionParams, float3(rasterCoord.x, rasterCoord.y, depthRange.x) * float(2) - float3(1.0, 1.0, 1.0));
+		float3 nearPosition = unprojection(projectionParams, float3(rasterCoord.x, rasterCoord.y, depthRange.y) * float(2.0) - float3(1.0, 1.0, 1.0));
 		// if (id.y < WorkGroupSize.y * NumWorkGroups.y / 2)
 		{
 			uint offset = (id.x + id.y * NumWorkGroups.x * WorkGroupSize.x) * 64;
@@ -86,7 +82,7 @@ TObject<IReflect>& LightEncoderCS::operator () (IReflect& reflect) {
 		ReflectProperty(lightInfoBuffer);
 		ReflectProperty(lightBuffer);
 
-		ReflectProperty(inverseProjectionMatrix)[lightInfoBuffer][BindInput(BindInput::TRANSFORM_VIEWPROJECTION_INV)];
+		ReflectProperty(projectionParams)[lightInfoBuffer][BindInput(BindInput::TRANSFORM_VIEWPROJECTION_INV)];
 		ReflectProperty(invScreenSize)[lightInfoBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(lightCount)[lightInfoBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(reserved)[lightInfoBuffer][BindInput(BindInput::GENERAL)];

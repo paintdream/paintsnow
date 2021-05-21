@@ -113,6 +113,14 @@ function StandardRenderFlow.New(bloomLayerCount : number) : RenderFlowComponent
 	renderFlowComponent:ExportRenderStagePort(stageScreen, "OutputColor", "SceneColor")
 	renderFlowComponent:ExportRenderStagePort(stageWidget, "Widgets", "Widgets")
 
+	-- Debug: test screen space trace
+	--[[
+	local stageScreenSpaceTrace : RenderStage = renderFlowComponent:NewRenderStage("ScreenSpaceTraceRenderStage", "")
+	renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "CameraView", stageScreenSpaceTrace, "CameraView")
+	renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "Depth", stageScreenSpaceTrace, "Depth")
+	renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "NormalRoughnessMetallic", stageScreenSpaceTrace, "Normal")
+	renderFlowComponent:LinkRenderStagePort(stageScreenSpaceTrace, "ScreenCoord", stageAntiAliasing, "InputColor")
+	]]
 	return renderFlowComponent
 end
 

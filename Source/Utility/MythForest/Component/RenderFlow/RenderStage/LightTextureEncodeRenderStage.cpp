@@ -45,7 +45,7 @@ void LightTextureEncodeRenderStage::Update(Engine& engine, IRender::Queue* queue
 	screenTransform.vertexBuffer.resource = meshResource->bufferCollection.positionBuffer;
 	LightEncoderFS& encoder = Pass.encoder;
 	encoder.depthTexture.resource = InputDepth.textureResource->GetRenderResource();
-	encoder.inverseProjectionMatrix = CameraView->inverseProjectionMatrix;
+	encoder.projectionParams = CameraView->projectionParams;
 
 	// Prepare lights
 	const std::vector<RenderPortLightSource::LightElement>& lights = LightSource.lightElements;
