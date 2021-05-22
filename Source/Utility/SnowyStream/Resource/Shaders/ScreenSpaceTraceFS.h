@@ -17,8 +17,7 @@ namespace PaintsNow {
 		BindTexture normalTexture;
 		BindBuffer traceBuffer;
 
-		MatrixFloat4x4 projectionMatrix;
-		MatrixFloat4x4 inverseProjectionMatrix;
+		Float4 projectionParams;
 		Float2 invScreenSize;
 		Float4 rasterCoord;
 

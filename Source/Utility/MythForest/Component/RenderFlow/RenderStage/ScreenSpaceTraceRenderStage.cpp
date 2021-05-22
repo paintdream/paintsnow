@@ -42,8 +42,7 @@ void ScreenSpaceTraceRenderStage::Update(Engine& engine, IRender::Queue* queue) 
 	ScreenSpaceTracePass& pass = GetPass();
 	pass.shaderScreen.depthTexture.resource = Depth.textureResource->GetRenderResource();
 	pass.shaderScreen.normalTexture.resource = Normal.textureResource->GetRenderResource();
-	pass.shaderScreen.projectionMatrix = CameraView->projectionMatrix;
-	pass.shaderScreen.inverseProjectionMatrix = CameraView->inverseProjectionMatrix;
+	pass.shaderScreen.projectionParams = CameraView->projectionParams;
 	pass.screenTransform.vertexBuffer.resource = meshResource->bufferCollection.positionBuffer;
 
 	const UShort3& dim = Depth.textureResource->description.dimension;
