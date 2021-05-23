@@ -33,16 +33,20 @@ namespace PaintsNow {
 		String GetShaderText() override;
 
 		// input
-		IShader::BindTexture BaseColorOcclusionTexture;
-		IShader::BindTexture NormalRoughnessMetallicTexture;
-		IShader::BindTexture DepthTexture;
-		IShader::BindTexture ShadowTexture;
-		IShader::BindBuffer uniformProjectionBuffer;
+		BindTexture BaseColorOcclusionTexture;
+		BindTexture NormalRoughnessMetallicTexture;
+		BindTexture DepthTexture;
+		BindTexture ShadowTexture;
+		BindTexture ScreenTexture;
+		BindTexture ReflectCoordTexture;
+
+		BindBuffer uniformProjectionBuffer;
 
 		MatrixFloat4x4 inverseProjectionMatrix;
 		Float2 rasterCoord;
 
 		// outputs
+		Float3 screenSpaceColor;
 		Float3 viewPosition;
 		Float3 viewNormal;
 		Float3 baseColor;
@@ -51,5 +55,7 @@ namespace PaintsNow {
 		float roughness;
 		float depth;
 		float shadow;
+
+		bool enableScreenSpaceColor;
 	};
 }

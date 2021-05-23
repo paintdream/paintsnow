@@ -26,6 +26,8 @@ TObject<IReflect>& DeferredLightingTextureEncodedRenderStage::operator () (IRefl
 		ReflectProperty(NormalRoughnessMetallic);
 		ReflectProperty(Depth);
 		ReflectProperty(ShadowTexture);
+		ReflectProperty(LastInputColor);
+		ReflectProperty(ReflectCoord);
 
 		ReflectProperty(LoadDepth);
 		ReflectProperty(OutputColor);
@@ -55,6 +57,8 @@ void DeferredLightingTextureEncodedRenderStage::Update(Engine& engine, IRender::
 	compactDecode.DepthTexture.resource = Depth.textureResource->GetRenderResource();
 	compactDecode.inverseProjectionMatrix = CameraView->inverseProjectionMatrix;
 	compactDecode.ShadowTexture.resource = ShadowTexture.textureResource->GetRenderResource();
+	compactDecode.ScreenTexture.resource = LastInputColor.textureResource->GetRenderResource();
+	compactDecode.ReflectCoordTexture.resource = ReflectCoord.textureResource->GetRenderResource();
 
 	if (renderStateDescription.stencilMask != LightSource->stencilMask) {
 		renderStateDescription.stencilMask = LightSource->stencilMask;

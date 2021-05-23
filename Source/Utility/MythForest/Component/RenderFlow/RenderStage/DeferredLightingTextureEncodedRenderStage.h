@@ -28,6 +28,8 @@ namespace PaintsNow {
 		RenderPortTextureInput LightTexture;
 		RenderPortTextureInput ShadowTexture;
 
+		RenderPortTextureInput LastInputColor;
+		RenderPortTextureInput ReflectCoord;
 		RenderPortRenderTargetLoad LoadDepth;
 		RenderPortRenderTargetStore OutputColor;
 	};

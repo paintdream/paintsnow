@@ -19,7 +19,13 @@ function StandardRenderFlow.New(bloomLayerCount : number) : RenderFlowComponent
 	renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "Depth", stageDeferredLighting, "Depth")
 	renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "Depth", stageDeferredLighting, "LoadDepth")
 
-	-- Step 2: Set Light
+	-- Step 2: Setup SSR
+	local stageScreenSpaceTrace : RenderStage = renderFlowComponent:NewRenderStage("ScreenSpaceTraceRenderStage", "")
+	renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "CameraView", stageScreenSpaceTrace, "CameraView")
+	renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "Depth", stageScreenSpaceTrace, "Depth")
+	renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "NormalRoughnessMetallic", stageScreenSpaceTrace, "Normal")
+
+	-- Step 3: Set Light
 	local tileLevel = 3
 	local stageDepthBoundingSetup : RenderStage = renderFlowComponent:NewRenderStage("DepthBoundingSetupRenderStage", "1")
 	renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "Depth", stageDepthBoundingSetup, "InputDepth")
@@ -31,12 +37,15 @@ function StandardRenderFlow.New(bloomLayerCount : number) : RenderFlowComponent
 		lastDepthStage = stageDepthBounding
 	end
 
+	local stageColorBarrier : RenderStage = renderFlowComponent:NewRenderStage("FrameBarrierRenderStage", "")
 	local stageLightBuffer : RenderStage = renderFlowComponent:NewRenderStage(computePass and "LightBufferEncodeRenderStage" or "LightTextureEncodeRenderStage", tostring(tileLevel))
 	renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "CameraView", stageLightBuffer, "CameraView")
 	renderFlowComponent:LinkRenderStagePort(lastDepthStage, "OutputDepth", stageLightBuffer, "InputDepth")
 	renderFlowComponent:LinkRenderStagePort(stageLightBuffer, computePass and "LightBuffer" or "LightTexture", stageDeferredLighting, computePass and "LightBuffer" or "LightTexture")
 	renderFlowComponent:LinkRenderStagePort(stageLightBuffer, "LightSource", stageDeferredLighting, "LightSource")
 	renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "CameraView", stageDeferredLighting, "CameraView")
+	renderFlowComponent:LinkRenderStagePort(stageScreenSpaceTrace, "ScreenCoord", stageDeferredLighting, "ReflectCoord")
+	renderFlowComponent:LinkRenderStagePort(stageColorBarrier, "Next", stageDeferredLighting, "LastInputColor")
 
 	local lastShadowMask : RenderStage = nil as RenderStage
 	for i = 1, 3 do
@@ -59,14 +68,12 @@ function StandardRenderFlow.New(bloomLayerCount : number) : RenderFlowComponent
 		lastShadowMask = stageShadowMask
 	end
 
-	-- Step 3: Forward shading
+	-- Step 4: Forward shading
 	local stageForwardLighting = renderFlowComponent:NewRenderStage("ForwardLightingRenderStage", "")
 	renderFlowComponent:LinkRenderStagePort(stageDeferredLighting, "OutputColor", stageForwardLighting, "InputColor")
 	renderFlowComponent:LinkRenderStagePort(lastShadowMask, "MoveDepth", stageForwardLighting, "InputDepth")
 
-	-- Step 4: Anti-Aliasing
-	local stageColorBarrier : RenderStage = renderFlowComponent:NewRenderStage("FrameBarrierRenderStage", "")
-
+	-- Step 5: Anti-Aliasing
 	local stageAntiAliasing : RenderStage = renderFlowComponent:NewRenderStage("AntiAliasingRenderStage", "")
 	renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "CameraView", stageAntiAliasing, "CameraView")
 	renderFlowComponent:LinkRenderStagePort(stageForwardLighting, "OutputColor", stageAntiAliasing, "InputColor")
@@ -74,7 +81,7 @@ function StandardRenderFlow.New(bloomLayerCount : number) : RenderFlowComponent
 	renderFlowComponent:LinkRenderStagePort(stageColorBarrier, "Next", stageAntiAliasing, "LastInputColor")
 	renderFlowComponent:LinkRenderStagePort(stageForwardLighting, "OutputDepth", stageAntiAliasing, "Depth")
 
-	-- Step 5: Apply HDR effects
+	-- Step 6: Apply HDR effects
 	local stageScreen : RenderStage = renderFlowComponent:NewRenderStage("ScreenRenderStage", strBloomLayer)
 	renderFlowComponent:LinkRenderStagePort(stageAntiAliasing, "OutputColor", stageScreen, "InputColor")
 	local screenMaterial = SnowyStream.NewResource("", "MaterialResource", true)
@@ -84,7 +91,7 @@ function StandardRenderFlow.New(bloomLayerCount : number) : RenderFlowComponent
 	})
 	renderFlowComponent:OverrideRenderStageMaterial(stageScreen, screenMaterial as MaterialResource)
 
-	-- Step 6: Prepare Bloom
+	-- Step 7: Prepare Bloom
 	local lastStage = stageAntiAliasing
 	for i = 0, bloomLayerCount - 1 do
 		local stageBloom : RenderStage = renderFlowComponent:NewRenderStage("BloomRenderStage", tostring(i + 1))
@@ -98,29 +105,20 @@ function StandardRenderFlow.New(bloomLayerCount : number) : RenderFlowComponent
 		lastStage = stageBloom
 	end
 
-	-- Step 7: Adding UIs
+	-- Step 8: Adding UIs
 	local stageWidget : RenderStage = renderFlowComponent:NewRenderStage("WidgetRenderStage", "")
 	renderFlowComponent:LinkRenderStagePort(stageScreen, "OutputColor", stageWidget, "InputColor")
 
-	-- Step 8: Write to output device
+	-- Step 9: Write to output device
 	local stageDevice : RenderStage = renderFlowComponent:NewRenderStage("DeviceRenderStage", "")
 	renderFlowComponent:LinkRenderStagePort(stageWidget, "OutputColor", stageDevice, "InputColor")
 
-	-- Step 9: Export symbols, notice that we only care abount scenes
+	-- Step 10: Export symbols, notice that we only care abount scenes
 	renderFlowComponent:ExportRenderStagePort(stageLightBuffer, "LightSource", "LightSource")
 	renderFlowComponent:ExportRenderStagePort(stageGeometryBuffer, "Primitives", "Primitives")
 	renderFlowComponent:ExportRenderStagePort(stageGeometryBuffer, "CameraView", "CameraView")
 	renderFlowComponent:ExportRenderStagePort(stageScreen, "OutputColor", "SceneColor")
 	renderFlowComponent:ExportRenderStagePort(stageWidget, "Widgets", "Widgets")
-
-	-- Debug: test screen space trace
-	--[[
-	local stageScreenSpaceTrace : RenderStage = renderFlowComponent:NewRenderStage("ScreenSpaceTraceRenderStage", "")
-	renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "CameraView", stageScreenSpaceTrace, "CameraView")
-	renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "Depth", stageScreenSpaceTrace, "Depth")
-	renderFlowComponent:LinkRenderStagePort(stageGeometryBuffer, "NormalRoughnessMetallic", stageScreenSpaceTrace, "Normal")
-	renderFlowComponent:LinkRenderStagePort(stageScreenSpaceTrace, "ScreenCoord", stageAntiAliasing, "InputColor")
-	]]
 	return renderFlowComponent
 end
 

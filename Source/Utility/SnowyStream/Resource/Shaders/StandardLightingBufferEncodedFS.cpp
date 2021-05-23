@@ -29,14 +29,18 @@ String StandardLightingBufferEncodedFS::GetShaderText() {
 	float NoV = saturate(dot(V, N));
 
 	float3 R = mult_vec(float3x3(invWorldNormalMatrix), reflect(V, N));
-	float3 env = textureLod(specTexture, R, roughness * cubeLevelInv).xyz;
+	float3 env = screenSpaceColor;
+	if (env.x < 0) {
+		env = textureLod(specTexture, R, roughness * cubeLevelInv).xyz * cubeStrength;
+	}
+
 	float4 r = float4(-1, -0.0275, -0.572, 0.022) * roughness + float4(1, 0.0425, 1.04, -0.04);
 	float a = min(r.x * r.x, exp2(-9.28 * NoV)) * r.x + r.y;
 	float2 AB = float2(-1.04, 1.04) * a + r.zw;
 	env = env * AB.x + AB.y;
 	mainColor = float4(0, 0, 0, 1);
 	// mainColor.xyz += diff.xyz * float3(1.0, 1.0, 1.0); // ambient
-	mainColor.xyz = mainColor.xyz + env * spec * cubeStrength;
+	mainColor.xyz = mainColor.xyz + env * spec;
 
 	float f = saturate(50.0 * spec.y);
 	float p = roughness * roughness;
@@ -109,6 +113,7 @@ TObject<IReflect>& StandardLightingBufferEncodedFS::operator () (IReflect& refle
 		ReflectProperty(lightIndexBuffer);
 		ReflectProperty(paramBuffer);
 
+		ReflectProperty(screenSpaceColor)[BindInput(BindInput::LOCAL)];
 		ReflectProperty(viewPosition)[BindInput(BindInput::LOCAL)];
 		ReflectProperty(viewNormal)[BindInput(BindInput::LOCAL)];
 		ReflectProperty(baseColor)[BindInput(BindInput::LOCAL)];
@@ -116,6 +121,7 @@ TObject<IReflect>& StandardLightingBufferEncodedFS::operator () (IReflect& refle
 		ReflectProperty(roughness)[BindInput(BindInput::LOCAL)];
 		ReflectProperty(shadow)[BindInput(BindInput::LOCAL)];
 		ReflectProperty(occlusion)[BindInput(BindInput::LOCAL)];
+
 		ReflectProperty(invWorldNormalMatrix)[paramBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(cubeLevelInv)[paramBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(cubeStrength)[paramBuffer][BindInput(BindInput::GENERAL)];

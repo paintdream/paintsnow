@@ -18,6 +18,7 @@ namespace PaintsNow {
 		BindBuffer lightInfoBuffer;
 		BindBuffer paramBuffer;
 
+		Float3 screenSpaceColor;
 		Float3 viewPosition;
 		Float3 viewNormal;
 		Float3 baseColor;

@@ -35,9 +35,11 @@ TObject<IReflect>& DeferredCompactEncodeFS::operator () (IReflect& reflect) {
 	return *this;
 }
 
-DeferredCompactDecodeFS::DeferredCompactDecodeFS() {
+DeferredCompactDecodeFS::DeferredCompactDecodeFS() : enableScreenSpaceColor(true) {
 	BaseColorOcclusionTexture.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
 	NormalRoughnessMetallicTexture.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
+	ScreenTexture.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
+	ReflectCoordTexture.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
 	DepthTexture.description.state.type = IRender::Resource::TextureDescription::TEXTURE_2D;
 	uniformProjectionBuffer.description.usage = IRender::Resource::BufferDescription::UNIFORM;
 }
@@ -61,6 +63,14 @@ String DeferredCompactDecodeFS::GetShaderText() {
 		position.xyz = position.xyz * float3(2, 2, 2) - float3(1, 1, 1);
 		position = mult_vec(inverseProjectionMatrix, position);
 		viewPosition = position.xyz / position.w;
+
+		screenSpaceColor = float3(-1, -1, -1);
+		if (enableScreenSpaceColor) {
+			float2 coord = textureLod(ReflectCoordTexture, rasterCoord.xy, float(0)).xy;
+			if (coord.x + coord.y > 0) {
+				screenSpaceColor = textureLod(ScreenTexture, coord.xy, float(0)).xyz;
+			}
+		}
 	);
 }
 
@@ -72,11 +82,15 @@ TObject<IReflect>& DeferredCompactDecodeFS::operator () (IReflect& reflect) {
 		ReflectProperty(NormalRoughnessMetallicTexture);
 		ReflectProperty(DepthTexture);
 		ReflectProperty(ShadowTexture);
+		ReflectProperty(ScreenTexture);
+		ReflectProperty(ReflectCoordTexture);
 		ReflectProperty(uniformProjectionBuffer);
+		ReflectProperty(enableScreenSpaceColor)[BindConst<bool>(enableScreenSpaceColor)];
 
 		ReflectProperty(inverseProjectionMatrix)[uniformProjectionBuffer][BindInput(BindInput::TRANSFORM_VIEWPROJECTION_INV)];
 		ReflectProperty(rasterCoord)[BindInput(BindInput::TEXCOORD)];
-		
+
+		ReflectProperty(screenSpaceColor)[BindOutput(BindOutput::LOCAL)];
 		ReflectProperty(viewPosition)[BindOutput(BindOutput::LOCAL)];
 		ReflectProperty(viewNormal)[BindOutput(BindOutput::LOCAL)];
 		ReflectProperty(baseColor)[BindOutput(BindOutput::LOCAL)];

@@ -23,18 +23,22 @@ String ScreenSpaceTraceFS::GetShaderText() {
 
 		position = projection(projectionParams, position.xyz);
 		float3 startPos = position.xyw;
+		startPos.xy = startPos.xy * float(0.5) + startPos.zz * float(0.5);
 		float3 stepPos = direction * invScreenSize.x;
+		stepPos.xy = stepPos.xy * float(0.5) + stepPos.zz * float(0.5);
 
 		traceCoord = float4(0, 0, 0, 0);
 		float lastDepth = startPos.z;
-		float t = 1;
-		for (int i = 0; i < 12; i++) {
+		float t = 0.1;
+		for (int i = 0; i < 16; i++) {
 			float3 pos = startPos + stepPos * t;
 
 			// convert to screen space coord
-			float d = textureLod(depthTexture, pos.xy / pos.z * float(0.5) + float2(0.5, 0.5), float(0)).x * float(2.0) - float(1.0);
+			// float d = textureLod(depthTexture, pos.xy / pos.z * float(0.5) + float2(0.5, 0.5), float(0)).x * float(2.0) - float(1.0);
+			float2 coord = pos.xy / pos.z;
+			float d = textureLod(depthTexture, coord, float(0)).x;
 			if (step(lastDepth, d) * step(d, pos.z) > 0) {
-				traceCoord.xy = pos.xy / pos.z * float(0.5) + float2(0.5, 0.5);
+				traceCoord.xy = coord;
 				// traceCoord = textureLod(normalTexture, traceCoord.xy, float(0));
 				break;
 			}
