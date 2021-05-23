@@ -13,13 +13,13 @@ String ScreenSpaceTraceFS::GetShaderText() {
 		rasterCoord.xy = rasterCoord.xy * invScreenSize.xy;
 		float depth = textureLod(depthTexture, rasterCoord.xy, float(0)).x;
 		float4 position;
-		position.xyz = unprojection(projectionParams, float3(rasterCoord.x, rasterCoord.y, depth) * float(2) - float3(1, 1, 1));
+		position.xyz = unprojection(inverseProjectionParams, float3(rasterCoord.x, rasterCoord.y, depth) * float(2) - float3(1, 1, 1));
 
 		float3 viewNormal;
 		viewNormal.xy = textureLod(normalTexture, rasterCoord.xy, float(0)).xy * float(255.0 / 127.0) - float2(128.0 / 127.0, 128.0 / 127.0);
 		viewNormal.z = sqrt(max(0.0, 1 - dot(viewNormal.xy, viewNormal.xy)));
 
-		float3 direction = projection(projectionParams, reflect(normalize(position.xyz - float3(0, 0, 1)), viewNormal)).xyw;
+		float3 direction = projection(inverseProjectionParams, reflect(normalize(position.xyz - float3(0, 0, 1)), viewNormal)).xyw;
 
 		position = projection(projectionParams, position.xyz);
 		float3 startPos = position.xyw;
@@ -61,6 +61,7 @@ TObject<IReflect>& ScreenSpaceTraceFS::operator () (IReflect& reflect) {
 		ReflectProperty(traceBuffer);
 
 		ReflectProperty(projectionParams)[traceBuffer][BindInput(BindInput::GENERAL)];
+		ReflectProperty(inverseProjectionParams)[traceBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(invScreenSize)[traceBuffer][BindInput(BindInput::GENERAL)];
 
 		ReflectProperty(rasterCoord)[BindInput(BindInput::RASTERCOORD)];

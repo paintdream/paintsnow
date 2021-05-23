@@ -14,8 +14,8 @@ LightEncoderFS::LightEncoderFS() {
 String LightEncoderFS::GetShaderText() {
 	return UnifyShaderCode(
 		float2 depthRange = texture(depthTexture, rasterCoord.xy).xy;
-		float3 farPosition = unprojection(projectionParams, float3(rasterCoord.x, rasterCoord.y, depthRange.x) * float(2) - float3(1.0, 1.0, 1.0));
-		float3 nearPosition = unprojection(projectionParams, float3(rasterCoord.x, rasterCoord.y, depthRange.y) * float(2.0) - float3(1.0, 1.0, 1.0));
+		float3 farPosition = unprojection(inverseProjectionParams, float3(rasterCoord.x, rasterCoord.y, depthRange.x) * float(2) - float3(1.0, 1.0, 1.0));
+		float3 nearPosition = unprojection(inverseProjectionParams, float3(rasterCoord.x, rasterCoord.y, depthRange.y) * float(2.0) - float3(1.0, 1.0, 1.0));
 
 		int count = min(int(lightCount), 255);
 		outputIndex = float4(0, 0, 0, 0);
@@ -49,7 +49,7 @@ TObject<IReflect>& LightEncoderFS::operator () (IReflect& reflect) {
 		ReflectProperty(lightInfoBuffer);
 		ReflectProperty(rasterCoord)[BindInput(BindInput::TEXCOORD)];
 
-		ReflectProperty(projectionParams)[lightInfoBuffer][BindInput(BindInput::TRANSFORM_VIEWPROJECTION_INV)];
+		ReflectProperty(inverseProjectionParams)[lightInfoBuffer][BindInput(BindInput::TRANSFORM_VIEWPROJECTION_INV)];
 		ReflectProperty(reserved)[lightInfoBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(lightCount)[lightInfoBuffer][BindInput(BindInput::GENERAL)];
 		ReflectProperty(lightInfos)[lightInfoBuffer][BindInput(BindInput::GENERAL)];

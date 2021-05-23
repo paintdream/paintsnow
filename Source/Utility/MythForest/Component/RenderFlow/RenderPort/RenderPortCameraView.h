@@ -16,6 +16,7 @@ namespace PaintsNow {
 		MatrixFloat4x4 viewMatrix;
 		MatrixFloat4x4 inverseViewMatrix;
 		Float4 projectionParams;
+		Float4 inverseProjectionParams;
 		Float2 jitterOffset;
 	};
 }

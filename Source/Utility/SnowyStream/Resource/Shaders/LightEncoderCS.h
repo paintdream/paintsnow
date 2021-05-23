@@ -19,7 +19,7 @@ namespace PaintsNow {
 		enum { MAX_LIGHT_COUNT = 120 };
 
 		// uniforms
-		Float4 projectionParams;
+		Float4 inverseProjectionParams;
 		Float2 invScreenSize;
 		float lightCount;
 		float reserved;

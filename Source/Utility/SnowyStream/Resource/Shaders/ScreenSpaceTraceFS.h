@@ -18,6 +18,7 @@ namespace PaintsNow {
 		BindBuffer traceBuffer;
 
 		Float4 projectionParams;
+		Float4 inverseProjectionParams;
 		Float2 invScreenSize;
 		Float4 rasterCoord;
 

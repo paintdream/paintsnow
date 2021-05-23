@@ -2,13 +2,16 @@
 
 using namespace PaintsNow;
 
-ScreenSpaceTraceRenderStage::ScreenSpaceTraceRenderStage(const String& s) : ScreenCoord(renderTargetDescription.colorStorages[0]) {
+ScreenSpaceTraceRenderStage::ScreenSpaceTraceRenderStage(const String& s) : ScreenCoord(renderTargetDescription.colorStorages[0]), LoadDepth(renderTargetDescription.depthStorage) {
 	renderTargetDescription.colorStorages[0].loadOp = IRender::Resource::RenderTargetDescription::CLEAR;
 	renderTargetDescription.colorStorages[0].storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
+	renderTargetDescription.depthStorage.loadOp = IRender::Resource::RenderTargetDescription::DEFAULT;
+	renderTargetDescription.depthStorage.storeOp = IRender::Resource::RenderTargetDescription::DEFAULT;
 
-	renderStateDescription.depthTest = IRender::Resource::RenderStateDescription::GREATER;
-	renderStateDescription.depthWrite = 1;
-	renderStateDescription.stencilWrite = 1;
+	renderStateDescription.depthTest = IRender::Resource::RenderStateDescription::DISABLED;
+	renderStateDescription.depthWrite = 0;
+	renderStateDescription.stencilTest = 1;
+	renderStateDescription.stencilWrite = 0;
 }
 
 
@@ -17,7 +20,9 @@ TObject<IReflect>& ScreenSpaceTraceRenderStage::operator () (IReflect& reflect) 
 
 	if (reflect.IsReflectProperty()) {
 		ReflectProperty(Depth);
+		ReflectProperty(LoadDepth);
 		ReflectProperty(Normal);
+		ReflectProperty(LightSource);
 		ReflectProperty(CameraView);
 		ReflectProperty(ScreenCoord);
 	}
@@ -43,7 +48,17 @@ void ScreenSpaceTraceRenderStage::Update(Engine& engine, IRender::Queue* queue) 
 	pass.shaderScreen.depthTexture.resource = Depth.textureResource->GetRenderResource();
 	pass.shaderScreen.normalTexture.resource = Normal.textureResource->GetRenderResource();
 	pass.shaderScreen.projectionParams = CameraView->projectionParams;
+	pass.shaderScreen.inverseProjectionParams = CameraView->inverseProjectionParams;
 	pass.screenTransform.vertexBuffer.resource = meshResource->bufferCollection.positionBuffer;
+
+	if (renderStateDescription.stencilMask != LightSource->stencilMask) {
+		renderStateDescription.stencilMask = LightSource->stencilMask;
+		renderStateDescription.stencilValue = LightSource->stencilMask;
+		renderStateDescription.stencilTest = LightSource->stencilMask != 0 ? IRender::Resource::RenderStateDescription::EQUAL : IRender::Resource::RenderStateDescription::NEVER;
+		renderStateDescription.stencilWrite = 0;
+		IRender& render = engine.interfaces.render;
+		render.UploadResource(queue, renderState, &renderStateDescription);
+	}
 
 	const UShort3& dim = Depth.textureResource->description.dimension;
 	pass.shaderScreen.invScreenSize = Float2(1.0f / dim.x(), 1.0f / dim.y());

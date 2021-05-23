@@ -161,7 +161,8 @@ namespace PaintsNow {
 
 	template <class T>
 	inline TType3<T> unprojection(const TVector<T, 4>& unproj, const TVector<T, 3>& v) {
-		return TType3<T>(unproj[0] * v[0], unproj[1] * v[1], unproj[2] * v[2] + unproj[3]);
+		T nz = unproj[3] / (unproj[2] + v[2]);
+		return TType3<T>(unproj[0] * v[0] * nz, unproj[1] * v[1] * nz, -nz);
 	}
 
 	template <class T>

@@ -17,7 +17,7 @@ namespace PaintsNow {
 		enum { MAX_LIGHT_COUNT = 120 };
 
 		// uniforms
-		Float4 projectionParams;
+		Float4 inverseProjectionParams;
 		Float3 reserved;
 		float lightCount;
 		std::vector<Float4> lightInfos;
