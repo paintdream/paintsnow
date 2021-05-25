@@ -137,7 +137,7 @@ void RayTraceComponent::RoutineRenderTile(const TShared<Context>& context, size_
 								Float4 uvBase = meshCollection.texCoords[0].coords[face.x()];
 								Float4 uvM = meshCollection.texCoords[0].coords[face.y()];
 								Float4 uvN = meshCollection.texCoords[0].coords[face.z()];
-								Float4 uvResult = uvBase + (uvM - uvBase)* task.result.coord.x() + (uvN - uvBase) * task.result.coord.y();
+								Float4 uvResult = uvBase + (uvM - uvBase) * task.result.coord.x() + (uvN - uvBase) * task.result.coord.y();
 
 								// sample texture
 								IRender::Resource::TextureDescription& desc = baseColorTexture->description;

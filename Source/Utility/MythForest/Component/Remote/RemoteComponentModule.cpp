@@ -11,6 +11,7 @@ TObject<IReflect>& RemoteComponentModule::operator () (IReflect& reflect) {
 	if (reflect.IsReflectMethod()) {
 		ReflectMethod(RequestNew)[ScriptMethodLocked = "New"];
 		ReflectMethod(RequestLoad)[ScriptMethod = "Load"];
+		ReflectMethod(RequestGet)[ScriptMethod = "Get"];
 		ReflectMethod(RequestCall)[ScriptMethod = "Call"];
 		ReflectMethod(RequestCallAsync)[ScriptMethod = "CallAsync"];
 		ReflectMethod(RequestCleanup)[ScriptMethod = "Cleanup"];
@@ -30,6 +31,14 @@ TShared<RemoteComponent> RemoteComponentModule::RequestNew(IScript::Request& req
 
 	remoteComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
 	return remoteComponent;
+}
+
+TShared<RemoteRoutine> RemoteComponentModule::RequestGet(IScript::Request& request, IScript::Delegate<RemoteComponent> remoteComponent, const String& name) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(remoteComponent);
+	// CHECK_THREAD_IN_MODULE(remoteComponent);
+
+	return remoteComponent->Get(name);
 }
 
 TShared<RemoteRoutine> RemoteComponentModule::RequestLoad(IScript::Request& request, IScript::Delegate<RemoteComponent> remoteComponent, const String& code) {

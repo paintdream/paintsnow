@@ -25,6 +25,14 @@ namespace PaintsNow {
 		TShared<RemoteComponent> RequestNew(IScript::Request& request, bool transparentMode);
 
 		/// <summary>
+		/// Get RemoteRoutine of local engine from global name.
+		/// </summary>
+		/// <param name="remoteComponent"> the RemoteComponent </param>
+		/// <param name="name"> name </param>
+		/// <returns> RemoteRoutine object </returns>
+		TShared<RemoteRoutine> RequestGet(IScript::Request& request, IScript::Delegate<RemoteComponent> remoteComponent, const String& name);
+
+		/// <summary>
 		/// Load code on a RemoteComponent and get RemoteRoutine of local engine.
 		/// </summary>
 		/// <param name="remoteComponent"> the RemoteComponent </param>

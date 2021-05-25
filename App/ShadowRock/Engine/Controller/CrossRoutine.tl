@@ -36,12 +36,22 @@ function CrossRoutine.New(callback : function (... : any)) : (function (func : f
 		else
 			return function (... : any) : any...
 				local running = coroutine.running()
-
+				local state = { done = false, waiting = false, rets = {} }
 				remoteComponent:CallAsync(function (... : any)
-					coroutine.resume(running, ...)
+					if state.waiting then
+						coroutine.resume(running, ...)
+					else
+						state.done = true
+						state.rets = table.pack(...)
+					end
 				end, remoteFunc, ...)
 
-				return coroutine.yield()
+				state.waiting = true
+				if state.done then
+					return table.unpack(state.rets)
+				else
+					return coroutine.yield()
+				end
 			end
 		end
 	end

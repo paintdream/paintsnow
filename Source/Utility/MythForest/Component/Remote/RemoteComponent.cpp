@@ -80,6 +80,22 @@ struct RoutineWrapper {
 	TShared<RemoteRoutine> routine;
 };
 
+TShared<RemoteRoutine> RemoteComponent::Get(const String& name) {
+	IScript::Request& request = script.GetDefaultRequest();
+	request.DoLock();
+	IScript::Request::Ref ref;
+	request << global;
+	request << key(name) >> ref;
+	request << endtable;
+	request.UnLock();
+
+	if (ref.value != 0) {
+		return TShared<RemoteRoutine>::From(new RemoteRoutine(this, ref));
+	} else {
+		return nullptr;
+	}
+}
+
 TShared<RemoteRoutine> RemoteComponent::Load(const String& code) {
 	IScript::Request& request = script.GetDefaultRequest();
 	request.DoLock();
@@ -175,6 +191,7 @@ static void CopyVariable(uint32_t flag, IScript::Request& request, IScript::Requ
 			} else {
 				request << object;
 			}
+
 			break;
 		}
 		case IScript::Request::ANY:
