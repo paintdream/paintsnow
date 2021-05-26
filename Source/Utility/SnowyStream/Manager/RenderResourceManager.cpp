@@ -316,7 +316,7 @@ void RenderResourceManager::RegisterBuiltinPasses() {
 	RegisterPass(*this, UniqueType<MultiHashSetupPass>());
 	RegisterPass(*this, UniqueType<MultiHashTracePass>());
 	RegisterPass(*this, UniqueType<ScreenPass>());
-	// RegisterPass(*this, UniqueType<ScreenSpaceFilterPass>());
+	RegisterPass(*this, UniqueType<ScreenSpaceFilterPass>());
 	RegisterPass(*this, UniqueType<ScreenSpaceTracePass>());
 	RegisterPass(*this, UniqueType<ShadowMaskPass>());
 	RegisterPass(*this, UniqueType<SkyDirectIrradiancePass>());
