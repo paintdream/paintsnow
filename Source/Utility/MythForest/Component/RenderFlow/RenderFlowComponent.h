@@ -34,19 +34,20 @@ namespace PaintsNow {
 		// set 0 for screen size
 		UShort2 GetMainResolution() const;
 		void SetMainResolution(const UShort2 res);
-		void ResolveSamplessAttachments();
-		void SetupTextures(Engine& engine);
 
 		RenderStage::Port* BeginPort(const String& symbol);
 		void EndPort(RenderStage::Port* port);
 		bool ExportSymbol(const String& symbol, RenderStage* renderStage, const String& port);
 		void Compile();
-		void Render(Engine& engine);
-		void RenderSyncTick(Engine& engine);
 
 	protected:
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		void SetMainResolution(Engine& engine);
+		void MarkupRenderStages();
+		void ResolveSamplessAttachments();
+		void SetupTextures(Engine& engine);
+		void Render(Engine& engine);
+		void RenderSyncTick(Engine& engine);
 
 		UShort2 mainResolution;
 		std::map<String, std::pair<RenderStage*, String> > symbolMap;

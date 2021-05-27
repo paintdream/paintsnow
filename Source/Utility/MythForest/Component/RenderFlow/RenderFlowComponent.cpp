@@ -98,22 +98,63 @@ public:
 	CallBatch(std::vector<RenderStage*>& r) : result(r) {}
 	// once item
 	bool operator () (RenderStage* stage) {
-		result.emplace_back(stage);
+		if (stage->Flag().load(std::memory_order_relaxed) & RenderStage::RENDERSTAGE_ENABLED) {
+			result.emplace_back(stage);
+		} else {
+			fprintf(stderr, "RenderStage: %s (%p) discarded by render flow optimizer.", stage->GetUnique()->GetBriefName().c_str(), stage);
+		}
+
 		return true;
 	}
 
 	// once batch
 	bool operator () () {
-		result.emplace_back(nullptr);
+		if (result.empty() || result.back() != nullptr) {
+			result.emplace_back(nullptr);
+		}
+
 		return true;
 	}
 
 	std::vector<RenderStage*>& result;
 };
 
+void RenderFlowComponent::MarkupRenderStages() {
+	std::queue<RenderStage*> renderStages;
+	for (std::map<String, std::pair<RenderStage*, String> >::const_iterator it = symbolMap.begin(); it != symbolMap.end(); ++it) {
+		RenderStage* renderStage = (*it).second.first;
+		renderStage->Flag().fetch_or(RenderStage::RENDERSTAGE_ENABLED, std::memory_order_relaxed);
+		renderStages.push(renderStage);
+	}
+
+	while (!renderStages.empty()) {
+		RenderStage* renderStage = renderStages.front();
+		renderStages.pop();
+
+		assert(renderStage->Flag().load(std::memory_order_acquire) & RenderStage::RENDERSTAGE_ENABLED);
+
+		const std::vector<RenderStage::PortInfo>& ports = renderStage->GetPorts();
+		for (size_t i = 0; i < ports.size(); i++) {
+			const std::vector<RenderPort::LinkInfo>& links = ports[i].port->GetLinks();
+			for (size_t j = 0; j < links.size(); j++) {
+				const RenderPort::LinkInfo& link = links[j];
+				if (!(link.flag & Tiny::TINY_PINNED)) {
+					RenderStage* target = static_cast<RenderStage*>(link.port->GetNode());
+					if (!(target->Flag().fetch_or(RenderStage::RENDERSTAGE_ENABLED, std::memory_order_relaxed) & RenderStage::RENDERSTAGE_ENABLED)) {
+						renderStages.push(target);
+					}
+				}
+			}
+		}
+	}
+}
+
 void RenderFlowComponent::Compile() {
 	OPTICK_EVENT();
 	assert(!(Flag().load(std::memory_order_acquire) & TINY_ACTIVATED)); // aware of thread unsafe
+
+	MarkupRenderStages();
+
 	std::vector<RenderStage*> result;
 	CallBatch batch(result);
 	IterateTopological(batch, batch);

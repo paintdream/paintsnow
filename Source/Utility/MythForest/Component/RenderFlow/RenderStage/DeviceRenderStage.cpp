@@ -3,7 +3,9 @@
 
 using namespace PaintsNow;
 
-DeviceRenderStage::DeviceRenderStage(const String& config) : BaseClass(0) {}
+DeviceRenderStage::DeviceRenderStage(const String& config) : BaseClass(0) {
+	Flag().fetch_or(RENDERSTAGE_ENABLED, std::memory_order_relaxed);
+}
 
 TObject<IReflect>& DeviceRenderStage::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
