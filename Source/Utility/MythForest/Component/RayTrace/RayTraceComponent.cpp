@@ -60,15 +60,15 @@ void RayTraceComponent::Capture(Engine& engine, const TShared<CameraComponent>& 
 	context->capturedTexture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), "", false, ResourceBase::RESOURCE_VIRTUAL | ResourceBase::RESOURCE_MAPPED);
 	IRender::Resource::TextureDescription& description = context->capturedTexture->description;
 	description.dimension = UShort3(captureSize.x(), captureSize.y(), 1);
-	description.state.format = IRender::Resource::TextureDescription::FLOAT;
+	description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
 	description.state.layout = IRender::Resource::TextureDescription::RGBA;
-	description.data.Resize(captureSize.x() * captureSize.y() * sizeof(float) * 4);
+	description.data.Resize(captureSize.x() * captureSize.y() * sizeof(UChar4));
 
 	// map manually
-	context->capturedTexture->Flag().fetch_or(ResourceBase::RESOURCE_MAPPED, std::memory_order_relaxed);
-	context->capturedTexture->GetMapCounter().fetch_add(1, std::memory_order_release);
+	// context->capturedTexture->Flag().fetch_or(ResourceBase::RESOURCE_MAPPED, std::memory_order_relaxed);
+	// context->capturedTexture->GetMapCounter().fetch_add(1, std::memory_order_release);
 
-	Entity* hostEntity = context->referenceCameraComponent->GetHostEntity();
+	Entity* hostEntity = context->referenceCameraComponent->GetBridgeComponent()->GetHostEntity();
 	const std::vector<Component*>& components = hostEntity->GetComponents();
 	std::vector<SpaceComponent*> spaceComponents;
 	for (size_t i = 0; i < components.size(); i++) {
@@ -84,16 +84,33 @@ void RayTraceComponent::Capture(Engine& engine, const TShared<CameraComponent>& 
 }
 
 void RayTraceComponent::RoutineRayTrace(const TShared<Context>& context) {
-	RoutineCollectTextures(context, context->referenceCameraComponent->GetHostEntity(), MatrixFloat4x4::Identity());
+	RoutineCollectTextures(context, context->referenceCameraComponent->GetBridgeComponent()->GetHostEntity(), MatrixFloat4x4::Identity());
 	size_t tileCountWidth = (captureSize.x() + tileSize - 1) / tileSize;
 	size_t tileCountHeight = (captureSize.y() + tileSize - 1) / tileSize;
 
 	ThreadPool& threadPool = context->engine.GetKernel().GetThreadPool();
 	for (size_t i = 0; i < tileCountHeight; i++) {
 		for (size_t j = 0; j < tileCountWidth; j++) {
-			threadPool.Dispatch(CreateTaskContextFree(Wrap(this, &RayTraceComponent::RoutineRenderTile), context, i, j), 1);
+			threadPool.Dispatch(CreateTaskContextFree(Wrap(this, &RayTraceComponent::RoutineRenderTile), context, j, i), 1);
 		}
 	}
+}
+
+static UChar4 FromFloat4(const Float4& v) {
+	return UChar4(
+		(uint8_t)(Math::Clamp(v.x(), 0.0f, 1.0f) * 255),
+		(uint8_t)(Math::Clamp(v.y(), 0.0f, 1.0f) * 255),
+		(uint8_t)(Math::Clamp(v.z(), 0.0f, 1.0f) * 255),
+		(uint8_t)(Math::Clamp(v.w(), 0.0f, 1.0f) * 255)
+	);
+}
+static Float4 ToFloat4(const UChar4& v) {
+	return Float4(
+		v.x() / 255.0f,
+		v.y() / 255.0f,
+		v.z() / 255.0f,
+		v.w() / 255.0f
+	);
 }
 
 void RayTraceComponent::RoutineRenderTile(const TShared<Context>& context, size_t i, size_t j) {
@@ -151,10 +168,10 @@ void RayTraceComponent::RoutineRenderTile(const TShared<Context>& context, size_
 								if (ux < 0) ux += desc.dimension.x();
 								if (uy < 0) uy += desc.dimension.y();
 
-								UChar4 color = *(const UChar4*)&desc.data[uy * desc.dimension.x() * 4 * sizeof(uint8_t) + ux * 4 * sizeof(uint8_t)];
+								UChar4* ptr = reinterpret_cast<UChar4*>(desc.data.GetData());
 
 								// write target
-								finalColor += Float4(color.x(), color.y(), color.z(), color.w());
+								finalColor += ToFloat4(ptr[uy * desc.dimension.x() + ux]);
 							}
 						}
 					}
@@ -162,7 +179,9 @@ void RayTraceComponent::RoutineRenderTile(const TShared<Context>& context, size_
 			}
 
 			finalColor *= sampleDiv;
-			*(Float4*)&context->capturedTexture->description.data[py * captureSize.x() * sizeof(float) * 4 + px * sizeof(float) * 4] = finalColor;
+
+			UChar4* ptr = reinterpret_cast<UChar4*>(context->capturedTexture->description.data.GetData());
+			ptr[py * captureSize.x() + px] = FromFloat4(finalColor);
 
 			// finish one
 			context->completedPixelCount.fetch_add(1, std::memory_order_release);

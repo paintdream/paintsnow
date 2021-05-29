@@ -12,6 +12,7 @@ TObject<IReflect>& RayTraceComponentModule::operator () (IReflect& reflect) {
 		ReflectMethod(RequestNew)[ScriptMethodLocked = "New"];
 		ReflectMethod(RequestGetCompletedPixelCount)[ScriptMethodLocked = "GetCompletedPixelCount"];
 		ReflectMethod(RequestConfigure)[ScriptMethodLocked = "Configure"];
+		ReflectMethod(RequestSetOutputPath)[ScriptMethodLocked = "SetOutputPath"];
 		ReflectMethod(RequestSetCaptureSize)[ScriptMethodLocked = "SetCaptureSize"];
 		ReflectMethod(RequestGetCaptureSize)[ScriptMethodLocked = "GetCaptureSize"];
 		ReflectMethod(RequestCapture)[ScriptMethodLocked = "Capture"];
@@ -63,6 +64,13 @@ void RayTraceComponentModule::RequestCapture(IScript::Request& request, IScript:
 	CHECK_DELEGATE(cameraComponent);
 
 	rayTraceComponent->Capture(engine, cameraComponent.Get());
+}
+
+void RayTraceComponentModule::RequestSetOutputPath(IScript::Request& request, IScript::Delegate<RayTraceComponent> rayTraceComponent, const String& outputPath) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(rayTraceComponent);
+
+	rayTraceComponent->SetOutputPath(outputPath);
 }
 
 TShared<TextureResource> RayTraceComponentModule::RequestGetCapturedTexture(IScript::Request& request, IScript::Delegate<RayTraceComponent> rayTraceComponent) {

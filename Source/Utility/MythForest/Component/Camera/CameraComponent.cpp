@@ -1012,6 +1012,10 @@ void CameraComponent::CollectComponents(Engine& engine, TaskData& taskData, cons
 	}
 }
 
+const TShared<BridgeComponent>& CameraComponent::GetBridgeComponent() const {
+	return bridgeComponent;
+}
+
 void CameraComponent::BindRootEntity(Engine& engine, BridgeComponentModule& bridgeComponentModule, Entity* entity) {
 	assert(!bridgeComponent);
 	assert(entity != nullptr);

@@ -60,6 +60,13 @@ namespace PaintsNow {
 		void RequestCapture(IScript::Request& request, IScript::Delegate<RayTraceComponent> rayTraceComponent, IScript::Delegate<CameraComponent> cameraComponent);
 
 		/// <summary>
+		/// Set capture output path
+		/// </summary>
+		/// <param name="rayTraceComponent"> the RayTraceComponent</param>
+		/// <param name="outputPath"> the output path </param>
+		void RequestSetOutputPath(IScript::Request& request, IScript::Delegate<RayTraceComponent> rayTraceComponent, const String& outputPath);
+
+		/// <summary>
 		/// Get capture result texture
 		/// </summary>
 		/// <param name="rayTraceComponent"> the RayTraceComponent</param>

@@ -146,6 +146,14 @@ local function InitializeWorld(databasePath : string)
 	cameraComponent:BindRootEntity(scene.rootEntity)
 	scene.rootEntity:UpdateEntity(true)
 
+	-- raytrace compare
+	local rayTraceComponent = RayTraceComponentModule.New()
+	scene.rootEntity:AddEntityComponent(rayTraceComponent as Component)
+	rayTraceComponent:SetOutputPath("./trace/example.png")
+	Debug.StartTrace = function ()
+		rayTraceComponent:Capture(cameraComponent)
+	end
+
 	scriptComponent:SetHandler("EVENT_INPUT", function (eventData : EventData)
 		if inOperation then return end
 

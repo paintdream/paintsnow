@@ -167,6 +167,7 @@ namespace PaintsNow {
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 
 		void BindRootEntity(Engine& engine, BridgeComponentModule& bridgeComponentModule, Entity* entity);
+		const TShared<BridgeComponent>& GetBridgeComponent() const;
 		uint32_t GetCollectedEntityCount() const;
 		uint32_t GetCollectedVisibleEntityCount() const;
 		uint32_t GetCollectedTriangleCount() const;
