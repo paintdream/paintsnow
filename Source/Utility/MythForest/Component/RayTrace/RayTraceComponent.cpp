@@ -16,7 +16,7 @@ RayTraceComponent::Context::~Context() {
 	}
 }
 
-RayTraceComponent::RayTraceComponent() : captureSize(320, 240), superSample(1), tileSize(8), rayCount(1024) {
+RayTraceComponent::RayTraceComponent() : captureSize(640, 480), superSample(4), tileSize(8), rayCount(1024) {
 }
 
 RayTraceComponent::~RayTraceComponent() {
@@ -54,11 +54,11 @@ void RayTraceComponent::Capture(Engine& engine, const TShared<CameraComponent>& 
 	context->referenceCameraComponent = cameraComponent;
 	CameraComponentConfig::WorldGlobalData& worldGlobalData = cameraComponent->GetTaskData()->worldGlobalData;
 	context->view = worldGlobalData.viewPosition;
-	MatrixFloat4x4 inverseViewProjectionMatrix = Math::InversePerspective(worldGlobalData.projectionMatrix) * Math::QuickInverse(worldGlobalData.viewMatrix);
-	context->right = Math::Transform(inverseViewProjectionMatrix, Float3(1, 0, 0));
-	context->up = Math::Transform(inverseViewProjectionMatrix, Float3(0, 1, 0));
-	context->forward = Math::Transform(inverseViewProjectionMatrix, Float3(0, 0, 1));
-	context->capturedTexture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), "", false, ResourceBase::RESOURCE_VIRTUAL | ResourceBase::RESOURCE_MAPPED);
+	const MatrixFloat4x4& viewMatrix = worldGlobalData.viewMatrix;
+	context->right = Float3(viewMatrix(0, 0), viewMatrix(1, 0), viewMatrix(2, 0)) * cameraComponent->aspect;
+	context->up = Float3(viewMatrix(0, 1), viewMatrix(1, 1), viewMatrix(2, 1));
+	context->forward = -Float3(viewMatrix(0, 2), viewMatrix(1, 2), viewMatrix(2, 2));
+	context->capturedTexture = engine.snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), "", false, ResourceBase::RESOURCE_VIRTUAL);
 	IRender::Resource::TextureDescription& description = context->capturedTexture->description;
 	description.dimension = UShort3(captureSize.x(), captureSize.y(), 1);
 	description.state.format = IRender::Resource::TextureDescription::UNSIGNED_BYTE;
@@ -66,8 +66,8 @@ void RayTraceComponent::Capture(Engine& engine, const TShared<CameraComponent>& 
 	description.data.Resize(captureSize.x() * captureSize.y() * sizeof(UChar4));
 
 	// map manually
-	// context->capturedTexture->Flag().fetch_or(ResourceBase::RESOURCE_MAPPED, std::memory_order_relaxed);
-	// context->capturedTexture->GetMapCounter().fetch_add(1, std::memory_order_release);
+	context->capturedTexture->Flag().fetch_or(ResourceBase::RESOURCE_MAPPED, std::memory_order_relaxed);
+	context->capturedTexture->GetMapCounter().fetch_add(1, std::memory_order_release);
 
 	Entity* hostEntity = context->referenceCameraComponent->GetBridgeComponent()->GetHostEntity();
 	const std::vector<Component*>& components = hostEntity->GetComponents();
@@ -216,6 +216,9 @@ void RayTraceComponent::RoutineComplete(const TShared<Context>& context) {
 		// write png
 		stream->Destroy();
 	}
+
+	capturedTexture = currentContext->capturedTexture;
+	currentContext = nullptr;
 }
 
 void RayTraceComponent::SetOutputPath(const String& p) {
@@ -289,9 +292,9 @@ void RayTraceComponent::RoutineCollectTextures(const TShared<Context>& context, 
 							if (baseColorTexture && normalTexture && mixtureTexture) {
 								context->mapEntityToResourceIndex[reinterpret_cast<size_t>(entity)] = (uint32_t)verify_cast<uint32_t>(context->mappedResources.size());
 								SnowyStream snowyStream = context->engine.snowyStream;
-								baseColorTexture = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), baseColorTexture->GetLocation() + "$", true, ResourceBase::RESOURCE_MAPPED);
-								normalTexture = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), normalTexture->GetLocation() + "$", true, ResourceBase::RESOURCE_MAPPED);
-								mixtureTexture = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), mixtureTexture->GetLocation() + "$", true, ResourceBase::RESOURCE_MAPPED);
+								baseColorTexture = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), baseColorTexture->GetLocation() + "$", true, ResourceBase::RESOURCE_MANUAL_UPLOAD | ResourceBase::RESOURCE_MAPPED);
+								normalTexture = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), normalTexture->GetLocation() + "$", true, ResourceBase::RESOURCE_MANUAL_UPLOAD | ResourceBase::RESOURCE_MAPPED);
+								mixtureTexture = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), mixtureTexture->GetLocation() + "$", true, ResourceBase::RESOURCE_MANUAL_UPLOAD | ResourceBase::RESOURCE_MAPPED);
 								context->mappedResources.emplace_back(baseColorTexture());
 								context->mappedResources.emplace_back(normalTexture());
 								context->mappedResources.emplace_back(mixtureTexture());

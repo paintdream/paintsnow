@@ -60,6 +60,7 @@ namespace PaintsNow {
 		uint16_t tileSize;
 		uint32_t rayCount;
 		String outputPath;
+		TShared<TextureResource> capturedTexture;
 		TShared<Context> currentContext;
 	};
 }

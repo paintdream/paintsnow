@@ -736,7 +736,6 @@ TShared<ResourceBase> SnowyStream::CreateResource(const String& path, const Stri
 			}
 		}
 
-		// assert((path[0] != '/') == !!(flag & ResourceBase::RESOURCE_VIRTUAL));
 		resource = (*p).second.second->Create(resourceManager, location);
 		resource->Flag().fetch_or(flag & ~ResourceBase::RESOURCE_MAPPED, std::memory_order_relaxed);
 		resourceManager.Insert(resource());
@@ -745,7 +744,7 @@ TShared<ResourceBase> SnowyStream::CreateResource(const String& path, const Stri
 			resourceManager.UnLock();
 		}
 
-		if (!(resource->Flag().load(std::memory_order_relaxed) & ResourceBase::RESOURCE_VIRTUAL)) {
+		if (!(resource->Flag().load(std::memory_order_relaxed) & ResourceBase::RESOURCE_MANUAL_UPLOAD)) {
 			if (resource->Map()) {
 				resourceManager.InvokeUpload(resource());
 			}
@@ -753,6 +752,8 @@ TShared<ResourceBase> SnowyStream::CreateResource(const String& path, const Stri
 			if (!mapOnCreate) {
 				resource->UnMap();
 			}
+		} else if (mapOnCreate) {
+			resource->Map();
 		}
 	}
 

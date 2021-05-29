@@ -947,7 +947,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 		GL_GUARD();
 
 		if (textureID != 0) {
-			if (GetDescription().state.media != IRender::Resource::TextureDescription::RENDERBUFFER) {
+			if (GetDescription().state.media != IRender::Resource::TextureDescription::TEXTURE_RESOURCE) {
 				glDeleteRenderbuffers(1, &renderbufferID);
 			} else {
 				glDeleteTextures(1, &textureID);
