@@ -35,12 +35,15 @@ namespace PaintsNow {
 
 		class RaycastTask : public TReflected<RaycastTask, WarpTiny> {
 		public:
+			RaycastTask();
 			enum {
 				RAYCASTTASK_IGNORE_WARP = TINY_CUSTOM_BEGIN,
 				RAYCASTTASK_CUSTOM_BEGIN = TINY_CUSTOM_BEGIN << 1
 			};
 
 			virtual bool EmplaceResult(rvalue<RaycastResult> item) = 0;
+
+			float clipOffDistanceSquared;
 		};
 
 		class RaycastTaskSerial : public TReflected<RaycastTaskSerial, RaycastTask> {

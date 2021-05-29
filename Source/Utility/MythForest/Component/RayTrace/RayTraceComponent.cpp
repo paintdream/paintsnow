@@ -3,6 +3,7 @@
 #include "../Model/ModelComponent.h"
 #include "../Space/SpaceComponent.h"
 #include "../Shape/ShapeComponent.h"
+#include "../../../SnowyStream/Manager/RenderResourceManager.h"
 using namespace PaintsNow;
 
 RayTraceComponent::Context::Context(Engine& e) : engine(e) {
@@ -15,7 +16,7 @@ RayTraceComponent::Context::~Context() {
 	}
 }
 
-RayTraceComponent::RayTraceComponent() : captureSize(640, 480), superSample(4), tileSize(8), rayCount(1024) {
+RayTraceComponent::RayTraceComponent() : captureSize(320, 240), superSample(1), tileSize(8), rayCount(1024) {
 }
 
 RayTraceComponent::~RayTraceComponent() {
@@ -53,7 +54,7 @@ void RayTraceComponent::Capture(Engine& engine, const TShared<CameraComponent>& 
 	context->referenceCameraComponent = cameraComponent;
 	CameraComponentConfig::WorldGlobalData& worldGlobalData = cameraComponent->GetTaskData()->worldGlobalData;
 	context->view = worldGlobalData.viewPosition;
-	MatrixFloat4x4 inverseViewProjectionMatrix = Math::QuickInverse(worldGlobalData.projectionMatrix) * Math::QuickInverse(worldGlobalData.viewMatrix);
+	MatrixFloat4x4 inverseViewProjectionMatrix = Math::InversePerspective(worldGlobalData.projectionMatrix) * Math::QuickInverse(worldGlobalData.viewMatrix);
 	context->right = Math::Transform(inverseViewProjectionMatrix, Float3(1, 0, 0));
 	context->up = Math::Transform(inverseViewProjectionMatrix, Float3(0, 1, 0));
 	context->forward = Math::Transform(inverseViewProjectionMatrix, Float3(0, 0, 1));
@@ -85,6 +86,7 @@ void RayTraceComponent::Capture(Engine& engine, const TShared<CameraComponent>& 
 
 void RayTraceComponent::RoutineRayTrace(const TShared<Context>& context) {
 	RoutineCollectTextures(context, context->referenceCameraComponent->GetBridgeComponent()->GetHostEntity(), MatrixFloat4x4::Identity());
+
 	size_t tileCountWidth = (captureSize.x() + tileSize - 1) / tileSize;
 	size_t tileCountHeight = (captureSize.y() + tileSize - 1) / tileSize;
 
@@ -160,6 +162,7 @@ void RayTraceComponent::RoutineRenderTile(const TShared<Context>& context, size_
 								IRender::Resource::TextureDescription& desc = baseColorTexture->description;
 								assert(desc.state.format == IRender::Resource::TextureDescription::UNSIGNED_BYTE);
 								assert(desc.state.layout == IRender::Resource::TextureDescription::RGBA);
+								assert(!desc.state.compress);
 
 								// wrap uv
 								int ux = (int)(uvResult.x() * desc.dimension.x() + 0.5f) % desc.dimension.x();
@@ -285,6 +288,10 @@ void RayTraceComponent::RoutineCollectTextures(const TShared<Context>& context, 
 
 							if (baseColorTexture && normalTexture && mixtureTexture) {
 								context->mapEntityToResourceIndex[reinterpret_cast<size_t>(entity)] = (uint32_t)verify_cast<uint32_t>(context->mappedResources.size());
+								SnowyStream snowyStream = context->engine.snowyStream;
+								baseColorTexture = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), baseColorTexture->GetLocation() + "$", true, ResourceBase::RESOURCE_MAPPED);
+								normalTexture = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), normalTexture->GetLocation() + "$", true, ResourceBase::RESOURCE_MAPPED);
+								mixtureTexture = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), mixtureTexture->GetLocation() + "$", true, ResourceBase::RESOURCE_MAPPED);
 								context->mappedResources.emplace_back(baseColorTexture());
 								context->mappedResources.emplace_back(normalTexture());
 								context->mappedResources.emplace_back(mixtureTexture());

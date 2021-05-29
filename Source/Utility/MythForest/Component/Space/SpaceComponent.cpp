@@ -319,8 +319,18 @@ template <class D>
 void RaycastInternal(Entity* root, Component::RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio, const Float3Pair& b, D d) {
 	Float3Pair bound = b;
 	for (Entity* entity = root; entity != nullptr; entity = entity->Right()) {
-		if (!getboolean<D>::value && !Math::IntersectBox(bound, ray))
-			break;
+		if (!getboolean<D>::value) {
+			TVector<float, 2> intersect = Math::IntersectBox(bound, ray);
+			if (intersect[1] < 0.0f || intersect[0] > intersect[1])
+				break;
+
+			// evaluate possible distance
+			if (task.clipOffDistanceSquared != FLT_MAX) {
+				float nearest = Math::SquareLength(bound.second - ray.first) - Math::SquareLength(bound.second - bound.first) * 0.5f;
+				if (nearest >= task.clipOffDistanceSquared)
+					break;
+			}
+		}
 
 		IMemory::PrefetchRead(entity->Left());
 		IMemory::PrefetchRead(entity->Right());

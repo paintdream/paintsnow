@@ -209,7 +209,8 @@ struct ShapeComponent::PatchRaycaster {
 		TVector<TVector<float, 4>, 2> uv;
 		TVector<TVector<float, 4>, 3> points[3];
 
-		if (Math::IntersectBox(box, ray)) {
+		TVector<float, 2> intersect = Math::IntersectBox(box, ray);
+		if (intersect[1] >= 0.0f && intersect[0] <= intersect[1]) {
 			static_assert(MAX_PATCH_COUNT % 4 == 0, "Must be 4n size");
 			uint32_t maxIndex = 0;
 			for (uint32_t w = 0; w < MAX_PATCH_COUNT; w += 4) {
@@ -279,6 +280,7 @@ float ShapeComponent::Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, 
 	if (Flag().load(std::memory_order_acquire) & TINY_PINNED) {
 		if (!patches.empty()) {
 			OPTICK_EVENT();
+
 			Float3Pair box(ray.first, ray.first);
 			Math::Union(box, ray.second);
 			IAsset::MeshCollection& meshCollection = meshResource->meshCollection;

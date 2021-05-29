@@ -34,6 +34,8 @@ Tiny::FLAG Component::GetEntityFlagMask() const {
 	return 0;
 }
 
+Component::RaycastTask::RaycastTask() : clipOffDistanceSquared(FLT_MAX) {}
+
 Component::RaycastTaskSerial::RaycastTaskSerial() {
 	Flag().store(RAYCASTTASK_IGNORE_WARP, std::memory_order_relaxed);
 	result.distance = FLT_MAX;
@@ -42,6 +44,7 @@ Component::RaycastTaskSerial::RaycastTaskSerial() {
 bool Component::RaycastTaskSerial::EmplaceResult(rvalue<Component::RaycastResult> item) {
 	RaycastResult& r = item;
 	if (result.distance > r.distance) {
+		clipOffDistanceSquared = result.distance * result.distance; // update clip distance
 		result = std::move(r);
 		return true;
 	} else {
@@ -108,12 +111,20 @@ void Component::RaycastTaskWarp::RemovePendingTask() {
 
 bool Component::RaycastTaskWarp::EmplaceResult(std::vector<RaycastResult>& result, rvalue<Component::RaycastResult> it) {
 	Component::RaycastResult& item = it;
+	static_assert(sizeof(uint32_t) == sizeof(float), "Must be IEEE 754 float32.");
 	if (result.size() < maxCount) {
+		if (maxCount == 1) {
+			clipOffDistanceSquared = Math::Min(clipOffDistanceSquared, item.distance * item.distance);
+		}
 		result.emplace_back(std::move(item));
 		return true;
 	} else {
 		for (size_t i = 0; i < result.size(); i++) {
 			if (result[i].distance > item.distance) {
+				if (maxCount == 1) {
+					clipOffDistanceSquared = Math::Min(clipOffDistanceSquared, item.distance * item.distance);
+				}
+
 				result[i] = std::move(item);
 				return true;
 			}
@@ -132,8 +143,17 @@ float Component::Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float
 void Component::RaycastForEntity(RaycastTask& task, Float3Pair& ray, Entity* entity) {
 	OPTICK_EVENT();
 	assert(!(entity->Flag().load(std::memory_order_acquire) & TINY_MODIFIED));
-	if (!Math::IntersectBox(entity->GetKey(), ray))
+
+	TVector<float, 2> intersect = Math::IntersectBox(entity->GetKey(), ray);
+	if (intersect[1] < 0.0f || intersect[0] > intersect[1])
 		return;
+
+	// evaluate possible distance
+	if (task.clipOffDistanceSquared != FLT_MAX) {
+		float nearest = Math::SquareLength(entity->GetKey().second - ray.first) - Math::SquareLength(entity->GetKey().second - entity->GetKey().first) * 0.5f;
+		if (nearest >= task.clipOffDistanceSquared)
+			return;
+	}
 
 	Float3Pair newRay = ray;
 	std::vector<RaycastResult> newResults;
