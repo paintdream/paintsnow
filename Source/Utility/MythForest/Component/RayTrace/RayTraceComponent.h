@@ -18,6 +18,7 @@ namespace PaintsNow {
 
 		typedef RenderPortLightSource::LightElement LightElement;
 		size_t GetCompletedPixelCount() const;
+		size_t GetTotalPixelCount() const;
 		void SetCaptureSize(const UShort2& size);
 		const UShort2& GetCaptureSize() const;
 		void Capture(Engine& engine, const TShared<CameraComponent>& cameraComponent);
@@ -49,19 +50,20 @@ namespace PaintsNow {
 		};
 
 	protected:
-		void Cleanup();
+		static Float3 ImportanceSampleGGX(const Float2& e, float a2);
 		void RoutineRayTrace(const TShared<Context>& context);
 		void RoutineCollectTextures(const TShared<Context>& context, Entity* rootEntity, const MatrixFloat4x4& worldMatrix);
 		void RoutineRenderTile(const TShared<Context>& context, size_t i, size_t j);
 		void RoutineComplete(const TShared<Context>& context);
+		Float4 PathTrace(const TShared<Context>& context, const Float3Pair& ray) const;
 
 		UShort2 captureSize;
 		uint16_t superSample;
 		uint16_t tileSize;
 		uint32_t rayCount;
 		String outputPath;
+		size_t completedPixelCountSync;
 		TShared<TextureResource> capturedTexture;
-		TShared<Context> currentContext;
 	};
 }
 

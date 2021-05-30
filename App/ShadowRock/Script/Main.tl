@@ -10,7 +10,7 @@ local fpsBuffer : { number } = {}
 local tickBuffer : { number } = {}
 local bufferIndex = 1
 
-local function SetFrameMonitorOnTitle(deltaTime : number, cameraComponent : CameraComponent, transformComponent : TransformComponent)
+local function SetFrameMonitorOnTitle(deltaTime : number, cameraComponent : CameraComponent, transformComponent : TransformComponent, rayTraceComponent : RayTraceComponent)
 	-- show fps
 	fpsBuffer[bufferIndex] = MythForest.GetFrameTickTime()
 	tickBuffer[bufferIndex] = deltaTime
@@ -29,6 +29,7 @@ local function SetFrameMonitorOnTitle(deltaTime : number, cameraComponent : Came
 
 	if bufferIndex % 4 == 0 then
 		local position = transformComponent:GetTranslation()
+		local trace = string.format("%3.2f%%", rayTraceComponent:GetCompletedPixelCount() * 100.0 / math.max(1, rayTraceComponent:GetTotalPixelCount()))
 		local fps = string.format("%3.2f", math.min(1000 * #fpsBuffer / sumFrame, 999.99))
 		local tps = string.format("%3.2f", math.min(1000 * #tickBuffer / sumTick, 999.99))
 		local eye = string.format("%3.2f, %3.2f, %3.2f", position[1], position[2], position[3])
@@ -36,6 +37,7 @@ local function SetFrameMonitorOnTitle(deltaTime : number, cameraComponent : Came
 		local triangle = tostring(cameraComponent:GetCollectedTriangleCount())
 
 		System.SetAppTitle("ShadowRock DEMO"
+			.. " | Trace: " .. trace
 			.. " | FPS: " .. fps
 			.. " | TPS: " .. tps
 			.. " | Eye: " .. eye
@@ -125,15 +127,6 @@ local function InitializeWorld(databasePath : string)
 
 	local scriptComponent = ScriptComponentModule.New("UserInputComponent")
 	local phaseComponent : PhaseComponent
-
-	scriptComponent:SetHandler("EVENT_TICK", function (eventData : EventData)
-		local deltaTime = eventData as number
-		SetFrameMonitorOnTitle(deltaTime, cameraComponent, cameraTransform)
-		if stepPhase and phaseComponent then
-			phaseComponent:Step(stepBounceCount)
-		end
-	end)
-
 	cameraController.spaceComponent:InsertEntity(guiEntity)
 	cameraController.entity:UpdateEntity(false)
 	cameraController.entity:AddEntityComponent(scriptComponent as Component)
@@ -153,6 +146,15 @@ local function InitializeWorld(databasePath : string)
 	Debug.StartTrace = function ()
 		rayTraceComponent:Capture(cameraComponent)
 	end
+
+	scriptComponent:SetHandler("EVENT_TICK", function (eventData : EventData)
+		local deltaTime = eventData as number
+		SetFrameMonitorOnTitle(deltaTime, cameraComponent, cameraTransform, rayTraceComponent)
+		if stepPhase and phaseComponent then
+			phaseComponent:Step(stepBounceCount)
+		end
+	end)
+
 
 	scriptComponent:SetHandler("EVENT_INPUT", function (eventData : EventData)
 		if inOperation then return end

@@ -30,6 +30,13 @@ namespace PaintsNow {
 		size_t RequestGetCompletedPixelCount(IScript::Request& request, IScript::Delegate<RayTraceComponent> rayTraceComponent);
 
 		/// <summary>
+		/// Get total pixel count of raytracing
+		/// </summary>
+		/// <param name="rayTraceComponent"> the RayTraceComponent</param>
+		/// <returns> total pixel count </returns>
+		size_t RequestGetTotalPixelCount(IScript::Request& request, IScript::Delegate<RayTraceComponent> rayTraceComponent);
+
+		/// <summary>
 		/// Get capture size of RayTraceComponent
 		/// </summary>
 		/// <param name="rayTraceComponent"> the RayTraceComponent</param>

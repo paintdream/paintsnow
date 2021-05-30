@@ -325,9 +325,9 @@ void RaycastInternal(Entity* root, Component::RaycastTask& task, Float3Pair& ray
 				break;
 
 			// evaluate possible distance
-			if (task.clipOffDistanceSquared != FLT_MAX) {
-				float nearest = Math::SquareLength(bound.second - ray.first) - Math::SquareLength(bound.second - bound.first) * 0.5f;
-				if (nearest >= task.clipOffDistanceSquared)
+			if (task.clipOffDistance != FLT_MAX) {
+				float nearest = Math::Length(bound.second - ray.first) - Math::Length(bound.second - bound.first) * 0.5f;
+				if (nearest >= task.clipOffDistance)
 					break;
 			}
 		}

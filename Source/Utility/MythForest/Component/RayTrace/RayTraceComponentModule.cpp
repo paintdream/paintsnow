@@ -10,6 +10,7 @@ TObject<IReflect>& RayTraceComponentModule::operator () (IReflect& reflect) {
 	BaseClass::operator () (reflect);
 	if (reflect.IsReflectMethod()) {
 		ReflectMethod(RequestNew)[ScriptMethodLocked = "New"];
+		ReflectMethod(RequestGetTotalPixelCount)[ScriptMethodLocked = "GetTotalPixelCount"];
 		ReflectMethod(RequestGetCompletedPixelCount)[ScriptMethodLocked = "GetCompletedPixelCount"];
 		ReflectMethod(RequestConfigure)[ScriptMethodLocked = "Configure"];
 		ReflectMethod(RequestSetOutputPath)[ScriptMethodLocked = "SetOutputPath"];
@@ -35,6 +36,13 @@ size_t RayTraceComponentModule::RequestGetCompletedPixelCount(IScript::Request& 
 	CHECK_DELEGATE(rayTraceComponent);
 
 	return rayTraceComponent->GetCompletedPixelCount();
+}
+
+size_t RayTraceComponentModule::RequestGetTotalPixelCount(IScript::Request& request, IScript::Delegate<RayTraceComponent> rayTraceComponent) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(rayTraceComponent);
+
+	return rayTraceComponent->GetTotalPixelCount();
 }
 
 void RayTraceComponentModule::RequestSetCaptureSize(IScript::Request& request, IScript::Delegate<RayTraceComponent> rayTraceComponent, const UShort2& size) {

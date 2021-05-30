@@ -16,12 +16,10 @@ RayTraceComponent::Context::~Context() {
 	}
 }
 
-RayTraceComponent::RayTraceComponent() : captureSize(640, 480), superSample(4), tileSize(8), rayCount(1024) {
+RayTraceComponent::RayTraceComponent() : captureSize(640, 480), superSample(4), tileSize(8), rayCount(1024), completedPixelCountSync(0) {
 }
 
-RayTraceComponent::~RayTraceComponent() {
-	Cleanup();
-}
+RayTraceComponent::~RayTraceComponent() {}
 
 void RayTraceComponent::Configure(uint16_t s, uint16_t t, uint32_t r) {
 	superSample = s;
@@ -38,19 +36,18 @@ const UShort2& RayTraceComponent::GetCaptureSize() const {
 }
 
 size_t RayTraceComponent::GetCompletedPixelCount() const {
-	return currentContext() == nullptr ? 0 : currentContext->completedPixelCount.load(std::memory_order_acquire);
+	return completedPixelCountSync;
 }
 
-void RayTraceComponent::Cleanup() {
-	currentContext = nullptr;
+size_t RayTraceComponent::GetTotalPixelCount() const {
+	return captureSize.x() * captureSize.y();
 }
 
 void RayTraceComponent::Capture(Engine& engine, const TShared<CameraComponent>& cameraComponent) {
-	assert(currentContext() == nullptr);
 	assert(cameraComponent() != nullptr);
+	completedPixelCountSync = 0;
 
 	TShared<Context> context = TShared<Context>::From(new Context(engine));
-	currentContext = context;
 	context->referenceCameraComponent = cameraComponent;
 	CameraComponentConfig::WorldGlobalData& worldGlobalData = cameraComponent->GetTaskData()->worldGlobalData;
 	context->view = worldGlobalData.viewPosition;
@@ -119,7 +116,6 @@ void RayTraceComponent::RoutineRenderTile(const TShared<Context>& context, size_
 	uint32_t width = Math::Min((uint32_t)tileSize, (uint32_t)(captureSize.x() - i * tileSize));
 	uint32_t height = Math::Min((uint32_t)tileSize, (uint32_t)(captureSize.y() - j * tileSize));
 	const Float3& view = context->view;
-	const std::vector<SpaceComponent*>& rootSpaceComponents = context->rootSpaceComponents;
 
 	float sampleDiv = 1.0f / (superSample * superSample);
 	for (uint32_t m = 0; m < height; m++) {
@@ -134,50 +130,7 @@ void RayTraceComponent::RoutineRenderTile(const TShared<Context>& context, size_
 					float y = ((t + 0.5f) / superSample + py) / captureSize.y() * 2.0f - 1.0f;
 
 					Float3 dir = context->forward + context->right * x + context->up * y;
-					Component::RaycastTaskSerial task;
-					Float3Pair ray(view, dir);
-					for (size_t i = 0; i < rootSpaceComponents.size(); i++) {
-						SpaceComponent* spaceComponent = rootSpaceComponents[i];
-						spaceComponent->Raycast(task, ray, nullptr, 1.0f);
-					}
-
-					if (task.result.distance != FLT_MAX && task.result.parent) {
-						// hit!
-						assert(task.result.parent->QueryInterface(UniqueType<Entity>()) != nullptr);
-						std::unordered_map<size_t, uint32_t>::const_iterator it = context->mapEntityToResourceIndex.find(reinterpret_cast<size_t>(task.result.parent()));
-						if (it != context->mapEntityToResourceIndex.end()) {
-							const TShared<TextureResource>& baseColorTexture = static_cast<TextureResource*>(context->mappedResources[(*it).second]());
-							assert(task.result.unit->QueryInterface(UniqueType<ShapeComponent>()) != nullptr);
-							ShapeComponent* shapeComponent = static_cast<ShapeComponent*>(task.result.unit());
-							IAsset::MeshCollection& meshCollection = shapeComponent->GetMesh()->meshCollection;
-
-							const UInt3& face = meshCollection.indices[task.result.faceIndex];
-							if (!meshCollection.texCoords.empty()) {
-								Float4 uvBase = meshCollection.texCoords[0].coords[face.x()];
-								Float4 uvM = meshCollection.texCoords[0].coords[face.y()];
-								Float4 uvN = meshCollection.texCoords[0].coords[face.z()];
-								Float4 uvResult = uvBase + (uvM - uvBase) * task.result.coord.x() + (uvN - uvBase) * task.result.coord.y();
-
-								// sample texture
-								IRender::Resource::TextureDescription& desc = baseColorTexture->description;
-								assert(desc.state.format == IRender::Resource::TextureDescription::UNSIGNED_BYTE);
-								assert(desc.state.layout == IRender::Resource::TextureDescription::RGBA);
-								assert(!desc.state.compress);
-
-								// wrap uv
-								int ux = (int)(uvResult.x() * desc.dimension.x() + 0.5f) % desc.dimension.x();
-								int uy = (int)(uvResult.y() * desc.dimension.y() + 0.5f) % desc.dimension.y();
-
-								if (ux < 0) ux += desc.dimension.x();
-								if (uy < 0) uy += desc.dimension.y();
-
-								UChar4* ptr = reinterpret_cast<UChar4*>(desc.data.GetData());
-
-								// write target
-								finalColor += ToFloat4(ptr[uy * desc.dimension.x() + ux]);
-							}
-						}
-					}
+					finalColor += PathTrace(context, Float3Pair(view, dir));
 				}
 			}
 
@@ -187,7 +140,7 @@ void RayTraceComponent::RoutineRenderTile(const TShared<Context>& context, size_
 			ptr[py * captureSize.x() + px] = FromFloat4(finalColor);
 
 			// finish one
-			context->completedPixelCount.fetch_add(1, std::memory_order_release);
+			completedPixelCountSync = context->completedPixelCount.fetch_add(1, std::memory_order_release);
 		}
 	}
 
@@ -198,8 +151,6 @@ void RayTraceComponent::RoutineRenderTile(const TShared<Context>& context, size_
 }
 
 void RayTraceComponent::RoutineComplete(const TShared<Context>& context) {
-	// TODO: complete!
-
 	if (!outputPath.empty() && context->capturedTexture() != nullptr) {
 		IImage& image = context->engine.interfaces.image;
 		IRender::Resource::TextureDescription& description = context->capturedTexture->description;
@@ -210,15 +161,21 @@ void RayTraceComponent::RoutineComplete(const TShared<Context>& context) {
 		IStreamBase* stream = context->engine.interfaces.archive.Open(outputPath, true, length);
 		IImage::Image* png = image.Create(description.dimension.x(), description.dimension.y(), layout, format);
 		void* buffer = image.GetBuffer(png);
-		memcpy(buffer, description.data.GetData(), verify_cast<size_t>(description.data.GetSize()));
+		const UChar4* src = reinterpret_cast<const UChar4*>(description.data.GetData());
+		UChar4* dst = reinterpret_cast<UChar4*>(buffer);
+		for (size_t k = 0; k < description.dimension.x() * description.dimension.y(); k++) {
+			UChar4 c = src[k];
+			std::swap(c.x(), c.z());
+			dst[k] = c;
+		}
+		// memcpy(buffer, description.data.GetData(), verify_cast<size_t>(description.data.GetSize()));
 		image.Save(png, *stream, "png");
 		image.Delete(png);
 		// write png
 		stream->Destroy();
 	}
 
-	capturedTexture = currentContext->capturedTexture;
-	currentContext = nullptr;
+	capturedTexture = context->capturedTexture;
 }
 
 void RayTraceComponent::SetOutputPath(const String& p) {
@@ -312,5 +269,68 @@ void RayTraceComponent::RoutineCollectTextures(const TShared<Context>& context, 
 }
 
 TShared<TextureResource> RayTraceComponent::GetCapturedTexture() const {
-	return currentContext() == nullptr ? nullptr : currentContext->capturedTexture;
+	return capturedTexture;
+}
+
+static const float PI = 3.1415926f;
+Float3 RayTraceComponent::ImportanceSampleGGX(const Float2& e, float a2) {
+	float phi = 2 * PI * e.x();
+	float cosTheta = sqrtf((1 - e.x()) / (1 + (a2 - 1) * e.y()));
+	float sinTheta = sqrtf(1 - cosTheta);
+	Float3 h;
+	h.x() = sinTheta * cosf(phi);
+	h.y() = sinTheta * sinf(phi);
+	h.z() = cosTheta;
+	return h;
+}
+
+Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float3Pair& r) const {
+	const std::vector<SpaceComponent*>& rootSpaceComponents = context->rootSpaceComponents;
+	Component::RaycastTaskSerial task;
+	for (size_t i = 0; i < rootSpaceComponents.size(); i++) {
+		SpaceComponent* spaceComponent = rootSpaceComponents[i];
+		Float3Pair ray = r;
+		spaceComponent->Raycast(task, ray, nullptr, 1.0f);
+	}
+
+	if (task.result.distance != FLT_MAX && task.result.parent) {
+		// hit!
+		assert(task.result.parent->QueryInterface(UniqueType<Entity>()) != nullptr);
+		std::unordered_map<size_t, uint32_t>::const_iterator it = context->mapEntityToResourceIndex.find(reinterpret_cast<size_t>(task.result.parent()));
+		if (it != context->mapEntityToResourceIndex.end()) {
+			const TShared<TextureResource>& baseColorTexture = static_cast<TextureResource*>(context->mappedResources[(*it).second]());
+			assert(task.result.unit->QueryInterface(UniqueType<ShapeComponent>()) != nullptr);
+			ShapeComponent* shapeComponent = static_cast<ShapeComponent*>(task.result.unit());
+			IAsset::MeshCollection& meshCollection = shapeComponent->GetMesh()->meshCollection;
+
+			const UInt3& face = meshCollection.indices[task.result.faceIndex];
+			if (!meshCollection.texCoords.empty()) {
+				Float4 uvBase = meshCollection.texCoords[0].coords[face.x()];
+				Float4 uvM = meshCollection.texCoords[0].coords[face.y()];
+				Float4 uvN = meshCollection.texCoords[0].coords[face.z()];
+				Float4 uvResult = uvBase + (uvM - uvBase) * task.result.coord.x() + (uvN - uvBase) * task.result.coord.y();
+
+				// sample texture
+				IRender::Resource::TextureDescription& desc = baseColorTexture->description;
+				assert(desc.state.format == IRender::Resource::TextureDescription::UNSIGNED_BYTE);
+				assert(desc.state.layout == IRender::Resource::TextureDescription::RGBA);
+				assert(!desc.state.compress);
+
+				// wrap uv
+				int ux = (int)(uvResult.x() * desc.dimension.x() + 0.5f) % desc.dimension.x();
+				int uy = (int)(uvResult.y() * desc.dimension.y() + 0.5f) % desc.dimension.y();
+
+				if (ux < 0) ux += desc.dimension.x();
+				if (uy < 0) uy += desc.dimension.y();
+
+				UChar4* ptr = reinterpret_cast<UChar4*>(desc.data.GetData());
+
+				// write target
+				return ToFloat4(ptr[uy * desc.dimension.x() + ux]);
+			}
+		}
+	}
+
+	// TODO: test light
+	return Float4(0, 0, 0, 0);
 }

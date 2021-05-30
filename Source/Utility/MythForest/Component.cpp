@@ -34,7 +34,7 @@ Tiny::FLAG Component::GetEntityFlagMask() const {
 	return 0;
 }
 
-Component::RaycastTask::RaycastTask() : clipOffDistanceSquared(FLT_MAX) {}
+Component::RaycastTask::RaycastTask() : clipOffDistance(FLT_MAX) {}
 
 Component::RaycastTaskSerial::RaycastTaskSerial() {
 	Flag().store(RAYCASTTASK_IGNORE_WARP, std::memory_order_relaxed);
@@ -44,7 +44,7 @@ Component::RaycastTaskSerial::RaycastTaskSerial() {
 bool Component::RaycastTaskSerial::EmplaceResult(rvalue<Component::RaycastResult> item) {
 	RaycastResult& r = item;
 	if (result.distance > r.distance) {
-		clipOffDistanceSquared = result.distance * result.distance; // update clip distance
+		clipOffDistance = result.distance * result.distance; // update clip distance
 		result = std::move(r);
 		return true;
 	} else {
@@ -114,7 +114,7 @@ bool Component::RaycastTaskWarp::EmplaceResult(std::vector<RaycastResult>& resul
 	static_assert(sizeof(uint32_t) == sizeof(float), "Must be IEEE 754 float32.");
 	if (result.size() < maxCount) {
 		if (maxCount == 1) {
-			clipOffDistanceSquared = Math::Min(clipOffDistanceSquared, item.distance * item.distance);
+			clipOffDistance = Math::Min(clipOffDistance, item.distance);
 		}
 		result.emplace_back(std::move(item));
 		return true;
@@ -122,7 +122,7 @@ bool Component::RaycastTaskWarp::EmplaceResult(std::vector<RaycastResult>& resul
 		for (size_t i = 0; i < result.size(); i++) {
 			if (result[i].distance > item.distance) {
 				if (maxCount == 1) {
-					clipOffDistanceSquared = Math::Min(clipOffDistanceSquared, item.distance * item.distance);
+					clipOffDistance = Math::Min(clipOffDistance, item.distance);
 				}
 
 				result[i] = std::move(item);
@@ -149,9 +149,9 @@ void Component::RaycastForEntity(RaycastTask& task, Float3Pair& ray, Entity* ent
 		return;
 
 	// evaluate possible distance
-	if (task.clipOffDistanceSquared != FLT_MAX) {
-		float nearest = Math::SquareLength(entity->GetKey().second - ray.first) - Math::SquareLength(entity->GetKey().second - entity->GetKey().first) * 0.5f;
-		if (nearest >= task.clipOffDistanceSquared)
+	if (task.clipOffDistance != FLT_MAX) {
+		float nearest = Math::Length(entity->GetKey().second - ray.first) - Math::Length(entity->GetKey().second - entity->GetKey().first) * 0.5f;
+		if (nearest >= task.clipOffDistance)
 			return;
 	}
 

@@ -43,7 +43,7 @@ namespace PaintsNow {
 
 			virtual bool EmplaceResult(rvalue<RaycastResult> item) = 0;
 
-			float clipOffDistanceSquared;
+			float clipOffDistance;
 		};
 
 		class RaycastTaskSerial : public TReflected<RaycastTaskSerial, RaycastTask> {
