@@ -99,7 +99,6 @@ String StandardLightingBufferEncodedFS::GetShaderText() {
 		if (k != 4) { break; }
 	}
 
-	mainColor.xyz = pow(max(mainColor.xyz, float3(0, 0, 0)), float3(1.0, 1.0, 1.0) / GAMMA);
 	// mainColor.xyz = mainColor.xyz * float(0.0001) + float3(1 - shadow, 1 - shadow, 1 - shadow);
 );
 }
