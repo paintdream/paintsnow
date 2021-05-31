@@ -19,19 +19,18 @@ namespace PaintsNow {
 		/// <summary>
 		/// Create ExplorerComponent
 		/// </summary>
-		/// <param name="componentType"> explorer component type </param>
+		/// <param name="identifier"> explorer type </param>
 		/// <returns> ExplorerComponent object </returns>
-		TShared<ExplorerComponent> RequestNew(IScript::Request& request, const String& componentType);
+		TShared<ExplorerComponent> RequestNew(IScript::Request& request, const String& identifier);
 
 		/// <summary>
 		/// Set proxy config for ExplorerComponent
 		/// </summary>
 		/// <param name="explorerComponent"> the ExplorerComponent </param>
 		/// <param name="component"> target component </param>
-		/// <param name="layer"> target layer </param>
 		/// <param name="activateThreshold"> target component activate threshold </param>
 		/// <param name="deactivateThreshold"> target component deactive threshold </param>
-		void RequestSetProxyConfig(IScript::Request& request, IScript::Delegate<ExplorerComponent> explorerComponent, IScript::Delegate<Component> component, uint32_t layer, float activateThreshold, float deactivateThreshold);
+		void RequestSetProxyConfig(IScript::Request& request, IScript::Delegate<ExplorerComponent> explorerComponent, IScript::Delegate<Component> component, float activateThreshold, float deactivateThreshold);
 	};
 }
 

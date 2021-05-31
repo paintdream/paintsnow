@@ -118,7 +118,7 @@ PhaseComponent::~PhaseComponent() {}
 void PhaseComponent::Initialize(Engine& engine, Entity* entity) {
 	OPTICK_EVENT();
 	if (rootEntity != entity) { // Set Host?
-		Component::Initialize(engine, entity);
+		BaseClass::Initialize(engine, entity);
 		assert(hostEntity == nullptr);
 		assert(renderQueue == nullptr);
 		hostEntity = entity;
@@ -210,7 +210,7 @@ void PhaseComponent::Uninitialize(Engine& engine, Entity* entity) {
 		renderQueue = nullptr;
 		hostEntity = nullptr;
 
-		Component::Uninitialize(engine, entity);
+		BaseClass::Uninitialize(engine, entity);
 	}
 }
 
@@ -977,7 +977,8 @@ void PhaseComponent::CollectComponents(Engine& engine, TaskData& task, const Wor
 		Component* const* componentBegin = nullptr;
 		Component* const* componentEnd = nullptr;
 
-		if (explorerComponent != nullptr) {
+		static Unique expectedIdentifier = UniqueType<RenderableComponent>::Get();
+		if (explorerComponent != nullptr && explorerComponent->GetExploreIdentifier() == expectedIdentifier) {
 			// Use nearest refValue for selecting most detailed components
 			explorerComponent->SelectComponents(engine, entity, 0.0f, exploredComponents);
 			if (!exploredComponents.empty()) {

@@ -914,9 +914,10 @@ void CameraComponent::CollectComponents(Engine& engine, TaskData& taskData, cons
 		Float4 end = Float4::Load(localBoundingBox.second) * instanceData.worldMatrix;
 		Float4 center = (start + end) * Float4(0.5f, 0.5f, 0.5f, 0.0f);
 		float length = Math::SquareLength(end - start);
+		float refValue = 1.0f - length / (0.001f + tanHalfFov * Math::SquareLength(center - Float4::Load(captureData.GetPosition(), 0.0f)));
 
 		// Project
-		subWorldInstancedData.viewReference = Math::Max(0.0f, 1.0f - length / (0.001f + tanHalfFov * Math::SquareLength(center - Float4::Load(captureData.GetPosition(), 0.0f))));
+		subWorldInstancedData.viewReference = Math::Max(0.0f, refValue);
 	}
 
 	if (rootFlag & (Entity::ENTITY_HAS_RENDERABLE | Entity::ENTITY_HAS_RENDERCONTROL | Entity::ENTITY_HAS_SPACE)) {
@@ -929,7 +930,8 @@ void CameraComponent::CollectComponents(Engine& engine, TaskData& taskData, cons
 		Component* const* componentBegin = nullptr;
 		Component* const* componentEnd = nullptr;
 
-		if (explorerComponent != nullptr) {
+		static Unique expectedIdentifier = UniqueType<RenderableComponent>::Get();
+		if (explorerComponent != nullptr && explorerComponent->GetExploreIdentifier() == expectedIdentifier) {
 			// Use nearest refValue for selecting most detailed components
 			explorerComponent->SelectComponents(engine, entity, subWorldInstancedData.viewReference, exploredComponents);
 			if (!exploredComponents.empty()) {

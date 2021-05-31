@@ -13,40 +13,35 @@ namespace PaintsNow {
 	// Level of details controller
 	class ExplorerComponent : public TAllocatedTiny<ExplorerComponent, UniqueComponent<Component, SLOT_EXPLORER_COMPONENT> > {
 	public:
-		ExplorerComponent(Unique componentType);
+		ExplorerComponent(Unique identifier);
 		~ExplorerComponent() override;
 
-		void Initialize(Engine& engine, Entity* entity) override;
-		void Uninitialize(Engine& engine, Entity* entity) override;
-
 		struct ProxyConfig {
-			ProxyConfig();
-			uint32_t layer;
 			float activateThreshold;
 			float deactivateThreshold;
 		};
 
 		void SetProxyConfig(Component* component, const ProxyConfig& config);
-		Unique GetExploredComponentType() const;
+		Unique GetExploreIdentifier() const;
 		typedef TCacheAllocator<Component*, uint8_t> ComponentPointerAllocator;
-		void SelectComponents(Engine& engine, Entity* entity, float refValue, std::vector<Component*, ComponentPointerAllocator>& collectedComponents);
+		void SelectComponents(Engine& engine, Entity* entity, float refValue, std::vector<Component*, ComponentPointerAllocator>& collectedComponents) const;
 
 	protected:
 		struct Proxy {
-			Proxy(Component* c = nullptr);
+			Proxy(Component* c = nullptr, const ProxyConfig& config = ProxyConfig());
+
 			operator Component* () const {
-				return component();
+				return component;
 			}
 
 			bool operator < (const Proxy& rhs) const;
-			TShared<Component> component;
-			Tiny::FLAG flag;
+
+			Component* component;
 			ProxyConfig config;
 		};
 
 		std::vector<Proxy> proxies;
-		Unique componentType;
-		uint32_t lastFrameIndex;
+		Unique identifier;
 	};
 }
 

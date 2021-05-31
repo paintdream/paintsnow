@@ -449,7 +449,8 @@ void VisibilityComponent::CollectComponents(Engine& engine, TaskData& task, cons
 	Component* const* componentBegin = nullptr;
 	Component* const* componentEnd = nullptr;
 
-	if (explorerComponent != nullptr) {
+	static Unique expectedIdentifier = UniqueType<RenderableComponent>::Get();
+	if (explorerComponent != nullptr && explorerComponent->GetExploreIdentifier() == expectedIdentifier) {
 		// Use nearest refValue for selecting most detailed components
 		explorerComponent->SelectComponents(engine, entity, 0.0f, exploredComponents);
 		if (!exploredComponents.empty()) {

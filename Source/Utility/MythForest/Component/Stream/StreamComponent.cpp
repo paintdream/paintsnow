@@ -144,7 +144,7 @@ void StreamComponent::Uninitialize(Engine& engine, Entity* entity) {
 		unloadHandler.script = IScript::Request::Ref();
 	}
 
-	Component::Uninitialize(engine, entity);
+	BaseClass::Uninitialize(engine, entity);
 }
 
 void StreamComponent::SetLoadHandler(IScript::Request& request, IScript::Request::Ref ref) {

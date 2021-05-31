@@ -16,28 +16,19 @@ TObject<IReflect>& ExplorerComponentModule::operator () (IReflect& reflect) {
 	return *this;
 }
 
-TShared<ExplorerComponent> ExplorerComponentModule::RequestNew(IScript::Request& request, const String& componentType) {
+TShared<ExplorerComponent> ExplorerComponentModule::RequestNew(IScript::Request& request, const String& identifier) {
 	CHECK_REFERENCES_NONE();
-
-	// Convert componentType from string
-	std::unordered_map<String, Module*>::const_iterator it = engine.GetModuleMap().find(componentType);
-	if (it != engine.GetModuleMap().end()) {
-		request.Error(String("Unable to load component type: ") + componentType);
-		return nullptr;
-	} else {
-		TShared<ExplorerComponent> explorerComponent = TShared<ExplorerComponent>::From(allocator->New((*it).second->GetTinyUnique()));
-		explorerComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
-		return explorerComponent;
-	}
+	TShared<ExplorerComponent> explorerComponent = TShared<ExplorerComponent>::From(allocator->New(Unique(identifier)));
+	explorerComponent->SetWarpIndex(engine.GetKernel().GetCurrentWarpIndex());
+	return explorerComponent;
 }
 
-void ExplorerComponentModule::RequestSetProxyConfig(IScript::Request& request, IScript::Delegate<ExplorerComponent> explorerComponent, IScript::Delegate<Component> component, uint32_t layer, float activateThreshold, float deactivateThreshold) {
+void ExplorerComponentModule::RequestSetProxyConfig(IScript::Request& request, IScript::Delegate<ExplorerComponent> explorerComponent, IScript::Delegate<Component> component, float activateThreshold, float deactivateThreshold) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(explorerComponent);
 	CHECK_DELEGATE(component);
 
 	ExplorerComponent::ProxyConfig config;
-	config.layer = layer;
 	config.activateThreshold = activateThreshold;
 	config.deactivateThreshold = deactivateThreshold;
 
