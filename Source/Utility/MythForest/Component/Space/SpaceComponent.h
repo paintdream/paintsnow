@@ -21,7 +21,6 @@ namespace PaintsNow {
 
 		void QueueRoutine(Engine& engine, ITask* task);
 		void QueryEntities(std::vector<TShared<Entity> >& entities, const Float3Pair& box);
-
 		bool Insert(Engine& engine, Entity* entity);
 		bool Remove(Engine& engine, Entity* entity);
 		void RemoveAll(Engine& engine);
@@ -34,6 +33,46 @@ namespace PaintsNow {
 		void UpdateBoundingBox(Engine& engine, Float3Pair& box, bool recursive) override;
 		const Float3Pair& GetBoundingBox() const;
 		float Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const override;
+
+	protected:
+		template <class T>
+		struct EntityEnumerator {
+			static void ForAllEntities(Engine& engine, Entity* entity, T& op) {
+				if (op(entity)) {
+					if (entity->Flag().load(std::memory_order_relaxed) & Entity::ENTITY_HAS_SPACE) {
+						const std::vector<Component*>& components = entity->GetComponents();
+						for (size_t i = 0; i < components.size(); i++) {
+							Component* component = components[i];
+							if (component != nullptr && component->GetEntityFlagMask() & Entity::ENTITY_HAS_SPACE) {
+								SpaceComponent* spaceComponent = static_cast<SpaceComponent*>(component);
+								if ((spaceComponent->Flag().load(std::memory_order_acquire) & COMPONENT_OVERRIDE_WARP)
+									&& spaceComponent->GetWarpIndex() != engine.GetKernel().GetCurrentWarpIndex()) {
+									engine.GetKernel().QueueRoutine(spaceComponent, CreateTaskContextFree(ForAllEntitiesTree, std::ref(engine), TShared<Entity>(spaceComponent->GetRootEntity()), op));
+								} else {
+									ForAllEntitiesTree(engine, spaceComponent->GetRootEntity(), op);
+								}
+							}
+						}
+					}
+				}
+			}
+
+			static void ForAllEntitiesTree(Engine& engine, const TShared<Entity>& rootEntity, T& op) {
+				for (Entity* entity = rootEntity(); entity != nullptr; entity = entity->Right()) {
+					if (entity->Left() != nullptr) {
+						ForAllEntitiesTree(engine, entity->Left(), op);
+					}
+
+					ForAllEntities(engine, entity, op);
+				}
+			}
+		};
+
+	public:
+		template <class T>
+		static void ForAllEntities(Engine& engine, Entity* entity, T& op) {
+			EntityEnumerator<T>::ForAllEntities(engine, entity, op);
+		}
 
 	protected:
 		void Initialize(Engine& engine, Entity* entity) override;

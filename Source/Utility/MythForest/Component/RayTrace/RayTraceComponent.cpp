@@ -163,7 +163,7 @@ void RayTraceComponent::RoutineComplete(const TShared<Context>& context) {
 		void* buffer = image.GetBuffer(png);
 		const UChar4* src = reinterpret_cast<const UChar4*>(description.data.GetData());
 		UChar4* dst = reinterpret_cast<UChar4*>(buffer);
-		for (size_t k = 0; k < description.dimension.x() * description.dimension.y(); k++) {
+		for (size_t k = 0; k < (size_t)description.dimension.x() * description.dimension.y(); k++) {
 			UChar4 c = src[k];
 			std::swap(c.x(), c.z());
 			dst[k] = c;

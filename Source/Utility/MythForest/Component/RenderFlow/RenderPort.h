@@ -73,6 +73,6 @@ namespace PaintsNow {
 		}
 
 	private:
-		TShared<ShaderResourceImpl<T> >& shaderResource;
+		TShared<ShaderResourceImpl<T> > shaderResource;
 	};
 }

@@ -83,6 +83,7 @@ namespace PaintsNow {
 		virtual FLAG GetEntityFlagMask() const;
 		virtual uint32_t GetQuickUniqueID() const;
 		static inline uint32_t StaticGetQuickUniqueID() { return ~(uint32_t)0; }
+
 	};
 
 	enum UniqueQuickID {

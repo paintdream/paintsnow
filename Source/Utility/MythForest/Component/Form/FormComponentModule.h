@@ -19,7 +19,7 @@ namespace PaintsNow {
 		/// </summary>
 		/// <param name="name"> name </param>
 		/// <returns> FormComponent object </returns>
-		TShared<FormComponent> RequestNew(IScript::Request& request, const String& name);
+		TShared<FormComponent> RequestNew(IScript::Request& request, String& name);
 
 		/// <summary>
 		/// Resize FormComponent slots

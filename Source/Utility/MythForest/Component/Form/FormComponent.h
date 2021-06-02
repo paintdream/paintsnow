@@ -13,6 +13,18 @@ namespace PaintsNow {
 	public:
 		FormComponent(const String& name);
 
+		TShared<SharedTiny> GetCookie(void* key) const;
+		void SetCookie(void* key, const TShared<SharedTiny>& tiny);
+		void ClearCookies();
+
+		const String& GetName() const;
+		void SetName(const String& name);
+		void SetName(rvalue<String> name);
+		std::vector<String>& GetValues();
+		const std::vector<String>& GetValues() const;
+
+	protected:
+		std::vector<std::key_value<void*, TShared<SharedTiny> > > cookies;
 		String name; // entity name, maybe
 		std::vector<String> values;
 	};

@@ -2,6 +2,7 @@
 #include "../../../../Core/Interface/IMemory.h"
 #include "../Animation/AnimationComponent.h"
 #include "../Batch/BatchComponent.h"
+#include "../Form/FormComponent.h"
 #include "../Space/SpaceComponent.h"
 #include "../Transform/TransformComponent.h"
 #include "../Explorer/ExplorerComponent.h"
@@ -76,7 +77,6 @@ void CameraComponent::UpdateRootMatrices(const MatrixFloat4x4& cameraWorldMatrix
 	nextTaskData->worldGlobalData.lastViewProjectionMatrix = prevTaskData->worldGlobalData.viewProjectionMatrix;
 
 	Flag().fetch_and(~TINY_MODIFIED, std::memory_order_release);
-
 }
 
 RenderFlowComponent* CameraComponent::GetRenderFlowComponent() const {
@@ -111,8 +111,27 @@ void CameraComponent::Initialize(Engine& engine, Entity* entity) {
 	nextTaskData = TShared<TaskData>::From(new TaskData(warpCount));
 }
 
+struct CookieTransitionCleaner {
+	CookieTransitionCleaner(void* k) : key(k) {}
+
+	bool operator () (Entity* entity) const {
+		FormComponent* formComponent = entity->GetUniqueComponent(UniqueType<FormComponent>());
+		if (formComponent != nullptr) {
+			formComponent->SetCookie(key, nullptr);
+		}
+
+		return true;
+	}
+
+	void* key;
+};
+
 void CameraComponent::Uninitialize(Engine& engine, Entity* entity) {
 	OPTICK_EVENT();
+
+	CookieTransitionCleaner cookieCleaner(this);
+	SpaceComponent::ForAllEntities(engine, bridgeComponent->GetHostEntity(), cookieCleaner);
+
 	bridgeComponent->Clear(engine);
 	bridgeComponent = nullptr;
 
@@ -142,6 +161,7 @@ void CameraComponent::Uninitialize(Engine& engine, Entity* entity) {
 
 	BaseClass::Uninitialize(engine, entity);
 }
+
 
 // Event Dispatcher
 void CameraComponent::DispatchEvent(Event& event, Entity* entity) {
