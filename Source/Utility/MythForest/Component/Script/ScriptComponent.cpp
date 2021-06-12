@@ -80,6 +80,10 @@ void ScriptComponent::UpdateEntityFlagMask() {
 
 void ScriptComponent::DispatchEvent(Event& event, Entity* entity) {
 	OPTICK_EVENT();
+	Engine& engine = event.engine;
+	// if (engine.interfaces.script.IsClosing())
+	//	return;
+
 	IScript::Request::Ref handler = handlers[event.eventID];
 	if (handler) {
 		Engine& engine = event.engine;

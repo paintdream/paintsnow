@@ -425,6 +425,7 @@ namespace PaintsNow {
 		virtual Resource* CreateResource(Device* device, Resource::Type resourceType) = 0;
 		virtual void DeleteResource(Queue* queue, Resource* resource) = 0; // must delete resource on a queue
 		virtual void UploadResource(Queue* queue, Resource* resource, Resource::Description* description) = 0;
+		virtual const void* GetResourceDeviceHandle(Resource* resource) = 0;
 		virtual void SetupBarrier(Queue* queue, Barrier* barrier) = 0;
 		virtual void RequestDownloadResource(Queue* queue, Resource* resource, Resource::Description* description) = 0;
 		virtual void CompleteDownloadResource(Queue* queue, Resource* resource) = 0;

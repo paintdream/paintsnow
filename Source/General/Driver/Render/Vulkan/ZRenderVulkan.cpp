@@ -38,6 +38,7 @@ struct ResourceImplVulkanBase : public IRender::Resource {
 	virtual void Execute(VulkanQueueImpl* queue) = 0;
 	virtual void Download(VulkanQueueImpl* queue, IRender::Resource::Description* description) = 0;
 	virtual Resource::Type GetResourceType() = 0;
+	virtual const void* GetHandle() const { return nullptr; }
 };
 
 template <class T>
@@ -662,6 +663,10 @@ struct ResourceImplVulkan<IRender::Resource::TextureDescription> final : public 
 	~ResourceImplVulkan() {
 	}
 
+	const void* GetHandle() const override {
+		return reinterpret_cast<const void*>(image);
+	}
+
 	Resource::Type GetResourceType() override {
 		return RESOURCE_TEXTURE;
 	}
@@ -825,6 +830,10 @@ struct ResourceImplVulkan<IRender::Resource::BufferDescription> final : public R
 	ResourceImplVulkan() : buffer(VK_NULL_HANDLE) {}
 	~ResourceImplVulkan() {
 		assert(buffer == VK_NULL_HANDLE);
+	}
+
+	const void* GetHandle() const override {
+		return reinterpret_cast<const void*>(buffer);
 	}
 
 	Resource::Type GetResourceType() override {
@@ -1096,6 +1105,10 @@ struct ResourceImplVulkan<IRender::Resource::RenderTargetDescription> final : pu
 
 	Resource::Type GetResourceType() override {
 		return RESOURCE_RENDERTARGET;
+	}
+
+	const void* GetHandle() const override {
+		return reinterpret_cast<const void*>(frameBuffer);
 	}
 
 	static VkAttachmentLoadOp ConvertLoadOp(uint32_t k) {
@@ -2065,6 +2078,13 @@ ZRenderVulkan::ZRenderVulkan(GLFWwindow* win) : allocator(nullptr), window(win) 
 
 	// Bind to window
 	Verify("bind to window", glfwCreateWindowSurface(instance, window, allocator, (VkSurfaceKHR*)&surface));
+}
+
+const void* ZRenderVulkan::GetResourceDeviceHandle(IRender::Resource* resource) {
+	assert(resource != nullptr);
+	ResourceImplVulkanBase* p = static_cast<ResourceImplVulkanBase*>(resource);
+
+	return p->GetHandle();
 }
 
 ZRenderVulkan::~ZRenderVulkan() {

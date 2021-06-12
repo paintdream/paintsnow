@@ -15,6 +15,7 @@
 #if USE_LEAVES_IMGUI
 #include "Helpers/ImGui/System.h"
 #include "Helpers/ImGui/Repository.h"
+#include "Helpers/ImGui/RenderFlowGraph.h"
 #include "Helpers/ImGui/Script.h"
 #include "Helpers/ImGui/IModule.h"
 #endif
@@ -110,6 +111,7 @@ int main(int argc, char* argv[]) {
 		IModule visualizer;
 		Repository repository;
 		Script script;
+		RenderFlowGraph renderFlowGraph;
 
 		LeavesImGui leavesImGui(loader.GetLeavesFluteReference());
 		TWrapper<IFrame*> frameFactory = WrapFactory(UniqueType<ZFrameGLFWImGui>(), std::ref(leavesImGui));
@@ -119,6 +121,7 @@ int main(int argc, char* argv[]) {
 		leavesImGui.AddWidget(&repository);
 		leavesImGui.AddWidget(&visualizer);
 		leavesImGui.AddWidget(&script);
+		leavesImGui.AddWidget(&renderFlowGraph);
 		loader.Run(cmdLine);
 	} else {
 		loader.Run(cmdLine);

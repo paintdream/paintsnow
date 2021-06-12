@@ -95,6 +95,7 @@ public:
 		return &r;
 	}
 	void SetupBarrier(Queue* queue, Barrier* barrier) override {}
+	const void* GetResourceDeviceHandle(Resource* resource) override { return nullptr; }
 	void UploadResource(Queue* queue, Resource* resource, Resource::Description* description) override {}
 	void RequestDownloadResource(Queue* queue, Resource* resource, Resource::Description* description) override {}
 	void CompleteDownloadResource(Queue* queue, Resource* resource) override {}

@@ -36,6 +36,7 @@ namespace PaintsNow {
 		Resource* CreateResource(Device* device, Resource::Type resourceType) override;
 		void UploadResource(Queue* queue, Resource* resource, Resource::Description* description) override;
 		void SetupBarrier(Queue* queue, Barrier* barrier) override;
+		const void* GetResourceDeviceHandle(Resource* resource) override;
 		void RequestDownloadResource(Queue* queue, Resource* resource, Resource::Description* description) override;
 		void CompleteDownloadResource(Queue* queue, Resource* resource) override;
 		void ExecuteResource(Queue* queue, Resource* resource) override;

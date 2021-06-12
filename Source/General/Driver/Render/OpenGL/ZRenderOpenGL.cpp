@@ -78,6 +78,7 @@ struct ResourceBaseImplOpenGL : public ResourceAligned {
 	virtual void Download(QueueImplOpenGL& queue) = 0;
 	virtual void SyncDownload(QueueImplOpenGL& queue) = 0;
 	virtual void Delete(QueueImplOpenGL& queue) = 0;
+	virtual const void* GetHandle() const { return nullptr; }
 
 #ifdef _DEBUG
 	String note;
@@ -433,6 +434,10 @@ template <>
 struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public ResourceBaseImplOpenGLDesc<IRender::Resource::TextureDescription> {
 	ResourceImplOpenGL() : textureID(0), textureType(GL_TEXTURE_2D), textureFormat(GL_RGBA8), pixelBufferObjectID(0) {}
 	IRender::Resource::Type GetType() const override { return RESOURCE_TEXTURE; }
+
+	const void* GetHandle() const override {
+		return reinterpret_cast<const void*>(textureID);
+	}
 
 	inline void CreateMips(Resource::TextureDescription& d, uint32_t bitDepth, GLuint textureType, GLuint srcLayout, GLuint srcDataType, GLuint format, const void* buffer, size_t length) {
 		GL_GUARD();
@@ -974,6 +979,9 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 template <>
 struct ResourceImplOpenGL<IRender::Resource::BufferDescription> final : public ResourceBaseImplOpenGLDesc<IRender::Resource::BufferDescription> {
 	ResourceImplOpenGL() : bufferID(0), length(0) {}
+	const void* GetHandle() const override {
+		return reinterpret_cast<const void*>(bufferID);
+	}
 
 	IRender::Resource::Type GetType() const override { return RESOURCE_BUFFER; }
 	void Upload(QueueImplOpenGL& queue) override {
@@ -1395,6 +1403,9 @@ template <>
 struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> final : public ResourceBaseImplOpenGLDesc<IRender::Resource::RenderTargetDescription> {
 	ResourceImplOpenGL() : vertexArrayID(0), frameBufferID(0) {}
 	IRender::Resource::Type GetType() const override { return RESOURCE_RENDERTARGET; }
+	const void* GetHandle() const override {
+		return reinterpret_cast<const void*>(frameBufferID);
+	}
 
 #ifdef _DEBUG
 	virtual void SetUploadDescription(IRender::Resource::Description* d) override {
@@ -2086,8 +2097,13 @@ void ZRenderOpenGL::ExecuteResource(Queue* queue, Resource* resource) {
 	q->QueueCommand(ResourceCommandImplOpenGL(ResourceCommandImplOpenGL::OP_EXECUTE, resource));
 }
 
+const void* ZRenderOpenGL::GetResourceDeviceHandle(IRender::Resource* resource) {
+	assert(resource != nullptr);
+	ResourceBaseImplOpenGL* base = static_cast<ResourceBaseImplOpenGL*>(resource);
+	return base->GetHandle();
+}
+
 void ZRenderOpenGL::SetupBarrier(Queue* queue, Barrier* barrier) {
-	// OpenGL does not support barriers
 }
 
 void ZRenderOpenGL::SetResourceNotation(Resource* resource, const String& note) {

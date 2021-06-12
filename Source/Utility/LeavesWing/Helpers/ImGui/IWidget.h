@@ -42,6 +42,7 @@ namespace PaintsNow {
 		virtual void Method(const char* name, const TProxy<>* p, const Param& retValue, const std::vector<Param>& params, const MetaChainBase* meta);
 		virtual void Class(IReflectObject& host, Unique id, const char* name, const char* path, const MetaChainBase* meta);
 		virtual void Enum(size_t value, Unique id, const char* name, const MetaChainBase* meta);
+		virtual void LeaveMainLoop();
 
 	protected:
 		void RenderObject(IReflectObject& object);

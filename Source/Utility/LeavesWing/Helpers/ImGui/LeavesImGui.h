@@ -25,6 +25,7 @@ namespace PaintsNow {
 		LeavesImGui(LeavesFlute*& leavesFlute);
 		void AddWidget(IWidget* widget);
 		void TickRender();
+		void LeaveMainLoop();
 
 	protected:
 		std::vector<IWidget*> widgets;
@@ -38,6 +39,7 @@ namespace PaintsNow {
 		void OnScrollCallback(double x, double y) override;
 		void OnKeyboardCallback(int key, int scancode, int action, int mods) override;
 		void OnCustomRender() override;
+		void EnterMainLoop() override;
 
 	protected:
 		LeavesImGui& leavesImGui;

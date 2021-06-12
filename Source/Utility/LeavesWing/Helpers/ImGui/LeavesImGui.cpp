@@ -16,6 +16,12 @@ void LeavesImGui::AddWidget(IWidget* widget) {
 	widgets.emplace_back(widget);
 }
 
+void LeavesImGui::LeaveMainLoop() {
+	for (size_t i = 0; i < widgets.size(); i++) {
+		widgets[i]->LeaveMainLoop();
+	}
+}
+
 void LeavesImGui::TickRender() {
 	if (leavesFlute != nullptr) {
 		for (size_t i = 0; i < widgets.size(); i++) {
@@ -44,6 +50,11 @@ void ZFrameGLFWImGui::OnKeyboardCallback(int key, int scancode, int action, int 
 	ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
 	if (ImGui::GetIO().WantCaptureKeyboard) return;
 	ZFrameGLFW::OnKeyboardCallback(key, scancode, action, mods);
+}
+
+void ZFrameGLFWImGui::EnterMainLoop() {
+	ZFrameGLFW::EnterMainLoop();
+	leavesImGui.LeaveMainLoop();
 }
 
 void ZFrameGLFWImGui::OnCustomRender() {

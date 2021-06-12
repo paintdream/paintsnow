@@ -13,10 +13,16 @@
 # define __AX_MATH_2D_H__
 # pragma once
 
+#ifdef max
+#undef max
+#endif
+
+#ifdef min
+#undef min
+#endif
 
 //------------------------------------------------------------------------------
 # if defined(__cplusplus)
-
 
 //------------------------------------------------------------------------------
 # include <algorithm>

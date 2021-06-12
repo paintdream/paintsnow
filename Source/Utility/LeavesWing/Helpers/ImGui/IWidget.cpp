@@ -270,3 +270,5 @@ void IWidget::RenderObject(IReflectObject& object) {
 	object(*this);
 	ImGui::Columns(1);
 }
+
+void IWidget::LeaveMainLoop() {}
