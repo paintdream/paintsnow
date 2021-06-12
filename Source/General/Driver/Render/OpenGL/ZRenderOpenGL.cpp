@@ -1820,7 +1820,6 @@ struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> final : public
 
 		assert(d.textureResources.size() == program.textureLocations.size());
 		for (uint32_t k = 0; k < d.textureResources.size(); k++) {
-			GL_GUARD();
 			const Texture* texture = static_cast<const Texture*>(d.textureResources[k]);
 			assert(texture != nullptr);
 			assert(texture->textureID != 0);
@@ -1829,10 +1828,12 @@ struct ResourceImplOpenGL<IRender::Resource::DrawCallDescription> final : public
 				if (program.isComputeShader) {
 					glBindImageTexture(k, (GLuint)texture->textureID, 0, GL_FALSE, 0, GL_READ_ONLY, texture->textureFormat);
 				} else {
+					GL_GUARD();
 					glActiveTexture((GLsizei)(GL_TEXTURE0 + k));
 					glBindTexture(texture->textureType, texture->textureID);
 				}
 
+				GL_GUARD();
 				glUniform1i(program.textureLocations[k], (GLuint)k);
 			}
 		}
@@ -1952,6 +1953,11 @@ void ZRenderOpenGL::DeleteDevice(IRender::Device* device) {
 void ZRenderOpenGL::NextDeviceFrame(IRender::Device* device) {
 	DeviceImplOpenGL* impl = static_cast<DeviceImplOpenGL*>(device);
 	impl->storeInvalidates.clear();
+
+	// do not derive last frame's state
+	memset(&impl->lastRenderState, 0xff, sizeof(impl->lastRenderState));
+	impl->lastProgramID = ~(GLuint)0;
+	impl->lastFrameBufferID = ~(GLuint)0;
 
 	#if GLES_COMPATIBLE
 	impl->lastRenderTargetDescription = IRender::Resource::RenderTargetDescription();

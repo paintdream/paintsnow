@@ -80,9 +80,10 @@ void ScriptComponent::UpdateEntityFlagMask() {
 
 void ScriptComponent::DispatchEvent(Event& event, Entity* entity) {
 	OPTICK_EVENT();
+	if (!(Flag().load(std::memory_order_relaxed) & TINY_ACTIVATED))
+		return;
+
 	Engine& engine = event.engine;
-	// if (engine.interfaces.script.IsClosing())
-	//	return;
 
 	IScript::Request::Ref handler = handlers[event.eventID];
 	if (handler) {
