@@ -1672,7 +1672,7 @@ void ed::EditorContext::Suspend(SuspendFlags flags)
     auto drawList = ImGui::GetWindowDrawList();
     auto lastChannel = drawList->_Splitter._Current;
     drawList->ChannelsSetCurrent(m_ExternalChannel);
-    m_Canvas.Suspend();
+    //m_Canvas.Suspend();
     drawList->ChannelsSetCurrent(lastChannel);
     if ((flags & SuspendFlags::KeepSplitter) != SuspendFlags::KeepSplitter)
         ImDrawList_SwapSplitter(drawList, m_Splitter);
@@ -1685,7 +1685,7 @@ void ed::EditorContext::Resume(SuspendFlags flags)
         ImDrawList_SwapSplitter(drawList, m_Splitter);
     auto lastChannel = drawList->_Splitter._Current;
     drawList->ChannelsSetCurrent(m_ExternalChannel);
-    m_Canvas.Resume();
+    //m_Canvas.Resume();
     drawList->ChannelsSetCurrent(lastChannel);
 }
 

@@ -130,7 +130,10 @@ void CameraComponent::Uninitialize(Engine& engine, Entity* entity) {
 	OPTICK_EVENT();
 
 	CookieTransitionCleaner cookieCleaner(this);
-	SpaceComponent::ForAllEntities(engine, bridgeComponent->GetHostEntity(), cookieCleaner);
+	Entity* hostEntity = bridgeComponent->GetHostEntity();
+	if (hostEntity != nullptr) {
+		SpaceComponent::ForAllEntities(engine, bridgeComponent->GetHostEntity(), cookieCleaner);
+	}
 
 	bridgeComponent->Clear(engine);
 	bridgeComponent = nullptr;
