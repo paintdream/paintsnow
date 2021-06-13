@@ -23,19 +23,21 @@ inline Float3Pair BuildBoundingFloat3PairRandomly() {
 }
 
 struct Queryer {
+	Queryer(const Float3Pair& b) : box(b) {}
+	const Float3Pair& box;
 	size_t count;
-	bool operator () (const Float3Pair& b, const Tree::Base& tree) {
-		if (Math::Overlap(b, tree.GetKey()))
+	bool operator () (const Tree::Base& tree) {
+		if (Math::Overlap(box, tree.GetKey()))
 			count++;
 		return true;
 	}
 };
 
 inline size_t FastQuery(Tree*& root, const Float3Pair& box) {
-	Queryer q;
+	Queryer q(box);
 	q.count = 0;
 	assert(root->GetParent() == nullptr);
-	root->Query(box, q);
+	root->Query(std::true_type(), box, q);
 
 	return q.count;
 }

@@ -66,7 +66,11 @@ ShapeComponent::Patch* ShapeComponent::MakeBound(Patch& patch, const std::vector
 	Float3Pair box;
 	for (uint32_t i = 0; i < MAX_PATCH_COUNT; i++) {
 		uint32_t index = patch.indices[i];
-		if (index == ~(uint32_t)0) return &patch;
+		if (index == ~(uint32_t)0) {
+			assert(i != 0);
+			break;
+		}
+
 		const UInt3& face = indices[index];
 		const Float3& first = vertices[face[0]];
 		const Float3& second = vertices[face[1]];
@@ -83,7 +87,7 @@ ShapeComponent::Patch* ShapeComponent::MakeBound(Patch& patch, const std::vector
 	}
 
 	patch.SetIndex(index);
-	patch.SetKey(box);
+	patch.GetKey() = box;
 	return &patch;
 }
 
@@ -149,7 +153,6 @@ void ShapeComponent::RoutineUpdate(Engine& engine, const TShared<MeshResource>& 
 		std::vector<Patch> linearPatches;
 		linearPatches.reserve(indices.size());
 
-		Patch patch;
 		uint32_t k = 0;
 		uint32_t lastLevel = ~(uint32_t)0;
 		for (uint32_t m = 0; m < codeIndices.size(); m++) {
@@ -196,20 +199,20 @@ void ShapeComponent::RoutineUpdate(Engine& engine, const TShared<MeshResource>& 
 	Flag().fetch_and(~TINY_UPDATING, std::memory_order_release);
 }
 
-struct ShapeComponent::PatchRaycaster {
+struct ShapeComponent::PatchRayCaster {
 	typedef TVector<TVector<float, 4>, 3> Group;
-	PatchRaycaster(const std::vector<Float3>& v, const std::vector<UInt3>& i, const Float3Pair& r) : vertices(v), indices(i), ray(r), hitPatch(nullptr), hitIndex(0), distance(FLT_MAX) {
+	PatchRayCaster(const std::vector<Float3>& v, const std::vector<UInt3>& i, const Float3Pair& r) : vertices(v), indices(i), ray(r), hitPatch(nullptr), hitIndex(0), distance(FLT_MAX) {
 		Math::ExtendVector(rayGroup.first, TVector<float, 3>(r.first));
 		Math::ExtendVector(rayGroup.second, TVector<float, 3>(r.second));
 	}
 
-	bool operator () (const Float3Pair& box, const TKdTree<Float3Pair>& node) {
+	bool operator () (const TKdTree<Float3Pair>& node) {
 		const Patch& patch = static_cast<const Patch&>(node);
 		TVector<TVector<float, 4>, 3> res;
 		TVector<TVector<float, 4>, 2> uv;
 		TVector<TVector<float, 4>, 3> points[3];
 
-		TVector<float, 2> intersect = Math::IntersectBox(box, ray);
+		TVector<float, 2> intersect = Math::IntersectBox(node.GetKey(), ray);
 		if (intersect[1] >= 0.0f && intersect[0] <= intersect[1]) {
 			static_assert(MAX_PATCH_COUNT % 4 == 0, "Must be 4n size");
 			uint32_t maxIndex = 0;
@@ -249,8 +252,10 @@ struct ShapeComponent::PatchRaycaster {
 								distance = s;
 								hitPatch = &patch;
 								hitIndex = patch.indices[i + m - 3];
-								coord = Float2(uv[0][m], uv[1][m]);
+								coord = Float4(uv[0][m], uv[1][m], 0, 0);
 								intersection = hit;
+
+								assert(intersectBox);
 							}
 						}
 					}
@@ -258,25 +263,23 @@ struct ShapeComponent::PatchRaycaster {
 					k = 0;
 				}
 			}
-
-			return true;
-		} else {
-			return false;
 		}
+		
+		return true;
 	}
 
 	const std::vector<Float3>& vertices;
 	const std::vector<UInt3>& indices;
 	std::pair<Group, Group> rayGroup;
 	const Patch* hitPatch;
+	uint32_t hitIndex;
 	const Float3Pair& ray;
 	Float3 intersection;
-	uint32_t hitIndex;
-	Float2 coord;
 	float distance;
+	Float4 coord;
 };
 
-float ShapeComponent::Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const {
+float ShapeComponent::Raycast(RaycastTask& task, Float3Pair& ray, MatrixFloat4x4& transform, Unit* parent, float ratio) const {
 	if (Flag().load(std::memory_order_acquire) & TINY_PINNED) {
 		if (!patches.empty()) {
 			OPTICK_EVENT();
@@ -284,11 +287,12 @@ float ShapeComponent::Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, 
 			Float3Pair box(ray.first, ray.first);
 			Math::Union(box, ray.second);
 			IAsset::MeshCollection& meshCollection = meshResource->meshCollection;
-			PatchRaycaster q(meshCollection.vertices, meshCollection.indices, ray);
-			(const_cast<Patch&>(patches[0])).Query(box, q);
+			PatchRayCaster q(meshCollection.vertices, meshCollection.indices, ray);
+			(const_cast<Patch&>(patches[0])).Query(std::true_type(), box, q);
 
 			if (q.hitPatch != nullptr) {
 				RaycastResult result;
+				result.transform = transform;
 				result.position = q.intersection;
 				result.distance = q.distance * ratio;
 				result.faceIndex = q.hitIndex;

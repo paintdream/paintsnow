@@ -295,10 +295,6 @@ bool Entity::IsOrphan() const {
 	return !!(Flag().load(std::memory_order_acquire) & ENTITY_STORE_ENGINE);
 }
 
-uint32_t Entity::GetPivotIndex() const {
-	return GetIndex();
-}
-
 void Entity::UpdateBoundingBox(Engine& engine, bool recursive) {
 	if (Flag().load(std::memory_order_relaxed) & TINY_PINNED)
 		return;
@@ -324,7 +320,7 @@ void Entity::UpdateBoundingBox(Engine& engine, bool recursive) {
 		assert(box.first.y() > -FLT_MAX && box.second.y() < FLT_MAX);
 		assert(box.first.z() > -FLT_MAX && box.second.z() < FLT_MAX);
 
-		SetKey(box);
+		GetKey() = box;
 	}
 }
 

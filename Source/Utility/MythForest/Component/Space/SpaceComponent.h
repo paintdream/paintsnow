@@ -32,7 +32,7 @@ namespace PaintsNow {
 		void DispatchEvent(Event& event, Entity* entity) override;
 		void UpdateBoundingBox(Engine& engine, Float3Pair& box, bool recursive) override;
 		const Float3Pair& GetBoundingBox() const;
-		float Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const override;
+		float Raycast(RaycastTask& task, Float3Pair& ray, MatrixFloat4x4& transform, Unit* parent, float ratio) const override;
 
 	protected:
 		template <class T>
@@ -77,7 +77,7 @@ namespace PaintsNow {
 	protected:
 		void Initialize(Engine& engine, Entity* entity) override;
 		void Uninitialize(Engine& engine, Entity* entity) override;
-		float RoutineRaycast(RaycastTaskWarp& task, Float3Pair& ray, Unit* parent, float ratio) const;
+		float RoutineRaycast(RaycastTaskWarp& task, Float3Pair& ray, MatrixFloat4x4& transform, Unit* parent, float ratio) const;
 		void RoutineUpdateBoundingBoxRecursive(Engine& engine, Float3Pair& box, Entity* entity, bool subEntity);
 		void RoutineUpdateBoundingBox(Engine& engine, Float3Pair& box, bool subEntity);
 		void RoutineDispatchEvent(const Event& event);

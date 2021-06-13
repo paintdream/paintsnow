@@ -18,7 +18,7 @@ namespace PaintsNow {
 		};
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		void UpdateBoundingBox(Engine& engine, Float3Pair& box, bool recursive) override;
-		float Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const override;
+		float Raycast(RaycastTask& task, Float3Pair& ray, MatrixFloat4x4& transform, Unit* parent, float ratio) const override;
 
 		const Float3Pair& GetLocalBoundingBox() const;
 

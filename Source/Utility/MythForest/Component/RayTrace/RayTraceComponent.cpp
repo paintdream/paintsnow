@@ -16,7 +16,7 @@ RayTraceComponent::Context::~Context() {
 	}
 }
 
-RayTraceComponent::RayTraceComponent() : captureSize(640, 480), superSample(4), tileSize(8), rayCount(1024), completedPixelCountSync(0) {
+RayTraceComponent::RayTraceComponent() : captureSize(320, 240), superSample(1), tileSize(8), rayCount(1), completedPixelCountSync(0) {
 }
 
 RayTraceComponent::~RayTraceComponent() {}
@@ -284,13 +284,29 @@ Float3 RayTraceComponent::ImportanceSampleGGX(const Float2& e, float a2) {
 	return h;
 }
 
+static Float4 SampleTexture(const TShared<TextureResource>& texture, const Float2& uv) {
+	IRender::Resource::TextureDescription& desc = texture->description;
+	assert(desc.state.format == IRender::Resource::TextureDescription::UNSIGNED_BYTE);
+	assert(desc.state.layout == IRender::Resource::TextureDescription::RGBA);
+	assert(!desc.state.compress);
+	// wrap uv
+	int ux = (int)(uv.x() * desc.dimension.x() + 0.5f) % desc.dimension.x();
+	int uy = (int)(uv.y() * desc.dimension.y() + 0.5f) % desc.dimension.y();
+
+	if (ux < 0) ux += desc.dimension.x();
+	if (uy < 0) uy += desc.dimension.y();
+
+	return ToFloat4(reinterpret_cast<UChar4*>(desc.data.GetData())[uy * desc.dimension.x() + ux]);
+}
+
 Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float3Pair& r) const {
 	const std::vector<SpaceComponent*>& rootSpaceComponents = context->rootSpaceComponents;
 	Component::RaycastTaskSerial task;
 	for (size_t i = 0; i < rootSpaceComponents.size(); i++) {
 		SpaceComponent* spaceComponent = rootSpaceComponents[i];
 		Float3Pair ray = r;
-		spaceComponent->Raycast(task, ray, nullptr, 1.0f);
+		MatrixFloat4x4 matrix = MatrixFloat4x4::Identity();
+		spaceComponent->Raycast(task, ray, matrix, nullptr, 1.0f);
 	}
 
 	if (task.result.distance != FLT_MAX && task.result.parent) {
@@ -299,34 +315,50 @@ Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float
 		std::unordered_map<size_t, uint32_t>::const_iterator it = context->mapEntityToResourceIndex.find(reinterpret_cast<size_t>(task.result.parent()));
 		if (it != context->mapEntityToResourceIndex.end()) {
 			const TShared<TextureResource>& baseColorTexture = static_cast<TextureResource*>(context->mappedResources[(*it).second]());
+			const TShared<TextureResource>& normalTexture = static_cast<TextureResource*>(context->mappedResources[(*it).second + 1]());
+			const TShared<TextureResource>& mixtureTexture = static_cast<TextureResource*>(context->mappedResources[(*it).second + 2]());
 			assert(task.result.unit->QueryInterface(UniqueType<ShapeComponent>()) != nullptr);
 			ShapeComponent* shapeComponent = static_cast<ShapeComponent*>(task.result.unit());
 			IAsset::MeshCollection& meshCollection = shapeComponent->GetMesh()->meshCollection;
 
 			const UInt3& face = meshCollection.indices[task.result.faceIndex];
-			if (!meshCollection.texCoords.empty()) {
+			if (!meshCollection.texCoords.empty() && !meshCollection.normals.empty() && !meshCollection.tangents.empty()) {
 				Float4 uvBase = meshCollection.texCoords[0].coords[face.x()];
 				Float4 uvM = meshCollection.texCoords[0].coords[face.y()];
 				Float4 uvN = meshCollection.texCoords[0].coords[face.z()];
-				Float4 uvResult = uvBase + (uvM - uvBase) * task.result.coord.x() + (uvN - uvBase) * task.result.coord.y();
+				uvBase = uvBase + (uvM - uvBase) * task.result.coord.x() + (uvN - uvBase) * task.result.coord.y();
+				Float2 uv(uvBase.x(), uvBase.y());
 
 				// sample texture
-				IRender::Resource::TextureDescription& desc = baseColorTexture->description;
-				assert(desc.state.format == IRender::Resource::TextureDescription::UNSIGNED_BYTE);
-				assert(desc.state.layout == IRender::Resource::TextureDescription::RGBA);
-				assert(!desc.state.compress);
+				Float4 baseColor = SampleTexture(baseColorTexture, uv);
+				return baseColor;
+				Float4 normal = SampleTexture(normalTexture, uv) * Float4(2.0f, 2.0f, 2.0f, 2.0f) - Float4(1.0f, 1.0f, 1.0f, 1.0f);
+				Float4 mixture = SampleTexture(mixtureTexture, uv);
 
-				// wrap uv
-				int ux = (int)(uvResult.x() * desc.dimension.x() + 0.5f) % desc.dimension.x();
-				int uy = (int)(uvResult.y() * desc.dimension.y() + 0.5f) % desc.dimension.y();
+				// calc world space normal
+				Float4 normalBase = ToFloat4(meshCollection.normals[face.x()]);
+				Float4 normalM = ToFloat4(meshCollection.normals[face.y()]);
+				Float4 normalN = ToFloat4(meshCollection.normals[face.z()]);
 
-				if (ux < 0) ux += desc.dimension.x();
-				if (uy < 0) uy += desc.dimension.y();
+				normalBase = normalBase + (normalM - normalBase) * task.result.coord.x() + (normalN - normalBase) * task.result.coord.y();
 
-				UChar4* ptr = reinterpret_cast<UChar4*>(desc.data.GetData());
+				Float4 tangentBase = ToFloat4(meshCollection.tangents[face.x()]);
+				Float4 tangentM = ToFloat4(meshCollection.tangents[face.y()]);
+				Float4 tangentN = ToFloat4(meshCollection.tangents[face.z()]);
 
-				// write target
-				return ToFloat4(ptr[uy * desc.dimension.x() + ux]);
+				tangentBase = tangentBase + (tangentM - tangentBase) * task.result.coord.x() + (tangentN - tangentBase) * task.result.coord.y();
+
+				// To world space
+				float hand = tangentBase.w();
+				tangentBase.w() = normalBase.w() = 0;
+				normalBase = normalBase * task.result.transform;
+				tangentBase = tangentBase * task.result.transform;
+				Float4 binormalBase = Math::CrossProduct(normalBase, tangentBase) * hand;
+
+				Float4 worldNormal = normalBase * normal.z() + tangentBase * normal.x() + binormalBase * normal.y();
+
+				worldNormal.w() = 1;
+				return worldNormal;
 			}
 		}
 	}

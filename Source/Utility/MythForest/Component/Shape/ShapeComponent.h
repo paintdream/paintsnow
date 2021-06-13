@@ -15,7 +15,7 @@ namespace PaintsNow {
 		ShapeComponent();
 		~ShapeComponent() override;
 		void Update(Engine& engine, const TShared<MeshResource>& resource);
-		float Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio = 1) const override;
+		float Raycast(RaycastTask& task, Float3Pair& ray, MatrixFloat4x4& transform, Unit* parent, float ratio = 1) const override;
 		enum {
 			MAX_PATCH_COUNT = 8
 		};
@@ -33,7 +33,8 @@ namespace PaintsNow {
 			};
 		};
 
-		struct PatchRaycaster;
+		struct PatchRayCaster;
+		struct PatchRayCuller;
 		static void MakeHeapInternal(std::vector<Patch>& target, Patch* begin, Patch* end);
 		static Patch* MakeBound(Patch& patch, const std::vector<Float3>& vertices, const std::vector<UInt3>& indices, int index);
 

@@ -46,15 +46,16 @@ Bytes FieldSimplygon::operator [] (const Float3& position) const {
 
 template <int type, class Q>
 struct BoxQueryer {
-	BoxQueryer(Q& q) : queryer(q) {}
+	BoxQueryer(Q& q, const Float3Pair& b) : queryer(q), box(b) {}
 	Q& queryer;
+	const Float3Pair& box;
 
-	bool operator () (const Float3Pair& b, TKdTree<Float3Pair, Unit>& tree) const {
+	bool operator () (TKdTree<Float3Pair, Unit>& tree) const {
 		if (type == FieldSimplygon::BOUNDING_BOX) {
 			queryer(static_cast<Entity&>(tree));
 		} else if (type == FieldSimplygon::BOUNDING_SPHERE) {
-			Float3 from = Math::ToLocal(b, tree.GetKey().first);
-			Float3 to = Math::ToLocal(b, tree.GetKey().second);
+			Float3 from = Math::ToLocal(box, tree.GetKey().first);
+			Float3 to = Math::ToLocal(box, tree.GetKey().second);
 			
 			float dx = Math::Max(0.0f, Math::Max(from.x(), -to.x()));
 			float dy = Math::Max(0.0f, Math::Max(from.y(), -to.y()));
@@ -64,8 +65,8 @@ struct BoxQueryer {
 				queryer(static_cast<Entity&>(tree));
 			}
 		} else if (type == FieldSimplygon::BOUNDING_CYLINDER) {
-			Float3 from = Math::ToLocal(b, tree.GetKey().first);
-			Float3 to = Math::ToLocal(b, tree.GetKey().second);
+			Float3 from = Math::ToLocal(box, tree.GetKey().first);
+			Float3 to = Math::ToLocal(box, tree.GetKey().second);
 			
 			float dx = Math::Max(0.0f, Math::Max(from.x(), -to.x()));
 			float dy = Math::Max(0.0f, Math::Max(from.y(), -to.y()));
@@ -95,20 +96,20 @@ void FieldSimplygon::PostEventForEntityTree(Entity* entity, Event& event, FLAG m
 	switch (type) {
 	case BOUNDING_BOX:
 	{
-		BoxQueryer<BOUNDING_BOX, Poster> q(poster);
-		entity->Query(box, q);
+		BoxQueryer<BOUNDING_BOX, Poster> q(poster, box);
+		entity->Query(std::true_type(), box, q);
 		break;
 	}
 	case BOUNDING_SPHERE:
 	{
-		BoxQueryer<BOUNDING_SPHERE, Poster> q(poster);
-		entity->Query(box, q);
+		BoxQueryer<BOUNDING_SPHERE, Poster> q(poster, box);
+		entity->Query(std::true_type(), box, q);
 		break;
 	}
 	case BOUNDING_CYLINDER:
 	{
-		BoxQueryer<BOUNDING_CYLINDER, Poster> q(poster);
-		entity->Query(box, q);
+		BoxQueryer<BOUNDING_CYLINDER, Poster> q(poster, box);
+		entity->Query(std::true_type(), box, q);
 		break;
 	}
 	}
@@ -128,20 +129,20 @@ void FieldSimplygon::QueryEntitiesForEntityTree(Entity* entity, std::vector<TSha
 	switch (type) {
 	case BOUNDING_BOX:
 	{
-		BoxQueryer<BOUNDING_BOX, Collector> q(collector);
-		entity->Query(box, q);
+		BoxQueryer<BOUNDING_BOX, Collector> q(collector, box);
+		entity->Query(std::true_type(), box, q);
 		break;
 	}
 	case BOUNDING_SPHERE:
 	{
-		BoxQueryer<BOUNDING_SPHERE, Collector> q(collector);
-		entity->Query(box, q);
+		BoxQueryer<BOUNDING_SPHERE, Collector> q(collector, box);
+		entity->Query(std::true_type(), box, q);
 		break;
 	}
 	case BOUNDING_CYLINDER:
 	{
-		BoxQueryer<BOUNDING_CYLINDER, Collector> q(collector);
-		entity->Query(box, q);
+		BoxQueryer<BOUNDING_CYLINDER, Collector> q(collector, box);
+		entity->Query(std::true_type(), box, q);
 		break;
 	}
 	}

@@ -180,7 +180,7 @@ void TransformComponent::SetObjectID(uint32_t id) {
 	uniqueObjectID = id;
 }
 
-float TransformComponent::Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const {
+float TransformComponent::Raycast(RaycastTask& task, Float3Pair& ray, MatrixFloat4x4& trans, Unit* parent, float ratio) const {
 	MatrixFloat4x4 invTransform = Math::QuickInverse(transform);
 
 	Float3Pair oldRay = ray;
@@ -189,6 +189,7 @@ float TransformComponent::Raycast(RaycastTask& task, Float3Pair& ray, Unit* pare
 	ray.first = Math::Transform(invTransform, ray.first);
 	ray.second = Math::Transform(invTransform, ray.second) - ray.first;
 
+	trans = transform * trans;
 	return ratio * Math::SquareLength(oldRay.second) / Math::SquareLength(ray.second);
 }
 

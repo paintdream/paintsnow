@@ -323,7 +323,6 @@ public:
 			const Component::RaycastResult& result = results[i];
 			request << begintable
 				<< key("Intersection") << result.position
-				<< key("Normal") << result.normal
 				<< key("TexCoord") << result.coord
 				<< key("Distance") << result.distance
 				<< key("Object") << result.unit
@@ -351,7 +350,8 @@ void MythForest::RequestRaycast(IScript::Request& request, IScript::Delegate<Ent
 	TShared<ScriptRaycastTask> task = TShared<ScriptRaycastTask>::From(new ScriptRaycastTask(engine, count, callback));
 	task->AddPendingTask();
 	Float3Pair ray(from, dir);
-	Component::RaycastForEntity(*task(), ray, entity.Get());
+	MatrixFloat4x4 transform;
+	Component::RaycastForEntity(*task(), ray, transform, entity.Get());
 	task->RemovePendingTask();
 }
 

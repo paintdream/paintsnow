@@ -261,9 +261,10 @@ void SpaceComponent::FastRemoveNode(Engine& engine, Entity* entity) {
 
 struct CollectEntityHandler {
 public:
-	CollectEntityHandler(std::vector<TShared<Entity> >& t) : entityList(t) {}
+	CollectEntityHandler(std::vector<TShared<Entity> >& t, const Float3Pair& b) : entityList(t), box(b) {}
+	const Float3Pair& box;
 
-	bool operator () (const Float3Pair& box, Entity::Type& tree) {
+	bool operator () (Entity::Type& tree) {
 		if (Math::Overlap(box, tree.GetKey())) {
 			entityList.emplace_back(static_cast<Entity*>(&tree));
 		}
@@ -275,9 +276,9 @@ public:
 };
 
 void SpaceComponent::QueryEntities(std::vector<TShared<Entity> >& entityList, const Float3Pair& box) {
-	CollectEntityHandler handler(entityList);
+	CollectEntityHandler handler(entityList, box);
 	if (rootEntity != nullptr) {
-		rootEntity->Query(Float3Pair(box), handler);
+		rootEntity->Query(std::true_type(), Float3Pair(box), handler);
 	}
 }
 
@@ -316,7 +317,7 @@ void SpaceComponent::RoutineUpdateBoundingBox(Engine& engine, Float3Pair& box, b
 }
 
 template <class D>
-void RaycastInternal(Entity* root, Component::RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio, const Float3Pair& b, D d) {
+void RaycastInternal(Entity* root, Component::RaycastTask& task, Float3Pair& ray, MatrixFloat4x4& transform, Unit* parent, float ratio, const Float3Pair& b, D d) {
 	Float3Pair bound = b;
 	for (Entity* entity = root; entity != nullptr; entity = entity->Right()) {
 		if (!getboolean<D>::value) {
@@ -335,34 +336,24 @@ void RaycastInternal(Entity* root, Component::RaycastTask& task, Float3Pair& ray
 		IMemory::PrefetchRead(entity->Left());
 		IMemory::PrefetchRead(entity->Right());
 
-		Component::RaycastForEntity(task, ray, entity);
+		Component::RaycastForEntity(task, ray, transform, entity);
 
 		if (getboolean<D>::value) {
-			uint32_t index = entity->GetPivotIndex();
-			const float* source = &(const_cast<Float3Pair&>(entity->GetKey()).first.x());
-			float* target = &bound.first.x();
-			if (index < 3) {
-				// cull right
-				if (entity->Left() != nullptr) {
-					RaycastInternal(entity->Left(), task, ray, parent, ratio, bound, d);
-				}
-
-				target[index] = source[index]; // pass through
-			} else if (entity->Left() != nullptr) {
-				// cull left
-				float value = target[index];
-				target[index] = source[index];
-				RaycastInternal(entity->Left(), task, ray, parent, ratio, bound, d);
-				target[index] = value;
+			uint32_t index = entity->GetIndex();
+			float save = Entity::Meta::SplitPush(std::true_type(), bound, entity->GetKey(), index);
+			if (entity->Left() != nullptr) {
+				RaycastInternal(entity->Left(), task, ray, transform, parent, ratio, bound, d);
 			}
+
+			Entity::Meta::SplitPop(bound, index, save);
 		} else if (entity->Left() != nullptr) {
-			RaycastInternal(entity->Left(), task, ray, parent, ratio, bound, d);
+			RaycastInternal(entity->Left(), task, ray, transform, parent, ratio, bound, d);
 		}
 	}
 }
 
-float SpaceComponent::RoutineRaycast(RaycastTaskWarp& task, Float3Pair& ray, Unit* parent, float ratio) const {
-	ratio = Raycast(task, ray, parent, ratio);
+float SpaceComponent::RoutineRaycast(RaycastTaskWarp& task, Float3Pair& ray, MatrixFloat4x4& transform, Unit* parent, float ratio) const {
+	ratio = Raycast(task, ray, transform, parent, ratio);
 	if (parent != nullptr) {
 		parent->ReleaseObject();
 	}
@@ -371,14 +362,14 @@ float SpaceComponent::RoutineRaycast(RaycastTaskWarp& task, Float3Pair& ray, Uni
 	return ratio;
 }
 
-float SpaceComponent::Raycast(RaycastTask& rayCastTask, Float3Pair& ray, Unit* parent, float ratio) const {
+float SpaceComponent::Raycast(RaycastTask& rayCastTask, Float3Pair& ray, MatrixFloat4x4& transform, Unit* parent, float ratio) const {
 	OPTICK_EVENT();
 
 	if (rayCastTask.Flag().load(std::memory_order_relaxed) & Component::RaycastTask::RAYCASTTASK_IGNORE_WARP) {
 		if (Flag().load(std::memory_order_relaxed) & SPACECOMPONENT_ORDERED) {
-			RaycastInternal(rootEntity, rayCastTask, ray, parent, ratio, boundingBox, std::true_type());
+			RaycastInternal(rootEntity, rayCastTask, ray, transform, parent, ratio, boundingBox, std::true_type());
 		} else {
-			RaycastInternal(rootEntity, rayCastTask, ray, parent, ratio, boundingBox, std::false_type());
+			RaycastInternal(rootEntity, rayCastTask, ray, transform, parent, ratio, boundingBox, std::false_type());
 		}
 
 		return ratio;
@@ -386,9 +377,9 @@ float SpaceComponent::Raycast(RaycastTask& rayCastTask, Float3Pair& ray, Unit* p
 		RaycastTaskWarp& task = static_cast<RaycastTaskWarp&>(rayCastTask);
 		if (!(Flag().load(std::memory_order_relaxed) & COMPONENT_OVERRIDE_WARP) || task.GetEngine().GetKernel().GetCurrentWarpIndex() == GetWarpIndex()) {
 			if (Flag().load(std::memory_order_relaxed) & SPACECOMPONENT_ORDERED) {
-				RaycastInternal(rootEntity, task, ray, parent, ratio, boundingBox, std::true_type());
+				RaycastInternal(rootEntity, task, ray, transform, parent, ratio, boundingBox, std::true_type());
 			} else {
-				RaycastInternal(rootEntity, task, ray, parent, ratio, boundingBox, std::false_type());
+				RaycastInternal(rootEntity, task, ray, transform, parent, ratio, boundingBox, std::false_type());
 			}
 		} else {
 			if (parent != nullptr) {
@@ -396,7 +387,7 @@ float SpaceComponent::Raycast(RaycastTask& rayCastTask, Float3Pair& ray, Unit* p
 			}
 
 			task.AddPendingTask();
-			task.GetEngine().GetKernel().QueueRoutine(const_cast<SpaceComponent*>(this), CreateTaskContextFree(Wrap(this, &SpaceComponent::RoutineRaycast), std::ref(task), ray, parent, ratio));
+			task.GetEngine().GetKernel().QueueRoutine(const_cast<SpaceComponent*>(this), CreateTaskContextFree(Wrap(this, &SpaceComponent::RoutineRaycast), std::ref(task), ray, transform, parent, ratio));
 		}
 
 		return ratio;

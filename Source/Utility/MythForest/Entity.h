@@ -49,7 +49,6 @@ namespace PaintsNow {
 		bool IsOrphan() const;
 		void SetEngineInternal(Engine& engine);
 		void CleanupEngineInternal();
-		uint32_t GetPivotIndex() const;
 
 		const std::vector<Component*>& GetComponents() const;
 		template <class T>

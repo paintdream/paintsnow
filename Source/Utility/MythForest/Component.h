@@ -22,10 +22,10 @@ namespace PaintsNow {
 		};
 
 		struct RaycastResult {
+			MatrixFloat4x4 transform;
 			Float3 position; // local position
-			Float3 normal;
-			Float2 coord;
 			float distance;
+			Float4 coord;
 			uint32_t faceIndex;
 			TShared<Unit> unit;
 			TShared<Unit> parent;
@@ -78,8 +78,8 @@ namespace PaintsNow {
 		virtual Entity* GetHostEntity() const;
 		virtual const String& GetAliasedTypeName() const;
 		virtual void UpdateBoundingBox(Engine& engine, Float3Pair& boundingBox, bool recursive);
-		virtual float Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio = 1) const;
-		static void RaycastForEntity(RaycastTask& task, Float3Pair& ray, Entity* entity);
+		virtual float Raycast(RaycastTask& task, Float3Pair& ray, MatrixFloat4x4& transform, Unit* parent, float ratio = 1) const;
+		static void RaycastForEntity(RaycastTask& task, Float3Pair& ray, MatrixFloat4x4& transform, Entity* entity);
 		virtual FLAG GetEntityFlagMask() const;
 		virtual uint32_t GetQuickUniqueID() const;
 		static inline uint32_t StaticGetQuickUniqueID() { return ~(uint32_t)0; }

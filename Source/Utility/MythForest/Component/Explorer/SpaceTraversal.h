@@ -41,23 +41,15 @@ namespace PaintsNow {
 
 				// Cull left & right 
 				if (getboolean<D>::value) {
-					uint32_t index = entity->GetPivotIndex();
-					const float* source = &(const_cast<Float3Pair&>(entity->GetKey()).first.x());
-					float* target = &instanceData.boundingBox.first.x();
-					if (index < 3) {
-						// cull right
-						if (entity->Left() != nullptr) {
-							CollectComponentsFromEntityTree(engine, taskData, instanceData, captureData, static_cast<Entity*>(entity->Left()), ordered);
-						}
+					uint8_t index = entity->GetIndex();
+					float save = Entity::Meta::SplitPush(std::true_type(), instanceData.boundingBox, entity->GetKey(), index);
 
-						target[index] = source[index]; // pass through
-					} else if (entity->Left() != nullptr) {
-						// cull left
-						float value = target[index];
-						target[index] = source[index];
+					// cull right
+					if (entity->Left() != nullptr) {
 						CollectComponentsFromEntityTree(engine, taskData, instanceData, captureData, static_cast<Entity*>(entity->Left()), ordered);
-						target[index] = value;
 					}
+
+					Entity::Meta::SplitPop(instanceData.boundingBox, index, save);
 				} else if (entity->Left() != nullptr) {
 					CollectComponentsFromEntityTree(engine, taskData, instanceData, captureData, static_cast<Entity*>(entity->Left()), ordered);
 				}

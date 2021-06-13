@@ -138,9 +138,9 @@ bool Component::RaycastTaskWarp::EmplaceResult(rvalue<Component::RaycastResult> 
 	return EmplaceResult(results[engine.GetKernel().GetCurrentWarpIndex()], std::move(item));
 }
 
-float Component::Raycast(RaycastTask& task, Float3Pair& ray, Unit* parent, float ratio) const { return ratio; }
+float Component::Raycast(RaycastTask& task, Float3Pair& ray, MatrixFloat4x4& transform, Unit* parent, float ratio) const { return ratio; }
 
-void Component::RaycastForEntity(RaycastTask& task, Float3Pair& ray, Entity* entity) {
+void Component::RaycastForEntity(RaycastTask& task, Float3Pair& ray, MatrixFloat4x4& transform, Entity* entity) {
 	OPTICK_EVENT();
 	assert(!(entity->Flag().load(std::memory_order_acquire) & TINY_MODIFIED));
 
@@ -156,6 +156,7 @@ void Component::RaycastForEntity(RaycastTask& task, Float3Pair& ray, Entity* ent
 	}
 
 	Float3Pair newRay = ray;
+	MatrixFloat4x4 newTransform = transform;
 	std::vector<RaycastResult> newResults;
 	const std::vector<Component*>& components = entity->GetComponents();
 	float ratio = 1.0f;
@@ -163,7 +164,7 @@ void Component::RaycastForEntity(RaycastTask& task, Float3Pair& ray, Entity* ent
 	for (size_t i = 0; i < components.size(); i++) {
 		Component* component = components[i];
 		if (component != nullptr) {
-			ratio = component->Raycast(task, newRay, entity, ratio);
+			ratio = component->Raycast(task, newRay, newTransform, entity, ratio);
 		}
 	}
 }
