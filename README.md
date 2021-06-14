@@ -12,3 +12,7 @@ Compilers supported: GCC/Clang/MSVC (requires C++ 11) | MSVC6
 Target platforms: Windows | Linux | Android (experimental)
 
 Target architectures: x86/amd64 | arm/arm64 (experimental)
+
+Packages installation required for building on Linux platform:
+
+sudo apt-get install libxi-dev libxcursor-dev libxinerama-dev libxrandr-dev libx11-dev
