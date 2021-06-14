@@ -16,7 +16,7 @@ RayTraceComponent::Context::~Context() {
 	}
 }
 
-RayTraceComponent::RayTraceComponent() : captureSize(320, 240), superSample(1), tileSize(8), rayCount(1), completedPixelCountSync(0) {
+RayTraceComponent::RayTraceComponent() : captureSize(640, 480), superSample(1), tileSize(8), rayCount(1), completedPixelCountSync(0) {
 }
 
 RayTraceComponent::~RayTraceComponent() {}
@@ -103,12 +103,22 @@ static UChar4 FromFloat4(const Float4& v) {
 		(uint8_t)(Math::Clamp(v.w(), 0.0f, 1.0f) * 255)
 	);
 }
+
 static Float4 ToFloat4(const UChar4& v) {
 	return Float4(
 		v.x() / 255.0f,
 		v.y() / 255.0f,
 		v.z() / 255.0f,
 		v.w() / 255.0f
+	);
+}
+
+static Float4 ToFloat4Signed(const UChar4& v) {
+	return Float4(
+		v.x() * 2.0f / 255.0f - 1.0f,
+		v.y() * 2.0f / 255.0f - 1.0f,
+		v.z() * 2.0f / 255.0f - 1.0f,
+		v.w() * 2.0f / 255.0f - 1.0f
 	);
 }
 
@@ -331,34 +341,36 @@ Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float
 
 				// sample texture
 				Float4 baseColor = SampleTexture(baseColorTexture, uv);
-				return baseColor;
 				Float4 normal = SampleTexture(normalTexture, uv) * Float4(2.0f, 2.0f, 2.0f, 2.0f) - Float4(1.0f, 1.0f, 1.0f, 1.0f);
 				Float4 mixture = SampleTexture(mixtureTexture, uv);
 
 				// calc world space normal
-				Float4 normalBase = ToFloat4(meshCollection.normals[face.x()]);
-				Float4 normalM = ToFloat4(meshCollection.normals[face.y()]);
-				Float4 normalN = ToFloat4(meshCollection.normals[face.z()]);
+				Float4 binormalBase = ToFloat4Signed(meshCollection.normals[face.x()]);
+				Float4 binormalM = ToFloat4Signed(meshCollection.normals[face.y()]);
+				Float4 binormalN = ToFloat4Signed(meshCollection.normals[face.z()]);
 
-				normalBase = normalBase + (normalM - normalBase) * task.result.coord.x() + (normalN - normalBase) * task.result.coord.y();
+				binormalBase = binormalBase + (binormalM - binormalBase) * task.result.coord.x() + (binormalN - binormalBase) * task.result.coord.y();
 
-				Float4 tangentBase = ToFloat4(meshCollection.tangents[face.x()]);
-				Float4 tangentM = ToFloat4(meshCollection.tangents[face.y()]);
-				Float4 tangentN = ToFloat4(meshCollection.tangents[face.z()]);
+				Float4 tangentBase = ToFloat4Signed(meshCollection.tangents[face.x()]);
+				Float4 tangentM = ToFloat4Signed(meshCollection.tangents[face.y()]);
+				Float4 tangentN = ToFloat4Signed(meshCollection.tangents[face.z()]);
 
 				tangentBase = tangentBase + (tangentM - tangentBase) * task.result.coord.x() + (tangentN - tangentBase) * task.result.coord.y();
 
 				// To world space
 				float hand = tangentBase.w();
-				tangentBase.w() = normalBase.w() = 0;
-				normalBase = normalBase * task.result.transform;
+				tangentBase.w() = binormalBase.w() = 0;
+				binormalBase = binormalBase * task.result.transform;
 				tangentBase = tangentBase * task.result.transform;
-				Float4 binormalBase = Math::CrossProduct(normalBase, tangentBase) * hand;
+				Float4 normalBase = Math::CrossProduct(binormalBase, tangentBase) * hand;
 
 				Float4 worldNormal = normalBase * normal.z() + tangentBase * normal.x() + binormalBase * normal.y();
 
+				worldNormal.w() = 0;
+				worldNormal = Math::Normalize(worldNormal);
 				worldNormal.w() = 1;
-				return worldNormal;
+
+				return worldNormal * Float4(0.5f, 0.5f, 0.5f, 0.5f) + Float4(0.5, 0.5f, 0.5f, 0.5f);
 			}
 		}
 	}
