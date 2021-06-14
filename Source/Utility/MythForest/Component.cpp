@@ -145,7 +145,7 @@ void Component::RaycastForEntity(RaycastTask& task, Float3Pair& ray, MatrixFloat
 	assert(!(entity->Flag().load(std::memory_order_acquire) & TINY_MODIFIED));
 
 	TVector<float, 2> intersect = Math::IntersectBox(entity->GetKey(), ray);
-	if (intersect[1] < 0.0f || intersect[0] > intersect[1])
+	if (intersect[1] < -0.0f || intersect[0] > intersect[1])
 		return;
 
 	// evaluate possible distance

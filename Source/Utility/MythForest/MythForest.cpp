@@ -350,7 +350,7 @@ void MythForest::RequestRaycast(IScript::Request& request, IScript::Delegate<Ent
 	TShared<ScriptRaycastTask> task = TShared<ScriptRaycastTask>::From(new ScriptRaycastTask(engine, count, callback));
 	task->AddPendingTask();
 	Float3Pair ray(from, dir);
-	MatrixFloat4x4 transform;
+	MatrixFloat4x4 transform = MatrixFloat4x4::Identity();
 	Component::RaycastForEntity(*task(), ray, transform, entity.Get());
 	task->RemovePendingTask();
 }

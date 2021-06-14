@@ -105,6 +105,27 @@ void ShapeComponent::Update(Engine& engine, const TShared<MeshResource>& resourc
 	}
 }
 
+void ShapeComponent::CheckBounding(Patch* root, Float3Pair& targetKey) {
+#ifdef _DEBUG
+	// ranged queryer
+	auto entry = targetKey;
+	for (Patch* p = root; p != nullptr; p = (Patch*)(p->GetRight())) {
+		assert(Math::Overlap(p->GetKey(), targetKey));
+
+		// culling
+		auto before = targetKey;
+		int index = p->GetIndex();
+		auto save = Patch::Meta::SplitPush(std::true_type(), targetKey, p->GetKey(), index);
+		// cull right in left node
+		if (p->GetLeft() != nullptr) {
+			CheckBounding(p->GetLeft(), targetKey);
+		}
+
+		Patch::Meta::SplitPop(targetKey, index, save);
+	}
+#endif
+}
+
 void ShapeComponent::RoutineUpdate(Engine& engine, const TShared<MeshResource>& resource) {
 	static_assert(alignof(Patch) == 8, "Patch align must be 8.");
 	if (resource == meshResource) return;
@@ -189,6 +210,8 @@ void ShapeComponent::RoutineUpdate(Engine& engine, const TShared<MeshResource>& 
 			root->Attach(MakeBound(newPatches[s], vertices, indices, s % 6));
 		}
 
+		CheckBounding(root, bound);
+
 		std::swap(newPatches, patches);
 	} else {
 		resource->UnMap();
@@ -198,6 +221,18 @@ void ShapeComponent::RoutineUpdate(Engine& engine, const TShared<MeshResource>& 
 	Flag().fetch_or(TINY_PINNED, std::memory_order_relaxed);
 	Flag().fetch_and(~TINY_UPDATING, std::memory_order_release);
 }
+
+struct ShapeComponent::PatchRayCuller {
+	PatchRayCuller(const Float3Pair& r) : ray(r) {}
+	const Float3Pair& ray;
+
+	bool operator () (const Float3Pair& box) {
+		TVector<float, 2> intersect = Math::IntersectBox(box, ray);
+		return (intersect[1] >= -0.0f && intersect[0] <= intersect[1]);
+	}
+
+	std::set<TKdTree<Float3Pair, Void>*> traversed;
+};
 
 struct ShapeComponent::PatchRayCaster {
 	typedef TVector<TVector<float, 4>, 3> Group;
@@ -212,56 +247,51 @@ struct ShapeComponent::PatchRayCaster {
 		TVector<TVector<float, 4>, 2> uv;
 		TVector<TVector<float, 4>, 3> points[3];
 
-		TVector<float, 2> intersect = Math::IntersectBox(node.GetKey(), ray);
-		if (intersect[1] >= 0.0f && intersect[0] <= intersect[1]) {
-			static_assert(MAX_PATCH_COUNT % 4 == 0, "Must be 4n size");
-			uint32_t maxIndex = 0;
-			for (uint32_t w = 0; w < MAX_PATCH_COUNT; w += 4) {
-				if (patch.indices[w] != ~(uint32_t)0) {
-					maxIndex = w + 1;
-				} else {
-					break;
+		static_assert(MAX_PATCH_COUNT % 4 == 0, "Must be 4n size");
+		uint32_t maxIndex = 0;
+		for (uint32_t w = 0; w < MAX_PATCH_COUNT; w += 4) {
+			if (patch.indices[w] != ~(uint32_t)0) {
+				maxIndex = w + 1;
+			} else {
+				break;
+			}
+		}
+
+		maxIndex = (maxIndex + 3) & ~3;
+
+		for (uint32_t i = 0, valid = 0; i < maxIndex; i++) {
+			uint32_t idx = patch.indices[i];
+			uint32_t k = i & 3;
+			if (idx != ~(uint32_t)0) {
+				const UInt3& index = indices[idx];
+				for (size_t t = 0; t < 3; t++) {
+					for (size_t m = 0; m < 3; m++) {
+						points[t][m][k] = vertices[index[t]][m];
+						points[t][m][k] = vertices[index[t]][m];
+						points[t][m][k] = vertices[index[t]][m];
+					}
 				}
+
+				valid = k;
 			}
 
-			maxIndex = (maxIndex + 3) & ~3;
-
-			for (uint32_t i = 0, valid = 0; i < maxIndex; i++) {
-				uint32_t idx = patch.indices[i];
-				uint32_t k = i & 3;
-				if (idx != ~(uint32_t)0) {
-					const UInt3& index = indices[idx];
-					for (size_t t = 0; t < 3; t++) {
-						for (size_t m = 0; m < 3; m++) {
-							points[t][m][k] = vertices[index[t]][m];
-							points[t][m][k] = vertices[index[t]][m];
-							points[t][m][k] = vertices[index[t]][m];
+			if (k == 3) {
+				Math::IntersectTriangle(res, uv, points, rayGroup);
+				for (uint32_t m = 0; m <= valid; m++) {
+					if (uv[0][m] >= 0.0f && uv[1][m] >= 0.0f && uv[0][m] + uv[1][m] <= 1.0f) {
+						Float3 hit(res[0][m], res[1][m], res[2][m]);
+						float s = Math::SquareLength(hit - ray.first);
+						if (s < distance) {
+							distance = s;
+							hitPatch = &patch;
+							hitIndex = patch.indices[i + m - 3];
+							coord = Float4(uv[0][m], uv[1][m], 0, 0);
+							intersection = hit;
 						}
 					}
-
-					valid = k;
 				}
 
-				if (k == 3) {
-					Math::IntersectTriangle(res, uv, points, rayGroup);
-					for (uint32_t m = 0; m <= valid; m++) {
-						if (uv[0][m] >= 0.0f && uv[1][m] >= 0.0f && uv[0][m] + uv[1][m] <= 1.0f) {
-							Float3 hit(res[0][m], res[1][m], res[2][m]);
-							float s = Math::SquareLength(hit - ray.first);
-							if (s < distance) {
-								distance = s;
-								hitPatch = &patch;
-								hitIndex = patch.indices[i + m - 3];
-								coord = Float4(uv[0][m], uv[1][m], 0, 0);
-								intersection = hit;
-
-								assert(intersectBox);
-							}
-						}
-					}
-
-					k = 0;
-				}
+				k = 0;
 			}
 		}
 		
@@ -288,7 +318,8 @@ float ShapeComponent::Raycast(RaycastTask& task, Float3Pair& ray, MatrixFloat4x4
 			Math::Union(box, ray.second);
 			IAsset::MeshCollection& meshCollection = meshResource->meshCollection;
 			PatchRayCaster q(meshCollection.vertices, meshCollection.indices, ray);
-			(const_cast<Patch&>(patches[0])).Query(std::true_type(), box, q);
+			PatchRayCuller c(ray);
+			(const_cast<Patch&>(patches[0])).Query(std::true_type(), box, q, c);
 
 			if (q.hitPatch != nullptr) {
 				RaycastResult result;

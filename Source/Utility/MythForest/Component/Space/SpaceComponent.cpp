@@ -322,7 +322,7 @@ void RaycastInternal(Entity* root, Component::RaycastTask& task, Float3Pair& ray
 	for (Entity* entity = root; entity != nullptr; entity = entity->Right()) {
 		if (!getboolean<D>::value) {
 			TVector<float, 2> intersect = Math::IntersectBox(bound, ray);
-			if (intersect[1] < 0.0f || intersect[0] > intersect[1])
+			if (intersect[1] < -0.0f || intersect[0] > intersect[1])
 				break;
 
 			// evaluate possible distance
