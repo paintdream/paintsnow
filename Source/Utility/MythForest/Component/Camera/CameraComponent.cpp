@@ -112,7 +112,7 @@ void CameraComponent::Initialize(Engine& engine, Entity* entity) {
 }
 
 struct CookieTransitionCleaner {
-	CookieTransitionCleaner(void* k) : key(k) {}
+	CookieTransitionCleaner(void* k = nullptr) : key(k) {}
 
 	bool operator () (Entity* entity) const {
 		FormComponent* formComponent = entity->GetUniqueComponent(UniqueType<FormComponent>());

@@ -108,14 +108,14 @@ void ShapeComponent::Update(Engine& engine, const TShared<MeshResource>& resourc
 void ShapeComponent::CheckBounding(Patch* root, Float3Pair& targetKey) {
 #ifdef _DEBUG
 	// ranged queryer
-	auto entry = targetKey;
+	Float3Pair entry = targetKey;
 	for (Patch* p = root; p != nullptr; p = (Patch*)(p->GetRight())) {
 		assert(Math::Overlap(p->GetKey(), targetKey));
 
 		// culling
-		auto before = targetKey;
+		Float3Pair before = targetKey;
 		int index = p->GetIndex();
-		auto save = Patch::Meta::SplitPush(std::true_type(), targetKey, p->GetKey(), index);
+		float save = Patch::Meta::SplitPush(std::true_type(), targetKey, p->GetKey(), index);
 		// cull right in left node
 		if (p->GetLeft() != nullptr) {
 			CheckBounding(p->GetLeft(), targetKey);
