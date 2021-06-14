@@ -42,7 +42,7 @@ namespace PaintsNow {
 			Float3 up;
 			Float3 right;
 			std::vector<SpaceComponent*> rootSpaceComponents;
-
+			std::vector<Float2> randomSequence;
 			std::vector<LightElement> lightElements;
 			std::unordered_map<size_t, uint32_t> mapEntityToResourceIndex;
 			std::vector<TShared<ResourceBase> > mappedResources;

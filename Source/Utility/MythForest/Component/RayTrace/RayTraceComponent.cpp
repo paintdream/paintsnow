@@ -16,8 +16,8 @@ RayTraceComponent::Context::~Context() {
 	}
 }
 
-RayTraceComponent::RayTraceComponent() : captureSize(640, 480), superSample(1), tileSize(8), rayCount(1), completedPixelCountSync(0) {
-}
+// RayTraceComponent::RayTraceComponent() : captureSize(640, 480), superSample(4), tileSize(8), rayCount(1024), completedPixelCountSync(0) {}
+RayTraceComponent::RayTraceComponent() : captureSize(320, 240), superSample(1), tileSize(8), rayCount(1024), completedPixelCountSync(0) {}
 
 RayTraceComponent::~RayTraceComponent() {}
 
@@ -43,11 +43,32 @@ size_t RayTraceComponent::GetTotalPixelCount() const {
 	return captureSize.x() * captureSize.y();
 }
 
+static uint32_t ReverseBits(uint32_t bits) {
+	bits = (bits << 16) | (bits >> 16);
+	bits = ((bits & 0x00ff00ff) << 8) | ((bits & 0xff00ff00) >> 8);
+	bits = ((bits & 0x0f0f0f0f) << 4) | ((bits & 0xf0f0f0f0) >> 4);
+	bits = ((bits & 0x33333333) << 2) | ((bits & 0xcccccccc) >> 2);
+	bits = ((bits & 0x55555555) << 1) | ((bits & 0xaaaaaaaa) >> 1);
+
+	return bits;
+}
+
+static const float PI = 3.1415926f;
+static Float2 Hammersley(uint32_t i, uint32_t total) {
+	return Float2((float)i / total * 2 * PI, ReverseBits(i) * 2.3283064365386963e-10f);
+}
+
 void RayTraceComponent::Capture(Engine& engine, const TShared<CameraComponent>& cameraComponent) {
 	assert(cameraComponent() != nullptr);
 	completedPixelCountSync = 0;
 
 	TShared<Context> context = TShared<Context>::From(new Context(engine));
+	// Generate random sequence
+	context->randomSequence.resize(rayCount);
+	for (uint32_t k = 0; k < rayCount; k++) {
+		context->randomSequence[k] = Hammersley(k, rayCount);
+	}
+
 	context->referenceCameraComponent = cameraComponent;
 	CameraComponentConfig::WorldGlobalData& worldGlobalData = cameraComponent->GetTaskData()->worldGlobalData;
 	context->view = worldGlobalData.viewPosition;
@@ -225,6 +246,10 @@ void RayTraceComponent::RoutineCollectTextures(const TShared<Context>& context, 
 					LightComponent* lightComponent = component->QueryInterface(UniqueType<LightComponent>());
 					if (lightComponent != nullptr) {
 						LightElement element;
+						Float3 color = lightComponent->GetColor();
+						float atten = lightComponent->GetAttenuation();
+						element.colorAttenuation = Float4(color.x(), color.y(), color.z(), atten);
+
 						if (lightComponent->Flag().load(std::memory_order_relaxed) & LightComponent::LIGHTCOMPONENT_DIRECTIONAL) {
 							element.position = Float4(-currentTransform(2, 0), -currentTransform(2, 1), -currentTransform(2, 2), 0);
 						} else {
@@ -232,7 +257,10 @@ void RayTraceComponent::RoutineCollectTextures(const TShared<Context>& context, 
 							element.position = Float4(currentTransform(3, 0), currentTransform(3, 1), currentTransform(3, 2), Math::Max(0.05f, range * range));
 						}
 
-						context->lightElements.emplace_back(std::move(element));
+						// TODO: directional light only by now
+						if (lightComponent->Flag().load(std::memory_order_relaxed) & LightComponent::LIGHTCOMPONENT_DIRECTIONAL) {
+							context->lightElements.emplace_back(std::move(element));
+						}
 					}
 				} else {
 					ModelComponent* modelComponent = component->QueryInterface(UniqueType<ModelComponent>());
@@ -282,15 +310,17 @@ TShared<TextureResource> RayTraceComponent::GetCapturedTexture() const {
 	return capturedTexture;
 }
 
-static const float PI = 3.1415926f;
+
 Float3 RayTraceComponent::ImportanceSampleGGX(const Float2& e, float a2) {
 	float phi = 2 * PI * e.x();
-	float cosTheta = sqrtf((1 - e.x()) / (1 + (a2 - 1) * e.y()));
-	float sinTheta = sqrtf(1 - cosTheta);
+	float cosTheta = sqrtf((1 - e.y()) / (1 + (a2 - 1) * e.y()));
+	float sinTheta = sqrtf(1 - cosTheta * cosTheta);
+
 	Float3 h;
 	h.x() = sinTheta * cosf(phi);
 	h.y() = sinTheta * sinf(phi);
 	h.z() = cosTheta;
+
 	return h;
 }
 
@@ -370,7 +400,39 @@ Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float
 				worldNormal = Math::Normalize(worldNormal);
 				worldNormal.w() = 1;
 
-				return worldNormal * Float4(0.5f, 0.5f, 0.5f, 0.5f) + Float4(0.5, 0.5f, 0.5f, 0.5f);
+				// Lighting
+				Float4 position(task.result.position.x(), task.result.position.y(), task.result.position.z(), 1.0f);
+				position = position * task.result.transform;
+				Float3 worldPosition = (Float3)position;
+				Float4 radiance(0.0f, 0.0f, 0.0f, 0.0f);
+
+				for (size_t i = 0; i < context->lightElements.size(); i++) {
+					const LightElement& lightElement = context->lightElements[i];
+					if (lightElement.position.w() == 0) { // directional light only now
+						// check shadow
+						Float3 dir = Math::Normalize((Float3)lightElement.position);
+						Component::RaycastTaskSerial task;
+						for (size_t i = 0; i < rootSpaceComponents.size(); i++) {
+							SpaceComponent* spaceComponent = rootSpaceComponents[i];
+							Float3Pair ray(worldPosition + dir * 0.3f, dir);
+							MatrixFloat4x4 matrix = MatrixFloat4x4::Identity();
+							spaceComponent->Raycast(task, ray, matrix, nullptr, 1.0f);
+						}
+
+						if (task.result.distance == FLT_MAX) {
+							// not shadowed, compute shading
+							Float4 L(dir.x(), dir.y(), dir.z(), 0.0f);
+							Float4 N = worldNormal;
+							float NoL = Math::Max(0.0f, Math::DotProduct(N, L));
+
+							radiance = radiance + baseColor * lightElement.colorAttenuation * NoL;
+						}
+					}
+				}
+
+				// return worldNormal * Float4(0.5f, 0.5f, 0.5f, 0.5f) + Float4(0.5, 0.5f, 0.5f, 0.5f);
+				radiance.w() = 1;
+				return radiance;
 			}
 		}
 	}

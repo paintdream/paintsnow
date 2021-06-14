@@ -315,7 +315,7 @@ float ShapeComponent::Raycast(RaycastTask& task, Float3Pair& ray, MatrixFloat4x4
 			OPTICK_EVENT();
 
 			Float3Pair box(ray.first, ray.first);
-			Math::Union(box, ray.second);
+			Math::Union(box, Float3(ray.first + ray.second));
 			IAsset::MeshCollection& meshCollection = meshResource->meshCollection;
 			PatchRayCaster q(meshCollection.vertices, meshCollection.indices, ray);
 			PatchRayCuller c(ray);
