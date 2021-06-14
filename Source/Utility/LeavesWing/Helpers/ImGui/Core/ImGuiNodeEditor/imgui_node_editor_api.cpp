@@ -421,7 +421,7 @@ int ax::NodeEditor::GetSelectedObjectCount()
 
 int ax::NodeEditor::GetSelectedNodes(NodeId* nodes, int size)
 {
-    return BuildIdList(s_Editor->GetSelectedObjects(), nodes, size, [](auto object)
+    return BuildIdList(s_Editor->GetSelectedObjects(), nodes, size, [](Detail::Object* object)
     {
         return object->AsNode() != nullptr;
     });
@@ -429,7 +429,7 @@ int ax::NodeEditor::GetSelectedNodes(NodeId* nodes, int size)
 
 int ax::NodeEditor::GetSelectedLinks(LinkId* links, int size)
 {
-    return BuildIdList(s_Editor->GetSelectedObjects(), links, size, [](auto object)
+    return BuildIdList(s_Editor->GetSelectedObjects(), links, size, [](Detail::Object* object)
     {
         return object->AsLink() != nullptr;
     });
@@ -567,7 +567,7 @@ int ax::NodeEditor::GetActionContextSize()
 
 int ax::NodeEditor::GetActionContextNodes(NodeId* nodes, int size)
 {
-    return BuildIdList(s_Editor->GetSelectedObjects(), nodes, size, [](auto object)
+    return BuildIdList(s_Editor->GetSelectedObjects(), nodes, size, [](Detail::Object* object)
     {
         return object->AsNode() != nullptr;
     });
@@ -575,7 +575,7 @@ int ax::NodeEditor::GetActionContextNodes(NodeId* nodes, int size)
 
 int ax::NodeEditor::GetActionContextLinks(LinkId* links, int size)
 {
-    return BuildIdList(s_Editor->GetSelectedObjects(), links, size, [](auto object)
+    return BuildIdList(s_Editor->GetSelectedObjects(), links, size, [](Detail::Object* object)
     {
         return object->AsLink() != nullptr;
     });

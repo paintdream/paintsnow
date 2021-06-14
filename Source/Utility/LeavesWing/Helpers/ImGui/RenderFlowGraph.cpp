@@ -67,7 +67,7 @@ static void UpdateTouch() {
 	}
 }
 
-RenderFlowGraph::Node* RenderFlowGraph::FindNode(ed::NodeId id) {
+RenderFlowGraph::GraphNode* RenderFlowGraph::FindNode(ed::NodeId id) {
 	for (auto& node : nodes)
 		if (node.ID == id)
 			return &node;
@@ -118,7 +118,7 @@ bool RenderFlowGraph::CanCreateLink(Pin* a, Pin* b) {
 	return true;
 }
 
-void RenderFlowGraph::BuildNode(Node* node) {
+void RenderFlowGraph::BuildNode(GraphNode* node) {
 	for (auto& input : node->Inputs) {
 		input.Node = node;
 		input.Kind = PinKind::Input;
@@ -130,7 +130,7 @@ void RenderFlowGraph::BuildNode(Node* node) {
 	}
 }
 
-RenderFlowGraph::Node* RenderFlowGraph::SpawnInputActionNode() {
+RenderFlowGraph::GraphNode* RenderFlowGraph::SpawnInputActionNode() {
 	nodes.emplace_back(GetNextId(), "InputAction Fire", ImColor(255, 128, 128));
 	nodes.back().Outputs.emplace_back(GetNextId(), "", PinType::Delegate);
 	nodes.back().Outputs.emplace_back(GetNextId(), "Pressed", PinType::Flow);
@@ -141,7 +141,7 @@ RenderFlowGraph::Node* RenderFlowGraph::SpawnInputActionNode() {
 	return &nodes.back();
 }
 
-RenderFlowGraph::Node* RenderFlowGraph::SpawnBranchNode() {
+RenderFlowGraph::GraphNode* RenderFlowGraph::SpawnBranchNode() {
 	nodes.emplace_back(GetNextId(), "Branch");
 	nodes.back().Inputs.emplace_back(GetNextId(), "", PinType::Flow);
 	nodes.back().Inputs.emplace_back(GetNextId(), "Condition", PinType::Bool);
@@ -153,7 +153,7 @@ RenderFlowGraph::Node* RenderFlowGraph::SpawnBranchNode() {
 	return &nodes.back();
 }
 
-RenderFlowGraph::Node* RenderFlowGraph::SpawnDoNNode() {
+RenderFlowGraph::GraphNode* RenderFlowGraph::SpawnDoNNode() {
 	nodes.emplace_back(GetNextId(), "Do N");
 	nodes.back().Inputs.emplace_back(GetNextId(), "Enter", PinType::Flow);
 	nodes.back().Inputs.emplace_back(GetNextId(), "N", PinType::Int);
@@ -166,7 +166,7 @@ RenderFlowGraph::Node* RenderFlowGraph::SpawnDoNNode() {
 	return &nodes.back();
 }
 
-RenderFlowGraph::Node* RenderFlowGraph::SpawnOutputActionNode() {
+RenderFlowGraph::GraphNode* RenderFlowGraph::SpawnOutputActionNode() {
 	nodes.emplace_back(GetNextId(), "OutputAction");
 	nodes.back().Inputs.emplace_back(GetNextId(), "Sample", PinType::Float);
 	nodes.back().Outputs.emplace_back(GetNextId(), "Condition", PinType::Bool);
@@ -177,7 +177,7 @@ RenderFlowGraph::Node* RenderFlowGraph::SpawnOutputActionNode() {
 	return &nodes.back();
 }
 
-RenderFlowGraph::Node* RenderFlowGraph::SpawnPrintStringNode() {
+RenderFlowGraph::GraphNode* RenderFlowGraph::SpawnPrintStringNode() {
 	nodes.emplace_back(GetNextId(), "Print String");
 	nodes.back().Inputs.emplace_back(GetNextId(), "", PinType::Flow);
 	nodes.back().Inputs.emplace_back(GetNextId(), "In String", PinType::String);
@@ -188,7 +188,7 @@ RenderFlowGraph::Node* RenderFlowGraph::SpawnPrintStringNode() {
 	return &nodes.back();
 }
 
-RenderFlowGraph::Node* RenderFlowGraph::SpawnMessageNode() {
+RenderFlowGraph::GraphNode* RenderFlowGraph::SpawnMessageNode() {
 	nodes.emplace_back(GetNextId(), "", ImColor(128, 195, 248));
 	nodes.back().Type = NodeType::Simple;
 	nodes.back().Outputs.emplace_back(GetNextId(), "Message", PinType::String);
@@ -198,7 +198,7 @@ RenderFlowGraph::Node* RenderFlowGraph::SpawnMessageNode() {
 	return &nodes.back();
 }
 
-RenderFlowGraph::Node* RenderFlowGraph::SpawnSetTimerNode() {
+RenderFlowGraph::GraphNode* RenderFlowGraph::SpawnSetTimerNode() {
 	nodes.emplace_back(GetNextId(), "Set Timer", ImColor(128, 195, 248));
 	nodes.back().Inputs.emplace_back(GetNextId(), "", PinType::Flow);
 	nodes.back().Inputs.emplace_back(GetNextId(), "Object", PinType::Object);
@@ -212,7 +212,7 @@ RenderFlowGraph::Node* RenderFlowGraph::SpawnSetTimerNode() {
 	return &nodes.back();
 }
 
-RenderFlowGraph::Node* RenderFlowGraph::SpawnLessNode() {
+RenderFlowGraph::GraphNode* RenderFlowGraph::SpawnLessNode() {
 	nodes.emplace_back(GetNextId(), "<", ImColor(128, 195, 248));
 	nodes.back().Type = NodeType::Simple;
 	nodes.back().Inputs.emplace_back(GetNextId(), "", PinType::Float);
@@ -224,7 +224,7 @@ RenderFlowGraph::Node* RenderFlowGraph::SpawnLessNode() {
 	return &nodes.back();
 }
 
-RenderFlowGraph::Node* RenderFlowGraph::SpawnWeirdNode() {
+RenderFlowGraph::GraphNode* RenderFlowGraph::SpawnWeirdNode() {
 	nodes.emplace_back(GetNextId(), "o.O", ImColor(128, 195, 248));
 	nodes.back().Type = NodeType::Simple;
 	nodes.back().Inputs.emplace_back(GetNextId(), "", PinType::Float);
@@ -236,7 +236,7 @@ RenderFlowGraph::Node* RenderFlowGraph::SpawnWeirdNode() {
 	return &nodes.back();
 }
 
-RenderFlowGraph::Node* RenderFlowGraph::SpawnTraceByChannelNode() {
+RenderFlowGraph::GraphNode* RenderFlowGraph::SpawnTraceByChannelNode() {
 	nodes.emplace_back(GetNextId(), "Single Line Trace by Channel", ImColor(255, 128, 64));
 	nodes.back().Inputs.emplace_back(GetNextId(), "", PinType::Flow);
 	nodes.back().Inputs.emplace_back(GetNextId(), "Start", PinType::Flow);
@@ -255,7 +255,7 @@ RenderFlowGraph::Node* RenderFlowGraph::SpawnTraceByChannelNode() {
 	return &nodes.back();
 }
 
-RenderFlowGraph::Node* RenderFlowGraph::SpawnTreeSequenceNode() {
+RenderFlowGraph::GraphNode* RenderFlowGraph::SpawnTreeSequenceNode() {
 	nodes.emplace_back(GetNextId(), "Sequence");
 	nodes.back().Type = NodeType::Tree;
 	nodes.back().Inputs.emplace_back(GetNextId(), "", PinType::Flow);
@@ -266,7 +266,7 @@ RenderFlowGraph::Node* RenderFlowGraph::SpawnTreeSequenceNode() {
 	return &nodes.back();
 }
 
-RenderFlowGraph::Node* RenderFlowGraph::SpawnTreeTaskNode() {
+RenderFlowGraph::GraphNode* RenderFlowGraph::SpawnTreeTaskNode() {
 	nodes.emplace_back(GetNextId(), "Move To");
 	nodes.back().Type = NodeType::Tree;
 	nodes.back().Inputs.emplace_back(GetNextId(), "", PinType::Flow);
@@ -276,7 +276,7 @@ RenderFlowGraph::Node* RenderFlowGraph::SpawnTreeTaskNode() {
 	return &nodes.back();
 }
 
-RenderFlowGraph::Node* RenderFlowGraph::SpawnTreeTask2Node() {
+RenderFlowGraph::GraphNode* RenderFlowGraph::SpawnTreeTask2Node() {
 	nodes.emplace_back(GetNextId(), "Random Wait");
 	nodes.back().Type = NodeType::Tree;
 	nodes.back().Inputs.emplace_back(GetNextId(), "", PinType::Flow);
@@ -286,7 +286,7 @@ RenderFlowGraph::Node* RenderFlowGraph::SpawnTreeTask2Node() {
 	return &nodes.back();
 }
 
-RenderFlowGraph::Node* RenderFlowGraph::SpawnComment() {
+RenderFlowGraph::GraphNode* RenderFlowGraph::SpawnComment() {
 	nodes.emplace_back(GetNextId(), "Test Comment");
 	nodes.back().Type = NodeType::Comment;
 	nodes.back().Size = ImVec2(300, 200);
@@ -331,7 +331,7 @@ void RenderFlowGraph::InitializeGraph() {
 	editor = ed::CreateEditor(&config);
 	ed::SetCurrentEditor(editor);
 
-	Node* node;
+	GraphNode* node;
 	node = SpawnInputActionNode();      ed::SetNodePosition(node->ID, ImVec2(-252, 220));
 	node = SpawnBranchNode();           ed::SetNodePosition(node->ID, ImVec2(-300, 351));
 	node = SpawnDoNNode();              ed::SetNodePosition(node->ID, ImVec2(-238, 504));
@@ -419,11 +419,11 @@ void RenderFlowGraph::ShowStyleEditor(bool* show) {
 		editorStyle = ed::Style();
 	ImGui::EndHorizontal();
 	ImGui::Spacing();
-	ImGui::DragFloat4("Node Padding", &editorStyle.NodePadding.x, 0.1f, 0.0f, 40.0f);
-	ImGui::DragFloat("Node Rounding", &editorStyle.NodeRounding, 0.1f, 0.0f, 40.0f);
-	ImGui::DragFloat("Node Border Width", &editorStyle.NodeBorderWidth, 0.1f, 0.0f, 15.0f);
-	ImGui::DragFloat("Hovered Node Border Width", &editorStyle.HoveredNodeBorderWidth, 0.1f, 0.0f, 15.0f);
-	ImGui::DragFloat("Selected Node Border Width", &editorStyle.SelectedNodeBorderWidth, 0.1f, 0.0f, 15.0f);
+	ImGui::DragFloat4("GraphNode Padding", &editorStyle.NodePadding.x, 0.1f, 0.0f, 40.0f);
+	ImGui::DragFloat("GraphNode Rounding", &editorStyle.NodeRounding, 0.1f, 0.0f, 40.0f);
+	ImGui::DragFloat("GraphNode Border Width", &editorStyle.NodeBorderWidth, 0.1f, 0.0f, 15.0f);
+	ImGui::DragFloat("Hovered GraphNode Border Width", &editorStyle.HoveredNodeBorderWidth, 0.1f, 0.0f, 15.0f);
+	ImGui::DragFloat("Selected GraphNode Border Width", &editorStyle.SelectedNodeBorderWidth, 0.1f, 0.0f, 15.0f);
 	ImGui::DragFloat("Pin Rounding", &editorStyle.PinRounding, 0.1f, 0.0f, 40.0f);
 	ImGui::DragFloat("Pin Border Width", &editorStyle.PinBorderWidth, 0.1f, 0.0f, 15.0f);
 	ImGui::DragFloat("Link Strength", &editorStyle.LinkStrength, 1.0f, 0.0f, 500.0f);
@@ -620,7 +620,7 @@ void RenderFlowGraph::ShowLeftPane(float paneWidth) {
 		ed::ClearSelection();
 	ImGui::EndHorizontal();
 	ImGui::Indent();
-	for (int i = 0; i < nodeCount; ++i) ImGui::Text("Node (%p)", selectedNodes[i].AsPointer());
+	for (int i = 0; i < nodeCount; ++i) ImGui::Text("GraphNode (%p)", selectedNodes[i].AsPointer());
 	for (int i = 0; i < linkCount; ++i) ImGui::Text("Link (%p)", selectedLinks[i].AsPointer());
 	ImGui::Unindent();
 
@@ -659,7 +659,7 @@ void RenderFlowGraph::ShowFrame() {
 
 	ImGui::SameLine(0.0f, 12.0f);
 
-	ed::Begin("Node editor");
+	ed::Begin("GraphNode editor");
 	{
 		auto cursorTopLeft = ImGui::GetCursorScreenPos();
 
@@ -1018,7 +1018,7 @@ void RenderFlowGraph::ShowFrame() {
 							showLabel("x Incompatible Pin Kind", ImColor(45, 32, 32, 180));
 							ed::RejectNewItem(ImColor(255, 0, 0), 2.0f);
 						}
-						//else if (endPin->Node == startPin->Node)
+						//else if (endPin->GraphNode == startPin->GraphNode)
 						//{
 						//    showLabel("x Cannot connect to self", ImColor(45, 32, 32, 180));
 						//    ed::RejectNewItem(ImColor(255, 0, 0), 1.0f);
@@ -1040,14 +1040,14 @@ void RenderFlowGraph::ShowFrame() {
 				if (ed::QueryNewNode(&pinId)) {
 					newLinkPin = FindPin(pinId);
 					if (newLinkPin)
-						showLabel("+ Create Node", ImColor(32, 45, 32, 180));
+						showLabel("+ Create GraphNode", ImColor(32, 45, 32, 180));
 
 					if (ed::AcceptNewItem()) {
 						createNewNode = true;
 						newNodeLinkPin = FindPin(pinId);
 						newLinkPin = nullptr;
 						ed::Suspend();
-						ImGui::OpenPopup("Create New Node");
+						ImGui::OpenPopup("Create New GraphNode");
 						ed::Resume();
 					}
 				}
@@ -1060,7 +1060,7 @@ void RenderFlowGraph::ShowFrame() {
 				ed::LinkId linkId = 0;
 				while (ed::QueryDeletedLink(&linkId)) {
 					if (ed::AcceptDeletedItem()) {
-						auto id = std::find_if(links.begin(), links.end(), [linkId](auto& link) { return link.ID == linkId; });
+						auto id = std::find_if(links.begin(), links.end(), [linkId](Link& link) { return link.ID == linkId; });
 						if (id != links.end())
 							links.erase(id);
 					}
@@ -1069,7 +1069,7 @@ void RenderFlowGraph::ShowFrame() {
 				ed::NodeId nodeId = 0;
 				while (ed::QueryDeletedNode(&nodeId)) {
 					if (ed::AcceptDeletedItem()) {
-						auto id = std::find_if(nodes.begin(), nodes.end(), [nodeId](auto& node) { return node.ID == nodeId; });
+						auto id = std::find_if(nodes.begin(), nodes.end(), [nodeId](GraphNode& node) { return node.ID == nodeId; });
 						if (id != nodes.end())
 							nodes.erase(id);
 					}
@@ -1085,23 +1085,23 @@ void RenderFlowGraph::ShowFrame() {
 	auto openPopupPosition = ImGui::GetMousePos();
 	ed::Suspend();
 	if (ed::ShowNodeContextMenu(&contextNodeId))
-		ImGui::OpenPopup("Node Context Menu");
+		ImGui::OpenPopup("GraphNode Context Menu");
 	else if (ed::ShowPinContextMenu(&contextPinId))
 		ImGui::OpenPopup("Pin Context Menu");
 	else if (ed::ShowLinkContextMenu(&contextLinkId))
 		ImGui::OpenPopup("Link Context Menu");
 	else if (ed::ShowBackgroundContextMenu()) {
-		ImGui::OpenPopup("Create New Node");
+		ImGui::OpenPopup("Create New GraphNode");
 		newNodeLinkPin = nullptr;
 	}
 	ed::Resume();
 
 	ed::Suspend();
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8, 8));
-	if (ImGui::BeginPopup("Node Context Menu")) {
+	if (ImGui::BeginPopup("GraphNode Context Menu")) {
 		auto node = FindNode(contextNodeId);
 
-		ImGui::TextUnformatted("Node Context Menu");
+		ImGui::TextUnformatted("GraphNode Context Menu");
 		ImGui::Separator();
 		if (node) {
 			ImGui::Text("ID: %p", node->ID.AsPointer());
@@ -1124,9 +1124,9 @@ void RenderFlowGraph::ShowFrame() {
 		if (pin) {
 			ImGui::Text("ID: %p", pin->ID.AsPointer());
 			if (pin->Node)
-				ImGui::Text("Node: %p", pin->Node->ID.AsPointer());
+				ImGui::Text("GraphNode: %p", pin->Node->ID.AsPointer());
 			else
-				ImGui::Text("Node: %s", "<none>");
+				ImGui::Text("GraphNode: %s", "<none>");
 		} else
 			ImGui::Text("Unknown pin: %p", contextPinId.AsPointer());
 
@@ -1150,14 +1150,14 @@ void RenderFlowGraph::ShowFrame() {
 		ImGui::EndPopup();
 	}
 
-	if (ImGui::BeginPopup("Create New Node")) {
+	if (ImGui::BeginPopup("Create New GraphNode")) {
 		auto newNodePostion = openPopupPosition;
 		//ImGui::SetCursorScreenPos(ImGui::GetMousePosOnOpeningCurrentPopup());
 
 		//auto drawList = ImGui::GetWindowDrawList();
 		//drawList->AddCircleFilled(ImGui::GetMousePosOnOpeningCurrentPopup(), 10.0f, 0xFFFF00FF);
 
-		Node* node = nullptr;
+		GraphNode* node = nullptr;
 		if (ImGui::MenuItem("Input Action"))
 			node = SpawnInputActionNode();
 		if (ImGui::MenuItem("Output Action"))
@@ -1244,9 +1244,10 @@ extern unsigned int ic_save_white_24dp_png_len;
 static TShared<TextureResource> CreateTexture(SnowyStream& snowyStream, Interfaces& interfaces, const unsigned char* fileData, unsigned int length) {
 	TShared<TextureResource> resource = snowyStream.CreateReflectedResource(UniqueType<TextureResource>(), "", false, ResourceBase::RESOURCE_VIRTUAL);
 	MemoryStream memoryStream(length);
-	memoryStream.Write(fileData, length);
-	memoryStream.Seek(IStreamBase::BEGIN, 0);
 	size_t len = length;
+	memoryStream.Write(fileData, len);
+	memoryStream.Seek(IStreamBase::BEGIN, 0);
+	len = length;
 	resource->LoadExternalResource(interfaces, memoryStream, len);
 	resource->Flag().fetch_or(Tiny::TINY_MODIFIED);
 	resource->GetResourceManager().InvokeUpload(resource(), nullptr);

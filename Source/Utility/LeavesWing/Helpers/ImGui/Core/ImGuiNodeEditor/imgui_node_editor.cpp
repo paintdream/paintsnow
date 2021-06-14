@@ -571,7 +571,7 @@ ImLine ed::Pin::GetClosestLine(const Pin* pin) const
 
 //------------------------------------------------------------------------------
 //
-// Node
+// GraphNode
 //
 //------------------------------------------------------------------------------
 bool ed::Node::AcceptDrag()
@@ -1753,7 +1753,7 @@ ed::Link* ed::EditorContext::CreateLink(LinkId id)
 }
 
 template <typename C, typename Id>
-static inline auto FindItemInLinear(C& container, Id id)
+static inline auto FindItemInLinear(C& container, Id id) -> decltype(container[0].m_Object)
 {
 # if defined(_DEBUG)
     auto start = container.data();
@@ -1771,7 +1771,7 @@ static inline auto FindItemInLinear(C& container, Id id)
 }
 
 template <typename C, typename Id>
-static inline auto FindItemIn(C& container, Id id)
+static inline auto FindItemIn(C& container, Id id) -> decltype(container[0].m_Object)
 {
 //# if defined(_DEBUG)
 //    auto start = container.data();
@@ -2055,7 +2055,7 @@ ed::Control ed::EditorContext::BuildControl(bool allowOffscreen)
         // Check for interactions with node.
         if (node->m_Type == NodeType::Group)
         {
-            // Node with a hole
+            // GraphNode with a hole
             ImGui::PushID(node->m_ID.AsPointer());
 
             static const NodeRegion c_Regions[] =
@@ -2148,7 +2148,7 @@ void ed::EditorContext::ShowMetrics(const Control& control)
     auto getObjectName = [](Object* object)
     {
         if (!object) return "";
-        else if (object->AsNode())  return "Node";
+        else if (object->AsNode())  return "GraphNode";
         else if (object->AsPin())   return "Pin";
         else if (object->AsLink())  return "Link";
         else return "";
@@ -2222,7 +2222,7 @@ void ed::EditorContext::ShowMetrics(const Control& control)
 
 //------------------------------------------------------------------------------
 //
-// Node Settings
+// GraphNode Settings
 //
 //------------------------------------------------------------------------------
 void ed::NodeSettings::ClearDirty()
@@ -3311,7 +3311,7 @@ void ed::SizeAction::ShowMetrics()
     auto getObjectName = [](Object* object)
     {
         if (!object) return "";
-        else if (object->AsNode())  return "Node";
+        else if (object->AsNode())  return "GraphNode";
         else if (object->AsPin())   return "Pin";
         else if (object->AsLink())  return "Link";
         else return "";
@@ -3319,7 +3319,7 @@ void ed::SizeAction::ShowMetrics()
 
     ImGui::Text("%s:", GetName());
     ImGui::Text("    Active: %s", m_IsActive ? "yes" : "no");
-    ImGui::Text("    Node: %s (%p)", getObjectName(m_SizedNode), m_SizedNode ? m_SizedNode->m_ID.AsPointer() : nullptr);
+    ImGui::Text("    GraphNode: %s (%p)", getObjectName(m_SizedNode), m_SizedNode ? m_SizedNode->m_ID.AsPointer() : nullptr);
     if (m_SizedNode && m_IsActive)
     {
         ImGui::Text("    Bounds: { x=%g y=%g w=%g h=%g }", m_SizedNode->m_Bounds.Min.x, m_SizedNode->m_Bounds.Min.y, m_SizedNode->m_Bounds.GetWidth(), m_SizedNode->m_Bounds.GetHeight());
@@ -3517,7 +3517,7 @@ void ed::DragAction::ShowMetrics()
     auto getObjectName = [](Object* object)
     {
         if (!object) return "";
-        else if (object->AsNode())  return "Node";
+        else if (object->AsNode())  return "GraphNode";
         else if (object->AsPin())   return "Pin";
         else if (object->AsLink())  return "Link";
         else return "";
@@ -3525,7 +3525,7 @@ void ed::DragAction::ShowMetrics()
 
     ImGui::Text("%s:", GetName());
     ImGui::Text("    Active: %s", m_IsActive ? "yes" : "no");
-    ImGui::Text("    Node: %s (%p)", getObjectName(m_DraggedObject), m_DraggedObject ? m_DraggedObject->ID().AsPointer() : nullptr);
+    ImGui::Text("    GraphNode: %s (%p)", getObjectName(m_DraggedObject), m_DraggedObject ? m_DraggedObject->ID().AsPointer() : nullptr);
 }
 
 
@@ -3800,7 +3800,7 @@ void ed::ContextMenuAction::ShowMetrics()
         {
             default:
             case None:        return "None";
-            case Node:        return "Node";
+            case Node:        return "GraphNode";
             case Pin:         return "Pin";
             case Link:        return "Link";
             case Background:  return "Background";
@@ -4200,7 +4200,7 @@ void ed::CreateItemAction::ShowMetrics()
         {
             default:
             case NoItem: return "None";
-            case Node:   return "Node";
+            case Node:   return "GraphNode";
             case Link:   return "Link";
         }
     };
@@ -4485,7 +4485,7 @@ void ed::DeleteItemsAction::ShowMetrics()
     //auto getObjectName = [](Object* object)
     //{
     //    if (!object) return "";
-    //    else if (object->AsNode()) return "Node";
+    //    else if (object->AsNode()) return "GraphNode";
     //    else if (object->AsPin())  return "Pin";
     //    else if (object->AsLink()) return "Link";
     //    else return "";
@@ -4493,7 +4493,7 @@ void ed::DeleteItemsAction::ShowMetrics()
 
     ImGui::Text("%s:", GetName());
     ImGui::Text("    Active: %s", m_IsActive ? "yes" : "no");
-    //ImGui::Text("    Node: %s (%d)", getObjectName(DeleteItemsgedNode), DeleteItemsgedNode ? DeleteItemsgedNode->ID : 0);
+    //ImGui::Text("    GraphNode: %s (%d)", getObjectName(DeleteItemsgedNode), DeleteItemsgedNode ? DeleteItemsgedNode->ID : 0);
 }
 
 bool ed::DeleteItemsAction::Add(Object* object)
@@ -4651,7 +4651,7 @@ void ed::DeleteItemsAction::RemoveItem()
 
 //------------------------------------------------------------------------------
 //
-// Node Builder
+// GraphNode Builder
 //
 //------------------------------------------------------------------------------
 ed::NodeBuilder::NodeBuilder(EditorContext* editor):
@@ -4926,7 +4926,7 @@ ImDrawList* ed::NodeBuilder::GetUserBackgroundDrawList(Node* node) const
 
 //------------------------------------------------------------------------------
 //
-// Node Builder
+// GraphNode Builder
 //
 //------------------------------------------------------------------------------
 ed::HintBuilder::HintBuilder(EditorContext* editor):

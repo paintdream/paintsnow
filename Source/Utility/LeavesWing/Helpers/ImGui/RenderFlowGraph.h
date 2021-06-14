@@ -53,19 +53,19 @@ namespace PaintsNow {
 			Comment
 		};
 
-		struct Node;
+		struct GraphNode;
 		struct Pin {
-			ed::PinId   ID;
-			Node* Node;
+			ed::PinId ID;
+			GraphNode* Node;
 			std::string Name;
-			PinType     Type;
-			PinKind     Kind;
+			PinType Type;
+			PinKind Kind;
 
 			Pin(int id, const char* name, PinType type) :
 				ID(id), Node(nullptr), Name(name), Type(type), Kind(PinKind::Input) {}
 		};
 
-		struct Node {
+		struct GraphNode {
 			ed::NodeId ID;
 			std::string Name;
 			std::vector<Pin> Inputs;
@@ -77,7 +77,7 @@ namespace PaintsNow {
 			std::string State;
 			std::string SavedState;
 
-			Node(int id, const char* name, ImColor color = ImColor(255, 255, 255)) :
+			GraphNode(int id, const char* name, ImColor color = ImColor(255, 255, 255)) :
 				ID(id), Name(name), Color(color), Type(NodeType::Blueprint), Size(0, 0) {}
 		};
 
@@ -92,26 +92,26 @@ namespace PaintsNow {
 				ID(id), StartPinID(startPinId), EndPinID(endPinId), Color(255, 255, 255) {}
 		};
 
-		Node* FindNode(ed::NodeId id);
+		GraphNode* FindNode(ed::NodeId id);
 		Link* FindLink(ed::LinkId id);
 		Pin* FindPin(ed::PinId id);
 		bool IsPinLinked(ed::PinId id);
 		bool CanCreateLink(Pin* a, Pin* b);
-		void BuildNode(Node* node);
-		Node* SpawnInputActionNode();
-		Node* SpawnBranchNode();
-		Node* SpawnDoNNode();
-		Node* SpawnOutputActionNode();
-		Node* SpawnPrintStringNode();
-		Node* SpawnMessageNode();
-		Node* SpawnSetTimerNode();
-		Node* SpawnLessNode();
-		Node* SpawnWeirdNode();
-		Node* SpawnTraceByChannelNode();
-		Node* SpawnTreeSequenceNode();
-		Node* SpawnTreeTaskNode();
-		Node* SpawnTreeTask2Node();
-		Node* SpawnComment();
+		void BuildNode(GraphNode* node);
+		GraphNode* SpawnInputActionNode();
+		GraphNode* SpawnBranchNode();
+		GraphNode* SpawnDoNNode();
+		GraphNode* SpawnOutputActionNode();
+		GraphNode* SpawnPrintStringNode();
+		GraphNode* SpawnMessageNode();
+		GraphNode* SpawnSetTimerNode();
+		GraphNode* SpawnLessNode();
+		GraphNode* SpawnWeirdNode();
+		GraphNode* SpawnTraceByChannelNode();
+		GraphNode* SpawnTreeSequenceNode();
+		GraphNode* SpawnTreeTaskNode();
+		GraphNode* SpawnTreeTask2Node();
+		GraphNode* SpawnComment();
 		void BuildNodes();
 		void InitializeGraph();
 		ImColor GetIconColor(PinType type);
@@ -122,7 +122,7 @@ namespace PaintsNow {
 
 		ed::EditorContext* editor;
 		int	pinIconSize;
-		std::vector<Node> nodes;
+		std::vector<GraphNode> nodes;
 		std::vector<Link> links;
 	};
 }

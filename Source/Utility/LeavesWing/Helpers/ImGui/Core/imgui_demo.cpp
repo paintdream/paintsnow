@@ -614,8 +614,8 @@ static void ShowDemoWindowWidgets()
                     node_flags |= ImGuiTreeNodeFlags_Selected;
                 if (i < 3)
                 {
-                    // Items 0..2 are Tree Node
-                    bool node_open = ImGui::TreeNodeEx((void*)(intptr_t)i, node_flags, "Selectable Node %d", i);
+                    // Items 0..2 are Tree GraphNode
+                    bool node_open = ImGui::TreeNodeEx((void*)(intptr_t)i, node_flags, "Selectable GraphNode %d", i);
                     if (ImGui::IsItemClicked())
                         node_clicked = i;
                     if (node_open)
@@ -2034,10 +2034,10 @@ static void ShowDemoWindowLayout()
         const float spacing = ImGui::GetStyle().ItemInnerSpacing.x;
         ImGui::Button("Button##1");
         ImGui::SameLine(0.0f, spacing);
-        if (ImGui::TreeNode("Node##1")) { for (int i = 0; i < 6; i++) ImGui::BulletText("Item %d..", i); ImGui::TreePop(); }    // Dummy tree data
+        if (ImGui::TreeNode("GraphNode##1")) { for (int i = 0; i < 6; i++) ImGui::BulletText("Item %d..", i); ImGui::TreePop(); }    // Dummy tree data
 
         ImGui::AlignTextToFramePadding();         // Vertically align text node a bit lower so it'll be vertically centered with upcoming widget. Otherwise you can use SmallButton (smaller fit).
-        bool node_open = ImGui::TreeNode("Node##2");  // Common mistake to avoid: if we want to SameLine after TreeNode we need to do it before we add child content.
+        bool node_open = ImGui::TreeNode("GraphNode##2");  // Common mistake to avoid: if we want to SameLine after TreeNode we need to do it before we add child content.
         ImGui::SameLine(0.0f, spacing); ImGui::Button("Button##2");
         if (node_open) { for (int i = 0; i < 6; i++) ImGui::BulletText("Item %d..", i); ImGui::TreePop(); }   // Dummy tree data
 
@@ -2047,7 +2047,7 @@ static void ShowDemoWindowLayout()
         ImGui::BulletText("Bullet text");
 
         ImGui::AlignTextToFramePadding();
-        ImGui::BulletText("Node");
+        ImGui::BulletText("GraphNode");
         ImGui::SameLine(0.0f, spacing); ImGui::Button("Button##4");
 
         ImGui::TreePop();
@@ -2810,17 +2810,17 @@ static void ShowDemoWindowColumns()
         ImGui::Columns(2, "tree", true);
         for (int x = 0; x < 3; x++)
         {
-            bool open1 = ImGui::TreeNode((void*)(intptr_t)x, "Node%d", x);
+            bool open1 = ImGui::TreeNode((void*)(intptr_t)x, "GraphNode%d", x);
             ImGui::NextColumn();
-            ImGui::Text("Node contents");
+            ImGui::Text("GraphNode contents");
             ImGui::NextColumn();
             if (open1)
             {
                 for (int y = 0; y < 3; y++)
                 {
-                    bool open2 = ImGui::TreeNode((void*)(intptr_t)y, "Node%d.%d", x, y);
+                    bool open2 = ImGui::TreeNode((void*)(intptr_t)y, "GraphNode%d.%d", x, y);
                     ImGui::NextColumn();
-                    ImGui::Text("Node contents");
+                    ImGui::Text("GraphNode contents");
                     if (open2)
                     {
                         ImGui::Text("Even more contents");

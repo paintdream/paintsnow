@@ -8,7 +8,7 @@
     template <typename __boost_has_member_T__>                                       \
     class __trait_name__                                                             \
     {                                                                                \
-        using check_type = ::std::remove_const_t<__boost_has_member_T__>;            \
+        using check_type = typename std::remove_const<__boost_has_member_T__>::type; \
         struct no_type {char x[2];};                                                 \
         using  yes_type = char;                                                      \
                                                                                      \
