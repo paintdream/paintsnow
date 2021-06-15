@@ -16,8 +16,7 @@ RayTraceComponent::Context::~Context() {
 	}
 }
 
-// RayTraceComponent::RayTraceComponent() : captureSize(640, 480), superSample(4), tileSize(8), rayCount(1024), completedPixelCountSync(0) {}
-RayTraceComponent::RayTraceComponent() : captureSize(320, 240), superSample(1), tileSize(8), rayCount(1024), completedPixelCountSync(0) {}
+RayTraceComponent::RayTraceComponent() : captureSize(640, 480), superSample(4), tileSize(8), rayCount(1024), completedPixelCountSync(0) {}
 
 RayTraceComponent::~RayTraceComponent() {}
 
@@ -411,21 +410,23 @@ Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float
 					if (lightElement.position.w() == 0) { // directional light only now
 						// check shadow
 						Float3 dir = Math::Normalize((Float3)lightElement.position);
-						Component::RaycastTaskSerial task;
-						for (size_t i = 0; i < rootSpaceComponents.size(); i++) {
-							SpaceComponent* spaceComponent = rootSpaceComponents[i];
-							Float3Pair ray(worldPosition + dir * 0.3f, dir);
-							MatrixFloat4x4 matrix = MatrixFloat4x4::Identity();
-							spaceComponent->Raycast(task, ray, matrix, nullptr, 1.0f);
-						}
+						Float4 L(dir.x(), dir.y(), dir.z(), 0.0f);
+						Float4 N = worldNormal;
 
-						if (task.result.distance == FLT_MAX) {
-							// not shadowed, compute shading
-							Float4 L(dir.x(), dir.y(), dir.z(), 0.0f);
-							Float4 N = worldNormal;
-							float NoL = Math::Max(0.0f, Math::DotProduct(N, L));
+						float NoL = Math::Max(0.0f, Math::DotProduct(N, L));
+						if (NoL > 0.0f) {
+							Component::RaycastTaskSerial task;
+							for (size_t i = 0; i < rootSpaceComponents.size(); i++) {
+								SpaceComponent* spaceComponent = rootSpaceComponents[i];
+								Float3Pair ray(worldPosition + dir * 0.05f, dir * 1000.0f);
+								MatrixFloat4x4 matrix = MatrixFloat4x4::Identity();
+								spaceComponent->Raycast(task, ray, matrix, nullptr, 1.0f);
+							}
 
-							radiance = radiance + baseColor * lightElement.colorAttenuation * NoL;
+							if (task.result.distance == FLT_MAX) {
+								// not shadowed, compute shading
+								radiance = radiance + baseColor * lightElement.colorAttenuation * NoL;
+							}
 						}
 					}
 				}

@@ -280,13 +280,16 @@ struct ShapeComponent::PatchRayCaster {
 				for (uint32_t m = 0; m <= valid; m++) {
 					if (uv[0][m] >= 0.0f && uv[1][m] >= 0.0f && uv[0][m] + uv[1][m] <= 1.0f) {
 						Float3 hit(res[0][m], res[1][m], res[2][m]);
-						float s = Math::SquareLength(hit - ray.first);
-						if (s < distance) {
-							distance = s;
-							hitPatch = &patch;
-							hitIndex = patch.indices[i + m - 3];
-							coord = Float4(uv[0][m], uv[1][m], 0, 0);
-							intersection = hit;
+						Float3 vec = hit - ray.first;
+						if (Math::DotProduct(vec, ray.second) > 0) {
+							float s = Math::SquareLength(vec);
+							if (s < distance) {
+								distance = s;
+								hitPatch = &patch;
+								hitIndex = patch.indices[i + m - 3];
+								coord = Float4(uv[0][m], uv[1][m], 0, 0);
+								intersection = hit;
+							}
 						}
 					}
 				}
