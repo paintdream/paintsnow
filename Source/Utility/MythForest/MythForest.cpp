@@ -324,7 +324,7 @@ public:
 			request << begintable
 				<< key("Intersection") << result.position
 				<< key("TexCoord") << result.coord
-				<< key("Distance") << result.distance
+				<< key("Distance") << sqrtf(result.squareDistance)
 				<< key("Object") << result.unit
 				<< key("Parent") << result.parent
 				<< endtable;

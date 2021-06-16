@@ -320,15 +320,15 @@ template <class D>
 void RaycastInternal(Entity* root, Component::RaycastTask& task, Float3Pair& ray, MatrixFloat4x4& transform, Unit* parent, float ratio, const Float3Pair& b, D d) {
 	Float3Pair bound = b;
 	for (Entity* entity = root; entity != nullptr; entity = entity->Right()) {
-		if (!getboolean<D>::value) {
+		if (getboolean<D>::value) {
 			TVector<float, 2> intersect = Math::IntersectBox(bound, ray);
 			if (intersect[1] < -0.0f || intersect[0] > intersect[1])
 				break;
 
 			// evaluate possible distance
 			if (task.clipOffDistance != FLT_MAX) {
-				float nearest = Math::Length(bound.second - ray.first) - Math::Length(bound.second - bound.first) * 0.5f;
-				if (nearest >= task.clipOffDistance)
+				float nearest = Math::Length((bound.second + bound.first) * 0.5f - ray.first) - Math::Length(bound.second - bound.first) * 0.5f;
+				if (nearest * nearest >= task.clipOffDistance)
 					break;
 			}
 		}

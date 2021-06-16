@@ -267,8 +267,6 @@ struct ShapeComponent::PatchRayCaster {
 				for (size_t t = 0; t < 3; t++) {
 					for (size_t m = 0; m < 3; m++) {
 						points[t][m][k] = vertices[index[t]][m];
-						points[t][m][k] = vertices[index[t]][m];
-						points[t][m][k] = vertices[index[t]][m];
 					}
 				}
 
@@ -328,7 +326,7 @@ float ShapeComponent::Raycast(RaycastTask& task, Float3Pair& ray, MatrixFloat4x4
 				RaycastResult result;
 				result.transform = transform;
 				result.position = q.intersection;
-				result.distance = q.distance * ratio;
+				result.squareDistance = q.distance * ratio;
 				result.faceIndex = q.hitIndex;
 				result.coord = q.coord;
 				result.unit = const_cast<ShapeComponent*>(this);

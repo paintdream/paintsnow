@@ -41,6 +41,7 @@ namespace PaintsNow {
 			Float3 forward;
 			Float3 up;
 			Float3 right;
+			int64_t clock;
 			std::vector<SpaceComponent*> rootSpaceComponents;
 			std::vector<Float2> randomSequence;
 			std::vector<LightElement> lightElements;

@@ -24,7 +24,7 @@ namespace PaintsNow {
 		struct RaycastResult {
 			MatrixFloat4x4 transform;
 			Float3 position; // local position
-			float distance;
+			float squareDistance;
 			Float4 coord;
 			uint32_t faceIndex;
 			TShared<Unit> unit;

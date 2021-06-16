@@ -98,6 +98,7 @@ void RayTraceComponent::Capture(Engine& engine, const TShared<CameraComponent>& 
 		}
 	}
 
+	context->clock = ITimer::GetSystemClock();
 	engine.GetKernel().GetThreadPool().Dispatch(CreateTaskContextFree(Wrap(this, &RayTraceComponent::RoutineRayTrace), context), 1);
 }
 
@@ -185,6 +186,9 @@ void RayTraceComponent::RoutineRenderTile(const TShared<Context>& context, size_
 }
 
 void RayTraceComponent::RoutineComplete(const TShared<Context>& context) {
+	int64_t diffTime = ITimer::GetSystemClock() - context->clock;
+	printf("Trace completed in %6.3fs\n", (double)diffTime / 1000.0);
+
 	if (!outputPath.empty() && context->capturedTexture() != nullptr) {
 		IImage& image = context->engine.interfaces.image;
 		IRender::Resource::TextureDescription& description = context->capturedTexture->description;
@@ -352,7 +356,7 @@ Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float
 		spaceComponent->Raycast(task, ray, matrix, nullptr, 1.0f);
 	}
 
-	if (task.result.distance != FLT_MAX && task.result.parent) {
+	if (task.result.squareDistance != FLT_MAX && task.result.parent) {
 		// hit!
 		assert(task.result.parent->QueryInterface(UniqueType<Entity>()) != nullptr);
 		std::unordered_map<size_t, uint32_t>::const_iterator it = context->mapEntityToResourceIndex.find(reinterpret_cast<size_t>(task.result.parent()));
@@ -431,7 +435,7 @@ Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float
 								spaceComponent->Raycast(task, ray, matrix, nullptr, 1.0f);
 							}
 
-							if (task.result.distance == FLT_MAX) {
+							if (task.result.squareDistance == FLT_MAX) {
 								// not shadowed, compute shading
 								radiance = radiance + baseColor * lightElement.colorAttenuation * NoL;
 							}

@@ -38,13 +38,13 @@ Component::RaycastTask::RaycastTask() : clipOffDistance(FLT_MAX) {}
 
 Component::RaycastTaskSerial::RaycastTaskSerial() {
 	Flag().store(RAYCASTTASK_IGNORE_WARP, std::memory_order_relaxed);
-	result.distance = FLT_MAX;
+	result.squareDistance = FLT_MAX;
 }
 
 bool Component::RaycastTaskSerial::EmplaceResult(rvalue<Component::RaycastResult> item) {
 	RaycastResult& r = item;
-	if (result.distance > r.distance) {
-		clipOffDistance = result.distance * result.distance; // update clip distance
+	if (result.squareDistance > r.squareDistance) {
+		clipOffDistance = result.squareDistance * result.squareDistance; // update clip distance
 		result = std::move(r);
 		return true;
 	} else {
@@ -114,15 +114,15 @@ bool Component::RaycastTaskWarp::EmplaceResult(std::vector<RaycastResult>& resul
 	static_assert(sizeof(uint32_t) == sizeof(float), "Must be IEEE 754 float32.");
 	if (result.size() < maxCount) {
 		if (maxCount == 1) {
-			clipOffDistance = Math::Min(clipOffDistance, item.distance);
+			clipOffDistance = Math::Min(clipOffDistance, item.squareDistance);
 		}
 		result.emplace_back(std::move(item));
 		return true;
 	} else {
 		for (size_t i = 0; i < result.size(); i++) {
-			if (result[i].distance > item.distance) {
+			if (result[i].squareDistance > item.squareDistance) {
 				if (maxCount == 1) {
-					clipOffDistance = Math::Min(clipOffDistance, item.distance);
+					clipOffDistance = Math::Min(clipOffDistance, item.squareDistance);
 				}
 
 				result[i] = std::move(item);
@@ -150,8 +150,8 @@ void Component::RaycastForEntity(RaycastTask& task, Float3Pair& ray, MatrixFloat
 
 	// evaluate possible distance
 	if (task.clipOffDistance != FLT_MAX) {
-		float nearest = Math::Length(entity->GetKey().second - ray.first) - Math::Length(entity->GetKey().second - entity->GetKey().first) * 0.5f;
-		if (nearest >= task.clipOffDistance)
+		float nearest = Math::Length((entity->GetKey().second + entity->GetKey().first) * 0.5f - ray.first) - Math::Length(entity->GetKey().second - entity->GetKey().first) * 0.5f;
+		if (nearest * nearest >= task.clipOffDistance)
 			return;
 	}
 
