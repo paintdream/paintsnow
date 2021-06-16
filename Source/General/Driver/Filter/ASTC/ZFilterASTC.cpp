@@ -12,7 +12,7 @@ public:
 	virtual bool Write(const void* p, size_t& len) {
 		// extract width, height
 		assert(len % sizeof(UChar4) == 0); // rgba
-		uint32_t level = Math::Log2(len / sizeof(UChar4)) >> 1;
+		uint32_t level = Math::Log2x(len / sizeof(UChar4)) >> 1;
 		int width = 1 << level;
 		int height = 1 << level;
 		size_t newLength = width * height;

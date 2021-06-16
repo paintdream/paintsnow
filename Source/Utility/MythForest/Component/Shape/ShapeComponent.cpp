@@ -30,27 +30,22 @@ struct CodeIndex {
 };
 
 // Generate Z-code
-static inline CodeIndex Encode(const UShort3Pair& box, uint32_t level, uint32_t i) {
+static inline CodeIndex Encode(const UShort3Pair& box, uint32_t level, uint32_t index) {
+	const uint16_t* p = &box.first.data[0];
+
+	uint32_t bitMask = 1 << level;
 	uint32_t code = 0;
-	uint16_t bitMask = 1 << (level - 1);
-	while (level > 0) {
-		uint16_t start = 0, end = 0;
-		for (uint32_t i = 0; i < 3; i++) {
-			start |= !!(box.first[i] & bitMask) << i;
-			end |= !!(box.second[i] & bitMask) << i;
-		}
+	for (uint32_t n = 0; n < level * 6; n++) {
+		size_t r = n % 6;
+		code = (code << 1) | !!(p[r] & bitMask);
 
-		code = (code << 3) | start;
-		if (start != end) {
-			break;
+		if (r == 5) {
+			bitMask >>= 1;
 		}
-
-		bitMask >>= 1;
-		--level;
 	}
 
 	// remaining
-	return CodeIndex(code << (3 * level), i, level);
+	return CodeIndex(code, index, level);
 }
 
 void ShapeComponent::MakeHeapInternal(std::vector<Patch>& output, Patch* begin, Patch* end) {
@@ -152,9 +147,14 @@ void ShapeComponent::RoutineUpdate(Engine& engine, const TShared<MeshResource>& 
 			}
 		}
 
+		int four = Math::Log2(4u);
+		int eight = Math::Log2(8u);
+		int tw = Math::Log2(12u);
+		int tws = Math::Log2x(12u);
+
 		// convert to local position
-		uint32_t level = Math::Min(Math::Log2(indices.size() / 8), (uint32_t)(sizeof(uint32_t) * 8 / 3));
-		uint32_t divCount = 1 << level;
+		uint32_t level = Math::Min(Math::Log2(indices.size() / 8), (uint32_t)sizeof(uint32_t) * 8 / 6);
+		uint32_t divCount = 1 << (level + 1);
 
 		std::vector<CodeIndex> codeIndices;
 		codeIndices.reserve(indices.size());

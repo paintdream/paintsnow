@@ -161,7 +161,7 @@ bool TextureResource::Compress(const String& compressionType, bool refreshRuntim
 
 		if (description.state.mip != IRender::Resource::TextureDescription::NOMIP) {
 			description.state.mip = IRender::Resource::TextureDescription::SPECMIP;
-			mipCount = Math::Log2((uint32_t)dimension.x()) - 2;
+			mipCount = Math::Log2x((uint32_t)dimension.x()) - 2;
 		}
 
 		size_t length = 0;

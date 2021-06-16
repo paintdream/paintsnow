@@ -64,7 +64,7 @@ size_t DataComponent::AllocateObject() {
 		size_t& mask = bitmap[i];
 		if (mask != ~(size_t)0) {
 			size_t s = Math::Alignment(mask + 1);
-			size_t index = Math::Log2(s) + i * 8 * sizeof(size_t);
+			size_t index = Math::Log2x(s) + i * 8 * sizeof(size_t);
 			if (index < maxObjectCount) {
 				mask |= s;
 				return index;

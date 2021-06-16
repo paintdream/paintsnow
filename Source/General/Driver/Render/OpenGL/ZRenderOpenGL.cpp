@@ -436,7 +436,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 	IRender::Resource::Type GetType() const override { return RESOURCE_TEXTURE; }
 
 	const void* GetHandle() const override {
-		return reinterpret_cast<const void*>(textureID);
+		return reinterpret_cast<const void*>((size_t)textureID);
 	}
 
 	inline void CreateMips(Resource::TextureDescription& d, uint32_t bitDepth, GLuint textureType, GLuint srcLayout, GLuint srcDataType, GLuint format, const void* buffer, size_t length) {
@@ -679,7 +679,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 					} else {
 						if (d.state.immutable && glTexStorage2D != nullptr) {
 							if (newTexture) {
-								glTexStorage2D(textureType, d.state.mip == IRender::Resource::TextureDescription::NOMIP ? 1 : Math::Log2((uint32_t)Math::Min(d.dimension.x(), d.dimension.y())) + 1, format, d.dimension.x(), d.dimension.y());
+								glTexStorage2D(textureType, d.state.mip == IRender::Resource::TextureDescription::NOMIP ? 1 : Math::Log2x((uint32_t)Math::Min(d.dimension.x(), d.dimension.y())) + 1, format, d.dimension.x(), d.dimension.y());
 							}
 
 							if (data != nullptr) {
@@ -707,7 +707,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 
 					if (d.state.immutable && glTexStorage2D != nullptr) {
 						if (newTexture) {
-							glTexStorage2D(GL_TEXTURE_CUBE_MAP, d.state.mip == IRender::Resource::TextureDescription::NOMIP ? 1 : Math::Log2((uint32_t)Math::Min(d.dimension.x(), d.dimension.y())) + 1, format, d.dimension.x(), d.dimension.y());
+							glTexStorage2D(GL_TEXTURE_CUBE_MAP, d.state.mip == IRender::Resource::TextureDescription::NOMIP ? 1 : Math::Log2x((uint32_t)Math::Min(d.dimension.x(), d.dimension.y())) + 1, format, d.dimension.x(), d.dimension.y());
 						}
 					}
 
@@ -742,7 +742,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 					} else {
 						if (d.state.immutable && glTexStorage3D != nullptr) {
 							if (newTexture) {
-								glTexStorage3D(textureType, d.state.mip == IRender::Resource::TextureDescription::NOMIP ? 1 : Math::Log2((uint32_t)Math::Min(Math::Min(d.dimension.x(), d.dimension.y()), d.dimension.z())) + 1, format, d.dimension.x(), d.dimension.y(), d.dimension.z());
+								glTexStorage3D(textureType, d.state.mip == IRender::Resource::TextureDescription::NOMIP ? 1 : Math::Log2x((uint32_t)Math::Min(Math::Min(d.dimension.x(), d.dimension.y()), d.dimension.z())) + 1, format, d.dimension.x(), d.dimension.y(), d.dimension.z());
 							}
 
 							if (data != nullptr) {
@@ -767,7 +767,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 					} else {
 						if (d.state.immutable && glTexStorage2D != nullptr) {
 							if (newTexture) {
-								glTexStorage2D(textureType, d.state.mip == IRender::Resource::TextureDescription::NOMIP ? 1 : Math::Log2((uint32_t)d.dimension.x()) + 1, format, d.dimension.x(), d.dimension.y());
+								glTexStorage2D(textureType, d.state.mip == IRender::Resource::TextureDescription::NOMIP ? 1 : Math::Log2x((uint32_t)d.dimension.x()) + 1, format, d.dimension.x(), d.dimension.y());
 							}
 
 							if (data != nullptr) {
@@ -791,7 +791,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 					} else {
 						if (d.state.immutable && glTexStorage3D != nullptr) {
 							if (newTexture) {
-								glTexStorage3D(textureType, d.state.mip == IRender::Resource::TextureDescription::NOMIP ? 1 : Math::Log2((uint32_t)Math::Min(d.dimension.x(), d.dimension.y())) + 1, format, d.dimension.x(), d.dimension.y(), d.dimension.z());
+								glTexStorage3D(textureType, d.state.mip == IRender::Resource::TextureDescription::NOMIP ? 1 : Math::Log2x((uint32_t)Math::Min(d.dimension.x(), d.dimension.y())) + 1, format, d.dimension.x(), d.dimension.y(), d.dimension.z());
 							}
 
 							if (data != nullptr) {
@@ -818,7 +818,7 @@ struct ResourceImplOpenGL<IRender::Resource::TextureDescription> final : public 
 
 					if (d.state.immutable && glTexStorage3D != nullptr) {
 						if (newTexture) {
-							glTexStorage3D(GL_TEXTURE_CUBE_MAP, d.state.mip == IRender::Resource::TextureDescription::NOMIP ? 1 : Math::Log2((uint32_t)Math::Min(d.dimension.x(), d.dimension.y())) + 1, format, d.dimension.x(), d.dimension.y(), d.dimension.z());
+							glTexStorage3D(GL_TEXTURE_CUBE_MAP, d.state.mip == IRender::Resource::TextureDescription::NOMIP ? 1 : Math::Log2x((uint32_t)Math::Min(d.dimension.x(), d.dimension.y())) + 1, format, d.dimension.x(), d.dimension.y(), d.dimension.z());
 						}
 					}
 
@@ -980,7 +980,7 @@ template <>
 struct ResourceImplOpenGL<IRender::Resource::BufferDescription> final : public ResourceBaseImplOpenGLDesc<IRender::Resource::BufferDescription> {
 	ResourceImplOpenGL() : bufferID(0), length(0) {}
 	const void* GetHandle() const override {
-		return reinterpret_cast<const void*>(bufferID);
+		return reinterpret_cast<const void*>((size_t)bufferID);
 	}
 
 	IRender::Resource::Type GetType() const override { return RESOURCE_BUFFER; }
@@ -1404,7 +1404,7 @@ struct ResourceImplOpenGL<IRender::Resource::RenderTargetDescription> final : pu
 	ResourceImplOpenGL() : vertexArrayID(0), frameBufferID(0) {}
 	IRender::Resource::Type GetType() const override { return RESOURCE_RENDERTARGET; }
 	const void* GetHandle() const override {
-		return reinterpret_cast<const void*>(frameBufferID);
+		return reinterpret_cast<const void*>((size_t)frameBufferID);
 	}
 
 #ifdef _DEBUG

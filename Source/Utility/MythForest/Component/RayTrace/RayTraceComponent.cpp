@@ -166,6 +166,10 @@ void RayTraceComponent::RoutineRenderTile(const TShared<Context>& context, size_
 
 			finalColor *= sampleDiv;
 
+			for (size_t i = 0; i < 4; i++) {
+				finalColor[i] = powf(finalColor[i], 2.2f);
+			}
+
 			UChar4* ptr = reinterpret_cast<UChar4*>(context->capturedTexture->description.data.GetData());
 			ptr[py * captureSize.x() + px] = FromFloat4(finalColor);
 
@@ -370,6 +374,10 @@ Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float
 
 				// sample texture
 				Float4 baseColor = SampleTexture(baseColorTexture, uv);
+				for (size_t i = 0; i < 4; i++) {
+					baseColor[i] = powf(baseColor[i], 1.0f / 2.2f);
+				}
+
 				Float4 normal = SampleTexture(normalTexture, uv) * Float4(2.0f, 2.0f, 2.0f, 2.0f) - Float4(1.0f, 1.0f, 1.0f, 1.0f);
 				Float4 mixture = SampleTexture(mixtureTexture, uv);
 
@@ -405,8 +413,8 @@ Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float
 				Float3 worldPosition = (Float3)position;
 				Float4 radiance(0.0f, 0.0f, 0.0f, 0.0f);
 
-				for (size_t i = 0; i < context->lightElements.size(); i++) {
-					const LightElement& lightElement = context->lightElements[i];
+				for (size_t k = 0; k < context->lightElements.size(); k++) {
+					const LightElement& lightElement = context->lightElements[k];
 					if (lightElement.position.w() == 0) { // directional light only now
 						// check shadow
 						Float3 dir = Math::Normalize((Float3)lightElement.position);
@@ -416,8 +424,8 @@ Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float
 						float NoL = Math::Max(0.0f, Math::DotProduct(N, L));
 						if (NoL > 0.0f) {
 							Component::RaycastTaskSerial task;
-							for (size_t i = 0; i < rootSpaceComponents.size(); i++) {
-								SpaceComponent* spaceComponent = rootSpaceComponents[i];
+							for (size_t n = 0; n < rootSpaceComponents.size(); n++) {
+								SpaceComponent* spaceComponent = rootSpaceComponents[n];
 								Float3Pair ray(worldPosition + dir * 0.05f, dir * 1000.0f);
 								MatrixFloat4x4 matrix = MatrixFloat4x4::Identity();
 								spaceComponent->Raycast(task, ray, matrix, nullptr, 1.0f);

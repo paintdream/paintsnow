@@ -56,7 +56,7 @@ String PreConstExpr::operator () (const String& text) const {
 			case '(':
 				if (parenthesesCount++ == 0) {
 					if (!findCondition) {
-						conditionStart = i + 1;
+						conditionStart = verify_cast<uint32_t>(i + 1);
 					}
 				}
 				break;
@@ -70,7 +70,7 @@ String PreConstExpr::operator () (const String& text) const {
 				break;
 			case '{':
 				if (bracesCount++ == 0) {
-					partStart = i + 1;
+					partStart = verify_cast<uint32_t>(i + 1);
 				}
 
 				break;

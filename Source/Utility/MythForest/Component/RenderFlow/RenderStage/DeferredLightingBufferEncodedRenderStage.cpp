@@ -75,7 +75,7 @@ void DeferredLightingBufferEncodedRenderStage::Update(Engine& engine, IRender::Q
 
 	if (LightSource->cubeMapTexture) {
 		standardLighting.specTexture.resource = LightSource->cubeMapTexture->GetRenderResource();
-		standardLighting.cubeLevelInv = 1.0f / Math::Log2((uint32_t)LightSource->cubeMapTexture->description.dimension.x());
+		standardLighting.cubeLevelInv = 1.0f / Math::Log2x((uint32_t)LightSource->cubeMapTexture->description.dimension.x());
 		standardLighting.cubeStrength = LightSource->cubeStrength;
 	} else {
 		standardLighting.specTexture.resource = BaseColorOcclusion.textureResource->GetRenderResource();
