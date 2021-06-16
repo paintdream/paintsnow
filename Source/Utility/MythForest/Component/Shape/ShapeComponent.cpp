@@ -213,6 +213,7 @@ void ShapeComponent::RoutineUpdate(Engine& engine, const TShared<MeshResource>& 
 		CheckBounding(root, bound);
 
 		std::swap(newPatches, patches);
+		boundingBox = bound;
 	} else {
 		resource->UnMap();
 		assert(false);
@@ -315,8 +316,7 @@ float ShapeComponent::Raycast(RaycastTask& task, Float3Pair& ray, MatrixFloat4x4
 		if (!patches.empty()) {
 			OPTICK_EVENT();
 
-			Float3Pair box(ray.first, ray.first);
-			Math::Union(box, Float3(ray.first + ray.second));
+			Float3Pair box = boundingBox;
 			IAsset::MeshCollection& meshCollection = meshResource->meshCollection;
 			PatchRayCaster q(meshCollection.vertices, meshCollection.indices, ray);
 			PatchRayCuller c(ray);
