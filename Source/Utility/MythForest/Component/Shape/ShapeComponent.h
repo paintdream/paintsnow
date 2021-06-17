@@ -26,14 +26,15 @@ namespace PaintsNow {
 		void RoutineUpdate(Engine& engine, const TShared<MeshResource>& resource);
 		void Cleanup();
 
-		struct_aligned(8) Patch : public TKdTree<Float3Pair> {
+		struct VertexStorage {
+			TVector<TVector<float, 4>, 3> vertices[MAX_PATCH_COUNT / 4][3];
+		};
+
+		struct_aligned(16) Patch : public TKdTree<Float3Pair, VertexStorage> {
 			Patch* GetRight() const { return static_cast<Patch*>(rightNode); }
 			Patch* GetLeft() const { return static_cast<Patch*>(leftNode); }
 
-			union {
-				uint32_t indices[MAX_PATCH_COUNT];
-				uint64_t alignment;
-			};
+			uint32_t indices[MAX_PATCH_COUNT];
 		};
 
 		struct PatchRayCaster;
@@ -44,6 +45,7 @@ namespace PaintsNow {
 
 		TShared<MeshResource> meshResource;
 		std::vector<Patch> patches;
+		Float3Pair boundingBox;
 	};
 }
 

@@ -19,14 +19,13 @@ static inline UShort3 ToLocalInt(const Float3Pair& bound, const Float3& pt, uint
 }
 
 struct CodeIndex {
-	CodeIndex(uint32_t c = 0, uint32_t i = 0, uint32_t l = 0) : code(c), index(i), level(l) {}
+	CodeIndex(uint32_t c = 0, uint32_t i = 0) : code(c), index(i) {}
 	bool operator < (const CodeIndex& rhs) const {
 		return code < rhs.code;
 	}
 
 	uint32_t code;
 	uint32_t index;
-	uint32_t level;
 };
 
 // Generate Z-code
@@ -45,7 +44,7 @@ static inline CodeIndex Encode(const UShort3Pair& box, uint32_t level, uint32_t 
 	}
 
 	// remaining
-	return CodeIndex(code, index, level);
+	return CodeIndex(code, index);
 }
 
 void ShapeComponent::MakeHeapInternal(std::vector<Patch>& output, Patch* begin, Patch* end) {
@@ -67,18 +66,20 @@ ShapeComponent::Patch* ShapeComponent::MakeBound(Patch& patch, const std::vector
 		}
 
 		const UInt3& face = indices[index];
-		const Float3& first = vertices[face[0]];
-		const Float3& second = vertices[face[1]];
-		const Float3& third = vertices[face[2]];
 
-		if (i == 0) {
-			box = Float3Pair(first, first);
-		} else {
-			Math::Union(box, first);
+		for (size_t t = 0; t < 3; t++) {
+			const Float3& v = vertices[face[t]];
+
+			for (size_t m = 0; m < 3; m++) {
+				if (i == 0 && t == 0 && m == 0) {
+					box = Float3Pair(v, v);
+				} else {
+					Math::Union(box, v);
+				}
+
+				patch.vertices[i / 4][t][m][i & 3] = v[m];
+			}
 		}
-
-		Math::Union(box, second);
-		Math::Union(box, third);
 	}
 
 	patch.SetIndex(index);
@@ -122,8 +123,9 @@ void ShapeComponent::CheckBounding(Patch* root, Float3Pair& targetKey) {
 }
 
 void ShapeComponent::RoutineUpdate(Engine& engine, const TShared<MeshResource>& resource) {
-	static_assert(alignof(Patch) == 8, "Patch align must be 8.");
-	if (resource == meshResource) return;
+	if (resource == meshResource)
+		return;
+
 	OPTICK_EVENT();
 
 	SnowyStream& snowyStream = engine.snowyStream;
@@ -147,11 +149,6 @@ void ShapeComponent::RoutineUpdate(Engine& engine, const TShared<MeshResource>& 
 			}
 		}
 
-		int four = Math::Log2(4u);
-		int eight = Math::Log2(8u);
-		int tw = Math::Log2(12u);
-		int tws = Math::Log2x(12u);
-
 		// convert to local position
 		uint32_t level = Math::Min(Math::Log2(indices.size() / 8), (uint32_t)sizeof(uint32_t) * 8 / 6);
 		uint32_t divCount = 1 << (level + 1);
@@ -172,28 +169,22 @@ void ShapeComponent::RoutineUpdate(Engine& engine, const TShared<MeshResource>& 
 
 		// make tree
 		std::vector<Patch> linearPatches;
-		linearPatches.reserve(indices.size());
 
-		uint32_t k = 0;
-		uint32_t lastLevel = ~(uint32_t)0;
-		for (uint32_t m = 0; m < codeIndices.size(); m++) {
-			const CodeIndex& codeIndex = codeIndices[m];
-			if (codeIndex.level != lastLevel || k == MAX_PATCH_COUNT) {
-				if (!linearPatches.empty()) {
-					while (k != MAX_PATCH_COUNT) {
-						linearPatches.back().indices[k++] = ~(uint32_t)0;
-					}
+		if (!codeIndices.empty()) {
+			uint32_t k = 0;
+			linearPatches.reserve((codeIndices.size() + MAX_PATCH_COUNT - 1) / MAX_PATCH_COUNT);
+			linearPatches.emplace_back(Patch());
+
+			for (uint32_t m = 0; m < codeIndices.size(); m++) {
+				const CodeIndex& codeIndex = codeIndices[m];
+				if (k == MAX_PATCH_COUNT) {
+					k = 0;
+					linearPatches.emplace_back(Patch());
 				}
 
-				lastLevel = codeIndex.level;
-				k = 0;
-				linearPatches.emplace_back(Patch());
+				linearPatches.back().indices[k++] = codeIndex.index;
 			}
 
-			linearPatches.back().indices[k++] = codeIndex.index;
-		}
-
-		if (!linearPatches.empty()) {
 			while (k != MAX_PATCH_COUNT) {
 				linearPatches.back().indices[k++] = ~(uint32_t)0;
 			}
@@ -242,61 +233,35 @@ struct ShapeComponent::PatchRayCaster {
 		Math::ExtendVector(rayGroup.second, TVector<float, 3>(r.second));
 	}
 
-	bool operator () (const TKdTree<Float3Pair>& node) {
+	bool operator () (const TKdTree<Float3Pair, VertexStorage>& node) {
 		const Patch& patch = static_cast<const Patch&>(node);
 		TVector<TVector<float, 4>, 3> res;
 		TVector<TVector<float, 4>, 2> uv;
-		TVector<TVector<float, 4>, 3> points[3];
 
 		static_assert(MAX_PATCH_COUNT % 4 == 0, "Must be 4n size");
-		uint32_t maxIndex = 0;
-		for (uint32_t w = 0; w < MAX_PATCH_COUNT; w += 4) {
-			if (patch.indices[w] != ~(uint32_t)0) {
-				maxIndex = w + 1;
-			} else {
-				break;
-			}
-		}
+		for (uint32_t k = 0; k < MAX_PATCH_COUNT / 4; k++) {
+			Math::IntersectTriangle(res, uv, patch.vertices[k], rayGroup);
+			for (uint32_t m = 0; m < 4; m++) {
+				if (patch.indices[k * 4 + m] == ~(uint32_t)0)
+					return true;
 
-		maxIndex = (maxIndex + 3) & ~3;
-
-		for (uint32_t i = 0, valid = 0; i < maxIndex; i++) {
-			uint32_t idx = patch.indices[i];
-			uint32_t k = i & 3;
-			if (idx != ~(uint32_t)0) {
-				const UInt3& index = indices[idx];
-				for (size_t t = 0; t < 3; t++) {
-					for (size_t m = 0; m < 3; m++) {
-						points[t][m][k] = vertices[index[t]][m];
-					}
-				}
-
-				valid = k;
-			}
-
-			if (k == 3) {
-				Math::IntersectTriangle(res, uv, points, rayGroup);
-				for (uint32_t m = 0; m <= valid; m++) {
-					if (uv[0][m] >= 0.0f && uv[1][m] >= 0.0f && uv[0][m] + uv[1][m] <= 1.0f) {
-						Float3 hit(res[0][m], res[1][m], res[2][m]);
-						Float3 vec = hit - ray.first;
-						if (Math::DotProduct(vec, ray.second) > 0) {
-							float s = Math::SquareLength(vec);
-							if (s < distance) {
-								distance = s;
-								hitPatch = &patch;
-								hitIndex = patch.indices[i + m - 3];
-								coord = Float4(uv[0][m], uv[1][m], 0, 0);
-								intersection = hit;
-							}
+				if (uv[0][m] >= 0.0f && uv[1][m] >= 0.0f && uv[0][m] + uv[1][m] <= 1.0f) {
+					Float3 hit(res[0][m], res[1][m], res[2][m]);
+					Float3 vec = hit - ray.first;
+					if (Math::DotProduct(vec, ray.second) > 0) {
+						float s = Math::SquareLength(vec);
+						if (s < distance) {
+							distance = s;
+							hitPatch = &patch;
+							hitIndex = patch.indices[k * 4 + m];
+							coord = Float4(uv[0][m], uv[1][m], 0, 0);
+							intersection = hit;
 						}
 					}
 				}
-
-				k = 0;
 			}
 		}
-		
+
 		return true;
 	}
 
