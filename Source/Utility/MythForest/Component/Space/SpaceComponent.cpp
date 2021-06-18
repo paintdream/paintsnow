@@ -48,6 +48,14 @@ void SpaceComponent::Uninitialize(Engine& engine, Entity* entity) {
 #endif
 }
 
+void SpaceComponent::Optimize() {
+	if (Flag().load(std::memory_order_relaxed) & SPACECOMPONENT_ORDERED) {
+		if (rootEntity != nullptr) {
+			rootEntity = static_cast<Entity*>(rootEntity->Optimize());
+		}
+	}
+}
+
 void SpaceComponent::QueueRoutine(Engine& engine, ITask* task) {
 	engine.GetKernel().QueueRoutine(this, task);
 }
@@ -433,3 +441,4 @@ void SpaceComponent::UpdateBoundingBox(Engine& engine, Float3Pair& box, bool rec
 const Float3Pair& SpaceComponent::GetBoundingBox() const {
 	return boundingBox;
 }
+

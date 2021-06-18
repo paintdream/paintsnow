@@ -19,6 +19,7 @@ namespace PaintsNow {
 			SPACECOMPONENT_CUSTOM_BEGIN = COMPONENT_CUSTOM_BEGIN << 2
 		};
 
+		void Optimize();
 		void QueueRoutine(Engine& engine, ITask* task);
 		void QueryEntities(std::vector<TShared<Entity> >& entities, const Float3Pair& box);
 		bool Insert(Engine& engine, Entity* entity);

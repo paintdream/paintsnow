@@ -8,16 +8,6 @@ ShapeComponent::~ShapeComponent() {
 	Cleanup();
 }
 
-static inline UShort3 ToLocalInt(const Float3Pair& bound, const Float3& pt, uint32_t divCount) {
-	Float3 local = Math::ToLocal(bound, pt);
-	UShort3 ret;
-	for (uint32_t i = 0; i < 3; i++) {
-		ret[i] = verify_cast<uint16_t>(Math::Clamp((uint32_t)(local[i] * divCount), 0u, divCount - 1));
-	}
-
-	return ret;
-}
-
 struct CodeIndex {
 	CodeIndex(uint32_t c = 0, uint32_t i = 0) : code(c), index(i) {}
 	bool operator < (const CodeIndex& rhs) const {
@@ -29,34 +19,24 @@ struct CodeIndex {
 };
 
 // Generate Z-code
-static inline CodeIndex Encode(const UShort3Pair& box, uint32_t level, uint32_t index) {
-	const uint16_t* p = &box.first.data[0];
+static inline CodeIndex Encode(const UShort3Pair& box, uint32_t index) {
+	return CodeIndex(Math::Interleave(TypeTrait<uint32_t>(), &box.first.data[0], 6u), index);
+}
 
-	uint32_t bitMask = 1 << level;
-	uint32_t code = 0;
-	for (uint32_t n = 0; n < level * 6; n++) {
-		size_t r = n % 6;
-		code = (code << 1) | !!(p[r] & bitMask);
+void ShapeComponent::MakeHeapInternal(std::vector<Patch>& output, Patch* begin, Patch* end, uint8_t index) {
+	if (begin < end) {
+		Patch* mid = begin + (end - begin) / 2;
+		mid->SetIndex(index);
 
-		if (r == 5) {
-			bitMask >>= 1;
-		}
+		index = (index + 1) % 6;
+
+		output.emplace_back(std::move(*mid));
+		MakeHeapInternal(output, begin, mid, index);
+		MakeHeapInternal(output, mid + 1, end, index);
 	}
-
-	// remaining
-	return CodeIndex(code, index);
 }
 
-void ShapeComponent::MakeHeapInternal(std::vector<Patch>& output, Patch* begin, Patch* end) {
-	if (begin >= end) return;
-
-	Patch* mid = begin + (end - begin) / 2;
-	output.emplace_back(std::move(*mid));
-	MakeHeapInternal(output, begin, mid);
-	MakeHeapInternal(output, mid + 1, end);
-}
-
-ShapeComponent::Patch* ShapeComponent::MakeBound(Patch& patch, const std::vector<Float3>& vertices, const std::vector<UInt3>& indices, int index) {
+ShapeComponent::Patch* ShapeComponent::MakeBound(Patch& patch, const std::vector<Float3>& vertices, const std::vector<UInt3>& indices) {
 	Float3Pair box;
 	for (uint32_t i = 0; i < MAX_PATCH_COUNT; i++) {
 		uint32_t index = patch.indices[i];
@@ -82,7 +62,6 @@ ShapeComponent::Patch* ShapeComponent::MakeBound(Patch& patch, const std::vector
 		}
 	}
 
-	patch.SetIndex(index);
 	patch.GetKey() = box;
 	return &patch;
 }
@@ -150,18 +129,19 @@ void ShapeComponent::RoutineUpdate(Engine& engine, const TShared<MeshResource>& 
 		}
 
 		// convert to local position
-		uint32_t level = Math::Min(Math::Log2(indices.size() / 8), (uint32_t)sizeof(uint32_t) * 8 / 6);
-		uint32_t divCount = 1 << (level + 1);
+		uint32_t level = (uint32_t)sizeof(uint32_t) * 8 / 6;
+		uint16_t div = 1 << (level + 1);
+		UShort3 divCount(div - 1, div - 1, div - 1);
 
 		std::vector<CodeIndex> codeIndices;
 		codeIndices.reserve(indices.size());
 		for (uint32_t i = 0; i < indices.size(); i++) {
 			const UInt3& index = indices[i];
-			UShort3 first = ToLocalInt(bound, vertices[index.x()], divCount);
+			UShort3 first = Math::QuantizeVector(bound, vertices[index.x()], divCount);
 			UShort3Pair box(first, first);
-			Math::Union(box, ToLocalInt(bound, vertices[index.y()], divCount));
-			Math::Union(box, ToLocalInt(bound, vertices[index.z()], divCount));
-			codeIndices.emplace_back(Encode(box, level, i));
+			Math::Union(box, Math::QuantizeVector(bound, vertices[index.y()], divCount));
+			Math::Union(box, Math::QuantizeVector(bound, vertices[index.z()], divCount));
+			codeIndices.emplace_back(Encode(box, i));
 		}
 
 		// sort by z-code
@@ -193,12 +173,12 @@ void ShapeComponent::RoutineUpdate(Engine& engine, const TShared<MeshResource>& 
 		// heap order
 		std::vector<Patch> newPatches;
 		newPatches.reserve(linearPatches.size());
-		MakeHeapInternal(newPatches, &linearPatches[0], &linearPatches[0] + linearPatches.size());
+		MakeHeapInternal(newPatches, &linearPatches[0], &linearPatches[0] + linearPatches.size(), 0);
 
 		// Connect
-		Patch* root = MakeBound(newPatches[0], vertices, indices, 0);
+		Patch* root = MakeBound(newPatches[0], vertices, indices);
 		for (uint32_t s = 1; s < newPatches.size(); s++) {
-			root->Attach(MakeBound(newPatches[s], vertices, indices, s % 6));
+			root->Attach(MakeBound(newPatches[s], vertices, indices));
 		}
 
 		CheckBounding(root, bound);
@@ -235,6 +215,10 @@ struct ShapeComponent::PatchRayCaster {
 
 	bool operator () (const TKdTree<Float3Pair, VertexStorage>& node) {
 		const Patch& patch = static_cast<const Patch&>(node);
+
+		IMemory::PrefetchReadLocal(patch.GetLeft());
+		IMemory::PrefetchReadLocal(patch.GetRight());
+
 		TVector<TVector<float, 4>, 3> res;
 		TVector<TVector<float, 4>, 2> uv;
 

@@ -208,6 +208,8 @@ function Scene.New(database : Database, clock : Clock) : Scene
 					end
 				end
 
+				subSpaceComponent:Optimize()
+
 				local subEventComponent = EventComponentModule.New()
 				subEventComponent:BindEventFrame(true)
 				local visibilityComponent = RuntimeVisibilityProbe.New()

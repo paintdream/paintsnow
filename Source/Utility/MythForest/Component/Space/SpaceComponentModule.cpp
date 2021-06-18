@@ -17,6 +17,7 @@ TObject<IReflect>& SpaceComponentModule::operator ()(IReflect& reflect) {
 		ReflectMethod(RequestQueryEntities)[ScriptMethod = "QueryEntities"];
 		ReflectMethod(RequestSetForwardMask)[ScriptMethodLocked = "SetForwardMask"];
 		ReflectMethod(RequestGetEntityCount)[ScriptMethodLocked = "GetEntityCount"];
+		ReflectMethod(RequestOptimize)[ScriptMethodLocked = "Optimize"];
 	}
 
 	return *this;
@@ -55,6 +56,14 @@ uint32_t SpaceComponentModule::RequestGetEntityCount(IScript::Request& request, 
 	CHECK_DELEGATE(spaceComponent);
 	CHECK_THREAD_IN_MODULE(spaceComponent);
 	return spaceComponent->GetEntityCount();
+}
+
+void SpaceComponentModule::RequestOptimize(IScript::Request& request, IScript::Delegate<SpaceComponent> spaceComponent) {
+	CHECK_REFERENCES_NONE();
+	CHECK_DELEGATE(spaceComponent);
+	CHECK_THREAD_IN_MODULE(spaceComponent);
+
+	spaceComponent->Optimize();
 }
 
 void SpaceComponentModule::RequestInsertEntity(IScript::Request& request, IScript::Delegate<SpaceComponent> spaceComponent, IScript::Delegate<Entity> entity) {

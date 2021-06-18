@@ -39,8 +39,8 @@ namespace PaintsNow {
 
 		struct PatchRayCaster;
 		struct PatchRayCuller;
-		static void MakeHeapInternal(std::vector<Patch>& target, Patch* begin, Patch* end);
-		static Patch* MakeBound(Patch& patch, const std::vector<Float3>& vertices, const std::vector<UInt3>& indices, int index);
+		static void MakeHeapInternal(std::vector<Patch>& target, Patch* begin, Patch* end, uint8_t index);
+		static Patch* MakeBound(Patch& patch, const std::vector<Float3>& vertices, const std::vector<UInt3>& indices);
 		static void CheckBounding(Patch* root, Float3Pair& box);
 
 		TShared<MeshResource> meshResource;

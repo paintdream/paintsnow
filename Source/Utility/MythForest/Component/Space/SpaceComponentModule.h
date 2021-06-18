@@ -58,6 +58,12 @@ namespace PaintsNow {
 		/// <returns> enitty count </returns>
 		uint32_t RequestGetEntityCount(IScript::Request& request, IScript::Delegate<SpaceComponent> spaceComponent);
 
+		/// <summary>
+		/// Optimize the tree (only for ordered space components)
+		/// </summary>
+		/// <param name="spaceComponent"> the SpaceComponent </param>
+		void RequestOptimize(IScript::Request& request, IScript::Delegate<SpaceComponent> spaceComponent);
+
 		TObject<IReflect>& operator () (IReflect& reflect) override;
 		void ScriptUninitialize(IScript::Request& request) override;
 	};
