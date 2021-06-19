@@ -79,7 +79,7 @@ namespace PaintsNow {
 		virtual const String& GetAliasedTypeName() const;
 		virtual void UpdateBoundingBox(Engine& engine, Float3Pair& boundingBox, bool recursive);
 		virtual float Raycast(RaycastTask& task, Float3Pair& ray, MatrixFloat4x4& transform, Unit* parent, float ratio = 1) const;
-		static void RaycastForEntity(RaycastTask& task, Float3Pair& ray, MatrixFloat4x4& transform, Entity* entity);
+		static void RaycastForEntity(RaycastTask& task, const Float3Pair& quickRay, Float3Pair& ray, MatrixFloat4x4& transform, Entity* entity);
 		virtual FLAG GetEntityFlagMask() const;
 		virtual uint32_t GetQuickUniqueID() const;
 		static inline uint32_t StaticGetQuickUniqueID() { return ~(uint32_t)0; }

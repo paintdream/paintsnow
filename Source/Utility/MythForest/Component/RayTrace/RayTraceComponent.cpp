@@ -16,7 +16,7 @@ RayTraceComponent::Context::~Context() {
 	}
 }
 
-RayTraceComponent::RayTraceComponent() : captureSize(640, 480), superSample(2), tileSize(8), rayCount(1024), completedPixelCountSync(0) {}
+RayTraceComponent::RayTraceComponent() : captureSize(640, 480), superSample(4), tileSize(8), rayCount(1024), completedPixelCountSync(0) {}
 
 RayTraceComponent::~RayTraceComponent() {}
 

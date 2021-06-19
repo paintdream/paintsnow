@@ -140,18 +140,18 @@ bool Component::RaycastTaskWarp::EmplaceResult(rvalue<Component::RaycastResult> 
 
 float Component::Raycast(RaycastTask& task, Float3Pair& ray, MatrixFloat4x4& transform, Unit* parent, float ratio) const { return ratio; }
 
-void Component::RaycastForEntity(RaycastTask& task, Float3Pair& ray, MatrixFloat4x4& transform, Entity* entity) {
+void Component::RaycastForEntity(RaycastTask& task, const Float3Pair& quickRay, Float3Pair& ray, MatrixFloat4x4& transform, Entity* entity) {
 	OPTICK_EVENT();
 	assert(!(entity->Flag().load(std::memory_order_acquire) & TINY_MODIFIED));
 
-	TVector<float, 2> intersect = Math::IntersectBox(entity->GetKey(), ray);
-	if (intersect[1] < -0.0f || intersect[0] > intersect[1])
+	float distance = Math::IntersectBox(entity->GetKey(), quickRay);
+	if (distance < 0)
 		return;
 
 	// evaluate possible distance
 	if (task.clipOffDistance != FLT_MAX) {
-		float nearest = Math::Length((entity->GetKey().second + entity->GetKey().first) * 0.5f - ray.first) - Math::Length(entity->GetKey().second - entity->GetKey().first) * 0.5f;
-		if (nearest * nearest >= task.clipOffDistance)
+		float nearest = Math::SquareLength(ray.second * distance);
+		if (nearest >= task.clipOffDistance)
 			return;
 	}
 

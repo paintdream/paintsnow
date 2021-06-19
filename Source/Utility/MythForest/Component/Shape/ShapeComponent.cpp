@@ -195,12 +195,11 @@ void ShapeComponent::RoutineUpdate(Engine& engine, const TShared<MeshResource>& 
 }
 
 struct ShapeComponent::PatchRayCuller {
-	PatchRayCuller(const Float3Pair& r) : ray(r) {}
-	const Float3Pair& ray;
+	PatchRayCuller(const Float3Pair& r) : quickRay(Math::QuickRay(r)) {}
+	Float3Pair quickRay;
 
 	bool operator () (const Float3Pair& box) {
-		TVector<float, 2> intersect = Math::IntersectBox(box, ray);
-		return (intersect[1] >= -0.0f && intersect[0] <= intersect[1]);
+		return Math::IntersectBox(box, quickRay) >= 0.0f;
 	}
 
 	std::set<TKdTree<Float3Pair, Void>*> traversed;

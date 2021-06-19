@@ -325,18 +325,18 @@ void SpaceComponent::RoutineUpdateBoundingBox(Engine& engine, Float3Pair& box, b
 }
 
 template <class D>
-void RaycastInternal(Entity* root, Component::RaycastTask& task, Float3Pair& ray, MatrixFloat4x4& transform, Unit* parent, float ratio, const Float3Pair& b, D d) {
+void RaycastInternal(Entity* root, Component::RaycastTask& task, const Float3Pair& quickRay, Float3Pair& ray, MatrixFloat4x4& transform, Unit* parent, float ratio, const Float3Pair& b, D d) {
 	Float3Pair bound = b;
 	for (Entity* entity = root; entity != nullptr; entity = entity->Right()) {
 		if (getboolean<D>::value) {
-			TVector<float, 2> intersect = Math::IntersectBox(bound, ray);
-			if (intersect[1] < -0.0f || intersect[0] > intersect[1])
+			float distance = Math::IntersectBox(bound, quickRay);
+			if (distance < 0)
 				break;
 
 			// evaluate possible distance
 			if (task.clipOffDistance != FLT_MAX) {
-				float nearest = Math::Length((bound.second + bound.first) * 0.5f - ray.first) - Math::Length(bound.second - bound.first) * 0.5f;
-				if (nearest * nearest >= task.clipOffDistance)
+				float nearest = Math::SquareLength(ray.second * distance);
+				if (nearest >= task.clipOffDistance)
 					break;
 			}
 		}
@@ -344,18 +344,18 @@ void RaycastInternal(Entity* root, Component::RaycastTask& task, Float3Pair& ray
 		IMemory::PrefetchRead(entity->Left());
 		IMemory::PrefetchRead(entity->Right());
 
-		Component::RaycastForEntity(task, ray, transform, entity);
+		Component::RaycastForEntity(task, quickRay, ray, transform, entity);
 
 		if (getboolean<D>::value) {
 			uint32_t index = entity->GetIndex();
 			float save = Entity::Meta::SplitPush(std::true_type(), bound, entity->GetKey(), index);
 			if (entity->Left() != nullptr) {
-				RaycastInternal(entity->Left(), task, ray, transform, parent, ratio, bound, d);
+				RaycastInternal(entity->Left(), task, quickRay, ray, transform, parent, ratio, bound, d);
 			}
 
 			Entity::Meta::SplitPop(bound, index, save);
 		} else if (entity->Left() != nullptr) {
-			RaycastInternal(entity->Left(), task, ray, transform, parent, ratio, bound, d);
+			RaycastInternal(entity->Left(), task, quickRay, ray, transform, parent, ratio, bound, d);
 		}
 	}
 }
@@ -374,20 +374,22 @@ float SpaceComponent::Raycast(RaycastTask& rayCastTask, Float3Pair& ray, MatrixF
 	OPTICK_EVENT();
 
 	if (rayCastTask.Flag().load(std::memory_order_relaxed) & Component::RaycastTask::RAYCASTTASK_IGNORE_WARP) {
+		Float3Pair quickRay = Math::QuickRay(ray);
 		if (Flag().load(std::memory_order_relaxed) & SPACECOMPONENT_ORDERED) {
-			RaycastInternal(rootEntity, rayCastTask, ray, transform, parent, ratio, boundingBox, std::true_type());
+			RaycastInternal(rootEntity, rayCastTask, quickRay, ray, transform, parent, ratio, boundingBox, std::true_type());
 		} else {
-			RaycastInternal(rootEntity, rayCastTask, ray, transform, parent, ratio, boundingBox, std::false_type());
+			RaycastInternal(rootEntity, rayCastTask, quickRay, ray, transform, parent, ratio, boundingBox, std::false_type());
 		}
 
 		return ratio;
 	} else {
 		RaycastTaskWarp& task = static_cast<RaycastTaskWarp&>(rayCastTask);
 		if (!(Flag().load(std::memory_order_relaxed) & COMPONENT_OVERRIDE_WARP) || task.GetEngine().GetKernel().GetCurrentWarpIndex() == GetWarpIndex()) {
+			Float3Pair quickRay = Math::QuickRay(ray);
 			if (Flag().load(std::memory_order_relaxed) & SPACECOMPONENT_ORDERED) {
-				RaycastInternal(rootEntity, task, ray, transform, parent, ratio, boundingBox, std::true_type());
+				RaycastInternal(rootEntity, task, quickRay, ray, transform, parent, ratio, boundingBox, std::true_type());
 			} else {
-				RaycastInternal(rootEntity, task, ray, transform, parent, ratio, boundingBox, std::false_type());
+				RaycastInternal(rootEntity, task, quickRay, ray, transform, parent, ratio, boundingBox, std::false_type());
 			}
 		} else {
 			if (parent != nullptr) {
