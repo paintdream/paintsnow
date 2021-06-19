@@ -10,6 +10,7 @@
 #include "../../../../Core/Template/TKdTree.h"
 
 namespace PaintsNow {
+	struct PatchRayCaster;
 	class ShapeComponent : public TAllocatedTiny<ShapeComponent, Component> {
 	public:
 		ShapeComponent();
@@ -25,6 +26,7 @@ namespace PaintsNow {
 	protected:
 		void RoutineUpdate(Engine& engine, const TShared<MeshResource>& resource);
 		void Cleanup();
+		void Complete(RaycastTask& task, Float3Pair& ray, const MatrixFloat4x4& transform, Unit* parent, float ratio, void* context) const;
 
 		struct VertexStorage {
 			TVector<TVector<float, 4>, 3> vertices[MAX_PATCH_COUNT / 4][3];

@@ -3,6 +3,7 @@
 #include "../../../BridgeSunset/BridgeSunset.h"
 #include "../../../../Core/Interface/IMemory.h"
 #include "../../../../Core/Driver/Profiler/Optick/optick.h"
+#include <queue>
 
 using namespace PaintsNow;
 
@@ -324,39 +325,73 @@ void SpaceComponent::RoutineUpdateBoundingBox(Engine& engine, Float3Pair& box, b
 	Flag().fetch_and(~Tiny::TINY_UPDATING, std::memory_order_release);
 }
 
-template <class D>
-void RaycastInternal(Entity* root, Component::RaycastTask& task, const Float3Pair& quickRay, Float3Pair& ray, MatrixFloat4x4& transform, Unit* parent, float ratio, const Float3Pair& b, D d) {
+struct SpaceDeferredBox {
+	SpaceDeferredBox(const Entity* n, float d) : node(n), nearestDistance(d) {}
+
+	bool operator < (const SpaceDeferredBox& rhs) const {
+		return nearestDistance > rhs.nearestDistance;
+	}
+
+	const Entity* node;
+	float nearestDistance;
+};
+
+typedef TCacheAllocator<SpaceDeferredBox> DeferredAllocator;
+typedef std::priority_queue<SpaceDeferredBox, std::vector<SpaceDeferredBox, DeferredAllocator> > DeferredQueue;
+
+template <class D, class A>
+static void RaycastInternal(DeferredQueue* q, Entity* root, Component::RaycastTask& task, const Float3Pair& quickRay, Float3Pair& ray, MatrixFloat4x4& transform, Unit* parent, float ratio, const Float3Pair& b, D d, A a) {
 	Float3Pair bound = b;
 	for (Entity* entity = root; entity != nullptr; entity = entity->Right()) {
+		float distance;
 		if (getboolean<D>::value) {
-			float distance = Math::IntersectBox(bound, quickRay);
+			distance = Math::IntersectBox(bound, quickRay);
 			if (distance < 0)
 				break;
 
 			// evaluate possible distance
-			if (task.clipOffDistance != FLT_MAX) {
-				float nearest = Math::SquareLength(ray.second * distance);
-				if (nearest >= task.clipOffDistance)
-					break;
+			if (!getboolean<A>::value) {
+				if (task.clipOffDistance != FLT_MAX) {
+					distance = Math::SquareLength(ray.second * distance) * ratio;
+					if (distance >= task.clipOffDistance) {
+						break;
+					}
+				}
 			}
 		}
 
 		IMemory::PrefetchRead(entity->Left());
 		IMemory::PrefetchRead(entity->Right());
 
-		Component::RaycastForEntity(task, quickRay, ray, transform, entity);
+		if (getboolean<D>::value && getboolean<A>::value) {
+			q->push(SpaceDeferredBox(entity, distance));
+		} else {
+			Component::RaycastForEntity(task, quickRay, ray, transform, entity, ratio);
+		}
 
 		if (getboolean<D>::value) {
 			uint32_t index = entity->GetIndex();
 			float save = Entity::Meta::SplitPush(std::true_type(), bound, entity->GetKey(), index);
 			if (entity->Left() != nullptr) {
-				RaycastInternal(entity->Left(), task, quickRay, ray, transform, parent, ratio, bound, d);
+				RaycastInternal(q, entity->Left(), task, quickRay, ray, transform, parent, ratio, bound, d, a);
 			}
 
 			Entity::Meta::SplitPop(bound, index, save);
 		} else if (entity->Left() != nullptr) {
-			RaycastInternal(entity->Left(), task, quickRay, ray, transform, parent, ratio, bound, d);
+			RaycastInternal(q, entity->Left(), task, quickRay, ray, transform, parent, ratio, bound, d, a);
 		}
+	}
+}
+
+static void ResolveDeferredQueue(DeferredQueue& q, Component::RaycastTask& task, const Float3Pair& quickRay, Float3Pair& ray, MatrixFloat4x4& transform, float ratio) {
+	while (!q.empty()) {
+		const SpaceDeferredBox& box = q.top();
+		if (Math::SquareLength(ray.second * box.nearestDistance) * ratio >= task.clipOffDistance) { // no better intersections jump out
+			break;
+		}
+
+		Component::RaycastForEntity(task, quickRay, ray, transform, const_cast<Entity*>(box.node), ratio);
+		q.pop();
 	}
 }
 
@@ -375,10 +410,18 @@ float SpaceComponent::Raycast(RaycastTask& rayCastTask, Float3Pair& ray, MatrixF
 
 	if (rayCastTask.Flag().load(std::memory_order_relaxed) & Component::RaycastTask::RAYCASTTASK_IGNORE_WARP) {
 		Float3Pair quickRay = Math::QuickRay(ray);
+
 		if (Flag().load(std::memory_order_relaxed) & SPACECOMPONENT_ORDERED) {
-			RaycastInternal(rootEntity, rayCastTask, quickRay, ray, transform, parent, ratio, boundingBox, std::true_type());
+			if (rayCastTask.cache != nullptr) {
+				DeferredAllocator allocator(rayCastTask.cache);
+				DeferredQueue q(std::less<SpaceDeferredBox>(), allocator);
+				RaycastInternal(&q, rootEntity, rayCastTask, quickRay, ray, transform, parent, ratio, boundingBox, std::true_type(), std::true_type());
+				ResolveDeferredQueue(q, rayCastTask, quickRay, ray, transform, ratio);
+			} else {
+				RaycastInternal(nullptr, rootEntity, rayCastTask, quickRay, ray, transform, parent, ratio, boundingBox, std::true_type(), std::false_type());
+			}
 		} else {
-			RaycastInternal(rootEntity, rayCastTask, quickRay, ray, transform, parent, ratio, boundingBox, std::false_type());
+			RaycastInternal(nullptr, rootEntity, rayCastTask, quickRay, ray, transform, parent, ratio, boundingBox, std::false_type(), std::false_type());
 		}
 
 		return ratio;
@@ -386,10 +429,19 @@ float SpaceComponent::Raycast(RaycastTask& rayCastTask, Float3Pair& ray, MatrixF
 		RaycastTaskWarp& task = static_cast<RaycastTaskWarp&>(rayCastTask);
 		if (!(Flag().load(std::memory_order_relaxed) & COMPONENT_OVERRIDE_WARP) || task.GetEngine().GetKernel().GetCurrentWarpIndex() == GetWarpIndex()) {
 			Float3Pair quickRay = Math::QuickRay(ray);
+
 			if (Flag().load(std::memory_order_relaxed) & SPACECOMPONENT_ORDERED) {
-				RaycastInternal(rootEntity, task, quickRay, ray, transform, parent, ratio, boundingBox, std::true_type());
+				if (rayCastTask.cache != nullptr) {
+					DeferredAllocator allocator(rayCastTask.cache);
+					DeferredQueue q(std::less<SpaceDeferredBox>(), allocator);
+
+					RaycastInternal(&q, rootEntity, task, quickRay, ray, transform, parent, ratio, boundingBox, std::true_type(), std::true_type());
+					ResolveDeferredQueue(q, rayCastTask, quickRay, ray, transform, ratio);
+				} else {
+					RaycastInternal(nullptr, rootEntity, task, quickRay, ray, transform, parent, ratio, boundingBox, std::true_type(), std::false_type());
+				}
 			} else {
-				RaycastInternal(rootEntity, task, quickRay, ray, transform, parent, ratio, boundingBox, std::false_type());
+				RaycastInternal(nullptr, rootEntity, task, quickRay, ray, transform, parent, ratio, boundingBox, std::false_type(), std::false_type());
 			}
 		} else {
 			if (parent != nullptr) {

@@ -34,9 +34,9 @@ Tiny::FLAG Component::GetEntityFlagMask() const {
 	return 0;
 }
 
-Component::RaycastTask::RaycastTask() : clipOffDistance(FLT_MAX) {}
+Component::RaycastTask::RaycastTask(BytesCache* cacheOptional) : clipOffDistance(FLT_MAX), cache(cacheOptional) {}
 
-Component::RaycastTaskSerial::RaycastTaskSerial() {
+Component::RaycastTaskSerial::RaycastTaskSerial(BytesCache* cacheOptional) : BaseClass(cacheOptional) {
 	Flag().store(RAYCASTTASK_IGNORE_WARP, std::memory_order_relaxed);
 	result.squareDistance = FLT_MAX;
 }
@@ -44,7 +44,7 @@ Component::RaycastTaskSerial::RaycastTaskSerial() {
 bool Component::RaycastTaskSerial::EmplaceResult(rvalue<Component::RaycastResult> item) {
 	RaycastResult& r = item;
 	if (result.squareDistance > r.squareDistance) {
-		clipOffDistance = result.squareDistance * result.squareDistance; // update clip distance
+		clipOffDistance = r.squareDistance; // update clip distance
 		result = std::move(r);
 		return true;
 	} else {
@@ -140,7 +140,7 @@ bool Component::RaycastTaskWarp::EmplaceResult(rvalue<Component::RaycastResult> 
 
 float Component::Raycast(RaycastTask& task, Float3Pair& ray, MatrixFloat4x4& transform, Unit* parent, float ratio) const { return ratio; }
 
-void Component::RaycastForEntity(RaycastTask& task, const Float3Pair& quickRay, Float3Pair& ray, MatrixFloat4x4& transform, Entity* entity) {
+void Component::RaycastForEntity(RaycastTask& task, const Float3Pair& quickRay, Float3Pair& ray, MatrixFloat4x4& transform, Entity* entity, float ratio) {
 	OPTICK_EVENT();
 	assert(!(entity->Flag().load(std::memory_order_acquire) & TINY_MODIFIED));
 
@@ -150,7 +150,7 @@ void Component::RaycastForEntity(RaycastTask& task, const Float3Pair& quickRay, 
 
 	// evaluate possible distance
 	if (task.clipOffDistance != FLT_MAX) {
-		float nearest = Math::SquareLength(ray.second * distance);
+		float nearest = Math::SquareLength(ray.second * distance) * ratio;
 		if (nearest >= task.clipOffDistance)
 			return;
 	}
@@ -159,8 +159,6 @@ void Component::RaycastForEntity(RaycastTask& task, const Float3Pair& quickRay, 
 	MatrixFloat4x4 newTransform = transform;
 	std::vector<RaycastResult> newResults;
 	const std::vector<Component*>& components = entity->GetComponents();
-	float ratio = 1.0f;
-
 	for (size_t i = 0; i < components.size(); i++) {
 		Component* component = components[i];
 		if (component != nullptr) {

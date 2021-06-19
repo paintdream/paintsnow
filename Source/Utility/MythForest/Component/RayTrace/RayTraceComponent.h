@@ -47,6 +47,7 @@ namespace PaintsNow {
 			std::vector<LightElement> lightElements;
 			std::unordered_map<size_t, uint32_t> mapEntityToResourceIndex;
 			std::vector<TShared<ResourceBase> > mappedResources;
+			std::vector<BytesCache> threadLocalCache;
 			std::atomic<size_t> completedPixelCount;
 		};
 
@@ -56,7 +57,7 @@ namespace PaintsNow {
 		void RoutineCollectTextures(const TShared<Context>& context, Entity* rootEntity, const MatrixFloat4x4& worldMatrix);
 		void RoutineRenderTile(const TShared<Context>& context, size_t i, size_t j);
 		void RoutineComplete(const TShared<Context>& context);
-		Float4 PathTrace(const TShared<Context>& context, const Float3Pair& ray) const;
+		Float4 PathTrace(const TShared<Context>& context, const Float3Pair& ray, BytesCache& cache) const;
 
 		UShort2 captureSize;
 		uint16_t superSample;

@@ -1,5 +1,6 @@
 #include "ShapeComponent.h"
 #include "../../../../Core/Driver/Profiler/Optick/optick.h"
+#include <queue>
 
 using namespace PaintsNow;
 
@@ -197,27 +198,37 @@ void ShapeComponent::RoutineUpdate(Engine& engine, const TShared<MeshResource>& 
 struct ShapeComponent::PatchRayCuller {
 	PatchRayCuller(const Float3Pair& r) : quickRay(Math::QuickRay(r)) {}
 	Float3Pair quickRay;
+	float lastDistance;
 
 	bool operator () (const Float3Pair& box) {
-		return Math::IntersectBox(box, quickRay) >= 0.0f;
+		lastDistance = Math::IntersectBox(box, quickRay);
+		return lastDistance >= 0.0f;
 	}
-
-	std::set<TKdTree<Float3Pair, Void>*> traversed;
 };
+
 
 struct ShapeComponent::PatchRayCaster {
 	typedef TVector<TVector<float, 4>, 3> Group;
-	PatchRayCaster(const std::vector<Float3>& v, const std::vector<UInt3>& i, const Float3Pair& r) : vertices(v), indices(i), ray(r), hitPatch(nullptr), hitIndex(0), distance(FLT_MAX) {
+
+	struct DeferredBox {
+		DeferredBox(const Patch* n, float d) : node(n), nearestDistance(d) {}
+
+		bool operator < (const DeferredBox& rhs) const {
+			return nearestDistance > rhs.nearestDistance;
+		}
+
+		const Patch* node;
+		float nearestDistance;
+	};
+
+	typedef TCacheAllocator<DeferredBox> DeferredAllocator;
+
+	PatchRayCaster(PatchRayCuller& c, const std::vector<Float3>& v, const std::vector<UInt3>& i, const Float3Pair& r, std::priority_queue<DeferredBox, std::vector<DeferredBox, DeferredAllocator> >* boxes) : culler(c), vertices(v), indices(i), ray(r), hitPatch(nullptr), hitIndex(0), distance(FLT_MAX), deferredBoxes(boxes) {
 		Math::ExtendVector(rayGroup.first, TVector<float, 3>(r.first));
 		Math::ExtendVector(rayGroup.second, TVector<float, 3>(r.second));
 	}
 
-	bool operator () (const TKdTree<Float3Pair, VertexStorage>& node) {
-		const Patch& patch = static_cast<const Patch&>(node);
-
-		IMemory::PrefetchReadLocal(patch.GetLeft());
-		IMemory::PrefetchReadLocal(patch.GetRight());
-
+	void ProcessPatch(const Patch& patch) {
 		TVector<TVector<float, 4>, 3> res;
 		TVector<TVector<float, 4>, 2> uv;
 
@@ -226,7 +237,7 @@ struct ShapeComponent::PatchRayCaster {
 			Math::IntersectTriangle(res, uv, patch.vertices[k], rayGroup);
 			for (uint32_t m = 0; m < 4; m++) {
 				if (patch.indices[k * 4 + m] == ~(uint32_t)0)
-					return true;
+					return;
 
 				if (uv[0][m] >= 0.0f && uv[1][m] >= 0.0f && uv[0][m] + uv[1][m] <= 1.0f) {
 					Float3 hit(res[0][m], res[1][m], res[2][m]);
@@ -244,10 +255,39 @@ struct ShapeComponent::PatchRayCaster {
 				}
 			}
 		}
+	}
+
+	bool operator () (const TKdTree<Float3Pair, VertexStorage>& node) {
+		// use cache?
+		const Patch& patch = static_cast<const Patch&>(node);
+		if (deferredBoxes != nullptr) {
+			deferredBoxes->push(DeferredBox(&patch, culler.lastDistance));
+		} else {
+			IMemory::PrefetchReadLocal(patch.GetLeft());
+			IMemory::PrefetchReadLocal(patch.GetRight());
+
+			ProcessPatch(patch);
+		}
 
 		return true;
 	}
 
+	void Resolve() {
+		if (deferredBoxes != nullptr) {
+			while (!deferredBoxes->empty()) {
+				const DeferredBox& box = deferredBoxes->top();
+				if (Math::SquareLength(ray.second * box.nearestDistance) >= distance) { // no better intersections jump out
+					break;
+				}
+
+				ProcessPatch(*box.node);
+				deferredBoxes->pop();
+			}
+		}
+	}
+
+	PatchRayCuller& culler;
+	std::priority_queue<DeferredBox, std::vector<DeferredBox, DeferredAllocator> >* deferredBoxes;
 	const std::vector<Float3>& vertices;
 	const std::vector<UInt3>& indices;
 	std::pair<Group, Group> rayGroup;
@@ -259,27 +299,39 @@ struct ShapeComponent::PatchRayCaster {
 	Float4 coord;
 };
 
+void ShapeComponent::Complete(RaycastTask& task, Float3Pair& ray, const MatrixFloat4x4& transform, Unit* parent, float ratio, void* context) const {
+	Float3Pair box = boundingBox;
+	IAsset::MeshCollection& meshCollection = meshResource->meshCollection;
+
+	PatchRayCuller c(ray);
+	PatchRayCaster q(c, meshCollection.vertices, meshCollection.indices, ray, reinterpret_cast<std::priority_queue<PatchRayCaster::DeferredBox, std::vector<PatchRayCaster::DeferredBox, PatchRayCaster::DeferredAllocator> >*>(context));
+	(const_cast<Patch&>(patches[0])).Query(std::true_type(), box, q, c);
+	q.Resolve();
+
+	if (q.hitPatch != nullptr) {
+		RaycastResult result;
+		result.transform = transform;
+		result.position = q.intersection;
+		result.squareDistance = q.distance * ratio;
+		result.faceIndex = q.hitIndex;
+		result.coord = q.coord;
+		result.unit = const_cast<ShapeComponent*>(this);
+		result.parent = parent;
+		task.EmplaceResult(std::move(result));
+	}
+}
+
 float ShapeComponent::Raycast(RaycastTask& task, Float3Pair& ray, MatrixFloat4x4& transform, Unit* parent, float ratio) const {
 	if (Flag().load(std::memory_order_acquire) & TINY_PINNED) {
 		if (!patches.empty()) {
 			OPTICK_EVENT();
+			if (task.cache != nullptr) {
+				PatchRayCaster::DeferredAllocator deferredAllocator(task.cache);
+				std::priority_queue<PatchRayCaster::DeferredBox, std::vector<PatchRayCaster::DeferredBox, PatchRayCaster::DeferredAllocator> > deferredBoxes(std::less<PatchRayCaster::DeferredBox>(), deferredAllocator);
 
-			Float3Pair box = boundingBox;
-			IAsset::MeshCollection& meshCollection = meshResource->meshCollection;
-			PatchRayCaster q(meshCollection.vertices, meshCollection.indices, ray);
-			PatchRayCuller c(ray);
-			(const_cast<Patch&>(patches[0])).Query(std::true_type(), box, q, c);
-
-			if (q.hitPatch != nullptr) {
-				RaycastResult result;
-				result.transform = transform;
-				result.position = q.intersection;
-				result.squareDistance = q.distance * ratio;
-				result.faceIndex = q.hitIndex;
-				result.coord = q.coord;
-				result.unit = const_cast<ShapeComponent*>(this);
-				result.parent = parent;
-				task.EmplaceResult(std::move(result));
+				Complete(task, ray, transform, parent, ratio, &deferredBoxes);
+			} else {
+				Complete(task, ray, transform, parent, ratio, nullptr);
 			}
 		}
 

@@ -17,6 +17,7 @@ RayTraceComponent::Context::~Context() {
 }
 
 RayTraceComponent::RayTraceComponent() : captureSize(640, 480), superSample(4), tileSize(8), rayCount(1024), completedPixelCountSync(0) {}
+// RayTraceComponent::RayTraceComponent() : captureSize(320, 240), superSample(1), tileSize(8), rayCount(1024), completedPixelCountSync(0) {}
 
 RayTraceComponent::~RayTraceComponent() {}
 
@@ -62,6 +63,7 @@ void RayTraceComponent::Capture(Engine& engine, const TShared<CameraComponent>& 
 	completedPixelCountSync = 0;
 
 	TShared<Context> context = TShared<Context>::From(new Context(engine));
+	context->threadLocalCache.resize(engine.GetKernel().GetThreadPool().GetThreadCount());
 	// Generate random sequence
 	context->randomSequence.resize(rayCount);
 	for (uint32_t k = 0; k < rayCount; k++) {
@@ -144,6 +146,9 @@ static Float4 ToFloat4Signed(const UChar4& v) {
 }
 
 void RayTraceComponent::RoutineRenderTile(const TShared<Context>& context, size_t i, size_t j) {
+	uint32_t threadIndex = context->engine.GetKernel().GetThreadPool().GetCurrentThreadIndex();
+	BytesCache& bytesCache = context->threadLocalCache[threadIndex];
+
 	uint32_t width = Math::Min((uint32_t)tileSize, (uint32_t)(captureSize.x() - i * tileSize));
 	uint32_t height = Math::Min((uint32_t)tileSize, (uint32_t)(captureSize.y() - j * tileSize));
 	const Float3& view = context->view;
@@ -161,7 +166,8 @@ void RayTraceComponent::RoutineRenderTile(const TShared<Context>& context, size_
 					float y = ((t + 0.5f) / superSample + py) / captureSize.y() * 2.0f - 1.0f;
 
 					Float3 dir = context->forward + context->right * x + context->up * y;
-					finalColor += PathTrace(context, Float3Pair(view, dir));
+					bytesCache.Reset();
+					finalColor += PathTrace(context, Float3Pair(view, dir), bytesCache);
 				}
 			}
 
@@ -346,9 +352,9 @@ static Float4 SampleTexture(const TShared<TextureResource>& texture, const Float
 	return ToFloat4(reinterpret_cast<UChar4*>(desc.data.GetData())[uy * desc.dimension.x() + ux]);
 }
 
-Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float3Pair& r) const {
+Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float3Pair& r, BytesCache& cache) const {
 	const std::vector<SpaceComponent*>& rootSpaceComponents = context->rootSpaceComponents;
-	Component::RaycastTaskSerial task;
+	Component::RaycastTaskSerial task(&cache);
 	for (size_t i = 0; i < rootSpaceComponents.size(); i++) {
 		SpaceComponent* spaceComponent = rootSpaceComponents[i];
 		Float3Pair ray = r;

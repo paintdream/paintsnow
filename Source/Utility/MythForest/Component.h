@@ -5,6 +5,7 @@
 
 #pragma once
 #include "../../Core/Template/TAllocator.h"
+#include "../../Core/Template/TCache.h"
 #include "Unit.h"
 #include "Event.h"
 
@@ -35,7 +36,7 @@ namespace PaintsNow {
 
 		class RaycastTask : public TReflected<RaycastTask, WarpTiny> {
 		public:
-			RaycastTask();
+			RaycastTask(BytesCache* cacheOptional = nullptr);
 			enum {
 				RAYCASTTASK_IGNORE_WARP = TINY_CUSTOM_BEGIN,
 				RAYCASTTASK_CUSTOM_BEGIN = TINY_CUSTOM_BEGIN << 1
@@ -43,13 +44,15 @@ namespace PaintsNow {
 
 			virtual bool EmplaceResult(rvalue<RaycastResult> item) = 0;
 
+			BytesCache* cache;
 			float clipOffDistance;
 		};
 
 		class RaycastTaskSerial : public TReflected<RaycastTaskSerial, RaycastTask> {
 		public:
-			RaycastTaskSerial();
+			RaycastTaskSerial(BytesCache* cacheOptional = nullptr);
 			bool EmplaceResult(rvalue<RaycastResult> item) override;
+
 			RaycastResult result;
 		};
 
@@ -79,7 +82,7 @@ namespace PaintsNow {
 		virtual const String& GetAliasedTypeName() const;
 		virtual void UpdateBoundingBox(Engine& engine, Float3Pair& boundingBox, bool recursive);
 		virtual float Raycast(RaycastTask& task, Float3Pair& ray, MatrixFloat4x4& transform, Unit* parent, float ratio = 1) const;
-		static void RaycastForEntity(RaycastTask& task, const Float3Pair& quickRay, Float3Pair& ray, MatrixFloat4x4& transform, Entity* entity);
+		static void RaycastForEntity(RaycastTask& task, const Float3Pair& quickRay, Float3Pair& ray, MatrixFloat4x4& transform, Entity* entity, float ratio);
 		virtual FLAG GetEntityFlagMask() const;
 		virtual uint32_t GetQuickUniqueID() const;
 		static inline uint32_t StaticGetQuickUniqueID() { return ~(uint32_t)0; }
