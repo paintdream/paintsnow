@@ -145,6 +145,44 @@ static Float4 ToFloat4Signed(const UChar4& v) {
 	);
 }
 
+static UChar4 ToneMapping(const Float4& color, float invAverageLuminance) {
+	static const float valuesACESInputMat[16] = {
+		0.59719f, 0.07600f, 0.02840f, 0,
+		0.35458f, 0.90834f, 0.13383f, 0,
+		0.04823f, 0.01566f, 0.83777f, 0,
+		0, 0, 0, 0
+	};
+
+	static const MatrixFloat4x4 ACESInputMat(valuesACESInputMat);
+
+	static const float valuesACESOutputMat[16] = {
+		1.60475f, -0.10208f, -0.00327f, 0,
+		-0.53108f, 1.10813f, -0.07276f, 0,
+		-0.07367f, -0.00605f, 1.07602f, 0,
+		0, 0, 0, 0
+	};
+
+	static const MatrixFloat4x4 ACESOutputMat(valuesACESOutputMat);
+
+	const float A = 2.51f;
+	const float B = 0.03f;
+	const float C = 2.43f;
+	const float D = 0.59f;
+	const float E = 0.14f;
+
+	Float4 target = Math::AllMax(Float4(0, 0, 0, 0), Float4(color * invAverageLuminance * ACESInputMat));
+	target = target * (target * Float4(A, A, A, A) + Float4(B, B, B, B)) / (target * (target * Float4(C, C, C, C) + Float4(D, D, D, D)) + Float4(E, E, E, E));
+	target = Math::AllClamp(Float4(target * ACESOutputMat), Float4(0, 0, 0, 0), Float4(1, 1, 1, 1));
+
+	UChar4 output;
+	for (size_t i = 0; i < 3; i++) {
+		output[i] = (uint8_t)(255 * Math::Clamp(powf(target[i], 1.0f / 2.2f), 0.0f, 1.0f));
+	}
+
+	output[3] = 255;
+	return output;
+}
+
 void RayTraceComponent::RoutineRenderTile(const TShared<Context>& context, size_t i, size_t j) {
 	uint32_t threadIndex = context->engine.GetKernel().GetThreadPool().GetCurrentThreadIndex();
 	BytesCache& bytesCache = context->threadLocalCache[threadIndex];
@@ -173,12 +211,8 @@ void RayTraceComponent::RoutineRenderTile(const TShared<Context>& context, size_
 
 			finalColor *= sampleDiv;
 
-			for (size_t i = 0; i < 4; i++) {
-				finalColor[i] = powf(finalColor[i], 2.2f);
-			}
-
 			UChar4* ptr = reinterpret_cast<UChar4*>(context->capturedTexture->description.data.GetData());
-			ptr[py * captureSize.x() + px] = FromFloat4(finalColor);
+			ptr[py * captureSize.x() + px] = ToneMapping(finalColor, 0.2f); // assuming average color
 
 			// finish one
 			completedPixelCountSync = context->completedPixelCount.fetch_add(1, std::memory_order_release);
@@ -385,7 +419,7 @@ Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float
 				// sample texture
 				Float4 baseColor = SampleTexture(baseColorTexture, uv);
 				for (size_t i = 0; i < 4; i++) {
-					baseColor[i] = powf(baseColor[i], 1.0f / 2.2f);
+					baseColor[i] = powf(baseColor[i], 2.2f);
 				}
 
 				Float4 normal = SampleTexture(normalTexture, uv) * Float4(2.0f, 2.0f, 2.0f, 2.0f) - Float4(1.0f, 1.0f, 1.0f, 1.0f);
