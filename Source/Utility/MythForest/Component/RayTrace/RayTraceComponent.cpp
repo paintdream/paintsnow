@@ -212,7 +212,7 @@ void RayTraceComponent::RoutineRenderTile(const TShared<Context>& context, size_
 			finalColor *= sampleDiv;
 
 			UChar4* ptr = reinterpret_cast<UChar4*>(context->capturedTexture->description.data.GetData());
-			ptr[py * captureSize.x() + px] = ToneMapping(finalColor, 0.2f); // assuming average color
+			ptr[py * captureSize.x() + px] = ToneMapping(finalColor, 0.5f); // assuming average color
 
 			// finish one
 			completedPixelCountSync = context->completedPixelCount.fetch_add(1, std::memory_order_release);
@@ -424,6 +424,9 @@ Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float
 
 				Float4 normal = SampleTexture(normalTexture, uv) * Float4(2.0f, 2.0f, 2.0f, 2.0f) - Float4(1.0f, 1.0f, 1.0f, 1.0f);
 				Float4 mixture = SampleTexture(mixtureTexture, uv);
+				float occlusion = mixture.x();
+				float roughness = mixture.y();
+				float metallic = mixture.z();
 
 				// calc world space normal
 				Float4 binormalBase = ToFloat4Signed(meshCollection.normals[face.x()]);
@@ -445,11 +448,10 @@ Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float
 				tangentBase = tangentBase * task.result.transform;
 				Float4 normalBase = Math::CrossProduct(binormalBase, tangentBase) * hand;
 
-				Float4 worldNormal = normalBase * normal.z() + tangentBase * normal.x() + binormalBase * normal.y();
+				Float4 N = normalBase * normal.z() + tangentBase * normal.x() + binormalBase * normal.y();
 
-				worldNormal.w() = 0;
-				worldNormal = Math::Normalize(worldNormal);
-				worldNormal.w() = 1;
+				N.w() = 0;
+				N = Math::Normalize(N);
 
 				// Lighting
 				Float4 position(task.result.position.x(), task.result.position.y(), task.result.position.z(), 1.0f);
@@ -457,15 +459,22 @@ Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float
 				Float3 worldPosition = (Float3)position;
 				Float4 radiance(0.0f, 0.0f, 0.0f, 0.0f);
 
+				Float4 V = Float4::Load(r.first) - position;
+				V.w() = 0;
+				V = Math::Normalize(V);
+
+				float NoV = Math::Max(0.0f, Math::DotProduct(V, N));
+				float p = roughness * roughness;
+				p = p * p;
+
 				for (size_t k = 0; k < context->lightElements.size(); k++) {
 					const LightElement& lightElement = context->lightElements[k];
 					if (lightElement.position.w() == 0) { // directional light only now
 						// check shadow
 						Float3 dir = Math::Normalize((Float3)lightElement.position);
-						Float4 L(dir.x(), dir.y(), dir.z(), 0.0f);
-						Float4 N = worldNormal;
-
+						Float4 L = Float4::Load(dir);
 						float NoL = Math::Max(0.0f, Math::DotProduct(N, L));
+
 						if (NoL > 0.0f) {
 							Component::RaycastTaskSerial task;
 							for (size_t n = 0; n < rootSpaceComponents.size(); n++) {
@@ -477,7 +486,27 @@ Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float
 
 							if (task.result.squareDistance == FLT_MAX) {
 								// not shadowed, compute shading
-								radiance = radiance + baseColor * lightElement.colorAttenuation * NoL;
+								Float4 diffuseColor = (baseColor - baseColor * metallic) / PI;
+								Float4 specularColor = Math::Interpolate(Float4(0.04f, 0.04f, 0.04f, 0.04f), baseColor, metallic);
+								Float4 H = Math::Normalize(L + V);
+								float NoH = Math::Max(0.0f, Math::DotProduct(N, H));
+								float VoH = Math::Max(0.0f, Math::DotProduct(V, H));
+
+								float q = (NoH * p - NoH) * NoH + 1.0f;
+								float vl = Math::Clamp(NoL, 0.1f, 1.0f);
+								float vlc = Math::Clamp(NoV, 0.01f, 1.0f);
+								float vls = vl * sqrtf(Math::Max(0.0f, -vlc * p + vlc) * vlc + p);
+								vls = vls + sqrtf(Math::Max(0.0f, -vl * p + vl) * vl + p) * vlc;
+								float DG = 0.5f * p / PI / Math::Max(vls * q * q, 0.0001f);
+#if defined(_MSC_VER) && _MSC_VER <= 1200
+								float e = expf(VoH * (VoH * -5.55473f) - 6.98316f) / expf(2);
+#else
+								float e = exp2f(VoH * (VoH * -5.55473f) - 6.98316f);
+#endif
+								float f = Math::Min(50.0f * specularColor.y(), 0.0f);
+								Float4 F = specularColor + (Float4(f, f, f, f) - specularColor) * e;
+
+								radiance = radiance + (diffuseColor + F * DG) * lightElement.colorAttenuation * NoL;
 							}
 						}
 					}

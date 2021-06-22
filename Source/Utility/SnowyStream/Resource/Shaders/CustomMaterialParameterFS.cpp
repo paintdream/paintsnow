@@ -11,12 +11,12 @@ CustomMaterialParameterFS::CustomMaterialParameterFS() {
 String CustomMaterialParameterFS::GetShaderText() {
 	if (description->code.empty()) {
 		return UnifyShaderCode(
-	outputColor = float3(1.0, 1.0, 1.0);
-	alpha = 1.0;
-	outputNormal = float3(0.0, 0.0, 1.0);
-	metallic = 0.0;
-	roughness = 1.0;
-	occlusion = 1.0;
+			outputColor = float3(1.0, 1.0, 1.0);
+			alpha = 1.0;
+			outputNormal = float3(0.0, 0.0, 1.0);
+			metallic = 0.0;
+			roughness = 1.0;
+			occlusion = 1.0;
 		);
 	} else {
 		return description->code;
