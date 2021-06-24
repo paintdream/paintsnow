@@ -52,11 +52,11 @@ void RayTraceComponentModule::RequestSetCaptureSize(IScript::Request& request, I
 	rayTraceComponent->SetCaptureSize(size);
 }
 
-void RayTraceComponentModule::RequestConfigure(IScript::Request& request, IScript::Delegate<RayTraceComponent> rayTraceComponent, uint16_t superSample, uint16_t tileSize, uint32_t rayCount) {
+void RayTraceComponentModule::RequestConfigure(IScript::Request& request, IScript::Delegate<RayTraceComponent> rayTraceComponent, uint16_t superSample, uint16_t tileSize, uint32_t rayCount, uint32_t bounceCount) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(rayTraceComponent);
 
-	rayTraceComponent->Configure(superSample, tileSize, rayCount);
+	rayTraceComponent->Configure(superSample, tileSize, rayCount, bounceCount);
 }
 
 const UShort2& RayTraceComponentModule::RequestGetCaptureSize(IScript::Request& request, IScript::Delegate<RayTraceComponent> rayTraceComponent) {
@@ -66,12 +66,12 @@ const UShort2& RayTraceComponentModule::RequestGetCaptureSize(IScript::Request& 
 	return rayTraceComponent->GetCaptureSize();
 }
 
-void RayTraceComponentModule::RequestCapture(IScript::Request& request, IScript::Delegate<RayTraceComponent> rayTraceComponent, IScript::Delegate<CameraComponent> cameraComponent) {
+void RayTraceComponentModule::RequestCapture(IScript::Request& request, IScript::Delegate<RayTraceComponent> rayTraceComponent, IScript::Delegate<CameraComponent> cameraComponent, float averageLuminance) {
 	CHECK_REFERENCES_NONE();
 	CHECK_DELEGATE(rayTraceComponent);
 	CHECK_DELEGATE(cameraComponent);
 
-	rayTraceComponent->Capture(engine, cameraComponent.Get());
+	rayTraceComponent->Capture(engine, cameraComponent.Get(), averageLuminance);
 }
 
 void RayTraceComponentModule::RequestSetOutputPath(IScript::Request& request, IScript::Delegate<RayTraceComponent> rayTraceComponent, const String& outputPath) {

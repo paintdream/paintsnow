@@ -50,7 +50,8 @@ namespace PaintsNow {
 		/// <param name="superSample"> n for NxN supersample </param>
 		/// <param name="tileSize"> tracing tile size </param>
 		/// <param name="rayCount"> trace ray count </param>
-		void RequestConfigure(IScript::Request& request, IScript::Delegate<RayTraceComponent> rayTraceComponent, uint16_t superSample, uint16_t tileSize, uint32_t rayCount);
+		/// <param name="bounceCount"> max bounce count </param>
+		void RequestConfigure(IScript::Request& request, IScript::Delegate<RayTraceComponent> rayTraceComponent, uint16_t superSample, uint16_t tileSize, uint32_t rayCount, uint32_t bounceCount);
 
 		/// <summary>
 		/// Get capture size of RayTraceComponent
@@ -64,7 +65,8 @@ namespace PaintsNow {
 		/// </summary>
 		/// <param name="rayTraceComponent"> the RayTraceComponent</param>
 		/// <param name="cameraComponent"> the reference camera </param>
-		void RequestCapture(IScript::Request& request, IScript::Delegate<RayTraceComponent> rayTraceComponent, IScript::Delegate<CameraComponent> cameraComponent);
+		/// <param name="invAverageLuminance"> the average Luminance </param>
+		void RequestCapture(IScript::Request& request, IScript::Delegate<RayTraceComponent> rayTraceComponent, IScript::Delegate<CameraComponent> cameraComponent, float averageLuminance);
 
 		/// <summary>
 		/// Set capture output path

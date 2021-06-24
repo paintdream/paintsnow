@@ -16,15 +16,16 @@ RayTraceComponent::Context::~Context() {
 	}
 }
 
-RayTraceComponent::RayTraceComponent() : captureSize(640, 480), superSample(4), tileSize(8), rayCount(1024), completedPixelCountSync(0) {}
-// RayTraceComponent::RayTraceComponent() : captureSize(320, 240), superSample(1), tileSize(8), rayCount(1024), completedPixelCountSync(0) {}
+ RayTraceComponent::RayTraceComponent() : captureSize(320, 240), superSample(4), tileSize(8), rayCount(16), maxBounceCount(2), completedPixelCountSync(0), stepMinimal(0.05f), stepMaximal(1000.0f) {}
+ // RayTraceComponent::RayTraceComponent() : captureSize(320, 240), superSample(2), tileSize(8), rayCount(16), maxBounceCount(4), completedPixelCountSync(0), stepMinimal(0.05f), stepMaximal(1000.0f) {}
 
 RayTraceComponent::~RayTraceComponent() {}
 
-void RayTraceComponent::Configure(uint16_t s, uint16_t t, uint32_t r) {
+void RayTraceComponent::Configure(uint16_t s, uint16_t t, uint32_t r, uint32_t b) {
 	superSample = s;
 	tileSize = t;
 	rayCount = r;
+	maxBounceCount = b;
 }
 
 void RayTraceComponent::SetCaptureSize(const UShort2& size) {
@@ -58,11 +59,12 @@ static Float2 Hammersley(uint32_t i, uint32_t total) {
 	return Float2((float)i / total * 2 * PI, ReverseBits(i) * 2.3283064365386963e-10f);
 }
 
-void RayTraceComponent::Capture(Engine& engine, const TShared<CameraComponent>& cameraComponent) {
+void RayTraceComponent::Capture(Engine& engine, const TShared<CameraComponent>& cameraComponent, float averageLuminance) {
 	assert(cameraComponent() != nullptr);
 	completedPixelCountSync = 0;
 
 	TShared<Context> context = TShared<Context>::From(new Context(engine));
+	context->invAverageLuminance = 1.0f / averageLuminance;
 	context->threadLocalCache.resize(engine.GetKernel().GetThreadPool().GetThreadCount());
 	// Generate random sequence
 	context->randomSequence.resize(rayCount);
@@ -192,6 +194,7 @@ void RayTraceComponent::RoutineRenderTile(const TShared<Context>& context, size_
 	const Float3& view = context->view;
 
 	float sampleDiv = 1.0f / (superSample * superSample);
+	float averageLuminance = context->invAverageLuminance;
 	for (uint32_t m = 0; m < height; m++) {
 		for (uint32_t n = 0; n < width; n++) {
 			uint32_t px = verify_cast<uint32_t>(i) * tileSize + n;
@@ -205,14 +208,15 @@ void RayTraceComponent::RoutineRenderTile(const TShared<Context>& context, size_
 
 					Float3 dir = context->forward + context->right * x + context->up * y;
 					bytesCache.Reset();
-					finalColor += PathTrace(context, Float3Pair(view, dir), bytesCache);
+					finalColor += PathTrace(context, Float3Pair(view, dir), bytesCache, 0);
 				}
 			}
 
 			finalColor *= sampleDiv;
+			finalColor.w() = 1;
 
 			UChar4* ptr = reinterpret_cast<UChar4*>(context->capturedTexture->description.data.GetData());
-			ptr[py * captureSize.x() + px] = ToneMapping(finalColor, 0.5f); // assuming average color
+			ptr[py * captureSize.x() + px] = ToneMapping(finalColor, averageLuminance); // assuming average color
 
 			// finish one
 			completedPixelCountSync = context->completedPixelCount.fetch_add(1, std::memory_order_release);
@@ -358,10 +362,23 @@ TShared<TextureResource> RayTraceComponent::GetCapturedTexture() const {
 }
 
 
-Float3 RayTraceComponent::ImportanceSampleGGX(const Float2& e, float a2) {
+static Float3 ImportanceSampleGGX(const Float2& e, float a2) {
 	float phi = 2 * PI * e.x();
-	float cosTheta = sqrtf((1 - e.y()) / (1 + (a2 - 1) * e.y()));
-	float sinTheta = sqrtf(1 - cosTheta * cosTheta);
+	float cosTheta = sqrtf(Math::Max(0.0f, (1 - e.y()) / Math::Max(0.00001f, 1 + (a2 - 1) * e.y())));
+	float sinTheta = sqrtf(Math::Max(0.0f, 1 - cosTheta * cosTheta));
+
+	Float3 h;
+	h.x() = sinTheta * cosf(phi);
+	h.y() = sinTheta * sinf(phi);
+	h.z() = cosTheta;
+
+	return h;
+}
+
+static Float3 ImportanceSampleCosWeight(const Float2& e) {
+	float phi = 2 * PI * e.x();
+	float sinTheta = sqrtf(e.y());
+	float cosTheta = sqrtf(Math::Max(0.0f, 1 - e.y()));
 
 	Float3 h;
 	h.x() = sinTheta * cosf(phi);
@@ -386,7 +403,25 @@ static Float4 SampleTexture(const TShared<TextureResource>& texture, const Float
 	return ToFloat4(reinterpret_cast<UChar4*>(desc.data.GetData())[uy * desc.dimension.x() + ux]);
 }
 
-Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float3Pair& r, BytesCache& cache) const {
+static Float4 Render(float a2, float NoH, float NoL, float NoV, float VoH, const Float4& specularColor, const Float4& diffuseColor, const Float4& lightColor) {
+	float q = (NoH * a2 - NoH) * NoH + 1.0f;
+	float vl = Math::Clamp(NoL, 0.1f, 1.0f);
+	float vlc = Math::Clamp(NoV, 0.01f, 1.0f);
+	float vls = vl * sqrtf(Math::Max(0.0f, -vlc * a2 + vlc) * vlc + a2);
+	vls = vls + sqrtf(Math::Max(0.0f, -vl * a2 + vl) * vl + a2) * vlc;
+	float DG = 0.5f * a2 / PI / Math::Max(vls * q * q, 0.00001f);
+#if defined(_MSC_VER) && _MSC_VER <= 1200
+	float e = expf(VoH * (VoH * -5.55473f) - 6.98316f) / expf(2);
+#else
+	float e = exp2f(VoH * (VoH * -5.55473f) - 6.98316f);
+#endif
+	float f = Math::Min(50.0f * specularColor.y(), 0.0f);
+	Float4 F = specularColor + (Float4(f, f, f, f) - specularColor) * e;
+
+	return (diffuseColor + F * DG) * lightColor * NoL;
+}
+
+Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float3Pair& r, BytesCache& cache, uint32_t count) const {
 	const std::vector<SpaceComponent*>& rootSpaceComponents = context->rootSpaceComponents;
 	Component::RaycastTaskSerial task(&cache);
 	for (size_t i = 0; i < rootSpaceComponents.size(); i++) {
@@ -459,13 +494,14 @@ Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float
 				Float3 worldPosition = (Float3)position;
 				Float4 radiance(0.0f, 0.0f, 0.0f, 0.0f);
 
-				Float4 V = Float4::Load(r.first) - position;
-				V.w() = 0;
-				V = Math::Normalize(V);
+				Float4 V = Float4::Load(r.second);
+				V = Math::Normalize(-V);
 
 				float NoV = Math::Max(0.0f, Math::DotProduct(V, N));
-				float p = roughness * roughness;
-				p = p * p;
+				float a = roughness * roughness;
+				float a2 = a * a;
+				Float4 diffuseColor = (baseColor - baseColor * metallic) / PI;
+				Float4 specularColor = Math::Interpolate(Float4(0.04f, 0.04f, 0.04f, 0.04f), baseColor, metallic);
 
 				for (size_t k = 0; k < context->lightElements.size(); k++) {
 					const LightElement& lightElement = context->lightElements[k];
@@ -479,41 +515,50 @@ Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float
 							Component::RaycastTaskSerial task;
 							for (size_t n = 0; n < rootSpaceComponents.size(); n++) {
 								SpaceComponent* spaceComponent = rootSpaceComponents[n];
-								Float3Pair ray(worldPosition + dir * 0.05f, dir * 1000.0f);
+								Float3Pair ray(worldPosition + dir * stepMinimal, dir * stepMaximal);
 								MatrixFloat4x4 matrix = MatrixFloat4x4::Identity();
 								spaceComponent->Raycast(task, ray, matrix, nullptr, 1.0f);
 							}
 
 							if (task.result.squareDistance == FLT_MAX) {
 								// not shadowed, compute shading
-								Float4 diffuseColor = (baseColor - baseColor * metallic) / PI;
-								Float4 specularColor = Math::Interpolate(Float4(0.04f, 0.04f, 0.04f, 0.04f), baseColor, metallic);
 								Float4 H = Math::Normalize(L + V);
 								float NoH = Math::Max(0.0f, Math::DotProduct(N, H));
 								float VoH = Math::Max(0.0f, Math::DotProduct(V, H));
 
-								float q = (NoH * p - NoH) * NoH + 1.0f;
-								float vl = Math::Clamp(NoL, 0.1f, 1.0f);
-								float vlc = Math::Clamp(NoV, 0.01f, 1.0f);
-								float vls = vl * sqrtf(Math::Max(0.0f, -vlc * p + vlc) * vlc + p);
-								vls = vls + sqrtf(Math::Max(0.0f, -vl * p + vl) * vl + p) * vlc;
-								float DG = 0.5f * p / PI / Math::Max(vls * q * q, 0.0001f);
-#if defined(_MSC_VER) && _MSC_VER <= 1200
-								float e = expf(VoH * (VoH * -5.55473f) - 6.98316f) / expf(2);
-#else
-								float e = exp2f(VoH * (VoH * -5.55473f) - 6.98316f);
-#endif
-								float f = Math::Min(50.0f * specularColor.y(), 0.0f);
-								Float4 F = specularColor + (Float4(f, f, f, f) - specularColor) * e;
-
-								radiance = radiance + (diffuseColor + F * DG) * lightElement.colorAttenuation * NoL;
+								radiance += Render(a2, NoH, NoL, NoV, VoH, specularColor, diffuseColor, lightElement.colorAttenuation);
 							}
 						}
 					}
 				}
 
-				// return worldNormal * Float4(0.5f, 0.5f, 0.5f, 0.5f) + Float4(0.5, 0.5f, 0.5f, 0.5f);
-				radiance.w() = 1;
+				// PathTrace next
+				if (count < maxBounceCount) {
+					uint32_t m = count == 0 ? rayCount : 1;
+
+					for (uint32_t i = 0; i < m; i++) {
+						Float2 random = Float2((float)rand() / RAND_MAX, (float)rand() / RAND_MAX);
+						float ratio = ((float)rand() / RAND_MAX - 0.04f) / 0.96f;
+						bool isSpecular = ratio < metallic;
+
+						Float3 R = isSpecular ? ImportanceSampleGGX(random, a) : ImportanceSampleCosWeight(random);
+						Float4 H = Math::Normalize(N * R.z() + Math::Normalize(tangentBase) * R.x() + Math::Normalize(binormalBase) * R.y());
+						Float4 L = H * Math::DotProduct(H, V) * 2.0f - V;
+						float NoL = Math::Max(0.0f, Math::DotProduct(N, L));
+						Float3Pair ray(worldPosition + (Float3)L * stepMinimal, (Float3)L * stepMaximal);
+						Float4 bounceRadiance = PathTrace(context, ray, cache, count + 1);
+						float VoH = Math::Max(0.0f, Math::DotProduct(V, H));
+						float NoH = Math::Max(0.0f, Math::DotProduct(N, H));
+
+						Float4 result = isSpecular ? Render(a2, NoH, NoL, NoV, VoH, specularColor, Float4(0, 0, 0, 0), bounceRadiance) : bounceRadiance * diffuseColor * NoL;
+
+						float q = (NoH * a2 - NoH) * NoH + 1.0f;
+						float weight = Math::Max(0.001f, Math::Interpolate(a2 / Math::Max(q * q, 0.0001f) * NoH / Math::Max(0.0001f, 4.0f * VoH), NoL / PI, ratio));
+
+						radiance += result / weight;
+					}
+				}
+
 				return radiance;
 			}
 		}

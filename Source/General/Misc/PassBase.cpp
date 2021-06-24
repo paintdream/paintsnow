@@ -107,6 +107,9 @@ void PassBase::Updater::Property(IReflectObject& s, Unique typeID, Unique refTyp
 	output.stride = 0;
 	output.length = sizeof(IRender::Resource*);
 	output.internalAddress = ptr;
+#ifdef _DEBUG
+	output.name = name;
+#endif
 	UInt2 subRange(0, ~(uint32_t)0);
 
 	if (s.IsBasicObject() || s.IsIterator()) {
@@ -148,6 +151,10 @@ void PassBase::Updater::Property(IReflectObject& s, Unique typeID, Unique refTyp
 								assert(subRange.x() + subRange.y() <= size);
 								size = subRange.y();
 							}
+						}
+
+						if (size == 64) {
+							int a = 0;
 						}
 					} else {
 						size = verify_cast<uint32_t>(typeID->GetSize());

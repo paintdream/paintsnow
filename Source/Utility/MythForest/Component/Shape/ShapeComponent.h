@@ -18,7 +18,7 @@ namespace PaintsNow {
 		void Update(Engine& engine, const TShared<MeshResource>& resource);
 		float Raycast(RaycastTask& task, Float3Pair& ray, MatrixFloat4x4& transform, Unit* parent, float ratio = 1) const override;
 		enum {
-			MAX_PATCH_COUNT = 8
+			MAX_PATCH_COUNT = 16
 		};
 
 		const TShared<MeshResource>& GetMesh() const;

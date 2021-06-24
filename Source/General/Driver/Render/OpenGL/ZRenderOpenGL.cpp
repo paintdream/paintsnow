@@ -102,7 +102,17 @@ public:
 
 class DeviceImplOpenGL final : public IRender::Device {
 public:
-	DeviceImplOpenGL(IRender& r) : lastProgramID(0), lastFrameBufferID(0), render(r), resolution(640, 480) {}
+	DeviceImplOpenGL(IRender& r) : lastProgramID(0), lastFrameBufferID(0), render(r), resolution(640, 480) { AddRef(); }
+
+	void AddRef() {
+		referenceCount.fetch_add(1, std::memory_order_relaxed);
+	}
+
+	void Release() {
+		if (referenceCount.fetch_sub(1, std::memory_order_release) == 1) {
+			delete this;
+		}
+	}
 
 	IRender& render;
 	Int2 resolution;
@@ -114,6 +124,7 @@ public:
 	IRender::Resource::RenderTargetDescription lastRenderTargetDescription;
 	#endif
 	DrawCallPool drawCallPool;
+	std::atomic<size_t> referenceCount;
 };
 
 struct ResourceCommandImplOpenGL {
@@ -180,8 +191,13 @@ private:
 
 struct QueueImplOpenGL final : public IRender::Queue {
 	QueueImplOpenGL(DeviceImplOpenGL* d, bool shared) : device(d), next(nullptr) {
+		d->AddRef();
 		critical.store(shared ? 0u : ~(uint32_t)0u, std::memory_order_relaxed);
 		flushCount.store(0u, std::memory_order_relaxed);
+	}
+
+	~QueueImplOpenGL() {
+		device->Release();
 	}
 
 	inline void Flush() {
@@ -1947,7 +1963,7 @@ Int2 ZRenderOpenGL::GetDeviceResolution(IRender::Device* device) {
 
 void ZRenderOpenGL::DeleteDevice(IRender::Device* device) {
 	DeviceImplOpenGL* impl = static_cast<DeviceImplOpenGL*>(device);
-	delete impl;
+	impl->Release();
 }
 
 void ZRenderOpenGL::NextDeviceFrame(IRender::Device* device) {

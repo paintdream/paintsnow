@@ -92,7 +92,8 @@ public:
 	struct_aligned(8) ResourceImpl : public IRender::Resource {};
 	Resource* CreateResource(Device* device, Resource::Type resourceType) override {
 		static ResourceImpl r;
-		return &r;
+		static int counter = 0;
+		return &r + counter++;
 	}
 	void SetupBarrier(Queue* queue, Barrier* barrier) override {}
 	const void* GetResourceDeviceHandle(Resource* resource) override { return nullptr; }

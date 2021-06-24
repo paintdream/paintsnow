@@ -62,6 +62,9 @@ namespace PaintsNow {
 			void* internalAddress;
 			IShader::BindBuffer* bindBuffer;
 			Unique type;
+#ifdef _DEBUG
+			String name;
+#endif
 		};
 
 		class Updater : public IReflect {

@@ -151,9 +151,9 @@ void CustomMaterialDescription::ReflectUniformTemplate(IReflect& reflect, Instan
 				assert(entries[var.slot].offset < extOptionBuffer.GetSize());
 				IShader::BindEnable enable((bool&)extOptionBuffer[entries[var.slot].offset]);
 				DummyMetaChain<IShader::BindEnable> enableChain(enable, &chain);
-				reflect.Property(dummy, type, type, name.c_str(), bufferBase + offset, bufferBase + offset + size, &enableChain);
+				reflect.Property(dummy, type, type, name.c_str(), bufferBase, bufferBase + offset, &enableChain);
 			} else {
-				reflect.Property(dummy, type, type, name.c_str(), bufferBase + offset, bufferBase + offset + size, &chain);
+				reflect.Property(dummy, type, type, name.c_str(), bufferBase, bufferBase + offset, &chain);
 			}
 
 			offset += size;
