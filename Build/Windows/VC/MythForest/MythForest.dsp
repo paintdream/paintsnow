@@ -329,6 +329,14 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Profile\ProfileComponentM
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Rasterize\RasterizeComponent.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Rasterize\RasterizeComponentModule.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\RayTrace\RayTraceComponent.cpp
 # End Source File
 # Begin Source File
@@ -794,6 +802,14 @@ SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Profile\ProfileComponent.
 # Begin Source File
 
 SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Profile\ProfileComponentModule.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Rasterize\RasterizeComponent.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\..\..\Source\Utility\MythForest\Component\Rasterize\RasterizeComponentModule.h
 # End Source File
 # Begin Source File
 
