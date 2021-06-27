@@ -6,6 +6,8 @@
 #include "../../../SnowyStream/Manager/RenderResourceManager.h"
 using namespace PaintsNow;
 
+const float EPSILON = 1e-6f;
+
 RayTraceComponent::Context::Context(Engine& e) : engine(e) {
 	completedPixelCount.store(0, std::memory_order_relaxed);
 }
@@ -16,8 +18,7 @@ RayTraceComponent::Context::~Context() {
 	}
 }
 
- RayTraceComponent::RayTraceComponent() : captureSize(320, 240), superSample(4), tileSize(8), rayCount(16), maxBounceCount(2), completedPixelCountSync(0), stepMinimal(0.05f), stepMaximal(1000.0f) {}
- // RayTraceComponent::RayTraceComponent() : captureSize(320, 240), superSample(2), tileSize(8), rayCount(16), maxBounceCount(4), completedPixelCountSync(0), stepMinimal(0.05f), stepMaximal(1000.0f) {}
+RayTraceComponent::RayTraceComponent() : captureSize(1280, 800), superSample(4), tileSize(8), rayCount(256), maxBounceCount(4), completedPixelCountSync(0), stepMinimal(0.05f), stepMaximal(1000.0f) {}
 
 RayTraceComponent::~RayTraceComponent() {}
 
@@ -364,7 +365,7 @@ TShared<TextureResource> RayTraceComponent::GetCapturedTexture() const {
 
 static Float3 ImportanceSampleGGX(const Float2& e, float a2) {
 	float phi = 2 * PI * e.x();
-	float cosTheta = sqrtf(Math::Max(0.0f, (1 - e.y()) / Math::Max(0.00001f, 1 + (a2 - 1) * e.y())));
+	float cosTheta = sqrtf(Math::Max(0.0f, (1 - e.y()) / Math::Max(EPSILON, 1 + (a2 - 1) * e.y())));
 	float sinTheta = sqrtf(Math::Max(0.0f, 1 - cosTheta * cosTheta));
 
 	Float3 h;
@@ -403,22 +404,29 @@ static Float4 SampleTexture(const TShared<TextureResource>& texture, const Float
 	return ToFloat4(reinterpret_cast<UChar4*>(desc.data.GetData())[uy * desc.dimension.x() + ux]);
 }
 
-static Float4 Render(float a2, float NoH, float NoL, float NoV, float VoH, const Float4& specularColor, const Float4& diffuseColor, const Float4& lightColor) {
+// GGX Geometry
+static float Geometry(float a2, float NoL, float NoV) {
+	NoL = Math::Clamp(NoL, 0.1f, 1.0f);
+	NoV = Math::Clamp(NoV, 0.01f, 1.0f);
+	float kl = NoL * sqrtf(Math::Max(0.0f, -NoV * a2 + NoV) * NoV + a2);
+	float kv = NoV * sqrtf(Math::Max(0.0f, -NoL * a2 + NoL) * NoL + a2);
+	return 0.5f / Math::Max((kl + kv) * PI, EPSILON);
+}
+
+// GGX Distribution
+static float Distribution(float a2, float NoH) {
 	float q = (NoH * a2 - NoH) * NoH + 1.0f;
-	float vl = Math::Clamp(NoL, 0.1f, 1.0f);
-	float vlc = Math::Clamp(NoV, 0.01f, 1.0f);
-	float vls = vl * sqrtf(Math::Max(0.0f, -vlc * a2 + vlc) * vlc + a2);
-	vls = vls + sqrtf(Math::Max(0.0f, -vl * a2 + vl) * vl + a2) * vlc;
-	float DG = 0.5f * a2 / PI / Math::Max(vls * q * q, 0.00001f);
+	return a2 / Math::Max(EPSILON, q * q);
+}
+
+static Float4 Fresnel(float a2, float VoH, const Float4& specularColor) {
 #if defined(_MSC_VER) && _MSC_VER <= 1200
 	float e = expf(VoH * (VoH * -5.55473f) - 6.98316f) / expf(2);
 #else
 	float e = exp2f(VoH * (VoH * -5.55473f) - 6.98316f);
 #endif
 	float f = Math::Min(50.0f * specularColor.y(), 0.0f);
-	Float4 F = specularColor + (Float4(f, f, f, f) - specularColor) * e;
-
-	return (diffuseColor + F * DG) * lightColor * NoL;
+	return specularColor + (Float4(f, f, f, f) - specularColor) * e;
 }
 
 Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float3Pair& r, BytesCache& cache, uint32_t count) const {
@@ -526,7 +534,7 @@ Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float
 								float NoH = Math::Max(0.0f, Math::DotProduct(N, H));
 								float VoH = Math::Max(0.0f, Math::DotProduct(V, H));
 
-								radiance += Render(a2, NoH, NoL, NoV, VoH, specularColor, diffuseColor, lightElement.colorAttenuation);
+								radiance += (diffuseColor + Fresnel(a2, VoH, specularColor) * Distribution(a2, NoH) * Geometry(a2, NoL, NoV)) * lightElement.colorAttenuation * NoL;
 							}
 						}
 					}
@@ -535,28 +543,37 @@ Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float
 				// PathTrace next
 				if (count < maxBounceCount) {
 					uint32_t m = count == 0 ? rayCount : 1;
+					Float4 gather(0, 0, 0, 0);
+					uint32_t validRay = 0;
 
 					for (uint32_t i = 0; i < m; i++) {
-						Float2 random = Float2((float)rand() / RAND_MAX, (float)rand() / RAND_MAX);
+						Float2 random = Float2((float)(rand() + 0.5f) / (RAND_MAX + 1), (float)(rand() + 0.5f) / (RAND_MAX + 1));
 						float ratio = ((float)rand() / RAND_MAX - 0.04f) / 0.96f;
 						bool isSpecular = ratio < metallic;
 
 						Float3 R = isSpecular ? ImportanceSampleGGX(random, a) : ImportanceSampleCosWeight(random);
 						Float4 H = Math::Normalize(N * R.z() + Math::Normalize(tangentBase) * R.x() + Math::Normalize(binormalBase) * R.y());
 						Float4 L = H * Math::DotProduct(H, V) * 2.0f - V;
-						float NoL = Math::Max(0.0f, Math::DotProduct(N, L));
-						Float3Pair ray(worldPosition + (Float3)L * stepMinimal, (Float3)L * stepMaximal);
-						Float4 bounceRadiance = PathTrace(context, ray, cache, count + 1);
-						float VoH = Math::Max(0.0f, Math::DotProduct(V, H));
-						float NoH = Math::Max(0.0f, Math::DotProduct(N, H));
+						float NoL = Math::DotProduct(N, L);
 
-						Float4 result = isSpecular ? Render(a2, NoH, NoL, NoV, VoH, specularColor, Float4(0, 0, 0, 0), bounceRadiance) : bounceRadiance * diffuseColor * NoL;
+						if (NoL > EPSILON) {
+							Float3Pair ray(worldPosition + (Float3)L * stepMinimal, (Float3)L * stepMaximal);
 
-						float q = (NoH * a2 - NoH) * NoH + 1.0f;
-						float weight = Math::Max(0.001f, Math::Interpolate(a2 / Math::Max(q * q, 0.0001f) * NoH / Math::Max(0.0001f, 4.0f * VoH), NoL / PI, ratio));
-
-						radiance += result / weight;
+							if (isSpecular) {
+								float NoH = Math::DotProduct(N, H);
+								if (NoH > EPSILON) {
+									float VoH = Math::Max(0.0f, Math::DotProduct(V, H));
+									gather += PathTrace(context, ray, cache, count + 1) * Fresnel(a2, VoH, specularColor) * Geometry(a2, NoL, NoV) * (4.0f * VoH * NoL / NoH);
+									validRay++;
+								}
+							} else {
+								gather += PathTrace(context, ray, cache, count + 1) * baseColor;
+								validRay++;
+							}
+						}
 					}
+
+					radiance += gather / (float)Math::Max((uint32_t)1, validRay);
 				}
 
 				return radiance;
