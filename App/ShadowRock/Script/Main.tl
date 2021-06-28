@@ -144,7 +144,7 @@ local function InitializeWorld(databasePath : string)
 	scene.rootEntity:AddEntityComponent(rayTraceComponent as Component)
 	rayTraceComponent:SetOutputPath("./trace/example.png")
 	Debug.StartTrace = function ()
-		rayTraceComponent:Capture(cameraComponent, 0.5)
+		rayTraceComponent:Capture(cameraComponent, 1.0)
 	end
 
 	scriptComponent:SetHandler("EVENT_TICK", function (eventData : EventData)

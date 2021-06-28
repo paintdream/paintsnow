@@ -49,6 +49,7 @@ namespace PaintsNow {
 			std::unordered_map<size_t, uint32_t> mapEntityToResourceIndex;
 			std::vector<TShared<ResourceBase> > mappedResources;
 			std::vector<BytesCache> threadLocalCache;
+			TShared<TextureResource> cubeMapTexture;
 			std::atomic<size_t> completedPixelCount;
 		};
 

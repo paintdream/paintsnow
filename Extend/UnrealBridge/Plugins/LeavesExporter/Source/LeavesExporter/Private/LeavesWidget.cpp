@@ -438,6 +438,8 @@ void SLeavesWidget::OnExportMeshComponent(UMeshComponent* meshComponent) {
 		auto materials = staticMeshComponent->GetMaterials();
 		for (int32 i = 0; i < materials.Num(); i++) {
 			auto materialInterface = materials[i];
+			if (materialInterface == nullptr) continue;
+
 			String materialName = TCHAR_TO_UTF8(*materialInterface->GetPathName());
 			ConvertPath(materialName);
 			TShared<MaterialResource> materialResource = TShared<MaterialResource>::From(new MaterialResource(std::ref(resourceManager), materialName));

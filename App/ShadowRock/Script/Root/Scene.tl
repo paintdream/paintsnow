@@ -247,7 +247,7 @@ function Scene.New(database : Database, clock : Clock) : Scene
 		sunTransformComponent:UpdateTransform()
 		sun:AddEntityComponent(sunTransformComponent as Component)
 		local lightComponent = LightComponentModule.New()
-		lightComponent:SetLightColor({2, 2, 2})
+		lightComponent:SetLightColor({10, 10, 10})
 		lightComponent:SetLightRange({1000, 1000, 1000})
 		lightComponent:SetLightAttenuation(0.1)
 		lightComponent:SetLightDirectional(true)
