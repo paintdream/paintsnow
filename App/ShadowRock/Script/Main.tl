@@ -142,9 +142,19 @@ local function InitializeWorld(databasePath : string)
 	-- raytrace compare
 	local rayTraceComponent = RayTraceComponentModule.New()
 	scene.rootEntity:AddEntityComponent(rayTraceComponent as Component)
-	rayTraceComponent:SetOutputPath("./trace/example.png")
-	Debug.StartTrace = function ()
-		rayTraceComponent:Capture(cameraComponent, 1.0)
+	Debug.StartTrace = function (width : number, height : number, superSample : number, rayCount : number, bounceCount : number, averageLuminance : number, path : string)
+		width = (width and width > 4) and width or 480
+		height = (height and height > 4) and height or 270
+		superSample = (superSample and superSample > 0) and superSample or 4
+		rayCount = (rayCount and rayCount > 0) and rayCount or 16
+		bounceCount = (bounceCount and bounceCount > 0) and bounceCount or 4
+		averageLuminance = (averageLuminance and averageLuminance > 0) and averageLuminance or 1.0
+		path = path or "./trace/example.png"
+
+		rayTraceComponent:SetOutputPath(path)
+		rayTraceComponent:SetCaptureSize({width, height})
+		rayTraceComponent:Configure(superSample, 8, rayCount, bounceCount)
+		rayTraceComponent:Capture(cameraComponent, averageLuminance)
 	end
 
 	scriptComponent:SetHandler("EVENT_TICK", function (eventData : EventData)

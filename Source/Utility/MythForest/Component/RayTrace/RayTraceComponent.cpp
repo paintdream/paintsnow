@@ -9,7 +9,7 @@ using namespace PaintsNow;
 
 const float EPSILON = 1e-6f;
 
-RayTraceComponent::Context::Context(Engine& e) : engine(e) {
+RayTraceComponent::Context::Context(Engine& e) : engine(e), possibilityForGeometryLight(0.75f) {
 	completedPixelCount.store(0, std::memory_order_relaxed);
 }
 
@@ -19,7 +19,7 @@ RayTraceComponent::Context::~Context() {
 	}
 }
 
-RayTraceComponent::RayTraceComponent() : captureSize(1280, 800), superSample(4), tileSize(8), rayCount(256), maxBounceCount(4), completedPixelCountSync(0), stepMinimal(0.05f), stepMaximal(1000.0f) {}
+RayTraceComponent::RayTraceComponent() : captureSize(1920, 1080), superSample(4), tileSize(8), rayCount(256), maxBounceCount(4), completedPixelCountSync(0), stepMinimal(0.05f), stepMaximal(1000.0f), maxEnvironmentRadiance(16.0f, 16.0f, 16.0f, 0.0f) {}
 
 RayTraceComponent::~RayTraceComponent() {}
 
@@ -320,7 +320,7 @@ void RayTraceComponent::RoutineCollectTextures(const TShared<Context>& context, 
 					if (envCubeComponent != nullptr) {
 						context->cubeMapTexture = envCubeComponent->cubeMapTexture;
 						context->cubeMapTexture->Map();
-						context->mappedResources.emplace_back(context->cubeMapTexture);
+						context->mappedResources.emplace_back(context->cubeMapTexture());
 					}
 				} else {
 					ModelComponent* modelComponent = component->QueryInterface(UniqueType<ModelComponent>());
@@ -460,8 +460,7 @@ static Float4 SampleCubeTexture(const TShared<TextureResource>& texture, const F
 	size_t each = desc.data.GetSize() / (6 * sizeof(UShort4));
 
 	UShort4 halfValues = reinterpret_cast<UShort4*>(desc.data.GetData())[uy * desc.dimension.x() + ux + each * index];
-	float scale = half2float_impl(halfValues.w());
-	return Float4(half2float_impl(halfValues.x()), half2float_impl(halfValues.y()), half2float_impl(halfValues.z()), 0.0f) * scale;
+	return Float4(half2float_impl(halfValues.x()), half2float_impl(halfValues.y()), half2float_impl(halfValues.z()), 0.0f);
 }
 
 static Float4 SampleTexture(const TShared<TextureResource>& texture, const Float2& uv) {
@@ -586,31 +585,41 @@ Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float
 				Float4 diffuseColor = (baseColor - baseColor * metallic) / PI;
 				Float4 specularColor = Math::Interpolate(Float4(0.04f, 0.04f, 0.04f, 0.04f), baseColor, metallic);
 
+				// russian roulette for tracing geometric lights
+				float survivalPossibility = 1;
+
 				for (size_t k = 0; k < context->lightElements.size(); k++) {
 					const LightElement& lightElement = context->lightElements[k];
 					if (lightElement.position.w() == 0) { // directional light only now
-						// check shadow
-						Float3 dir = Math::Normalize((Float3)lightElement.position);
-						Float4 L = Float4::Load(dir);
-						float NoL = Math::Max(0.0f, Math::DotProduct(N, L));
+						float roll = (float)rand() / RAND_MAX;
+						if (roll < context->possibilityForGeometryLight) {
+							// check shadow
+							Float3 dir = Math::Normalize((Float3)lightElement.position);
+							Float4 L = Float4::Load(dir);
+							float NoL = Math::Max(0.0f, Math::DotProduct(N, L));
 
-						if (NoL > 0.0f) {
-							Component::RaycastTaskSerial task;
-							for (size_t n = 0; n < rootSpaceComponents.size(); n++) {
-								SpaceComponent* spaceComponent = rootSpaceComponents[n];
-								Float3Pair ray(worldPosition + dir * stepMinimal, dir * stepMaximal);
-								MatrixFloat4x4 matrix = MatrixFloat4x4::Identity();
-								spaceComponent->Raycast(task, ray, matrix, nullptr, 1.0f);
+							if (NoL > 0.0f) {
+								Component::RaycastTaskSerial task;
+								for (size_t n = 0; n < rootSpaceComponents.size(); n++) {
+									SpaceComponent* spaceComponent = rootSpaceComponents[n];
+									Float3Pair ray(worldPosition + dir * stepMinimal, dir * stepMaximal);
+									MatrixFloat4x4 matrix = MatrixFloat4x4::Identity();
+									spaceComponent->Raycast(task, ray, matrix, nullptr, 1.0f);
+								}
+
+								if (task.result.squareDistance == FLT_MAX) {
+									// not shadowed, compute shading
+									Float4 H = Math::Normalize(L + V);
+									float NoH = Math::Max(0.0f, Math::DotProduct(N, H));
+									float VoH = Math::Max(0.0f, Math::DotProduct(V, H));
+
+									radiance += (diffuseColor + Fresnel(a2, VoH, specularColor) * Distribution(a2, NoH) * Geometry(a2, NoL, NoV)) * lightElement.colorAttenuation * (NoL / (survivalPossibility * context->possibilityForGeometryLight));
+								}
 							}
 
-							if (task.result.squareDistance == FLT_MAX) {
-								// not shadowed, compute shading
-								Float4 H = Math::Normalize(L + V);
-								float NoH = Math::Max(0.0f, Math::DotProduct(N, H));
-								float VoH = Math::Max(0.0f, Math::DotProduct(V, H));
-
-								radiance += (diffuseColor + Fresnel(a2, VoH, specularColor) * Distribution(a2, NoH) * Geometry(a2, NoL, NoV)) * lightElement.colorAttenuation * NoL;
-							}
+							return radiance;
+						} else {
+							survivalPossibility = 1.0f - context->possibilityForGeometryLight;
 						}
 					}
 				}
@@ -648,7 +657,7 @@ Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float
 						}
 					}
 
-					radiance += gather / (float)Math::Max((uint32_t)1, validRay);
+					radiance += gather / ((float)Math::Max((uint32_t)1, validRay) * survivalPossibility);
 				}
 
 				return radiance;
@@ -657,7 +666,7 @@ Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float
 	}
 
 	if (context->cubeMapTexture) {
-		return SampleCubeTexture(context->cubeMapTexture, Math::Normalize(r.second));
+		return Math::AllMin(maxEnvironmentRadiance, SampleCubeTexture(context->cubeMapTexture, Math::Normalize(r.second)));
 	} else {
 		return Float4(0.0f, 0.0f, 0.0f, 0.0f);
 	}

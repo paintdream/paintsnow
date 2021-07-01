@@ -42,6 +42,7 @@ namespace PaintsNow {
 			Float3 up;
 			Float3 right;
 			float invAverageLuminance;
+			float possibilityForGeometryLight;
 			int64_t clock;
 			std::vector<SpaceComponent*> rootSpaceComponents;
 			std::vector<Float2> randomSequence;
@@ -60,6 +61,7 @@ namespace PaintsNow {
 		void RoutineComplete(const TShared<Context>& context);
 		Float4 PathTrace(const TShared<Context>& context, const Float3Pair& ray, BytesCache& cache, uint32_t count) const;
 
+		Float4 maxEnvironmentRadiance;
 		UShort2 captureSize;
 		uint16_t superSample;
 		uint16_t tileSize;
