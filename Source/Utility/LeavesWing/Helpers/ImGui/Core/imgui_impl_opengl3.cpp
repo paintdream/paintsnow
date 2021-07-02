@@ -98,6 +98,15 @@
 #if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W)
 #include <GL/gl3w.h>            // Needs to be initialized with gl3wInit() in user's code
 #elif defined(IMGUI_IMPL_OPENGL_LOADER_GLEW)
+#define GLEW_STATIC
+#define GLAPI
+#define GLFW_INCLUDE_VULKAN
+
+#if defined(CMAKE_ANDROID)
+#define GLES_COMPATIBLE 1
+#else
+#define GLES_COMPATIBLE 0
+#endif
 #include "../../../../../Driver/Render/OpenGL/Core/glew.h"
 #elif defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
 #include <glad/glad.h>          // Needs to be initialized with gladLoadGL() in user's code.
