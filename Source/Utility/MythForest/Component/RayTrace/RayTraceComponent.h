@@ -43,6 +43,7 @@ namespace PaintsNow {
 			Float3 right;
 			float invAverageLuminance;
 			float possibilityForGeometryLight;
+			float possibilityCubeMapLight;
 			int64_t clock;
 			std::vector<SpaceComponent*> rootSpaceComponents;
 			std::vector<Float2> randomSequence;
@@ -51,6 +52,7 @@ namespace PaintsNow {
 			std::vector<TShared<ResourceBase> > mappedResources;
 			std::vector<BytesCache> threadLocalCache;
 			TShared<TextureResource> cubeMapTexture;
+			std::vector<Float4> importantCubeMapDistribution;
 			std::atomic<size_t> completedPixelCount;
 		};
 
@@ -60,6 +62,7 @@ namespace PaintsNow {
 		void RoutineRenderTile(const TShared<Context>& context, size_t i, size_t j);
 		void RoutineComplete(const TShared<Context>& context);
 		Float4 PathTrace(const TShared<Context>& context, const Float3Pair& ray, BytesCache& cache, uint32_t count) const;
+		void Raycast(RaycastTaskSerial& task, const TShared<Context>& context, const Float3Pair& r) const;
 
 		Float4 maxEnvironmentRadiance;
 		UShort2 captureSize;
@@ -67,6 +70,8 @@ namespace PaintsNow {
 		uint16_t tileSize;
 		uint32_t rayCount;
 		uint32_t maxBounceCount;
+		uint32_t cubeMapQuantization;
+		uint32_t cubeMapQuantizationMultiplier;
 		String outputPath;
 		size_t completedPixelCountSync;
 		float stepMinimal;

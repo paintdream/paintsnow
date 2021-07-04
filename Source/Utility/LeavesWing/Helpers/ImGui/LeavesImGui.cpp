@@ -1,6 +1,13 @@
 #include "LeavesImGui.h"
 
 #if USE_LEAVES_IMGUI
+
+#define GLFW_STATIC
+#define GLEW_STATIC
+#ifdef GLFW_LIB_PRAGMAS
+#undef GLFW_LIB_PRAGMAS
+#endif
+
 #include "../../../LeavesFlute/LeavesFlute.h"
 #include "Core/imgui.h"
 #include "Core/imgui_impl_glfw.h"

@@ -9,7 +9,7 @@ using namespace PaintsNow;
 
 const float EPSILON = 1e-6f;
 
-RayTraceComponent::Context::Context(Engine& e) : engine(e), possibilityForGeometryLight(0.75f) {
+RayTraceComponent::Context::Context(Engine& e) : engine(e), possibilityForGeometryLight(0.5f), possibilityCubeMapLight(0.5f) {
 	completedPixelCount.store(0, std::memory_order_relaxed);
 }
 
@@ -19,7 +19,7 @@ RayTraceComponent::Context::~Context() {
 	}
 }
 
-RayTraceComponent::RayTraceComponent() : captureSize(1920, 1080), superSample(4), tileSize(8), rayCount(256), maxBounceCount(4), completedPixelCountSync(0), stepMinimal(0.05f), stepMaximal(1000.0f), maxEnvironmentRadiance(16.0f, 16.0f, 16.0f, 0.0f) {}
+RayTraceComponent::RayTraceComponent() : captureSize(1920, 1080), superSample(4), tileSize(8), rayCount(256), maxBounceCount(4), cubeMapQuantization(4096), cubeMapQuantizationMultiplier(8), completedPixelCountSync(0), stepMinimal(0.05f), stepMaximal(1000.0f), maxEnvironmentRadiance(64.0f, 64.0f, 64.0f, 0.0f) {}
 
 RayTraceComponent::~RayTraceComponent() {}
 
@@ -108,20 +108,6 @@ void RayTraceComponent::Capture(Engine& engine, const TShared<CameraComponent>& 
 	engine.GetKernel().GetThreadPool().Dispatch(CreateTaskContextFree(Wrap(this, &RayTraceComponent::RoutineRayTrace), context), 1);
 }
 
-void RayTraceComponent::RoutineRayTrace(const TShared<Context>& context) {
-	RoutineCollectTextures(context, context->referenceCameraComponent->GetBridgeComponent()->GetHostEntity(), MatrixFloat4x4::Identity());
-
-	size_t tileCountWidth = (captureSize.x() + tileSize - 1) / tileSize;
-	size_t tileCountHeight = (captureSize.y() + tileSize - 1) / tileSize;
-
-	ThreadPool& threadPool = context->engine.GetKernel().GetThreadPool();
-	for (size_t i = 0; i < tileCountHeight; i++) {
-		for (size_t j = 0; j < tileCountWidth; j++) {
-			threadPool.Dispatch(CreateTaskContextFree(Wrap(this, &RayTraceComponent::RoutineRenderTile), context, j, i), 1);
-		}
-	}
-}
-
 static UChar4 FromFloat4(const Float4& v) {
 	return UChar4(
 		(uint8_t)(Math::Clamp(v.x(), 0.0f, 1.0f) * 255),
@@ -196,7 +182,7 @@ void RayTraceComponent::RoutineRenderTile(const TShared<Context>& context, size_
 	const Float3& view = context->view;
 
 	float sampleDiv = 1.0f / (superSample * superSample);
-	float averageLuminance = context->invAverageLuminance;
+	float invAverageLuminance = context->invAverageLuminance;
 	for (uint32_t m = 0; m < height; m++) {
 		for (uint32_t n = 0; n < width; n++) {
 			uint32_t px = verify_cast<uint32_t>(i) * tileSize + n;
@@ -218,7 +204,7 @@ void RayTraceComponent::RoutineRenderTile(const TShared<Context>& context, size_
 			finalColor.w() = 1;
 
 			UChar4* ptr = reinterpret_cast<UChar4*>(context->capturedTexture->description.data.GetData());
-			ptr[py * captureSize.x() + px] = ToneMapping(finalColor, averageLuminance); // assuming average color
+			ptr[py * captureSize.x() + px] = ToneMapping(finalColor, invAverageLuminance); // assuming average color
 
 			// finish one
 			completedPixelCountSync = context->completedPixelCount.fetch_add(1, std::memory_order_release);
@@ -397,10 +383,24 @@ static Float3 ImportanceSampleCosWeight(const Float2& e) {
 	return h;
 }
 
-// https://github.com/headupinclouds/half/blob/master/include/half.hpp
-inline float half2float_impl(uint16_t value);
+static Float3 UniformSample(const Float2& e) {
+	float phi = 2 * PI * e.x();
+	float theta = PI * e.y();
+	float sinTheta = sinf(theta);
+	float cosTheta = cosf(theta);
 
-static Float4 SampleCubeTexture(const TShared<TextureResource>& texture, const Float3& dir) {
+	Float3 h;
+	h.x() = sinTheta * cosf(phi);
+	h.y() = sinTheta * sinf(phi);
+	h.z() = cosTheta;
+
+	return h;
+}
+
+// https://github.com/headupinclouds/half/blob/master/include/half.hpp
+static float half2float_impl(uint16_t value);
+
+static Float4 SampleCubeTexture(const TShared<TextureResource>& texture, const Float3& dir, const Float4& maxEnvironmentRadiance) {
 	IRender::Resource::TextureDescription& desc = texture->description;
 	assert(desc.state.format == IRender::Resource::TextureDescription::HALF);
 	assert(desc.state.layout == IRender::Resource::TextureDescription::RGBA);
@@ -460,7 +460,7 @@ static Float4 SampleCubeTexture(const TShared<TextureResource>& texture, const F
 	size_t each = desc.data.GetSize() / (6 * sizeof(UShort4));
 
 	UShort4 halfValues = reinterpret_cast<UShort4*>(desc.data.GetData())[uy * desc.dimension.x() + ux + each * index];
-	return Float4(half2float_impl(halfValues.x()), half2float_impl(halfValues.y()), half2float_impl(halfValues.z()), 0.0f);
+	return Math::AllMin(maxEnvironmentRadiance, Float4(half2float_impl(halfValues.x()), half2float_impl(halfValues.y()), half2float_impl(halfValues.z()), 0.0f));
 }
 
 static Float4 SampleTexture(const TShared<TextureResource>& texture, const Float2& uv) {
@@ -503,15 +503,19 @@ static Float4 Fresnel(float a2, float VoH, const Float4& specularColor) {
 	return specularColor + (Float4(f, f, f, f) - specularColor) * e;
 }
 
-Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float3Pair& r, BytesCache& cache, uint32_t count) const {
+inline void RayTraceComponent::Raycast(Component::RaycastTaskSerial& task, const TShared<Context>& context, const Float3Pair& r) const {
 	const std::vector<SpaceComponent*>& rootSpaceComponents = context->rootSpaceComponents;
-	Component::RaycastTaskSerial task(&cache);
 	for (size_t i = 0; i < rootSpaceComponents.size(); i++) {
 		SpaceComponent* spaceComponent = rootSpaceComponents[i];
 		Float3Pair ray = r;
 		MatrixFloat4x4 matrix = MatrixFloat4x4::Identity();
 		spaceComponent->Raycast(task, ray, matrix, nullptr, 1.0f);
 	}
+}
+
+Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float3Pair& r, BytesCache& cache, uint32_t count) const {
+	RaycastTaskSerial task(&cache);
+	Raycast(task, context, r);
 
 	if (task.result.squareDistance != FLT_MAX && task.result.parent) {
 		// hit!
@@ -587,7 +591,7 @@ Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float
 
 				// russian roulette for tracing geometric lights
 				float survivalPossibility = 1;
-
+				
 				for (size_t k = 0; k < context->lightElements.size(); k++) {
 					const LightElement& lightElement = context->lightElements[k];
 					if (lightElement.position.w() == 0) { // directional light only now
@@ -599,14 +603,8 @@ Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float
 							float NoL = Math::Max(0.0f, Math::DotProduct(N, L));
 
 							if (NoL > 0.0f) {
-								Component::RaycastTaskSerial task;
-								for (size_t n = 0; n < rootSpaceComponents.size(); n++) {
-									SpaceComponent* spaceComponent = rootSpaceComponents[n];
-									Float3Pair ray(worldPosition + dir * stepMinimal, dir * stepMaximal);
-									MatrixFloat4x4 matrix = MatrixFloat4x4::Identity();
-									spaceComponent->Raycast(task, ray, matrix, nullptr, 1.0f);
-								}
-
+								RaycastTaskSerial task;
+								Raycast(task, context, Float3Pair(worldPosition + dir * stepMinimal, dir * stepMaximal));
 								if (task.result.squareDistance == FLT_MAX) {
 									// not shadowed, compute shading
 									Float4 H = Math::Normalize(L + V);
@@ -619,19 +617,50 @@ Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float
 
 							return radiance;
 						} else {
-							survivalPossibility = 1.0f - context->possibilityForGeometryLight;
+							survivalPossibility *= 1.0f - context->possibilityForGeometryLight;
 						}
 					}
 				}
 
+				// gather sky light randomly
+				if (context->cubeMapTexture) {
+					float roll = (float)rand() / RAND_MAX;
+					if (roll < context->possibilityCubeMapLight) {
+						Float4 L = context->importantCubeMapDistribution[rand() % context->importantCubeMapDistribution.size()];
+						float NoL = Math::Max(0.0f, Math::DotProduct(N, L));
+
+						if (NoL > 0) {
+							float pdf = L.w();
+							L.w() = 0;
+
+							Float3 dir(L);
+							Float4 r = SampleCubeTexture(context->cubeMapTexture, dir, maxEnvironmentRadiance);
+
+							RaycastTaskSerial task(&cache);
+							Raycast(task, context, Float3Pair(worldPosition + dir * stepMinimal, dir * stepMaximal));
+							if (task.result.squareDistance == FLT_MAX) {
+								Float4 H = Math::Normalize(L + V);
+								float NoH = Math::Max(0.0f, Math::DotProduct(N, H));
+								float VoH = Math::Max(0.0f, Math::DotProduct(V, H));
+
+								radiance += (diffuseColor + Fresnel(a2, VoH, specularColor) * Distribution(a2, NoH) * Geometry(a2, NoL, NoV)) * r / (NoL * survivalPossibility * context->possibilityCubeMapLight * pdf);
+							}
+						}
+
+						return radiance;
+					} else {
+						survivalPossibility *= 1.0f - context->possibilityCubeMapLight;
+					}
+				}
+
 				// PathTrace next
-				if (count < maxBounceCount) {
+				if (survivalPossibility > 0 && count < maxBounceCount) {
 					uint32_t m = count == 0 ? rayCount : 1;
 					Float4 gather(0, 0, 0, 0);
 					uint32_t validRay = 0;
 
 					for (uint32_t i = 0; i < m; i++) {
-						Float2 random = Float2((float)(rand() + 0.5f) / (RAND_MAX + 1), (float)(rand() + 0.5f) / (RAND_MAX + 1));
+						Float2 random = Float2((float)rand() / RAND_MAX, (float)rand() / RAND_MAX);
 						float ratio = ((float)rand() / RAND_MAX - 0.04f) / 0.96f;
 						bool isSpecular = ratio < metallic;
 
@@ -666,9 +695,65 @@ Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float
 	}
 
 	if (context->cubeMapTexture) {
-		return Math::AllMin(maxEnvironmentRadiance, SampleCubeTexture(context->cubeMapTexture, Math::Normalize(r.second)));
+		return SampleCubeTexture(context->cubeMapTexture, Math::Normalize(r.second), maxEnvironmentRadiance);
 	} else {
 		return Float4(0.0f, 0.0f, 0.0f, 0.0f);
+	}
+}
+
+struct CompareRadiance {
+	bool operator () (const Float4& lhs, const Float4& rhs) const {
+		return lhs.w() < rhs.w();
+	}
+};
+
+void RayTraceComponent::RoutineRayTrace(const TShared<Context>& context) {
+	RoutineCollectTextures(context, context->referenceCameraComponent->GetBridgeComponent()->GetHostEntity(), MatrixFloat4x4::Identity());
+	srand(0);
+
+	if (context->cubeMapTexture) {
+		std::vector<Float4>& distribution = context->importantCubeMapDistribution;
+		distribution.resize(cubeMapQuantization);
+		assert(cubeMapQuantization != 0);
+		assert(cubeMapQuantizationMultiplier != 0);
+
+		std::vector<Float4> samples;
+		samples.resize(cubeMapQuantization * cubeMapQuantizationMultiplier);
+
+		for (size_t i = 0; i < samples.size(); i++) {
+			Float3 h = UniformSample(Float2((float)rand() / RAND_MAX, (float)rand() / RAND_MAX));
+			Float4 radiance = SampleCubeTexture(context->cubeMapTexture, h, maxEnvironmentRadiance);
+			radiance.w() = Math::Length(radiance);
+			samples[i] = radiance;
+		}
+
+		std::sort(samples.begin(), samples.end(), CompareRadiance());
+
+		// accum sum
+		for (size_t j = 1; j < samples.size(); j++) {
+			samples[j].w() += samples[j - 1].w();
+		}
+
+		float sum = Math::Max(samples.back().w(), 0.001f);
+		float lastAccum = 0;
+		for (uint32_t k = 0; k < cubeMapQuantization; k++) {
+			std::vector<Float4>::iterator it = std::lower_bound(samples.begin(), samples.end(), Float4(0, 0, 0, sum * k / cubeMapQuantization), CompareRadiance());
+			Float4 f = *it;
+			float w = f.w();
+			f.w() = Math::Max(1.0f, (f.w() - lastAccum) * cubeMapQuantization * cubeMapQuantizationMultiplier / sum);
+			lastAccum = w;
+			distribution[k] = f;
+		}
+	}
+
+	size_t tileCountWidth = (captureSize.x() + tileSize - 1) / tileSize;
+	size_t tileCountHeight = (captureSize.y() + tileSize - 1) / tileSize;
+
+	ThreadPool& threadPool = context->engine.GetKernel().GetThreadPool();
+	for (size_t i = 0; i < tileCountHeight; i++) {
+		for (size_t j = 0; j < tileCountWidth; j++) {
+			threadPool.Dispatch(CreateTaskContextFree(Wrap(this, &RayTraceComponent::RoutineRenderTile), context, j, i), 1);
+		}
 	}
 }
 
