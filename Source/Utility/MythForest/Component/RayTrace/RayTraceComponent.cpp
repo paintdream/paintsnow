@@ -627,6 +627,8 @@ Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float
 					float roll = (float)rand() / RAND_MAX;
 					if (roll < context->possibilityCubeMapLight) {
 						Float4 L = context->importantCubeMapDistribution[rand() % context->importantCubeMapDistribution.size()];
+						// Float3 h = UniformSample(Float2((float)rand() / RAND_MAX, (float)rand() / RAND_MAX));
+						// Float4 L(h.x(), h.y(), h.z(), 1.0f);
 						float NoL = Math::Max(0.0f, Math::DotProduct(N, L));
 
 						if (NoL > 0) {
@@ -634,11 +636,10 @@ Float4 RayTraceComponent::PathTrace(const TShared<Context>& context, const Float
 							L.w() = 0;
 
 							Float3 dir(L);
-							Float4 r = SampleCubeTexture(context->cubeMapTexture, dir, maxEnvironmentRadiance);
-
 							RaycastTaskSerial task(&cache);
 							Raycast(task, context, Float3Pair(worldPosition + dir * stepMinimal, dir * stepMaximal));
 							if (task.result.squareDistance == FLT_MAX) {
+								Float4 r = SampleCubeTexture(context->cubeMapTexture, dir, maxEnvironmentRadiance);
 								Float4 H = Math::Normalize(L + V);
 								float NoH = Math::Max(0.0f, Math::DotProduct(N, H));
 								float VoH = Math::Max(0.0f, Math::DotProduct(V, H));
@@ -712,7 +713,7 @@ void RayTraceComponent::RoutineRayTrace(const TShared<Context>& context) {
 	srand(0);
 
 	if (context->cubeMapTexture) {
-		std::vector<Float4>& distribution = context->importantCubeMapDistribution;
+		std::vector<Float4> distribution;
 		distribution.resize(cubeMapQuantization);
 		assert(cubeMapQuantization != 0);
 		assert(cubeMapQuantizationMultiplier != 0);
@@ -722,9 +723,7 @@ void RayTraceComponent::RoutineRayTrace(const TShared<Context>& context) {
 
 		for (size_t i = 0; i < samples.size(); i++) {
 			Float3 h = UniformSample(Float2((float)rand() / RAND_MAX, (float)rand() / RAND_MAX));
-			Float4 radiance = SampleCubeTexture(context->cubeMapTexture, h, maxEnvironmentRadiance);
-			radiance.w() = Math::Length(radiance);
-			samples[i] = radiance;
+			samples[i] = Float4(h.x(), h.y(), h.z(), Math::Length(SampleCubeTexture(context->cubeMapTexture, h, maxEnvironmentRadiance)));
 		}
 
 		std::sort(samples.begin(), samples.end(), CompareRadiance());
@@ -734,15 +733,29 @@ void RayTraceComponent::RoutineRayTrace(const TShared<Context>& context) {
 			samples[j].w() += samples[j - 1].w();
 		}
 
-		float sum = Math::Max(samples.back().w(), 0.001f);
+		float sum = Math::Max(samples.back().w(), EPSILON);
 		float lastAccum = 0;
+		uint32_t n = 0;
+		std::vector<Float4>::iterator lastIterator = samples.end();
 		for (uint32_t k = 0; k < cubeMapQuantization; k++) {
 			std::vector<Float4>::iterator it = std::lower_bound(samples.begin(), samples.end(), Float4(0, 0, 0, sum * k / cubeMapQuantization), CompareRadiance());
-			Float4 f = *it;
-			float w = f.w();
-			f.w() = Math::Max(1.0f, (f.w() - lastAccum) * cubeMapQuantization * cubeMapQuantizationMultiplier / sum);
-			lastAccum = w;
-			distribution[k] = f;
+			if (it != lastIterator) {
+				Float4 f = *it;
+				float w = f.w();
+				f.w() = (f.w() - lastAccum) / sum;
+
+				lastAccum = w;
+				distribution[n++] = f;
+				lastIterator = it;
+			}
+		}
+
+		context->importantCubeMapDistribution.resize(n);
+
+		for (uint32_t m = 0; m < n; m++) {
+			Float4 v = distribution[m];
+			v.w() = v.w() * n;
+			context->importantCubeMapDistribution[m] = v;
 		}
 	}
 
