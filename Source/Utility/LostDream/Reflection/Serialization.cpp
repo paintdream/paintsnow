@@ -3,6 +3,7 @@
 #include "../../SnowyStream/Resource/MeshResource.h"
 #include "../../SnowyStream/ResourceManager.h"
 #include "../../../General/Driver/Filter/LZW/ZFilterLZW.h"
+#include "../../../General/Driver/Filter/Json/ZFilterJson.h"
 
 using namespace PaintsNow;
 
@@ -159,7 +160,8 @@ struct MarshallInfo : public TReflected<MarshallInfo, IReflectObjectComplex, Met
 
 		return *this;
 	}
-	String name;
+
+	String name; // not serialized!
 	int value;
 	double test;
 	float flt;
@@ -353,7 +355,18 @@ bool Serialization::Run(int randomSeed, int length) {
 	printf("Recover data: %s\n", data);
 	printf("Recover data: %s\n", result);
 	f->Destroy();
-	
+
+	ZFilterJson json;
+	MemoryStream jsonStream(0x1000);
+	IStreamBase* j = json.CreateFilter(jsonStream);
+	*j << info;
+	j->Destroy();
+
+	jsonStream.Seek(IStreamBase::BEGIN, 0);
+	IStreamBase* jr = json.CreateFilter(jsonStream);
+	MarshallInfo jsonReadback;
+	*jr >> jsonReadback;
+	jr->Destroy();
 	return true;
 }
 

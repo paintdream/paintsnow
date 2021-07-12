@@ -18,8 +18,8 @@ public:
 	bool Seek(IStreamBase::SEEK_OPTION option, int64_t offset) override;
 
 	// object writing/reading routine
-	virtual bool Write(IReflectObject& s, void* ptr, size_t length);
-	virtual bool Read(IReflectObject& s, void* ptr, size_t length);
+	bool Write(IReflectObject& s, Unique unique, void* ptr, size_t length) override;
+	bool Read(IReflectObject& s, Unique unique, void* ptr, size_t length) override;
 
 protected:
 	IStreamBase& stream;
@@ -78,15 +78,17 @@ public:
 				if (v.isArray()) {
 					size_t index = 0;
 					Unique id = it.GetElementUnique();
-					IReflectObject& prototype = const_cast<IReflectObject&>(it.GetElementPrototype());
-					if (prototype.IsBasicObject()) {
+
+					if (!it.IsElementBasicObject()) {
+						IReflectObject& prototype = const_cast<IReflectObject&>(it.GetElementPrototype());
 						while (it.Next()) {
 							OnValue(prototype, id, v[(Json::ArrayIndex)index++], it.Get());
 						}
 					} else {
+						IReflectObject basicObject;
 						while (it.Next()) {
 							void* ptr = it.Get();
-							OnValue(*reinterpret_cast<IReflectObject*>(ptr), id, v[(Json::ArrayIndex)index++], ptr);
+							OnValue(basicObject, id, v[(Json::ArrayIndex)index++], ptr);
 						}
 					}
 				}
@@ -140,8 +142,28 @@ public:
 	}
 
 	void Property(IReflectObject& s, Unique typeID, Unique refTypeID, const char* name, void* base, void* ptr, const MetaChainBase* meta) override {
-		if (!root.isMember(name)) {
+		if (read && !root.isMember(name)) {
 			return;
+		}
+
+
+		singleton Unique metaRuntime = UniqueType<MetaRuntime>::Get();
+		const MetaStreamPersist* customPersist = nullptr;
+
+		// check serialization chain
+		while (meta != nullptr) {
+			// runtime data can not be serialized
+			if (meta->GetNode()->GetUnique() == metaRuntime) {
+				return;
+			} else {
+				const MetaStreamPersist* persistHelper = meta->GetNode()->QueryInterface(UniqueType<MetaStreamPersist>());
+				if (persistHelper != nullptr) {
+					assert(false);
+					return; // not supported!
+				}
+			}
+
+			meta = meta->GetNext();
 		}
 
 		Json::Value& v = root[name];
@@ -154,7 +176,8 @@ private:
 	Json::Value& root;
 };
 
-bool FilterJsonImpl::Write(IReflectObject& s, void* ptr, size_t length) {
+bool FilterJsonImpl::Write(IReflectObject& s, Unique unique, void* ptr, size_t length) {
+	assert(!s.IsBasicObject());
 	Json::Value v;
 	Exchanger<false> exchanger(v);
 	s(exchanger);
@@ -260,7 +283,7 @@ static void ParseDynamicObject(DynamicObjectWrapper& wrapper, const Value& value
 	}
 }
 
-bool FilterJsonImpl::Read(IReflectObject& s, void* ptr, size_t length) {
+bool FilterJsonImpl::Read(IReflectObject& s, Unique unique, void* ptr, size_t length) {
 	// check dynamic object
 	assert(!s.IsBasicObject());
 	String str;
