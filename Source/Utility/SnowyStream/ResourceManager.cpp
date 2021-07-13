@@ -75,10 +75,11 @@ void ResourceManager::Insert(ResourceBase* resource) {
 			resource->ReferenceObject();
 		}
 
-		resource->Flag().fetch_and(~ResourceBase::RESOURCE_ORPHAN, std::memory_order_release);
-		UnLock();
-		InvokeAttach(resource, GetContext());
-		DoLock();
+		if (resource->Flag().fetch_and(~ResourceBase::RESOURCE_ORPHAN, std::memory_order_release) & ResourceBase::RESOURCE_ORPHAN) {
+			UnLock();
+			InvokeAttach(resource, GetContext());
+			DoLock();
+		}
 	} else {
 		InvokeAttach(resource, GetContext());
 	}
@@ -118,20 +119,16 @@ void ResourceManager::Remove(ResourceBase* resource) {
 	if (resource->Flag().load(std::memory_order_acquire) & (ResourceBase::RESOURCE_ORPHAN | ResourceBase::RESOURCE_ETERNAL))
 		return;
 
-	const String& location = resource->GetLocation();
-	if (location.empty()) return;
+	assert(!resource->GetLocation().empty());
+	resourceMap.erase(resource->GetLocation());
 
-	// Double check
-	if (!location.empty()) {
-		resourceMap.erase(location);
-	}
+	if (!(resource->Flag().fetch_or(ResourceBase::RESOURCE_ORPHAN, std::memory_order_release) & ResourceBase::RESOURCE_ORPHAN)) {
+		assert(resource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_ATTACHED);
 
-	// Parallel bug here.
-	if (resource->Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_ATTACHED) {
+		UnLock();
 		InvokeDetach(resource, GetContext());
+		DoLock();
 	}
-
-	resource->Flag().fetch_or(ResourceBase::RESOURCE_ORPHAN, std::memory_order_release);
 }
 
 ResourceCreator::~ResourceCreator() {}

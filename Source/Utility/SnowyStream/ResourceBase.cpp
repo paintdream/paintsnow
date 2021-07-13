@@ -79,14 +79,21 @@ bool ResourceBase::IsPrepared() const {
 }
 
 void ResourceBase::Destroy() {
-	// last?
-	resourceManager.DoLock();
-	if (!(Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_ORPHAN)) {
-		resourceManager.Remove(this);
-	}
-	resourceManager.UnLock();
+	referCount.fetch_add(1, std::memory_order_acquire);
 
-	if (referCount.load(std::memory_order_acquire) == 0) {
+	if (!(Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_ORPHAN)) {
+		resourceManager.DoLock();
+
+		// Double check
+		if (!(Flag().load(std::memory_order_acquire) & ResourceBase::RESOURCE_ORPHAN)) {
+			resourceManager.Remove(this);
+		}
+
+		resourceManager.UnLock();
+	}
+
+	// last?
+	if (referCount.fetch_sub(1, std::memory_order_release) == 1) {
 		BaseClass::Destroy();
 	}
 }
