@@ -198,31 +198,35 @@ using namespace PaintsNow;
 #if defined(_WIN32) || defined(WIN32)
 
 static ZDebuggerWin* dump = nullptr;
-static long _stdcall OnException(PEXCEPTION_POINTERS pep)
-{
-	if (dump != nullptr && (!dump->handler || dump->handler()))
-	{
-		HANDLE hFile = ::CreateFileA(dump->path.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 
-		if ((hFile != nullptr) && (hFile != INVALID_HANDLE_VALUE))
-		{
-			MINIDUMP_EXCEPTION_INFORMATION mdei;
-			mdei.ThreadId = GetCurrentThreadId();
-			mdei.ExceptionPointers = pep;
-			mdei.ClientPointers = FALSE;
+static DWORD _stdcall DumpThread(LPVOID param) {
+	PEXCEPTION_POINTERS pep = (PEXCEPTION_POINTERS)param;
+	HANDLE hFile = ::CreateFileA(dump->path.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 
-			MINIDUMP_CALLBACK_INFORMATION mci;
-			mci.CallbackRoutine = nullptr; // (MINIDUMP_CALLBACK_ROUTINE)MiniDumpCallback;  
-			mci.CallbackParam = 0;
+	if ((hFile != nullptr) && (hFile != INVALID_HANDLE_VALUE)) {
+		MINIDUMP_EXCEPTION_INFORMATION mdei;
+		mdei.ThreadId = GetCurrentThreadId();
+		mdei.ExceptionPointers = pep;
+		mdei.ClientPointers = TRUE;
 
-			if (MiniDumpWriteDump != nullptr)
-			{
-				fprintf(stderr, "Exception caught. Writing MiniDump ...\n");
-				::MiniDumpWriteDump(::GetCurrentProcess(), ::GetCurrentProcessId(), hFile, MiniDumpNormal | MiniDumpWithProcessThreadData | MiniDumpWithFullMemoryInfo | MiniDumpWithThreadInfo | MiniDumpWithHandleData | MiniDumpWithDataSegs | MiniDumpWithCodeSegs | MiniDumpWithModuleHeaders, (pep != nullptr) ? &mdei : 0, nullptr, &mci);
+		if (MiniDumpWriteDump != nullptr) {
+			fprintf(stderr, "Exception caught. Writing MiniDump ...\n");
+
+			if (!::MiniDumpWriteDump(::GetCurrentProcess(), ::GetCurrentProcessId(), hFile, MiniDumpNormal | MiniDumpWithProcessThreadData | MiniDumpWithFullMemoryInfo | MiniDumpWithThreadInfo | MiniDumpWithHandleData | MiniDumpWithDataSegs | MiniDumpWithCodeSegs | MiniDumpWithModuleHeaders, nullptr, nullptr, nullptr)) {
+				fprintf(stderr, "Dump failed! Error code = %x\n", ::GetLastError());
 			}
-
-			CloseHandle(hFile);
 		}
+
+		CloseHandle(hFile);
+	}
+
+	return 0;
+}
+
+static long _stdcall OnException(PEXCEPTION_POINTERS pep) {
+	if (dump != nullptr && (!dump->handler || dump->handler())) {
+		HANDLE dumpThread = ::CreateThread(NULL, 0, DumpThread, pep, 0, NULL);
+		::WaitForSingleObject(dumpThread, INFINITE);
 	}
 
 	return EXCEPTION_EXECUTE_HANDLER;

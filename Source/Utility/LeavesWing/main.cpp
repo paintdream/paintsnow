@@ -27,21 +27,17 @@ static bool DumpHandler() {
 	return true;
 }
 
-static void RegisterDump() {
-#if defined(_WIN32) || defined(WIN32)
+int main(int argc, char* argv[]) {
+	// Register/unregister service?
+#ifdef _WIN32
 	ZDebuggerWin dumper;
 	time_t t;
 	time(&t);
 	tm* x = localtime(&t);
 	char fileName[256];
-	sprintf(fileName, "LeavesWingCrashLog_%04d_%02d_%02d_%02d_%02d_%02d.dmp", x->tm_year, x->tm_mon, x->tm_mday, x->tm_hour, x->tm_min, x->tm_sec);
+	sprintf(fileName, "LeavesWing_%04d_%02d_%02d_%02d_%02d_%02d.dmp", x->tm_year, x->tm_mon, x->tm_mday, x->tm_hour, x->tm_min, x->tm_sec);
 	dumper.SetDumpHandler(fileName, &DumpHandler);
-#endif
-}
 
-int main(int argc, char* argv[]) {
-	// Register/unregister service?
-#ifdef _WIN32
 	::CoInitializeEx(0, COINIT_MULTITHREADED);
 	if (argc > 1) {
 		if (strcmp(argv[1], "/install") == 0) {
@@ -69,8 +65,6 @@ int main(int argc, char* argv[]) {
 		return ServiceWin32::GetInstance().RunServiceMaster(argc, argv) ? 0 : -1;
 	}
 #endif
-
-	RegisterDump();
 
 	CmdLine cmdLine;
 
