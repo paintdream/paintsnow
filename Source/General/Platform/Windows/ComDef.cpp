@@ -557,7 +557,7 @@ namespace PaintsNow {
 
 	void InitDPIAware() {
 		typedef BOOL(WINAPI* SetProcessDPIAware)();
-		SetProcessDPIAware proc = (SetProcessDPIAware)::GetProcAddress(::GetModuleHandleA("user32.dll"), "SetProcessDPIAware");
+		SetProcessDPIAware proc = (SetProcessDPIAware)::GetProcAddress(::GetModuleHandleW(L"user32.dll"), "SetProcessDPIAware");
 		if (proc != nullptr) {
 			proc();
 		}

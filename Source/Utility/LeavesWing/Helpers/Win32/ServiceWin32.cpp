@@ -33,12 +33,12 @@ bool ServiceWin32::RunServiceWorker(DWORD argc, LPSTR* argv) {
 }
 
 bool ServiceWin32::RunServiceMaster(DWORD argc, LPSTR* argv) {
-	SERVICE_TABLE_ENTRYA DispatchTable[] = {
+	SERVICE_TABLE_ENTRYA dispatchTable[] = {
 		{ (LPSTR)serviceName.c_str(), &::ServiceMain },
 		{ NULL, NULL }
 	};
 
-	return ::StartServiceCtrlDispatcherA(DispatchTable) != 0;
+	return ::StartServiceCtrlDispatcherA(dispatchTable) != 0;
 }
 
 void ServiceWin32::SetupHandler(LeavesFlute& leavesFlute) {

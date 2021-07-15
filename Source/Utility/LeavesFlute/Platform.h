@@ -6,7 +6,7 @@
 #pragma once
 #include "../../Core/PaintsNow.h"
 #define PAINTSNOW_VERSION_MAJOR "0"
-#define PAINTSNOW_VERSION_MINOR "0.20.7.16"
+#define PAINTSNOW_VERSION_MINOR "0.21.7.16"
 
 #if defined(_MSC_VER) && _MSC_VER <= 1200
 #pragma comment(lib, "libmp3lame.lib")

@@ -12,7 +12,7 @@
 namespace PaintsNow {
 	class RasterizeComponent : public TAllocatedTiny<RasterizeComponent, Component> {
 	public:
-		RasterizeComponent();
+		RasterizeComponent(const TShared<TextureResource>& texture);
 
 		void RenderMesh(const TShared<MeshResource>& meshResource, const MatrixFloat4x4& transform);
 

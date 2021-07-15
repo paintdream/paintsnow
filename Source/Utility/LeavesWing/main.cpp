@@ -71,12 +71,12 @@ int main(int argc, char* argv[]) {
 	// support for drag'n'drop startup profile
 #ifdef _WIN32
 	if (argc == 2 && argv[1][0] != '-') {
-		char target[MAX_PATH * 2] = "";
-		char current[MAX_PATH * 2] = "";
-		::GetCurrentDirectoryA(MAX_PATH * 2, current);
+		WCHAR target[MAX_PATH * 2] = L"";
+		WCHAR current[MAX_PATH * 2] = L"";
+		::GetCurrentDirectoryW(MAX_PATH * 2, current);
 		String mount;
-		if (::PathRelativePathToA(target, current, FILE_ATTRIBUTE_DIRECTORY, argv[1], FILE_ATTRIBUTE_NORMAL)) {
-			mount = String("--Mount=") + target;
+		if (::PathRelativePathToW(target, current, FILE_ATTRIBUTE_DIRECTORY, (LPCWSTR)Utf8ToSystem(argv[1]).c_str(), FILE_ATTRIBUTE_NORMAL)) {
+			mount = String("--Mount=") + SystemToUtf8(String((const char*)target, wcslen(target) * 2));
 		} else {
 			mount = String("--Mount=") + argv[1];
 		}

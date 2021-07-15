@@ -201,7 +201,7 @@ static ZDebuggerWin* dump = nullptr;
 
 static DWORD _stdcall DumpThread(LPVOID param) {
 	PEXCEPTION_POINTERS pep = (PEXCEPTION_POINTERS)param;
-	HANDLE hFile = ::CreateFileA(dump->path.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+	HANDLE hFile = ::CreateFileW((LPCWSTR)SystemToUtf8(dump->path).c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_WRITE, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 
 	if ((hFile != nullptr) && (hFile != INVALID_HANDLE_VALUE)) {
 		MINIDUMP_EXCEPTION_INFORMATION mdei;

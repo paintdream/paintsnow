@@ -54,8 +54,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,20,7,16
- PRODUCTVERSION 0,20,7,16
+ FILEVERSION 0,21,7,16
+ PRODUCTVERSION 0,21,7,16
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -73,14 +73,14 @@ BEGIN
             VALUE "Comments", "\0"
             VALUE "CompanyName", "\0"
             VALUE "FileDescription", "LeavesWing Application Platform\0"
-            VALUE "FileVersion", "0, 20, 7, 16\0"
+            VALUE "FileVersion", "0, 21, 7, 16\0"
             VALUE "InternalName", "LeavesWing\0"
             VALUE "LegalCopyright", "Copyright (C) 2014-2021 PaintDream (paintdream@paintdream.com)\0"
             VALUE "LegalTrademarks", "\0"
             VALUE "OriginalFilename", "LeavesWing\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "\0"
-            VALUE "ProductVersion", "0, 20, 7, 16\0"
+            VALUE "ProductVersion", "0, 21, 7, 16\0"
             VALUE "SpecialBuild", "\0"
         END
     END

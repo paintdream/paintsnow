@@ -200,7 +200,7 @@ bool ZFrameWin32AttachWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPA
 }
 
 LRESULT CALLBACK ZFrameWin32AttachWindow::HookProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-	ZFrameWin32AttachWindow* windowContext = reinterpret_cast<ZFrameWin32AttachWindow*>(::GetWindowLongPtrA(hWnd, GWLP_USERDATA));
+	ZFrameWin32AttachWindow* windowContext = reinterpret_cast<ZFrameWin32AttachWindow*>(::GetWindowLongPtrW(hWnd, GWLP_USERDATA));
 
 	if (windowContext->WindowProc(hWnd, msg, wParam, lParam)) {
 		return ::CallWindowProcW(windowContext->originalProc, hWnd, msg, wParam, lParam);

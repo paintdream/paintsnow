@@ -15,7 +15,7 @@ using namespace PaintsNow;
 
 ZDebuggerRenderDoc::ZDebuggerRenderDoc() : api(nullptr) {
 #ifdef _WIN32
-	HMODULE mod = ::LoadLibraryA("renderdoc.dll");
+	HMODULE mod = ::LoadLibraryW(L"renderdoc.dll");
 	if (mod != nullptr) {
 		pRENDERDOC_GetAPI RENDERDOC_GetAPI =
 			(pRENDERDOC_GetAPI)GetProcAddress(mod, "RENDERDOC_GetAPI");
